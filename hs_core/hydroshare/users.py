@@ -28,7 +28,7 @@ def create_account(
         password=None, active=True, organization=None
 ):
     """
-    Create a new user within the HydroShare system.
+    Create a new user within the CommonsShare system.
 
     Returns: The user that was created
 
@@ -66,8 +66,8 @@ def create_account(
 
     u.groups = groups
 
-    # make the user a member of the Hydroshare role group
-    u.groups.add(Group.objects.get(name='Hydroshare Author'))
+    # make the user a member of the CommonsShare role group
+    u.groups.add(Group.objects.get(name='CommonsShare Author'))
 
     user_access = UserAccess(user=u)
     user_access.save()
@@ -97,7 +97,7 @@ def create_account(
 
 def update_account(user, **kwargs):
     """
-    Update an existing user within the HydroShare system. The user calling this method must have
+    Update an existing user within the CommonsShare system. The user calling this method must have
     write access to the account details.
 
     REST URL:  PUT /accounts/{userID}
@@ -288,7 +288,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
     We may want to modify this method to return more than just the pids for resources so that some
     metadata for the list of resources returned could be displayed without having to call
-    HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
+    CommonsShare.getScienceMetadata() and CommonsShare.GetSystemMetadata() for every resource in the returned list.
 
     Implementation notes:  For efficiency's sake, this returns a dictionary of query sets with one
     query set per defined resource type.  At a high level someone could run through this whole list,

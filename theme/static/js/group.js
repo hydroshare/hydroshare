@@ -269,7 +269,7 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
-    $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
+    $("title").text($(".group-title").text() + " | CommonsShare"); // Fix page title
 
      $("#id_user-autocomplete").addClass("form-control");
 

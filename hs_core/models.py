@@ -1,4 +1,4 @@
-"""Declare critical models for Hydroshare hs_core app."""
+"""Declare critical models for CommonsShare hs_core app."""
 
 import os.path
 import json
@@ -268,7 +268,7 @@ class AbstractMetaDataElement(models.Model):
 class HSAdaptorEditInline(object):
     """Define permissions-based helper to determine if user can edit adapter field.
 
-    Adaptor class added for Django inplace editing to honor HydroShare user-resource permissions
+    Adaptor class added for Django inplace editing to honor CommonsShare user-resource permissions
     """
 
     @classmethod
@@ -369,7 +369,7 @@ class Party(AbstractMetaDataElement):
             if party.description is not None and kwargs['description'] is not None:
                 if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
                     if party.description != kwargs['description']:
-                        raise ValidationError("HydroShare user identifier can't be changed.")
+                        raise ValidationError("CommonsShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -871,7 +871,7 @@ class Identifier(AbstractMetaDataElement):
             if idf.url.lower() != kwargs['url'].lower():
                 if idf.name.lower() == 'hydroshareidentifier':
                     if 'migration' not in kwargs:
-                        raise ValidationError("Hydroshare identifier url value can't be changed.")
+                        raise ValidationError("CommonsShare identifier url value can't be changed.")
 
                 # check this new identifier url not already exists
                 if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
@@ -888,11 +888,11 @@ class Identifier(AbstractMetaDataElement):
         # get matching resource
         resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
         if idf.name.lower() == 'hydroshareidentifier':
-            raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
+            raise ValidationError("CommonsShare identifier:%s can't be deleted." % idf.name)
 
         if idf.name.lower() == 'doi':
             if resource.doi:
-                raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource "
+                raise ValidationError("CommonsShare identifier:%s can't be deleted for a resource "
                                       "that has been assigned a DOI." % idf.name)
         idf.delete()
 
@@ -1756,7 +1756,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # becomes private for performance reasons. The nightly script run will clean up
                 # to make sure all private resources are not available to hyrax server as well as
                 # to make sure all resources files available to hyrax server are up to date with
-                # the HydroShare iRODS data store.
+                # the CommonsShare iRODS data store.
 
                 # run script to update hyrax input files when private netCDF resource becomes
                 # public or private composite resource that includes netCDF files becomes public
@@ -2057,11 +2057,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 creation_date=date_str))
         elif repl_rel:
             citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
+                                    u"CommonsShare at: {url}".format(repl_rel_value=repl_rel.value,
                                                                    creation_date=date_str,
                                                                    url=hs_identifier.url))
         else:
-            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+            citation_str_lst.append(", CommonsShare, {url}".format(url=hs_identifier.url))
 
         if isPendingActivation:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
@@ -2624,7 +2624,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
-    # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
+    # CommonsShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
     logical_file_content_type = models.ForeignKey(ContentType,
                                                   null=True, blank=True,
@@ -3201,8 +3201,8 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
-    # this resource_federation_path is added to record where a HydroShare resource is
-    # stored. The default is empty string meaning the resource is stored in HydroShare
+    # this resource_federation_path is added to record where a CommonsShare resource is
+    # stored. The default is empty string meaning the resource is stored in CommonsShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
 
@@ -3357,7 +3357,7 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
             .format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor, 'depositor_name').text = 'CommonsShare'
         etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
         etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the ' \
@@ -3372,9 +3372,9 @@ class BaseResource(Page, AbstractResource):
         db_md = etree.SubElement(db, 'database_metadata', language="en")
         # titles is required element for database_metadata
         titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        etree.SubElement(titles, 'title').text = "CommonsShare Resources"
         # create the dataset sub element, dataset_type can be record or collection, set it to
-        # collection for HydroShare resources
+        # collection for CommonsShare resources
         dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
         ds_titles = etree.SubElement(dataset, 'titles')
         etree.SubElement(ds_titles, 'title').text = self.metadata.title.value

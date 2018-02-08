@@ -149,15 +149,15 @@ class QuotaMessage(models.Model):
     # content when over quota within grace period and less than 125% of hard limit quota;
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
     # after grace period or when they are over hard limit quota
-    warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
+    warning_content_prepend = models.TextField(default='Your quota for CommonsShare resources is '
                                                        '{allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. '
                                                        'Once your quota reaches 100% you will no '
                                                        'longer be able to create new resources in '
-                                                       'HydroShare. ')
-    grace_period_content_prepend = models.TextField(default='You have exceeded your HydroShare '
-                                                            'quota. Your quota for HydroShare '
+                                                       'CommonsShare. ')
+    grace_period_content_prepend = models.TextField(default='You have exceeded your CommonsShare '
+                                                            'quota. Your quota for CommonsShare '
                                                             'resources is {allocated}{unit} in '
                                                             '{zone} zone. You currently have '
                                                             'resources that consume {used}{unit}, '
@@ -166,10 +166,10 @@ class QuotaMessage(models.Model):
                                                             'reduce your use to below your quota, '
                                                             'or to acquire additional quota, after '
                                                             'which you will no longer be able to '
-                                                            'create new resources in HydroShare. ')
+                                                            'create new resources in CommonsShare. ')
     enforce_content_prepend = models.TextField(default='Your action '
                                                        'was refused because you have exceeded your '
-                                                       'quota. Your quota for HydroShare resources '
+                                                       'quota. Your quota for CommonsShare resources '
                                                        'is {allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. ')
@@ -279,14 +279,14 @@ class UserProfile(models.Model):
     cv = models.FileField(upload_to='profile',
                           help_text='Upload your Curriculum Vitae if you wish people to be able to download it.',
                           null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
+    details = models.TextField("Description", help_text='Tell the CommonsShare community a little about yourself.',
                                null=True, blank=True)
 
     state = models.CharField(max_length=1024, null=True, blank=True)
     country = models.CharField(max_length=1024, null=True, blank=True)
 
     create_irods_user_account = models.BooleanField(default=False,
-                                                    help_text='Check to create an iRODS user account in HydroShare user '
+                                                    help_text='Check to create an iRODS user account in CommonsShare user '
                                                               'iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck '
                                                               '(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).'
                                                               'Uncheck to delete your iRODS user account. Note that deletion of your iRODS user '

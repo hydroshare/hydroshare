@@ -1,4 +1,8 @@
-from json import dumps
+from json import dumps, loads, load
+import requests
+import time
+import os
+from urllib2 import urlopen, URLError
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -17,6 +21,9 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils.http import int_to_base36
 from django.template.response import TemplateResponse
+from rest_framework import status
+from django.http import HttpResponseBadRequest
+from django.conf import settings as ds
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -28,8 +35,9 @@ from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
-from hs_core.views.utils import run_ssh_command
-from hs_core.hydroshare.utils import user_from_id
+from hs_core.views.utils import run_ssh_command, authorize, ACTION_TO_AUTHORIZE
+from hs_core.hydroshare.utils import get_file_from_irods, user_from_id
+from hs_core.models import ResourceFile, get_user
 from hs_access_control.models import GroupMembershipRequest
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.forms import ThreadedCommentForm
@@ -250,18 +258,18 @@ def update_user_profile(request):
                                     ))
                     # send an email to the old address notifying the email change
                     message = """Dear {}
-                    <p>HydroShare received a request to change the email address associated with
-                    HydroShare account {} from {} to {}. You are receiving this email to the old
+                    <p>CommonsShare received a request to change the email address associated with
+                    CommonsShare account {} from {} to {}. You are receiving this email to the old
                     email address as a precaution. If this is correct you may ignore this email
                     and click on the link in the email sent to the new address to confirm this change.</p>
                     <p>If you did not originate this request, there is a danger someone else has
-                    accessed your account. You should log into HydroShare, change your password,
+                    accessed your account. You should log into CommonsShare, change your password,
                     and set the email address to the correct address. If you are unable to do this
                     contact help@cuahsi.org
                     <p>Thank you</p>
-                    <p>The HydroShare Team</p>
+                    <p>The CommonsShare Team</p>
                     """.format(user.first_name, user.username, user.email, new_email)
-                    send_mail(subject="Change of HydroShare email address.",
+                    send_mail(subject="Change of CommonsShare email address.",
                               message=message,
                               html_message=message,
                               from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
@@ -540,3 +548,147 @@ def create_irods_account(request):
             dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
+
+
+def create_scidas_virtual_app(request, res_id, cluster):
+    user = get_user(request)
+    if not user.is_authenticated() or not user.is_active:
+        messages.error(request, "Only authorized user can make appliance provision request.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    res, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    cluster_name = cluster
+    if cluster_name != 'chameleon' and cluster_name != 'aws' and cluster_name != 'azure':
+        cluster_name = ''
+    file_data_list = []
+    p_data = {}
+    file_path = '/'+ds.IRODS_ZONE+'/home/'+ds.IRODS_USERNAME
+    for rf in ResourceFile.objects.filter(object_id=res.id):
+        fname = ''
+        if rf.resource_file.name:
+            fname = os.path.join(file_path, rf.resource_file.name)
+        elif rf.fed_resource_file.name:
+            fname = rf.fed_resource_file.name
+        if fname:
+            file_data_list.append(fname)
+            if fname.endswith('.json') and not p_data:
+                temp_json_file = get_file_from_irods(rf)
+                with open(temp_json_file, 'r') as fp:
+                    jdata = load(fp)
+                    if 'id' in jdata and 'containers' in jdata:
+                        p_data = jdata
+
+    url = "http://sc17demo1.scidas.org:9090/appliance"
+    app_id = user.username + '_cs_app_id'
+    preset_url = ''
+    if not p_data:
+        p_data = {
+            "id": app_id,
+             "containers": [
+                {
+                  "id": app_id,
+                  "image": "scidas/irods-jupyter-hydroshare",
+                  "resources": {
+                    "cpus": 2,
+                    "mem": 2048
+                  },
+                  "port_mappings": [
+                    {
+                      "container_port": 8888,
+                      "host_port": 0,
+                      "protocol": "tcp"
+                    }
+                  ],
+                  "args": [
+                    "--ip=0.0.0.0",
+                    "--NotebookApp.token=\"\""
+                  ],
+                  "data": file_data_list
+                }
+            ]
+        }
+    else:
+        app_id = p_data['id']
+        p_data['containers'][0]['data'] = file_data_list
+
+    if cluster_name:
+        p_data['containers'][0]['cluster'] = cluster_name
+
+    if 'endpoints' in p_data['containers'][0]:
+        if p_data['containers'][0]['endpoints']:
+            preset_ep_data = p_data['containers'][0]['endpoints'][0]
+            preset_url = 'http://' + preset_ep_data['host'] + ':' + str(preset_ep_data['host_port'])
+
+
+    # delete the appliance before posting to create a new one in case it already exists
+    app_url = url+'/'+app_id
+    response = requests.delete(app_url)
+    is_deleted = False
+    if response.status_code != status.HTTP_404_NOT_FOUND and \
+           response.status_code != status.HTTP_200_OK:
+        idx = 0
+        while idx < 2:
+            get_response = requests.get(app_url)
+            idx += 1
+            if get_response.status_code == status.HTTP_404_NOT_FOUND:
+                is_deleted = True
+                break
+            else:
+                # appliance is not deleted successfully yet, wait and poll 
+                # again one more time
+                time.sleep(2) 
+    else:
+        is_deleted = True
+    if not is_deleted:
+        errmsg = 'The old appliance '+app_id+' cannot be deleted successfully'
+        messages.error(request, errmsg)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    
+    response = requests.post(url, data=dumps(p_data))
+    if response.status_code != status.HTTP_200_OK and \
+            response.status_code != status.HTTP_201_CREATED:
+        return HttpResponseBadRequest(content=response.text)
+    while True:
+        response = requests.get(app_url)
+        if not response.status_code == status.HTTP_200_OK:
+            return HttpResponseBadRequest(content=response.text)
+        return_data = loads(response.content)
+        con_ret_data_list = return_data['containers']
+        con_ret_data = con_ret_data_list[0]
+        con_state = con_ret_data['state']
+        ep_data_list = con_ret_data['endpoints']
+        if con_state=='running' and (ep_data_list or preset_url):
+            break
+        else:
+            # the jupyter appliance is not ready yet, need to wait and poll again
+            time.sleep(2)
+
+    if preset_url:
+        app_url = preset_url
+    else:
+        ep_data = ep_data_list[0]
+        app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
+
+    # make sure the new directed url is loaded and working before redirecting.
+    # Since scidas will install dependencies included in requirements.txt, it will take some time
+    # before the app_url is ready to go after the appliance is provisioned, hence wait for up to 30 seconds
+    # before erroring out if connection to the url keeps being refused.
+    idx = 0
+    while True:
+        try:
+            ret = urlopen(app_url, timeout=10)
+            break
+        except URLError as ex:
+            errmsg = ex.reason if hasattr(ex, 'reason') else 'URLError'
+            idx += 1
+            time.sleep(5)
+        
+        if idx > 6:
+            messages.error(request, errmsg)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    if ret.code == 200:
+        return HttpResponseRedirect(app_url)
+    else:
+        messages.error(request, 'time out error')
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])

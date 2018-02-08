@@ -1,5 +1,5 @@
 """
-WSGI config for HydroShare project.
+WSGI config for CommonsShare project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

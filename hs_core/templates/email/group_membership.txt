@@ -2,15 +2,15 @@
 {% block main %}
     {% if group_owner %}
         {% trans "Dear " %}{{ group_owner.first_name }}
-        {% trans "User " %}{{ user.first_name }} has requested to join your HydroShare group ({{ group.name }}).
+        {% trans "User " %}{{ user.first_name }} has requested to join your CommonsShare group ({{ group.name }}).
         {{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}
         Click on the link below to accept this request.
     {% else %}
         {% trans "Dear " %}{{ user.first_name }}
-        {% trans "You have been invited to join HydroShare user group ("%}{{ group.name }} ).
+        {% trans "You have been invited to join CommonsShare user group ("%}{{ group.name }} ).
         Click on the link below to join this group.
     {% endif %}
 
     {{ request.scheme }}://{{ request.get_host }}{{ action_url }}
-    {% trans "The HydroShare Team" %}
+    {% trans "The CommonsShare Team" %}
 {% endblock %}

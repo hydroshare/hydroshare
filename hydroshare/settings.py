@@ -295,7 +295,6 @@ INSTALLED_APPS = (
     "hs_core",
     "hs_access_control",
     "hs_labels",
-    "hs_metrics",
     "irods_browser_app",
     "hs_geo_raster_resource",
     "ref_ts",
@@ -580,7 +579,7 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
-        # Catch-all logger for HydroShare apps
+        # Catch-all logger for CommonsShare apps
         '': {
             'handlers': ['hydrosharelog'],
             'propagate': False,

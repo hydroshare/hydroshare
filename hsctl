@@ -26,7 +26,7 @@ DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
 PROD_SERVER='./run-server'
 PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
-USE_LOCAL_IRODS=false
+USE_LOCAL_IRODS=true
 
 display_usage() {
     echo "*** HydroShare Control script ***"

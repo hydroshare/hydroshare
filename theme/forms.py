@@ -26,7 +26,7 @@ from hydroshare import settings as hydroshare_settings
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
 
-# This form.py is added by Hong Yi for customizing comments in HydroShare
+# This form.py is added by Hong Yi for customizing comments in CommonsShare
 # as part of effort to address issue https://github.com/hydroshare/hydroshare/issues/186
 # In particular, we want to remove name, email, and url fields and
 # want to link comments to user profile
@@ -153,7 +153,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = "[HydroShare Support] New comment by {c_name} for: {res_obj}".format(
+            subject = "[CommonsShare Support] New comment by {c_name} for: {res_obj}".format(
                 c_name=comment.user_name, res_obj=str(obj))
             context = {
                 "comment": comment,

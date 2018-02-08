@@ -4,5 +4,5 @@
 {{ user.first_name }} {{ user.last_name }} {% trans " has transferred the quota holder to you for this resource:" %}
 {{ request.scheme }}://{{ request.get_host }}/resource/{{ resource_uuid }}
 {% trans "If you do not approve this, you can contact " %}{{ user.first_name }} {{ user.last_name }}.
-{% trans "The HydroShare Team" %}
+{% trans "The CommonsShare Team" %}
 {% endblock %}

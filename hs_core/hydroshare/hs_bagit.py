@@ -124,7 +124,7 @@ def create_bag_files(resource):
     # Create a description of the metadata document that describes the whole resource and add it
     # to the aggregation
     resMetaFile = AggregatedResource(metadata_url)
-    resMetaFile._dc.title = "Dublin Core science metadata document describing the HydroShare " \
+    resMetaFile._dc.title = "Dublin Core science metadata document describing the CommonsShare " \
                             "resource"
     resMetaFile._citoterms.documents = ag_url
     resMetaFile._ore.isAggregatedBy = ag_url

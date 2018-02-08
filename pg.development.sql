@@ -4208,6 +4208,434 @@ ALTER SEQUENCE hs_core_type_id_seq OWNED BY hs_core_type.id;
 
 
 --
+-- Name: hs_dictionary_uncategorizedterm; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_dictionary_uncategorizedterm (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+ALTER TABLE hs_dictionary_uncategorizedterm OWNER TO postgres;
+
+--
+-- Name: hs_dictionary_uncategorizedterm_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_dictionary_uncategorizedterm_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_dictionary_uncategorizedterm_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_dictionary_uncategorizedterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_dictionary_uncategorizedterm_id_seq OWNED BY hs_dictionary_uncategorizedterm.id;
+
+
+--
+-- Name: hs_dictionary_university; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_dictionary_university (
+    id integer NOT NULL,
+    country_code character varying(2) NOT NULL,
+    name character varying(255) NOT NULL,
+    url character varying(255) NOT NULL
+);
+
+
+ALTER TABLE hs_dictionary_university OWNER TO postgres;
+
+--
+-- Name: hs_dictionary_university_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_dictionary_university_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_dictionary_university_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_dictionary_university_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_dictionary_university_id_seq OWNED BY hs_dictionary_university.id;
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvaggregationstatistic (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvaggregationstatistic OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvaggregationstatistic_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvaggregationstatistic_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvaggregationstatistic_id_seq OWNED BY hs_file_types_cvaggregationstatistic.id;
+
+
+--
+-- Name: hs_file_types_cvelevationdatum; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvelevationdatum (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvelevationdatum OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvelevationdatum_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvelevationdatum_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvelevationdatum_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvelevationdatum_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvelevationdatum_id_seq OWNED BY hs_file_types_cvelevationdatum.id;
+
+
+--
+-- Name: hs_file_types_cvmedium; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvmedium (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvmedium OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvmedium_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvmedium_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvmedium_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvmedium_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvmedium_id_seq OWNED BY hs_file_types_cvmedium.id;
+
+
+--
+-- Name: hs_file_types_cvmethodtype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvmethodtype (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvmethodtype OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvmethodtype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvmethodtype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvmethodtype_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvmethodtype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvmethodtype_id_seq OWNED BY hs_file_types_cvmethodtype.id;
+
+
+--
+-- Name: hs_file_types_cvsitetype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvsitetype (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvsitetype OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvsitetype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvsitetype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvsitetype_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvsitetype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvsitetype_id_seq OWNED BY hs_file_types_cvsitetype.id;
+
+
+--
+-- Name: hs_file_types_cvspeciation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvspeciation (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvspeciation OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvspeciation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvspeciation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvspeciation_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvspeciation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvspeciation_id_seq OWNED BY hs_file_types_cvspeciation.id;
+
+
+--
+-- Name: hs_file_types_cvstatus; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvstatus (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvstatus OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvstatus_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvstatus_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvstatus_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvstatus_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvstatus_id_seq OWNED BY hs_file_types_cvstatus.id;
+
+
+--
+-- Name: hs_file_types_cvunitstype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvunitstype (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvunitstype OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvunitstype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvunitstype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvunitstype_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvunitstype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvunitstype_id_seq OWNED BY hs_file_types_cvunitstype.id;
+
+
+--
+-- Name: hs_file_types_cvvariablename; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvvariablename (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvvariablename OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvvariablename_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvvariablename_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvvariablename_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvvariablename_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvvariablename_id_seq OWNED BY hs_file_types_cvvariablename.id;
+
+
+--
+-- Name: hs_file_types_cvvariabletype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_cvvariabletype (
+    id integer NOT NULL,
+    term character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    is_dirty boolean NOT NULL,
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_cvvariabletype OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvvariabletype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_cvvariabletype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_cvvariabletype_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_cvvariabletype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_cvvariabletype_id_seq OWNED BY hs_file_types_cvvariabletype.id;
+
+
+--
 -- Name: hs_file_types_genericfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -4492,7 +4920,8 @@ CREATE TABLE hs_file_types_reftimeseriesfilemetadata (
     extra_metadata hstore NOT NULL,
     keywords character varying(100)[] NOT NULL,
     is_dirty boolean NOT NULL,
-    json_file_content text NOT NULL
+    json_file_content text NOT NULL,
+    abstract text
 );
 
 
@@ -4551,6 +4980,77 @@ ALTER TABLE hs_file_types_reftimeserieslogicalfile_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_file_types_reftimeserieslogicalfile_id_seq OWNED BY hs_file_types_reftimeserieslogicalfile.id;
+
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_timeseriesfilemetadata (
+    id integer NOT NULL,
+    value_counts hstore NOT NULL,
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL,
+    abstract text
+);
+
+
+ALTER TABLE hs_file_types_timeseriesfilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_timeseriesfilemetadata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_timeseriesfilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_timeseriesfilemetadata_id_seq OWNED BY hs_file_types_timeseriesfilemetadata.id;
+
+
+--
+-- Name: hs_file_types_timeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_timeserieslogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_timeserieslogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_timeserieslogicalfile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_timeserieslogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_timeserieslogicalfile_id_seq OWNED BY hs_file_types_timeserieslogicalfile.id;
 
 
 --
@@ -5389,6 +5889,9 @@ CREATE TABLE hs_modflow_modelinstance_groundwaterflow (
     "flowPackage" character varying(100),
     "flowParameter" character varying(100),
     content_type_id integer NOT NULL,
+    "horizontalFlowBarrierPackage" boolean NOT NULL,
+    "seawaterIntrusionPackage" boolean NOT NULL,
+    "unsaturatedZonePackage" boolean NOT NULL,
     CONSTRAINT hs_modflow_modelinstance_groundwaterflow_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -6146,6 +6649,114 @@ ALTER SEQUENCE hs_tools_resource_apphomepageurl_id_seq OWNED BY hs_tools_resourc
 
 
 --
+-- Name: hs_tools_resource_helppageurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_helppageurl (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value character varying(1024) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_helppageurl_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_helppageurl OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_helppageurl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_helppageurl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_helppageurl_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_helppageurl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_helppageurl_id_seq OWNED BY hs_tools_resource_helppageurl.id;
+
+
+--
+-- Name: hs_tools_resource_issuespageurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_issuespageurl (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value character varying(1024) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_issuespageurl_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_issuespageurl OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_issuespageurl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_issuespageurl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_issuespageurl_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_issuespageurl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_issuespageurl_id_seq OWNED BY hs_tools_resource_issuespageurl.id;
+
+
+--
+-- Name: hs_tools_resource_mailinglisturl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_mailinglisturl (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value character varying(1024) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_mailinglisturl_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_mailinglisturl OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_mailinglisturl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_mailinglisturl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_mailinglisturl_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_mailinglisturl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_mailinglisturl_id_seq OWNED BY hs_tools_resource_mailinglisturl.id;
+
+
+--
 -- Name: hs_tools_resource_requesturlbase; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -6179,6 +6790,114 @@ ALTER TABLE hs_tools_resource_requesturlbase_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_tools_resource_requesturlbase_id_seq OWNED BY hs_tools_resource_requesturlbase.id;
+
+
+--
+-- Name: hs_tools_resource_roadmap; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_roadmap (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value text NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_roadmap_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_roadmap OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_roadmap_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_roadmap_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_roadmap_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_roadmap_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_roadmap_id_seq OWNED BY hs_tools_resource_roadmap.id;
+
+
+--
+-- Name: hs_tools_resource_showonopenwithlist; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_showonopenwithlist (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value boolean NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_showonopenwithlist_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_showonopenwithlist OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_showonopenwithlist_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_showonopenwithlist_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_showonopenwithlist_id_seq OWNED BY hs_tools_resource_showonopenwithlist.id;
+
+
+--
+-- Name: hs_tools_resource_sourcecodeurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_sourcecodeurl (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value character varying(1024) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_sourcecodeurl_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_sourcecodeurl OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_sourcecodeurl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_sourcecodeurl_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_sourcecodeurl_id_seq OWNED BY hs_tools_resource_sourcecodeurl.id;
 
 
 --
@@ -6386,6 +7105,42 @@ ALTER SEQUENCE hs_tools_resource_supportedsharingstatuschoices_id_seq OWNED BY h
 
 
 --
+-- Name: hs_tools_resource_testingprotocolurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_testingprotocolurl (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    value character varying(1024) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_testingprotocolurl_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_tools_resource_testingprotocolurl OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_testingprotocolurl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tools_resource_testingprotocolurl_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_testingprotocolurl_id_seq OWNED BY hs_tools_resource_testingprotocolurl.id;
+
+
+--
 -- Name: hs_tools_resource_toolicon; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -6427,7 +7182,8 @@ ALTER SEQUENCE hs_tools_resource_toolicon_id_seq OWNED BY hs_tools_resource_tool
 --
 
 CREATE TABLE hs_tools_resource_toolmetadata (
-    coremetadata_ptr_id integer NOT NULL
+    coremetadata_ptr_id integer NOT NULL,
+    approved boolean NOT NULL
 );
 
 
@@ -8255,6 +9011,90 @@ ALTER TABLE ONLY hs_core_type ALTER COLUMN id SET DEFAULT nextval('hs_core_type_
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_dictionary_uncategorizedterm ALTER COLUMN id SET DEFAULT nextval('hs_dictionary_uncategorizedterm_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_dictionary_university ALTER COLUMN id SET DEFAULT nextval('hs_dictionary_university_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvaggregationstatistic ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvaggregationstatistic_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvelevationdatum ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvelevationdatum_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvmedium ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvmedium_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvmethodtype ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvmethodtype_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvsitetype ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvsitetype_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvspeciation ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvspeciation_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvstatus ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvstatus_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvunitstype ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvunitstype_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariablename ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvvariablename_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariabletype ALTER COLUMN id SET DEFAULT nextval('hs_file_types_cvvariabletype_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_file_types_genericfilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_genericfilemetadata_id_seq'::regclass);
 
 
@@ -8319,6 +9159,20 @@ ALTER TABLE ONLY hs_file_types_reftimeseriesfilemetadata ALTER COLUMN id SET DEF
 --
 
 ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_reftimeserieslogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_timeseriesfilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_timeseriesfilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_timeserieslogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_timeserieslogicalfile_id_seq'::regclass);
 
 
 --
@@ -8612,7 +9466,49 @@ ALTER TABLE ONLY hs_tools_resource_apphomepageurl ALTER COLUMN id SET DEFAULT ne
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_tools_resource_helppageurl ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_helppageurl_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_issuespageurl ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_issuespageurl_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_mailinglisturl ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_mailinglisturl_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_tools_resource_requesturlbase ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_requesturlbase_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_roadmap ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_roadmap_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_showonopenwithlist ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_showonopenwithlist_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_sourcecodeurl ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_sourcecodeurl_id_seq'::regclass);
 
 
 --
@@ -8655,6 +9551,13 @@ ALTER TABLE ONLY hs_tools_resource_supportedsharingstatus_sharing_status ALTER C
 --
 
 ALTER TABLE ONLY hs_tools_resource_supportedsharingstatuschoices ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_supportedsharingstatuschoices_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_testingprotocolurl ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_testingprotocolurl_id_seq'::regclass);
 
 
 --
@@ -8858,7 +9761,7 @@ ALTER TABLE ONLY theme_userquota ALTER COLUMN id SET DEFAULT nextval('theme_user
 --
 
 COPY auth_group (id, name) FROM stdin;
-1	Hydroshare Author
+1	CommonsShare Author
 \.
 
 
@@ -8874,402 +9777,399 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-2137	1	412
-2138	1	413
-2139	1	414
-2140	1	415
-2141	1	416
-2142	1	417
-2143	1	418
-2144	1	419
-2145	1	420
-2146	1	421
-2147	1	422
-2148	1	423
-2149	1	424
-2150	1	425
-2151	1	426
-2152	1	427
-2153	1	428
-2154	1	429
-2155	1	430
-2156	1	431
-2157	1	432
-2158	1	433
-2159	1	434
-2160	1	435
-2161	1	436
-2162	1	437
-2163	1	438
-2164	1	439
-2165	1	440
-2166	1	441
-2167	1	442
-2168	1	443
-2169	1	444
-2170	1	445
-2171	1	446
-2172	1	447
-2173	1	448
-2174	1	449
-2175	1	450
-2176	1	451
-2177	1	452
-2178	1	453
-2179	1	454
-2180	1	455
-2181	1	456
-2182	1	457
-2183	1	458
-2184	1	459
-2185	1	460
-2186	1	461
-2187	1	462
-2188	1	463
-2189	1	464
-2190	1	465
-2191	1	476
-2192	1	477
-2193	1	478
-2194	1	479
-2195	1	480
-2196	1	481
-2197	1	482
-2198	1	483
-2199	1	484
-2200	1	485
-2201	1	486
-2202	1	487
-2203	1	488
-2204	1	489
-2205	1	490
-2206	1	491
-2207	1	492
-2208	1	493
-2209	1	494
-2210	1	495
-2211	1	496
-2212	1	497
-2213	1	498
-2214	1	499
-2215	1	500
-2216	1	501
-2217	1	502
-2218	1	503
-2219	1	504
-2220	1	505
-2221	1	506
-2222	1	507
-2223	1	508
-2224	1	509
-2225	1	510
-2226	1	511
-2227	1	512
-2228	1	513
-2229	1	514
-2230	1	522
-2231	1	523
-2232	1	524
-2233	1	528
-2234	1	529
-2235	1	530
-2236	1	531
-2237	1	532
-2238	1	533
-2239	1	543
-2240	1	544
-2241	1	545
-2242	1	552
-2243	1	553
-2244	1	554
-2245	1	555
-2246	1	556
-2247	1	557
-2248	1	558
-2249	1	559
-2250	1	560
-2251	1	561
-2252	1	562
-2253	1	563
-2254	1	564
-2255	1	565
-2256	1	566
-2257	1	567
-2258	1	568
-2259	1	569
-2260	1	570
-2261	1	571
-2262	1	572
-2263	1	573
-2264	1	574
-2265	1	575
-2266	1	576
-2267	1	577
-2268	1	578
-2269	1	579
-2270	1	580
-2271	1	581
-2272	1	582
-2273	1	583
-2274	1	584
-2275	1	585
-2276	1	586
-2277	1	587
-2278	1	588
-2279	1	589
-2280	1	590
-2281	1	591
-2282	1	592
-2283	1	593
-2284	1	594
-2285	1	595
-2286	1	596
-2287	1	597
-2288	1	598
-2289	1	599
-2290	1	600
-2291	1	601
-2292	1	602
-2293	1	603
-2294	1	604
-2295	1	605
-2296	1	606
-2297	1	607
-2298	1	608
-2299	1	609
-2300	1	610
-2301	1	611
-2302	1	612
-2303	1	613
-2304	1	614
-1957	1	139
-1958	1	140
-1959	1	141
-1960	1	142
-1961	1	143
-1962	1	144
-1963	1	145
-1964	1	146
-1965	1	147
-1966	1	148
-1967	1	149
-1968	1	150
-1969	1	151
-1970	1	152
-1971	1	153
-1972	1	154
-1973	1	155
-1974	1	156
-1975	1	157
-1976	1	158
-1977	1	159
-1978	1	160
-1979	1	161
-1980	1	162
-1981	1	163
-1982	1	164
-1983	1	165
-1984	1	166
-1985	1	167
-1986	1	168
-1987	1	169
-1988	1	170
-1989	1	171
-1990	1	172
-1991	1	173
-1992	1	174
-1993	1	175
-1994	1	176
-1995	1	177
-1996	1	178
-1997	1	179
-1998	1	180
-1999	1	181
-2000	1	182
-2001	1	183
-2002	1	184
-2003	1	185
-2004	1	186
-2005	1	187
-2006	1	188
-2007	1	189
-2008	1	190
-2009	1	191
-2010	1	192
-2011	1	193
-2012	1	194
-2013	1	195
-2014	1	196
-2015	1	197
-2016	1	198
-2017	1	199
-2018	1	200
-2019	1	201
-2020	1	202
-2021	1	203
-2022	1	204
-2023	1	271
-2024	1	272
-2025	1	273
-2026	1	274
-2027	1	275
-2028	1	276
-2029	1	277
-2030	1	278
-2031	1	279
-2032	1	280
-2033	1	281
-2034	1	282
-2035	1	283
-2036	1	284
-2037	1	285
-2038	1	313
-2039	1	314
-2040	1	315
-2041	1	316
-2042	1	317
-2043	1	318
-2044	1	319
-2045	1	320
-2046	1	321
-2047	1	322
-2048	1	323
-2049	1	324
-2050	1	325
-2051	1	326
-2052	1	327
-2053	1	328
-2054	1	329
-2055	1	330
-2056	1	331
-2057	1	332
-2058	1	333
-2059	1	334
-2060	1	335
-2061	1	336
-2062	1	337
-2063	1	338
-2064	1	339
-2065	1	340
-2066	1	341
-2067	1	342
-2068	1	343
-2069	1	344
-2070	1	345
-2071	1	346
-2072	1	347
-2073	1	348
-2074	1	349
-2075	1	350
-2076	1	351
-2077	1	352
-2078	1	353
-2079	1	354
-2080	1	355
-2081	1	356
-2082	1	357
-2083	1	358
-2084	1	359
-2085	1	360
-2086	1	361
-2087	1	362
-2088	1	363
-2089	1	364
-2090	1	365
-2091	1	366
-2092	1	367
-2093	1	368
-2094	1	369
-2095	1	370
-2096	1	371
-2097	1	372
-2098	1	373
-2099	1	374
-2100	1	375
-2101	1	376
-2102	1	377
-2103	1	378
-2104	1	379
-2105	1	380
-2106	1	381
-2107	1	382
-2108	1	383
-2109	1	384
-2110	1	385
-2111	1	386
-2112	1	387
-2113	1	388
-2114	1	389
-2115	1	390
-2116	1	391
-2117	1	392
-2118	1	393
-2119	1	394
-2120	1	395
-2121	1	396
-2122	1	397
-2123	1	398
-2124	1	399
-2125	1	400
-2126	1	401
-2127	1	402
-2128	1	403
-2129	1	404
-2130	1	405
-2131	1	406
-2132	1	407
-2133	1	408
-2134	1	409
-2135	1	410
-2136	1	411
-2305	1	615
-2306	1	616
-2307	1	617
-2308	1	618
-2309	1	619
-2310	1	620
-2311	1	621
-2312	1	622
-2313	1	623
-2314	1	624
-2315	1	625
-2316	1	626
-2317	1	627
-2318	1	628
-2319	1	629
-2320	1	630
-2321	1	631
-2322	1	632
-2323	1	633
-2324	1	634
-2325	1	635
-2326	1	636
-2327	1	637
-2328	1	638
-2329	1	639
-2330	1	640
-2331	1	641
-2332	1	642
-2333	1	643
-2334	1	644
-2335	1	645
-2336	1	646
-2337	1	647
-2338	1	648
-2339	1	649
-2340	1	650
-2341	1	651
-2342	1	652
-2343	1	653
-2344	1	654
-2345	1	655
-2346	1	656
-2347	1	657
-2348	1	658
-2349	1	659
-2350	1	660
-2351	1	661
-2352	1	662
+2749	1	139
+2750	1	140
+2751	1	141
+2752	1	142
+2753	1	143
+2754	1	144
+2755	1	145
+2756	1	146
+2757	1	147
+2758	1	148
+2759	1	149
+2760	1	150
+2761	1	151
+2762	1	152
+2763	1	153
+2764	1	154
+2765	1	155
+2766	1	156
+2767	1	157
+2768	1	158
+2769	1	159
+2770	1	160
+2771	1	161
+2772	1	162
+2773	1	163
+2774	1	164
+2775	1	165
+2776	1	166
+2777	1	167
+2778	1	168
+2779	1	169
+2780	1	170
+2781	1	171
+2782	1	172
+2783	1	173
+2784	1	174
+2785	1	175
+2786	1	176
+2787	1	177
+2788	1	178
+2789	1	179
+2790	1	180
+2791	1	181
+2792	1	182
+2793	1	183
+2794	1	184
+2795	1	185
+2796	1	186
+2797	1	187
+2798	1	188
+2799	1	189
+2800	1	190
+2801	1	191
+2802	1	192
+2803	1	193
+2804	1	194
+2805	1	195
+2806	1	196
+2807	1	197
+2808	1	198
+2809	1	199
+2810	1	200
+2811	1	201
+2812	1	202
+2813	1	203
+2814	1	204
+2815	1	271
+2816	1	272
+2817	1	273
+2818	1	274
+2819	1	275
+2820	1	276
+2821	1	277
+2822	1	278
+2823	1	279
+2824	1	280
+2825	1	281
+2826	1	282
+2827	1	283
+2828	1	284
+2829	1	285
+2830	1	313
+2831	1	314
+2832	1	315
+2833	1	316
+2834	1	317
+2835	1	318
+2836	1	319
+2837	1	320
+2838	1	321
+2839	1	322
+2840	1	323
+2841	1	324
+2842	1	325
+2843	1	326
+2844	1	327
+2845	1	328
+2846	1	329
+2847	1	330
+2848	1	331
+2849	1	332
+2850	1	333
+2851	1	334
+2852	1	335
+2853	1	336
+2854	1	337
+2855	1	338
+2856	1	339
+2857	1	340
+2858	1	341
+2859	1	342
+2860	1	343
+2861	1	344
+2862	1	345
+2863	1	346
+2864	1	347
+2865	1	348
+2866	1	349
+2867	1	350
+2868	1	351
+2869	1	352
+2870	1	353
+2871	1	354
+2872	1	355
+2873	1	356
+2874	1	357
+2875	1	358
+2876	1	359
+2877	1	360
+2878	1	361
+2879	1	362
+2880	1	363
+2881	1	364
+2882	1	365
+2883	1	366
+2884	1	367
+2885	1	368
+2886	1	369
+2887	1	370
+2888	1	371
+2889	1	372
+2890	1	373
+2891	1	374
+2892	1	375
+2893	1	376
+2894	1	377
+2895	1	378
+2896	1	379
+2897	1	380
+2898	1	381
+2899	1	382
+2900	1	383
+2901	1	384
+2902	1	385
+2903	1	386
+2904	1	387
+2905	1	388
+2906	1	389
+2907	1	390
+2908	1	391
+2909	1	392
+2910	1	393
+2911	1	394
+2912	1	395
+2913	1	396
+2914	1	397
+2915	1	398
+2916	1	399
+2917	1	400
+2918	1	401
+2919	1	402
+2920	1	403
+2921	1	404
+2922	1	405
+2923	1	406
+2924	1	407
+2925	1	408
+2926	1	409
+2927	1	410
+2928	1	411
+2929	1	412
+2930	1	413
+2931	1	414
+2932	1	415
+2933	1	416
+2934	1	417
+2935	1	418
+2936	1	419
+2937	1	420
+2938	1	421
+2939	1	422
+2940	1	423
+2941	1	424
+2942	1	425
+2943	1	426
+2944	1	427
+2945	1	428
+2946	1	429
+2947	1	430
+2948	1	431
+2949	1	432
+2950	1	433
+2951	1	434
+2952	1	435
+2953	1	436
+2954	1	437
+2955	1	438
+2956	1	442
+2957	1	443
+2958	1	444
+2959	1	445
+2960	1	446
+2961	1	447
+2962	1	448
+2963	1	449
+2964	1	450
+2965	1	451
+2966	1	452
+2967	1	453
+2968	1	454
+2969	1	455
+2970	1	456
+2971	1	457
+2972	1	458
+2973	1	459
+2974	1	460
+2975	1	461
+2976	1	462
+2977	1	463
+2978	1	464
+2979	1	465
+2980	1	476
+2981	1	477
+2982	1	478
+2983	1	479
+2984	1	480
+2985	1	481
+2986	1	482
+2987	1	483
+2988	1	484
+2989	1	485
+2990	1	486
+2991	1	487
+2992	1	488
+2993	1	489
+2994	1	490
+2995	1	491
+2996	1	492
+2997	1	493
+2998	1	494
+2999	1	495
+3000	1	496
+3001	1	497
+3002	1	498
+3003	1	499
+3004	1	500
+3005	1	501
+3006	1	502
+3007	1	503
+3008	1	504
+3009	1	505
+3010	1	506
+3011	1	507
+3012	1	508
+3013	1	509
+3014	1	510
+3015	1	511
+3016	1	512
+3017	1	513
+3018	1	514
+3019	1	522
+3020	1	523
+3021	1	524
+3022	1	528
+3023	1	529
+3024	1	530
+3025	1	531
+3026	1	532
+3027	1	533
+3028	1	543
+3029	1	544
+3030	1	545
+3031	1	552
+3032	1	553
+3033	1	554
+3034	1	555
+3035	1	556
+3036	1	557
+3037	1	558
+3038	1	559
+3039	1	560
+3040	1	561
+3041	1	562
+3042	1	563
+3043	1	564
+3044	1	565
+3045	1	566
+3046	1	567
+3047	1	568
+3048	1	569
+3049	1	570
+3050	1	571
+3051	1	572
+3052	1	573
+3053	1	574
+3054	1	575
+3055	1	576
+3056	1	577
+3057	1	578
+3058	1	579
+3059	1	580
+3060	1	581
+3061	1	582
+3062	1	583
+3063	1	584
+3064	1	585
+3065	1	586
+3066	1	587
+3067	1	588
+3068	1	589
+3069	1	590
+3070	1	591
+3071	1	592
+3072	1	593
+3073	1	594
+3074	1	595
+3075	1	596
+3076	1	597
+3077	1	598
+3078	1	599
+3079	1	600
+3080	1	601
+3081	1	602
+3082	1	603
+3083	1	604
+3084	1	605
+3085	1	606
+3086	1	607
+3087	1	608
+3088	1	609
+3089	1	610
+3090	1	611
+3091	1	612
+3092	1	613
+3093	1	614
+3094	1	615
+3095	1	616
+3096	1	617
+3097	1	618
+3098	1	619
+3099	1	620
+3100	1	621
+3101	1	622
+3102	1	623
+3103	1	624
+3104	1	625
+3105	1	626
+3106	1	627
+3107	1	628
+3108	1	629
+3109	1	630
+3110	1	631
+3111	1	632
+3112	1	633
+3113	1	634
+3114	1	635
+3115	1	636
+3116	1	637
+3117	1	638
+3118	1	639
+3119	1	640
+3120	1	641
+3121	1	642
+3122	1	643
+3123	1	644
+3124	1	645
+3125	1	646
+3126	1	647
+3127	1	648
+3128	1	649
+3129	1	650
+3130	1	651
+3131	1	652
+3132	1	653
+3133	1	654
+3134	1	655
+3135	1	656
+3136	1	657
+3137	1	658
+3138	1	659
+3139	1	660
+3140	1	661
+3141	1	662
 \.
 
 
@@ -9277,7 +10177,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 2352, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 3141, true);
 
 
 --
@@ -9720,9 +10620,6 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 436	Can add swat model instance meta data	146	add_swatmodelinstancemetadata
 437	Can change swat model instance meta data	146	change_swatmodelinstancemetadata
 438	Can delete swat model instance meta data	146	delete_swatmodelinstancemetadata
-439	Can add original file info	147	add_originalfileinfo
-440	Can change original file info	147	change_originalfileinfo
-441	Can delete original file info	147	delete_originalfileinfo
 442	Can add original coverage	148	add_originalcoverage
 443	Can change original coverage	148	change_originalcoverage
 444	Can delete original coverage	148	delete_originalcoverage
@@ -9983,6 +10880,69 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 699	Can add ref timeseries logical file	219	add_reftimeserieslogicalfile
 700	Can change ref timeseries logical file	219	change_reftimeserieslogicalfile
 701	Can delete ref timeseries logical file	219	delete_reftimeserieslogicalfile
+702	Can add testing protocol url	220	add_testingprotocolurl
+703	Can change testing protocol url	220	change_testingprotocolurl
+704	Can delete testing protocol url	220	delete_testingprotocolurl
+705	Can add help page url	221	add_helppageurl
+706	Can change help page url	221	change_helppageurl
+707	Can delete help page url	221	delete_helppageurl
+708	Can add source code url	222	add_sourcecodeurl
+709	Can change source code url	222	change_sourcecodeurl
+710	Can delete source code url	222	delete_sourcecodeurl
+711	Can add issues page url	223	add_issuespageurl
+712	Can change issues page url	223	change_issuespageurl
+713	Can delete issues page url	223	delete_issuespageurl
+714	Can add mailing list url	224	add_mailinglisturl
+715	Can change mailing list url	224	change_mailinglisturl
+716	Can delete mailing list url	224	delete_mailinglisturl
+717	Can add roadmap	225	add_roadmap
+718	Can change roadmap	225	change_roadmap
+719	Can delete roadmap	225	delete_roadmap
+720	Can add show on open with list	226	add_showonopenwithlist
+721	Can change show on open with list	226	change_showonopenwithlist
+722	Can delete show on open with list	226	delete_showonopenwithlist
+723	Can add cv variable type	227	add_cvvariabletype
+724	Can change cv variable type	227	change_cvvariabletype
+725	Can delete cv variable type	227	delete_cvvariabletype
+726	Can add cv variable name	228	add_cvvariablename
+727	Can change cv variable name	228	change_cvvariablename
+728	Can delete cv variable name	228	delete_cvvariablename
+729	Can add cv speciation	229	add_cvspeciation
+730	Can change cv speciation	229	change_cvspeciation
+731	Can delete cv speciation	229	delete_cvspeciation
+732	Can add cv elevation datum	230	add_cvelevationdatum
+733	Can change cv elevation datum	230	change_cvelevationdatum
+734	Can delete cv elevation datum	230	delete_cvelevationdatum
+735	Can add cv site type	231	add_cvsitetype
+736	Can change cv site type	231	change_cvsitetype
+737	Can delete cv site type	231	delete_cvsitetype
+738	Can add cv method type	232	add_cvmethodtype
+739	Can change cv method type	232	change_cvmethodtype
+740	Can delete cv method type	232	delete_cvmethodtype
+741	Can add cv units type	233	add_cvunitstype
+742	Can change cv units type	233	change_cvunitstype
+743	Can delete cv units type	233	delete_cvunitstype
+744	Can add cv status	234	add_cvstatus
+745	Can change cv status	234	change_cvstatus
+746	Can delete cv status	234	delete_cvstatus
+747	Can add cv medium	235	add_cvmedium
+748	Can change cv medium	235	change_cvmedium
+749	Can delete cv medium	235	delete_cvmedium
+750	Can add cv aggregation statistic	236	add_cvaggregationstatistic
+751	Can change cv aggregation statistic	236	change_cvaggregationstatistic
+752	Can delete cv aggregation statistic	236	delete_cvaggregationstatistic
+753	Can add time series file meta data	237	add_timeseriesfilemetadata
+754	Can change time series file meta data	237	change_timeseriesfilemetadata
+755	Can delete time series file meta data	237	delete_timeseriesfilemetadata
+756	Can add time series logical file	238	add_timeserieslogicalfile
+757	Can change time series logical file	238	change_timeserieslogicalfile
+758	Can delete time series logical file	238	delete_timeserieslogicalfile
+759	Can add university	239	add_university
+760	Can change university	239	change_university
+761	Can delete university	239	delete_university
+762	Can add uncategorized term	240	add_uncategorizedterm
+763	Can change uncategorized term	240	change_uncategorizedterm
+764	Can delete uncategorized term	240	delete_uncategorizedterm
 \.
 
 
@@ -9990,7 +10950,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 701, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 764, true);
 
 
 --
@@ -9998,7 +10958,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 701, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-09-01 18:11:00.078101+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
+4	pbkdf2_sha256$20000$AretTDtCdjAs$NCU2pqMCLZqdeaSoLvAv/Xgbb3QDDR3ySWWurPNjb34=	2018-01-16 22:16:26.201253+00	t	admin	CommonsShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -10015,14 +10975,14 @@ COPY auth_user_groups (id, user_id, group_id) FROM stdin;
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_user_groups_id_seq', 2, true);
+SELECT pg_catalog.setval('auth_user_groups_id_seq', 10, true);
 
 
 --
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_user_id_seq', 4, true);
+SELECT pg_catalog.setval('auth_user_id_seq', 15, true);
 
 
 --
@@ -10199,12 +11159,12 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 32	2016-01-25 19:52:16.941687+00	4	Discover	2	Changed slug and keywords.	33	4
 33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
 34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
-35	2016-02-24 17:41:41.504891+00	1	Hydroshare Author	2	Changed permissions.	2	4
+35	2016-02-24 17:41:41.504891+00	1	CommonsShare Author	2	Changed permissions.	2	4
 36	2016-06-23 17:07:04.049586+00	13	Collaborate	1		33	4
-37	2017-02-02 17:25:53.744625+00	1	Hydroshare Author	2	Changed permissions.	2	4
-38	2017-02-02 17:26:10.173151+00	1	Hydroshare Author	2	Changed permissions.	2	4
-39	2017-02-02 17:26:32.707066+00	1	Hydroshare Author	2	Changed permissions.	2	4
-40	2017-02-02 17:26:47.958444+00	1	Hydroshare Author	2	Changed permissions.	2	4
+37	2017-02-02 17:25:53.744625+00	1	CommonsShare Author	2	Changed permissions.	2	4
+38	2017-02-02 17:26:10.173151+00	1	CommonsShare Author	2	Changed permissions.	2	4
+39	2017-02-02 17:26:32.707066+00	1	CommonsShare Author	2	Changed permissions.	2	4
+40	2017-02-02 17:26:47.958444+00	1	CommonsShare Author	2	Changed permissions.	2	4
 41	2017-09-01 18:12:16.42384+00	5	Help	3		33	4
 42	2017-09-01 18:12:49.58398+00	14	Help	1		34	4
 43	2017-09-01 18:13:41.541669+00	15	About	1		34	4
@@ -10404,7 +11364,6 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 144	hs_swat_modelinstance	modelinput
 145	hs_swat_modelinstance	swatmodelinstanceresource
 146	hs_swat_modelinstance	swatmodelinstancemetadata
-147	hs_geographic_feature_resource	originalfileinfo
 148	hs_geographic_feature_resource	originalcoverage
 149	hs_geographic_feature_resource	fieldinformation
 150	hs_geographic_feature_resource	geometryinformation
@@ -10477,6 +11436,27 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 217	hs_file_types	geofeaturelogicalfile
 218	hs_file_types	reftimeseriesfilemetadata
 219	hs_file_types	reftimeserieslogicalfile
+220	hs_tools_resource	testingprotocolurl
+221	hs_tools_resource	helppageurl
+222	hs_tools_resource	sourcecodeurl
+223	hs_tools_resource	issuespageurl
+224	hs_tools_resource	mailinglisturl
+225	hs_tools_resource	roadmap
+226	hs_tools_resource	showonopenwithlist
+227	hs_file_types	cvvariabletype
+228	hs_file_types	cvvariablename
+229	hs_file_types	cvspeciation
+230	hs_file_types	cvelevationdatum
+231	hs_file_types	cvsitetype
+232	hs_file_types	cvmethodtype
+233	hs_file_types	cvunitstype
+234	hs_file_types	cvstatus
+235	hs_file_types	cvmedium
+236	hs_file_types	cvaggregationstatistic
+237	hs_file_types	timeseriesfilemetadata
+238	hs_file_types	timeserieslogicalfile
+239	hs_dictionary	university
+240	hs_dictionary	uncategorizedterm
 \.
 
 
@@ -10484,7 +11464,7 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 219, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 240, true);
 
 
 --
@@ -10864,6 +11844,23 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 190	hs_file_types	0005_reftimeseriesfilemetadata_reftimeserieslogicalfile	2017-08-17 21:08:41.719251+00
 191	hs_geographic_feature_resource	0002_auto_20170612_2159	2017-08-17 21:08:42.181189+00
 192	theme	0008_auto_20170622_2141	2017-08-17 21:08:43.301783+00
+193	hs_dictionary	0001_initial	2018-01-08 21:56:10.100821+00
+194	hs_dictionary	0002_auto_20170824_1900	2018-01-08 21:56:14.319081+00
+195	hs_dictionary	0003_auto_20171023_1550	2018-01-08 21:56:14.340782+00
+196	hs_dictionary	0003_auto_20170908_1943	2018-01-08 21:56:14.402175+00
+197	hs_dictionary	0004_merge	2018-01-08 21:56:14.406465+00
+198	hs_file_types	0006_auto_20170812_1621	2018-01-08 21:56:15.98303+00
+199	hs_file_types	0006_reftimeseriesfilemetadata_abstract	2018-01-08 21:56:16.016098+00
+200	hs_file_types	0007_timeseriesfilemetadata_abstract	2018-01-08 21:56:16.082439+00
+201	hs_labels	0005_auto_20171127_1952	2018-01-08 21:56:16.424456+00
+202	hs_modflow_modelinstance	0003_auto_20170501_1700	2018-01-08 21:56:18.8675+00
+203	hs_tools_resource	0012_toolmetadata_approved	2018-01-08 21:56:19.020066+00
+204	hs_tools_resource	0013_auto_20171023_1724	2018-01-08 21:56:19.160113+00
+205	hs_tools_resource	0014_auto_20171101_1812	2018-01-08 21:56:27.023376+00
+206	hs_tools_resource	0015_auto_20171101_1819	2018-01-08 21:56:28.618875+00
+207	hs_tools_resource	0012_auto_20171110_1559	2018-01-08 21:56:29.672568+00
+208	hs_tools_resource	0016_merge	2018-01-08 21:56:29.677747+00
+209	hs_tools_resource	0017_auto_20171128_1852	2018-01-08 21:56:30.870221+00
 \.
 
 
@@ -10871,7 +11868,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 192, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 209, true);
 
 
 --
@@ -10879,8 +11876,6 @@ SELECT pg_catalog.setval('django_migrations_id_seq', 192, true);
 --
 
 COPY django_redirect (id, site_id, old_path, new_path) FROM stdin;
-2	1	/privacy/	https://help.hydroshare.org/about-hydroshare/policies/statement-of-privacy/
-1	1	/terms-of-use/	https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/
 \.
 
 
@@ -11761,6 +12756,13 @@ SELECT pg_catalog.setval('hs_core_contributor_id_seq', 1, false);
 --
 
 COPY hs_core_coremetadata (id) FROM stdin;
+1
+2
+3
+4
+5
+6
+7
 \.
 
 
@@ -11821,6 +12823,13 @@ SELECT pg_catalog.setval('hs_core_date_id_seq', 1, false);
 --
 
 COPY hs_core_description (id, object_id, abstract, content_type_id) FROM stdin;
+1	1	The data are accessed in a cloud environment provided by KC4 and the compute capabilities provided by KC5, where the team executes a CWL workflow for post-processing of GTEx data and adapts the Bgee differential gene expression pipeline to identify sex differences. KC2 GUIDs best practices are applied to, and KC1 FAIR metrics are used to evaluate, a secondary dataset with integrated GTEx cardiac gene expression data and MOD cardiac morphology data.	68
+2	3	Perform enrichment test using phenotype ontology	68
+3	2	Explore relationships between environmental exposures and clinical data.	68
+4	4	This is annotation for the novel CWL data.	68
+5	5	Abstract for my secure CWL workflow.	68
+6	7	This is annotation for the novel CWL data.	68
+7	6	An example CWL workflow for demonstration purposes.	68
 \.
 
 
@@ -11828,7 +12837,7 @@ COPY hs_core_description (id, object_id, abstract, content_type_id) FROM stdin;
 -- Name: hs_core_description_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_core_description_id_seq', 1, false);
+SELECT pg_catalog.setval('hs_core_description_id_seq', 7, true);
 
 
 --
@@ -12065,6 +13074,9556 @@ SELECT pg_catalog.setval('hs_core_type_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_dictionary_uncategorizedterm; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_dictionary_uncategorizedterm (id, name) FROM stdin;
+1	RENCI
+2	RENCI
+3	Maastricht University
+4	RENCI
+5	RENCI
+6	RENCI
+7	RENCI
+\.
+
+
+--
+-- Name: hs_dictionary_uncategorizedterm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_dictionary_uncategorizedterm_id_seq', 7, true);
+
+
+--
+-- Data for Name: hs_dictionary_university; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_dictionary_university (id, country_code, name, url) FROM stdin;
+1	AD	University of Andorra	http://www.uda.ad/
+2	AE	Abu Dhabi University	http://www.adu.ac.ae/
+3	AE	Ajman University of Science & Technology	http://www.ajman.ac.ae/
+4	AE	Alain University of Science and Technology	http://www.alainuniversity.ac.ae/
+5	AE	Al Ghurair University	http://www.agu.ae/
+6	AE	Alhosn University	http://www.alhosnu.ae/
+7	AE	Al Khawarizmi International College	http://www.khawarizmi.com/
+8	AE	American College Of Dubai	http://www.acd.ac.ae/
+9	AE	American University in Dubai	http://www.aud.edu/
+10	AE	American University in the Emirates	http://www.aue.ae/
+11	AE	American University of Sharjah	http://www.aus.edu/
+12	AE	British University in Dubai	http://www.buid.ac.ae/
+13	AE	Dubai Medical College for Girls	http://www.dmcg.edu/
+14	AE	Dubai Pharmacy College	http://www.dpc.edu/
+15	AE	Etisalat University College	http://www.ece.ac.ae/
+16	AE	Gulf Medical University	http://www.gmu.ac.ae/
+17	AE	Hamdan Bin Mohammed e-University	http://www.hbmeu.ac.ae/
+18	AE	Higher Colleges of Technology	http://www.hct.ac.ae/
+19	AE	Ittihad University	http://www.ittihad.ac.ae/
+20	AE	Jumeira University	http://www.ju.ac.ae/
+21	AE	Khalifa University	http://www.kustar.ac.ae/
+22	AE	Khalifa University of Science, Technology and Research	http://www.ku.ac.ae/
+23	AE	Masdar University Of Science And Technology	http://www.masdar.ac.ae/
+24	AE	New York University, Abu Dhabi	http://nyuad.nyu.edu/
+25	AE	Paris-Sorbonne University Abu Dhabi	http://www.sorbonne.ae/
+26	AE	Rak Medical & Health Sciences University	http://www.rakmhsu.com/
+27	AE	Rochester Institute of Technology, Dubai	http://dubai.rit.edu/
+28	AE	Skyline University College, Sharjah	http://www.skylineuniversity.com/
+29	AE	Synergy University, Dubai Campus	http://www.synergydubai.ae/
+30	AE	The Emirates Academy of Hotel Managment	http://www.emiratesacademy.edu/
+31	AE	The Petroleum Institute	http://www.pi.ac.ae/
+32	AE	United Arab Emirates University	http://www.uaeu.ac.ae/
+33	AE	University Of Dubai	http://www.ud.ac.ae/
+34	AE	University of Jazeera	http://www.uojazeera.com/
+35	AE	University of Sharjah	http://www.sharjah.ac.ae/
+36	AE	University of Wollongong - Dubai Campus	http://www.uowdubai.ac.ae/
+37	AE	Zayed University	http://www.zu.ac.ae/
+38	AF	Afghan University	http://www.afghanuniversity.edu.af/
+39	AF	Al-Birony University	http://www.au.edu.af/
+40	AF	American University of Afghanistan	http://www.auaf.edu.af/
+41	AF	Aria Institute of Higher Education	http://www.aria.edu.af/
+42	AF	Badakhshan University	http://www.badakhshan.edu.af/
+43	AF	Baghlan University	http://www.baghlan.edu.af/
+44	AF	Bakhtar University	http://www.bakhtar.edu.af/
+45	AF	Balkh University	http://www.ba.edu.af/
+46	AF	Bamiyan University	http://www.bu.edu.af/
+47	AF	Bost University	http://www.bost.edu.af/
+48	AF	Dawat University	http://www.dawat.edu.af/
+49	AF	Dunya Institute of Higher Education	http://www.dunya.edu.af/
+50	AF	Faryab Higher Education Institute	http://www.faryab.edu.af/
+51	AF	Ghazni University	http://www.gu.edu.af/
+52	AF	Herat University	http://www.hu.edu.af/
+53	AF	Ibn Sina University	http://www.ibnesina.edu.af/
+54	AF	Jawzjan University	http://www.ju.edu.af/
+55	AF	Kaboora Institute of Higher Education	http://www.kaboora.edu.af/
+56	AF	Kabul Education University	http://www.keu.edu.af/
+57	AF	Kabul Health Sciences Institute	http://www.kabuli.edu.af/
+58	AF	Kabul Medical University	http://www.kmu.edu.af/
+59	AF	Kabul University	http://www.ku.edu.af/
+60	AF	Kandahar University	http://www.kan.edu.af/
+61	AF	Kardan University	http://www.kardan.edu.af/
+62	AF	Karwan Institute of Higher Education	http://www.karwan.edu.af/
+63	AF	Kateb Institute of Higher Education	http://www.kateb.edu.af/
+64	AF	Khana-e-Noor Institute of Higher Education	http://www.ken.edu.af/
+65	AF	Khurasan University	http://www.kumsa.net/
+66	AF	Maryam Institute of Higher Education	http://www.maryam.edu.af/
+67	AF	Nangarhar University	http://www.nu.edu.af/
+68	AF	National Military Academy of Afghanistan	http://www.nmaa.edu.af/
+69	AF	Paktia University	http://www.pu.edu.af/
+70	AF	Pamir University	http://www.pamir.edu.af/
+71	AF	Parwan University	http://www.parwan.edu.af/
+72	AF	Polytechnical University of Kabul	http://www.polytechnic-kabul.org/
+73	AF	Rana Institute of Higher Education	http://www.rihs.edu.af/
+74	AF	Sadat Institute of Higher Education	http://www.sadat.edu.af/
+75	AF	Salam University	http://www.salam.edu.af/
+76	AF	Shaikh Zayed University	http://www.szu.edu.af/
+77	AF	Taj Institute of Higher Education	http://www.taj.edu.af/
+78	AF	Takhar University	http://www.tu.edu.af/
+79	AG	American University of Antigua	http://www.auamed.org/
+80	AG	University of Health Sciences Antigua	http://www.uhsa.ag/
+81	AL	Academy of Arts	http://www.akademiaearteve.edu.al/
+82	AL	Academy of Sports and Physical Training	http://www.aefs.edu.al/
+83	AL	Agricultural University of Tirane	http://www.ubt.edu.al/
+84	AL	American University of Tirana	http://www.uat.edu.al/
+85	AL	Beder University	http://www.beder.edu.al/
+86	AL	Epoka University	http://www.epoka.edu.al/
+87	AL	Polytechnic University of Tirane	http://www.upt.al/
+88	AL	University of Elbasan "Aleksander Xhuvani"	http://www.uniel.edu.al/
+89	AL	University of Gjirokstra "Eqerem Cabej"	http://www.uogj.edu.al/
+90	AL	University of Korca "Fan Noli"	http://www.unkorce.edu.al/
+91	AL	University of New York Tirana	http://www.unyt.edu.al/
+92	AL	University of Shkodra "Luigj Gurakuqi"	http://www.unishk.edu.al/
+93	AL	University of Tirana	http://www.unitir.edu.al/
+94	AL	University of Vlora "Ismail Qemali"	http://www.univlora.edu.al/
+95	AL	University “Pavaresia” Vlore	http://www.unipavaresia.edu.al/
+96	AM	American University of Armenia	http://www.aua.am/
+97	AM	Armenian State Agrarian University	http://www.asau.am/
+98	AM	Armenian State University of Economics	http://www.asue.am/
+99	AM	Eurasia International University	http://www.eiu.am/
+100	AM	European Regional Educational Academy of Armenia	http://www.eriicta.am/
+101	AM	French University in Armenia (UFAR)	http://www.ufar.am/
+102	AM	Mehrabyan Medical Institute and Medical College	http://www.armmed.am/
+103	AM	Russian-Armenian (Slavonic) State University	http://www.rau.am/
+104	AM	State Engineering University of Armenia	http://www.seua.am/
+105	AM	Yerevan Haibusak University	http://www.haybusak.org/
+106	AM	Yerevan State Medical University	http://www.ysmu.am/
+107	AM	Yerevan State University	http://www.ysu.am/
+108	AN	American University of the Caribbean, Sint Maarten	http://www.aucmed.edu/
+109	AN	International University School of Medicine (IUSOM)	http://www.internationaluniversity-schoolofmedicine.org/
+110	AN	St.James's School of Medicine, Bonaire	http://www.sjsm.org/
+111	AN	University of Sint Eustatius School of Medicine	http://www.eustatiusmed.edu/
+112	AN	University of the Netherlands Antilles, Curacao	http://www.una.an/
+113	AO	Universidade Católica de Angola	http://www.ucan.edu/
+114	AO	Universidade Gregorio Semedo	http://www.ugs.ed.ao/
+115	AO	Universidade Independente de Angola	http://www.unia.ao/
+116	AO	Universidade Lusíada de Angola	http://www.ulangola.net/
+117	AO	Universidade Metodista de Angola	http://www.uma.co.ao/
+118	AO	Universidade Metropolitana de Angola	http://www.unimetroangola.com/
+119	AO	Universidade Tecnica de Angola	http://www.utanga.co.ao/
+120	AO	Univesidade Agostinho Neto	http://www.uan.ao/
+121	AR	Instituto de Enseñanza Superior del Ejército	http://www.iese.edu.ar/
+122	AR	Instituto Nacional de Educación Física "General Manuel Belgrano"	http://www.unlu.edu.ar/Belgrano.htm
+123	AR	Instituto Tecnológico de Buenos Aires	http://www.itba.edu.ar/
+124	AR	Instituto Universitario Aeronáutico	http://www.iua.edu.ar/
+125	AR	Instituto Universitario CEMA	http://www.cema.edu.ar/
+126	AR	Instituto Universitario de Ciencias de la Salud Fundación H.A. Barceló	http://www.barcelo.edu.ar/
+127	AR	Instituto Universitario de Estudios Navales y Marítimos	http://www.inun.edu.ar/
+128	AR	Instituto Universitario de la Policia Federal	http://www.universidad-policial.edu.ar/
+129	AR	Instituto Universitario Nacional del Arte	http://www.iuna.edu.ar/
+130	AR	Universidad Abierta Interamericana	http://www.vaneduc.edu.ar/uai/
+131	AR	Universidad Adventista del Plata	http://www.uapar.edu/
+132	AR	Universidad Argentina de la Empresa	http://www.uade.edu.ar/
+133	AR	Universidad Argentina "John F. Kennedy"	http://www.kennedy.edu.ar/
+134	AR	Universidad Atlantida Argentina	http://www.atlantida.edu.ar/
+135	AR	Universidad Austral Buenos Aires	http://www.austral.edu.ar/
+136	AR	Universidad Autónoma de Entre Ríos	http://www.uader.edu.ar/
+137	AR	Universidad Blas Pascal	http://www.ubp.edu.ar/
+138	AR	Universidad CAECE, Buenos Aires	http://www.caece.edu.ar/
+139	AR	Universidad Católica Argentina Santa Maria de los Buenos Aires	http://www.uca.edu.ar/
+140	AR	Universidad Católica de Córdoba	http://www.uccor.edu.ar/
+141	AR	Universidad Católica de Cuyo	http://www.uccuyo.edu.ar/
+142	AR	Universidad Católica de La Plata	http://www.ucalp.edu.ar/
+143	AR	Universidad Católica de Salta	http://www.ucasal.edu.ar/
+144	AR	Universidad Católica de Santa Fé	http://www.ucsf.edu.ar/
+145	AR	Universidad Católica de Santiago del Estero	http://www.ucse.edu.ar/
+146	AR	Universidad Champagnat	http://www.uch.edu.ar/
+147	AR	Universidad de Belgrano	http://www.ub.edu.ar/
+148	AR	Universidad de Bologna - Representación en Buenos Aires	http://www.unibo.edu.ar/
+149	AR	Universidad de Buenos Aires	http://www.uba.ar/
+150	AR	Universidad de Ciencias Empresariales y Sociales	http://www.uces.edu.ar/
+151	AR	Universidad de Concepción del Uruguay	http://www.ucu.edu.ar/
+152	AR	Universidad de Congreso	http://www.ucongres.edu.ar/
+153	AR	Universidad de Flores - Buenos Aires	http://www.uflo.edu.ar/
+154	AR	Universidad del Aconcagua	http://www.uda.edu.ar/
+155	AR	Universidad de la Cuenca del Plata	http://www.ucp.edu.ar/
+156	AR	Universidad de la Fraternidad de Agrupaciones Santo Tomas de Aquino (FASTA)	http://www.ufasta.edu.ar/
+157	AR	Universidad de la Marina Mercante	http://www.udemm.edu.ar/
+158	AR	Universidad del Centro Educativo Latinoamericano Rosario	http://www.ucel.edu.ar/
+159	AR	Universidad del Cine - Buenos Aires	http://www.ucine.edu.ar/
+160	AR	Universidad del Museo Social Argentino	http://www.umsa.edu.ar/
+161	AR	Universidad del Norte "Santo Tomás de Aquino"	http://www.unsta.edu.ar/
+162	AR	Universidad del Salvador	http://www.salvador.edu.ar/
+163	AR	Universidad de Mendoza	http://www.um.edu.ar/
+164	AR	Universidad de Morón	http://www.unimoron.edu.ar/
+165	AR	Universidad de Palermo	http://www.palermo.edu.ar/
+166	AR	Universidad de San Andres	http://www.udesa.edu.ar/
+167	AR	Universidad Empresarial Siglio 21	http://www.uesiglo21.edu.ar/
+168	AR	Universidad ISALUD	http://www.isalud.edu.ar/
+169	AR	Universidad "Juan Agustín Maza"	http://www.umaza.edu.ar/
+170	AR	Universidad Maimónides	http://www.maimonides.edu.ar/
+171	AR	Universidad Nacional de Catamarca	http://www.unca.edu.ar/
+172	AR	Universidad Nacional de Córdoba	http://www.unc.edu.ar/
+173	AR	Universidad Nacional de Cuyo	http://www.uncu.edu.ar/
+174	AR	Universidad Nacional de Entre Ríos	http://www.uner.edu.ar/
+175	AR	Universidad Nacional de Formosa	http://www.unf.edu.ar/
+176	AR	Universidad Nacional de General San Martín	http://www.unsam.edu.ar/
+177	AR	Universidad Nacional de General Sarmiento	http://www.ungs.edu.ar/
+178	AR	Universidad Nacional de Jujuy	http://www.unju.edu.ar/
+179	AR	Universidad Nacional de La Matanza	http://www.unlam.edu.ar/
+180	AR	Universidad Nacional de Lanus	http://www.unla.edu.ar/
+181	AR	Universidad Nacional de La Pampa	http://www.unlpam.edu.ar/
+182	AR	Universidad Nacional de la Patagonia Austral	http://www.unpa.edu.ar/
+183	AR	Universidad Nacional de la Patagonia "San Juan Bosco"	http://www.unp.edu.ar/
+184	AR	Universidad Nacional de La Plata	http://www.unlp.edu.ar/
+185	AR	Universidad Nacional de La Rioja	http://www.unlar.edu.ar/
+186	AR	Universidad Nacional del Centro de la Provincia de Buenos Aires	http://www.unicen.edu.ar/
+187	AR	Universidad Nacional del Comahue	http://www.uncoma.edu.ar/
+188	AR	Universidad Nacional del Littoral	http://www.unl.edu.ar/
+189	AR	Universidad Nacional del Nordeste	http://www.unne.edu.ar/
+190	AR	Universidad Nacional del Noroeste de la Provincia de Buenos Aires	http://www.unnoba.edu.ar/
+191	AR	Universidad Nacional de Lomas de Zamora	http://www.unlz.edu.ar/
+192	AR	Universidad Nacional del Sur	http://www.uns.edu.ar/
+193	AR	Universidad Nacional de Luján	http://www.unlu.edu.ar/
+194	AR	Universidad Nacional de Mar del Plata	http://www.mdp.edu.ar/
+195	AR	Universidad Nacional de Misiones	http://www.unam.edu.ar/
+196	AR	Universidad Nacional de Quilmes	http://www.unq.edu.ar/
+197	AR	Universidad Nacional de Río Cuarto	http://www.unrc.edu.ar/
+198	AR	Universidad Nacional de Rosario	http://www.unr.edu.ar/
+199	AR	Universidad Nacional de Salta	http://www.unsa.edu.ar/
+200	AR	Universidad Nacional de San Juan	http://www.unsj.edu.ar/
+201	AR	Universidad Nacional de San Luis	http://www.unsl.edu.ar/
+202	AR	Universidad Nacional de Santiago del Estero	http://www.unse.edu.ar/
+203	AR	Universidad Nacional de Tres de Febrero	http://www.untref.edu.ar/
+204	AR	Universidad Nacional de Tucumán	http://www.unt.edu.ar/
+205	AR	Universidad Nacional de Villa María	http://www.unvm.edu.ar/
+206	AR	Universidad Notarial Argentina	http://www.universidadnotarial.edu.ar/
+207	AR	Universidad Tecnológica Nacional	http://www.utn.edu.ar/
+208	AR	Universidad Torcuato di Tella	http://www.utdt.edu/
+209	AT	Akademie der bildenden Künste Wien	http://www.akbild.ac.at/
+210	AT	Donau-Universität Krems	http://www.donau-uni.ac.at/
+211	AT	Fachhochschule Burgenland	http://www.fh-burgenland.at/
+212	AT	Fachhochschule für Bank- und Finanzwirtschaft	http://www.fh-vie.ac.at/
+213	AT	Fachhochschule JOANNEUM	http://www.fh-joanneum.at/
+214	AT	Fachhochschule Kärnten	http://www.fh-kaernten.ac.at/
+215	AT	Fachhochschule Krems	http://www.fh-krems.ac.at/
+216	AT	Fachhochschule Kufstein (Tirol)	http://www.fh-kufstein.ac.at/
+217	AT	Fachhochschule Salzburg	http://www.fh-sbg.ac.at/
+218	AT	Fachhochschule St. Pölten	http://www.fh-stpoelten.ac.at/
+219	AT	Fachhochschule Vorarlberg	http://www.fhv.at/
+220	AT	Fachhochschule Wiener Neustadt	http://www.fhwn.ac.at/
+221	AT	Fachhochschulstudiengänge der Wiener Wirtschaft	http://www.fhw.at/
+222	AT	Fachhochschulstudiengänge Hagenberg	http://www.fh-hagenberg.at/
+223	AT	Fachhochschulstudiengänge Krems IMC	http://www.imc-krems.ac.at/
+224	AT	Fachhochschulstudiengänge Steyr	http://www.fh-steyr.at/
+225	AT	Fachhochschulstudiengänge Wels	http://www.fh-wels.at/
+226	AT	Institute of Science and Technology	http://www.ist.ac.at/
+227	AT	Katholisch-Theologische Privatuniversität Linz	http://www.kth-linz.ac.at/
+228	AT	MCI-Management Center Innsbruck	http://www.mci.edu/
+229	AT	Medizinische Universität Graz	http://www.meduni-graz.at/
+230	AT	Medizinische Universität Innsbruck	http://www.i-med.ac.at/
+231	AT	Medizinische Universität Wien	http://www.meduniwien.at/
+232	AT	Montanuniversität Leoben	http://www.unileoben.ac.at/
+233	AT	Private Universität für Medizinische Informatik und Technik Tirol	http://www.umit.at/
+234	AT	Technikum Wien	http://www.technikum-wien.at/
+235	AT	Technische Universität Graz	http://www.tugraz.at/
+236	AT	Technische Universität Wien	http://www.tuwien.ac.at/
+237	AT	Universität für angewandte Kunst Wien	http://ns2.uni-ak.ac.at/
+238	AT	Universität für Bodenkultur Wien	http://www.boku.ac.at/
+239	AT	Universität für künstlerische und industrielle Gestaltung Linz	http://www.khs-linz.ac.at/
+240	AT	Universität für Musik und darstellende Kunst Graz	http://www.kug.ac.at/
+241	AT	Universität für Musik und darstellende Kunst  Wien	http://www.mdw.ac.at/
+242	AT	Universität Graz	http://www.kfunigraz.ac.at/
+243	AT	Universität Innsbruck	http://www.uibk.ac.at/
+244	AT	Universität Klagenfurt	http://www.uni-klu.ac.at/
+245	AT	Universität Linz	http://www.uni-linz.ac.at/
+246	AT	Universität Mozarteum Salzburg	http://www.moz.ac.at/
+247	AT	Universität Salzburg	http://www.sbg.ac.at/
+248	AT	Universität Vienna	http://www.univie.ac.at/
+249	AT	Veterinärmedizinische Universität Wien	http://www.vu-wien.ac.at/
+250	AT	Webster University, Vienna	http://www.webster.ac.at/
+251	AT	Wirtschaftsuniversität Wien	http://www.wu-wien.ac.at/
+252	AU	Australian Catholic University	http://www.acu.edu.au/
+253	AU	Australian Correspondence Schools	http://www.acs.edu.au/
+254	AU	Australian Defence Force Academy	http://www.adfa.oz.au/
+255	AU	Australian Lutheran College	http://www.alc.edu.au/
+256	AU	Australian Maritime College	http://www.amc.edu.au/
+257	AU	Australian National University	http://www.anu.edu.au/
+258	AU	Avondale College	http://www.avondale.edu.au/
+259	AU	Batchelor Institute of Indigenous Tertiary Education	http://www.nt.gov.au/batc/
+260	AU	Blue Mountains Hotel School	http://www.hotelschool.com.au/
+261	AU	Bond University	http://www.bond.edu.au/
+262	AU	Central Queensland University	http://www.cqu.edu.au/
+263	AU	Charles Darwin University	http://www.cdu.edu.au/
+264	AU	Charles Sturt University	http://www.csu.edu.au/
+265	AU	Curtin University of Technology	http://www.curtin.edu.au/
+266	AU	Deakin University	http://www.deakin.edu.au/
+267	AU	Edith Cowan University	http://www.ecu.edu.au/
+268	AU	Flinders University of South Australia	http://www.flinders.edu.au/
+269	AU	Griffith University	http://www.gu.edu.au/
+270	AU	Holmes Institute	http://www.holmes.edu.au/
+271	AU	Institute Of Technology, Australia	http://www.iota.edu.au/
+272	AU	International College of Tourism and Hotel Management	http://www.icthm.edu.au/
+273	AU	James Cook University of North Queensland	http://www.jcu.edu.au/
+274	AU	La Trobe University	http://www.latrobe.edu.au/
+275	AU	Macquarie University	http://www.mq.edu.au/
+276	AU	Marcus Oldham College	http://www.marcusoldham.vic.edu.au/
+277	AU	Monash University	http://www.monash.edu.au/
+278	AU	Murdoch University	http://www.murdoch.edu.au/
+279	AU	Queensland University of Technology	http://www.qut.edu.au/
+280	AU	Royal Melbourne Institute of Technology	http://www.rmit.edu.au/
+281	AU	Southern Cross University	http://www.scu.edu.au/
+282	AU	Swinburne University of Technology	http://www.swin.edu.au/
+283	AU	University of Adelaide	http://www.adelaide.edu.au/
+284	AU	University of Ballarat	http://www.ballarat.edu.au/
+285	AU	University of Canberra	http://www.canberra.edu.au/
+286	AU	University of Divinity	http://www.divinity.edu.au/
+287	AU	University of Melbourne	http://www.unimelb.edu.au/
+288	AU	University of Newcastle	http://www.newcastle.edu.au/
+289	AU	University of New England	http://www.une.edu.au/
+290	AU	University of New South Wales	http://www.unsw.edu.au/
+291	AU	University of Notre Dame Australia	http://www.nd.edu.au/
+292	AU	University of Queensland	http://www.uq.edu.au/
+293	AU	University of South Australia	http://www.unisa.edu.au/
+294	AU	University of Southern Queensland	http://www.usq.edu.au/
+295	AU	University of Sydney	http://www.usyd.edu.au/
+296	AU	University of Tasmania	http://www.utas.edu.au/
+297	AU	University of Technology Sydney	http://www.uts.edu.au/
+298	AU	University of the Sunshine Coast	http://www.usc.edu.au/
+299	AU	University of Western Australia	http://www.uwa.edu.au/
+300	AU	University of Western Sydney	http://www.uws.edu.au/
+301	AU	University of Wollongong	http://www.uow.edu.au/
+302	AZ	Academy of Public Administration	http://www.dia.edu.az/
+303	AZ	Azerbaijan Diplomatic Academy	http://www.ada.edu.az/
+304	AZ	Azerbaijan International University	http://www.abu.az/
+305	AZ	Azerbaijan Medical University	http://www.amu.edu.az/
+306	AZ	Azerbaijan National Conservatorie	http://www.conservatory.az/
+307	AZ	Azerbaijan State Economic University	http://www.aseu.az/
+308	AZ	Azerbaijan State Oil Academy	http://adna.jis.az/
+309	AZ	Azerbaijan Technical University	http://www.aztu.az/
+310	AZ	Azerbaijan Technology University	http://www.aztu.edu.az/
+311	AZ	Azerbaijan Toursim Institute	http://www.tourism.edu.az/
+312	AZ	Azerbaijan University	http://www.au.edu.az/
+313	AZ	Azerbaijan University ol Languages	http://www.adu.edu.az/
+314	AZ	Baki Business University	http://www.bbu.edu.az/
+315	AZ	Baku Slavic University	http://www.bsu-edu.org/
+316	AZ	Baku State University	http://www.bsu.az/
+317	AZ	Ganja State University 	http://www.gsu.az/
+318	AZ	Khazar University	http://www.khazar.org/
+319	AZ	Lankaran State University	http://www.lsu.edu.az/
+320	AZ	Nakhchivan Private University	http://www.az-npu.org/
+321	AZ	Nakhchivan State University	http://www.ndu.edu.az/
+322	AZ	National Aviation Academy	http://www.naa.edu.az/
+323	AZ	Odlar Yurdu University	http://www.oyu.edu.az/
+324	AZ	Police Academy	http://www.pa.edu.az/
+325	AZ	Qafqaz University	http://www.qafqaz.edu.az/
+326	AZ	Sumgait State University	http://www.sdu.edu.az/
+327	AZ	Western University	http://www.wu.edu.az/
+328	BA	American University	http://www.aubih.ba/
+329	BA	International Burch University	http://www.ibu.edu.ba/
+330	BA	International University of Sarajevo	http://www.ius.edu.ba/
+331	BA	International University of Travnik	http://www.iu-travnik.com/
+332	BA	Sarajevo Film Academy	http://www.sfa.ba/
+333	BA	Slobomir P Univerzitet	http://www.spu.ba/
+334	BA	University of Banja Luka	http://www.unibl.org/
+335	BA	University of Bihac	http://www.unbi.ba/
+336	BA	University of East Srarajevo	http://www.unssa.rs.ba/
+337	BA	University of Mostar	http://www.sve-mo.ba/
+338	BA	University of Sarajevo	http://www.unsa.ba/
+339	BA	University of Tuzla	http://www.untz.ba/
+340	BA	University of Zenica	http://www.unze.ba/
+341	BA	University Vitez In Travnik	http://www.unvi.edu.ba/
+342	BA	Univerzitet u Mostaru "Dzemal Bijedic"	http://www.unmo.ba/
+343	BB	University of the West Indies, Cave Hill	http://www.uwichill.edu.bb/
+344	BD	Ahsanullah University of Science & Technology	http://www.aust.edu/
+345	BD	American International University - Bangladesh	http://www.aiub.edu/
+346	BD	Asa University Bangladesh	http://www.asaub.edu.bd/
+347	BD	Asian University of Bangladesh	http://www.aub-bd.org/
+348	BD	Atish Dipankar University	http://www.atishdipankaruniversity.edu.bd/
+349	BD	Bangabandhu Sheikh Mujibur Rahman Agricultural University	http://www.bsmrau.edu.bd/
+350	BD	Bangabandhu Sheikh Mujibur Rahman Medical University	http://www.bsmmu.edu.bd/
+351	BD	Bangladesh Agricultural University	http://www.bau.edu.bd/
+352	BD	Bangladesh Open University	http://www.bou.edu.bd/
+353	BD	Bangladesh University	http://www.bu.edu.bd/
+354	BD	Bangladesh University of Business & Technology	http://www.bubt.edu.bd/
+355	BD	Bangladesh University of Engineering and Technology	http://www.buet.ac.bd/
+356	BD	Bangladesh University of Professionals	http://www.bup.edu.bd/
+357	BD	Bangladesh University of Textiles	http://www.butex.edu.bd/
+358	BD	Begum Rokeya University, Rangpur	http://www.brur.ac.bd/
+359	BD	BGC Trust University, Bangladesh	http://www.bgctrustbd.org/btub/
+360	BD	Brac University	http://www.bracuniversity.net/
+361	BD	Chittagong Independent University	http://www.ciu.edu.bd/
+362	BD	Chittagong University of Engineering and Technology	http://www.cuet.ac.bd/
+363	BD	City University	http://www.cityuniversity.edu.bd/
+364	BD	Comilla University	http://www.cou.ac.bd/
+365	BD	Daffodil International University	http://www.daffodilvarsity.edu.bd/
+366	BD	Darul Ihsan University	http://www.diu.ac.bd/
+367	BD	Dhaka International University	http://www.diu.net.bd/
+368	BD	Dhaka University of Engineering and Technology	http://www.duet.ac.bd/
+369	BD	East Delta University	http://www.eastdelta.edu.bd/
+370	BD	Eastern University	http://www.easternuni.edu.bd/
+371	BD	East West University	http://www.ewubd.edu/
+372	BD	East-West University, Mohakhali	http://www.ewubd.edu/
+373	BD	Green University of Bangladesh	http://www.green.edu.bd/
+374	BD	Hajee Mohammad Danesh Science and Technology University	http://www.hstu.ac.bd/
+375	BD	IBAIS University	http://www.ibaisuniv.edu.bd/
+376	BD	Independent University, Bangladesh	http://www.iub.edu.bd/
+377	BD	International Culture University 	http://www.icu-edu.org/
+378	BD	International Islamic University Chittagong	http://www.iiuc.ac.bd/
+379	BD	International University of Business Agriculture and Technology	http://www.iubat.edu/
+380	BD	Islamic University Kushtia	http://www.iu.ac.bd/
+381	BD	Islamic University of Technology	http://www.iutoic-dhaka.edu/
+382	BD	Jagannath University	http://www.jnu.ac.bd/
+383	BD	Jahangirnagar University	http://www.juniv.edu/
+384	BD	Jatiya Kabi Kazi Nazrul Islam University	http://www.jkkniu.edu.bd/
+385	BD	Khulna University	http://www.ku.ac.bd/
+386	BD	Khulna University of Engineering And Technology	http://www.kuet.ac.bd/
+387	BD	Leading University	http://www.lus.ac.bd/
+388	BD	Manarat International University	http://www.manarat.ac.bd/
+389	BD	Mawlana Bhashani Science And Technology University	http://www.mbstu.ac.bd/
+390	BD	Metropolitan University	http://www.metrouni.edu.bd/
+391	BD	Military Institute of Science and Technology	http://www.mist.ac.bd/
+392	BD	National University	http://www.nu.edu.bd/
+393	BD	Noakhali University of Science and Technology	http://www.nstu.edu.bd/
+394	BD	North East University Bangladesh	http://www.neub.edu.bd/
+395	BD	Northern University Bangladesh	http://www.nub.ac.bd/
+396	BD	North South University	http://www.northsouth.edu/
+397	BD	Pabna University of Science and Technology	http://www.pust.ac.bd/
+398	BD	Patuakhali Science and Technology University	http://www.pstu.ac.bd/
+399	BD	People's University of Bangladesh	http://www.pub.ac.bd/
+400	BD	Premier University	http://www.puc.ac.bd/
+401	BD	Presidency University	http://www.presidency.edu.bd/
+402	BD	Queens University	http://www.queensuniversity.edu.bd/
+403	BD	Rajshahi University of Engineering and Technology	http://www.ruet.ac.bd/
+404	BD	Shahjalal University of Science and Technology	http://www.sust.edu/
+405	BD	Southeast University	http://www.seu.ac.bd/
+406	BD	Southern University Bangladesh	http://www.southern.edu.bd/
+407	BD	Stamford University	http://www.stamforduniversity.edu.bd/
+408	BD	Sylhet Agricultural University	http://www.sau.ac.bd/
+409	BD	Sylhet Engineering College	http://www.sec.ac.bd/
+410	BD	Sylhet International University	http://www.siu.edu.bd/
+411	BD	United International University	http://www.uiu.ac.bd/
+412	BD	University of Asia Pacific, Dhanmondi	http://www.uap-bd.edu/
+413	BD	University of Chittagong	http://www.cu.ac.bd/
+414	BD	University of Development Alternative	http://www.uoda.edu.bd/
+415	BD	University of Dhaka	http://www.du.ac.bd/
+416	BD	University of Information Technology & Sciences	http://www.uits.edu.bd/
+417	BD	University of Liberal Arts	http://www.ulab.edu.bd/
+418	BD	University of Rajshahi	http://www.ru.ac.bd/
+419	BD	University of Science & Technology Chittagong	http://www.ustc.ac.bd/
+420	BD	World University of Bangladesh	http://www.wub.edu/
+421	BE	Brexgata University Academy	http://www.brexgata.eu/
+422	BE	Brussels Management School (ICHEC)	http://www.ichec.be/
+423	BE	Brussels School of International Studies	http://www.ukc.ac.uk/international/bsis/
+424	BE	College of Europe	http://www.coleurope.eu/
+425	BE	Continental Theological Seminary	http://www.ctsem.edu/
+426	BE	ECAM - Institut Supérieur Industriel	http://www.ecam.be/
+427	BE	EHSAL - Europese Hogeschool Brussel	http://www.ehsal.be/
+428	BE	Erasmushogeschool Brussel	http://www.ehb.be/
+429	BE	European Carolus Magnus University	http://www.carolus-magnus-university.eu/
+430	BE	European International University	http://www.europeaniu.org/
+431	BE	Evangelische Theologische Faculteit, Leuven	http://www.etf.edu/
+432	BE	Faculté Polytechnique de Mons	http://www.fpms.ac.be/
+433	BE	Facultés Universitaires Catholiques de Mons	http://www.fucam.ac.be/
+434	BE	Facultés Universitaires Notre-Dame de la Paix	http://www.fundp.ac.be/
+435	BE	Facultés Universitaires Saint-Louis	http://www.fusl.ac.be/
+436	BE	Faculté Universitaire des Sciences Agronomiques de Gembloux	http://www.fsagx.ac.be/
+437	BE	Fondation Universitaire Luxembourgeoise	http://www.ful.ac.be/
+438	BE	Hasselt University	http://www.uhasselt.be/
+439	BE	Hogere Zeevaartschool - Maritime Academy	http://www.hzs.be/
+440	BE	Hogeschool Antwerpen	http://www.ha.be/
+441	BE	Hogeschool voor Wetenschap en Kunst (VLEKHO), Brussel	http://www.vlekho.be/
+442	BE	Hogeschool voor Wetenschap & Kunst	http://www.wenk.be/
+443	BE	Hogeschool West-Vlaanderen (TU)	http://www.howest.be/
+444	BE	Karel De Grote Hogeschool	http://www.kdg.be/
+445	BE	Katholieke Hogeschool Kempen	http://www.khk.be/
+446	BE	Katholieke Hogeschool Leuven	http://www.khleuven.be/
+447	BE	Katholieke Hogeschool Limburg	http://www.khlim.be/
+448	BE	Katholieke Universiteit Brussel	http://www.kubrussel.ac.be/
+449	BE	Katholieke Universiteit Leuven	http://www.kuleuven.ac.be/
+450	BE	Katholieke Universiteit Leuven, Campus Kortrijk	http://www.kulak.ac.be/
+451	BE	Royal Military Academy	http://www.rma.ac.be/
+452	BE	Thierry Graduate School of Leadership	http://www.thierryschool.org/
+453	BE	United Business Institute	http://www.ubi.edu/
+454	BE	Université Catholique de Louvain	http://www.ucl.ac.be/
+455	BE	Université de Liège	http://www.ulg.ac.be/
+456	BE	Université de Mons-Hainaut	http://www.umh.ac.be/
+457	BE	Universiteit Antwerpen	http://www.ua.ac.be/
+458	BE	Universiteit Antwerpen Management School	http://www.uams.be/
+459	BE	Universiteit Antwerpen, UFSIA	http://www.ufsia.ac.be/
+460	BE	Universiteit Gent	http://www.rug.ac.be/
+461	BE	Université Libre de Bruxelles	http://www.ulb.ac.be/
+462	BE	Vesalius College	http://www.vesalius.edu/
+463	BE	Vlerick Leuven Gent Management School	http://www.vlerick.be/
+464	BE	Vrije Universiteit Brussel	http://www.vub.ac.be/
+465	BF	Université de Ouagadougou	http://www.univ-ouaga.bf/
+466	BG	Academy of Economics "Dimitur A. Tscenov"	http://www.uni-svishtov.bg/
+467	BG	Academy of Music, Dance and Fine Arts	http://amti.hit.bg/
+468	BG	Agricultural University of Plovdiv	http://www.au-plovdiv.bg/
+469	BG	American University in Bulgaria	http://www.aubg.bg/
+470	BG	Bourgas Free University	http://www.bfu.bg/
+471	BG	Bourgas University "Prof. Assen Zlatarov"	http://www.btu.bg/
+472	BG	City University Programs in Bulgaria 	http://www.cityu.bg/
+473	BG	International University College	http://www.vumk.eu/
+474	BG	Medical University of Sofia	http://www.mu-sofia.bg/
+475	BG	Medical University Pleven	http://www.mu-pleven.bg/
+476	BG	Medical University Plovdiv	http://www.meduniversity-plovdiv.bg/
+477	BG	Medical University Varna	http://www.mu-varna.bg/
+478	BG	Military University Shoumen	http://www.pv-ma.bg/
+479	BG	National Academy for Theatre and Film Arts "Krustju Sarafov"	http://www.natfiz.bg/
+480	BG	National Academy of Arts	http://www.nha-bg.org/
+481	BG	National Academy of Music "Pantcho Vladigerov"	http://www.nma.bg/
+482	BG	National Sports Academy Sofia	http://www.nsa.bg/
+483	BG	New Bulgarian University	http://www.nbu.bg/
+484	BG	Shoumen University "Konstantin Preslavski"	http://www.shu-bg.net/
+485	BG	Sofia University "St. Kliment Ohridski"	http://www.uni-sofia.bg/
+486	BG	South-West University "Neofit Rilski"	http://www.swu.bg/
+487	BG	Technical University of Gabrovo	http://www.tugab.bg/
+488	BG	Technical University of Sofia	http://www.tu-sofia.bg/
+489	BG	Technical University of Varna	http://www.tu-varna.acad.bg/
+490	BG	Trakia University Stara Zagora	http://www.uni-sz.bg/
+491	BG	University of Architecture, Civil Engineering and Geodesy	http://www.uacg.bg/
+492	BG	University of Chemical Technology and Metallurgy	http://www.uctm.edu/
+493	BG	University of Economics Varna	http://www.ue-varna.bg/
+494	BG	University of Food Technology	http://www.uft-plovdiv.bg/
+495	BG	University of Forestry Sofia	http://www.ltu.bg/
+496	BG	University of Mining and Geology "St. Ivan Rils"	http://www.mgu.bg/
+497	BG	University of National and World Economy	http://www.unwe.acad.bg/
+498	BG	University of Plovdiv	http://www.uni-plovdiv.bg/
+499	BG	University of Rousse	http://www.ru.acad.bg/
+500	BG	Varna Free University	http://www.vfu.bg/
+501	BG	Veliko Turnovo University "Cyril and Methodius"	http://www.uni-vt.bg/
+502	BH	Al Ahlia University	http://www.ahliauniversity.org/
+503	BH	Ama International University	http://www.amaiu.edu.bh/
+504	BH	Applied Science University	http://www.asu.edu.bh/
+505	BH	Arabian Gulf University	http://www.agu.edu.bh/
+506	BH	Arab Open University	http://www.aou.org.bh/
+507	BH	Bahrain Polytechnic	http://www.polytechnic.bh/
+508	BH	Gulf University College	http://www.gulfuniversity.net/
+509	BH	New York Instiute of Technology	http://www.nyit.edu.bh/
+510	BH	RCSI-Medical University of Bahrain	http://www.rcsi-mub.com/
+511	BH	The Kingdom University	http://www.ku.edu.bh/
+512	BH	University College Bahrain	http://www.ucb.edu.bh/
+513	BH	University of Bahrain	http://www.uob.edu.bh/
+514	BI	Hope Africa University	http://hopeafricauniversity.org/
+515	BI	Université du Burundi	http://www.ub.edu.bi/
+516	BI	Université Lumière de Bujumbura	http://www.ulbu.bi/
+517	BJ	Espam Formation University	http://www.espam-formationuc.org/
+518	BJ	Houdegbe North American University Benin	http://www.hnaubenin.org/
+519	BJ	Université d'Abomey-Calavi (UAC)	http://www.uac.bj/
+520	BM	Bermuda College	http://www.bercol.bm/
+521	BN	Institut Teknologi Brunei	http://www.itb.edu.bn/
+522	BN	Universiti Islam Sultan Sharif Ali	http://www.unissa.edu.bn/
+523	BN	University of Brunei Darussalam	http://www.ubd.edu.bn/
+524	BO	Escuela Militar de Ingeniería	http://www.emi.edu.bo/
+525	BO	Universidad Adventista de Bolivia	http://www.uab.edu.bo/
+526	BO	Universidad Amazonica de Pando	http://www.uapnet.edu.bo/
+527	BO	Universidad Andina Simón Bolivar	http://www.uasb.edu.bo/
+528	BO	Universidad Autónoma del Beni "José Ballivián"	http://www.uabjb.edu.bo/
+529	BO	Universidad Autónoma Gabriel René Moreno	http://www.uagrm.edu.bo/
+530	BO	Universidad Autónoma Juan Misael Saracho	http://www.uajms.edu.bo/
+531	BO	Universidad Autónoma Tomás Frías	http://www.uatf.edu.bo/
+532	BO	Universidad Católica Boliviana, Cochabamba	http://www.ucbcba.edu.bo/
+533	BO	Universidad Católica Boliviana, La Paz	http://www.ucb.edu.bo/
+534	BO	Universidad Católica Boliviana, Santa Cruz	http://www.ucbscz.edu.bo/
+535	BO	Universidad Católica Boliviana, Tarija	http://www.ucbtja.edu.bo/
+536	BO	Universidad Central	http://www.unicen.edu.bo/
+537	BO	Universidad de Aquino Bolivia	http://www.udabol.edu.bo/
+538	BO	Universidad Domingo Savio	http://www.upds.edu.bo/
+539	BO	Universidad Empresarial Mateo Kuljis	http://www.unikuljis.edu.bo/
+540	BO	Universidad Juan Misael Saracho	http://www.uajms.edu.bo/
+541	BO	Universidad Los Andes	http://www.udelosandes.edu.bo/
+542	BO	Universidad Mayor de San Andrés	http://www.umsanet.edu.bo/
+543	BO	Universidad Mayor de San Simón	http://www.umss.edu.bo/
+544	BO	Universidad Nacional Siglo XX Llallagua	http://www.unsxx.edu.bo/
+545	BO	Universidad Nuestra Senora de La Paz	http://www.unslp.edu.bo/
+546	BO	Universidad NUR	http://www.nur.edu/
+547	BO	Universidad Privada Abierta Latinoamericana	http://www.upal.edu/
+548	BO	Universidad Privada Boliviana	http://www.upb.edu/
+549	BO	Universidad Privada del Valle	http://www.univalle.edu/
+550	BO	Universidad Privada de Santa Cruz de la Sierra	http://www.upsa.edu.bo/
+551	BO	Universidad Privada Franz Tamayo (UNIFRANZ)	http://www.unifranz.edu.bo/
+552	BO	Universidad Salesiana de Bolivia	http://www.usalesiana.edu.bo/
+553	BO	Universidad San Francisco Xavier	http://www.usfx.info/
+554	BO	Universidad San Francisco Xavier de Chuquisaca	http://www.usfx.edu.bo/
+555	BO	Universidad Técnica de Oruro	http://www.uto.edu.bo/
+556	BR	Centro Regional Universitário de Espiríto Santo do Pinhal	http://www.creupi.br/
+557	BR	Centro Universitário Adventista de São Paulo	http://www.unasp.edu.br/
+558	BR	Centro Universitário Barao de Maua	http://www.baraodemaua.br/
+559	BR	Centro Universitário Claretiano	http://www.claretiano.edu.br/
+560	BR	Centro Universitário de Araraquara	http://www.uniara.com.br/
+561	BR	Centro Universitário de João Pessoa	http://www.unipe.br/
+562	BR	Centro Universitário Monte Serrat	http://www.unimonte.br/
+563	BR	Centro Universitário Newton Paiva	http://www.newtonpaiva.br/
+564	BR	Centro Universitário Plinio Leite	http://www.unipli.com.br/
+565	BR	Centro Universitário Senac	http://www.sp.senac.br/
+566	BR	Centro Universitário Serra dos Órgãos	http://www.unifeso.edu.br/
+567	BR	EMESCAM - Escola Superior de Ciências da Santa Casa de Misericórdia de Vitória	http://www.emescam.br/
+568	BR	FAAP - Fundação Armando Alvares Penteado	http://www.faap.br/
+569	BR	Faculdade Integradas do Ceará	http://www.fic.br/
+570	BR	Faculdade Italo Brasileira	http://www.italo.br/
+571	BR	Faculdade Jaguariúna	http://www.faj.br/
+572	BR	Faculdades Integradas Curitiba	http://www.faculdadescuritiba.br/
+573	BR	Faculdades Integradas do Brasil - UNIBRASIL	http://www.unibrasil.com.br/
+574	BR	Faculdades Integradas Toledo	http://www.toledo.br/
+575	BR	Faculdades Integradas UPIS	http://www.upis.br/
+576	BR	FAE Business School - Faculdade de Administração e Economia	http://www.fae.edu/
+577	BR	Fundação Educacional de Ituverava	http://www.feituverava.com.br/
+578	BR	Instituto Mauá de Tecnologia	http://www.maua.br/
+579	BR	Instituto Nacional de Matemática Pura e Aplicada - IMPA	http://www.impa.br/
+580	BR	Instituto Tecnológico de Aeronáutica	http://www.ita.br/
+581	BR	Pontifícia Universidade Católica de Campinas	http://www.puccamp.br/
+582	BR	Pontifícia Universidade Católica de Minas Gerais	http://www.pucminas.br/
+583	BR	Pontifícia Universidade Católica de São Paulo	http://www.pucsp.br/
+584	BR	Pontificia Universidade Católica do Paraná	http://www.pucpr.br/
+585	BR	Pontifícia Universidade Católica do Rio de Janeiro	http://www.puc-rio.br/
+586	BR	Pontifícia Universidade Católica do Rio Grande do Sul	http://www.pucrs.br/
+587	BR	Universidade Bandeirante de São Paulo	http://www.uniban.br/
+588	BR	Universidade Braz Cubas	http://www.brazcubas.br/
+589	BR	Universidade Camilo Castelo Branco	http://www.unicastelo.br/
+590	BR	Universidade Candido Mendes	http://www.candidomendes.br/
+591	BR	Universidade Castelo Branco	http://www.castelobranco.br/
+592	BR	Universidade Católica de Brasília	http://www.ucb.br/
+593	BR	Universidade Católica de Goiás	http://www.ucg.br/
+594	BR	Universidade Católica de Pelotas	http://www.ucpel.tche.br/
+595	BR	Universidade Católica de Pernambuco	http://www.unicap.br/
+596	BR	Universidade Católica de Petrópolis	http://www.ucp.br/
+597	BR	Universidade Católica de Salvador	http://www.ucsal.br/
+598	BR	Universidade Católica de Santos	http://www.unisantos.com.br/
+599	BR	Universidade Católica Dom Bosco	http://www.unibosco.br/
+600	BR	Universidade Cidade de São Paulo	http://www.unicid.br/
+601	BR	Universidade Cruzeiro do Sul	http://www.unicsul.br/
+602	BR	Universidade da Amazônia	http://www.unama.br/
+603	BR	Universidade da Região da Campanha	http://www.urcamp.tche.br/
+604	BR	Universidade de Alfenas	http://www.unifenas.br/
+605	BR	Universidade de Brasília	http://www.unb.br/
+606	BR	Universidade de Caxias do Sul	http://www.ucs.tche.br/
+607	BR	Universidade de Cruz Alta	http://www.unicruz.tche.br/
+608	BR	Universidade de Fortaleza	http://www.unifor.br/
+609	BR	Universidade de Franca	http://www.unifran.br/
+610	BR	Universidade de Guarulhos	http://www.ung.br/
+611	BR	Universidade de Itaúna	http://web.prover.com.br/fui/
+612	BR	Universidade de Marília	http://www.unimar.br/
+613	BR	Universidade de Mogi das Cruzes	http://www.umc.br/
+614	BR	Universidade de Nova Iguaçu	http://www.unig.br/
+615	BR	Universidade de Passo Fundo	http://www.upf.tche.br/
+616	BR	Universidade de Pernambuco	http://www.upe.br/
+617	BR	Universidade de Ribeirão Preto	http://www.unaerp.br/
+618	BR	Universidade de Santa Cruz do Sul	http://www.unisc.br/
+619	BR	Universidade de Santo Amaro	http://www.unisa.br/
+620	BR	Universidade de São Paulo	http://www.usp.br/
+621	BR	Universidade de Taubaté	http://www.unitau.br/
+622	BR	Universidade de Tocantins	http://www.pop-to.rnp.br/
+623	BR	Universidade de Uberaba	http://www.uniube.br/
+624	BR	Universidade de Vila Velha	http://www.uvv.br/
+625	BR	Universidade do Amazonas	http://www.fua.br/
+626	BR	Universidade do Estado da Bahia	http://www.uneb.br/
+627	BR	Universidade do Estado de Santa Catarina	http://www.udesc.br/
+628	BR	Universidade do Estado do Rio de Janeiro	http://www.uerj.br/
+629	BR	Universidade do Estado do Rio Grande do Norte	http://www.uern.br/
+630	BR	Universidade do Extremo Sul Catarinense	http://www.unesc.rct-sc.br/
+631	BR	Universidade do Grande Rio	http://www.unigranrio.br/
+632	BR	Universidade do Oeste de Santa Catarina	http://www.unoesc.edu.br/
+633	BR	Universidade do Oeste Paulista	http://www.unoeste.br/
+634	BR	Universidade do Rio de Janeiro	http://www.unirio.br/
+635	BR	Universidade do Rio Grande	http://www.furg.br/
+636	BR	Universidade do Sagrado Coração	http://www.usc.br/
+637	BR	Universidade do Sul de Santa Catarina	http://www.unisul.br/
+638	BR	Universidade do Vale do Itajaí	http://www.univali.rct-sc.br/
+639	BR	Universidade Estácio de Sá	http://www.estacio.br/
+640	BR	Universidade Estadual da Paraíba	http://www.uepb.edu.br/
+641	BR	Universidade Estadual de Campinas	http://www.unicamp.br/
+642	BR	Universidade Estadual de Feira de Santana	http://www.uefs.br/
+643	BR	Universidade Estadual de Londrina	http://www.uel.br/
+644	BR	Universidade Estadual de Maringá	http://www.uem.br/
+645	BR	Universidade Estadual de Montes Claros	http://www.unimontes.br/
+646	BR	Universidade Estadual de Ponta Grossa	http://www.uepg.br/
+647	BR	Universidade Estadual de Santa Cruz	http://www.uesc.br/
+648	BR	Universidade Estadual do Ceará	http://www.uece.br/
+649	BR	Universidade Estadual do Centro-Oeste	http://www.unicentro.br/
+650	BR	Universidade Estadual do Maranhão	http://www.uema.br/
+651	BR	Universidade Estadual do Norte Fluminense	http://www.uenf.br/
+652	BR	Universidade Estadual do Oeste do Paraná	http://www.unioeste.br/
+653	BR	Universidade Estadual do Piauí	http://www.uespi.br/
+654	BR	Universidade Estadual do Vale do Acaraú	http://www.uvanet.br/
+655	BR	Universidade Estadual Paulista	http://www.unesp.br/
+656	BR	Universidade Estadual Sudoeste da Bahia	http://www.uesb.br/
+657	BR	Universidade Federal da Bahia	http://www.ufba.br/
+658	BR	Universidade Federal da Grande Dourados	http://www.ufgd.edu.br/
+659	BR	Universidade Federal da Paraíba	http://www.ufpb.br/
+660	BR	Universidade Federal de Alagoas	http://www.ufal.br/
+661	BR	Universidade Federal de Campina Grande	http://www.ufcg.edu.br/
+662	BR	Universidade Federal de Goiás	http://www.ufg.br/
+663	BR	Universidade Federal de Juiz de Fora	http://www.ufjf.br/
+664	BR	Universidade Federal de Lavras	http://www.ufla.br/
+665	BR	Universidade Federal de Mato Grosso	http://www.ufmt.br/
+666	BR	Universidade Federal de Mato Grosso do Sul	http://www.ufms.br/
+667	BR	Universidade Federal de Minas Gerais	http://www.ufmg.br/
+668	BR	Universidade Federal de Ouro Preto	http://www.ufop.br/
+669	BR	Universidade Federal de Pelotas	http://www.ufpel.tche.br/
+670	BR	Universidade Federal de Pernambuco	http://www.ufpe.br/
+671	BR	Universidade Federal de Rondônia	http://www.unir.br/
+672	BR	Universidade Federal de Roraima	http://www.technet.com.br/vestibular/
+673	BR	Universidade Federal de Santa Catarina	http://www.ufsc.br/
+674	BR	Universidade Federal de Santa Maria	http://www.ufsm.br/
+675	BR	Universidade Federal de São Carlos	http://www.ufscar.br/
+676	BR	Universidade Federal de São Paulo	http://www.epm.br/
+677	BR	Universidade Federal de Sergipe	http://www.ufs.br/
+678	BR	Universidade Federal de Uberlândia	http://www.ufu.br/
+679	BR	Universidade Federal de Viçosa	http://www.ufv.br/
+680	BR	Universidade Federal do ABC	http://www.ufabc.edu.br/
+681	BR	Universidade Federal do Acre	http://www.ufac.br/
+682	BR	Universidade Federal do Amapá	http://www.unifap.br/
+683	BR	Universidade Federal do Ceará	http://www.ufc.br/
+684	BR	Universidade Federal do Espírito Santo	http://www.ufes.br/
+685	BR	Universidade Federal do Maranhão	http://www.ufma.br/
+686	BR	Universidade Federal do Pará	http://www.ufpa.br/
+687	BR	Universidade Federal do Paraná	http://www.ufpr.br/
+688	BR	Universidade Federal do Piauí	http://www.ufpi.br/
+689	BR	Universidade Federal do Rio de Janeiro	http://www.ufrj.br/
+690	BR	Universidade Federal do Rio Grande do Norte	http://www.ufrn.br/
+691	BR	Universidade Federal do Rio Grande do Sul	http://www.ufrgs.br/
+692	BR	Universidade Federal do Vale do São Francisco	http://www.univasf.edu.br/
+693	BR	Universidade Federal Fluminense	http://www.uff.br/
+694	BR	Universidade Federal Rural de Pernambuco	http://www.ufrpe.br/
+695	BR	Universidade Federal Rural do Rio de Janeiro	http://www.ufrrj.br/
+696	BR	Universidade Federal Rural do Semi-Árido	http://www.ufersa.edu.br/
+697	BR	Universidade Gama Filho	http://www.ugf.br/
+698	BR	Universidade Ibirapuera	http://www.unib.br/
+699	BR	Universidade Luterana do Brasil	http://www.ulbra.br/
+700	BR	Universidade Mackenzie	http://www.mackenzie.br/
+701	BR	Universidade Metodista de Piracicaba	http://www.unimep.br/
+702	BR	Universidade Metropolitana de Santos	http://www.unimes.com.br/
+703	BR	Universidade para o Desenvolvimento do Alto Vale do Itajaí	http://www.unidavi.rct-sc.br/
+704	BR	Universidade Paulista	http://www.unip-objetivo.br/
+705	BR	Universidade Potiguar	http://www.unp.br/
+706	BR	Universidade Regional de Blumenau	http://www.furb.rct-sc.br/
+707	BR	Universidade Regional do Cariri	http://www.urca.br/
+708	BR	Universidade Regional do Noroeste do Estado do Rio Grande do Sul	http://www.unijui.tche.br/
+709	BR	Universidade Regional Integrada do Alto Uruguai e das Missões	http://www.uri.br/
+710	BR	Universidade Salgado de Oliveira	http://www.universo.br/
+711	BR	Universidade Salvador	http://www.unifacs.br/
+712	BR	Universidade Santa Cecília dos Bandeirantes	http://www.stcecilia.br/
+713	BR	Universidade Santa Úrsula	http://www.usu.br/
+714	BR	Universidade São Francisco	http://www.usf.br/
+715	BR	Universidade São Judas Tadeu	http://www.saojudas.br/
+716	BR	Universidade São Marcos	http://www.smarcos.br/
+717	BR	Universidade Tiradentes	http://www.unit.br/
+718	BR	Universidade Vale do Paraiba	http://www.univap.br/
+719	BR	Universidade Vale do Rio Doce	http://www.univale.br/
+720	BR	Universidade Vale do Rio dos Sinos	http://www.unisinos.br/
+721	BR	Universidade Veiga de Almeida	http://www.uva.br/
+722	BS	The College of The Bahamas	http://www.cob.edu.bs/
+723	BT	Royal University of Bhutan	http://www.rub.edu.bt/
+724	BW	ABM University College	http://www.abm.ac.bw/
+725	BW	Botho University	http://www.bothocollege.ac.bw/
+726	BW	Botswana Accountancy College	http://www.bac.ac.bw/
+727	BW	Botswana College of Agriculture	http://www.bca.bw/
+728	BW	Botswana International University of Science & Technology	http://www.biust.ac.bw/
+729	BW	Gaborone Universal College of Law	http://www.guc.co.bw/
+730	BW	New Era College of Arts, Science & Technology	http://www.neweracollege.ac.bw/
+731	BW	University of Botswana	http://www.ub.bw/
+732	BY	Academy of Public Administration of Belarus	http://www.pac.by/
+733	BY	Academy of the Ministry of Internal Affairs of the Republic of Belarus	http://academy.mia.by/
+734	BY	Belarusian-Russian University	http://www.bru.mogilev.by/
+735	BY	Belarussian National Technical University	http://www.bntu.by/
+736	BY	Belarussian State Academy of Music	http://www.bgam.edu.by/
+737	BY	Belarussian State Agrarian Technical University	http://www.batu.edu.by/
+738	BY	Belarussian State Agricultural Academy	http://www.baa.by/
+739	BY	Belarussian State Economic University	http://www.bseu.by/
+740	BY	Belarussian State Medical University	http://www.bsmu.by/
+741	BY	Belarussian State Pedagogical University M. Tanka	http://www.bspu.unibel.by/
+742	BY	Belarussian State Polytechnical Academy	http://www.bspa.unibel.by/
+743	BY	Belarussian State Technological University	http://www.bstu.unibel.by/
+744	BY	Belarussian State University	http://www.bsu.by/
+745	BY	Belarussian State University of Culture and Arts	http://www.buk.by/
+746	BY	Belarussian State University of Informatics and Radioelectronics	http://www.bsuir.by/
+747	BY	Belarussian State University of Transport	http://www.belsut.gomel.by/
+748	BY	Brest State Technical University	http://www.bstu.by/
+749	BY	Brest State University	http://www.brsu.brest.by/
+750	BY	European Humanities University	http://www.data.minsk.by/ehu/
+751	BY	Gomel State Medical University	http://www.meduniver.gomel.by/
+752	BY	Gomel State Technical University Pavel Sukhoi	http://www.gstu.gomel.by/
+753	BY	Gomel State University Francisk Scarnia	http://www.gsu.unibel.by/
+754	BY	Grodno State Agrarian University	http://www.uni-agro.grodno.by/
+755	BY	Grodno State Medical University	http://www.grsmu.by/
+756	BY	Grodno State University Yanka Kupaly	http://www.grsu.by/
+757	BY	Institute for Command Engineers of The Ministry for Emergency Situations	http://www.kii.gov.by/
+758	BY	International Sakharov Environmental University	http://www.iseu.by/
+759	BY	Minsk Institute of Management	http://www.miu.by/
+760	BY	Minsk State Linguistic University	http://www.mslu.by/
+761	BY	Mogilev State University A.A. Kuleshov	http://msu.mogilev.by/
+762	BY	Mozyr State Pedagogical Institute	http://www.mgpu.gomel.by/
+763	BY	Polotsk State University	http://www.psu.by/
+764	BY	Vitebsk State Academy of Veterinary Medicine	http://www.vsavm.com/
+765	BY	Vitebsk State Medical University	http://www.vgmu.vitebsk.by/
+766	BY	Vitebsk State Technological University	http://www.vstu.vitebsk.by/
+767	BY	Vitebsk State University	http://www.vsu.by/
+768	BZ	American University of the Caribbean, School of Medicine	http://www.aucmed.edu/
+769	BZ	Central America Health Sciences University (Belize Medical College)	http://www.cahsu.edu/
+770	BZ	Greenford International University	http://www.giuedu.bz/
+771	BZ	University of Belize	http://www.ub.edu.bz/
+772	BZ	West Coast University (WCU) 	http://www.westcoastuniversity.bz/
+773	CA	Acadia University	http://www.acadiau.ca/
+774	CA	Algonquin College	http://www.algonquincollege.com/
+775	CA	Ashton College	http://www.ashtoncollege.com/
+776	CA	Assumption University	http://www.assumptionu.ca/
+777	CA	Athabasca University	http://www.athabascau.ca/
+778	CA	Augustana University College	http://www.augustana.ab.ca/
+779	CA	Bishop's University	http://www.ubishops.ca/
+780	CA	Bow Valley College	http://www.bowvalleycollege.ca/
+781	CA	Brandon University	http://www.brandonu.ca/
+782	CA	Brescia College	http://www.uwo.ca/brescia/
+783	CA	British Columbia Institute of Technology	http://www.bcit.ca/
+784	CA	British Columbia Open University	http://www.bcou.ca/
+785	CA	Brock University	http://www.brocku.ca/
+786	CA	Camosun College	http://www.camosun.bc.ca/
+787	CA	Campion College	http://www.uregina.ca/campion/
+788	CA	Canadian College of Business & Computers	http://www.ccbc.ca/
+789	CA	Canadian Mennonite University	http://www.cmu.ca/
+790	CA	Capilano College	http://www.capcollege.bc.ca/
+791	CA	Carleton University	http://www.carleton.ca/
+792	CA	Centennial College	http://www.centennialcollege.ca/
+793	CA	Collège Boréal	http://www.borealc.on.ca/
+794	CA	College of New Caledonia	http://www.cnc.bc.ca/
+795	CA	College of the Rockies	http://www.cotr.bc.ca/
+796	CA	Columbia College	http://www.columbiacollege.ca/
+797	CA	Concordia University	http://www.concordia.ca/
+798	CA	Concordia University College of Alberta	http://www.concordia.ab.ca/
+799	CA	Conestoga College	http://www.conestogac.on.ca/
+800	CA	Dalhousie University	http://www.dal.ca/
+801	CA	DeVry Institute of Technology	http://www.cal.devry.ca/
+802	CA	Dominican College of Philosophy and Theology	http://www.op.org/canada/college.htm
+803	CA	Douglas College	http://www.douglas.bc.ca/
+804	CA	Durham College	http://www.durhamc.on.ca/
+805	CA	École des Hautes Études Commerciales	http://www.hec.ca/
+806	CA	École de technologie supérieure, Université du Québec	http://www.etsmtl.ca/
+807	CA	École nationale d'administration publique, Université du Québec	http://www.enap.uquebec.ca/
+808	CA	École Polytechnique de Montréal, Université de Montréal	http://www.polymtl.ca/
+809	CA	Emily Carr Institute of Art + Design	http://www.eciad.bc.ca/
+810	CA	First Nations University of Canada	http://www.firstnationsuniversity.ca/
+811	CA	George Brown College	http://www.gbrownc.on.ca/
+812	CA	Humber College	http://www.humber.ca/
+813	CA	Huron University College	http://www.huronuc.on.ca/
+814	CA	Institut Armand-Frappier, Université du Québec	http://www.iaf.inrs.ca/
+815	CA	Institut National de la Recherche Scientifique, Université du Québec	http://www.inrs.uquebec.ca/
+816	CA	King's College	http://www.uwo.ca/kings/
+817	CA	Kingston College	http://www.kingston.edu/
+818	CA	King's University College	http://www.kingsu.ab.ca/
+819	CA	Kwantleen University College	http://www.kwantlen.bc.ca/
+820	CA	Lakehead University	http://www.lakeheadu.ca/
+821	CA	Langara College	http://www.langara.bc.ca/
+822	CA	Lansbridge University	http://www.lansbridge.com/
+823	CA	Laurentian University of Sudbury	http://www.laurentian.ca/
+824	CA	Luther College	http://www.saskweb.com/luthercollege/
+825	CA	MacEwan University	http://www.macewan.ca/
+826	CA	Malaspina University College	http://www.mala.bc.ca/
+827	CA	McGill University	http://www.mcgill.ca/
+828	CA	McMaster University	http://www.mcmaster.ca/
+829	CA	Memorial University of Newfoundland	http://www.ucs.mun.ca/
+830	CA	Mount Allison University	http://www.mta.ca/
+831	CA	Mount Royal College	http://www.mtroyal.ab.ca/
+832	CA	Mount Saint Vincent University	http://www.msvu.ca/
+833	CA	Nicola Valley Institute of Technology	http://www.nvit.bc.ca/
+834	CA	Nipissing University	http://www.nipissingu.ca/
+835	CA	Northern Alberta Institute of Technology	http://www.nait.ca/
+836	CA	Northern Lights College	http://www.nlc.bc.ca/
+837	CA	North Island College	http://www.nic.bc.ca/
+838	CA	Nova Scotia Agricultural College	http://www.nsac.ns.ca/
+839	CA	Nova Scotia College of Art and Design	http://www.nscad.ns.ca/
+840	CA	Okanagan University College	http://www.okanagan.bc.ca/
+841	CA	Ontario College of Art and Design	http://www.ocad.ca/
+842	CA	Pacific International College	http://www.picollege.ca/
+843	CA	Queen's University	http://www.queensu.ca/
+844	CA	Quest University	http://www.questu.ca/
+845	CA	Redeemer College	http://www.redeemer.ca/
+846	CA	Regent College	http://www.regent-college.edu/
+847	CA	Royal Military College of Canada	http://www.rmc.ca/
+848	CA	Royal Roads University	http://www.royalroads.ca/
+849	CA	Ryerson Polytechnic University	http://www.ryerson.ca/
+850	CA	Saskatchewan Indian Federated College	http://www.sifc.edu/
+851	CA	Sauder School of Business	http://www.sauder.ubc.ca/
+852	CA	Selkirk College	http://www.selkirk.bc.ca/
+853	CA	Seneca College	http://www.senecac.on.ca/
+854	CA	Sheridan College	http://www.sheridanc.on.ca/
+855	CA	Simon Fraser University	http://www.sfu.ca/
+856	CA	Southern Alberta Institute of Technology	http://www.sait.ca/
+857	CA	St. Anne University	http://www.ustanne.ednet.ns.ca/
+858	CA	St. Clair College	http://www.stclairc.on.ca/
+859	CA	St. Francis Xavier University	http://www.stfx.ca/
+860	CA	St. Mary's University	http://www.stmarys.ca/
+861	CA	St. Paul University	http://www.ustpaul.ca/
+862	CA	St. Thomas University	http://www.stthomasu.ca/
+863	CA	Télé-université, Université du Québec	http://www.teluq.uquebec.ca/
+864	CA	Thompson Rivers University	http://www.tru.ca/
+865	CA	Trent University	http://www.trentu.ca/
+866	CA	Trinity Western University	http://www.twu.ca/
+867	CA	Université de Montréal	http://www.umontreal.ca/
+868	CA	Université de Sherbrooke	http://www.usherb.ca/
+869	CA	Université du Québec à Chicoutimi	http://www.uqac.ca/
+870	CA	Université du Québec à Montréal	http://www.uqam.ca/
+871	CA	Université du Québec à Rimouski	http://www.uqar.uquebec.ca/
+872	CA	Université du Québec à Trois-Rivières	http://www.uqtr.uquebec.ca/
+873	CA	Université du Québec en Abitibi-Témiscamingue	http://www.uqat.uquebec.ca/
+874	CA	Université du Québec en Outaouais	http://www.uqo.ca/
+875	CA	Université Laval	http://www.ulaval.ca/
+876	CA	University Canada West	http://www.universitycanadawest.ca/
+877	CA	University College of Cape Breton	http://www.uccb.ns.ca/
+878	CA	University College of Saint-Boniface	http://www.ustboniface.mb.ca/
+879	CA	University College of the Cariboo	http://www.cariboo.bc.ca/
+880	CA	University College of the Fraser Valley	http://www.ucfv.bc.ca/
+881	CA	University of Alberta	http://www.ualberta.ca/
+882	CA	University of British Columbia	http://www.ubc.ca/
+883	CA	University of Calgary	http://www.ucalgary.ca/
+884	CA	University of Guelph	http://www.uoguelph.ca/
+885	CA	University of King's College	http://www.ukings.ns.ca/
+886	CA	University of Lethbridge	http://www.uleth.ca/
+887	CA	University of Manitoba	http://www.umanitoba.ca/
+888	CA	University of Moncton	http://www.umoncton.ca/
+889	CA	University of Moncton, Edmundston	http://www.cuslm.ca/
+890	CA	University of Moncton, Shippagan	http://www.cus.ca/
+891	CA	University of New Brunswick	http://www.unb.ca/
+892	CA	University of New Brunswick, Saint John	http://www.unbsj.ca/
+893	CA	University of Northern British Columbia	http://www.unbc.ca/
+894	CA	University of Ontario Institute of Technology	http://www.uoit.ca/
+895	CA	University of Ottawa	http://www.uottawa.ca/
+896	CA	University of Prince Edward Island	http://www.upei.ca/
+897	CA	University of Québec	http://www.uquebec.ca/
+898	CA	University of Regina	http://www.uregina.ca/
+899	CA	University of Saskatchewan	http://www.usask.ca/
+900	CA	University of St. Jerome's College	http://www.usjc.uwaterloo.ca/
+901	CA	University of St. Michael's College	http://www.utoronto.ca/stmikes/
+902	CA	University of Sudbury	http://www.usudbury.com/
+903	CA	University of Toronto	http://www.utoronto.ca/
+904	CA	University of Toronto, Mississauga	http://www.utm.utoronto.ca/
+905	CA	University of Toronto, Scarborough	http://www.scar.utoronto.ca/
+906	CA	University of Trinity College	http://www.trinity.utoronto.ca/
+907	CA	University of Victoria	http://www.uvic.ca/
+908	CA	University of Waterloo	http://www.uwaterloo.ca/
+909	CA	University of Western Ontario	http://www.uwo.ca/
+910	CA	University of Windsor	http://www.uwindsor.ca/
+911	CA	University of Winnipeg	http://www.uwinnipeg.ca/
+912	CA	Vancouver Community College	http://www.vcc.ca/
+913	CA	Victoria University Toronto, University of Toronto	http://vicu.utoronto.ca/
+914	CA	Wilfrid Laurier University	http://www.wlu.ca/
+915	CA	William and Catherine Booth College	http://www.boothcollege.ca/
+916	CA	York University	http://www.yorku.ca/
+917	CA	Yukon College	http://www.yukoncollege.yk.ca/
+918	CD	Université Catholique de Bukavu	http://www.ucbukavu.ac.cd/
+919	CD	Université Chrétienne Bilingue du Congo	http://www.ucbc.org/
+920	CD	Université de Bandundu Ville	http://www.uniband.org/
+921	CD	Université de Kamina	http://www.ukamina.org/
+922	CD	Université de Kikwite	http://www.unikik.net/
+923	CD	Université de Kinshasa	http://www.unikin.cd/
+924	CD	Université de Kisangani	http://www.unikis.ac.cd/
+925	CD	Université de Kolwezi	http://www.unikol.ac.cd/
+926	CD	Université de Lubumbashi	http://www.unilu.ac.cd/
+927	CD	Université de l'Uélé	http://www.uniuele.ac.cd/
+928	CD	Université Kongo	http://www.universitekongo.org/
+929	CD	Université Protestante au Congo	http://www.upc.ac.cd/
+930	CD	Université Shalom de Bunia	http://www.unishabunia.org/
+931	CF	Université de Bangui	http://www.univ-bangui.net/
+932	CG	University Marien Ngouabi Brazzaville	http://www.univ-mngb.net/
+933	CH	Business and Hotel Management School	http://www.bhms.ch/
+934	CH	Business School Lausanne (BSL)	http://www.bsl-lausanne.ch/
+935	CH	Cubidor University Switzerland	http://www.cubidor.com/
+936	CH	DCT International Hotel & Business Management School	http://www.dct.ch/
+937	CH	European Graduate School, Media & Communications	http://www.egs.edu/
+938	CH	European University	http://www.euruni.edu/
+939	CH	Fachhochschule Pur	http://www.phw.info/
+940	CH	Fachhochschule St. Gallen	https://www.fhsg.ch/
+941	CH	Franklin College Switzerland	http://www.fc.edu/
+942	CH	Geneva Business School	http://www.gbs-ge.ch/
+943	CH	Glion Institute of Higher Education	http://www.glion.edu/
+944	CH	Graduate School of Business Administration Zurich (GSBA Zurich)	http://www.gsba.ch/
+945	CH	Hochschule für Gestaltung und Kunst Zürich	http://www.hgkz.ch/
+946	CH	International Culinary Institute (ICI)	http://www.ici-luzern.com/
+947	CH	International Hotel Management Institute	http://www.imi-luzern.com/
+948	CH	International School of Business Management	http://www.isbm-school.com/
+949	CH	International University in Geneva	http://www.iun.ch/
+950	CH	Lausanne Hotel School (EHL)	http://www.ehl.ch/
+951	CH	Les Roches Gruyère University of Applied Sciences	http://www.lrguas.ch/
+952	CH	Les Roches International School of Hotel Management	http://www.lesroches.edu/
+953	CH	Libera Università degli Studi di Scienze Umane e Tecnologiche	http://www.uniludes.ch/
+954	CH	Lucerne University of Applied Sciences and Arts 	http://www.hslu.ch/
+955	CH	NTB Interstate University of Applied Sciences of Technology	http://www.ntb.ch/
+956	CH	Pädagogische Hochschule Zürich (Zurich School of Education)	http://www.phzh.ch/
+957	CH	Schiller International University, American College of Switzerland	http://www.american-college.com/
+958	CH	School of Management Fribourg	http://www.heg-fr.ch/
+959	CH	Swiss Business School Zurich (SBS)	http://www.sbs.edu/
+960	CH	Swiss Federal Institute of Technology, Lausanne	http://www.epfl.ch/
+961	CH	Swiss Federal Institute of Technology, Zurich	http://www.ethz.ch/
+962	CH	Swiss Management Center	http://www.swissmc.ch/
+963	CH	University Center "César Ritz"	http://www.uccr.edu/
+964	CH	University of Applied Sciences Aargau	http://www.fh-aargau.ch/
+965	CH	University of Applied Sciences Basel (FHBB )	http://www.fhbb.ch/
+966	CH	University of Applied Sciences Chur	http://www.fh-htachur.ch/
+967	CH	University of Applied Sciences Rapperswil	http://www.hsr.ch/
+968	CH	University of Applied Sciences Solothurn Northwestern Switzerland	http://www.fhso.ch/
+969	CH	University of Basel	http://www.unibas.ch/
+970	CH	University of Berne	http://www.unibe.ch/
+971	CH	University of Fribourg	http://www.unifr.ch/
+972	CH	University of Geneva	http://www.unige.ch/
+973	CH	University of Lausanne	http://www.unil.ch/
+974	CH	University of Lucerne	http://www.unilu.ch/
+975	CH	University of Neuchatel	http://www.unine.ch/
+976	CH	University of St. Gallen	http://www.unisg.ch/
+977	CH	University of Switzerland	http://www.swissu.org/
+978	CH	University of the Italian-speaking Part of Switzerland	http://www.unisi.ch/
+979	CH	University of Zürich	http://www.unizh.ch/
+980	CH	Victoria University	http://www.victoria-uni.ch/
+981	CH	Webster University Geneva	http://www.webster.ch/
+982	CH	Zurich University of Applied Sciences Winterthur	http://www.zhwin.ch/
+983	CI	Université d'Abobo-Adjamé	http://www.uabobo.ci/
+984	CI	Université de Bouaké	http://www.ubouake.ci/
+985	CI	Université de Cocody	http://www.univ-cocody.ci/
+986	CL	Escuela de Arquitectura y Diseño	http://www.arquitecturaucv.cl/
+987	CL	Pontificia Universidad Catolica de Chile	http://www.puc.cl/
+988	CL	Universidad Academia de Humanismo Cristiano	http://www.academia.cl/
+989	CL	Universidad Academia de Humanismo Cristiano	http://www.academia.cl/
+990	CL	Universidad "Adolfo Ibañez"	http://www.uai.cl/
+991	CL	Universidad Adolfo Ibáñez	http://www.uai.cl/
+992	CL	Universidad Adventista de Chile	http://www.unachile.cl/
+993	CL	Universidad Alberto Hurtado	http://www.uahurtado.cl/
+994	CL	Universidad Arcis	http://www.universidadarcis.cl/
+995	CL	Universidad "Arturo Prat"	http://www.unap.cl/
+996	CL	Universidad Austral de Chile	http://www.uach.cl/
+997	CL	Universidad Autonoma del Sur	http://www.uas.cl/
+998	CL	Universidad Bernardo O'Higgins	http://www.ubohiggins.cl/
+999	CL	Universidad Bolivariana	http://www.ubolivariana.cl/
+1000	CL	Universidad Católica Cardenal Raúl Silva Henríquez	http://www.ucsh.cl/
+1001	CL	Universidad Catolica de La Santísima Concepción	http://www.ucsc.cl/
+1002	CL	Universidad Catolica del Maule	http://www.ucm.cl/
+1003	CL	Universidad Catolica del Norte	http://www.ucn.cl/
+1004	CL	Universidad Catolica de Temuco	http://www.uctem.cl/
+1005	CL	Universidad Catolica de Valparaiso	http://www.ucv.cl/
+1006	CL	Universidad Central	http://www.ucentral.cl/
+1007	CL	Universidad Chileno Britanica de Cultura	http://www.ubritanica.cl/
+1008	CL	Universidad de Aconcagua	http://www.uaconcagua.cl/
+1009	CL	Universidad de Antofagasta	http://www.uantof.cl/
+1010	CL	Universidad de Artes, Ciencias y Comunicación	http://www.uniacc.cl/
+1011	CL	Universidad de Atacama	http://www.uda.cl/
+1012	CL	Universidad de Chile	http://www.uchile.cl/
+1013	CL	Universidad de Ciencias de la Informatica	http://www.ucinf.cl/
+1014	CL	Universidad de Concepcion	http://www.udec.cl/
+1015	CL	Universidad de La Frontera	http://www.ufro.cl/
+1016	CL	Universidad de Las Américas	http://www.uamericas.cl/
+1017	CL	Universidad de La Serena	http://www.userena.cl/
+1018	CL	Universidad del Bío-Bío	http://www.ubiobio.cl/
+1019	CL	Universidad del Desarrollo	http://www.udesarrollo.cl/
+1020	CL	Universidad del Mar	http://www.udelmar.cl/
+1021	CL	Universidad de Los Andes	http://www.uandes.cl/
+1022	CL	Universidad de Los Lagos	http://www.ulagos.cl/
+1023	CL	Universidad del Pacífico	http://www.upacifico.cl/
+1024	CL	Universidad de Magallanes	http://www.umag.cl/
+1025	CL	Universidad de Playa Ancha de Ciencias de la Educacion	http://www.upa.cl/
+1026	CL	Universidad de San Andres	http://www.usanandres.cl/
+1027	CL	Universidad de Santiago de Chile	http://www.usach.cl/
+1028	CL	Universidad de Talca	http://www.utalca.cl/
+1029	CL	Universidad de Tarapacá	http://www.uta.cl/
+1030	CL	Universidad de Valparaiso	http://www.uv.cl/
+1031	CL	Universidad de Viña del Mar	http://www.uvm.cl/
+1032	CL	Universidad Diego Portales	http://www.udp.cl/
+1033	CL	Universidad Finis Terrae	http://www.ufinis.cl/
+1034	CL	Universidad Francisco de Aguirre	http://www.unfa.cl/
+1035	CL	Universidad Gabriela Mistral	http://www.ugm.cl/
+1036	CL	Universidad Iberoamericana de Ciencias y Tecnologia	http://www.unicit.cl/
+1037	CL	Universidad International SEK, Santiago	http://www.uisek.cl/
+1038	CL	Universidad José Santos Ossa	http://www.ujso.cl/
+1039	CL	Universidad La Republica	http://www.ulare.cl/
+1040	CL	Universidad Mariano Egaña	http://www.ume.cl/
+1041	CL	Universidad Maritima de Chile	http://www.umaritima.cl/
+1042	CL	Universidad Mayor	http://www.umayor.cl/
+1043	CL	Universidad Metropolitana de Ciencias de la Educación	http://www.umce.cl/
+1044	CL	Universidad Miguel de Cervantes	http://www.ucervantes.cl/
+1045	CL	Universidad Nacional Andrés Bello	http://www.unab.cl/
+1046	CL	Universidad San Sebastian	http://www.uss.cl/
+1047	CL	Universidad Santo Tomás	http://www.ust.cl/
+1048	CL	Universidad Técnica "Federico Santa María"	http://www.utfsm.cl/
+1049	CL	Universidad Tecnológica Metropolitana	http://www.utem.cl/
+1050	CL	Universidad Tecnologica "Vicente Perez Rosales"	http://www.uvipro.cl/
+1051	CM	Bamenda University of Science & Technology	http://www.bamendauniversity.com/
+1052	CM	Fomic Polytechnic	http://www.fomicgroup.cm/
+1053	CM	Université de Bamenda	http://www.unibda.net/
+1054	CM	Université de Buéa	http://www.ubuea.cm/
+1055	CM	Université de Douala	http://www.univ-douala.com/
+1056	CM	Université de Dschang	http://www.univ-dschang.org/
+1057	CM	Université de Ngaoundéré	http://www.univ-ndere.cm/
+1058	CM	Université des Montagnes	http://www.udesmontagnes.org/
+1059	CM	Université de Yaoundé I	http://www.uy1.uninet.cm/
+1060	CM	Université de Yaoundé II	http://www.universite-yde2.org/
+1061	CN	2nd Military Medical University	http://www.smmu.edu.cn/
+1062	CN	3rd Military Medical University	http://www.tmmu.edu.cn/
+1063	CN	4th Military Medical University	http://www.fmmu.edu.cn/
+1064	CN	Anhui Medical University	http://www.ahmu.edu.cn/
+1065	CN	Anhui Normal University	http://www.ahnu.edu.cn/
+1066	CN	Anhui Technical College of Water Resources and Hydroelectric Power	http://www.ahsdxy.ah.edu.cn/
+1067	CN	Anhui University	http://www.ahu.edu.cn/
+1068	CN	Anhui University of Finance and Economics	http://www.aufe.edu.cn/
+1069	CN	Anhui University of Traditional Chinese Medicine	http://www.ahtcm.edu.cn/
+1070	CN	Beijing Foreign Studies University	http://www.bfsu.edu.cn/
+1071	CN	Beijing Forestry University	http://www.bjfu.edu.cn/
+1072	CN	Beijing Information Science and Technology University	http://www.biti.edu.cn/
+1073	CN	Beijing Institute of Technology	http://www.bit.edu.cn/
+1074	CN	Beijing International Studies University	http://www.bisu.edu.cn/
+1075	CN	Beijing Language and Culture University	http://www.blcu.edu.cn/
+1076	CN	Beijing Medical University	http://www.bjmu.edu.cn/
+1077	CN	Beijing New Asia University	http://www.newasia.bj.edu.cn/
+1078	CN	Beijing Normal University	http://www.bnu.edu.cn/
+1079	CN	Beijing Petroleum University	http://www.bjpeu.edu.cn/
+1080	CN	Beijing Polytechnic University	http://www.bjpu.edu.cn/
+1081	CN	Beijing Sport University	http://www.bsu.edu.cn/
+1082	CN	Beijing Union University	http://www.ipdbuu.com.cn/
+1083	CN	Beijing University of Aeronautics and Astronautics	http://www.buaa.edu.cn/
+1084	CN	Beijing University of Agriculture	http://www.bac.edu.cn/
+1085	CN	Beijing University of Chemical Technology	http://www.buct.edu.cn/
+1086	CN	Beijing University of Chinese Medicine and Pharmacology	http://www.bjucmp.edu.cn/
+1087	CN	Beijing University of Posts and Telecommunications	http://www.bupt.edu.cn/
+1088	CN	Beijing University of Science and Technology	http://www.ustb.edu.cn/
+1089	CN	Bohai University	http://www.bhu.edu.cn/
+1090	CN	Buddhist Acamedy of China	http://www.zgfxy.cn/
+1091	CN	Capital Normal University	http://www.cnu.edu.cn/
+1092	CN	Capital University of Economics and Business	http://www.cueb.edu.cn/
+1093	CN	Capital University of Medical Sciences	http://www.cpums.edu.cn/
+1094	CN	Central Academy of  Fine Art	http://www.cafa.edu.cn/
+1095	CN	Central China Normal University	http://www.ccnu.edu.cn/
+1096	CN	Central Radio and TV University	http://www.crtvu.edu.cn/
+1097	CN	Central South Forestry University	http://www.csfu.edu.cn/
+1098	CN	Central South University	http://www.csu.edu.cn/
+1099	CN	Central University for Nationalities	http://www.cun.edu.cn/
+1100	CN	Central University of Finance and Economics	http://www.cufe.edu.cn/
+1101	CN	Changchun Teachers College	http://www.cncnc.edu.cn/
+1102	CN	Changchun University of Technology	http://www.ccut.edu.cn/
+1103	CN	Changsha Railway University	http://www.csru.edu.cn/
+1104	CN	Changsha University of Electric Power	http://www.csuep.edu.cn/
+1105	CN	Chengdu Institute of Sichuan International Studies University	http://www.cisisu.edu.cn/
+1106	CN	Chengdu University	http://www.cdu.edu.cn/
+1107	CN	Chengdu University of Technology	http://www.cdut.edu.cn/
+1108	CN	Chengdu University of Traditional Chinese Medicine	http://www.cdutcm.edu.cn/
+1109	CN	China Academy of Art	http://www.chinaacademyofart.com/
+1110	CN	China Agricultural University	http://www.cau.edu.cn/
+1111	CN	China Agriculture University East	http://www.bjaeu.edu.cn/
+1112	CN	China Foreign Affairs University	http://www.cfau.edu.cn/
+1113	CN	China Medical University Shenyang	http://www.cmu.edu.cn/
+1114	CN	China Pharmaceutical University Nanjing	http://www.cpu.edu.cn/
+1115	CN	China Three Gorges University	http://www.ctgu.edu.cn/
+1116	CN	China University of Geoscience Beijing	http://www.cugb.edu.cn/
+1117	CN	China University of Geosciences Wuhan	http://www.cug.edu.cn/
+1118	CN	China University of Mining Technology - Beijing	http://www.cumtb.edu.cn/
+1119	CN	China University of Mining Technology - Xuzhou	http://www.cumt.edu.cn/
+1120	CN	China University of Political Science and Law	http://www.cupl.edu.cn/
+1121	CN	China USA Business University	http://www.cubu.edu/
+1122	CN	China youth college for political science	http://www.cyc.edu.cn/
+1123	CN	Chinese People's Public Security University	http://www.cppsu.edu.cn/
+1124	CN	Chongqing Education College	http://www.cqec.net.cn/
+1125	CN	Chongqing Medical University	http://www.cqmu.edu.cn/
+1126	CN	Chongqing Normal University	http://www.cqnu.edu.cn/
+1127	CN	Chongqing Normal University Foreign Trade and Business College	http://www.swsm.cn/
+1128	CN	Chongqing Technology and Business University	http://www.ctbu.edu.cn/
+1129	CN	Chongqing Telecommunication College	http://www.cqtcedu.com/
+1130	CN	Chongqing Three Gorges University	http://www.sanxiau.edu.cn/
+1131	CN	Chongqing University	http://www.cqu.edu.cn/
+1132	CN	Chongqing University of Communications	http://www.cquc.edu.cn/
+1133	CN	Chongqing University of Post and Telecommunications	http://www.cqupt.edu.cn/
+1134	CN	Chongqing University of Science and Technology 	http://www.cqust.cn/
+1135	CN	Chongqing University of Technology	http://www.cqut.edu.cn/
+1136	CN	Chongqing Vocational College of Public Transportation	http://www.cqgyzy.com/
+1137	CN	Chongqing Wenli University	http://www.cqwu.net/
+1138	CN	Civil Aviation University of China	http://www.cauc.edu/
+1139	CN	Communication University of China	http://www.cuc.edu.cn/
+1140	CN	Dalian Martime University	http://www.dlmu.edu.cn/
+1141	CN	Dalian Medical University	http://www.dlmedu.edu.cn/
+1142	CN	Dalian Polytechnic University	http://www.dlpu.edu.cn/
+1143	CN	Dalian University	http://www.dlu.edu.cn/
+1144	CN	Dalian University of Foreign Language	http://www.dlufl.edu.cn/
+1145	CN	Dalian University of Technology	http://www.dlut.edu.cn/
+1146	CN	Dongbei University of Finance And Economics	http://www.dufe.edu.cn/
+1147	CN	Donghua University, Shanghai	http://www.dhu.edu.cn/
+1148	CN	East China Jiao Tong University	http://www.ecjtu.jx.cn/
+1149	CN	East China Normal University	http://www.ecnu.edu.cn/
+1150	CN	East China University of Science and Technology	http://www.ecust.edu.cn/
+1151	CN	Emeishan Buddhist College	http://www.emsfj.com/
+1152	CN	Foshan University	http://www.fosu.edu.cn/
+1153	CN	Fudan University	http://www.fudan.edu.cn/
+1154	CN	Fujian Agricultural University	http://www.fjau.edu.cn/
+1155	CN	Fujian Medical University	http://www.fjmu.edu.cn/
+1156	CN	Fujian Normal University	http://www.fjnu.edu.cn/
+1157	CN	Fujian University of Traditional Chinese Medicine	http://www.fjtcm.edu.cn/
+1158	CN	Fushun Petroleum University	http://www.fspu.edu.cn/
+1159	CN	Fuzhou University	http://www.fzu.edu.cn/
+1160	CN	Gansu Agricultural University	http://www.gsau.edu.cn/
+1161	CN	Gansu University of Technology	http://www.gsut.edu.cn/
+1162	CN	Guangdong Peizheng College 	http://www.peizheng.com.cn/
+1163	CN	Guangdong Polytechnic Normal University	http://www.gdin.edu.cn/
+1164	CN	Guangdong Radio & TV University	http://www.gdrtvu.edu.cn/
+1165	CN	Guangdong University of Foreign Studies	http://www.gdufs.edu.cn/
+1166	CN	Guangdong University of Technology	http://www.gdut.edu.cn/
+1167	CN	Guangxi Medical University	http://www.gxmu.edu.cn/
+1168	CN	Guangxi Normal University	http://www.gxnu.edu.cn/
+1169	CN	Guangxi Traditional Chinese Medical University	http://www.gxtcmu.edu.cn/
+1170	CN	Guangxi University	http://www.gxu.edu.cn/
+1171	CN	Guangxi University for Nationalities	http://www.gxun.edu.cn/
+1172	CN	Guangzhou Academy of Fine Art	http://www.gzarts.edu.cn/
+1173	CN	Guangzhou Normal University	http://www.guangztc.edu.cn/
+1174	CN	Guangzhou University	http://www.gzhu.edu.cn/
+1175	CN	Guangzhou University of Traditional Chinese Medicine	http://www.gzhtcm.edu.cn/
+1176	CN	Guizhou Normal University	http://www.gznu.edu.cn/
+1177	CN	Guizhou University	http://www.gzu.edu.cn/
+1178	CN	Hainan Normal University	http://www.hainnu.edu.cn/
+1179	CN	Hainan University	http://www.hainu.edu.cn/
+1180	CN	Harbin Engineering University	http://www.hrbeu.edu.cn/
+1181	CN	Harbin Institute of Technology	http://www.hit.edu.cn/
+1182	CN	Harbin Medical University	http://www.hrbmu.edu.cn/
+1183	CN	Harbin Normal University	http://www.hrbnu.edu.cn/
+1184	CN	Harbin University of Civil Engineering & Architecture	http://www.hrbucea.edu.cn/
+1185	CN	Harbin University of Science and Technology	http://www.hrbust.edu.cn/
+1186	CN	Hebei Academy of Fine Art	http://www.hbafa.com/
+1187	CN	Hebei Agricultural University	http://www.hebau.edu.cn/
+1188	CN	Hebei Medical University	http://www.hebmu.edu.cn/
+1189	CN	Hebei Normal University	http://www.hebnu.edu.cn/
+1190	CN	Hebei United University	http://www.hebeiuniteduniversity.com/
+1191	CN	Hebei University	http://www.hbu.edu.cn/
+1192	CN	Hebei University of Economics and Trade	http://www.heuet.edu.cn/
+1193	CN	Hebei University of Science and Technology	http://www.hebust.edu.cn/
+1194	CN	Hebei University of Technology	http://www.hebut.edu.cn/
+1195	CN	Hefei University of Technology	http://www.hfut.edu.cn/
+1196	CN	Hehai University	http://www.hhu.edu.cn/
+1197	CN	Heilongjiang August 1st Reclamation University	http://www.hlaflru.edu.cn/
+1198	CN	Heilongjiang Commercial University	http://www.hljcu.edu.cn/
+1199	CN	Heilongjiang University	http://www.hlju.edu.cn/
+1200	CN	Henan Agriculture University	http://www.henau.edu.cn/
+1201	CN	Henan Buddhist College	http://www.hnfjxy.cn/
+1202	CN	Henan Normal University	http://www.henannu.edu.cn/
+1203	CN	Henan Univeristy	http://www.henu.edu.cn/
+1204	CN	Hohai University Changzhou	http://www.hhuc.edu.cn/
+1205	CN	Huaihai Institute of Technology	http://www.hhit.edu.cn/
+1206	CN	Huaihua Medical College	http://www.yizhuan.com/
+1207	CN	Huaihua Radio and Television University	http://www.hhrtu.com/
+1208	CN	 Huaihua University	http://www.hhu.edu.cn/
+1209	CN	Huanghe Science & Technology University	http://www.hhstu.edu.cn/
+1210	CN	Huaqiao University Quanzhuo	http://www.hqu.edu.cn/
+1211	CN	Huazhong Agricultural University	http://www.hzau.edu.cn/
+1212	CN	Huazhong University of Science and Technology	http://www.hust.edu.cn/
+1213	CN	Hubei University	http://www.hubu.edu.cn/
+1214	CN	Huizhou University	http://www.hzu.edu.cn/
+1215	CN	Hunan Agricultural University	http://www.hunau.net/
+1216	CN	Hunan Normal University	http://www.hunnu.edu.cn/
+1217	CN	Hunan University	http://www.hunu.edu.cn/
+1218	CN	Inner Mongolia Agricultural University	http://www.imau.edu.cn/
+1219	CN	Inner Mongolia Normal University	http://www.imnu.edu.cn/
+1220	CN	Inner Mongolia Polytechnic University	http://www.impu.edu.cn/
+1221	CN	Inner Mongolia University	http://www.imu.edu.cn/
+1222	CN	International Business University of Beijing	http://www.ibub.edu.cn/
+1223	CN	Jiangsu University of Science and Technology	http://www.jsust.edu.cn/
+1224	CN	Jiangxi Agricultural University	http://www.jxau.edu.cn/
+1225	CN	Jiangxi Normal University	http://www.jxnu.edu.cn/
+1226	CN	Jiangxi University of Finance and Economics	http://www.jxufe.edu.cn/
+1227	CN	Jiangxi University of Traditional Chinese Medicine	http://www.jutcm.com/
+1228	CN	Jiaying University	http://www.jyu.edu.cn/
+1229	CN	Jilin Agricultural University	http://www.jlau.edu.cn/
+1230	CN	Jilin University	http://www.jlu.edu.cn/
+1231	CN	Jilin University of Technology	http://www.jut.edu.cn/
+1232	CN	Jimei University	http://www.jmu.edu.cn/
+1233	CN	Jinan University	http://www.jnu.edu.cn/
+1234	CN	Jingdezhen China Institute	http://www.jci.edu.cn/
+1235	CN	Jishou University	http://www.jsu.edu.cn/
+1236	CN	Kunmimg University of Science and Technology	http://www.kmust.edu.cn/
+1237	CN	Lanzhou University	http://www.lzu.edu.cn/
+1238	CN	Liaocheng Teachers University	http://www.lctu.edu.cn/
+1239	CN	Liaoning Normal University	http://www.lnnu.edu.cn/
+1240	CN	Liaoning Technical University	http://www.lntu.edu.cn/
+1241	CN	Liaoning University	http://www.lnu.edu.cn/
+1242	CN	Logistics Engineering University of PLA	http://www.hqgc.net/
+1243	CN	Ludong University	http://www.ytnc.edu.cn/
+1244	CN	Luxun Academy of Fine Art	http://www.lumei.edu.cn/
+1245	CN	Luzhou Medical College	http://www.lzmc.edu.cn/
+1246	CN	Nanchang University	http://www.ncu.edu.cn/
+1247	CN	Nanjing Agricultural University	http://www.njau.edu.cn/
+1248	CN	Nanjing Forestry University	http://www.njfu.edu.cn/
+1249	CN	Nanjing Institute of Meteorology	http://www.njim.edu.cn/
+1250	CN	Nanjing Medical University	http://www.njmu.edu.cn/
+1251	CN	Nanjing Normal University	http://www.njnu.edu.cn/
+1252	CN	Nanjing Union Theological Seminary	http://www.njuts.cn/
+1253	CN	Nanjing University	http://www.nju.edu.cn/
+1254	CN	Nanjing University of Aeronautics and Astronautics	http://www.nuaa.edu.cn/
+1255	CN	Nanjing University of Chemical Technology	http://www.njuct.edu.cn/
+1256	CN	Nanjing University of Economics	http://www.njue.edu.cn/
+1257	CN	Nanjing University of Posts and Telecommunications	http://www.njupt.edu.cn/
+1258	CN	Nanjing University of Science and Technology	http://www.njust.edu.cn/
+1259	CN	Nanjing University of Traditional Chinese Medicine	http://www.njutcm.edu.cn/
+1260	CN	Nankai University	http://nku.nankai.edu.cn/
+1261	CN	National University of Defense Technology	http://www.nudt.edu.cn/
+1262	CN	Neijiang Teacher University	http://www.neijtc.edu.cn/
+1263	CN	Ningbo University	http://www.nbu.edu.cn/
+1264	CN	Ningbo University of Technology	http://www.nbut.edu.cn/
+1265	CN	Ningxia Medical College	http://www.nxmc.edu.cn/
+1266	CN	Ningxia University	http://www.nxu.edu.cn/
+1267	CN	North China Electric Power University	http://www.ncepubj.edu.cn/
+1268	CN	North China University of Technology	http://www.ncut.edu.cn/
+1269	CN	Northeast Agricultural University	http://www.neau.edu.cn/
+1270	CN	Northeastern University	http://www.neu.edu.cn/
+1271	CN	Northeast Forest University	http://www.nefu.edu.cn/
+1272	CN	Northeast Normal University	http://www.nenu.edu.cn/
+1273	CN	Northeast University at Qinhuangdao Campus	http://www.neuq.edu.cn/
+1274	CN	Northern Jiaotong University	http://www.njtu.edu.cn/
+1275	CN	Northern Sichuan Medical College	http://www.nsmc.edu.cn/
+1276	CN	Northwest A&F University	http://www.nwau.edu.cn/
+1277	CN	Northwest Normal University Lanzhou	http://www.nwnu.edu.cn/
+1278	CN	Northwest Polytechnical University Xi'an	http://www.nwpu.edu.cn/
+1279	CN	Northwest University Xi'an	http://www.nwu.edu.cn/
+1280	CN	Ocean University of China	http://www.ouc.edu.cn/
+1281	CN	Panzhihua University	http://www.pzhu.edu.cn/
+1282	CN	Peking University	http://www.pku.edu.cn/
+1283	CN	Qingdao University	http://www.qdu.edu.cn/
+1284	CN	Qingdao University of Science and Technology	http://www.qust.edu.cn/
+1285	CN	Qinghai Normal University	http://www.qhnu.edu.cn/
+1286	CN	Qinghai Radio & Television University	http://www.qhrtvu.edu.cn/
+1287	CN	Qinghai University	http://www.qhu.edu.cn/
+1288	CN	Qiongzhou University	http://www.qzu.edu.cn/
+1289	CN	Qufu Normal University	http://www.qfnu.edu.cn/
+1290	CN	Renmin University of China	http://www.ruc.edu.cn/
+1291	CN	Shaanxi Normal University	http://www.snnu.edu.cn/
+1292	CN	Shandong Agricultural University	http://www.sdau.edu.cn/
+1293	CN	Shandong Economic University	http://www.sdie.edu.cn/
+1294	CN	Shandong Medical University	http://www.sdmu.edu.cn/
+1295	CN	Shandong Normal University	http://www.sdnu.edu.cn/
+1296	CN	Shandong University	http://www.sdu.edu.cn/
+1297	CN	Shandong University of Art and Design	http://www.sdada.edu.cn/
+1298	CN	Shandong University of Science and Technology	http://www.sdust.edu.cn/
+1299	CN	Shandong University of Technology	http://www.sdut.edu.cn/
+1300	CN	Shandong University of Triaditional Chinese Medicine	http://www.sdutcm.edu.cn/
+1301	CN	Shanghai Business School	http://www.sbs.edu.cn/
+1302	CN	Shanghai City College	http://www.umcollege.com/
+1303	CN	Shanghai Customs College	http://shanghai_edu.customs.gov.cn/
+1304	CN	Shanghai Dainji University	http://www.sdju.edu.cn/
+1305	CN	Shanghai Institue of Foreign Trade	http://www.shift.edu.cn/
+1306	CN	Shanghai International Studies University	http://www.shisu.edu.cn/
+1307	CN	Shanghai Jiaotong University	http://www.sjtu.edu.cn/
+1308	CN	Shanghai Lida Polytechnic Institute	http://www.lidapoly.com/
+1309	CN	Shanghai Lixin University of Commerce	http://www.lixin.edu.cn/
+1310	CN	Shanghai Maritime University	http://www.shmtu.edu.cn/
+1311	CN	Shanghai Medical University	http://www.shmu.edu.cn/
+1312	CN	Shanghai Normal University	http://www.shtu.edu.cn/
+1313	CN	Shanghai Ocean University	http://www.shou.edu.cn/
+1314	CN	Shanghai Ouhua Vocational Technical College	http://www.shouhua.net.cn/
+1315	CN	Shanghai Sanda University	http://www.sandau.edu.cn/
+1316	CN	Shanghai Second Medical University	http://www.shsmu.edu.cn/
+1317	CN	Shanghai Second Polytechnic University	http://www.shspu.edu.cn/
+1318	CN	Shanghai Sipo Polytechnic	http://www.sh-sipopolytechnic.com/
+1319	CN	Shanghai Television University	http://www.shtvu.edu.cn/
+1320	CN	Shanghai TieDao University	http://www.shtdu.edu.cn/
+1321	CN	Shanghai University	http://www.shu.edu.cn/
+1322	CN	Shanghai University of Engineering Science	http://www.sues.edu.cn/
+1323	CN	Shanghai University of Finance and Economics	http://www.shufe.edu.cn/
+1324	CN	Shanghai University of Science and Technology	http://www.usst.edu.cn/
+1325	CN	Shanghai University of Traditional Chinese Medicine and Pharmacology	http://www.shutcm.edu.cn/
+1326	CN	Shantou University	http://www.stu.edu.cn/
+1327	CN	Shanxi Agricultural University	http://www.sxau.edu.cn/
+1328	CN	Shanxi Normal University	http://www.snnu.edu.cn/
+1329	CN	Shanxi University	http://www.sxu.edu.cn/
+1330	CN	Shaoguan University	http://www.sgu.edu.cn/
+1331	CN	Shenyang Institute of Chemical Technology	http://www.syict.edu.cn/
+1332	CN	Shenyang Jianzhu University	http://www.sjzu.edu.cn/
+1333	CN	Shenyang Pharmaceutical University	http://www.syphu.edu.cn/
+1334	CN	Shenyang Polytechnic University	http://www.sypu.edu.cn/
+1335	CN	Shenyang University	http://www.syu.edu.cn/
+1336	CN	Shenzhen University	http://www.szu.edu.cn/
+1337	CN	Shihezi University 	http://www.shzu.edu.cn/
+1338	CN	Sichuan Agricultural University	http://www.sicau.edu.cn/
+1339	CN	Sichuan Fine Art Institute	http://zsb.scfai.edu.cn/
+1340	CN	Sichuan International Studies University	http://www.sisu.edu.cn/
+1341	CN	Sichuan Normal University	http://www.sicnu.edu.cn/
+1342	CN	Sichuan University	http://www.scu.edu.cn/
+1343	CN	South China Agricultural University	http://www.scau.edu.cn/
+1344	CN	South China Construction University	http://www.sccu.edu.cn/
+1345	CN	South China Normal University	http://www.scnu.edu.cn/
+1346	CN	South China University	http://www.usc.edu.cn/
+1347	CN	South China University of Technology	http://www.scut.edu.cn/
+1348	CN	Southeast University	http://www.seu.edu.cn/
+1349	CN	Southern Medial University	http://www.fimmu.edu.cn/
+1350	CN	Southern Yangtze University	http://www.sytu.edu.cn/
+1351	CN	South University of Science and Technology of China 	http://www.sustc.edu.cn/
+1352	CN	Southwest Agricultural University	http://www.swau.edu.cn/
+1353	CN	Southwest Forestry University	http://www.swfc.edu.cn/
+1354	CN	Southwest Jiaotong University	http://www.swjtu.edu.cn/
+1355	CN	Southwest Petroleum University	http://www.swpu.edu.cn/
+1356	CN	Southwest University	http://www.swnu.edu.cn/
+1357	CN	Southwest University of Finance and Economics	http://www.swufe.edu.cn/
+1358	CN	Southwest University of Nationalities	http://www.swun.edu.cn/
+1359	CN	Southwest University of Political Science and Law	http://www.swupl.edu.cn/
+1360	CN	Southwest University of Science and Technology	http://www.swust.edu.cn/
+1361	CN	South West University Yucai College	http://www.swuyc.edu.cn/
+1362	CN	Sun Yat-Sen University of Medical Sciences	http://www.gzsums.edu.cn/
+1363	CN	Suzhou University	http://www.suda.edu.cn/
+1364	CN	Taiyuan University of Technology	http://www.tyut.edu.cn/
+1365	CN	Taizhou College	http://www.tzc.edu.cn/
+1366	CN	Tarim University	http://www.taru.edu.cn/
+1367	CN	The University of Nottingham Ningbo China	http://www.nottingham.edu.cn/
+1368	CN	Tianjin Academy of Fine Art	http://www.tjarts.edu.cn/
+1369	CN	Tianjin Medical University	http://www.tijmu.edu.cn/
+1370	CN	Tianjin Normal University	http://www.tjnu.edu.cn/
+1371	CN	Tianjin Open University	http://www.tjrtvu.edu.cn/
+1372	CN	Tianjin Polytechnic University	http://www.tjpu.edu.cn/
+1373	CN	Tianjin University	http://www.tju.edu.cn/
+1374	CN	Tianjin University of Commerce	http://www.tjcu.edu.cn/
+1375	CN	Tianjin University of Finance & Economics	http://www.tjufe.edu.cn/
+1376	CN	Tianjin University of Technology	http://www.tjut.edu.cn/
+1377	CN	Tibet Agricultural and Animal Husbandry College	http://www.xza.cn/
+1378	CN	Tibet Tibetan Medical College	http://www.ttmc.edu.cn/
+1379	CN	Tibet University	http://www.utibet.edu.cn/
+1380	CN	Tibet University of Nationalities	http://www.xzmy.edu.cn/
+1381	CN	Tongji Medical University	http://www.tjmu.edu.cn/
+1382	CN	Tongji University	http://www.tongji.edu.cn/
+1383	CN	Tsinghua University	http://www.tsinghua.edu.cn/
+1384	CN	University of Electronic Science and Technology of China	http://www.uestc.edu.cn/
+1385	CN	University of Hydraulic Electric Engineering	http://www.uheeyc.edu.cn/
+1386	CN	University of International Business and Economics	http://www.uibe.edu.cn/
+1387	CN	University of Jinan	http://www.ujn.edu.cn/
+1388	CN	University of Petroleum (East China)	http://www.hdpu.edu.cn/
+1389	CN	University of Science and Technology Beijing	http://www.ustb.edu.cn/
+1390	CN	University of Science and Technology of China	http://www.ustc.edu.cn/
+1391	CN	Urumqi Vocational University	http://www.uvu.edu.cn/
+1392	CN	Wenzhou Medical College	http://www.wzmu.net/
+1393	CN	Wenzhou University	http://www.wzu.edu.cn/
+1394	CN	West China University of Medical Sciences	http://www.wcums.edu.cn/
+1395	CN	Wudanshan Taoist College 	http://www.wdsdjxy.com/
+1396	CN	Wuhan Automobile Polytechnical University	http://www.whapu.edu.cn/
+1397	CN	Wuhan Technical University of Surveying and Mapping	http://www.wtusm.edu.cn/
+1398	CN	Wuhan Transportation University	http://www.whtu.edu.cn/
+1399	CN	Wuhan University	http://www.whu.edu.cn/
+1400	CN	Wuhan University of Hydraulic and Electric Engineering	http://www.wuhee.edu.cn/
+1401	CN	Wuhan University of Technology	http://www.whut.edu.cn/
+1402	CN	Wuhan University School of Medicine	http://wsm.whu.edu.cn/
+1403	CN	Wuxi University of Light Industry	http://www.wxuli.edu.cn/
+1404	CN	Wuyi University	http://www.wyu.edu.cn/
+1405	CN	Xiamen University	http://www.xmu.edu.cn/
+1406	CN	Xi'an Academy of Fine Art	http://www.xafa.edu.cn/
+1407	CN	Xiangtan Normal University	http://www.xtnu.edu.cn/
+1408	CN	Xiangtan University	http://www.xtu.edu.cn/
+1409	CN	Xi'an Highway University	http://www.xahu.edu.cn/
+1410	CN	Xi'an International Studies University	http://www.xisu.edu.cn/
+1411	CN	Xi'an Jiaotong-Liverpool University	http://www.xjtlu.edu.cn/
+1412	CN	Xi'an Jiaotong University	http://www.xjtu.edu.cn/
+1413	CN	Xi'an University of Architecture and Technology	http://www.xauat.edu.cn/
+1414	CN	Xi'an University of Electronic Science and Technology	http://www.xidian.edu.cn/
+1415	CN	Xi'an University of Technology	http://www.xaut.edu.cn/
+1416	CN	Xihua University	http://www.xhu.edu.cn/
+1417	CN	Xijiang University	http://www.xiju.edu.cn/
+1418	CN	Xinghai Conservatory of Music	http://www.xhcom.edu.cn/
+1419	CN	Xinjiang Agriculture University	http://www.xjau.edu.cn/
+1420	CN	Xinjiang Normal University	http://www.xjnu.edu.cn/
+1421	CN	Xinjiang University	http://www.xju.edu.cn/
+1422	CN	Xinjiang University of Finance and Economics	http://www.xjufe.edu.cn/
+1423	CN	Xuzhou Normal University	http://www.xznu.edu.cn/
+1424	CN	Yan'an University	http://www.yau.edu.cn/
+1425	CN	Yanbian University	http://www.ybu.edu.cn/
+1426	CN	Yanbian University of Science and Technology	http://www.ybust.edu.cn/
+1427	CN	Yangtze Normal University	http://www.yznu.cn/
+1428	CN	Yangtze University	http://www.yangtzeu.edu.cn/
+1429	CN	Yangzhou University	http://www.yzu.edu.cn/
+1430	CN	Yan Shan University	http://www.ysu.edu.cn/
+1431	CN	Yantai Education Institute & Yantai Television University	http://www.ytet.edu.cn/
+1432	CN	Yantai University	http://www.ytu.edu.cn/
+1433	CN	Yunnan Agriculture University	http://www.ynau.edu.cn/
+1434	CN	Yunnan Normal University	http://www.ynnu.edu.cn/
+1435	CN	Yunnan University	http://www.ynu.edu.cn/
+1436	CN	Zhanjiang Ocean University	http://www.zjou.edu.cn/
+1437	CN	Zhejiang Forestry University	http://www.zjfc.edu.cn/
+1438	CN	Zhejiang Gongshang University	http://www.zjgsu.edu.cn/
+1439	CN	Zhejiang Normal University	http://www.zjnu.edu.cn/
+1440	CN	Zhejiang Sci-Tech University 	http://www.zstu.edu.cn/
+1441	CN	Zhejiang University	http://www.zju.edu.cn/
+1442	CN	Zhejiang University of Technology	http://www.zjut.edu.cn/
+1443	CN	Zhengda Software College	http://www.zdsoft.com.cn/
+1444	CN	Zhengzhou Grain University	http://www.zzgc.edu.cn/
+1445	CN	Zhengzhou University of Technology	http://www.zzut.edu.cn/
+1446	CN	Zhongnan University of Economics and Law	http://www.znuel.net/
+1447	CN	Zhongnan University of Finance and Economics	http://www.znufe.edu.cn/
+1448	CN	Zhongnan University of Technology	http://www.zhnut.edu.cn/
+1449	CN	Zhongshan University	http://www.zsu.edu.cn/
+1450	CO	Centro de Estudios Investigación y Tecnología (CEIT)	http://www.iceit.edu.co/
+1451	CO	Colegio de Estudios Superiores de Administración (CESA)	http://www.cesa.edu.co/
+1452	CO	Conservatorio del Tolima	http://www.bundenet.com/umusical/
+1453	CO	Corporación Educativa Mayor del Desarrollo "Simón Bolivar"	http://www.unisimonbolivar.edu.co/
+1454	CO	Corporación Universitaria de Ibagué (CORUNIVERSITARIA)	http://www.cui.edu.co/
+1455	CO	Corporación Universitaria de la Costa (UNICOSTA)	http://www.cuc.edu.co/
+1456	CO	Corporación Universitaria de Santander (UDES)	http://www.udes.edu.co/
+1457	CO	Corporación Universitaria Tecnológica de Bolivar	http://www.cutb.edu.co/
+1458	CO	Escuela Colombiana de Carreras Industriales	http://www.ecci.edu.co/
+1459	CO	Escuela Colombiana de Ingeniería Julio Garavito	http://www.escuelaing.edu.co/
+1460	CO	Escuela de Administración de Negocios	http://www.ean.edu.co/
+1461	CO	Escuela de Ingeniería de Antioquia	http://www.eia.edu.co/
+1462	CO	Escuela de Policia "General Santander"	http://www.escueladepolicia.edu.co/
+1463	CO	Escuela Superiore de Administración Pública	http://www.esap.edu.co/
+1464	CO	Fundacion Escuela Colombiana de Rehabiliación	http://www.ecr.edu.co/
+1465	CO	Fundación Universitaria de Boyacá	http://www.uniboyaca.edu.co/
+1466	CO	Fundación Universitaria del Area Andina. Sede Pereira	http://www.funandi.edu.co/
+1467	CO	Fundación Universitaria Luis Amigó	http://www.funlam.edu.co/
+1468	CO	Fundación Universitaria Manuela Beltrán	http://www.umb.edu.co/
+1469	CO	Fundación Universitaria San Martín	http://www.sanmartin.edu.co/
+1470	CO	Institucion Universitaria de Envigado	http://www.iue.edu.co/
+1471	CO	Institución Universitaria Iberoamericana	http://www.iberoamericana.edu.co/
+1472	CO	Instituto Tecnológico Metropolitano	http://www.itm.edu.co/
+1473	CO	Instituto Universitario de La Paz	http://www.unipaz.edu.co/
+1474	CO	Politécnico Columbiano "Jaime Isaza Cadavid"	http://www.politecjic.edu.co/
+1475	CO	Politécnico Grancolombiano - Institución Universitaria	http://www.poligran.edu.co/
+1476	CO	Pontificia Universidad Javeriana	http://www.javeriana.edu.co/
+1477	CO	Universidad Adventista de Colombia	http://www.unac.edu.co/
+1478	CO	Universidad Antonio Nariño	http://www.uanarino.edu.co/
+1479	CO	Universidad Autónoma de Bucaramanga	http://www.unab.edu.co/
+1480	CO	Universidad Autónoma de Colombia	http://www.fuac.edu.co/
+1481	CO	Universidad Autónoma de Las Américas	http://www.uam.edu.co/
+1482	CO	Universidad Autónoma del Caribe	http://www.uac.edu.co/
+1483	CO	Universidad Autónoma de Manizales	http://www.autonoma.edu.co/
+1484	CO	Universidad Autónoma de Occidente	http://www.cuao.edu.co/
+1485	CO	Universidad Autónoma Latinoamericana	http://www.unaula.edu.co/
+1486	CO	Universidad Bellas Artes	http://www.bellasartes.edu.co/
+1487	CO	Universidad Católica de Colombia	http://www.ucatolica.edu.co/
+1488	CO	Universidad Católica del Norte	http://www.ucn.edu.co/
+1489	CO	Universidad Católica del Oriente	http://www.uco.edu.co/
+1490	CO	Universidad Católica de Manizales	http://www.ucatolicamz.edu.co/
+1491	CO	Universidad Católica Popular del Risaralda	http://www.ucpr.edu.co/
+1492	CO	Universidad Central	http://www.ucentral.edu.co/
+1493	CO	Universidad Central del Valle del Cauca	http://www.uceva.edu.co/
+1494	CO	Universidad CES	http://www.ces.edu.co/
+1495	CO	Universidad Cooperativa de Colombia	http://www.ucc.edu.co/
+1496	CO	Universidad de América Bogotá	http://www.uamerica.edu.co/
+1497	CO	Universidad de Antioquia	http://www.udea.edu.co/
+1498	CO	Universidad de Antioquía	http://www.udea.edu.co/
+1499	CO	Universidad de Bogotá "Jorge Tadeo Lozano"	http://www.utadeo.edu.co/
+1500	CO	Universidad de Caldas	http://www.ucaldas.edu.co/
+1501	CO	Universidad de Cartagena	http://www.unicartagena.edu.co/
+1502	CO	Universidad de Ciencias Aplicadas y Ambientales (UDCA)	http://www.udca.edu.co/
+1503	CO	Universidad de Córdoba	http://www.unicordoba.edu.co/
+1504	CO	Universidad de La Amazonia	http://www.uniamazonia.edu.co/
+1505	CO	Universidad de La Guajira	http://www.uniguajira.edu.co/
+1506	CO	Universidad de La Sabana	http://www.unisabana.edu.co/
+1507	CO	Universidad de La Salle	http://www.lasalle.edu.co/
+1508	CO	Universidad del Atlántico	http://www.uniatlantico.edu.co/
+1509	CO	Universidad del Cauca	http://www.ucauca.edu.co/
+1510	CO	Universidad del Magdalena	http://www.unimagdalena.edu.co/
+1511	CO	Universidad del Norte	http://www.uninorte.edu.co/
+1512	CO	Universidad de Los Andes	http://www.uniandes.edu.co/
+1513	CO	Universidad de Los Llanos	http://www.unillanos.edu.co/
+1514	CO	Universidad del Quindío	http://www.uniquindio.edu.co/
+1515	CO	Universidad del Rosario	http://www.urosario.edu.co/
+1516	CO	Universidad del Sinú	http://www.unisinucartagena.edu.co/
+1517	CO	Universidad del Tolima	http://www.ut.edu.co/
+1518	CO	Universidad del Valle del Cauca	http://www.univalle.edu.co/
+1519	CO	Universidad de Manizales	http://www.umanizales.edu.co/
+1520	CO	Universidad de Medellín	http://www.udem.edu.co/
+1521	CO	Universidad de Nariño	http://www.udenar.edu.co/
+1522	CO	Universidad de Pamplona	http://www.unipamplona.edu.co/
+1523	CO	Universidad de San Buenaventura	http://www.usb.edu.co/
+1524	CO	Universidad de San Buenaventura Medellin	http://www.usbmed.edu.co/
+1525	CO	Universidad de Sucre	http://www.unisucre.edu.co/
+1526	CO	Universidad Distral "Francisco José de Caldas"	http://www.udistrital.edu.co/
+1527	CO	Universidad EAFIT	http://www.eafit.edu.co/
+1528	CO	Universidad El Bosque	http://www.unbosque.edu.co/
+1529	CO	Universidad Externado de Colombia	http://www.uexternado.edu.co/
+1530	CO	Universidad Francisco de Paula Santander	http://www.ufps.edu.co/
+1531	CO	Universidad ICESI	http://www.icesi.edu.co/
+1532	CO	Universidad INCCA de Colombia	http://www.unincca.edu.co/
+1533	CO	Universidad Industrial de Santander	http://www.uis.edu.co/
+1534	CO	Universidad La Gran Colombia	http://www.ugrancolombia.edu.co/
+1535	CO	Universidad Libre de Colombia	http://www.unilibre.edu.co/
+1536	CO	Universidad Mariana	http://www.umariana.edu.co/
+1537	CO	Universidad Metropolitana	http://www.unimetro.edu.co/
+1538	CO	Universidad Militar Nueva Granada	http://www.umng.edu.co/
+1539	CO	Universidad Nacional Abierta y a Distancia	http://www.unad.edu.co/
+1540	CO	Universidad Nacional de Colombia	http://www.unal.edu.co/
+1541	CO	Universidad Pedagogica Nacional	http://www.pedagogica.edu.co/
+1542	CO	Universidad Pedagógica y Tecnológica de Colombia	http://www.uptc.edu.co/
+1543	CO	Universidad Piloto de Colombia	http://www.unipiloto.edu.co/
+1544	CO	Universidad Pontificia Bolivariana	http://www.upb.edu.co/
+1545	CO	Universidad Popular del Cesar	http://www.unicesar.edu.co/
+1546	CO	Universidad Santiago de Cali	http://www.usaca.edu.co/
+1547	CO	Universidad Santo Tomás	http://www.usta.edu.co/
+1548	CO	Universidad Sergio Arboleda	http://www.usergioarboleda.edu.co/
+1549	CO	Universidad Surcolombiana	http://www.usurcolombia.com/
+1550	CO	Universidad Tecnológica del Choco "Diego Luis Cordoba"	http://www.utch.edu.co/
+1551	CO	Universidad Tecnológica de Pereira	http://www.utp.edu.co/
+1552	CR	Instituto Tecnológico de Costa Rica	http://www.itcr.ac.cr/
+1553	CR	Universidad Adventista de Centro América	http://www.unadeca.ac.cr/
+1554	CR	Universidad Autónoma de Centro América	http://www.uaca.ac.cr/
+1555	CR	Universidad Autonoma Monterrey	http://www.unam.ac.cr/
+1556	CR	Universidad Braulio Carrillo	http://www.universidadbrauliocarrillo.com/
+1557	CR	Universidad Católica Anselmo Llorente	http://www.ucatolica.ac.cr/
+1558	CR	Universidad Central	http://www.universidadcentral.com/
+1559	CR	Universidad de Cartago Florencio del Castillo	http://www.uca.ac.cr/
+1560	CR	Universidad de Costa Rica	http://www.ucr.ac.cr/
+1561	CR	Universidad de Iberoamérica	http://www.unibe.ac.cr/
+1562	CR	Universidad de La Salle	http://www.ulasalle.ac.cr/
+1563	CR	Universidad del Turismo	http://www.utur.ac.cr/
+1564	CR	Universidad de San José	http://www.universidadsanjosecr.com/
+1565	CR	Universidad Empresarial	http://www.unem.edu/internacional/
+1566	CR	Universidad Estatal a Distancia	http://www.uned.ac.cr/
+1567	CR	Universidad Fidélitas	http://www.ufidelitas.ac.cr/
+1568	CR	Universidad Fundepos Alma Mater	http://www.fundepos.ac.cr/
+1569	CR	Universidad Hispanoamericana	http://www.uhispanoamericana.ac.cr/
+1570	CR	Universidad Internacional de las Américas	http://www.uia.ac.cr/
+1571	CR	Universidad Isaac Newton	http://www.isaacnewtoncr.com/
+1572	CR	Universidad Latina de Costa Rica	http://www.ulatina.ac.cr/
+1573	CR	Universidad Latinoamericana de Ciencia y Tecnología	http://www.ulacit.ac.cr/
+1574	CR	Universidad Libre de Costa Rica	http://www.ulicori.ac.cr/
+1575	CR	Universidad Metropolitana Castro Carazo	http://www.umca.net/
+1576	CR	Universidad Nacional	http://www.una.ac.cr/
+1577	CR	Universidad para la Cooperación Internacional	http://www.uci.ac.cr/
+1578	CR	Universidad San Juan de la Cruz	http://www.universidadsanjuan.ac.cr/
+1579	CR	Universidad San Juan de la Cruz	http://www.sjdlc.com/
+1580	CR	Universidad San Marcos	http://www.usam.ac.cr/
+1581	CR	Universidad Santa Paula	http://www.uspsantapaula.com/
+1582	CR	Universidad Veritas	http://www.uveritas.ac.cr/
+1583	CR	University for Peace	http://www.upeace.org/
+1584	CU	Instituto Superior Minero Metalúrgico "Dr. Antonio Núñez Jiménez"	http://www.ismm.edu.cu/
+1585	CU	Instituto Superior Politécnico José Antonio Echeverría	http://www.cujae.edu.cu/
+1586	CU	Universidad Central de Las Villas	http://www.uclv.edu.cu/
+1587	CU	Universidad de Camagüey	http://www.reduc.edu.cu/
+1588	CU	Universidad de Ciego de Avila	http://www.unica.cu/
+1589	CU	Universidad de Cienfuegos	http://www.ucf.edu.cu/
+1590	CU	Universidad de Granma	http://www.udg.co.cu/
+1591	CU	Universidad de Holguín	http://www.uho.edu.cu/
+1592	CU	Universidad de La Habana	http://www.uh.cu/
+1593	CU	Universidad de Matanzas Camilo Cienfuegos	http://www.umcc.cu/
+1594	CU	Universidad de Oriente	http://www.uo.edu.cu/
+1595	CU	Universidad de Pinar del Río	http://www.upr.edu.cu/
+1596	CU	Universidad Pedagógica "José Martí", Camagüey	http://www.ispcmw.rimed.cu/
+1597	CV	Universidade Jean Piaget de Cabo Verde	http://cv.unipiaget.org/
+1598	CY	Americanos College	http://www.ac.ac.cy/
+1599	CY	Cyprus College	http://www.cycollege.ac.cy/
+1600	CY	Cyprus International Institute of Management (CIIM)	http://www.ciim.ac.cy/
+1601	CY	Cyprus International University	http://www.ciu.edu.tr/
+1602	CY	Cyprus University of Technology	http://www.cut.ac.cy/
+1603	CY	Eastern Mediterranean University	http://www.emu.edu.tr/
+1604	CY	European University Cyprus	http://www.euc.ac.cy/
+1605	CY	European University of Lefke	http://www.lefke.edu.tr/
+1606	CY	Frederick University	http://www.frederick.ac.cy/
+1607	CY	Girne American University	http://www.gau.edu.tr/
+1608	CY	Intercollege	http://www.intercollege.ac.cy/
+1609	CY	Near East University	http://www.neu.edu.tr/
+1610	CY	Open University of Cyprus	http://www.ouc.ac.cy/
+1611	CY	The CTL Eurocollege	http://www.ctleuro.ac.cy/
+1612	CY	University of Cyprus	http://www.ucy.ac.cy/
+1613	CY	University of Nicosia	http://www.unic.ac.cy/
+1614	CZ	Academy of Performing Arts, Film and TV Fakulty	http://www.famu.cz/
+1615	CZ	Anglo-American University	http://www.aauni.edu/
+1616	CZ	Brno University of Technology	http://www.vutbr.cz/
+1617	CZ	Cevro Institut College	http://www.vsci.cz/
+1618	CZ	Charles University Prague	http://www.cuni.cz/
+1619	CZ	Czech Technical University of Prague	http://www.cvut.cz/
+1620	CZ	Czech University of Agriculture Prague	http://www.czu.cz/
+1621	CZ	Masaryk University	http://www.muni.cz/
+1622	CZ	Mendel University of Agriculture and Forestry	http://www.mendelu.cz/
+1623	CZ	Palacky University	http://www.upol.cz/
+1624	CZ	Prague College	http://www.praguecollege.cz/
+1625	CZ	Prague Institute of Chemical Technology	http://www.vscht.cz/
+1626	CZ	Prague International University	http://www.mpu-prague.cz/
+1627	CZ	Silesian University	http://www.slu.cz/
+1628	CZ	Technical University of Liberec	http://www.vslib.cz/
+1629	CZ	Technical University of Mining and Metallurgy Ostrava	http://www.vsb.cz/
+1630	CZ	Tiffin University Prague	http://www.tiffinprague.cz/
+1631	CZ	Tomas Bata University in Zlin	http://www.utb.cz/
+1632	CZ	University of Economics Prague	http://www.vse.cz/
+1633	CZ	University of Education Hradec Kralove	http://www.vsp.cz/
+1634	CZ	University of Jan Evangelista Purkyne	http://www.ujep.cz/
+1635	CZ	University of New York in Prague	http://www.unyp.cz/
+1636	CZ	University of Northern Virginia, Prague Campus	http://www.unva.cz/
+1637	CZ	University of Ostrava	http://www.osu.cz/
+1638	CZ	University of Pardubice	http://www.upce.cz/
+1639	CZ	University of South Bohemia	http://www.jcu.cz/
+1640	CZ	University of Veterinary and Pharmaceutical Science	http://www.vfu.cz/
+1641	CZ	University of West Bohemia	http://www.zcu.cz/
+1642	DE	AKAD Hochschulen für Berufstätige, Fachhochschule Leipzig	http://www.akad.de/
+1643	DE	Albert-Ludwigs-Universität Freiburg	http://www.uni-freiburg.de/
+1644	DE	Alice-Salomon-Fachhochschule für Sozialarbeit und Sozialpädagogik Berlin	http://www.asfh-berlin.de/
+1645	DE	Augustana Hochschule Neuendettelsau	http://www.augustana.de/
+1646	DE	Bauhaus Universität Weimar	http://www.uni-weimar.de/
+1647	DE	Bayerische Julius-Maximilians-Universität Würzburg	http://www.uni-wuerzburg.de/
+1648	DE	Bergische Universität Gesamthochschule Wuppertal	http://www.uni-wuppertal.de/
+1649	DE	BiTS - Business and Information Technology School gGmbH	http://www.bits-iserlohn.de/
+1650	DE	Brandenburgische Technische Universität Cottbus	http://www.tu-cottbus.de/
+1651	DE	Carl von Ossietzky Universität Oldenburg	http://www.uni-oldenburg.de/
+1652	DE	Christian-Albrechts-Universität Kiel	http://www.uni-kiel.de/
+1653	DE	Cologne Business School	http://www.cbs.de/
+1654	DE	Deutsche Hochschule für Verwaltungswissenschaften Speyer	http://www.dhv-speyer.de/
+1655	DE	Deutsche Sporthochschule Köln	http://www.dshs-koeln.de/
+1656	DE	Deutsche Telekom Fachhochschule Leipzig	http://www.fh-telekom-leipzig.de/
+1657	DE	Deutsch-Ordens Fachhochschule Riedlingen, Hochschule für Wirtschaft	http://www.fh-riedlingen.de/
+1658	DE	DIPLOMA-Fachhochschule Ölsnitz/Vogtland	http://www.diploma.de/
+1659	DE	Duale Hochschule Baden-Württemberg	http://www.dhbw.de/
+1660	DE	E.A.P. Europäische Wirtschaftshochschule Berlin	http://www.eap.net/
+1661	DE	Eberhard-Karls-Universität Tübingen	http://www.uni-tuebingen.de/
+1662	DE	Ernst-Moritz-Arndt Universität Greifswald	http://www.uni-greifswald.de/
+1663	DE	Europa Fachhochschule Fresenius	http://www.fh-fresenius.de/
+1664	DE	Europäische Betriebswirtschafts-Akademie	http://www.eba-muenchen.de/
+1665	DE	Europäische Fachhochschule	http://www.eufh.de/
+1666	DE	Europa-Universität Viadrina Frankfurt (Oder)	http://www.euv-frankfurt-o.de/
+1667	DE	European Business School Schloß Reichartshausen	http://www.ebs.de/
+1668	DE	European College of Liberal Arts	http://www.ecla.de/
+1669	DE	European Management School	http://www.ems-mainz.de/
+1670	DE	Evangelische Fachhochschule Berlin, Fachhochschule für Sozialarbeit und Sozialpädagogik	http://www.evfh-berlin.de/
+1671	DE	Evangelische Fachhochschule Darmstadt	http://www.efh-darmstadt.de/
+1672	DE	Evangelische Fachhochschule Freiburg, Hochschule für Soziale Arbeit, Diakonie und Religionspädagogik	http://www.efh-freiburg.de/
+1673	DE	Evangelische Fachhochschule für Religionspädagogik, und Gemeindediakonie Moritzburg	http://www.fhs-moritzburg.de/
+1674	DE	Evangelische Fachhochschule für Sozialpädagogik der "Diakonenanstalt des Rauhen Hauses" Hamburg	http://www.rauheshaus.de/fachhochschule/
+1675	DE	Evangelische Fachhochschule Hannover	http://www.efh-hannover.de/
+1676	DE	Evangelische Fachhochschule Ludwigshafen Hochschule für Sozial- und Gesundheitswesen	http://www.efhlu.de/
+1677	DE	Evangelische Fachhochschule Nürnberg	http://www.evfh-nuernberg.de/
+1678	DE	Evangelische Fachhochschule Reutlingen-Ludwigsburg, Hochschule für Soziale Arbeit, Religionspädagogik und Diakonie	http://www.efh-reutlingen-ludwigsburg.de/
+1679	DE	Evangelische Fachhochschule Rheinland-Westfalen-Lippe	http://www.efh-bochum.de/
+1680	DE	Evangelische Hochschule für Soziale Arbeit Dresden (FH)	http://www.ehs-dresden.de/
+1681	DE	Fachhochschule Aachen	http://www.fh-aachen.de/
+1682	DE	Fachhochschule Aschaffenburg	http://www.fh-aschaffenburg.de/
+1683	DE	Fachhochschule Augsburg	http://www.fh-augsburg.de/
+1684	DE	Fachhochschule Biberach, Hochschule für Bauwesen und Wirtschaft	http://www.fh-biberach.de/
+1685	DE	Fachhochschule Bielefeld	http://www.fh-bielefeld.de/
+1686	DE	Fachhochschule Bingen	http://www.fh-bingen.de/
+1687	DE	Fachhochschule Bochum	http://www.fh-bochum.de/
+1688	DE	Fachhochschule Bonn-Rhein-Sieg	http://www.fh-bonn-rhein-sieg.de/
+1689	DE	Fachhochschule Brandenburg	http://www.fh-brandenburg.de/
+1690	DE	Fachhochschule Braunschweig/Wolfenbüttel	http://www.fh-wolfenbuettel.de/
+1691	DE	Fachhochschule Deggendorf	http://www.fh-deggendorf.de/
+1692	DE	Fachhochschule der Wirtschaft	http://www.fhdw.de/
+1693	DE	Fachhochschule des Mittelstandes (FHM)	http://www.fhm-mittelstand.de/
+1694	DE	Fachhochschule Dortmund	http://www.fh-dortmund.de/
+1695	DE	Fachhochschule Düsseldorf	http://www.fh-duesseldorf.de/
+1696	DE	Fachhochschule Eberswalde	http://www.fh-eberswalde.de/
+1697	DE	Fachhochschule Erfurt	http://www.fh-erfurt.de/
+1698	DE	Fachhochschule Flensburg	http://www.fh-flensburg.de/
+1699	DE	Fachhochschule Frankfurt am Main	http://www.fh-frankfurt.de/
+1700	DE	Fachhochschule für das öffentliche Bibliothekswesen Bonn	http://www.fhoebb.de/
+1701	DE	Fachhochschule für die Wirtschaft	http://www.fhdw.bib.de/
+1702	DE	Fachhochschule für Oekonomie und Management (FOM)	http://www.fom.de/
+1703	DE	Fachhochschule für Technik und Wirtschaft Berlin	http://www.fhtw-berlin.de/
+1704	DE	Fachhochschule Furtwangen, Hochschule für Technik und Wirtschaft	http://www.fh-furtwangen.de/
+1705	DE	Fachhochschule für Verwaltung und Rechtspflege Berlin	http://www.fhvr.berlin.de/
+1706	DE	Fachhochschule für Wirtschaft Berlin	http://www.fhw-berlin.de/
+1707	DE	Fachhochschule Gelsenkirchen	http://www.fh-gelsenkirchen.de/
+1708	DE	Fachhochschule Gießen-Friedberg	http://www.fh-giessen.de/
+1709	DE	Fachhochschule Hamburg	http://www.fh-hamburg.de/
+1710	DE	Fachhochschule Hannover	http://www.fh-hannover.de/
+1711	DE	Fachhochschule Heidelberg	http://www.fh-heidelberg.de/
+1712	DE	Fachhochschule Heilbronn, Hochschule für Technik und Wirtschaft	http://www.fh-heilbronn.de/
+1713	DE	Fachhochschule Hildesheim/Holzminden/Göttingen, Hochschule für angewandte Wissenschaft und Kunst	http://www.fh-hildesheim.de/
+1714	DE	Fachhochschule Hof	http://www.fh-hof.de/
+1715	DE	Fachhochschule Ingolstadt	http://www.fh-ingolstadt.de/
+1716	DE	Fachhochschule Jena	http://www.fh-jena.de/
+1717	DE	Fachhochschule Kaiserslautern	http://www.fh-kl.de/
+1718	DE	Fachhochschule Kempten, Hochschule für Technik und Wirtschaft	http://www.fh-Kempten.de/
+1719	DE	Fachhochschule Kiel	http://www.fh-kiel.de/
+1720	DE	Fachhochschule Koblenz	http://www.fh-koblenz.de/
+1721	DE	Fachhochschule Köln	http://www.fh-koeln.de/
+1722	DE	Fachhochschule Konstanz, Hochschule für Technik, Wirtschaft und Gestaltung	http://www.fh-konstanz.de/
+1723	DE	Fachhochschule Landshut, Hochschule für Wirtschaft - Sozialwesen - Technik	http://www.fh-landshut.de/
+1724	DE	Fachhochschule Lausitz	http://www.fh-lausitz.de/
+1725	DE	Fachhochschule Lippe	http://www.fh-lippe.de/
+1726	DE	Fachhochschule Lübeck	http://www.fh-luebeck.de/
+1727	DE	Fachhochschule Ludwigshafen, Hochschule für Wirtschaft	http://www.fh-ludwigshafen.de/
+1728	DE	Fachhochschule Mainz	http://www.fh-mainz.de/
+1729	DE	Fachhochschule Mannheim, Hochschule für Sozialwesen	http://www.fhs-mannheim.de/
+1730	DE	Fachhochschule Mannheim, Hochschule für Technik und Gestaltung	http://www.fh-mannheim.de/
+1731	DE	Fachhochschule Merseburg	http://www.fh-merseburg.de/
+1732	DE	Fachhochschule München	http://www.fh-muenchen.de/
+1733	DE	Fachhochschule Münster	http://www.fh-muenster.de/
+1734	DE	Fachhochschule Neubrandenburg	http://www.fh-nb.de/
+1735	DE	Fachhochschule Neu-Ulm	http://www.fh-neu-ulm.de/
+1736	DE	Fachhochschule Niederrhein	http://www.fh-niederrhein.de/
+1737	DE	Fachhochschule Nordhausen	http://www.fh-nordhausen.de/
+1738	DE	Fachhochschule Nordhessen	http://www.diploma.de/
+1739	DE	Fachhochschule Nordostniedersachsen	http://www.fhnon.de/
+1740	DE	Fachhochschule Nürtingen, Hochschule für Wirtschaft, Landwirtschaft und Landespflege	http://www.fh-nuertingen.de/
+1741	DE	Fachhochschule Offenburg, Hochschule für Technik und Wirtschaft	http://www.fh-offenburg.de/
+1742	DE	Fachhochschule Oldenburg/Ostfriesland/Wilhelmshaven	http://www.fh-oow.de/
+1743	DE	Fachhochschule Osnabrück	http://www.fh-osnabrueck.de/
+1744	DE	Fachhochschule Pforzheim, Hochschule für Gestaltung, Technik und Wirtschaft	http://www.fh-pforzheim.de/
+1745	DE	Fachhochschule Potsdam	http://www.fh-potsdam.de/
+1746	DE	Fachhochschule Ravensburg-Weingarten	http://www.fh-weingarten.de/
+1747	DE	Fachhochschule Regensburg	http://www.fh-regensburg.de/
+1748	DE	Fachhochschule Reutlingen, Hochschule für Technik und Wirtschaft	http://www.fh-reutlingen.de/
+1749	DE	Fachhochschule Rosenheim, Hochschule für Technik und Wirtschaft	http://www.fh-rosenheim.de/
+1750	DE	Fachhochschule Rottenburg, Hochschule für Forstwirtschaft	http://www.fh-rottenburg.de/
+1751	DE	Fachhochschule Schmalkalden	http://www.fh-schmalkalden.de/
+1752	DE	Fachhochschule Schwäbisch Gmünd, Hochschule für Gestaltung	http://www.hfg-gmuend.de/
+1753	DE	Fachhochschule Schwäbisch Hall, Hochschule für Gestaltung	http://www.fh-schwaebischhall.de/
+1754	DE	Fachhochschule Stralsund	http://www.fh-stralsund.de/
+1755	DE	Fachhochschule Stuttgart, Hochschule der Medien	http://www.hdm-stuttgart.de/
+1756	DE	Fachhochschule Stuttgart, Hochschule für Technik	http://www.fht-stuttgart.de/
+1757	DE	Fachhochschule Trier, Hochschule für Technik, Wirtschaft und Gestaltung	http://www.fh-trier.de/
+1758	DE	Fachhochschule Ulm, Hochschule für Technik	http://www.fh-ulm.de/
+1759	DE	Fachhochschule und Berufskollegs NTA, Prof.Dr. Grübler gemein. GmbH	http://www.fh-isny.de/
+1760	DE	Fachhochschule Wedel	http://www.fh-wedel.de/
+1761	DE	Fachhochschule Weihenstephan	http://www.fh-weihenstephan.de/
+1762	DE	Fachhochschule Westküste, Hochschule für Wirtschaft und Technik	http://www.fh-westkueste.de/
+1763	DE	Fachhochschule Wiesbaden	http://www.fh-wiesbaden.de/
+1764	DE	Fachhochschule Worms	http://www.fh-worms.de/
+1765	DE	Fachhochschule Würzburg - Schweinfurt	http://www.fh-wuerzburg.de/
+1766	DE	Fern-Fachhochschule Hamburg	http://www.fern-fh.de/
+1767	DE	Fernuniversität Gesamthochschule Hagen	http://www.fernuni-hagen.de/
+1768	DE	Freie Kunst-Studienstätte Ottersberg	http://www.fh-ottersberg.de/
+1769	DE	Freie Universität Berlin	http://www.fu-berlin.de/
+1770	DE	Friedrich-Alexander Universität Erlangen-Nürnberg	http://www.uni-erlangen.de/
+1771	DE	Friedrich-Schiller Universität Jena	http://www.uni-jena.de/
+1772	DE	Georg-August Universität Göttingen	http://www.uni-goettingen.de/
+1773	DE	Georg-Simon-Ohm-Fachhochschule Nürnberg	http://www.fh-nuernberg.de/
+1774	DE	Gustav-Siewerth-Akademie	http://www.siewerth-akademie.de/
+1775	DE	Hafencity Universität Hamburg	http://www.hcu-hamburg.de/
+1776	DE	Handelshochschule Leipzig	http://www.hhl.de/
+1777	DE	Heinrich-Heine Universität Düsseldorf	http://www.uni-duesseldorf.de/
+1778	DE	Hertie School of Governance	http://www.hertie-school.org/
+1779	DE	Hochschule Albstadt-Sigmaringen	http://www.hs-albsig.de/
+1780	DE	Hochschule Anhalt (FH), Hochschule für angewandte Wissenschaften	http://www.hs-anhalt.de/
+1781	DE	Hochschule Bremen	http://www.hs-bremen.de/
+1782	DE	Hochschule Bremerhaven	http://www.hs-bremerhaven.de/
+1783	DE	Hochschule Coburg	http://www.hs-coburg.de/
+1784	DE	Hochschule Darmstadt	http://www.hs-darmstadt.de/
+1785	DE	Hochschule Esslingen	http://www.hs-esslingen.de/
+1786	DE	Hochschule Fulda	http://www.hs-fulda.de/
+1787	DE	Hochschule für Bankwirtschaft (HfB), Private Fachhochschule der Bankakademie	http://www.hfb.de/
+1788	DE	Hochschule für Berufstätige Rendsburg	http://www.akad.de/
+1789	DE	Hochschule für Internationales Management	http://www.himh.de/
+1790	DE	Hochschule für Jüdische Studien Heidelberg	http://www.hjs.uni-heidelberg.de/
+1791	DE	Hochschule für Philosophie München	http://www.hfph.mwn.de/
+1792	DE	Hochschule für Politik (HFP)	http://www.hfp.mhn.de/
+1793	DE	Hochschule für Technik und Wirtschaft des Saarlandes	http://www.htw-saarland.de/
+1794	DE	Hochschule für Technik und Wirtschaft Dresden (FH)	http://www.htw-dresden.de/
+1795	DE	Hochschule für Technik und Wirtschaft Karlsruhe	http://www.hs-karlsruhe.de/
+1796	DE	Hochschule für Technik, Wirtschaft und Kultur Leipzig (FH)	http://www.htwk-leipzig.de/
+1797	DE	Hochschule Harz, Hochschule für angewandte Wissenschaften (FH)	http://www.hs-harz.de/
+1798	DE	Hochschule Magdeburg-Stendal (FH)	http://www.hs-magdeburg.de/
+1799	DE	Hochschule Mittweida (FH)	http://www.htwm.de/
+1800	DE	Hochschule Vechta	http://www.uni-vechta.de/
+1801	DE	Hochschule Wismar, Fachhochschule für Technik, Wirtschaft und Gestaltung	http://www.hs-wismar.de/
+1802	DE	Hochschule Zittau/Görlitz (FH)	http://www.hs-zigr.de/
+1803	DE	Humboldt Universität Berlin	http://www.hu-berlin.de/
+1804	DE	HWP - Hamburger Universität für Wirtschaft und Politik	http://www.hwp-hamburg.de/
+1805	DE	Internationale Fachhochschule Aalen	http://www.international.fh-aalen.de/
+1806	DE	Internationale Fachhochschule Bad Honnef	http://www.fh-bad-honnef.de/
+1807	DE	Internationales Hochschulinstitut Zittau	http://www.ihi-zittau.de/
+1808	DE	International School of Management ISM Dortmund	http://www.ism-dortmund.de/
+1809	DE	International School of New Media, University of Lübeck	http://www.isnm.de/
+1810	DE	International University in Germany	http://www.i-u.de/
+1811	DE	Jacobs University Bremen	http://www.jacobs-university.de/
+1812	DE	Johannes-Gutenberg Universität Mainz	http://www.uni-mainz.de/
+1813	DE	Johann Wolfgang Goethe Universität Frankfurt am Main	http://www.uni-frankfurt.de/
+1814	DE	Justus Liebig Universität Gießen	http://www.uni-giessen.de/
+1815	DE	Karlshochschule International University	http://www.karlshochschule.de/
+1816	DE	Katholische Fachhochschule Berlin (KFB)	http://www.kfb-berlin.de/
+1817	DE	Katholische Fachhochschule Freiburg, Hochschule für Sozialwesen, Religionspädagogik und Pflege	http://www.kfh-Freiburg.de/
+1818	DE	Katholische Fachhochschule Mainz	http://www.kfh-mainz.de/
+1819	DE	Katholische Fachhochschule Norddeutschland	http://www.kath-fh-nord.de/
+1820	DE	Katholische Fachhochschule Nordrhein-Westfalen	http://www.kfhnw.de/
+1821	DE	Katholische Hochschule für Soziale Arbeit Saarbrücken	http://www.khsa.de/
+1822	DE	Katholische Stiftungsfachhochschule München	http://www.ksfh.de/
+1823	DE	Katholische Universität Eichstätt	http://www.ku-eichstaett.de/
+1824	DE	Kirchliche Hochschule Bethel	http://www.bethel.de/kiho/
+1825	DE	Kirchliche Hochschule Wuppertal	http://www.uni-wuppertal.de/inst/kiho/
+1826	DE	Kunstakademie Düsseldorf.	http://www.kunstakademie-duesseldorf.de/
+1827	DE	Kunsthochschule Berlin-Weissensee, Hochschule für Gestaltung 	http://www.kh-berlin.de/
+1828	DE	Ludwig-Maximilians-Universität München	http://www.uni-muenchen.de/
+1829	DE	Lutherische Theologische Hochschule Oberursel	http://www.selk.de/LThH/
+1830	DE	Märkische Fachhochschule Iserlohn	http://www.mfh-iserlohn.de/
+1831	DE	Martin-Luther Universität Halle-Wittenberg	http://www.uni-halle.de/
+1832	DE	Medizinische Hochschule Hannover	http://www.mh-hannover.de/
+1833	DE	Medizinische Universität Lübeck	http://www.mu-luebeck.de/
+1834	DE	Merkur Internationale FH Karlsruhe	http://www.merkur-fh.org/
+1835	DE	Merz Akademie, Hochschule für Gestaltung Stuttgart	http://www.merz-akademie.de/
+1836	DE	Muthesius-Hochschule, Fachhochschule für Kunst und Gestaltung	http://www.muthesius.de/
+1837	DE	Nordakademie, Staatlich anerkannte private Fachhochschule mit dualen Studiengängen	http://www.nordakademie.de/
+1838	DE	Northern Institute of Technology Management (NIT)	http://www.nithh.de/
+1839	DE	Otto-Friedrich Universität Bamberg	http://www.uni-bamberg.de/
+1840	DE	Otto-von-Guericke Universität Magdeburg	http://www.uni-magdeburg.de/
+1841	DE	Pädagogische Hochschule Erfurt/Mühlhausen	http://www.ph-erfurt.de/
+1842	DE	Pädagogische Hochschule Freiburg	http://www.ph-freiburg.de/
+1843	DE	Pädagogische Hochschule Heidelberg	http://www.ph-heidelberg.de/
+1844	DE	Pädagogische Hochschule Karlsruhe	http://www.ph-karlsruhe.de/
+1845	DE	Pädagogische Hochschule Ludwigsburg	http://www.ph-ludwigsburg.de/
+1846	DE	Pädagogische Hochschule Schwäbisch Gmünd	http://www.ph-gmuend.de/
+1847	DE	Pädagogische Hochschule Weingarten	http://www.ph-weingarten.de/
+1848	DE	Phillips-Universität Marburg	http://www.uni-marburg.de/
+1849	DE	Philosophisch-Theologische Hochschule der Salesianer Don Boscos	http://www.pth-bb.de/
+1850	DE	Philosophisch-Theologische Hochschule Münster	http://www.pth-muenster.de/
+1851	DE	Philosophisch-Theologische Hochschule Sankt Georgen	http://www.st-georgen.uni-frankfurt.de/
+1852	DE	Philosophisch-Theologische Hochschule SVD Sankt Augustin	http://www.philtheol-augustin.de/
+1853	DE	Philosophisch-Theologische Hochschule Vallendar der Gesellschaft des Katholischen Apostolates (Pallottiner)	http://www.pthv.de/
+1938	DK	International Business School of Scandinavia	http://www.ibss.eu/
+1854	DE	Philosophisch-Theologisches Studium Erfurt, Staatlich anerkannte Wissenschaftliche Hochschule	http://www.uni-erfurt.de/phil-theol/
+1855	DE	Popakademie Baden-Württemberg	http://www.popakademie.de/
+1856	DE	Private Fachhochschule für Wirtschaft und Technik Vechta/Diepholz	http://www.fhwt.de/
+1857	DE	Private Fachhochschule Göttingen	http://www.pfh-goettingen.de/
+1858	DE	Private FernFachhochschule Darmstadt	http://www.privatfh-da.de/
+1859	DE	Private Hanseuniversität	http://www.hanseuni.de/
+1860	DE	Private Universität Witten/Herdecke	http://www.uni-wh.de/
+1861	DE	Rheinische Fachhochschule Köln	http://www.rfh-koeln.de/
+1862	DE	Rheinische Friedrich-Wilhelms Universität Bonn	http://www.uni-bonn.de/
+1863	DE	Rheinisch Westfälische Technische Hochschule Aachen	http://www.rwth-aachen.de/
+1864	DE	Ruhr-Universität Bochum	http://www.ruhr-uni-bochum.de/
+1865	DE	Ruprecht-Karls-Universität Heidelberg	http://www.uni-heidelberg.de/
+1866	DE	Schiller International University, Heidelberg	http://www.siu-heidelberg.de/
+1867	DE	SRH University of Applied Sciences	http://www.srh-berlin.de/
+1868	DE	Staatlich anerkannte Fachhochschule für Kunsttherapie	http://www.fhkt.de/
+1869	DE	Staatliche Hochschule für Musik	http://www.mh-trossingen.de/
+1870	DE	Steinbeis-Hochschule-Berlin	http://www.stw.de/shb/
+1871	DE	Technische Fachhochschule Berlin	http://www.tfh-berlin.de/
+1872	DE	Technische Fachhochschule Georg Agricola für Rohstoff, Energie und, Umwelt zu Bochum	http://www.tfh-bochum.de/
+1873	DE	Technische Fachhochschule Wildau	http://www.tfh-wildau.de/
+1874	DE	Technische Universität Bergakademie Freiberg	http://www.tu-freiberg.de/
+1875	DE	Technische Universität Berlin	http://www.tu-berlin.de/
+1876	DE	Technische Universität Carolo-Wilhelmina Braunschweig	http://www.tu-bs.de/
+1877	DE	Technische Universität Chemnitz	http://www.tu-chemnitz.de/
+1878	DE	Technische Universität Clausthal	http://www.tu-clausthal.de/
+1879	DE	Technische Universität Darmstadt	http://www.tu-darmstadt.de/
+1880	DE	Technische Universität Dresden	http://www.tu-dresden.de/
+1881	DE	Technische Universität Hamburg-Harburg	http://www.tu-harburg.de/
+1882	DE	Technische Universität Ilmenau	http://www.tu-ilmenau.de/
+1883	DE	Technische Universität München	http://www.tu-muenchen.de/
+1884	DE	Theologische Fakultät Paderborn	http://www.paderborn.de/theofak/
+1885	DE	Theologische Fakultät Trier	http://www.uni-trier.de/uni/theo/
+1886	DE	Theologische Hochschule Friedensau	http://www.thh-friedensau.de/
+1887	DE	Tierärztliche Hochschule Hannover	http://www.tiho-hannover.de/
+1888	DE	Universität Augsburg	http://www.uni-augsburg.de/
+1889	DE	Universität Bayreuth	http://www.uni-bayreuth.de/
+1890	DE	Universität Bielefeld	http://www.uni-bielefeld.de/
+1891	DE	Universität Bremen	http://www.uni-bremen.de/
+1892	DE	Universität der Bundeswehr Hamburg	http://www.unibw-hamburg.de/
+1893	DE	Universität der Bundeswehr München	http://www.unibw-muenchen.de/
+1894	DE	Universität des Saarlandes	http://www.uni-saarland.de/
+1895	DE	Universität Dortmund	http://www.uni-dortmund.de/
+1896	DE	Universität Duisburg-Essen	http://www.uni-duisburg-essen.de/
+1897	DE	Universität Erfurt	http://www.uni-erfurt.de/
+1898	DE	Universität Flensburg	http://www.uni-flensburg.de/
+1899	DE	Universität Fridericana Karlsruhe (Technische Hochschule)	http://www.uni-karlsruhe.de/
+1900	DE	Universität Hamburg	http://www.uni-hamburg.de/
+1901	DE	Universität Hannover	http://www.uni-hannover.de/
+1902	DE	Universität Hildesheim	http://www.uni-hildesheim.de/
+1903	DE	Universität Hohenheim	http://www.uni-hohenheim.de/
+1904	DE	Universität Kaiserslautern	http://www.uni-kl.de/
+1905	DE	Universität Kassel	http://www.uni-kassel.de/
+1906	DE	Universität Koblenz-Landau	http://www.uni-koblenz-landau.de/
+1907	DE	Universität Köln	http://www.uni-koeln.de/
+1908	DE	Universität Konstanz	http://www.uni-konstanz.de/
+1909	DE	Universität Leipzig	http://www.uni-leipzig.de/
+1910	DE	Universität Lüneburg	http://www.uni-lueneburg.de/
+1911	DE	Universität Mannheim	http://www.uni-mannheim.de/
+1912	DE	Universität Osnabrück	http://www.uni-osnabrueck.de/
+1913	DE	Universität Paderborn	http://www.uni-paderborn.de/
+1914	DE	Universität Passau	http://www.uni-passau.de/
+1915	DE	Universität Potsdam	http://www.uni-potsdam.de/
+1916	DE	Universität Regensburg	http://www.uni-regensburg.de/
+1917	DE	Universität Rostock	http://www.uni-rostock.de/
+1918	DE	Universität Siegen	http://www.uni-siegen.de/
+1919	DE	Universität Stuttgart	http://www.uni-stuttgart.de/
+1920	DE	Universität Trier	http://www.uni-trier.de/
+1921	DE	Universität Ulm	http://www.uni-ulm.de/
+1922	DE	Westfälische Wilhelms-Universität Münster	http://www.uni-muenster.de/
+1923	DE	Westsächsische Hochschule Zwickau (FH)	http://www.fh-zwickau.de/
+1924	DE	Wissenschaftliche Hochschule für Unternehmensführung, Otto-Beisheim Hochschule	http://www.whu-koblenz.de/
+1925	DJ	Université de Djibouti	http://www.univ.edu.dj/
+1926	DK	Aalborg Business College	http://www.ah.dk/
+1927	DK	Aalborg University	http://www.auc.dk/
+1928	DK	Aarhus School of Architecture	http://www.a-aarhus.dk/
+1929	DK	Aarhus School of Business	http://www.hha.dk/
+1930	DK	Aarhus Technical College	http://www.ats.dk/
+1931	DK	Aarhus University	http://www.au.dk/
+1932	DK	Copenhagen Business School	http://www.cbs.dk/
+1933	DK	Copenhagen University	http://www.ku.dk/
+1934	DK	Danish Business Academy	http://www.ddea.dk/
+1935	DK	Danish University of Education	http://www.dpu.dk/
+1936	DK	Engineering College of Aarhus	http://www.iha.dk/
+1937	DK	Engineering College of Copenhagen	http://www.ihk.dk/
+1939	DK	International People's College	http://www.ipc.dk/
+1940	DK	IT University of Copenhagen	http://www.itu.dk/
+1941	DK	Knightsbridge University	http://www.knightsbridgeuniversity.com/
+1942	DK	Lutheran School Of Theology In Aarhus	http://www.teologi.dk/
+1943	DK	Odense University	http://www.ou.dk/
+1944	DK	Roskilde University	http://www.ruc.dk/
+1945	DK	Royal Academy of Music	http://www.musik-kons.dk/
+1946	DK	Royal Danish Academy of Fine Arts, School of Architecture	http://www.karch.dk/
+1947	DK	Royal Danish Academy of Fine Arts, School of Visual Art	http://www.kunstakademiet.dk/
+1948	DK	Royal Danish Academy of Music	http://www.dkdm.dk/
+1949	DK	Royal Danish School of Educational Sciences	http://www.dlh.dk/
+1950	DK	Royal Danish School of Pharmacy	http://www.dfh.dk/
+1951	DK	Royal School of Library and Information Science	http://www.db.dk/
+1952	DK	Royal Veterinary and Agricultural University	http://www.kvl.dk/
+1953	DK	Southern Denmark Business School	http://www.hhs.dk/
+1954	DK	Technical University of Denmark	http://www.dtu.dk/
+1955	DK	Tietgen Business College	http://www.tietgen.dk/
+1956	DK	University of Southern Denmark	http://www.sdu.dk/
+1957	DM	Ballsbridge University 	http://www.acedu.org/
+1958	DM	Dominica State College	http://www.dsc.dm/
+1959	DM	New World University	http://www.newworld.ac/
+1960	DM	Ross University Caribbean School of Medicine	http://www.rossu.edu/medical-school/
+1961	DO	Instituto Tecnológico de Santo Domingo	http://www.intec.edu.do/
+1962	DO	Pontificia Universidad Católica Madre y Maestra (PUCMM)	http://www.pucmm.edu.do/
+1963	DO	Universidad Abierta Para Adultos	http://www.uapa.edu.do/
+1964	DO	Universidad Adventista Dominicana	http://www.unad.edu.do/
+1965	DO	Universidad Agroforestal Fernando A.Meriño	http://www.uafam.edu.do/
+1966	DO	Universidad APEC	http://www.unapec.edu.do/
+1967	DO	Universidad Autónoma de Santo Domingo	http://www.uasd.edu.do/
+1968	DO	Universidad Católica de Santo Domingo	http://www.ucsd.edu.do/
+1969	DO	Universidad Católica Madre y Maestra	http://www.pucmm.edu.do/
+1970	DO	Universidad Católica Nordestana	http://www.ucne.edu.do/
+1971	DO	Universidad Católica Tecnológica del Cibao	http://www.ucateci.edu.do/
+1972	DO	Universidad Central del Este	http://www.uce.edu.do/
+1973	DO	Universidad Central Dominicana de Estudio Profesionales	http://66.98.64.31/
+1974	DO	Universidad de la Tercera Edad	http://www.ute.edu.do/
+1975	DO	Universidad del Caribe	http://www.unicaribe.edu.do/
+1976	DO	Universidad Dominicana O&M	http://www.udoym.edu.do/
+1977	DO	Universidad Dominico-Americana	http://www.icda.edu.do/espanol/unicda/
+1978	DO	Universidad Eugenio Maria de Hostos	http://www.uniremhos.edu.do/
+1979	DO	Universidad Experimental Felix Adam	http://www.unefa.edu.do/
+1980	DO	Universidad Federico Henríquez y Carvajal	http://www.ufhec.edu.do/
+1981	DO	Universidad Iberoamericana	http://www.unibe.edu.do/
+1982	DO	Universidad Interamericana	http://www.unica.edu.do/
+1983	DO	Universidad Nacional Evangélica	http://www.unev-rd.edu.do/
+1984	DO	Universidad Nacional Pedro Henríquez Ureña	http://www.unphu.edu.do/
+1985	DO	Universidad Odontológica Dominicana	http://www.uod.edu.do/
+1986	DO	Universidad Tecnológica del Sur	http://www.utesur.edu.do/
+1987	DO	Universidad Tecnológica de Santiago	http://www.utesa.edu/
+1988	DO	Universidad Ulises Francisco Espaillat	http://www.ufhec.edu.do/
+1989	DZ	Centre Universitaire de Jijel	http://www.univ-jijel.dz/
+1990	DZ	Centre Universitaire de Tebessa	http://www.univ-tebessa.dz/
+1991	DZ	Centre Universitaire de Tiaret	http://www.univ-tiaret.dz/
+1992	DZ	Centre Universitaire d'Oum El Bouaghi	http://www.univ-oeb.dz/
+1993	DZ	Université Abou Bekr Belkaid, Tlemcen	http://www.univ-tlemcen.dz/
+1994	DZ	Université Amar Telidji	http://www.lagh-univ.dz/
+1995	DZ	Université Badji Mokhtar	http://www.univ-annaba.dz/
+1996	DZ	Université d'Alger	http://www.univ-alger.dz/
+1997	DZ	Université d'Alger 3	http://www.univ-alger3.dz/
+1998	DZ	Université de Batna	http://www.univ-batna.dz/
+1999	DZ	Université de Béjaia	http://www.univ-bejaia.dz/
+2000	DZ	Université de Biskra	http://www.univ-biskra.dz/
+2001	DZ	Université de Blida	http://www.univ-blida.dz/
+2002	DZ	Université de Chlef	http://www.univ-chlef.dz/
+2003	DZ	Université de Guelma	http://www.univ-guelma.dz/
+2004	DZ	Université de Mostaganem	http://www.univ-mosta.dz/
+2005	DZ	Université de M'sila	http://www.univ-msila.dz/
+2006	DZ	Université de Saida	http://www.univ-saida.dz/
+2007	DZ	Université de Sétif	http://www.univ-setif.dz/
+2008	DZ	Université de Sidi-Bel-Abbès (Djillali Liabès)	http://www.univ-sba.dz/
+2009	DZ	Université de Skikda	http://www.univ-skikda.dz/
+2010	DZ	Université des Sciences et de la Technologie d'Oran	http://www.univ-usto.dz/
+2011	DZ	Université des Sciences et de la Technologie Houari Boumediène	http://www.usthb.dz/
+2012	DZ	Universite des Sciences Islamiques de Constantine	http://www.univ-emir.dz/
+2013	DZ	Université d'Oran Es-Senia	http://www.univ-oran.dz/
+2014	DZ	Université Dr Tahar Moulay	http://www.univ-saida.dz/
+2015	DZ	Université Kasdi Merbah Ouargla	http://www.univ-ouargla.dz/
+2016	DZ	Université Mentouri Constantine	http://www.umc.edu.dz/
+2017	DZ	Université M'hamed Bouguerra de Boumerdes	http://www.umbb.dz/
+2018	DZ	Université Mouloud Mammeri de Tizi Ouzou	http://www.ummto.dz/
+2019	EC	Brookdale Community College	http://www.brookdale.edu.ec/
+2020	EC	Escuela Politécnica de Chimborazo	http://www.espoch.edu/
+2021	EC	Escuela Politécnica del Ejercito	http://www.espe.edu.ec
+2022	EC	Escuela Politécnica Nacional	http://www.epn.edu.ec/
+2023	EC	Escuela Superior Politécnica del Litoral	http://www.espol.edu.ec/
+2024	EC	Pontificia Universidad Católica del Ecuador	http://www.puce.edu.ec/
+2025	EC	Universidad Agraria del Ecuador	http://www.uagraria.edu.ec/
+2026	EC	Universidad Andina Simón Bolívar	http://www.uasb.edu.ec/
+2027	EC	Universidad Casa Grande	http://www.casagrande.edu.ec/
+2028	EC	Universidad Catolica de Azogues	http://www.ucaazo.edu.ec/
+2029	EC	Universidad Católica de Cuenca	http://www.ucacue.edu.ec/
+2030	EC	Universidad Católica de Santiago de Guayaquil	http://www.ucsg.edu.ec/
+2031	EC	Universidad Central del Ecuador	http://www.ucentral.edu.ec/
+2032	EC	Universidad de Cuenca	http://www.ucuenca.edu.ec/
+2033	EC	Universidad de Especialidades del Espíritu Santo	http://www.uees.edu.ec/
+2034	EC	Universidad de Especialidades Turísticas 	http://www.uct.edu.ec/
+2035	EC	Universidad de Guayaquil	http://www.ug.edu.ec/
+2036	EC	Universidad del Azuay	http://www.uazuay.edu.ec/
+2037	EC	Universidad del Pacifico	http://www.upacifico.edu.ec/
+2038	EC	Universidad Estatal de Bolívar	http://www.ueb.isfun.net/
+2039	EC	Universidad Internacional del Ecuador	http://www.internacional.edu.ec/
+2040	EC	Universidad Internacional SEK, Quito	http://www.sek.edu/html/ecuador.html
+2041	EC	Universidad Laica "Eloy Alfaro" de Manabi	http://www.uleam.edu.ec/
+2042	EC	Universidad Laica "Vicente Rocafuerte" de Guayaquil	http://www.ulaicavr.com/
+2043	EC	Universidad Nacional de Chimborazo	http://www.unach.edu.ec/
+2044	EC	Universidad Nacional de Loja	http://www.unl.edu.ec/
+2045	EC	Universidad Politécnica Salesiana	http://www.ups.edu.ec/
+2046	EC	Universidad San Francisco de Quito	http://www.usfq.edu.ec/
+2047	EC	Universidad Santa María Campus Guayaquil	http://www.usm.edu.ec/
+2048	EC	Universidad Técnica de Ambato	http://www.uta.edu.ec/
+2049	EC	Universidad Técnica de Babahoyo	http://www.utb.edu.ec/
+2050	EC	Universidad Técnica de Cotopaxi	http://www.utc.edu.ec/
+2051	EC	Universidad Técnica de Esmeraldas "Luis Vargas Torres"	http://www.utelvt.edu.ec/
+2052	EC	Universidad Técnica del Norte	http://www.utn.edu.ec/
+2053	EC	Universidad Técnica de Machala	http://www.utmachala.edu.ec/
+2054	EC	Universidad Técnica de Manabí	http://www.utm.edu.ec/
+2055	EC	Universidad Técnica Estatal de Quevedo	http://www.uteq.edu.ec/
+2056	EC	Universidad Técnica Particular de Loja	http://www.utpl.edu.ec/
+2057	EC	Universidad Tecnológica América	http://www.unita.edu.ec/
+2058	EC	Universidad Tecnológica Equinoccial	http://www.ute.edu.ec/
+2059	EC	Universidad Tecnológica Indoamérica	http://www.indoamerica.edu.ec/
+2060	EC	Universidad Tecnologica Israel	http://www.uisrael.ec/
+2061	EC	Universidad Tecnológica San Antonio de Machala	http://www.utsam.edu.ec/
+2062	EE	Estonian Academy of Arts	http://www.artun.ee/
+2063	EE	Estonian Academy of Music and Theatre	http://www.ema.edu.ee/
+2064	EE	Estonian Academy of Security Sciences	http://www.sisekaitse.ee/
+2065	EE	Estonian Business School	http://www.ebs.ee/
+2066	EE	Estonian University of Life Sciences	http://www.emu.ee/
+2067	EE	Tallinn University	http://www.tlu.ee/
+2068	EE	Tallinn University of Technology	http://www.ttu.ee/
+2069	EE	Tartu Health Care College	http://www.nooruse.ee/
+2070	EE	University of Applied Sciences	http://www.tktk.ee/
+2071	EE	University of Tartu	http://www.ut.ee/
+2072	EG	Ain Shams University	http://www.shams.edu.eg/
+2073	EG	Akhbar El Yom Academy	http://www.akhbaracademy.edu.eg/
+2074	EG	Al Azhar University	http://www.azhar.edu.eg/
+2075	EG	Alexandria University	http://www.alex.edu.eg/
+2076	EG	American University in Cairo	http://www.aucegypt.edu/
+2077	EG	Arab Academy for Science & Technology	http://www.aast.edu/
+2078	EG	Arab Open University	http://www.aou.edu.eg/
+2079	EG	Assiut University	http://www.aun.edu.eg/
+2080	EG	Benha University	http://www.bu.edu.eg/
+2081	EG	Beni Suef University	http://www.bsu.edu.eg/
+2082	EG	Cairo University	http://www.cu.edu.eg/
+2083	EG	Damanhour University	http://www.damanhour.edu.eg/
+2084	EG	Damietta University	http://www.du.edu.eg/
+2085	EG	Delta University	http://www.deltauniv.edu.eg/
+2086	EG	El Shorouk Academy	http://www.elshoroukacademy.edu.eg/
+2087	EG	Fayoum University	http://www.fayoum.edu.eg/
+2088	EG	Future University	http://www.futureuniversity.edu.eg/
+2089	EG	German University in Cairo	http://www.guc.edu.eg/
+2090	EG	Helwan University	http://www.helwan.edu.eg/
+2091	EG	Higher Technological Institute	http://www.hti.edu.eg/
+2092	EG	Kafr El-Sheikh University	http://www.kfs.edu.eg/
+2093	EG	Mansoura University	http://www.mans.edu.eg/
+2094	EG	Menoufia University	http://www.menofia.edu.eg/
+2095	EG	Military Technical College	http://www.mtc.edu.eg/
+2096	EG	Minia University	http://www.minia.edu.eg/
+2097	EG	Misr International University	http://www.miuegypt.edu.eg/
+2098	EG	Misr University for Sience and Technology	http://www.must.edu.eg/
+2099	EG	Modern Acadmy	http://www.modern-academy.edu.eg/
+2100	EG	Modern Sciences & Arts University	http://www.msa.eun.eg/
+2101	EG	Modern University For Technology and Information	http://www.mti.edu.eg/
+2102	EG	Nile University	http://www.nileu.edu.eg/
+2103	EG	October 6 university	http://www.o6u.edu.eg/
+2104	EG	Pharos International University	http://www.pua.edu.eg/
+2105	EG	Port Said University	http://www.psu.edu.eg/
+2106	EG	Sadat Academy for Management Sciences	http://www.sadatacademy.edu.eg/
+2107	EG	Sinai University	http://www.su.edu.eg/
+2108	EG	Sohag University	http://www.sohag-univ.edu.eg/
+2109	EG	South Valley University	http://www.svu.edu.eg/
+2110	EG	Suez Canal University	http://www.suez.edu.eg/
+2111	EG	Tanta University	http://www.tanta.edu.eg/
+2112	EG	Université Française d'Égypte	http://www.ufe.edu.eg/
+2113	EG	Université Senghor d'Alexandrie	http://www.usenghor-francophonie.org/
+2114	EG	University of Sadat City	http://www.usc.edu.eg/
+2115	EG	Zagazig University	http://www.zu.edu.eg/
+2116	ER	Eritrea Institute of Technology	http://www.eit.edu.er/
+2117	ES	Barcelona Graduate School of Economics	http://www.barcelonagse.eu/
+2118	ES	Bircham International University	http://www.bircham.edu/
+2119	ES	Centro Universitario Villanueva	http://www.villanueva.edu/
+2120	ES	Escuela Superior de Gestion Comercial y Marketing (ESIC)	http://www.esic.es/
+2121	ES	Global Business School Barcelona	http://www.global-business-school.org/
+2122	ES	IE University	http://www.ie.edu/
+2123	ES	Iniciativa Universidad del Atlantico	http://www.universidadatlantico.org/
+2124	ES	International University of Southern Europe	http://www.iuse.edu.es/
+2125	ES	La Salle Universities - International Programmes	http://www.lasalleuniversities.net/
+2126	ES	Mondragon Univertsitatea	http://www.muni.es/
+2127	ES	Schiller International University, Madrid	http://www.schillermadrid.edu/
+2128	ES	Universidad Abierta Interactiva	http://www.uniactiva.com/
+2129	ES	Universidad Alfonso X El Sabio	http://www.uax.es/
+2130	ES	Universidad Antonio de Nebrija	http://www.unnet.es/
+2131	ES	Universidad Autónoma de Madrid	http://www.uam.es/
+2132	ES	Universidad Cardenal Herrera-CEU	http://www.uchceu.es/
+2133	ES	Universidad Carlos III de Madrid	http://www.uc3m.es/
+2134	ES	Universidad Católica de Ávila	http://www.ucavila.es/
+2135	ES	Universidad Católica de Valencia	http://www.ucv.es/
+2136	ES	Universidad Católica San Antonio	http://www.ucam.edu/
+2137	ES	Universidad Complutense de Madrid	http://www.ucm.es/
+2138	ES	Universidad de Alcalá de Henares	http://www.uah.es/
+2139	ES	Universidad de Alicante	http://www.ua.es/
+2140	ES	Universidad de Almería	http://www.ualm.es/
+2141	ES	Universidad de Burgos	http://www.ubu.es/
+2142	ES	Universidad de Cádiz	http://www.uca.es/
+2143	ES	Universidad de Cantabria	http://www.unican.es/
+2144	ES	Universidad de Castilla La Mancha	http://www.uclm.es/
+2145	ES	Universidad de Córdoba	http://www.uco.es/
+2146	ES	Universidad de Deusto	http://www.deusto.es/
+2147	ES	Universidad de Extremadura	http://www.unex.es/
+2148	ES	Universidad de Gerona	http://www.udg.es/
+2149	ES	Universidad de Granada	http://www.ugr.es/
+2150	ES	Universidad de Huelva	http://www.uhu.es/
+2151	ES	Universidad de Jaén	http://www.ujaen.es/
+2152	ES	Universidad de La Coruña	http://www.udc.es/
+2153	ES	Universidad de La Laguna	http://www.ull.es/
+2154	ES	Universidad de La Rioja	http://www.unirioja.es/
+2155	ES	Universidad de Las Palmas de Gran Canaria	http://www.ulpgc.es/
+2156	ES	Universidad de León	http://www.unileon.es/
+2157	ES	Universidad del País Vasco	http://www.ehu.es/
+2158	ES	Universidad de Málaga	http://www.uma.es/
+2159	ES	Universidad de Murcia	http://www.um.es/
+2160	ES	Universidad de Navarra	http://www.unav.es/
+2161	ES	Universidad de Oviedo	http://www.uniovi.es/
+2162	ES	Universidad de Salamanca	http://www.usal.es/
+2163	ES	Universidad de San Pablo CEU	http://www.ceu.es/
+2164	ES	Universidad de Santiago de Compostela	http://www.usc.es/
+2165	ES	Universidad de Sevilla	http://www.us.es/
+2166	ES	Universidad de Valencia	http://www.uv.es/
+2167	ES	Universidad de Valladolid	http://www.uva.es/
+2168	ES	Universidad de Vigo	http://www.uvigo.es/
+2169	ES	Universidad de Zaragoza	http://www.unizar.es/
+2170	ES	Universidad Europea de Madrid	http://www.uem.es/
+2171	ES	Universidad Francisco de Vitoria	http://www.ufv.es/
+2172	ES	Universidad Internacional de Andalucía	http://www.uia.es/
+2173	ES	Universidad Internacional de Andalucía, Sede Antonio Machado de Baeza	http://www.uniaam.uia.es/
+2174	ES	Universidad Internacional de Andalucía, Sede La Rábida	http://www.uniara.uia.es/
+2175	ES	Universidad Internacional Menéndez Pelayo	http://www.uimp.es/
+2176	ES	Universidad Miguel Hernández de Elche	http://www.umh.es/
+2177	ES	Universidad Nacional de Educación a Distancia	http://www.uned.es/
+2178	ES	Universidad Pablo de Olavide	http://www.upo.es/
+2179	ES	Universidad Politécnica de Cartagena	http://www.upct.es/
+2180	ES	Universidad Politécnica de Cataluna	http://www.upc.edu/
+2181	ES	Universidad Politécnica de Madrid	http://www.upm.es/
+2182	ES	Universidad Politécnica de Valencia	http://www.upv.es/
+2183	ES	Universidad Pontificia Comillas	http://www.upco.es/
+2184	ES	Universidad Pontificia de Salamanca	http://www.upsa.es/
+2185	ES	Universidad Pública de Navarra	http://www.unavarra.es/
+2186	ES	Universidad Rey Juan Carlos	http://www.urjc.es/
+2187	ES	Universitat Autónoma de Barcelona	http://www.uab.es/
+2188	ES	Universitat de Barcelona	http://www.ub.es/
+2189	ES	Universitat de les Illes Balears	http://www.uib.es/
+2190	ES	Universitat de Lleida	http://www.udl.es/
+2191	ES	Universitat de Vic	http://www.uvic.es/
+2192	ES	Universitat Internacional de Catalunya	http://www.uic.es/
+2193	ES	Universitat Jaume I de Castellón	http://www.uji.es/
+2194	ES	Universitat Oberta de Catalunya	http://www.uoc.es/
+2195	ES	Universitat Pompeu Fabra	http://www.upf.es/
+2196	ES	Universitat Rámon Llull	http://www.url.es/
+2197	ES	Universitat Rovira I Virgili Tarragona	http://www.urv.es/
+2198	ET	Adama Science and Technology University	http://www.astu.edu.et/
+2199	ET	Addis Ababa Science & Technology University	http://www.aastu.org/
+2200	ET	Addis Ababa University	http://www.aau.edu.et/
+2201	ET	Adigrat University	http://www.adu.edu.et/
+2202	ET	Aksum University	http://www.aku.edu.et/
+2203	ET	Ambo University	http://www.ambou.edu.et/
+2204	ET	Arba Minch University	http://www.amu.edu.et/
+2205	ET	Assosa University	http://www.asu.edu.et/
+2206	ET	Bahir Dar University	http://www.bdu.edu.et/
+2207	ET	Bule Hora  University	http://www.bulehorauniversity.com/
+2208	ET	Debre Birhan University	http://www.dbu.edu.et/
+2209	ET	Debre Markos University	http://www.dmu.edu.et/
+2210	ET	Dilla University	http://www.dillauniversity.edu.et/
+2211	ET	Dire Dawa University	http://www.ddu.edu.et/
+2212	ET	Ethiopian Civil Service University	http://www.ecsc.edu.et/
+2213	ET	Gondar University	http://www.uog.edu.et/
+2214	ET	Haramaya University	http://www.haramaya.edu.et/
+2215	ET	Hawassa University	http://www.hu.edu.et/
+2216	ET	Jigjiga University	http://www.jju.edu.et/
+2217	ET	Jimma University	http://www.ju.edu.et/
+2218	ET	Madawalabu University	http://www.mwu.edu.et/
+2219	ET	Mekelle Institute of Technology	http://www.mitethiopia.edu.et/
+2220	ET	Mekelle University	http://www.mu.edu.et/
+2221	ET	Mizan Tepi University	http://www.mtu.edu.et/
+2222	ET	Semera University	http://www.su.edu.et/
+2223	ET	Unity  University	http://www.uuc.edu.et/
+2224	ET	Wolaita Sodo University	http://www.wsu.edu.et/
+2225	ET	Wolkite University	http://www.wku.edu.et/
+2226	ET	Wollega University	http://www.wuni.edu.et/
+2227	ET	Wollo University	http://www.wu.edu.et/
+2228	FI	Abo Akademi University	http://www.abo.fi/
+2229	FI	Academy of Fine Arts	http://www.kuva.fi/
+2230	FI	Central Ostrobothnia University of Applied Sciences	http://www.cou.fi/
+2231	FI	Diaconia University of Applied Sciences	http://www.diak.fi/
+2232	FI	EVTEK University of Applied Sciences	http://www.evtek.fi/
+2233	FI	Helsinki School of Economics and Business Administration	http://www.hkkk.fi/
+2234	FI	Helsinki University of Technology	http://www.hut.fi/
+2235	FI	Lahti Polytechnic	http://www.lamk.fi/
+2236	FI	Lappeenranta University of Technology	http://www.lut.fi/
+2237	FI	Oulu Polytechnic	http://www.oamk.fi/
+2238	FI	Rovaniemi University of Applied Sciences	http://www.ramk.fi/
+2239	FI	Satakunta University Of Applied Scinces	http://www.samk.fi/
+2240	FI	Scandinavian Art and Business Institute	http://www.sabi.eu.com/
+2241	FI	Sibelius Academy	http://www.siba.fi/
+2242	FI	South Carelian Polytechnic	http://www.scp.fi/
+2243	FI	Swedish School of Economics and Business Administration, Finland	http://www.shh.fi/
+2244	FI	Tampere Polytechnic	http://www.tpu.fi/
+2245	FI	Tampere University of Technology	http://www.tut.fi/
+2246	FI	Theatre Academy Finland	http://www.teak.fi/
+2247	FI	Turku School of Economics and Business Administration	http://www.tukkk.fi/
+2248	FI	University of Art and Design Helsinki	http://www.uiah.fi/
+2249	FI	University of Helsinki	http://www.helsinki.fi/
+2250	FI	University of Joensuu	http://www.joensuu.fi/
+2251	FI	University of Jyväskylä	http://www.jyu.fi/
+2252	FI	University of Kuopio	http://www.uku.fi/
+2253	FI	University of Lapland	http://www.ulapland.fi/
+2254	FI	University of Oulu	http://www.oulu.fi/
+2255	FI	University of Tampere	http://www.uta.fi/
+2256	FI	University of Turku	http://www.utu.fi/
+2257	FI	University of Vaasa	http://www.uwasa.fi/
+2258	FI	Vaasa University of Applied Sciences	http://www.puv.fi/
+2259	FJ	Fiji National University 	http://www.fnu.ac.fj/
+2260	FJ	Fiji School of Medicine	http://www.fsm.ac.fj/
+2261	FJ	University of Fiji	http://www.unifiji.ac.fj/
+2262	FJ	University of the South Pacific	http://www.usp.ac.fj/
+2263	FO	University of the Faroe Islands	http://www.setur.fo/
+2264	FR	AgroParisTech	http://www.agroparistech.fr/
+2265	FR	American Graduate School in Paris	http://www.ags.edu/
+2266	FR	American University of Paris	http://www.aup.fr/
+2267	FR	British Institute in Paris, University of London	http://www.bip.lon.ac.uk/
+2268	FR	Centre de Formation et de Perfectionnement des Journalistes	http://www.cfpj.com/
+2269	FR	Centre d'Etudes Supérieures des Techniques Industrielles	http://www.ismcm-cesti.fr/
+2270	FR	Centre d'Etudes Supérieures Industrielles Paris	http://www.cesi.fr/
+2271	FR	Centre National d'Etudes Agronomiques des Régions Chaudes	http://www.cnearc.fr/
+2272	FR	Conservatoire National des Arts et Métiers	http://www.cnam.fr/
+2273	FR	Ecole Catholique d'Arts & Metiers	http://www.ecam.fr/
+2274	FR	Ecole Centrale d'Electronique - ECE	http://www.ece.fr/
+2275	FR	Ecole Centrale de Lille	http://www.ec-lille.fr/
+2276	FR	Ecole Centrale de Lyon	http://www.ec-lyon.fr/
+2277	FR	Ecole Centrale de Nantes	http://www.ec-nantes.fr/
+2278	FR	Ecole d'Architecture de Nancy	http://www.nancy.archi.fr/
+2279	FR	Ecole de l'Air	http://www.aea.asso.fr/
+2280	FR	Ecole des Hautes Etudes Commerciales	http://www.hec.fr/
+2281	FR	Ecole des Hautes Etudes Commerciales du Nord	http://edu.edhec.com/
+2282	FR	Ecole des Hautes Etudes Industrielles de Lille	http://www.hei.fr/
+2283	FR	Ecole des Ingénieurs de la Ville de Paris	http://www.eivp-paris.fr/
+2284	FR	Ecole d'Ingénieurs en Informatique pour l'Industrie	http://www.e3i.univ-tours.fr/
+2285	FR	Ecole Européen des Affaires	http://www.eap.fr/
+2286	FR	Ecole Européenne de Chimie, Polymères et Matériaux de Strasbourg	http://www-ecpm.u-strasbg.fr/
+2287	FR	Ecole Française d'Electronique et d'Informatique	http://www.efrei.fr/
+2353	FR	Ecole Nationale Vétérinaire d'Alfort	http://www.vet-alfort.fr/
+2288	FR	Ecole Française de Papeterie et des Industries Graphiques	http://www.efpg.inpg.fr/
+2289	FR	Ecole Nationale d'Administration	http://www.ena.fr/
+2290	FR	Ecole Nationale de la Météorologie	http://www.enm.meteo.fr/
+2291	FR	Ecole Nationale de la Statistique et de l'Administration Economique	http://www.ensae.fr/
+2292	FR	Ecole Nationale de la Statistique et de l'Analyse de l'information	http://www.ensai.fr/
+2293	FR	Ecole Nationale de l'Aviation Civile	http://www.enac.fr/
+2294	FR	Ecole Nationale des Ponts et Chausees	http://www.enpc.fr/
+2295	FR	Ecole Nationale des Sciences Géographiques	http://www.ensg.ign.fr/
+2296	FR	Ecole Nationale des Travaux Publics de l'Etat	http://www.entpe.fr/
+2297	FR	Ecole Nationale d'Ingénieurs de Metz	http://www.enim.fr/
+2298	FR	Ecole Nationale d'Ingénieurs de Saint-Etienne	http://www.enise.fr/
+2299	FR	Ecole Nationale d'Ingénieurs des Techniques des Industries Agricoles et Alimentaires	http://www.enitiaa-nantes.fr/
+2300	FR	Ecole Nationale d'Ingénieurs des Travaux Agricoles de Bordeaux	http://www.enitab.fr/
+2301	FR	Ecole Nationale d'Ingénieurs des Travaux Agricoles de Clermont-Ferrand	http://www.enitac.fr/
+2302	FR	Ecole Nationale d'Ingénieurs de Tarbes	http://www.enit.fr/
+2303	FR	Ecole Nationale du Génie de l'Eau et de l'Environnement de Strasbourg	http://www-engees.u-strasbg.fr/
+2304	FR	Ecole Nationale Supérieur de Géologie de Nancy	http://www.ensg.u-nancy.fr/
+2305	FR	Ecole Nationale Supérieur de Mécanique et d'Aéronautique	http://www.ensma.fr/
+2306	FR	Ecole Nationale Supérieur de Mécaniques et des Microtechniques	http://www.ens2m.fr/
+2307	FR	Ecole Nationale Supérieur des Ingénieur des Etudes et Techniques d'Armement	http://www.ensieta.fr/
+2308	FR	Ecole Nationale Supérieur d'Ingénieurs de Constructions Aéronautique	http://www.ensica.fr/
+2309	FR	Ecole Nationale Supérieure Agronomique de Toulouse	http://www.ensat.fr/
+2310	FR	Ecole Nationale Supérieure d'Agronomie de Montpellier	http://www.ensam.inra.fr/
+2311	FR	Ecole Nationale Supérieure d'Agronomie de Rennes	http://agro.roazhon.inra.fr/
+2312	FR	Ecole Nationale Supérieure d'Agronomie et des Industries Alimentaires	http://www.ensaia.u-nancy.fr/
+2313	FR	Ecole Nationale Supérieure d'Arts et Métiers de Paris	http://www.paris.ensam.fr/
+2314	FR	Ecole Nationale Supérieure de Biologie Appliquée à la Nutrition et à l'Alementation	http://www.u-bourgogne.fr/ENSBANA/
+2315	FR	Ecole Nationale Supérieure de Chimie de Clermont-Ferrand	http://ensccf.univ-bpclermont.fr/
+2316	FR	Ecole Nationale Supérieure de Chimie de Lille	http://www.ensc-lille.fr/
+2317	FR	Ecole Nationale Supérieure de Chimie de Montpellier	http://www.enscm.fr/
+2318	FR	Ecole Nationale Supérieure de Chimie de Mulhouse	http://www.enscmu.univ-mulhouse.fr/
+2319	FR	Ecole Nationale Supérieure de Chimie de Paris	http://www.enscp.jussieu.fr/
+2320	FR	Ecole Nationale Supérieure de Chimie de Rennes	http://www.ensc-rennes.fr/
+2321	FR	Ecole Nationale Supérieure de Chimie de Toulouse	http://www.univ-inpt.fr/~ensct/
+2322	FR	Ecole Nationale Supérieure de Chimie et de Physique de Bordeaux	http://www.enscpb.u-bordeaux.fr/
+2323	FR	Ecole Nationale Supérieure de l'Aéronautique et de l'Espace	http://www.supaero.fr/
+2324	FR	Ecole Nationale Supérieure d'Electrochimie et d'Electrométallurgie de Gernoble	http://www.inpg.fr/INPG/fr_see.html
+2325	FR	Ecole Nationale Supérieure d'Electronique, d'Electrotechnique, d'Informatique et d'Hydraulique de Toulouse	http://www.enseeiht.fr/
+2326	FR	Ecole Nationale Supérieure d'Electronique et de Radioelectricite de Bordeaux	http://www.enserb.u-bordeaux.fr/
+2327	FR	Ecole Nationale Supérieure d'Electronique et de Radioelectricite de Grenoble	http://www.enserg.fr/
+2328	FR	Ecole Nationale Supérieure de l'Electronique et de ses Applications	http://www.ensea.fr/
+2329	FR	Ecole Nationale Supérieure de Physique de Grenoble	http://www-enspg.inpg.fr/
+2330	FR	Ecole Nationale Supérieure de Physique de Marseille	http://www.enspm.u-3mrs.fr/
+2331	FR	Ecole Nationale Supérieure de Physique de Strasbourg	http://www-ensps.u-strasbg.fr/
+2332	FR	Ecole Nationale Supérieure des Arts et Industries de Strasbourg	http://www-ensais.u-strasbg.fr/
+2333	FR	Ecole Nationale Supérieure des Arts et Industries Textiles	http://www.ensait.fr/
+2334	FR	Ecole Nationale Supérieure des Industries Chimiques de Nancy	http://www.ensic.u-nancy.fr/
+2335	FR	Ecole Nationale Supérieure des Industries Textiles de Mulhouse	http://www.ensitm.fr/
+2336	FR	Ecole Nationale Supérieure des Mines d'Alès	http://www.ensm-ales.fr/
+2337	FR	Ecole Nationale Supérieure des Mines de Douai	http://www.ensm-douai.fr/
+2338	FR	Ecole Nationale Supérieure des Mines de Nancy	http://www.mines.u-nancy.fr/
+2339	FR	Ecole Nationale Supérieure des Mines de Paris	http://www.ensmp.fr/
+2340	FR	Ecole Nationale Supérieure des Mines de St-Etienne	http://www.emse.fr/
+2341	FR	Ecole Nationale Supérieure des Telecommunications de Bretagne	http://www.enst-bretagne.fr/
+2342	FR	Ecole Nationale Supérieure des Telecommunications de Paris	http://www.enst.fr/
+2343	FR	Ecole Nationale Supérieure de Techniques Avancées	http://www.ensta.fr/
+2344	FR	Ecole Nationale Supérieure d'Hydraulique et de Mécanique de Grenoble	http://www.hmg.inpg.fr/
+2345	FR	Ecole Nationale Superieure d'Informatique et de Mathematiques Appliquees de Grenoble	http://www-ensimag.imag.fr/
+2346	FR	École Nationale Supérieure d'Ingénieurs de Constructions Aéronautiques	http://www.ensica.fr/
+2347	FR	Ecole Nationale Supérieure d'Ingénieurs de Génie Chimique	http://www.inp-fc.fr/~ensigc/
+2348	FR	Ecole Nationale Supérieure d'Ingenieurs Electriciens de Grenoble	http://www.ensieg.inpg.fr/
+2349	FR	Ecole Nationale Supérieure d'Ingénieurs en Mécanique et Energétique de Valenciennes	http://www.univ-valenciennes.fr/ensimev/
+2350	FR	Ecole Nationale Supérieure du Pétrole et des Monteurs	http://www.ifp.fr/EC/EC000GP1.html
+2351	FR	Ecole Nationale Supérieure Electricité et Mécanique	http://www.ensem.u-nancy.fr/
+2352	FR	Ecole Nationale Supérieure en Electrotechnique, Electronique, Informatique et Hydraulique de Toulouse	http://www.enseeiht.fr/
+2354	FR	Ecole Nationale Vétérinaire de Lyon	http://www.vet-lyon.fr/
+2355	FR	Ecole Nationale Vétérinaire de Nantes	http://www.vet-nantes.fr/
+2356	FR	Ecole Nationale Vétérinaire de Toulouse	http://www.envt.fr/
+2357	FR	Ecole Normale Supérieure de Cachan	http://www.ens-cachan.fr/
+2358	FR	Ecole Normale Supérieure de Fontenay-Saint Cloud	http://www.ens-fcl.fr/
+2359	FR	Ecole Normale Supérieure de Lyon	http://www.ens-lyon.fr/
+2360	FR	Ecole Normale Supérieure de Paris	http://www.ens.fr/
+2361	FR	Ecole Polytechnique	http://www.polytechnique.fr/
+2362	FR	Ecole Polytechnique Marseille	http://www.polytech-marseille.fr/
+2363	FR	Ecole Polytechnique Universitaire de Lille	http://www.polytech-lille.fr/
+2364	FR	Ecole pour les Etudes et la Recherche en Informatique et Electronique	http://www.eerie.fr/
+2365	FR	Ecole Spéciale de Mécanique et d'Electricité	http://www.esme.fr/
+2366	FR	Ecole Spéciale des Travaux Publics du Bâtiment et de l'Industrie	http://www.estp.fr/
+2367	FR	Ecole Superieur d'Ingenieurs Leonard de Vinci	http://www.devinci.fr/
+2368	FR	Ecole Supérieure d'Agriculture d'Angers	http://www.groupe-esa.com/
+2369	FR	Ecole Supérieure d'Agriculture de Purpan	http://www.esa-purpan.fr/
+2370	FR	Ecole Supérieure de Chimie Organique et Minérale	http://www.escom.fr/
+2371	FR	Ecole Supérieure de Chimie Physique Electronique de Lyon	http://www.cpe.fr/
+2372	FR	Ecole Supérieure de Commerce de Bordeaux	http://www.esc-bordeaux.fr/
+2373	FR	Ecole Supérieure de Commerce de Brest	http://www.esc-brest.fr/
+2374	FR	Ecole Supérieure de Commerce de Clermont-Ferrand	http://www.esc-clermont.fr/
+2375	FR	Ecole Supérieure de Commerce de Dijon	http://www.escdijon.com/
+2376	FR	Ecole Supérieure de Commerce de Grenoble	http://www.esc-grenoble.fr/
+2377	FR	Ecole Supérieure de Commerce de Le Havre/Caen	http://www.esc-normandie.fr/
+2378	FR	Ecole Supérieure de Commerce de Lille	http://www.esc-lille.fr/
+2379	FR	Ecole Supérieure de Commerce de Lyon	http://www.em-lyon.com/
+2380	FR	Ecole Supérieure de Commerce de Marseille-Provence	http://www.esc-marseille.fr/
+2381	FR	Ecole Supérieure de Commerce de Nantes-Atlantique	http://www.escna.fr/
+2382	FR	Ecole Supérieure de Commerce de Paris	http://www.escp.fr/
+2383	FR	Ecole Supérieure de Commerce de Pau	http://www.esc-pau.fr/
+2384	FR	Ecole Supérieure de Commerce de Reims	http://www.esc-reims.edu/
+2385	FR	Ecole Supérieure de Commerce de Rouen	http://www.esc-rouen.fr/
+2386	FR	Ecole Supérieure de Commerce de Sophia Antipolis	http://www.ceram.edu/
+2387	FR	Ecole Supérieure de Commerce de Toulouse	http://www.esc-toulouse.fr/
+2388	FR	Ecole Supérieure de Commerce et Management	http://www.escem.fr/
+2389	FR	Ecole Supérieure d'Electricité	http://www.supelec.fr/
+2390	FR	Ecole Supérieure d'Electronique de l'Ouest	http://www.eseo.fr/
+2391	FR	Ecole Supérieure de Physique et de Chimie Industrielles	http://www.espci.fr/
+2392	FR	Ecole Supérieure des Sciences Commerciales d'Angers	http://www.essca.asso.fr/
+2393	FR	Ecole Supérieure des Sciences Economiques et Commerciales	http://www.essec.fr/
+2394	FR	Ecole Supérieure des Sciences et Technologie de l'Ingénieur de Nancy	http://www.esstin.u-nancy.fr/
+2395	FR	Ecole Supérieure des Techniques Industrielles et des Textiles	http://www.fupl.asso.fr/estit/
+2396	FR	Ecole Supérieure d'Informatique-Electronique-Automatique	http://www.esiea.fr/
+2397	FR	Ecole Supérieure d'Ingénieurs de Marseille	http://esim.imt-mrs.fr/
+2398	FR	Ecole Supérieure d'Ingénieurs en Electronique et Electrotechnique	http://www.esiee.fr/
+2399	FR	Ecole Supérieure d'Ingénieurs en Génie Electrique	http://www.esigelec.fr/
+2400	FR	Ecole Supérieure d'Ingénieurs et de Techniciens pour l'Agriculture	http://www.esitpa.org/
+2401	FR	Ecole Supérieure d'Optique	http://www.iota.u-psud.fr/~ecole/
+2402	FR	Ecole Supérieure Internationale d'Administration des Entreprises	http://www.esiae.fr/
+2403	FR	Ecole Superieure Robert de Sorbon	http://www.sorbon.fr/
+2404	FR	Ecole Universitaire d'Ingénieurs de Lille	http://www.eudil.fr/
+2405	FR	ENIC Telecom Lille 1	http://www.enic.fr/
+2406	FR	EPF Ecole d'Ingénieurs	http://www.epf.fr/
+2407	FR	European Business School	http://www.ebs-paris.com/
+2408	FR	European Management Center Paris	http://www.emc-campus.com/
+2409	FR	Grenoble Ecole de Management	http://www.grenoble-em.com/
+2410	FR	Groupe Sup de Co Amiens Picardie	http://www.supco-amiens.fr/
+2411	FR	Groupe Sup de Co Montpellier	http://www.supco-montpellier.fr/
+2412	FR	IDRAC (Institut de recherche en action commerciale)	http://www.ecoles-idrac.com/
+2413	FR	Institut Catholique d'Arts et Métiers Lille	http://www.icam.fr/
+2414	FR	Institut Catholique d'Arts et Métiers Nantes	http://www.icam.fr/presentation/nantes.htm
+2415	FR	Institut Catholique de Paris	http://www.icp.fr/
+2416	FR	Institut Catholique de Toulouse	http://www.ict-toulouse.asso.fr/
+2417	FR	Institut Commercial de Nancy	http://www.icn-nancy.com/
+2418	FR	Institut de Recherche et d'Enseignement Supérieur aux Techniques de l'électronique	http://www.ireste.fr/
+2419	FR	Institut des hautes études économiques et commerciales	http://www.inseec.fr/
+2420	FR	Institut des Sciences de la Matière et du Rayonnement	http://www.ismra.fr/
+2421	FR	Institut des Sciences de l'Ingénieur de Clermont-Ferrand	http://cust.univ-bpclermont.fr/
+2422	FR	Institut des Sciences de l'Ingénieur de Montpellier	http://www.isim.univ-montp2.fr/
+2423	FR	Institut d'Etudes Politiques de Bordeaux	http://www.iep.u-bordeaux.fr/
+2424	FR	Institut d'Etudes Politiques de Paris (Sciences Po)	http://www.sciences-po.fr/
+2425	FR	Institut National des Sciences Appliquées de Lyon	http://www.insa-lyon.fr/
+2426	FR	Institut National des Sciences Appliquées de Rennes	http://www.insa-rennes.fr/
+2427	FR	Institut National des Sciences Appliquées de Rouen	http://www.insa-rouen.fr/
+2428	FR	Institut National des Sciences Appliquées de Toulouse	http://www.insa-tlse.fr/
+2429	FR	Institut National des Télécommunications	http://www.int-evry.fr/
+2430	FR	Institut National Polytechnique de Grenoble	http://www.inpg.fr/
+2431	FR	Institut National Polytechnique de Lorraine	http://www.inpl-nancy.fr/
+2432	FR	Institut National Polytechnique de Toulouse	http://www.inp-fc.fr/
+2433	FR	Institut National Supérieur de Formation Agro-Alimentaire	http://agro.roazhon.inra.fr/etab/insfa/accueil.htm
+2434	FR	Institut Supérieur Agricole de Beauvais	http://www.isab.fr/
+2435	FR	Institut Supérieur d'Agriculture Lille	http://www.isa.fupl.asso.fr/
+2436	FR	Institut Supérieur d'Agriculture Rhone-Alpes	http://www.isara.fr/
+2437	FR	Institut Supérieure d'Electronique de Paris	http://www.isep.fr/
+2438	FR	Institut Supérieure d'Electronique du Nord	http://www.isen.fr/
+2439	FR	Institut Textile et Chimique de Lyon	http://www.itech.fr/
+2440	FR	Schiller International University, Paris	http://www.schillerparis.com/
+2441	FR	Schiller International University, Strasbourg	http://www.schillerstrasbourg.com/
+2442	FR	Université Blaise Pascal (Clermont-Ferrand II)	http://www.univ-bpclermont.fr/
+2443	FR	Université Bordeaux I	http://www.cribx1.u-bordeaux.fr/
+2444	FR	Université Catholique de Lille	http://www.fupl.asso.fr/
+2445	FR	Université Catholique de l' Ouest	http://www.uco.fr/
+2446	FR	Université Catholique de Lyon	http://www.univ-catholyon.fr/
+2447	FR	Université Charles-de-Gaulle (Lille III)	http://www.univ-lille3.fr/
+2448	FR	Université Claude Bernard (Lyon I)	http://www.univ-lyon1.fr/
+2449	FR	Université d'Aix-Marseille III	http://www.u-3mrs.fr/
+2450	FR	Université d'Angers	http://www.univ-angers.fr/
+2451	FR	Université d'Artois	http://www.univ-artois.fr/
+2452	FR	Université d'Auvergne (Clermont-Ferrand I)	http://www.u-clermont1.fr/
+2453	FR	Université d'Avignon	http://www.univ-avignon.fr/
+2454	FR	Université de Bourgogne	http://www.u-bourgogne.fr/
+2455	FR	Université de Bretagne Occidentale	http://www.univ-brest.fr/
+2456	FR	Université de Bretagne Sud	http://www.univ-ubs.fr/
+2457	FR	Université de Caen Basse Normandie	http://www.unicaen.fr/
+2458	FR	Université de Cergy-Pontoise	http://www.u-cergy.fr/
+2459	FR	Université de Corse Pascal Paoli	http://www.univ-corse.fr/
+2460	FR	Université de Franche-Comté	http://www.univ-fcomte.fr/
+2461	FR	Université de Haute-Alsace	http://www.univ-mulhouse.fr/
+2462	FR	Université de la Méditerranée (Aix Marseille II)	http://www.univmed.fr/
+2463	FR	Université de La Rochelle	http://www.univ-lr.fr/
+2464	FR	Université de Limoges	http://www.unilim.fr/
+2465	FR	Université de Marne la Vallée	http://www.univ-mlv.fr/
+2466	FR	Université de Metz	http://www.univ-metz.fr/
+2467	FR	Université de Montpellier I	http://www.univ-montp1.fr/
+2468	FR	Université de Montpellier II	http://www.univ-montp2.fr/
+2469	FR	Université de Nantes	http://www.univ-nantes.fr/
+2470	FR	Université de Nice-Sophia Antipolis	http://www.unice.fr/
+2471	FR	Université Denis Diderot (Paris VII)	http://www.sigu7.jussieu.fr/
+2472	FR	Université de Pau et des Pays de l'Adour	http://www.univ-pau.fr/
+2473	FR	Université de Perpignan	http://www.univ-perp.fr/
+2474	FR	Université de Picardie Jules-Verne	http://www.u-picardie.fr/
+2475	FR	Université de Poitiers	http://www.univ-poitiers.fr/
+2476	FR	Université de Provence (Aix-Marseille I)	http://www.up.univ-mrs.fr/
+2477	FR	Université de Reims Champagne-Ardenne	http://www.univ-reims.fr/
+2478	FR	Université de Rouen - Haute Normandie	http://www.univ-rouen.fr/
+2479	FR	Université de Savoie	http://www.univ-savoie.fr/
+2480	FR	Université des Sciences et Technologies de Lille (Lille I)	http://www.univ-lille1.fr/
+2481	FR	Université des Sciences Humaines (Strasbourg II)	http://ushs.u-strasbg.fr/
+2482	FR	Université des Sciences Sociales (Toulouse I)	http://www.univ-tlse1.fr/
+2483	FR	Université de Technologie de Belfort Montbéliard	http://www.utbm.fr/
+2484	FR	Université de Technologie de Compiègne	http://www.utc.fr/
+2485	FR	Université de Technologie de Troyes	http://www.utt.fr/
+2486	FR	Université de Toulouse	http://www.univ-toulouse.fr/
+2487	FR	Université de Toulouse-le-Mirail (Toulouse II)	http://www.univ-tlse2.fr/
+2488	FR	Université de Valenciennes et du Hainaut-Cambrésis	http://www.univ-valenciennes.fr/
+2489	FR	Université de Versailles Saint-Quentin-en-Yvelines	http://www.uvsq.fr/
+2490	FR	Université d'Evry Val d'Essonne	http://www.univ-evry.fr/
+2491	FR	Université d'Orléans	http://www.univ-orleans.fr/
+2492	FR	Université du Droit et de la Sante (Lille II)	http://www.univ-lille2.fr/
+2493	FR	Université du Havre	http://www.univ-lehavre.fr/
+2494	FR	Université du Littoral Cote d'Opale	http://www.univ-littoral.fr/
+2495	FR	Université du Maine	http://www.univ-lemans.fr/
+2496	FR	Université du Sud, Toulon et Var	http://www.univ-tln.fr/
+2497	FR	Université François Rabelais de Tours	http://www.univ-tours.fr/
+2498	FR	Université Henri Poincaré (Nancy I)	http://www.uhp-nancy.fr/
+2499	FR	Université Jean Monnet	http://www.univ-st-etienne.fr/
+2500	FR	Université Jean Moulin (Lyon III)	http://www.univ-lyon3.fr/
+2501	FR	Université Joseph Fourier (Grenoble I)	http://www.ujf-grenoble.fr/
+2502	FR	Université Louis Pasteur (Strasbourg I)	http://www-ulp.u-strasbg.fr/
+2503	FR	Université Lumiére (Lyon II)	http://www.univ-lyon2.fr/
+2504	FR	Université Michel de Montaigne (Bordeaux III )	http://www.montaigne.u-bordeaux.fr/
+2505	FR	Université Montesquieu (Bordeaux IV)	http://www.montesquieu.u-bordeaux.fr/
+2506	FR	Université Nancy II	http://www.univ-nancy2.fr/
+2507	FR	Université Panthéon-Assas (Paris II)	http://www.u-paris2.fr/
+2508	FR	Université Panthéon-Sorbonne (Paris I)	http://www.univ-paris1.fr/
+2509	FR	Université Paris-Dauphine (Paris IX)	http://www.dauphine.fr/
+2510	FR	Université Paris Nanterre (Paris X)	http://www.u-paris10.fr/
+2511	FR	Université Paris Nord (Paris XIII)	http://www.univ-paris13.fr/
+2512	FR	Université Paris-Sorbonne (Paris IV)	http://www.paris4.sorbonne.fr/
+2513	FR	Université Paris Sud (Paris XI)	http://www.u-psud.fr/
+2514	FR	Université Paul Sabatier (Toulouse III)	http://www.ups-tlse.fr/
+2515	FR	Université Paul Valéry (Montpellier III)	http://www.univ-montp3.fr/
+2516	FR	Université Pierre et Marie Curie (Paris VI)	http://www.jussieu.fr/
+2517	FR	Université Pierre Mendes-France (Grenoble II)	http://www.upmf-grenoble.fr/
+2518	FR	Université René Descartes (Paris V)	http://www.univ-paris5.fr/
+2519	FR	Université Rennes I	http://www.univ-rennes1.fr/
+2520	FR	Université Rennes II - Haute-Bretagne	http://www.uhb.fr/
+2521	FR	Université Robert Schuman (Strasbourg III)	http://www-urs.u-strasbg.fr/
+2522	FR	Université Sorbonne-Nouvelle (Paris III)	http://www.univ-paris3.fr/
+2523	FR	Université Stendhal (Grenoble III)	http://www.u-grenoble3.fr/
+2524	FR	Université Val-de-Marne (Paris XII)	http://www.univ-paris12.fr/
+2525	FR	Université Victor Segalen (Bordeaux II)	http://www.u-bordeaux2.fr/
+2526	FR	Université Vincennes Saint-Denis (Paris VIII)	http://www.univ-paris8.fr/
+2527	GA	Université Omar Bongo	http://www.uob.ga/
+2528	GB	Aga Khan University	http://www.aku.edu/
+2529	GB	American InterContinental University - London	http://www.aiuniv.edu/
+2530	GB	Anglia Ruskin University	http://www.anglia.ac.uk/
+2531	GB	Aston University	http://www.aston.ac.uk/
+2532	GB	Birkbeck College, University of London	http://www.bbk.ac.uk/
+2533	GB	Birmingham City University	http://www.bcu.ac.uk/
+2534	GB	Bournemouth University	http://www.bournemouth.ac.uk/
+2535	GB	British College of Osteopathic Medicine	http://www.bcom.ac.uk/
+2536	GB	Brunel University Uxbridge	http://www.brunel.ac.uk/
+2537	GB	Buckinghamshire New University	http://www.bucks.ac.uk/
+2538	GB	Camberwell College of Arts	http://www.camb.linst.ac.uk/
+2539	GB	Canterbury Christ Church University	http://www.canterbury.ac.uk/
+2540	GB	Cardiff University	http://www.cardiff.ac.uk/
+2541	GB	Central Saint Martins College of Art & Design	http://www.csm.linst.ac.uk/
+2542	GB	Chelsea College of Art and Design	http://www.chelsea.linst.ac.uk/
+2543	GB	City University	http://www.city.ac.uk/
+2544	GB	Courtauld Institute of Art, University of London	http://www.courtauld.ac.uk/
+2545	GB	Coventry University	http://www.coventry.ac.uk/
+2546	GB	Cranfield University	http://www.cranfield.ac.uk/
+2547	GB	De Montfort University Leicester	http://www.dmu.ac.uk/
+2548	GB	European School of Economics	http://www.eselondon.ac.uk/
+2549	GB	Falmouth University	http://www.falmouth.ac.uk/
+2550	GB	Glasgow Caledonian University	http://www.gcal.ac.uk/
+2551	GB	Glasgow School of Art	http://www.gsa.ac.uk/
+2552	GB	Goldsmiths College, University of London	http://www.gold.ac.uk/
+2553	GB	Heriot-Watt University	http://www.hw.ac.uk/
+2554	GB	Heythrop College, University of London	http://www.heythrop.ac.uk/
+2555	GB	Huron University USA in London	http://www.huron.ac.uk/
+2556	GB	ifs University College	http://www.ifslearning.ac.uk/
+2557	GB	Imperial College London	http://www.ic.ac.uk/
+2558	GB	Imperial College School of Medicine	http://www.med.ic.ac.uk/
+2559	GB	Institue of Historical Research, University of London	http://ihr.sas.ac.uk/
+2560	GB	Institute of Advanced Legal Studies, University of London	http://www.sas.ac.uk/ials/
+2561	GB	Institute of Classical Studies, University of London	http://www.sas.ac.uk/icls/
+2562	GB	Institute of Commonwealth Studies, University of London	http://www.ihr.sas.ac.uk/ics/
+2563	GB	Institute of Education, University of London	http://www.ioe.ac.uk/
+2564	GB	Institute of Germanic Studies, University of London	http://www.sas.ac.uk/igs/
+2565	GB	Institute of Latin American Studies, University of London	http://www.sas.ac.uk/ilas/
+2566	GB	International Centre for Isclamic Science	http://www.kolieh.com/
+2567	GB	International Colleges of Islamic Science	http://www.islamiccolleges.com/
+2568	GB	Keele University	http://www.keele.ac.uk/
+2569	GB	King's College London, University of London	http://www.kcl.ac.uk/
+2570	GB	Kingston University	http://www.kingston.ac.uk/
+2571	GB	Leeds Metropolitan University	http://www.lmu.ac.uk/
+2572	GB	Liverpool Hope University College	http://www.hope.ac.uk/
+2573	GB	Liverpool John Moores University	http://www.livjm.ac.uk/
+2574	GB	London Business School	http://www.lbs.lon.ac.uk/
+2575	GB	London College of Science & Technology	http://www.lcst.ac/
+2576	GB	London Guildhall University	http://www.lgu.ac.uk/
+2577	GB	London Institute of Management and Technology	http://www.limt.co.uk/
+2578	GB	London Metropolitan University	http://www.londonmet.ac.uk/
+2579	GB	London School of Business & Finance	http://www.lsbf.org.uk/
+2580	GB	London School of Economics and Political Science, University of London	http://www.lse.ac.uk/
+2581	GB	London School of Hygiene & Tropical Medicine, University of London	http://www.lshtm.ac.uk/
+2582	GB	London School of Jewish Studies	http://www.brijnet.org/lsjs/
+2583	GB	Loughborough University	http://www.lboro.ac.uk/
+2584	GB	Middlesex University	http://www.mdx.ac.uk/
+2585	GB	Napier University	http://www.napier.ac.uk/
+2586	GB	Newport International University	http://www.niu.org.uk/
+2587	GB	Nottingham Trent University	http://www.ntu.ac.uk/
+2588	GB	Open University	http://www.open.ac.uk/
+2589	GB	Oxford Brookes University	http://www.brookes.ac.uk/
+2590	GB	Queen Mary and Westfield College, University of London	http://www.qmw.ac.uk/
+2591	GB	Richmond University - The American International University in London	http://www.richmond.ac.uk/
+2592	GB	Roehampton University of Surrey	http://www.roehampton.ac.uk/
+2593	GB	Royal Academy of Music, University of London	http://www.ram.ac.uk/
+2594	GB	Royal College of Art	http://www.rca.ac.uk/
+2595	GB	Royal College of Music, University of London	http://www.rcm.ac.uk/
+2596	GB	Royal Free Hospital School of Medicine, University of London	http://www.rfhsm.ac.uk/
+2597	GB	Royal Holloway and Bedford New College	http://www.rhbnc.ac.uk/
+2598	GB	Saint George's Hospital Medical School, University of London	http://www.sghms.ac.uk/
+2599	GB	Schiller International University, London	http://www.schillerlondon.ac.uk/
+2600	GB	School of Oriental and African Studies, University of London	http://www.soas.ac.uk/
+2601	GB	School of Pharmacy, University of London	http://www.ulsop.ac.uk/
+2602	GB	School of Slavonic and East European Studies, University of London	http://www.ssees.ac.uk/
+2603	GB	Sheffield Hallam University	http://www.shu.ac.uk/
+2604	GB	Sotheby´s Institute of Art - London	http://www.sothebysinstitutelondon.com/
+2605	GB	Southampton Solent University	http://www.solent.ac.uk/
+2606	GB	South Bank University	http://www.sbu.ac.uk/
+2607	GB	Staffordshire University	http://www.staffs.ac.uk/
+2608	GB	St.Patrick's International College, London	http://www.st-patricks.ac.uk/
+2609	GB	Stratford College London	http://www.sclondon.ac/
+2610	GB	Swansea Metropolitan University	http://www.smu.ac.uk/
+2611	GB	Thames Valley University	http://www.tvu.ac.uk/
+2612	GB	The American University in London	http://www.aul.edu/
+2613	GB	The Manchester Metropolitan University	http://www.mmu.ac.uk/
+2614	GB	The Queen's University Belfast	http://www.qub.ac.uk/
+2615	GB	The Robert Gordon University	http://www.rgu.ac.uk/
+2616	GB	Trinity College Carmarthen	http://www.trinity-cm.ac.uk/
+2617	GB	Trinity College of Music	http://www.tcm.ac.uk/
+2618	GB	United Medical and Dental Schools, University of London	http://www.umds.ac.uk/
+2619	GB	University Campus Suffolk	http://www.ucs.ac.uk/
+2620	GB	University College London, University of London	http://www.ucl.ac.uk/
+2621	GB	University of Aberdeen	http://www.abdn.ac.uk/
+2622	GB	University of Abertay Dundee	http://www.abertay.ac.uk/
+2623	GB	University of Bath	http://www.bath.ac.uk/
+2624	GB	University of Bedfordshire	http://www.beds.ac.uk/
+2625	GB	University of Birmingham	http://www.bham.ac.uk/
+2626	GB	University of Bolton	http://www.bolton.ac.uk/
+2627	GB	University of Bradford	http://www.brad.ac.uk/
+2628	GB	University of Brighton	http://www.bton.ac.uk/
+2629	GB	University of Bristol	http://www.bris.ac.uk/
+2630	GB	University of Buckingham	http://www.buck.ac.uk/
+2631	GB	University of Cambridge	http://www.cam.ac.uk/
+2632	GB	University of Central Lancashire	http://www.uclan.ac.uk/
+2633	GB	University of Chester	http://www.chester.ac.uk/
+2634	GB	University of Derby	http://www.derby.ac.uk/
+2635	GB	University of Dundee	http://www.dundee.ac.uk/
+2636	GB	University of Durham	http://www.dur.ac.uk/
+2637	GB	University of East Anglia	http://www.uea.ac.uk/
+2638	GB	University of East London	http://www.uel.ac.uk/
+2639	GB	University of Edinburgh	http://www.ed.ac.uk/
+2640	GB	University of Essex	http://www.essex.ac.uk/
+2641	GB	University of Exeter	http://www.ex.ac.uk/
+2642	GB	University of Glamorgan	http://www.glam.ac.uk/
+2643	GB	University of Glasgow	http://www.gla.ac.uk/
+2644	GB	University of Gloucestershire	http://www.glos.ac.uk/
+2645	GB	University of Greenwich	http://www.gre.ac.uk/
+2646	GB	University of Halifax, Birmingham Campus	http://www.halifaxuni.ac/
+2647	GB	University of Hertfordshire	http://www.herts.ac.uk/
+2648	GB	University of Huddersfield	http://www.hud.ac.uk/
+2649	GB	University of Hull	http://www.hull.ac.uk/
+2650	GB	University of Kent at Canterbury	http://www.ukc.ac.uk/
+2651	GB	University of Lancaster	http://www.lancs.ac.uk/
+2652	GB	University of Leeds	http://www.leeds.ac.uk/
+2653	GB	University of Leicester	http://www.le.ac.uk/
+2654	GB	University of Lincoln	http://www.lincoln.ac.uk/
+2655	GB	University of Liverpool	http://www.liv.ac.uk/
+2656	GB	University of London	http://www.lon.ac.uk/
+2657	GB	University of Manchester	http://www.man.ac.uk/
+2658	GB	University of Newcastle-upon-Tyne	http://www.ncl.ac.uk/
+2659	GB	University of Northampton	http://www.northampton.ac.uk/
+2660	GB	University of North London	http://www.unl.ac.uk/
+2661	GB	University of Northumbria at Newcastle	http://www.unn.ac.uk/
+2662	GB	University of Nottingham	http://www.nottingham.ac.uk/
+2663	GB	University of Oxford	http://www.ox.ac.uk/
+2664	GB	University of Paisley	http://www.paisley.ac.uk/
+2665	GB	University of Plymouth	http://www.plymouth.ac.uk/
+2666	GB	University of Portsmouth	http://www.port.ac.uk/
+2667	GB	University of Reading	http://www.rdg.ac.uk/
+2668	GB	University of Salford	http://www.salford.ac.uk/
+2669	GB	University of Sheffield	http://www.shef.ac.uk/
+2670	GB	University of Southampton	http://www.soton.ac.uk/
+2671	GB	University of St. Andrews	http://www.st-and.ac.uk/
+2672	GB	University of Stirling	http://www.stir.ac.uk/
+2673	GB	University of Strathclyde	http://www.strath.ac.uk/
+2674	GB	University of Sunderland	http://www.sunderland.ac.uk/
+2675	GB	University of Surrey	http://www.surrey.ac.uk/
+2676	GB	University of Sussex	http://www.sussex.ac.uk/
+2677	GB	University of Teesside	http://www.tees.ac.uk/
+2678	GB	University of the West of England, Bristol	http://www.uwe.ac.uk/
+2679	GB	University of Ulster	http://www.ulst.ac.uk/
+2680	GB	University of Wales	http://www.wales.ac.uk/
+2681	GB	University of Wales, Aberystwyth	http://www.aber.ac.uk/
+2682	GB	University of Wales, Bangor	http://www.bangor.ac.uk/
+2683	GB	University of Wales College of Medicine	http://www.uwcm.ac.uk/
+2684	GB	University of Wales Institute, Cardiff	http://www.uwic.ac.uk/
+2685	GB	University of Wales, Lampeter	http://www.lamp.ac.uk/
+2686	GB	University of Wales, Newport	http://www.newport.ac.uk/
+2687	GB	University of Wales, Swansea	http://www.swan.ac.uk/
+2688	GB	University of Warwick	http://www.warwick.ac.uk/
+2689	GB	University of Westminster	http://www.westminster.ac.uk/
+2690	GB	University of Wolverhampton	http://www.wlv.ac.uk/
+2691	GB	University of Worcester	http://www.worc.ac.uk/
+2692	GB	University of York	http://www.york.ac.uk/
+2693	GB	Warburg Institute, University of London	http://www.sas.ac.uk/warburg/
+2694	GB	Warnborough University	http://www.warnborough.edu/
+2695	GB	William Gilbert College	http://www.williamgilbert.co.uk/
+2696	GB	Wimbledon School of Art	http://www.wimbledon.ac.uk/
+2697	GD	St. George's University	http://www.sgu.edu/
+2698	GE	Agricultural University of Georgia	http://www.agruni.edu.ge/
+2699	GE	Akaki Tsereteli State University	http://www.atsu.edu.ge/
+2700	GE	Caucasus University	http://www.cu.edu.ge/
+2701	GE	Free University of Tbilisi	http://www.freeuni.ge/
+2702	GE	Georgian Technical University	http://www.gtu.edu.ge/
+2703	GE	Ilia Chavchavadze State University	http://www.iliauni.edu.ge/
+2704	GE	International Blacksea University	http://www.ibsu.edu.ge/
+2705	GE	St. Andrew Georgian University	http://www.sangu.ge/
+2706	GE	Tbilisi State Medical University	http://www.tsmu.edu/
+2707	GE	Tbilisi State University	http://www.tsu.edu.ge/
+2708	GE	Tbilisi Teaching University	http://www.tbuniver.edu.ge/
+2709	GE	University of Grigol Robakidze	http://www.gruni.edu.ge/
+2710	GF	Université des Antilles et de la Guyane	http://www.univ-ag.fr/
+2711	GH	Accra Polytechnic 	http://www.accrapolytechnic.edu.gh/
+2712	GH	Akrofi-Christaller Institute of Theeology, Mission and  Culture	http://www.acighana.org/
+2713	GH	All Nations University College	http://www.anuc.edu.gh/
+2714	GH	Ashesi University	http://www.ashesi.edu.gh/
+2715	GH	Cape Coast Polytechnic 	http://www.cpoly.edu.gh/
+2716	GH	Central University College	http://www.central.edu.gh/
+2717	GH	Ghana Christian University College	http://www.ghanacu.org/
+2718	GH	Ghana Institute of Management and Public Administration (GIMPA)	http://www.gimpa.edu.gh/
+2719	GH	Ghana Telecom University College	http://www.gtuc.edu.gh/
+2720	GH	Ho Polytechnic 	http://www.hopoly.edu.gh/
+2721	GH	Islamic University College	http://www.iug.edu.gh/
+2722	GH	Koforidua Polytechnic 	http://www.koforiduapoly.edu.gh/
+2723	GH	Kumasi Polytechnic 	http://www.kpoly.edu.gh/
+2724	GH	Kwame Nkrumah University of Science and Technology	http://www.knust.edu.gh/
+2725	GH	Lancaster University Ghana	http://www.lancaster.edu.gh/
+2726	GH	Pan African Christian University College	http://www.pacuc.edu.gh/
+2727	GH	Prempeh College	http://www.prempeh-college.com/
+2728	GH	Presbyterian University College	http://www.presbyuniversity.edu.gh/
+2729	GH	Regent University College of Science and Technology  	http://www.regentghana.net/
+2730	GH	Takoradi Polytechnic 	http://www.tpoly.edu.gh/
+2731	GH	Trinity Theological Seminary	http://www.trinity.edu.gh/
+2732	GH	University for Development Studies	http://www.uds.edu.gh/
+2733	GH	University of Cape Coast	http://www.ucc.edu.gh/
+2734	GH	University of Education, Winneba	http://www.uew.edu.gh/
+2735	GH	University of Ghana	http://www.ug.edu.gh/
+2736	GH	Valley View University	http://www.vvu.edu.gh/
+2737	GL	University of Greenland	http://www.ilisimatusarfik.gl/
+2738	GM	American International University West Africa	http://www.aiu.edu.gm/
+2739	GM	EUCLID University	http://www.euclid.int/
+2740	GM	University of the Gambia	http://www.utg.edu.gm/
+2741	GN	Université Gamal Abdel Nasser de Conakry	http://www.uganc.org/
+2742	GN	Université Julius Nyerere Kankan	http://www.ujnk.org/
+2743	GN	Université Kofi Annan	http://www.univ-kag.org/
+2744	GN	Université Thierno Amadou Diallo	http://www.utad-petel-edu.org/
+2745	GP	Université des Antilles et de la Guyane	http://www.univ-ag.fr/
+2746	GQ	Universidad Nacional de Guinea Ecuatorial	http://www.unge.gq/
+2747	GR	Aegean University	http://www.aegean.gr/
+2748	GR	Agricultural University of Athens	http://www.aua.gr/
+2749	GR	American College of Greece	http://www.acg.gr/
+2750	GR	American College of Thessaloniki	http://www.act.edu/
+2751	GR	Aristotle University of Thessaloniki	http://www.auth.gr/
+2752	GR	Athens Graduate School of Management (AGSM)	http://www.agsm.gr/
+2753	GR	Athens Laboratory of Business Administration (ALBA)	http://www.alba.edu.gr/
+2754	GR	Athens School of Fine Arts	http://www.asfa.gr/
+2755	GR	Athens University of Economics and Business	http://www.aueb.gr/
+2756	GR	City University Athens	http://www.cityu.gr/
+2757	GR	DEI Bachelor & Master Degrees	http://www.dei.edu.gr/
+2758	GR	Dimocritus University of Thrace	http://www.duth.gr/
+2759	GR	European University, Athens Campus	http://www.euruni.edu/
+2760	GR	Harokopio University	http://www.forthnet.gr/harokopio/
+2761	GR	Hellenic Army Academy	http://www.sse.gr/
+2762	GR	Hellenic Open University	http://www.eap.gr/
+2763	GR	Institute of Management Development - Ohrid	http://www.imd.edu.gr/
+2764	GR	Institute of Management & Enteurpreneurship of South East Europe	http://www.imese.gr/
+2765	GR	International Hellenic University	http://www.ihu.edu.gr/
+2766	GR	Ionian University Corfu	http://www.uion.edu.gr/
+2767	GR	National Technical University of Athens	http://www.ntua.gr/
+2768	GR	Panteios University of Economics and Political Sciences Athens	http://www.panteion.gr/
+2769	GR	Technical University of Crete	http://www.tuc.gr/
+2770	GR	Technological Education Institute of Athens	http://www.teiath.gr/
+2771	GR	Technological Education Institute of Epiros	http://www.teiep.gr/
+2772	GR	Technological Education Institute of Halkida, Euboea	http://www.teihal.gr/
+2773	GR	Technological Education Institute of Heraklion	http://www.teiher.gr/
+2774	GR	Technological Education Institute of Kalamata	http://www.teikal.gr/
+2775	GR	Technological Education Institute of Kavala	http://www.teikav.edu.gr/
+2776	GR	Technological Education Institute of Kozani	http://www.teikoz.gr/
+2777	GR	Technological Education Institute of Lamia	http://www.teilam.gr/
+2778	GR	Technological Education Institute of Larissa	http://www.teilar.gr/
+2779	GR	Technological Education Institute of Mesologgi	http://www.teimes.gr/
+2780	GR	Technological Education Institute of Patras	http://www.teipat.gr/
+2781	GR	Technological Education Institute of Piraeus	http://www.teipir.gr/
+2782	GR	Technological Education Institute of Serres	http://www.teiser.gr/
+2783	GR	Technological Education Institute of Thessaloniki	http://www.teithe.gr/
+2784	GR	University of Athens	http://www.uoa.gr/
+2785	GR	University of Central Greece	http://www.ucg.gr/
+2786	GR	University of Crete	http://www.uoc.gr/
+2787	GR	University of Indianapolis in Athens	http://www.uindy.edu.gr/
+2788	GR	University of Ioannina	http://www.uoi.gr/
+2789	GR	University of LaVerne in Athens	http://www.laverne.edu.gr/
+2790	GR	University of Macedonia	http://www.uom.gr/
+2791	GR	University of Patras	http://www.upatras.gr/
+2792	GR	University of Peloponnese	http://www.uop.gr/
+2793	GR	University of Piraeus	http://www.unipi.gr/
+2794	GR	University of Thessaly	http://www.uth.gr/
+2795	GR	University of Western Macedonia	http://www.uowm.gr/
+2796	GR	Yorker International University, Athens	http://www.nyuniversity.net/
+2797	GT	Centro Universitario Ciudad Vieja	http://www.cucv.edu.gt/
+2798	GT	Centro Universitario de Occidente	http://www.cunoc.edu.gt/
+2799	GT	Universidad del Istmo	http://www.unis.edu.gt/
+2800	GT	Universidad del Valle de Guatemala	http://www.uvg.edu.gt/
+2801	GT	Universidad de San Carlos de Guatemala	http://www.usac.edu.gt/
+2802	GT	Universidad Francisco Marroquín	http://www.ufm.edu.gt/
+2803	GT	Universidad Galileo	http://www.galileo.edu/
+2804	GT	Universidad Mariano Gálvez	http://www.umg.edu.gt/
+2805	GT	Universidad Panamericana	http://www.upana.edu.gt/
+2806	GT	Universidad Rafael Landívar	http://www.url.edu.gt/
+2807	GT	Universidad Rural de Guatemala	http://www.urural.edu.gt/
+2808	GU	University of Guam	http://www.uog.edu/
+2809	GY	Gemsville Technical University	http://www.gemsvilleuniversity.com/
+2810	GY	Greenheart Medical School	http://www.greenheartmed.org/
+2811	GY	Texila American University	http://www.tauedu.org/
+2812	GY	University of Guyana	http://www.uog.edu.gy/
+2813	HK	Chinese University of Hong Kong	http://www.cuhk.hk/
+2814	HK	Chu Hai College	http://www.chuhai.edu.hk/
+2815	HK	City University of Hong Kong	http://www.cityu.edu.hk/
+2816	HK	Hong Kong Academy for Performing Arts 	http://www.hkapa.edu/
+2817	HK	Hong Kong Baptist University	http://www.hkbu.edu.hk/
+2818	HK	Hong Kong Institute of Education	http://www.ied.edu.hk/
+2819	HK	Hong Kong Polytechnic University	http://www.polyu.edu.hk/
+2820	HK	Hong Kong Shue Yan College	http://www.hksyc.edu/
+2821	HK	Hong Kong University of Science and Technology	http://www.ust.hk/
+2822	HK	Lingnan University	http://www.ln.edu.hk/
+2823	HK	Open University of Hong Kong	http://www.ouhk.edu.hk/
+2824	HK	University of Hong Kong	http://www.hku.hk/
+2825	HN	Escuela Agricola Panamericana Zamorano	http://www.zamorano.edu/
+2826	HN	Universidad Católica de Honduras	http://www.unicah.edu/
+2827	HN	Universidad de San Pedro Sula	http://www.usps.edu.hn/
+2828	HN	Universidad José Cecilio del Valle	http://www.ujcv.edu.hn/
+2829	HN	Universidad Metropolitana de Honduras	http://www.unimetro.edu.hn/
+2830	HN	Universidad Nacional Autónoma de Honduras	http://www.unah.edu.hn/
+2831	HN	Universidad Pedagógica Nacional "Francisco Morazán"	http://www.upnfm.edu.hn/
+2832	HN	Universidad Tecnológica Centroamericana	http://www.unitec.edu/
+2833	HN	Universidad Tecnológica de Honduras	http://www.uth.hn/
+2834	HR	University of Dubrovnik	http://www.unidu.hr/
+2835	HR	University of Osijek	http://www.unios.hr/
+2836	HR	University of Pula	http://www.unipu.hr/
+2837	HR	University of Rijeka	http://www.uniri.hr/
+2838	HR	University of Split	http://www.unist.hr/
+2839	HR	University of Zadar	http://www.unizd.hr/
+2840	HR	University of Zagreb	http://www.unizg.hr/
+2841	HR	Zagreb School of Economics and Management	http://www.zsem.hr/
+2842	HT	American University of the Caribbean	http://www.auchaiti.org/
+2843	HT	Université Chrétienne du Nord d'Haiti	http://www.ucnh.org/
+2844	HT	Université d'Etat d'Haiti	http://www.ueh.edu.ht/
+2845	HT	Université Épiscopale d'Haiti	http://www.uneph.org/
+2846	HT	Université Notre Dame d'Haïti	http://www.undh.org/
+2847	HT	Université Quisqueya	http://www.uniq.edu/
+2848	HU	Academy of Drama and Film	http://www.filmacademy.hu/
+2849	HU	Andrassy Gyula German Speaking University Budapest	http://www.andrassyuni.hu/
+2850	HU	Avicenna International College	http://www.avicenna.hu/
+2851	HU	Budapest Buddhist University	http://www.tkbf.hu/
+2852	HU	Budapest University of Economic Sciences and Public Administration	http://www.bke.hu/
+2853	HU	Central European University	http://www.ceu.hu/
+2854	HU	College of Dunaujvaros	http://www.duf.hu/
+2855	HU	Dániel Berzsenyi Teacher Training College	http://www.bdtf.hu/
+2856	HU	Debrecen University of Agricultural Sciences	http://www.agr.unideb.hu/
+2857	HU	Eötvös Lorand University	http://www.elte.hu/
+2858	HU	Esztergom Theological College	http://www.ehf.hu/
+2859	HU	Haynal Imre University of Health Sciences Budapest	http://www.hiete.hu/
+2860	HU	Hungarian Academy of Craft and Design	http://www.mif.hu/
+2861	HU	Hungarian Academy of Fine Arts Budapest	http://www.arts7.hu/
+2862	HU	Hungarian University of Physical Education	http://www.hupe.hu/
+2863	HU	Janus Pannonius University	http://www.jpte.hu/
+2864	HU	Károl Gáspár University of the Reformed Church	http://www.kgre.hu/
+2865	HU	Kodolanyi Janos University College	http://www.kodolanyi.hu/
+2866	HU	Kossuth Lajos University	http://www.lib.klte.hu/
+2867	HU	Liszt Ferenc Academy of Music Budapest	http://www.lfze.hu/
+2868	HU	Pázmány Péter Catholic University	http://www.ppke.hu/
+2869	HU	Reformed Theological Academy of Debrecen	http://www.drk.hu/
+2870	HU	Séchenyi István University	http://www.sze.hu/
+2871	HU	Semmelweis University of Medical Sciences	http://www.sote.hu/
+2872	HU	Szent István University	http://www.szie.hu/
+2873	HU	Technical University of Budapest	http://www.bme.hu/
+2874	HU	University Medical School of Debrecen	http://www.dote.hu/
+2875	HU	University Medical School of Pécs	http://www.pote.hu/
+2876	HU	University of Debrecen 	http://www.unideb.hu/
+2877	HU	University of Horticulture and Food Industry	http://www.kee.hu/
+2878	HU	University of Miskolc	http://www.uni-miskolc.hu/
+2879	HU	University of Pannonia	http://www.uni-pannon.hu/
+2880	HU	University of Pecs	http://www.pte.hu/
+2881	HU	University of Sopron	http://www.efe.hu/
+2882	HU	University of Szeged	http://www.u-szeged.hu/
+2883	HU	University of Veterinary Science	http://www.univet.hu/
+2884	HU	University of West Hungary	http://www.nyme.hu/
+2885	ID	Abfi Institute Perbanas Jakarta	http://www.perbanasinstitute.ac.id/
+2886	ID	Binus University	http://www.binus.ac.id/
+2887	ID	Bogor Agricultural University	http://www.ipb.ac.id/
+2888	ID	Institut Sains dan Teknologi Al Kamal	http://www.ista.ac.id/
+2889	ID	Institut Sains & Teknologi Akprind	http://www.akprind.ac.id/
+2890	ID	Institut Teknologi Adhi Tama Surabaya	http://www.itats.ac.id/
+2891	ID	Institut Teknologi Bandung	http://www.itb.ac.id/
+2892	ID	Institut Teknologi Sepuluh Nopember	http://www.its.ac.id/
+2893	ID	Institut Teknologi Telkom	http://www.stttelkom.ac.id/
+2894	ID	Politeknik Negeri Bandung	http://www.polban.ac.id/
+2895	ID	Politeknik Negeri Jakarta	http://www.pnj.ac.id/
+2896	ID	Politeknik Negeri Lhokseumawe	http://www.pnl.ac.id/
+2897	ID	Politeknik Negeri Malang	http://www.poltek-malang.ac.id/
+2898	ID	Politeknik Negeri Padang	http://www.polinpdg.ac.id/
+2899	ID	Politeknik Negeri Pontianak	http://www.polnep.ac.id/
+2900	ID	Politeknik Negeri Sambas	http://www.poltesa.ac.id/
+2901	ID	Politeknik Negeri Semarang	http://www.polines.ac.id/
+2902	ID	Politeknik Pos Indonesia	http://www.poltekpos.ac.id/
+2903	ID	Prasetiya Mulya Business School	http://www.pmbs.ac.id/
+2904	ID	Sekolah Tinggi Akuntansi Negara (STAN)	http://www.stan.ac.id/
+2905	ID	Stie Perbanas Surabaya	http://www.perbanas.ac.id/
+2906	ID	STMIK AMIKOM Yogyakarta	http://www.amikom.ac.id/
+2907	ID	STMIK Sinar Nusantara	http://www.sinus.ac.id/
+2908	ID	Swiss German University	http://www.sgu.ac.id/
+2909	ID	Trisakti Institute of Tourism 	http://www.stptrisakti.ac.id/
+2910	ID	Unitomo Surabaya	http://www.unitomo.ac.id/
+2911	ID	Universitas 17 Agustus 1945 Banyuwangi	http://www.untag-banyuwangi.ac.id/
+2912	ID	Universitas 17 Agustus 1945 Cirebon	http://www.untagcirebon.info/
+2913	ID	Universitas 17 Agustus 1945 Jakarta	http://www.untag-jkt.org/
+2914	ID	Universitas 17 Agustus 1945 Samarinda	http://www.untag-smd.ac.id/
+2915	ID	Universitas 17 Agustus 1945 Semarang	http://www.untagsmg.ac.id/
+2916	ID	Universitas 17 Agustus 1945 Surabaya	http://www.untag.ac.id/
+2917	ID	Universitas Advent Indonesia	http://www.unai.edu/
+2918	ID	Universitas Ahmad Dahlan	http://www.uad.ac.id/
+2919	ID	Universitas Airlangga	http://www.unair.ac.id/
+2920	ID	Universitas Amir Hamzah	http://www.unhamzah.ac.id/
+2921	ID	Universitas Andalas	http://www.unand.ac.id/
+2922	ID	Universitas Atma Jaya Yogyakarta	http://www.uajy.ac.id/
+2923	ID	Universitas Bakrie	http://www.bakrie.ac.id/
+2924	ID	Universitas Bengkulu	http://www.unib.ac.id/
+2925	ID	Universitas Bhayangkara Jakarta Raya	http://www.ubharajaya.ac.id/
+2926	ID	Universitas Bhayangkara Surabaya	http://www.ubhara.ac.id/
+2927	ID	Universitas Bojonegoro	http://www.unigoro.ac.id/
+2928	ID	Universitas Brawijaya	http://www.ub.ac.id/
+2929	ID	Universitas Bunda Mulia Jakarta	http://www.ubm.ac.id/
+2930	ID	Universitas Bung Hatta	http://www.bunghatta.ac.id/
+2931	ID	Universitas Cenderawasih	http://www.uncen.ac.id/
+2932	ID	Universitas Darma Agung	http://www.uda.ac.id/
+2933	ID	Universitas Darma Persada	http://www.unsada.ac.id/
+2934	ID	Universitas Dian Nuswantoro	http://www.dinus.ac.id/
+2935	ID	Universitas Diponegoro	http://www.undip.ac.id/
+2936	ID	Universitas Dr. R. Moestopo	http://www.moestopo.ac.id/
+2937	ID	Universitas Gadjah Mada	http://www.ugm.ac.id/
+2938	ID	Universitas Gajayana Malang	http://www.unigamalang.ac.id/
+2939	ID	Universitas Gunadarma	http://www.gunadarma.ac.id/
+2940	ID	Universitas Haluoleo	http://www.unhalu.ac.id/
+2941	ID	Universitas Hasanuddin	http://www.unhas.ac.id/
+2942	ID	Universitas HKBP Nommensen	http://www.nommensen.org/
+2943	ID	Universitas Ibn Chaldun Jakarta	http://www.ibnuchaldun.com/
+2944	ID	Universitas Ibn Khaldun Bogor	http://www.uika-bogor.ac.id/
+2945	ID	Universitas Indonesia	http://www.ui.ac.id/
+2946	ID	Universitas Indonusa Esa Unggul	http://www.indonusa.ac.id/
+2947	ID	Universitas Islam Bandung	http://www.unisba.ac.id/
+2948	ID	Universitas Islam Indonesia	http://www.uii.ac.id/
+2949	ID	Universitas Islam Jakarta	http://www.uinjkt.ac.id/
+2950	ID	Universitas Islam Malang	http://www.unisma.ac.id/
+2951	ID	Universitas Islam Nusantara	http://www.uninus.ac.id/
+2952	ID	Universitas Islam Riau	http://www.uir.ac.id/
+2953	ID	Universitas Islam Sultan Agung	http://www.unissula.ac.id/
+2954	ID	Universitas Islam Sumatera Utara	http://www.uisu.ac.id/
+2955	ID	Universitas Islam Syekh-Yusuf 	http://www.unistangerang.ac.id/
+2956	ID	Universitas Jambi	http://www.unja.ac.id/
+2957	ID	Universitas Janabadra	http://www.janabadra.ac.id/
+2958	ID	Universitas Jayabaya	http://www.jayabaya.ac.id/
+2959	ID	Universitas Jember	http://www.unej.ac.id/
+2960	ID	Universitas Jenderal Achmad Yani	http://www.unjani.ac.id/
+2961	ID	Universitas Jenderal Soedirman	http://www.unsoed.ac.id/
+2962	ID	Universitas Katolik Indonesia Atma Jaya	http://www.atmajaya.ac.id/
+2963	ID	Universitas Katolik Parahyangan	http://www.unpar.ac.id/
+2964	ID	Universitas Katolik Soegijapranoto	http://www.unika.ac.id/
+2965	ID	Universitas Katolik Widya Karya	http://www.widyakarya.ac.id/
+2966	ID	Universitas Katolik Widya Manadala	http://www.wima.ac.id/
+2967	ID	Universitas Kediri	http://www.unik-kediri.ac.id/
+2968	ID	Universitas Khairun	http://www.unkhair.ac.id/
+2969	ID	Universitas Klabat	http://www.tagnet.org/unklab/
+2970	ID	Universitas Komputer Indonesia	http://www.unikom.ac.id/
+2971	ID	Universitas Krisnadwipayana	http://www.unkris.ac.id/
+2972	ID	Universitas Kristen Duta Wacana	http://www.ukdw.ac.id/
+2973	ID	Universitas Kristen Indonesia	http://www.uki.ac.id/
+2974	ID	Universitas Kristen Indonesia Tomohon	http://www.ukit-tomohon.org/
+2975	ID	Universitas Kristen Krida Wacana	http://www.ukrida.ac.id/
+2976	ID	Universitas Kristen Maranatha	http://www.maranatha.edu/
+2977	ID	Universitas Kristen Petra	http://www.petra.ac.id/
+2978	ID	Universitas Kristen Satya Wacana	http://www.uksw.edu/
+2979	ID	Universitas Lambung Mangkurat	http://www.unlam.ac.id/
+2980	ID	Universitas Lampung	http://www.unila.ac.id/
+2981	ID	Universitas Lancang Kuning	http://unilak.ac.id/
+2982	ID	Universitas Ma Chung	http://www.machung.ac.id/
+2983	ID	Universitas Madura	http://www.unira-pmk.net/
+2984	ID	Universitas Mahasaraswati Denpasar	http://www.unmas.org/
+2985	ID	Universitas Mahendradatta	http://www.mahendradatta.org/
+2986	ID	Universitas Mataram	http://www.unram.ac.id/
+2987	ID	Universitas Mercu Buana	http://www.mercubuana.ac.id/
+2988	ID	Universitas Merdeka Madiun	http://www.unmer-madiun.ac.id/
+2989	ID	Universitas Merdeka Malang	http://www.unmer.ac.id/
+2990	ID	Universitas Methodist Indonesia	http://www.umi-mdn.edu/
+2991	ID	Universitas Muhammadiyah Jakarta	http://www.umj.ac.id/
+2992	ID	Universitas Muhammadiyah Jember	http://www.unmuhjember.ac.id/
+2993	ID	Universitas Muhammadiyah Magelang	http://www.ummgl.ac.id/
+2994	ID	Universitas Muhammadiyah Makassar	http://www.unismuh.ac.id/
+2995	ID	Universitas Muhammadiyah Malang	http://www.umm.ac.id/
+2996	ID	Universitas Muhammadiyah Mataram	http://www.unmuhmataram.com/
+2997	ID	Universitas Muhammadiyah Sumatra Utara	http://www.umsu.ac.id/
+2998	ID	Universitas Muhammadiyah Surakarta	http://www.ums.ac.id/
+2999	ID	Universitas Muhammadiyah Yogyakarta	http://www.umy.ac.id/
+3000	ID	Universitas Mulawarman	http://www.unmul.ac.id/
+3001	ID	Universitas Muria Kudus	http://www.umk.ac.id/
+3002	ID	Universitas Muslim Indonesia	http://www.umi.ac.id/
+3003	ID	Universitas Narotama	http://www.narotama.ac.id/
+3004	ID	Universitas Nasional Jakarta	http://www.unas.ac.id/
+3005	ID	Universitas Nasional Pasim	http://www.pasim.ac.id/
+3006	ID	Universitas Negeri Gorontalo	http://www.ung.ac.id/
+3007	ID	Universitas Negeri Jakarta	http://www.unj.ac.id/
+3008	ID	Universitas Negeri Makassar	http://www.unm.ac.id/
+3009	ID	Universitas Negeri Malang	http://www.malang.ac.id/
+3010	ID	Universitas Negeri Manado	http://www.unima.ac.id/
+3011	ID	Universitas Negeri Medan	http://www.unimed.ac.id/
+3012	ID	Universitas Negeri Padang	http://www.unp.ac.id/
+3013	ID	Universitas Negeri Semarang	http://www.unnes.ac.id/
+3014	ID	Universitas Negeri Surabaya	http://www.unesa.ac.id/
+3015	ID	Universitas Negeri Yogyakarta	http://www.uny.ac.id/
+3016	ID	Universitas Ngurah Rai	http://www.unr.ac.id/
+3017	ID	Universitas Nusa Cendana	http://www.undana.ac.id/
+3018	ID	Universitas Padjadjaran	http://www.unpad.ac.id/
+3019	ID	Universitas Pakuan	http://www.unpak.ac.id/
+3020	ID	Universitas Palangka Raya	http://www.upr.ac.id/
+3021	ID	Universitas Pancasakti Tegal	http://www.upstegal.ac.id/
+3022	ID	Universitas Pancasila	http://www.univpancasila.ac.id/
+3023	ID	Universitas Paramadina Mulya	http://www.paramadina.ac.id/
+3024	ID	Universitas Pasundan	http://www.unpas.ac.id/
+3025	ID	Universitas Pattimura	http://www.unpatti.ac.id/
+3026	ID	Universitas Pekalongan	http://www.unikal.ac.id/
+3027	ID	Universitas Pelita Harapan	http://www.uph.edu/
+3028	ID	Universitas Pembangunan Nasional "Veteran" East Java	http://www.upnjatim.ac.id/
+3029	ID	Universitas Pembangunan Panca Budi	http://www.pancabudi.ac.id/
+3030	ID	Universitas Pendidikan Indonesia	http://www.upi.edu/
+3031	ID	Universitas Persada Indonesia Y.A.I	http://www.yai.ac.id/
+3032	ID	Universitas Pesantren Darul Ulum Jombang	http://www.unipdu.ac.id/
+3033	ID	Universitas Proklamasi 45	http://www.up45.ac.id/
+3034	ID	Universitas Putera Batam	http://www.puterabatam.ac.id/
+3035	ID	Universitas Riau	http://www.unri.ac.id/
+3036	ID	Universitas Sam Ratulangi	http://www.unsrat.ac.id/
+3037	ID	Universitas Sanata Dharma	http://www.usd.ac.id/
+3038	ID	Universitas Sarjanawiyata Tamansiswa	http://www.sarjanawiyata.ac.id/
+3039	ID	Universitas Sebelas Maret	http://www.uns.ac.id/
+3040	ID	Universitas Semarang	http://www.usm.ac.id/
+3041	ID	Universitas Siliwangi	http://www.unsil.ac.id/
+3042	ID	Universitas Simalungun	http://www.usi.ac.id/
+3043	ID	Universitas Slamet Riyadi Surakarta	http://www.unisri.ac.id/
+3044	ID	Universitas Sriwijaya	http://www.unsri.ac.id/
+3045	ID	Universitas Sultan Ageng Tirtayasa	http://www.untirta.ac.id/
+3046	ID	Universitas Sumatera Utara	http://www.usu.ac.id/
+3047	ID	Universitas Surabaya	http://www.ubaya.ac.id/
+3048	ID	Universitas Swadaya Gunung Djati	http://www.unswagati-crb.ac.id/
+3049	ID	Universitas Syiah Kuala	http://www.unsyiah.ac.id/
+3050	ID	Universitas Tadulako	http://www.untad.ac.id/
+3051	ID	Universitas Tanjungpura	http://www.untan.ac.id/
+3052	ID	Universitas Tarumanagara	http://www.untar.ac.id/
+3053	ID	Universitas Terbuka Indonesia	http://www.ut.ac.id/
+3054	ID	Universitas Tidar Magelang	http://www.utm.ac.id/
+3055	ID	Universitas Trilogi	http://www.universitas-trilogi.ac.id/
+3056	ID	Universitas Trisakti	http://www.trisakti.ac.id/
+3057	ID	Universitas Tunas Pembangunan	http://www.utp.ac.id/
+3058	ID	Universitas Udayana	http://www.unud.ac.id/
+3059	ID	Universitas Widya Gama Malang	http://www.widyagama.ac.id/
+3060	ID	Universitas Widyatama	http://www.widyatama.ac.id/
+3061	ID	Universitas Wijaya Kusuma Purwokerto	http://www.unwiku.ac.id/
+3062	ID	Universitas Wijaya Kusuma Surabaya	http://www.wijayakusumasby.ac.id/
+3063	ID	Universitas Wisnuwardhana	http://www.wisnuwardhana.ac.id/
+3064	ID	Universitas Yarsi	http://www.yarsi.ac.id/
+3065	IE	Athlone Institute of Technology	http://www.ait.ie/
+3066	IE	Carlow Institute of Technology	http://www.itcarlow.ie/
+3067	IE	Cork Institute of Technology	http://www.cit.ie/
+3068	IE	Dublin City University	http://www.dcu.ie/
+3069	IE	Dublin Institute for Advanced Studies	http://www.dias.ie/
+3070	IE	Dublin Institute of Technology	http://www.dit.ie/
+3071	IE	Galway Mayo Institute of Technology	http://www.gmit.ie/
+3072	IE	Griffith College	http://www.gcd.ie/
+3073	IE	Institue of Technology, Tralee	http://www.ittralee.ie/
+3074	IE	Irish International University (Distance Education)	http://www.iiuedu.ie/
+3075	IE	LSB College	http://www.lsb.ie/
+3076	IE	National College of Ireland	http://www.ncirl.ie/
+3077	IE	National University of Ireland	http://www.nui.ie/
+3078	IE	National University of Ireland, Galway	http://www.ucg.ie/
+3079	IE	National University of Ireland, Maynooth	http://www.may.ie/
+3080	IE	Royal College of Physicians of Ireland	http://www.rcpi.ie/
+3081	IE	Royal College of Surgeons	http://www.rcsi.ie/
+3082	IE	Shannon College of Hotel Management	http://www.shannoncollege.com/
+3083	IE	University College Cork	http://www.ucc.ie/
+3084	IE	University College Dublin	http://www.ucd.ie/
+3085	IE	University of Dublin, Trinity College	http://www.tcd.ie/
+3086	IE	University of Limerick	http://www.ul.ie/
+3087	IE	Warnborough University	http://www.warnborough.edu/
+3088	IE	Waterford Institute Of Technology	http://www.wit.ie/
+3089	IL	Acdemic Center for Law and Business	http://www.clb.ac.il/
+3090	IL	Afeka Tel Aviv Academic College of Engineering	http://www.afeka.ac.il/
+3091	IL	Ariel University Center of Samaria	http://www.ariel.ac.il/
+3092	IL	Ashkelon Academic College	http://www.ash-college.ac.il/
+3093	IL	Bar-Ilan University	http://www.biu.ac.il/
+3094	IL	Ben-Gurion University of the Negev	http://www.bgu.ac.il/
+3095	IL	Bezalel Academy of Art and Design	http://www.bezalel.ac.il/
+3096	IL	College of Management	http://www.colman.ac.il/
+3097	IL	Emeq Yizrael College	http://www.yvc.ac.il/
+3098	IL	Galillee College	http://www.galilcol.ac.il/
+3099	IL	Hebrew University of Jerusalem	http://www.huji.ac.il/
+3100	IL	Jerusalem University College	http://www.juc.edu/
+3101	IL	Open University of Israel	http://www.openu.ac.il/
+3102	IL	Russell Berrie Nanotechnology Institute	http://rbni.technion.ac.il/
+3103	IL	Sami Shamoon College of Engineering	http://www.sce.ac.il/
+3104	IL	Shenkar School of Engineering & Design	http://www.shenkar.ac.il/
+3105	IL	Technion - Israel Institute of Technology	http://www.technion.ac.il/
+3106	IL	Tel Aviv University	http://www.tau.ac.il/
+3107	IL	The Interdisciplinary Center Herzliya	http://www.idc.ac.il/
+3108	IL	University of Haifa	http://www.haifa.ac.il/
+3109	IL	Weizmann Institute of Science	http://www.weizmann.ac.il/
+3110	IL	Western Galilee College	http://www.wgalil.ac.il/
+3111	IN	Acharya Nagarjuna University	http://www.nagarjunauniversity.ac.in/
+3112	IN	Acharya Ranga Agricultural University	http://www.angrau.net/
+3113	IN	Ahmedabad University	http://www.ahduni.edu.in/
+3114	IN	AISECT University	http://www.aisectuniversity.ac.in/
+3115	IN	Alagappa University	http://www.alagappauniversity.ac.in/
+3116	IN	Aligarh Muslim University	http://www.amu.ac.in/
+3117	IN	Allahabad Agricultural Institute, Deemed University	http://www.aaidu.org/
+3118	IN	Allahabad University	http://www.alldunivpio.org/
+3119	IN	All India Institute of Medical Sciences	http://www.aiims.ac.in/
+3120	IN	Amity University	http://www.amity.edu/
+3121	IN	Amravati University	http://www.amtuni.com/
+3122	IN	Amrita Vishwa Vidyapeetham (Deemed University)	http://www.amrita.edu/
+3123	IN	Andhra University	http://www.andhrauniversity.info/
+3124	IN	Annamalai University	http://www.annamalaiuniversity.ac.in/
+3125	IN	Anna University	http://www.annauniv.edu/
+3126	IN	Anna University of Technology, Tirunelveli	http://www.annauniv.edu.in/
+3127	IN	ARYA Institute of Engineering & Technology	http://www.aryainstitutejpr.com/
+3128	IN	Asian Business School	http://www.abs.edu.in/
+3129	IN	Assam Agricultural University	http://www.aau.ac.in/
+3130	IN	Assam University	http://www.assamuniversity.nic.in/
+3131	IN	Avinashilingam Institute for Home Science and Higher Education for Women	http://www.tnuniv.ac.in/adu/
+3132	IN	Awadhesh Pratap Singh University	http://www.apsurewa.nic.in/
+3133	IN	Babasaheb Bhimrao Ambedkar University	http://www.bbauindia.org/
+3134	IN	Banaras Hindu University	http://www.bhu.ac.in/
+3135	IN	Banasthali University	http://www.banasthali.org/
+3136	IN	Bangalore University	http://bengaluruuniversity.com/
+3137	IN	Bankura University	http://www.bankurauniv.com/
+3138	IN	Barkatullah University	http://www.bubhopal.nic.in/
+3139	IN	Bengal Engineering College	http://www.becs.ac.in/
+3140	IN	Berhampur University	http://www.bamu.nic.in/
+3141	IN	Bhagwant University	http://www.bhagwantuniversity.com/
+3142	IN	Bharathiar University	http://www.bharathi.ernet.in/
+3143	IN	Bharathidasan University	http://www.bdu.ernet.in/
+3144	IN	Bharath Institue Of Higher Education & Research	http://www.bharathuniv.com/
+3145	IN	Bharati Vidyapeeth University	http://www.bharatividyapeeth.edu/
+3146	IN	Bhavnagar University	http://www.bhavuni.edu/
+3147	IN	Bhupendra Narayan Mandal University	http://www.bnmu.in/
+3148	IN	Bidhan Chandra Agricultural University	http://www.bckv.edu.in/
+3149	IN	Biju Pattnaik University of Technology	http://www.bput.org/
+3150	IN	Birla Institute of Technology and Science	http://www.bits-pilani.ac.in/
+3151	IN	Birla Institute of Technology, Ranchi	http://bitmesraranchi.org/
+3152	IN	Birsa Agricultural University	http://www.bau.nic.in/
+3153	IN	B. R. Ambedkar Bihar University	http://www.brabu.net/
+3154	IN	B. S. Abdur Rahman University	http://www.bsauniv.ac.in/
+3155	IN	Bundelkhand University	http://www.bundelkhanduniversity.org/
+3156	IN	Burdwan University	http://www.buruniv.ac.in/
+3157	IN	CCS Haryana Agricultural University	http://hau.ernet.in/
+3158	IN	Center for Entrepreneurship and Small Business Management	http://www.cesbm.ac.in/
+3159	IN	Central Agricultural University	http://www.cau.org.in/
+3160	IN	Central Institute of English and Foreign Languages	http://www.ciefl.org/
+3161	IN	Central Institute of Fisheries Education	http://www.cife.edu.in/
+3162	IN	Central Institute of Higher Tibetan Studies	http://www.cihts.ac.in/
+3163	IN	Chandra Shekhar Azad University of Agriculture and Technology	http://www.csauk.ac.in/
+3164	IN	Chaudhary Charan Singh Haryana Agricultural University	http://www.hau.ernet.in/
+3165	IN	Chaudhary Charan Singh University	http://www.ccsuniversity.ac.in/
+3166	IN	Ch. Charan Singh University	http://www.ccsuniversity.org/
+3167	IN	Chhatrapati Shahu Ji Maharaj University	http://www.kanpuruniversity.org/
+3168	IN	Christ University	http://www.christuniversity.in/
+3169	IN	CMJ University	http://www.cmjuniversity.edu.in/
+3170	IN	Cochin University of Science and Technology	http://www.cusat.ac.in/
+3171	IN	Darul Huda Islamic University	http://www.darulhuda.com/
+3172	IN	Dav University	http://www.davuniversity.org/
+3173	IN	Dayalbagh Educational Institute	http://www.dei.ac.in/
+3174	IN	Deccan College Postgraduate and Research Institute	http://www.deccancollegepune.ac.in/
+3175	IN	Deen Dayal Upadhyay Gorakhpur University	http://www.ddugu.edu.in/
+3176	IN	Delhi College of Engineering (DCE)	http://www.dceonline.net/
+3177	IN	Devi Ahilya University of Indore	http://www.davv.ac.in/
+3178	IN	Dhirubhai Ambani Institute of Information and Communication Technology	http://www.da-iict.org/
+3179	IN	Dibrugarh University	http://www.dibru.ernet.in/
+3180	IN	Dravidian University	http://www.dravidianuniversity.ac.in/
+3181	IN	Dr. Babasaheb Ambedkar Marathwada Universtiy	http://www.bamu.net/
+3182	IN	Dr. Babasaheb Ambedkar Technological University	http://www.dbatechuni.org/
+3183	IN	Dr. Bhim Rao Abdekar University	http://www.brauagra.com/
+3184	IN	Dr. B.R. Ambedkar Open University	http://www.braou.ac.in/
+3185	IN	Dr. C.V. Raman University	http://www.cvru.ac.in/
+3186	IN	Dr. D.Y. Patil University	http://www.dypatiluniversity.org/
+3187	IN	Dr. Hari Singh Gour University, formerly University of Sagar	http://www.sagaruniversity.nic.in/
+3188	IN	Dr. Panjabrao Deshmukh Krishi Vidyapeeth	http://www.pdkv.ac.in/
+3189	IN	Dr. Ram Manohar Lohia Avadh University	http://www.rmlau.ac.in/
+3190	IN	Dr. YS Parmar University of Horticulture and Forestry	http://www.ysparmaruniversity.org/
+3191	IN	Eiilm University	http://www.eiilmuniversity.ac.in/
+3192	IN	Engineering Colleges in Tamil Nadu	http://www.sonatech.ac.in/
+3193	IN	Fakir Mohan University	http://www.fmuniversity.nic.in/
+3194	IN	Fatima mata national college kollam kerala	http://www.fatimacollege.net/
+3195	IN	First Global University to teaching Jainism	http://www.jainuniversity.org/
+3196	IN	Forest Research Institute Dehradun	http://fri.icfre.gov.in/
+3197	IN	Gandhigram Rural Institute	http://www.tnuniv.ac.in/gri/
+3198	IN	Gandhi Institute of Technology and Managment	http://www.gitam.edu/
+3199	IN	Gauhati University	http://www.gu.nic.in/
+3200	IN	Global Open University , Nagaland	http://www.government.ind.in/
+3201	IN	Goa University	http://www.unigoa.ac.in/
+3202	IN	Gokhale Institute of Politics and Economics	http://www.gipe.ernet.in/
+3203	IN	Govind Ballabh Pant University of Agriculture and Technology	http://www.gbpuat.ac.in/
+3204	IN	Gujarat Ayurved University	http://www.ayurveduniversity.com/
+3205	IN	Gujarat Technological University Ahmedabad	http://www.gtu.ac.in/
+3206	IN	Gujarat University Ahmedabad	http://www.gujaratuniversity.org.in/
+3207	IN	Gulbarga University	http://www.gulbargauniversity.kar.nic.in/
+3208	IN	Guru Ghasidas University	http://www.ggu.ac.in/
+3209	IN	Guru Gobind Singh Indraprastha University	http://www.ipu.ac.in/
+3210	IN	Guru Jambeshwar University	http://www.gju.ernet.in/
+3211	IN	Gurukula Kangri University	http://www.gkvharidwar.org/
+3212	IN	Gurukul University	http://www.gurukuluniversity.org/
+3213	IN	Guru Nanak Dev University	http://www.gnduonline.org/
+3214	IN	Hemchandracharay North Gujarat University	http://www.ngu.ac.in/
+3215	IN	Hemwati Nandan Bahuguna Garhwal University	http://www.hnbgu.ac.in/
+3216	IN	Hidayatullah National Law University, Raipur	http://www.hnluraipur.com/
+3217	IN	Himachal Pradesh Agricultural University	http://hillagric.ernet.in/
+3218	IN	Himachal Pradesh University	http://hpuniv.nic.in/
+3219	IN	IASE (Institute of Advanced Studies) Deemed University	http://www.iaseduniv.org/
+3220	IN	ICFAI University	http://www.icfai.org/
+3221	IN	Indian Agricultural Research Institute	http://www.iari.ernet.in/
+3222	IN	Indian Board of Alternative Medicine	http://www.altmedworld.net/
+3223	IN	Indian Institute of Information Technology	http://www.iiita.com/
+3224	IN	Indian Institute of Information Technology and Management - Kerala	http://www.iiitmk.ac.in/
+3225	IN	Indian Institute of Management, Tiruchirappalli	http://www.iimtrichy.ac.in/
+3226	IN	Indian Institute of Science	http://www.iisc.ernet.in/
+3227	IN	Indian Institute of Technology, Bombay	http://www.iitb.ac.in/
+3228	IN	Indian Institute of Technology, Delhi	http://www.iitd.ernet.in/
+3229	IN	Indian Institute of Technology, Guwahati	http://www.iitg.ernet.in/
+3230	IN	Indian Institute of Technology, Hyderabad	http://www.iith.ac.in/
+3231	IN	Indian Institute of Technology, Kanpur	http://www.iitk.ac.in/
+3232	IN	Indian Institute of Technology, Kharagpur	http://www.iitkgp.ernet.in/
+3233	IN	Indian Institute of Technology, Madras	http://www.iitm.ac.in/
+3234	IN	Indian Institute of Technology, Roorkee	http://www.iitr.ernet.in/
+3235	IN	Indian Institute of Technology, Roorkee	http://www.iitr.ac.in/
+3236	IN	Indian Law Institue	http://www.ilidelhi.org/
+3237	IN	Indian School of Business Management and Administration	http://isbm.org.in/
+3238	IN	Indian School of Mines (ISM)	http://www.ismdhanbad.ac.in/
+3239	IN	Indian Statistical Institute	http://www.isical.ac.in/
+3240	IN	Indian University	http://www.iur.ac.in/
+3241	IN	Indian Veterinary Research Institute	http://www.ivri.nic.in/
+3242	IN	Indira Gandhi Agricultural University	http://www.igau.edu.in/
+3243	IN	Indira Gandhi Institute of Development and Research	http://www.igidr.ac.in/
+3244	IN	Indira Gandhi Institute of Medical Sciences	http://www.igims.org/
+3245	IN	Indira Gandhi National Open University	http://www.ignou.ac.in/
+3246	IN	Institute of Management and Technical Studies 	http://www.imtsinstitute.com/
+3247	IN	Institute of Technology and Management	http://www.itmindia.edu/
+3248	IN	Integral University	http://www.integraluniversity.ac.in/
+3249	IN	International Institute for Population Sciences	http://www.iipsindia.org/
+3250	IN	Jadavpur University	http://www.jadavpur.edu/
+3251	IN	Jagran Lakecity University	http://www.jlu.edu.in/
+3252	IN	Jai Narayan Vyas University	http://www.jnvu.edu.in/
+3253	IN	Jain University, Centre for Management Studies	http://www.cms.ac.in/
+3254	IN	Jain Vishva Bharati Institute	http://www.jvbi.ac.in/
+3255	IN	Jai Prakash University	http://jpv.bih.nic.in/
+3256	IN	Jaipur National University	http://www.jnujaipur.ac.in/
+3257	IN	Jamia Hamdard University	http://www.jamiahamdard.edu/
+3258	IN	Jamia Millia Islamia University	http://jmi.nic.in/
+3259	IN	Jawaharlal Nehru Agricultural University	http://www.jnkvv.nic.in/
+3260	IN	Jawaharlal Nehru Centre for Advanced  Scientific Research	http://www.jncasr.ac.in/
+3261	IN	Jawaharlal Nehru Technological University	http://www.jntu.ac.in/
+3262	IN	Jawaharlal Nehru University	http://www.jnu.ac.in/
+3263	IN	Jaypee Institute of Information Technology	http://www.jiit.ac.in/
+3264	IN	Jiwaji University	http://www.jiwaji.edu/
+3265	IN	Jodhpur National University	http://www.jodhpurnationaluniversity.com/
+3266	IN	Kakatiya University	http://www.kuwarangal.com/
+3267	IN	Kalinga University	http://www.kalingauniversity.com/
+3268	IN	Kameshwar Singh Darbhanga Sanskrit University	http://www.ksdsu.edu.in/
+3269	IN	Kamrah International Institute of Technology (KIIT)	http://www.kiit.in/
+3270	IN	Kannada University	http://www.kannadauniversity.org/
+3271	IN	Kannur University	http://www.kannuruniversity.ac.in/
+3272	IN	Kanpur University	http://www.kanpuruniversity.org/
+3273	IN	Karnataka State Law University	http://www.kslu.ac.in/
+3274	IN	Karnataka State Open University	http://www.karnatakastateopenuniversity.in/
+3275	IN	Karnatak University	http://www.kud.ac.in/
+3276	IN	Karpagam University	http://www.karpagamuniv.com/
+3277	IN	Karunya Institute Of Technology ( Deemed University)	http://www.karunya.edu/
+3278	IN	Kerala Agricultural University	http://www.kau.edu/
+3279	IN	Kerala University of Fisheries and Ocean Sciences	http://www.kufos.ac.in/
+3280	IN	Kohinoor School of Hospitality Management	http://kimi.kohinoor.ac.in/
+3281	IN	Konkan Agricultural University	http://www.dbskkv.org/
+3282	IN	Krishna University	http://www.krishnauniversity.ac.in/
+3283	IN	Kumaun University	http://www.kumaununiversity.org/
+3284	IN	Kurukshetra University	http://www.kukinfo.com/
+3285	IN	Kuvempu University	http://www.kuvempu.ac.in/
+3286	IN	Lakshmibai National Institute of Physical Education	http://www.lnipe.edu/
+3287	IN	Lalit Narayan Mithila University	http://lnmu.bih.nic.in/
+3288	IN	 L.D.College of Engineering	http://www.ldceahd.org/
+3289	IN	Madhya Pradesh Bhoj (Open) University	http://www.mpbou.org/
+3290	IN	Madurai Kamaraj University	http://www.mkuhyd.com/
+3291	IN	Magadh University	http://www.magadhuniversity.org/
+3292	IN	Maharaja Ganga Singh University, Bikaner	http://www.mgsubikaner.ac.in/
+3293	IN	Maharaja Sayajirao University of Baroda	http://www.msubaroda.ac.in/
+3294	IN	Maharishi Dayanand University, Rohtak (Haryana )	http://www.mdurohtak.com/
+3295	IN	Maharshi Dayanand Sarswati University Ajmer	http://www.mdsuajmer.ac.in/
+3296	IN	Mahatma Gandhi Chitrakut Gramoday University	http://www.ruraluniversity-chitrakoot.org/
+3297	IN	Mahatma Gandhi Kashi Vidyapith 	http://www.mgkvp.ac.in/
+3298	IN	Mahatma Gandhi University, Kerala	http://www.mgu.ac.in/
+3299	IN	Mahatma Gandhi University Meghalaya 	http://www.mgu.edu.in/
+3300	IN	Mahatma Jyotiba Phule Rohilkhand University Bareilly 	http://www.mjpru.ac.in/
+3301	IN	Mahatma Phule Agricultural University	http://mpkv.mah.nic.in/
+3302	IN	Makanlal Chutur Vedi University	http://www.mcu.ac.in/
+3303	IN	Makhanlal Chaturvedi National University of Journalism and Communication	http://www.mcu.ac.in/
+3304	IN	Mangalore University	http://www.mangaloreuniversity.ac.in/
+3305	IN	Manipal University	http://www.manipal.edu/
+3306	IN	Manipur University	http://www.manipur.nic.in/maniuniversity.htm
+3307	IN	Manonmaniam Sundaranar University	http://www.tnuniv.ac.in/msu/
+3308	IN	Mar Athanasios College for Advanced Studies	http://www.macfast.org/
+3309	IN	Marathwada Agricultural University	http://mkv2.mah.nic.in/
+3310	IN	Mohan Lal Sukhadia University	http://www.mlsu.ac.in/
+3311	IN	Mother Teresa Women's University	http://www.tnuniv.ac.in/mteresa/
+3312	IN	Motilal Nehru National Institute Of Technology	http://www.mnnit.ac.in/
+3313	IN	Moulana Azad national Urdu University	http://www.manuu.ac.in/
+3314	IN	Nagaland University	http://www.nagauniv.org.in/
+3315	IN	Nagpur University	http://www.nagpur-university.com/
+3316	IN	Nalanda Open University	http://www.nalandaopenuniversity.info/
+3317	IN	Narendra Deva University of Agriculture and Technology	http://www.nduat.nic.in/
+3318	IN	Narsee Monjee Institute of Management Studies	http://www.nmims.edu/
+3319	IN	National Dairy Research Institute	http://ndri.nic.in/
+3320	IN	National Institute of Industrial Engineering	http://www.nitie.edu/
+3321	IN	National Institute of Mental Health and Neuro Sciences	http://www.nimhans.kar.nic.in/
+3322	IN	National Institute of Technology, Calicut	http://www.nitc.ac.in/
+3323	IN	National Institute of Technology, Durgapur	http://www.nitdgp.ac.in/
+3324	IN	National Institute of Technology, Jamshedpur	http://www.nitjsr.ac.in/
+3325	IN	National Institute of Technology Kurukshetra	http://www.nitkkr.net/
+3326	IN	National Institute of Technology, Rourkela	http://www.nitrkl.ac.in/
+3327	IN	National Institute of Technology, Trichy	http://www.nitt.edu/
+3328	IN	National Institute of Technology, Warangal	http://www.nitw.ernet.in/
+3329	IN	National Law School of India University	http://www.nls.ac.in/
+3330	IN	National Museum Institute of History of Art, Conservation and Museology	http://www.nationalmuseumindia.org/nmi/index.htm
+3331	IN	National Sanskrit University	http://www.sanskrit.nic.in/
+3332	IN	Netaji Subhas Inst of Technology	http://www.nsit.ac.in/
+3333	IN	Nirma University	http://www.nirmauni.ac.in/
+3334	IN	Nizam's Institute of Medical Sciences	http://nims.ap.nic.in/
+3335	IN	North Bengal University	http://www.nbu.ac.in/
+3336	IN	North Eastern Hill University	http://www.nehu.ac.in/
+3337	IN	North Maharashtra University	http://www.nmu.ac.in/
+3338	IN	Open International University for Alternative Medicines	http://www.altmeduniversity.com/
+3339	IN	Orissa University of Agriculture and Technology	http://bhub.ori.nic.in/ouat/
+3340	IN	Osmania University	http://www.osmania.ac.in/
+3341	IN	Pandit Ravi Shankar Shukla University	http://www.rsuniversity.com/
+3342	IN	Panjab University	http://www.puchd.ac.in/
+3343	IN	Patna University	http://puonline.bih.nic.in/
+3344	IN	Periyar University	http://www.spuniv.org/
+3345	IN	Pes University	http://www.pes.edu/
+3346	IN	Pondicherry University	http://www.pondiuni.org/
+3347	IN	Postgraduate lnstitute of Medical Education and Research	http://www.pgimer.nic.in/
+3348	IN	Potti Sreeramulu Telugu University	http://www.teluguuniversity.ac.in/
+3349	IN	PSG College of Technology	http://www.psgtech.edu/
+3350	IN	Punjab Agricultural University	http://www.pau.edu/
+3351	IN	Punjab Engineering College Deemed University	http://www.pec.ac.in/
+3352	IN	Punjabi University Patiala	http://www.punjabiuniversity.ac.in/
+3353	IN	Punjab Technical University	http://www.ptu.ac.in/
+3354	IN	Rabindra Bharati University	http://www.rabindrabharatiuniversity.net/
+3355	IN	Rajasthan Agricultural University, Bikaner	http://www.raubikaner.org/
+3356	IN	Rajasthan Technical University	http://www.rtu.ac.in/
+3357	IN	Rajasthan Vidyapeeth University	http://www.jrnrvu.org/
+3358	IN	Rajendra Agricultural University	http://www.pusavarsity.org.in/
+3359	IN	Rajitlal Institute of Technology & Health Sciences (RITHS)	http://www.riths.ac.in/
+3360	IN	Rajiv Gandhi Technical University (University of Technology of Madhya Pradesh)	http://www.rgtu.net/
+3361	IN	Rajiv Gandhi University	http://www.rgu.ac.in/
+3362	IN	Ranchi University	http://www.ranchiuniversity.org.in/
+3363	IN	Rani Durgavati University	http://www.rdunijbpin.org/
+3364	IN	RKDF University	http://www.rkdf.ac.in/
+3365	IN	Sambalpur University	http://www.sambalpuruniversitypgc.in/
+3366	IN	Sampurnanand Sanskrit University	http://ssvv.up.nic.in/
+3367	IN	Sanjay Gandhi Postgraduate lnstitute of Medical Sciences	http://www.sgpgi.ac.in/
+3368	IN	Sardarkrushinagar Dantiwada Agricultural University	http://www.sdau.edu.in/
+3369	IN	Sardar Patel University	http://www.spuvvn.edu/
+3370	IN	Sardar Vallabhai Patel University of Agriculture Amd Technology	http://www.svbpuctm.org/
+3371	IN	SASTRA Deemed University	http://www.sastra.edu/
+3372	IN	Sathyabama University	http://www.sathyabamauniv.ac.in/
+3373	IN	Saurashtra University	http://www.saurashtrauniversity.edu/
+3374	IN	School of Planning and Architecture	http://www.spa.ac.in/
+3375	IN	Shanmugha Arts Science Technology and Research Academy	http://www.sce.ac.in/
+3376	IN	Sher-E-Kashmir University of Agricultural Sciences and Technology	http://www.skuastkashmir.ac.in/
+3377	IN	Shivaji University	http://www.unishivaji.ac.in/
+3378	IN	Shobhit University, Meerut	http://www.shobhituniversity.ac.in/
+3379	IN	Shreemati Nathibai Damodar Thackersey Women's University	http://www.sndt.edu/
+3380	IN	Shridhar University	http://www.shridharuniversity.ac.in/
+3381	IN	Shri Jagannath Sanskrit University	http://www.sjsv.nic.in/
+3382	IN	Shri Lal Bahadur Shastri Rashtriya Sanskrit Vidyapeetha	http://www.slbsrsv.ac.in/
+3383	IN	Shri Mata Vaishno Devi University	http://www.smvdu.net.in/
+3384	IN	Sido Kanhu Murmu University	http://www.skmu.edu.in/
+3385	IN	Sikha 'O' Anushandhan University	http://www.soauniversity.ac.in/
+3386	IN	Sikkim Manipal University of Health, Medical and Technological Sciences	http://www.smu.edu.in/
+3387	IN	Singhania University Rajasthan	http://www.singhaniauniversity.co.in/
+3388	IN	SMK Fomra Institute of Technology	http://www.smkfomra.net/
+3389	IN	Solapur University	http://su.digitaluniversity.ac/
+3390	IN	South Asian University	http://www.southasianuniversity.org/
+3391	IN	South Gujarat University	http://www.sgu.ernet.in/
+3392	IN	Sree Chitra Tirunal Institute for Medical Sciences and Technology	http://sctimst.ker.nic.in/
+3393	IN	Sree Rama Krishna Degree College	http://www.srkdc.org/
+3394	IN	Sree Sankaracharya University of Sanskrit	http://www.ssus.ac.in/
+3395	IN	Sri Chandrasekharendra Saraswathi Viswa Mahavidyalaya	http://www.kanchiuniv.ac.in/
+3396	IN	Sri Krishnadevaraya University	http://skuniv.ap.nic.in/
+3397	IN	Sri Padmavati Women's University	http://www.padmavatiwomen-univ.org/
+3398	IN	Sri Ramachardra Medical College and Research Institute	http://www.hostindia.com/srmc/
+3399	IN	Sri Sant Gajanan Maharaj College of Engineering	http://www.ssgmce.org/
+3400	IN	Sri Sathya Sai Institute of Higher Learning	http://www.srisathyasai.org.in/pages/instts/HighLearn.htm
+3401	IN	Sri Venkateswara Institute of Medical Sciences	http://svimstpt.ap.nic.in/
+3402	IN	Sri Venkateswara University	http://svuni.ap.nic.in/
+3403	IN	SRM Institute Of Science & Technology ( Deemed University)	http://www.srmuniv.ac.in/
+3404	IN	Sunrise University Alwar	http://www.sunriseuniversity.in/
+3405	IN	Swami Ramanand Teerth Marathwada University	http://www.srtmun.org/
+3406	IN	Symbiosis International University	http://www.siu.edu.in/
+3407	IN	Takhatmal Shrivallabh Homoeopathic Medical College	http://www.tshmc.org/
+3408	IN	Tamil Nadu Agricultural University	http://dbs.tn.nic.in/tnau/
+3409	IN	Tamil Nadu Dr. Ambedkar Law University	http://www.tndalu.org/
+3410	IN	Tamil Nadu Dr. M.G.R. Medical University	http://www.tnmmu.ac.in/
+3411	IN	Tamil Nadu Veterinary and Animal Sciences University	http://www.tanuvas.com/
+3412	IN	Tamil University	http://www.tamiluniversity.ac.in/
+3413	IN	Tata Institute of Social Sciences	http://www.tiss.edu/
+3414	IN	Telugu University	http://www.teluguuniversity.ac.in/
+3415	IN	Tezpur University	http://www.tezu.ernet.in/
+3416	IN	Thapar Institute of Engineering and Technology	http://www.tiet.ac.in/
+3417	IN	The New College	http://www.thenewcollege.org/
+3418	IN	Thiagarajar College of Engineering	http://www.tce.edu/
+3419	IN	Thiruvalluvar University	http://www.tvuni.in/
+3420	IN	Tilak Maharashtra Vidyapeeth	http://www.tmv.edu.in/
+3421	IN	Tilka Manjhi Bhagalpur University	http://www.tmbu.org/
+3422	IN	Tripura University	http://www.tripurauniv.in/
+3423	IN	Tumkur University	http://www.tumkuruniversity.ac.in/
+3424	IN	University of Agricultural Sciences, Bangalore	http://uasbng.kar.nic.in/
+3425	IN	University of Agricultural Sciences, Dharwad	http://www.uasd.net/
+3426	IN	University of Burdwan	http://www.burdwanuniversity.ac.in/
+3427	IN	University of Calcutta	http://www.caluniv.ac.in/
+3428	IN	University of Calicut	http://unical.ac.in/
+3429	IN	University of Delhi	http://www.du.ac.in/
+3430	IN	University of Health Sciences Andhra Pradesh	http://59.163.116.210/
+3431	IN	University of Hyderabad	http://www.uohyd.ernet.in/
+3432	IN	University of Jammu	http://www.jammuvarsity.org/
+3433	IN	University of Kalyani	http://www.klyuniv.ac.in/
+3434	IN	University of Kashmir	http://kashmiruniversity.net/
+3435	IN	University of Kerala	http://www.keralauniversity.ac.in/
+3436	IN	University of Kota	http://www.uok.ac.in/
+3437	IN	University of Lucknow	http://www.lucknowuniv.org/
+3438	IN	University of Madras	http://www.unom.ac.in/
+3439	IN	University of Media Arts	http://www.uma.ac.in/
+3440	IN	University of Mumbai	http://www.mu.ac.in/
+3441	IN	University of Music and Fine Arts	http://www.iksvv.com/
+3442	IN	University of Mysore	http://www.uni-mysore.ac.in/
+3443	IN	University of North Bengal	http://www.nbu.ac.in/
+3444	IN	University of Pune	http://www.unipune.ernet.in/
+3445	IN	University of Rajasthan	http://www.uniraj.org/
+3446	IN	University of Roorkee	http://www.uor.org/
+3447	IN	Utkal University	http://www.utkaluniv.org/
+3448	IN	Uttarakhand Open University 	http://www.uou.ac.in/
+3449	IN	Uttarakhand Technical University	http://www.uktech.ac.in/
+3450	IN	Uttar Pradesh Technical University	http://www.uptu.ac.in/
+3451	IN	Vardhaman Mahaveer Open University	http://www.vmou.ac.in/
+3452	IN	VBS Purvanchal University	http://vbspu.ac.in/
+3453	IN	Veer Kunwar Singh University	http://www.vksu-ara.org/
+3454	IN	Veer Surendra Sai University of Technology	http://www.vssut.ac.in/
+3455	IN	Vellore Institute of Technology	http://www.vit.ac.in/
+3456	IN	Vidyasagar University	http://www.vidyasagar.ac.in/
+3457	IN	Vignan University	http://www.vignanuniversity.org/
+3458	IN	Vikrama Simhapuri University	http://www.simhapuriuniv.ac.in/
+3459	IN	Vikram University	http://www.vikramuniversity.org/
+3460	IN	Vinayaka Mission's Research Foundation-Deemed University	http://www.vinayakamissions.com/
+3461	IN	Vinoba Bhave University	http://www.vbu.co.in/
+3462	IN	Visva-Bharati University	http://www.visva-bharati.ac.in/
+3463	IN	Visvesvaraya National Institute of Technology	http://www.vnitnagpur.ac.in/
+3464	IN	Visvesvaraya Technological University	http://www.vtu.ac.in/
+3465	IN	West Bengal University of Animal and Fishery Sciences	http://www.wbuafs.nic.in/
+3466	IN	West Bengal University of Technology	http://www.wbut.net/
+3467	IN	Yashawantrao Chavan Maharashtra Open University	http://www.ycmou.com/
+3468	IQ	Ahlulbait International University	http://www.ahlulbaitonline.com/
+3469	IQ	Al Maarif University College	http://www.auc-edu.org/
+3470	IQ	Al Mamon University College	http://www.almamonuc.org/
+3471	IQ	Al Mansour University College	http://www.muc.edu.iq/
+3472	IQ	Al Muthanna University	http://www.uoalmuthana.edu.iq/
+3473	IQ	Al Nahrain University	http://www.nahrainuniv.edu.iq/
+3474	IQ	Al Rafidain University College	http://www.coalrafidain.edu.iq/
+3475	IQ	Al Rasheed University College	http://www.alrasheed-uc.com/
+3476	IQ	Alsadrain University	http://www.alsadrain.org/
+3477	IQ	Al Turath University College	http://www.turathun.com/
+3478	IQ	Al Yarmouk University College	http://www.yu.edu.jo/
+3479	IQ	American University of Iraq, Sulaimani (Kurdistan Region)	http://www.auis.edu.iq/
+3480	IQ	Baghdad College of Economic Sciences University	http://www.baghdadcollege.edu.iq/
+3481	IQ	Baghdad College of Pharmacy	http://www.bpc.edu.iq/
+3482	IQ	British Royal University	http://broyalu.net/
+3483	IQ	Cihan University	http://www.cihanuniversity.edu.iq/
+3484	IQ	College of Science, Baghdad University	http://www.scbaghdad.edu.iq/
+3485	IQ	Dijla University College	http://www.duc.edu.iq/
+3486	IQ	Diyala University	http://www.uodiyala.edu.iq/
+3487	IQ	Hawler Medical University	http://www.hawlermu.org/
+3488	IQ	Iraq University College	http://www.iraquniversity.net/
+3489	IQ	Ishik University	http://www.iu.edu.iq/
+3490	IQ	Kerbala University	http://www.uokerbala.edu.iq/
+3491	IQ	Komar University of Science and Technology	http://www.komar.edu.iq/
+3492	IQ	Koya University (Kurdistan Region)	http://www.koyauniversity.org/
+3493	IQ	Madenat Alelem University College	http://www.madenatalelem.com/
+3494	IQ	Misan University	http://www.uomisan.edu.iq/
+3495	IQ	Nawroz University	http://www.nawrozuniversity.com/
+3496	IQ	Salahddin University (Kurdistan Region)	http://www.suh-edu.com/
+3497	IQ	Soran University	http://www.soran.edu.iq/
+3498	IQ	Sulaimani Polytechnic University	http://www.spu.edu.iq/
+3499	IQ	Thi Qar University	http://www.thiqaruni.org/
+3500	IQ	Tikrit University	http://www.tu.edu.iq/
+3501	IQ	Uinversity of Babylon	http://www.uobabylon.edu.iq/
+3502	IQ	University of Al-Qadisiyah	http://www.qu.edu.iq/
+3503	IQ	University of Anbar	http://www.uoanbar.edu.iq/
+3504	IQ	University of Baghdad	http://www.uobaghdad.edu.iq/
+3505	IQ	University of Basrah	http://www.uobasrah.edu.iq/
+3506	IQ	University of Dohuk (Kurdistan Region)	http://www.uod.ac/
+3507	IQ	University of Human Development (Kurdistan Region)	http://www.uhd.edu.iq/
+3508	IQ	University of Kirkuk	http://www.uokirkuk.edu.iq/
+3509	IQ	University of Kufa	http://www.uokufa.edu.iq/
+3510	IQ	University of Kurdistan - Hawler	http://www.ukh.ac/
+3511	IQ	University of Mosul	http://www.uomosul.edu.iq/
+3512	IQ	University of Mustansiriyah	http://www.uomustansiriyah.edu.iq/
+3513	IQ	University of Sulaimania (Kurdistan Region)	http://www.univsul.edu.iq/
+3514	IQ	University of Technology - Iraq	http://www.uotechnology.edu.iq/
+3515	IQ	University of Wassit	http://www.uowasit.edu.iq/
+3516	IR	Adiban Higher Education Institue	http://www.adiban.ac.ir/
+3517	IR	Ahvaz University of Medical Sciences	http://www.aums.ac.ir/
+3518	IR	Ahwaz Jondishapour University of Medical Sciences	http://www.ajums.ac.ir/
+3519	IR	Allameh Tabatabaie University	http://www.atu.ac.ir/
+3520	IR	Almustafa Open University	http://www.almustafaou.ir/
+3521	IR	Amirkabir College of Managmant & Technology	http://www.acmt.ac.ir/
+3522	IR	Amirkabir University of Technology	http://www.aut.ac.ir/
+3523	IR	Arak University	http://www.araku.ac.ir/
+3524	IR	Arak University of Medical Sciences	http://www.arakmu.ac.ir/
+3525	IR	Arak University of Technology	http://www.arakut.ac.ir/
+3526	IR	Ardabil University of Medical Sciences	http://www.arums.ac.ir/
+3527	IR	Art University	http://www.art.ac.ir/
+3528	IR	Azzahra University	http://www.azzahra.ac.ir/
+3529	IR	Babol Noshirvani University of Technology	http://www.nit.ac.ir/
+3530	IR	Babol University of Medical Sciences	http://www.mubabol.ac.ir/
+3531	IR	Baghyatoolah Medical Sciences University	http://www.bmsu.ac.ir/
+3532	IR	Baha'i Institute for Higher Education	http://www.bihe.org/
+3533	IR	Birjand University	http://www.birjand.ac.ir/
+3534	IR	Birjand University of Medical Sciences	http://www.bums.ac.ir/
+3535	IR	Bu Ali Sina University	http://www.basu.ac.ir/
+3536	IR	Bushehr University of Medical Sciences	http://www.bpums.ac.ir/
+3537	IR	Damghan University of Basic Sciences	http://www.dubs.ac.ir/
+3538	IR	Daneshestan Institute of Higher Education	http://www.sdi.ac.ir/
+3539	IR	Delijan Payame Noor University	http://www.delijanpnu.ac.ir/
+3540	IR	Deylaman Institute of Higher Education	http://www.deylaman.ac.ir/
+3541	IR	Fasa Faculty of Medical Sciences	http://www.fums.ac.ir/
+3542	IR	Ferdowsi University of Mashhad	http://www.um.ac.ir/
+3543	IR	Golestan University of Medical Sciences	http://www.goums.ac.ir/
+3544	IR	Gonabad University of Medical Sciences	http://www.gmu.ac.ir/
+3545	IR	Gorgan University of Agricultural Sciences and Natural Resources	http://www.gau.ac.ir/
+3546	IR	Guilan University	http://www.guilan.ac.ir/
+3547	IR	Guilan University of Medical Sciences	http://www.gums.ac.ir/
+3548	IR	Hamadan University of Medical Sciences	http://www.umsha.ac.ir/
+3549	IR	Hormozgan University of Medical Sciences	http://www.hums.ac.ir/
+3550	IR	Hyrcania Institute of Higher Education	http://www.hyrcania.ac.ir/
+3551	IR	Ilam University	http://www.ilam.ac.ir/
+3552	IR	Ilam University of Medical Sciences	http://www.medilam.hbi.ir/
+3553	IR	Imam Khomeini International University	http://www.ikiu.ac.ir/
+3554	IR	Imam Reza University	http://www.imamreza.ac.ir/
+3555	IR	Imam Sadiq University	http://www.isu.ac.ir/
+3556	IR	Iranian Academy of Persian Language and Literature	http://www.persianacademy.ir/
+3557	IR	Iran University of Medical Sciences	http://www.iums.ac.ir/
+3558	IR	Iran University of Science and Technology Tehran	http://www.iust.ac.ir/
+3559	IR	Isfahan University	http://www.ui.ac.ir/
+3560	IR	Isfahan University of Medical Sciences	http://www.mui.ac.ir/
+3561	IR	Isfahan University of Technology	http://www.iut.ac.ir/
+3562	IR	Islamic Azad University, Ahar	http://www.iau-ahar.ac.ir/
+3563	IR	Islamic Azad University, Aliabad 	http://www.aliabadiau.ac.ir/
+3564	IR	Islamic Azad University, Arak	http://www.iau-arak.ac.ir/
+3565	IR	Islamic Azad University, Ardabil	http://www.iauardabil.ac.ir/
+3566	IR	Islamic Azad University, Bandar Abbas	http://www.iauba.ac.ir/
+3567	IR	Islamic Azad University, Bojnourd	http://www.bojnourdiau.ac.ir/
+3568	IR	Islamic Azad University, Bostanabad	http://www.iaubos.ac.ir/
+3569	IR	Islamic Azad University, Boukan	http://www.iau-boukan.ac.ir
+3570	IR	Islamic Azad University, Central Tehran Branch	http://www.iauctb.ac.ir/
+3571	IR	Islamic Azad University, Dehaghan	http://www.dehaghan.ac.ir/
+3572	IR	Islamic Azad University, Falavarjan 	http://www.falavarjan.ac.ir/
+3573	IR	Islamic Azad University, Fars Science & Research Branch	http://www.fsriau.ac.ir/
+3574	IR	Islamic Azad University, Garmsar	http://www.iau-garmsar.ac.ir/
+3575	IR	Islamic Azad University, Gorgan	http://www.gorganiau.ir/
+3576	IR	Islamic Azad University, Hamedan	http://www.iauh.ac.ir/
+3577	IR	Islamic Azad University, Janah	http://www.janahiau.ac.ir/
+3578	IR	Islamic Azad University, Karaj	http://www.iaukb.ir/
+3579	IR	Islamic Azad University, Kazeron	http://www.kau.ac.ir/
+3580	IR	Islamic Azad University, Kerman	http://www.iauk.ac.ir/
+3581	IR	Islamic Azad University, Khorasgan	http://www.khuisf.ac.ir/
+3582	IR	Islamic Azad University, Lahijan	http://www.iau-lahijan.ac.ir/
+3583	IR	Islamic Azad University, Mahshar	http://www.mahshahriau.ac.ir/
+3584	IR	Islamic Azad University, Majlesi	http://www.iaumajlesi.ac.ir/
+3585	IR	Islamic Azad University, Mashhad	http://www.mshdiau.ac.ir/
+3586	IR	Islamic Azad University, Maybod	http://www.maybod.ac.ir/
+3587	IR	Islamic Azad University, Mehriz	http://www.iaumehriz.com/
+3588	IR	Islamic Azad University, Mobarakeh	http://www.mau.ac.ir/
+3589	IR	Islamic Azad University, Najaf Abad	http://www.iaun.ac.ir/
+3590	IR	Islamic Azad University, North Tehran	http://www.iau-tnb.ac.ir/
+3591	IR	Islamic Azad University, Parand	http://www.piau.ac.ir/
+3592	IR	Islamic Azad University, Qazvin	http://www.qazviniau.ac.ir/
+3593	IR	Islamic Azad University, Qom	http://www.qom-iau.ac.ir/
+3594	IR	Islamic Azad University, Quchan	http://www.iauq.ac.ir/
+3595	IR	Islamic Azad University, Region One	http://www.iauro.ac.ir/
+3596	IR	Islamic Azad University, Roodehen	http://www.riau.ac.ir/
+3597	IR	Islamic Azad University, Sanandaj	http://www.iausdj.ac.ir/
+3598	IR	Islamic Azad University, Saveh	http://www.iau-saveh.ac.ir/
+3599	IR	Islamic Azad University, Semnan	http://www.semnaniau.ac.ir/
+3600	IR	Islamic Azad University, Shabestar	http://www.iaushab.ac.ir/
+3601	IR	Islamic Azad University, Shahr-e-rey Branch	http://www.iausr.ac.ir/
+3602	IR	Islamic Azad University, Shahrood	http://www.iau-shahrood.ac.ir/
+3603	IR	Islamic Azad University, Shahryar	http://www.shahryariau.ac.ir/
+3604	IR	Islamic Azad University, Shiraz	http://www.iaushiraz.ac.ir/
+3605	IR	Islamic Azad University, Shirvan	http://www.iau-shirvan.ac.ir/
+3606	IR	Islamic Azad University, Sowmesara	http://www.sowmesaraiau.ac.ir/
+3607	IR	Islamic Azad University, Tabriz	http://www.iaut.ac.ir/
+3608	IR	Islamic Azad University, Tafresh	http://www.iautb.ac.ir/
+3609	IR	Islamic Azad University, Tehran Medical	http://www.iautmu.ac.ir/
+3610	IR	Islamic Azad University, Tehran Science & Research Branch	http://www.srbiau.ac.ir/
+3611	IR	Islamic Azad University, Tehran South	http://www.azad.ac.ir/
+3612	IR	Islamic Azad University, Varamin	http://www.iauvaramin.ac.ir/
+3613	IR	Islamic Azad University, Yazd	http://www.iauyazd.ac.ir/
+3614	IR	Jahrom University of Medical Sciences	http://www.jums.ac.ir/
+3615	IR	Jami Institute of Technology	http://www.jami.ac.ir/
+3616	IR	Kamalolmolk Art & Architecture Higher Education Institute of Noshahr	http://www.kamalolmolk.ac.ir/
+3617	IR	Kar University	http://www.karuniversity.com/
+3618	IR	Kashan University	http://www.kashanu.ac.ir/
+3619	IR	Kashan University of Medical Sciences	http://www.kaums.ac.ir/
+3620	IR	Kerman Graduate University of Technology	http://www.kgut.ac.ir/
+3621	IR	Kermanshah University of Medical Sciences	http://www.kums.ac.ir/
+3622	IR	Kermanshah University of Technology	http://www.kut.ac.ir/
+3623	IR	Kerman University of Medical Sciences	http://www.kmu.ac.ir/
+3624	IR	Khomeinishahr Payame Noor University	http://km.isfpnu.ac.ir/
+3625	IR	K.N.Toosi University of Technology	http://www.kntu.ac.ir/
+3626	IR	Kurdistan University of Medical Sciences	http://www.muk.ac.ir/
+3627	IR	Lorestan University	http://www.lu.ac.ir/
+3628	IR	Lorestan University of Medical Sciences	http://www.lums.ac.ir/
+3629	IR	Malayer University	http://www.malayeru.ac.ir/
+3630	IR	Malekan Payame Nour University	http://www.malekanpnu.ac.ir/
+3631	IR	Mamasani University of Technology	http://www.mamasaniiau.ac.ir/
+3632	IR	Mashhad University of Medical Sciences	http://www.mums.ac.ir/
+3633	IR	Mazandaran University of Iran	http://www.umz.ac.ir/
+3634	IR	Mazandaran University of Medical Science	http://www.mazums.ac.ir/
+3635	IR	Mazandaran University of Science & Technology	http://www.ustmb.ac.ir/
+3636	IR	Mofid University	http://www.mofidu.ac.ir/
+3637	IR	Mustafa International University	http://www.miu.ac.ir/
+3638	IR	Najaf Abad University of Applied Science and Technology	http://www.najafabad-uast.ac.ir/
+3639	IR	Payame Noor University	http://www.pnu.ac.ir/
+3640	IR	Payame Noor University, Tafresh	http://www.pnut.ac.ir/
+3641	IR	Persian Gulf University	http://www.pgu.ac.ir/
+3642	IR	Petroleum University of Technology	http://www.put.ac.ir/
+3643	IR	Power and Water Institute of Technology	http://www.pwit.ac.ir/
+3644	IR	Qazvin University of Medical Sciences	http://www.qums.ac.ir/
+3645	IR	Qom University	http://www.qom.ac.ir/
+3646	IR	Qom University of Medical Sciences	http://www.muq.ac.ir/
+3647	IR	Qom University of Technology	http://www.qut.ac.ir/
+3648	IR	Rafsanjan University of Medical Sciences	http://www.rums.ac.ir/
+3649	IR	Raghebe Esfahani University	http://www.raghebisf.ac.ir/
+3650	IR	Razi University	http://www.razi.ac.ir/
+3651	IR	Sabzevar School of Medical Sciences	http://www.medsab.ac.ir/
+3652	IR	Sabzevar Teacher Training University	http://www.sttu.ac.ir/
+3653	IR	Sadjad Institute of Technology	http://www.sadjad.ac.ir/
+3654	IR	Sadra University	http://www.sadra.ac.ir/
+3655	IR	Sahand University of Technology	http://www.sut.ac.ir/
+3656	IR	School of Economic Sciences	http://www.ses.ac.ir/
+3657	IR	Semnan University	http://www.semnan.ac.ir/
+3658	IR	Semnan University of Medical Sciences	http://www.sem-ums.ac.ir/
+3659	IR	Shahed University	http://www.shahed.ac.ir/
+3660	IR	Shaheed Beheshti University	http://www.sbu.ac.ir/
+3661	IR	Shaheed Beheshti University of Medical Sciences	http://www.sbmu.ac.ir/
+3662	IR	Shaheed Chamran University	http://www.cua.ac.ir/
+3663	IR	Shaheed Rajaei Teacher Training University	http://www.srttu.edu/
+3664	IR	Shahid Bahonar University of Kerman	http://www.uk.ac.ir/
+3665	IR	Shahrekord University	http://www.sku.ac.ir/
+3666	IR	Shahrekord University of Medical Sciences	http://www.skums.ac.ir/
+3667	IR	Shahrood University of Medical Sciences	http://www.shmu.ac.ir/
+3668	IR	Shahrood University of Technology	http://www.shahroodut.ac.ir/
+3669	IR	Sharif University of Technology	http://www.sharif.ac.ir/
+3670	IR	Sharif University of Technology, Kish Campus	http://www.kish.ac.ir/
+3671	IR	Sheikhbahaee University	http://www.shbu.ac.ir/
+3672	IR	Shiraz Payamnoor University	http://www.spnu.ac.ir/
+3673	IR	Shiraz University	http://www.shirazu.ac.ir/
+3674	IR	Shiraz University of Medical Sciences	http://www.sums.ac.ir/
+3675	IR	Shiraz University of Technology	http://www.sutech.ac.ir/
+3676	IR	Shomal University	http://www.shomal.ac.ir/
+3677	IR	Sistan & Balouchestan University	http://www.usb.ac.ir/
+3678	IR	Tabari Institute of Higher Education	http://www.tabari.ac.ir/ 
+3679	IR	Tabriz College of Technology	http://www.tct.ac.ir/
+3680	IR	Tabriz Islamic Art University	http://www.tabriziau.ac.ir/
+3681	IR	Tabriz University	http://www.tabrizu.ac.ir/
+3682	IR	Tabriz University of Medical Sciences	http://www.tbzmed.ac.ir/
+3683	IR	Takestan Islamic Azad University	http://www.tiau.ac.ir/
+3684	IR	Tarbiat Modares University	http://www.modares.ac.ir/
+3685	IR	Tehran University of Medical Sciences	http://www.tums.ac.ir/
+3686	IR	Tehran University of Teacher Training	http://www.tmu.ac.ir/
+3687	IR	The Bahá'í Institute For Higher Education (BIHE)	http://www.bihe.org/
+3688	IR	Torbat Heydarieh University of Medical Sciences	http://www.thums.ac.ir/
+3689	IR	University College of Nabi Akram	http://www.ucna.info/
+3690	IR	University of Applied Science and Technology	http://www.uast.ac.ir/
+3691	IR	University of Hormozgan	http://www.hormozgan.ac.ir/
+3692	IR	University of Kurdistan	http://www.uok.ac.ir/
+3693	IR	University of Lavasanat Pnu	http://www.lavasanpnu.ac.ir/
+3694	IR	University of Mashhad Pnu	http://www.pnum.ac.ir/
+3695	IR	University of Mohaghegh	http://www.uma.ac.ir/
+3696	IR	University of Science and Culture	http://www.usc.ac.ir/
+3785	IT	University of Milan	http://www.unimi.it/
+3697	IR	University of Social Welfare and Rehabilitation Scinences	http://www.uswr.ac.ir/
+3698	IR	University of Tehran	http://www.ut.ac.ir/
+3699	IR	Urmia University	http://www.urmia.ac.ir/
+3700	IR	Urmia University of Medical Sciences	http://www.umsu.ac.ir/
+3701	IR	Urmia University of Technology	http://www.uut.ac.ir/
+3702	IR	Vali-e-Asr University	http://www.vru.ac.ir/
+3703	IR	Yasuj University	http://www.yu.ac.ir/
+3704	IR	Yasuj University of Medical Sciences	http://www.yums.ac.ir/
+3705	IR	Yazd Medical University	http://www.ssu.ac.ir/
+3706	IR	Yazd University	http://www.yazduni.ac.ir/
+3707	IR	Zabol University	http://www.uoz.ac.ir/
+3708	IR	Zahedan University of Medical Sciences	http://www.zdmu.ac.ir/
+3709	IR	Zanjan Institute for Advanced Studies in Basic Sciences	http://www.iasbs.ac.ir/
+3710	IR	Zanjan University	http://www.znu.ac.ir/
+3711	IR	Zanjan University of Medical Sciences	http://www.zums.ac.ir/
+3712	IS	Bifrost School of Business	http://www.bifrost.is/
+3713	IS	Holar University College	http://www.holar.is/
+3714	IS	Hvanneyri Agricultural University	http://www.hvanneyri.is/
+3715	IS	Iceland Academy of the Arts	http://www.lhi.is/
+3716	IS	Iceland University of Education	http://www.khi.is/
+3717	IS	Reykjavík University	http://www.ru.is/
+3718	IS	Technological University of Iceland	http://www.iti.is/
+3719	IS	University Centre of the Westfjords	http://www.hsvest.is/
+3720	IS	University of Akureyri	http://www.unak.is/
+3721	IS	University of Iceland	http://www.hi.is/
+3722	IT	Abdus Salam international centre for theoretical physics	http://www.ictp.trieste.it/
+3723	IT	Basilicata University Potenza	http://www.unibas.it/
+3724	IT	Campus Bio-Medico University of Rome	http://www.unicampus.it/
+3725	IT	Catholic University of the Sacred Heart	http://www.unicatt.it/
+3726	IT	Dutch University Institute for Art History (DUIA)	http://www.iuoart.org/
+3727	IT	European School of Economics	http://www.uniese.it/
+3728	IT	European University Institute	http://www.iue.it/
+3729	IT	Fondazione Sacro Cuore	http://www.sacrocuore.org/
+3730	IT	Free International University of Social Studies	http://www.luiss.it/
+3731	IT	Free University Institute "Carlo Cattaneo"	http://www.liuc.it/
+3732	IT	Free University "Maria Santissima Assunta"	http://www.lumsa.it/
+3733	IT	Free University of Bozen	http://www.unibz.it/
+3734	IT	Higher School of University and Advanced Studies Pisa	http://www.sssup.it/
+3735	IT	Institute for Advanced Studies Lucca	http://www.imtlucca.it/
+3736	IT	International Higher School for Advanced Studies Trieste	http://www.sissa.it/
+3737	IT	Istituto Universitario di Studi Superiori	http://www.iusspavia.it/
+3738	IT	John Cabot University	http://www.johncabot.edu/
+3739	IT	Johns Hopkins University, SAIS Bologna Center	http://www.jhubc.it/
+3740	IT	Link Campus University of Malta	http://www.unilink.it/
+3741	IT	NABA - Nuova Accademia di Belle Arti, Milan	http://www.naba.it/
+3742	IT	Polytechnic Institute of Bari	http://www.poliba.it/
+3743	IT	Polytechnic Institute of Milan	http://www.polimi.it/
+3744	IT	Polytechnic Institute of Turin	http://www.polito.it/
+3745	IT	Pontifica Università Gregoriana	http://www.unigre.it/
+3746	IT	Pontificia Università della Santa Croce	http://www.pusc.it/
+3747	IT	Pontificia Università Lateranense	http://www.pul.it/
+3748	IT	Pontificia Università S. Tommaso	http://www.angelicum.org/
+3749	IT	Pontificio Ateneo Antonianum	http://www.antonianum.ofm.org/
+3750	IT	Pontificio Istituto Orientale	http://www.pio.urbe.it/
+3751	IT	School of Education Pisa	http://www.sns.it/
+3752	IT	Second University of Naples	http://www.unina2.it/
+3753	IT	Third University of Rome	http://www.uniroma3.it/
+3754	IT	Università Bocconi	http://www.uni-bocconi.it/
+3755	IT	Università Pontificia Salesiana	http://www.unisal.it/
+3756	IT	University Institute of Architecture Venice	http://www.iuav.unive.it/
+3757	IT	University Institute of Modern Languages	http://www.iulm.it/
+3758	IT	University Institute of Naval Studies	http://www.uninav.it/
+3759	IT	University Institute of Oriental Studies	http://www.iuo.it/
+3760	IT	University Institute of Teacher Training "Suor Orsola Benincasa"	http://www.unisob.na.it/
+3761	IT	University of Ancona	http://www.unian.it/
+3762	IT	University of Aquila	http://www.univaq.it/
+3763	IT	University of Bari	http://www.uniba.it/
+3764	IT	University of Bergamo	http://www.unibg.it/
+3765	IT	University of Bologna	http://www.unibo.it/
+3766	IT	University of Brescia	http://www.unibs.it/
+3767	IT	University of Cagliari	http://www.unica.it/
+3768	IT	University of Calabria	http://www.unical.it/
+3769	IT	University of Camerino	http://www.unicam.it/
+3770	IT	University of Cassino	http://www.unicas.it/
+3771	IT	University of Catania	http://www.unict.it/
+3772	IT	University of Chieti	http://www.unich.it/
+3773	IT	University of Commerce Luigi Bocconi	http://www.uni-bocconi.it/
+3774	IT	University of Ferrara	http://www.unife.it/
+3775	IT	University of Florence	http://www.unifi.it/
+3776	IT	University of Foggia	http://www.unifg.it/
+3777	IT	University of Gastronomic Sciences	http://www.unisg.it/
+3778	IT	University of Genoa	http://www.unige.it/
+3779	IT	University of Insubria	http://www.uninsubria.it/
+3780	IT	University of Italian Studies for Foreigners of Perugia	http://www.unistrapg.it/
+3781	IT	University of Italian Studies for Foreigners of Siena	http://www.unistrasi.it/
+3782	IT	University of Lecce	http://www.unile.it/
+3783	IT	University of Macerata	http://www.unimc.it/
+3784	IT	University of Messina	http://www.unime.it/
+3786	IT	University of Milan - Bicocca	http://www.unimib.it/
+3787	IT	University of Modena	http://www.casa.unimo.it/
+3788	IT	University of Molise	http://www.unimol.it/
+3789	IT	University of Naples Federico II	http://www.unina.it/
+3790	IT	University of Padua	http://www.unipd.it/
+3791	IT	University of Palermo	http://www.unipa.it/
+3792	IT	University of Parma	http://www.unipr.it/
+3793	IT	University of Pavia	http://www.unipv.it/
+3794	IT	University of Perugia	http://www.unipg.it/
+3795	IT	University of Pisa	http://www.unipi.it/
+3796	IT	University of Reggio Calabria	http://www.unirc.it/
+3797	IT	University of Roma "La Sapienza"	http://www.uniroma1.it/
+3798	IT	University of Roma "Tor Vergata"	http://www.uniroma2.it/
+3799	IT	University of Salerno	http://www.unisa.it/
+3800	IT	University of Sannio	http://www.unisannio.it/
+3801	IT	University of Sassari	http://www.uniss.it/
+3802	IT	University of Siena	http://www.unisi.it/
+3803	IT	University of Teramo	http://www.unite.it/
+3804	IT	University of Trento	http://www.unitn.it/
+3805	IT	University of Trieste	http://www.univ.trieste.it/
+3806	IT	University of Turin	http://www.unito.it/
+3807	IT	University of Udine	http://www.uniud.it/
+3808	IT	University of Urbino	http://www.uniurb.it/
+3809	IT	University of Venice	http://www.unive.it/
+3810	IT	University of Verona	http://www.univr.it/
+3811	IT	Viterbo State University	http://www.unitus.it/
+3812	IT	Yorker International University, Milano	http://www.nyuniversity.net/
+3813	JM	Northern Caribbean University	http://www.ncu.edu.jm/
+3814	JM	University of Technology Jamaica	http://www.utech.edu.jm/
+3815	JM	University of the West Indies, Mona	http://www.uwimona.edu.jm/
+3816	JO	Al-Ahliyya Amman University	http://www.ammanu.edu.jo/
+3817	JO	Al al-Bayt University	http://www.aabu.edu.jo/
+3818	JO	Al-Balqa Applied University	http://www.bau.edu.jo/
+3819	JO	Al Hussein Bin Talal University	http://www.ahu.edu.jo/
+3820	JO	Al-Isra University	http://www.isra.edu.jo/
+3821	JO	Al-Zaytoonah University	http://www.alzaytoonah.edu.jo/
+3822	JO	Amman Arab University for Higher Studies	http://www.aau.edu.jo/
+3823	JO	Amman University	http://www.amman.edu/
+3824	JO	Applied Science University	http://www.asu.edu.jo/
+3825	JO	Arab Academy for Banking and Financial Sciences	http://www.aabfs.org/
+3826	JO	Arab Open University	http://www.aou.edu.jo/
+3827	JO	Balqa Applied University	http://www.bau.edu.jo/
+3828	JO	German Jordanian University	http://www.gju.edu.jo/
+3829	JO	Hashemite University	http://www.hu.edu.jo/
+3830	JO	Irbid National University	http://www.inu.edu.jo/
+3831	JO	Jadara University	http://www.jadara.edu.jo/
+3832	JO	Jerash Private University	http://www.jerashun.edu.jo/
+3833	JO	Jordan Academy of Music / Higher Institute of Music	http://www.jam.edu.jo/
+3834	JO	Jordan University of Science and Technology	http://www.just.edu.jo/
+3835	JO	Middle East University	http://www.meu.edu.jo/
+3836	JO	Mu' tah University	http://www.mutah.edu.jo/
+3837	JO	New York Institute of Technology	http://www.nyit.edu.jo/
+3838	JO	Philadelphia University	http://www.philadelphia.edu.jo/
+3839	JO	Princess Sumaya University for Technology	http://www.psut.edu.jo/
+3840	JO	Tafila Technical University 	http://www.ttu.edu.jo/
+3841	JO	The World Islamic Sciences & Education University	http://www.wise.edu.jo/
+3842	JO	University of Jordan	http://www.ju.edu.jo/
+3843	JO	University of Petra	http://www.uop.edu.jo/
+3844	JO	Yarmouk University	http://www.yu.edu.jo/
+3845	JO	Zarka Private University	http://www.zpu.edu.jo/
+3846	JP	Aichi Bunkyo University	http://www.abu.ac.jp/
+3847	JP	Aichi Gakuin University	http://www.aichi-gakuin.ac.jp/
+3848	JP	Aichi Gakusen University	http://www.gakusen.ac.jp/
+3849	JP	Aichi Institute of Technology	http://www.aitech.ac.jp/
+3850	JP	Aichi Medical University	http://www.aichi-med-u.ac.jp/
+3851	JP	Aichi Prefectural University	http://www.aichi-pu.ac.jp/
+3852	JP	Aichi Prefectural University of Fine Arts & Music	http://www.aichi-fam-u.ac.jp/
+3853	JP	Aichi Sangyo University	http://www.asu.ac.jp/
+3854	JP	Aichi Shukutoku University	http://www.aasa.ac.jp/
+3855	JP	Aichi University	http://www.aichi-u.ac.jp/
+3856	JP	Aichi University of Education	http://www.aichi-edu.ac.jp/
+3857	JP	Aikoku Gakuen University	http://www.aikoku-u.ac.jp/
+3858	JP	Akita University	http://www.akita-u.ac.jp/
+3859	JP	Akita University of Economics and Law	http://www.akeihou-u.ac.jp/
+3860	JP	American University Extension, Okinawa	http://www.aue-okinawa.ac.jp/
+3861	JP	Aomori Chuoh Gakuin University	http://www.aomoricgu.ac.jp/
+3862	JP	Aomori Public College	http://www.nebuta.ac.jp/
+3863	JP	Aomori University	http://www.aomori-u.ac.jp/
+3864	JP	Aomori University of Health and Welfare	http://www.auhw.ac.jp/
+3865	JP	Aoyama Gakuin University	http://www.aoyama.ac.jp/
+3866	JP	Asahikawa Medical College	http://www.asahikawa-med.ac.jp/
+3867	JP	Asahikawa University	http://www.asahikawa-u.ac.jp/
+3868	JP	Asahi University	http://www.asahi-u.ac.jp/
+3869	JP	Ashikaga Institute of Technology	http://www.ashitech.ac.jp/
+3870	JP	Ashiya University	http://www.ashiya-u.ac.jp/
+3871	JP	Asia University	http://www.asia-u.ac.jp/
+3872	JP	Atomi College	http://www.atomi.ac.jp/
+3873	JP	Azabu University	http://www.azabu-u.ac.jp/
+3874	JP	Baika Women's College	http://www.baika.ac.jp/
+3875	JP	Baiko Women's College	http://www.baiko.ac.jp/
+3876	JP	Beppu University	http://www.beppu-u.ac.jp/
+3877	JP	Bukkyo University	http://www.bukkyo-u.ac.jp/
+3878	JP	Bunka Women's University	http://www.bunka-wu.ac.jp/
+3879	JP	Bunkyo University	http://www.bunkyo.ac.jp/
+3880	JP	Chiba Institute of Technology	http://www.it-chiba.ac.jp/
+3881	JP	Chiba Keizai University	http://www.cku.ac.jp/
+3882	JP	Chiba University	http://www.chiba-u.ac.jp/
+3883	JP	Chiba University of Commerce	http://www.cuc.ac.jp/
+3884	JP	Chikushi Jogakuen University	http://www.chikushi.ac.jp/
+3885	JP	Chubu Gakuin University & Chubu Women's College	http://www.chubu-gu.ac.jp/
+3886	JP	Chubu University	http://www.chubu.ac.jp/
+3887	JP	Chukyo Gakuin University	http://www.chukyogakuin-u.ac.jp/
+3888	JP	Chukyo University	http://www.chukyo-u.ac.jp/
+3889	JP	Chukyo Women's University	http://www.chujo-u.ac.jp/
+3890	JP	Chuo Gakuin University	http://www.cgu.ac.jp/
+3891	JP	Chuo University	http://www.chuo-u.ac.jp/
+3892	JP	Daido Institute of Technology	http://www.daido-it.ac.jp/
+3893	JP	Daiichi College of Pharmaceutical Sciences	http://www.daiichi-cps.ac.jp/
+3894	JP	Dai Ichi University, College of Technology	http://www.daiichi-koudai.ac.jp/
+3895	JP	Daiichi University of Economics	http://www.daiichi-ue.ac.jp/
+3896	JP	Daito Bunka University	http://www.daito.ac.jp/
+3897	JP	Doho University	http://www.doho.ac.jp/
+3898	JP	Dohto University	http://www.dohto.ac.jp/
+3899	JP	Dokkyo University	http://www.dokkyo.ac.jp/
+3900	JP	Dokkyo University School of Medicine	http://www.dokkyomed.ac.jp/
+3901	JP	Doshisha University	http://www.doshisha.ac.jp/
+3902	JP	Doshisha Women's College of Liberal Arts	http://www.dwc.doshisha.ac.jp/
+3903	JP	Edogawa University	http://www.edogawa-u.ac.jp/
+3904	JP	Ehime University	http://www.ehime-u.ac.jp/
+3905	JP	Eichi University	http://www.eichi-u.ac.jp/
+3906	JP	Elisabeth University of Music	http://www.eum.ac.jp/
+3907	JP	Ferris University	http://www.ferris.ac.jp/
+3908	JP	Fujita Health University	http://www.fujita-hu.ac.jp/
+3909	JP	Fuji University	http://www.termnet.co.jp/fujidai/
+3910	JP	Fuji Women's College	http://www.fujijoshi.ac.jp/
+3911	JP	Fukui Medical School	http://www.fukui-med.ac.jp/
+3912	JP	Fukui Prefectural University	http://www.fpu.ac.jp/
+3913	JP	Fukui University	http://www.fukui-u.ac.jp/
+3914	JP	Fukui University of Technology	http://www.fukui-ut.ac.jp/
+3915	JP	Fukuoka Dental College	http://www.fdcnet.ac.jp/
+3916	JP	Fukuoka Institute of Technology	http://www.fit.ac.jp/
+3917	JP	Fukuoka International University	http://www.fukuoka-int-u.ac.jp/
+3918	JP	Fukuoka Prefectural University	http://www.fukuoka-pu.ac.jp/
+3919	JP	Fukuoka University	http://www.fukuoka-u.ac.jp/
+3920	JP	Fukuoka University of Education	http://www.fukuoka-edu.ac.jp/
+3921	JP	Fukuoka Women's University	http://www.fwu.ac.jp/
+3922	JP	Fukushima Medical College	http://www.fmu.ac.jp/
+3923	JP	Fukushima University	http://www.fukushima-u.ac.jp/
+3924	JP	Fukuyama Heisei University	http://www.heisei-u.ac.jp/
+3925	JP	Fukuyama University	http://www.fukuyama-u.ac.jp/
+3926	JP	Gakushuin University	http://www.gakushuin.ac.jp/
+3927	JP	Gifu Keizai University	http://www.gifu-keizai.ac.jp/
+3928	JP	Gifu Pharmaceutical University	http://www.gifu-pu.ac.jp/
+3929	JP	Gifu Shotoku Gakuen University	http://www.shotoku.ac.jp/
+3930	JP	Gifu University	http://www.gifu-u.ac.jp/
+3931	JP	Gifu University for Education and Languages	http://www.gifu-kyoiku.ac.jp/
+3932	JP	Gifu Women's University	http://www.gijodai.ac.jp/
+3933	JP	Graduate University for Advanced Studies	http://www.soken.ac.jp/
+3934	JP	Gunma Prefectural Women's University	http://www.gpwu.ac.jp/
+3935	JP	Gunma University	http://www.gunma-u.ac.jp/
+3936	JP	Hachinohe Institute of Technology	http://www.hi-tech.ac.jp/
+3937	JP	Hachinohe University	http://www.hachinohe-u.ac.jp/
+3938	JP	Hakodate University	http://www.hakodate-u.ac.jp/
+3939	JP	Hakuoh University	http://www.hakuoh.ac.jp/
+3940	JP	Hamamatsu University	http://www.hamamatsu-u.ac.jp/
+3941	JP	Hamamatsu University School of Medicine	http://www.hama-med.ac.jp/
+3942	JP	Hanazono University	http://www.hanazono.ac.jp/
+3943	JP	Hannan University	http://www.hannan-u.ac.jp/
+3944	JP	Heisei International University	http://www.hiu.ac.jp/
+3945	JP	Higashi Nippon International University	http://www.tonichi-kokusai-u.ac.jp/
+3946	JP	Hijiyama University	http://www.hijiyama-u.ac.jp/
+3947	JP	Himeji Dokkyo University	http://www.himeji-du.ac.jp/
+3948	JP	Himeji Institute of Technology	http://www.himeji-tech.ac.jp/
+3949	JP	Hirosaki Gakuin University	http://www.hirogaku-u.ac.jp/
+3950	JP	Hirosaki University	http://www.hirosaki-u.ac.jp/
+3951	JP	Hiroshima Bunkyo Women's University	http://www.h-bunkyo.ac.jp/
+3952	JP	Hiroshima City University	http://www.hiroshima-cu.ac.jp/
+3953	JP	Hiroshima Institute of Technology	http://www.it-hiroshima.ac.jp/
+3954	JP	Hiroshima International University	http://www.hirokoku-u.ac.jp/
+3955	JP	Hiroshima Jogakuin University	http://www.hju.ac.jp/
+3956	JP	Hiroshima Kokusai Gakuin University	http://www.hkg.ac.jp/
+3957	JP	Hiroshima Prefectural University	http://www.hiroshima-pu.ac.jp/
+3958	JP	Hiroshima Shudo University	http://www.shudo-u.ac.jp/
+3959	JP	Hiroshima University	http://www.hiroshima-u.ac.jp/
+3960	JP	Hiroshima University of Economics	http://www.hue.ac.jp/
+3961	JP	Hiroshima Women's University	http://www.hirojo-u.ac.jp/
+3962	JP	Hitotsubashi University	http://www.hit-u.ac.jp/
+3963	JP	Hokkaido Information University	http://www.do-johodai.ac.jp/
+3964	JP	Hokkaido Institute of Pharmaceutical Sciences	http://www.hokuyakudai.ac.jp/
+3965	JP	Hokkaido Institute of Technology	http://www.hit.ac.jp/
+3966	JP	Hokkaido Tokai University	http://www.u-tokai.ac.jp/
+3967	JP	Hokkaido University	http://www.hokudai.ac.jp/
+3968	JP	Hokkaido University of Education	http://www.hokkyodai.ac.jp/
+3969	JP	Hokkaido University of Health Sciences	http://www.hoku-iryo-u.ac.jp/
+3970	JP	Hokkaigakuen University	http://www.hokkai-s-u.ac.jp/
+3971	JP	Hokkaigakuen University of Kitami	http://www.hokkai-k-u.ac.jp/
+3972	JP	Hokuriku University	http://www.hokuriku-u.ac.jp/
+3973	JP	Hokusei Gakuen University	http://www.hokusei.ac.jp/
+3974	JP	Hosei University	http://www.hosei.ac.jp/
+3975	JP	Hoshi University	http://www.hoshi.ac.jp/
+3976	JP	Hyogo College of Medicine	http://www.hyo-med.ac.jp/
+3977	JP	Hyogo University	http://www.hyogo-dai.ac.jp/
+3978	JP	Hyogo University of Education	http://www.hyogo-u.ac.jp/
+3979	JP	Ibaraki Christian College	http://www.icc.ac.jp/
+3980	JP	Ibaraki Prefectural University of Health Sciences	http://www.ipu.ac.jp/
+3981	JP	Ibaraki University	http://www.ibaraki.ac.jp/
+3982	JP	International Buddhist University	http://www.shitennoji.ac.jp/
+3983	JP	International Budo University	http://www.budo-u.ac.jp/
+3984	JP	International Christian University	http://www.icu.ac.jp/
+3985	JP	International University of Health and Welfare	http://www.iuhw.ac.jp/
+3986	JP	International University of Japan	http://www.iuj.ac.jp/
+3987	JP	International University of Kagoshima	http://www.iuk.ac.jp/
+3988	JP	Ishinomaki Senshu University	http://www.isenshu-u.ac.jp/
+3989	JP	Iwaki Meisei University	http://www.iwakimu.ac.jp/
+3990	JP	Iwate Medical University	http://www.iwate-med.ac.jp/
+3991	JP	Iwate Prefectural University	http://www.iwate-pu.ac.jp/
+3992	JP	Iwate University	http://www.iwate-u.ac.jp/
+3993	JP	Japan Advanced Institute of Science and Technology	http://www.jaist.ac.jp/
+3994	JP	Japan College of Social Work	http://www.shakaijigyo.ac.jp/
+3995	JP	Japanese Red Cross College of Nursing	http://www.redcross.ac.jp/
+3996	JP	Japan Women's University	http://www.jwu.ac.jp/
+3997	JP	Jichi Medical School	http://www.jichi.ac.jp/
+3998	JP	Jikei University School of Medicine	http://www.jikei.ac.jp/
+3999	JP	Jissen Women's University	http://www.jissen.ac.jp/
+4000	JP	Jobu University	http://www.jobu.ac.jp/
+4001	JP	Joetsu University of Education	http://www.juen.ac.jp/
+4002	JP	Josai International University	http://www.jiu.ac.jp/
+4003	JP	Josai University	http://www.josai.ac.jp/
+4004	JP	Juntendo University	http://www.juntendo.ac.jp/
+4005	JP	Kagawa Institute of Nutrition	http://www.eiyo.ac.jp/
+4006	JP	Kagawa Medical School	http://www.kms.ac.jp/
+4007	JP	Kagawa University	http://www.kagawa-u.ac.jp/
+4008	JP	Kagoshima Immaculate Heart University	http://www.juntan.k-junshin.ac.jp/jundai/
+4009	JP	Kagoshima University	http://www.kagoshima-u.ac.jp/
+4010	JP	Kagoshima Women's College	http://www.kwc-u.ac.jp/
+4011	JP	Kamakura Women's College	http://www.kamakura-u.ac.jp/
+4012	JP	Kanagawa Dental College	http://www.kdcnet.ac.jp/
+4013	JP	Kanagawa Institute of Technology	http://www.kanagawa-it.ac.jp/
+4014	JP	Kanagawa University	http://www.kanagawa-u.ac.jp/
+4015	JP	Kanazawa College of Art	http://www.kanazawa-bidai.ac.jp/
+4016	JP	Kanazawa College of Economics	http://www.kanazawa-eco.ac.jp/
+4017	JP	Kanazawa Gakuin University	http://www.kanazawa-gu.ac.jp/
+4018	JP	Kanazawa Institute of Technology	http://www.kanazawa-it.ac.jp/
+4019	JP	Kanazawa Medical University	http://www.kanazawa-med.ac.jp/
+4020	JP	Kanazawa University	http://www.kanazawa-u.ac.jp/
+4021	JP	Kanda University of International Studies	http://www.kuis.ac.jp/
+4022	JP	Kansai Gaidai University	http://www.kansai-gaidai-u.ac.jp/
+4023	JP	Kansai Medical University	http://www.kmu.ac.jp/
+4024	JP	Kansai University	http://www.kansai-u.ac.jp/
+4025	JP	Kansai University of International Studies	http://www.kuins.ac.jp/
+4026	JP	Kansai University of Social Welfare	http://www.kusw.ac.jp/
+4027	JP	Kanto Gakuen University	http://www.kanto-gakuen.ac.jp/
+4028	JP	Kanto Gakuin University	http://www.kanto-gakuin.ac.jp/
+4029	JP	Kawamura Gakuen Woman's University	http://www.kgwu.ac.jp/
+4030	JP	Kawasaki Medical School	http://www.kawasaki-m.ac.jp/
+4031	JP	Kawasaki University of Medical Care	http://www.kawasaki-m.ac.jp/mw/
+4032	JP	Keiai University	http://www.u-keiai.ac.jp/
+4033	JP	Keio University	http://www.keio.ac.jp/
+4034	JP	Keisen Jogaku-en College	http://www.keisen.ac.jp/
+4035	JP	Keiwa College	http://www.keiwa-c.ac.jp/
+4036	JP	Kibi International University	http://www.kiui.ac.jp/
+4037	JP	Kinjo Gakuin University	http://www.kinjo-u.ac.jp/
+4038	JP	Kinki University	http://www.kindai.ac.jp/
+4039	JP	Kitakyushu University	http://www.kitakyu-u.ac.jp/
+4040	JP	Kitami Institute of Technology	http://www.kitami-it.ac.jp/
+4041	JP	Kitasato University	http://www.kitasato-u.ac.jp/
+4042	JP	Kobe City University of ForeignStudies	http://www.kobe-cufs.ac.jp/
+4043	JP	Kobe Design University	http://www.kobe-du.ac.jp/
+4044	JP	Kobe Gakuin University	http://www.kobegakuin.ac.jp/
+4045	JP	Kobe International University	http://www.kobe-kiu.ac.jp/
+4046	JP	Kobe Jogakuin University	http://www.kobe-c.ac.jp/
+4047	JP	Kobe Pharmaceutical University	http://www.kobepharma-u.ac.jp/
+4048	JP	Kobe Shinwa Women's University	http://www.kobe-shinwa.ac.jp/
+4049	JP	Kobe Shoin Women's University	http://www.shoin.ac.jp/
+4050	JP	Kobe University	http://www.kobe-u.ac.jp/
+4051	JP	Kobe University of Mercantile Marine	http://www.kshosen.ac.jp/
+4052	JP	Kobe Women's University	http://www.suma.kobe-wu.ac.jp/
+4053	JP	Kochi Medical School	http://www.kochi-ms.ac.jp/
+4054	JP	Kochi University	http://www.kochi-u.ac.jp/
+4055	JP	Kochi University of Technology	http://www.kochi-tech.ac.jp/
+4056	JP	Kochi Women's University	http://www.kochi-wu.ac.jp/
+4057	JP	Kogakkan University	http://www.kogakkan-u.ac.jp/
+4058	JP	Kogakuin University	http://www.kogakuin.ac.jp/
+4059	JP	Koka Women's College	http://www.koka.ac.jp/
+4060	JP	Kokugakuin University	http://www.kokugakuin.ac.jp/
+4061	JP	Kokushikan University	http://www.kokushikan.ac.jp/
+4062	JP	Komazawa University	http://www.komazawa-u.ac.jp/
+4063	JP	Konan University	http://www.konan-u.ac.jp/
+4064	JP	Konan Women's University	http://www.konan-wu.ac.jp/
+4065	JP	Korea University	http://www.korea-u.ac.jp/
+4066	JP	Koriyama Women's University and College	http://www.koriyama-kgc.ac.jp/
+4067	JP	Koshien University	http://www.koshien.ac.jp/
+4068	JP	Koyasan University	http://www.koyasan-u.ac.jp/
+4069	JP	Kumamoto Gakuen University	http://www.kumagaku.ac.jp/
+4070	JP	Kumamoto Institute of Technology	http://www.knct.ac.jp/
+4071	JP	Kumamoto Prefectural University	http://www.pu-kumamoto.ac.jp/
+4072	JP	Kumamoto University	http://www.kumamoto-u.ac.jp/
+4073	JP	Kunitachi College of Music	http://www.kunitachi.ac.jp/
+4074	JP	Kurashiki Sakuyo University	http://www.ksu.ac.jp/
+4075	JP	Kurashiki University of Science and the Arts	http://www.kusa.ac.jp/
+4076	JP	Kure University	http://www.kure-u.ac.jp/
+4077	JP	Kurume Institute of Technology	http://www.kurume-it.ac.jp/
+4078	JP	Kurume University	http://www.kurume-u.ac.jp/
+4079	JP	Kushiro Public University of Economics	http://www.kushiro-pu.ac.jp/
+4080	JP	Kwansei Gakuin University	http://www.kwansei.ac.jp/
+4081	JP	Kwassui Women's College	http://www.kwassui.ac.jp/
+4082	JP	Kyorin University	http://www.kyorin-u.ac.jp/
+4083	JP	Kyoritsu Pharmaceutical University	http://www.kyoritsu-ph.ac.jp/
+4084	JP	Kyoritsu Woman's University	http://www.kyoritsu-wu.ac.jp/
+4085	JP	Kyoto Bunkyo University	http://www.kbu.ac.jp/
+4086	JP	Kyoto City University of Arts	http://www.kcua.ac.jp/
+4087	JP	Kyoto Gakuen University	http://www.kyotogakuen-u.ac.jp/
+4088	JP	Kyoto Institute of Technology	http://www.kit.ac.jp/
+4089	JP	Kyoto Pharmaceutical University	http://www.kyoto-phu.ac.jp/
+4090	JP	Kyoto Prefectural University	http://www.kpu.ac.jp/
+4091	JP	Kyoto Prefectural University of Medicine	http://www.kpu-m.ac.jp/
+4092	JP	Kyoto Sangyo University	http://www.kyoto-su.ac.jp/
+4093	JP	Kyoto Seika University	http://www.kyoto-seika.ac.jp/
+4094	JP	Kyoto Tachibana Women's University	http://www.tachibana-u.ac.jp/
+4095	JP	Kyoto University	http://www.kyoto-u.ac.jp/
+4096	JP	Kyoto University of Art and Design	http://www.kyoto-art.ac.jp/
+4097	JP	Kyoto University of Education	http://www.kyokyo-u.ac.jp/
+4098	JP	Kyoto University of Foreign Studies	http://www.kufs.ac.jp/
+4099	JP	Kyoto Women's University	http://www.kyoto-wu.ac.jp/
+4100	JP	Kyushu Dental College	http://www.kyu-dent.ac.jp/
+4101	JP	Kyushu Institute of Design	http://www.kyushu-id.ac.jp/
+4102	JP	Kyushu Institute of Technology	http://www.kyutech.ac.jp/
+4103	JP	Kyushu International University	http://www.kiu.ac.jp/
+4104	JP	Kyushu Kyoritsu University	http://www.kyukyo-u.ac.jp/
+4105	JP	Kyushu Sangyo University	http://www.ip.kyusan-u.ac.jp/
+4106	JP	Kyushu Tokai University	http://www.ktokai-u.ac.jp/
+4107	JP	Kyushu University	http://www.kyushu-u.ac.jp/
+4108	JP	Kyushu University of Nursing and SocialWelfare	http://www.kyushu-ns.ac.jp/
+4109	JP	Kyushu Women's University	http://www.kwuc.ac.jp/
+4110	JP	Matsumoto Dental University	http://www.mdu.ac.jp/
+4111	JP	Matsusaka University	http://www.mie-chukyo-u.ac.jp/
+4112	JP	Matsuyama University	http://www.matsuyama-u.ac.jp/
+4113	JP	Meiji College of Pharmacy	http://www.my-pharm.ac.jp/
+4114	JP	Meiji Gakuin University	http://www.meijigakuin.ac.jp/
+4115	JP	Meiji University	http://www.meiji.ac.jp/
+4116	JP	Meiji University of Oriental Medicine	http://www.meiji-u.ac.jp/
+4117	JP	Meijo University	http://www.meijo-u.ac.jp/
+4118	JP	Meikai University	http://www.meikai.ac.jp/
+4119	JP	Meio University	http://www.meio-u.ac.jp/
+4120	JP	Meisei University	http://www.meisei-u.ac.jp/
+4121	JP	Mejiro University	http://www.mejiro.ac.jp/
+4122	JP	Mie University	http://www.mie-u.ac.jp/
+4123	JP	Mimasaka Women's College	http://www.mimasaka.ac.jp/
+4124	JP	Minamikyushu University	http://www.nankyudai.ac.jp/
+4125	JP	Miyagi Gakuin Women's College	http://www.mgu.ac.jp/
+4126	JP	Miyagi University	http://www.myu.ac.jp/
+4127	JP	Miyagi University of Education	http://www.miyakyo-u.ac.jp/
+4128	JP	Miyazaki Medical College	http://www.miyazaki-med.ac.jp/
+4129	JP	Miyazaki Municipal University	http://www.miyazaki-mu.ac.jp/
+4130	JP	Miyazaki Prefectural Nursing University	http://www.mpu.ac.jp/
+4131	JP	Miyazaki University	http://www.miyazaki-u.ac.jp/
+4132	JP	Morioka College	http://www.morioka-u.ac.jp/
+4133	JP	Mukogawa Women's University	http://www.mukogawa-u.ac.jp/
+4134	JP	Muroran Institute of Technology	http://www.muroran-it.ac.jp/
+4135	JP	Musashi Institute of Technology	http://www.musashi-tech.ac.jp/
+4136	JP	Musashino Academy of Music	http://www.musashino-music.ac.jp/
+4137	JP	Musashino Art University	http://www.musabi.ac.jp/
+4138	JP	Musashino Women's University	http://www.musashino-wu.ac.jp/
+4139	JP	Musashi University	http://www.musashi.ac.jp/
+4140	JP	Nagano University	http://www.nagano.ac.jp/
+4141	JP	Nagaoka University of Technology	http://www.nagaokaut.ac.jp/
+4142	JP	Nagasaki Institute of Applied Science	http://www.nias.ac.jp/
+4143	JP	Nagasaki Prefectural University	http://www.nagasakipu.ac.jp/
+4144	JP	Nagasaki University	http://www.nagasaki-u.ac.jp/
+4145	JP	Nagoya City University	http://www.nagoya-cu.ac.jp/
+4146	JP	Nagoya College of Music	http://www.doho.ac.jp/~meion/
+4147	JP	Nagoya Economics University	http://www.nagoya-ku.ac.jp/
+4148	JP	Nagoya Gakuin University	http://www.ngu.ac.jp/
+4149	JP	Nagoya Institute of Technology	http://www.nitech.ac.jp/
+4150	JP	Nagoya University	http://www.nagoya-u.ac.jp/
+4151	JP	Nagoya University of Arts	http://www.nua.ac.jp/
+4152	JP	Nagoya University of Commerce and Business Administration	http://www.nucba.ac.jp/
+4153	JP	Nagoya University of Foreign Studies	http://www.nufs.nakanishi.ac.jp/
+4154	JP	Nagoya Women's University	http://www.nagoya-wu.ac.jp/
+4155	JP	Nakamura Gakuen University	http://www.nakamura-u.ac.jp/
+4156	JP	Nanzan University	http://www.nanzan-u.ac.jp/
+4157	JP	Nara Medical University	http://www.naramed-u.ac.jp/
+4158	JP	Nara Sangyo University	http://www.nara-su.ac.jp/
+4159	JP	Nara University	http://www.nara-u.ac.jp/
+4160	JP	Nara University of Commerce	http://www.narauc.ac.jp/
+4161	JP	Nara University of Education	http://www.nara-edu.ac.jp/
+4162	JP	Nara Women's University	http://www.nara-wu.ac.jp/
+4163	JP	Naruto University of Education	http://www.naruto-u.ac.jp/
+4164	JP	National Defence Medical College	http://www.ndmc.ac.jp/
+4165	JP	National Fisheries University	http://www.fish-u.ac.jp/
+4166	JP	National Institute of Fitness and Sports Kanoya	http://www.nifs-k.ac.jp/
+4167	JP	Nihon Fukushi University	http://www.n-fukushi.ac.jp/
+4168	JP	Nihon University	http://www.nihon-u.ac.jp/
+4169	JP	Niigata College of Pharmacy	http://www.niigata-pharm.ac.jp/
+4170	JP	Niigata Sangyo University	http://www.nsu.ac.jp/
+4171	JP	Niigata University	http://www.niigata-u.ac.jp/
+4172	JP	Niigata University of International and Information Studies	http://www.nuis.ac.jp/
+4173	JP	Niigata University of Management	http://www.niigataum.ac.jp/
+4174	JP	Nippon Bunri University	http://www.nbu.ac.jp/
+4175	JP	Nippon Dental University	http://www.ndu.ac.jp/
+4176	JP	Nippon Institute of Technology	http://www.nit.ac.jp/
+4177	JP	Nippon Medical School	http://www.nms.ac.jp/
+4178	JP	Nippon Sport Science University	http://www.nittai.ac.jp/
+4179	JP	Nippon Veterinary and Animalscience University	http://www.nvau.ac.jp/
+4180	JP	Nishikyushu University	http://www.nisikyu-u.ac.jp/
+4181	JP	Nishinippon Institute of Technology	http://www.nishitech.ac.jp/
+4182	JP	Nisho Gakusha University	http://www.nishogakusha-u.ac.jp/
+4183	JP	Nortre Dame Seishin University	http://www.ndsu.ac.jp/
+4184	JP	Notre Dame Women's College	http://www.notredame.ac.jp/
+4185	JP	Obihiro University of Agriculture and Veterinary Medicine	http://www.obihiro.ac.jp/
+4186	JP	Obirin University	http://www.obirin.ac.jp/
+4187	JP	Ochanomizu Women's University	http://www.ocha.ac.jp/
+4188	JP	Ohka Gakuen University	http://www.ohkagakuen-u.ac.jp/
+4189	JP	Ohtani Women's University	http://www.ohtani-w.ac.jp/
+4190	JP	Ohu University	http://www.ohu-u.ac.jp/
+4191	JP	Oita Medical University	http://www.oita-med.ac.jp/
+4192	JP	Oita University	http://www.oita-u.ac.jp/
+4193	JP	Oita University of Nursing and Health Sciences	http://www.oita-nhs.ac.jp/
+4194	JP	Okayama Prefectural University	http://www.oka-pu.ac.jp/
+4195	JP	Okayama Shoka University	http://www.osu.ac.jp/
+4196	JP	Okayama University	http://www.okayama-u.ac.jp/
+4197	JP	Okayama University of Science	http://www.ous.ac.jp/
+4198	JP	Okinawa International University	http://www.okiu.ac.jp/
+4199	JP	Okinawa Prefectural University of Fine Arts	http://www.okigei.ac.jp/
+4200	JP	Okinawa University	http://www.okinawa-u.ac.jp/
+4201	JP	Osaka City University	http://www.osaka-cu.ac.jp/
+4202	JP	Osaka College of Music	http://www.daion.ac.jp/
+4203	JP	Osaka Dental University	http://www.osaka-dent.ac.jp/
+4204	JP	Osaka Electro-Communication University	http://www.osakac.ac.jp/
+4205	JP	Osaka Gakuin University	http://www.osaka-gu.ac.jp/
+4206	JP	Osaka Institute of Technology	http://www.oit.ac.jp/
+4207	JP	Osaka International University	http://www.oiu.oiu.ac.jp/
+4208	JP	Osaka International University for Women	http://www.oiuw.oiu.ac.jp/
+4209	JP	Osaka Medical College	http://www.osaka-med.ac.jp/
+4210	JP	Osaka Prefectural University	http://www.osakafu-u.ac.jp/
+4211	JP	Osaka Sangyo University	http://www.osaka-sandai.ac.jp/
+4212	JP	Osaka Shoin Women's College	http://www.osaka-shoin.ac.jp/
+4213	JP	Osaka University	http://www.osaka-u.ac.jp/
+4214	JP	Osaka University of Arts	http://www.osaka-geidai.ac.jp/
+4215	JP	Osaka University of Commerce	http://www.daishodai.ac.jp/
+4216	JP	Osaka University of Economics	http://www.osaka-ue.ac.jp/
+4217	JP	Osaka University of Economics & Law	http://www.keiho-u.ac.jp/
+4218	JP	Osaka University of Education	http://www.osaka-kyoiku.ac.jp/
+4219	JP	Osaka University of Foreign Studies	http://www.osaka-gaidai.ac.jp/
+4220	JP	Osaka University of Health and Sport Sciences	http://www.ouhs.ac.jp/
+4221	JP	Osaka University of Pharmaceutical Sciences	http://www.oups.ac.jp/
+4222	JP	Osaka Women's University	http://www.osaka-wu.ac.jp/
+4223	JP	Otani University	http://www.otani.ac.jp/
+4224	JP	Otaru University of Commerce	http://www.otaru-uc.ac.jp/
+4225	JP	Otemae University	http://www.otemae.ac.jp/
+4226	JP	Otemon Gakuin University	http://www.otemon.ac.jp/
+4227	JP	Otsuma Women's University	http://www.otsuma.ac.jp/
+4228	JP	Polytechnic University	http://www.uitec.ac.jp/
+4229	JP	Poole Gakuin University	http://www.poole.ac.jp/
+4230	JP	Rakuno Gakuen University	http://www.rakuno.ac.jp/
+4231	JP	Reitaku University	http://www.reitaku-u.ac.jp/
+4232	JP	Rikkyo University (St. Paul's University)	http://www.rikkyo.ac.jp/
+4233	JP	Rissho University	http://www.ris.ac.jp/
+4234	JP	Ritsumeikan Asia Pacific University	http://www.apu.ac.jp/
+4235	JP	Ritsumeikan University	http://www.ritsumei.ac.jp/
+4236	JP	Ryukoku University	http://www.ryukoku.ac.jp/
+4237	JP	Ryutsu Keizai University	http://www.rku.ac.jp/
+4238	JP	Saga Medical School	http://www.saga-med.ac.jp/
+4239	JP	Sagami Women's University	http://www.sagami-wu.ac.jp/
+4240	JP	Saga University	http://www.saga-u.ac.jp/
+4241	JP	Saitama Institute of Technology	http://www.sit.ac.jp/
+4242	JP	Saitama Medical School	http://www.saitama-med.ac.jp/
+4243	JP	Saitama Prefectural University	http://www.spu.ac.jp/
+4244	JP	Saitama University	http://www.saitama-u.ac.jp/
+4245	JP	Sakushin Gakuin University	http://www.sakushin-u.ac.jp/
+4246	JP	Sankei University	http://www.miyasankei-u.ac.jp/
+4247	JP	Sanno University	http://www.sanno.ac.jp/
+4248	JP	Sanyo Gakuen University	http://www.sguc.ac.jp/
+4249	JP	Sapporo Gakuin University	http://www.sgu.ac.jp/
+4250	JP	Sapporo International University	http://www.siu.ac.jp/
+4251	JP	Sapporo Medical University	http://www.sapmed.ac.jp/
+4252	JP	Sapporo University	http://www.sapporo-u.ac.jp/
+4253	JP	Science University of Tokyo	http://www.sut.ac.jp/
+4254	JP	Science University of Tokyo in Yamaguchi	http://www.yama.sut.ac.jp/
+4255	JP	Seian University of Art & Design	http://www.seian.ac.jp/
+4256	JP	Seigakuin University	http://www.seigakuin-univ.ac.jp/
+4257	JP	Seijo University	http://www.seijo.ac.jp/
+4258	JP	Seikei University	http://www.seikei.ac.jp/
+4259	JP	Seinan Gakuin University	http://www.seinan-gu.ac.jp/
+4260	JP	Seisen University	http://www.seisen-u.ac.jp/
+4261	JP	Seiwa College	http://www.seiwa-u.ac.jp/
+4262	JP	Sendai University	http://www.sendaidaigaku.jp/
+4263	JP	Senshu University	http://www.senshu-u.ac.jp/
+4264	JP	Senzoku Gakuen College	http://www.senzoku.ac.jp/
+4265	JP	Setsunan University	http://www.setsunan.ac.jp/
+4266	JP	Shibaura Institute of Technology	http://www.shibaura-it.ac.jp/
+4267	JP	Shiga University	http://www.shiga-u.ac.jp/
+4268	JP	Shiga University of Medical Science	http://www.shiga-med.ac.jp/
+4269	JP	Shikoku Christian College	http://www.sg-u.ac.jp/
+4270	JP	Shikoku University	http://www.shikoku-u.ac.jp/
+4271	JP	Shimane University	http://www.shimane-u.ac.jp/
+4272	JP	Shimane University, Faculty of Medicine	http://www.shimane-med.ac.jp/
+4273	JP	Shimonoseki City University	http://www.shimonoseki-cu.ac.jp/
+4274	JP	Shinshu University	http://www.shinshu-u.ac.jp/
+4275	JP	Shirayuri Women's College	http://www.shirayuri.ac.jp/
+4276	JP	Shizuoka Prefectural University	http://www.u-shizuoka-ken.ac.jp/
+4277	JP	Shizuoka Sangyo University	http://www.ssu.ac.jp/
+4278	JP	Shizuoka University	http://www.shizuoka.ac.jp/
+4279	JP	Shokei College	http://www.shokei-gakuen.ac.jp/shokeicol/
+4280	JP	Shonan Institute of Technology	http://www.shonan-it.ac.jp/
+4281	JP	Showa College of Pharmaceutical Sciences	http://www.shoyaku.ac.jp/
+4282	JP	Showa University	http://www.showa-u.ac.jp/
+4283	JP	Showa Women's University	http://www.swu.ac.jp/
+4284	JP	Shuchiin College	http://www.shuchiin.ac.jp/
+4285	JP	Shujitsu Women's University	http://www.shujitsu.ac.jp/
+4286	JP	Shukutoku University	http://www.shukutoku.ac.jp/
+4287	JP	Shumei University	http://www.shumei-u.ac.jp/
+4288	JP	Siebold University of Nagasaki	http://www.sun.ac.jp/
+4289	JP	Soai University	http://www.soai.ac.jp/
+4290	JP	Soka University	http://www.soka.ac.jp/
+4291	JP	Sonoda Women's University	http://www.sonoda-u.ac.jp/
+4292	JP	Sophia University	http://www.sophia.ac.jp/
+4293	JP	St. Andrew's University	http://www.andrew.ac.jp/
+4294	JP	St. Luke' s College of Nursing	http://www.slcn.ac.jp/
+4295	JP	St. Marianna University School of Medicine	http://www.marianna-u.ac.jp/
+4296	JP	Sugino Women's College	http://www.sugino.ac.jp/daiindex.html
+4297	JP	Sugiyama Jogakuen University	http://www.sugiyama-u.ac.jp/
+4298	JP	Surugadai University	http://www.surugadai.ac.jp/
+4299	JP	Suzuka International University	http://www.suzuka-iu.ac.jp/
+4300	JP	Suzuka University of Medical Science	http://www.suzuka-u.ac.jp/
+4301	JP	Taisho University	http://www.tais.ac.jp/
+4302	JP	Takachiho University	http://www.takachiho.ac.jp/
+4303	JP	Takamatsu University	http://www.takamatsu-u.ac.jp/
+4304	JP	Takarazuka University of Art and Design	http://www.takara-univ.ac.jp/
+4305	JP	Takasaki City University of Economics	http://www.tcue.ac.jp/
+4306	JP	Takushoku University	http://www.takushoku-u.ac.jp/
+4307	JP	Tama Art University	http://www.tamabi.ac.jp/
+4308	JP	Tamagawa University	http://www.tamagawa.ac.jp/
+4309	JP	Tama Institute of Management and Information Sciences	http://www.timis.ac.jp/
+4310	JP	Teikyo Heisei University	http://www.teikyo-u.ac.jp/
+4311	JP	Teikyo University of Science and Technology	http://www.ntu.ac.jp/
+4312	JP	Temple University Japan	http://www.tuj.ac.jp/
+4313	JP	Tenri University	http://www.tenri-u.ac.jp/
+4314	JP	Tezukayama Gakuin University	http://www.tezuka-gu.ac.jp/
+4315	JP	Tezukayama University	http://www.tezukayama-u.ac.jp/
+4316	JP	Toho College of Music	http://www.toho-music.ac.jp/
+4317	JP	Toho Gakuen School of Music	http://www.tohomusic.ac.jp/
+4318	JP	Tohoku Bunka Gakuen University	http://www.tbgu.ac.jp/
+4319	JP	Tohoku College of Pharmacy	http://www.tohoku-pharm.ac.jp/
+4320	JP	Tohoku Fukushi University	http://www.tfu.ac.jp/
+4321	JP	Tohoku Gakuin University	http://www.tohoku-gakuin.ac.jp/
+4322	JP	Tohoku Institute of Technology	http://www.tohtech.ac.jp
+4323	JP	Tohoku University	http://www.tohoku.ac.jp/
+4324	JP	Tohoku University of Art and Design	http://www.tuad.ac.jp/
+4325	JP	Tohoku Women's College	http://www.tojo.ac.jp/
+4326	JP	Toho University	http://www.toho-u.ac.jp/
+4327	JP	Tohwa University	http://www.tohwa-u.ac.jp/
+4328	JP	Toin University of Yokohama	http://www.toin.ac.jp/
+4329	JP	Tokai Gakuen University	http://www.tokaigakuen-u.ac.jp/
+4330	JP	Tokai University	http://www.u-tokai.ac.jp/
+4331	JP	Tokai University Educational System	http://www.tokai.ac.jp/
+4332	JP	Tokai Women's College	http://www.tokaijoshi-u.ac.jp/
+4333	JP	Tokiwa University	http://www.tokiwa.ac.jp/
+4334	JP	Tokoha Gakuen University	http://www.tokoha-u.ac.jp/
+4335	JP	Tokushima Bunri University	http://www.bunri-u.ac.jp/
+4336	JP	Tokushima University	http://www.tokushima-u.ac.jp/
+4337	JP	Tokuyama University	http://www.tokuyama-u.ac.jp/
+4338	JP	Tokyo College of Music	http://www.tokyo-ondai.ac.jp/
+4339	JP	Tokyo Denki University	http://www.dendai.ac.jp/
+4340	JP	Tokyo Dental College	http://www.tdc.ac.jp/
+4341	JP	Tokyo Engineering University	http://www.teu.ac.jp/
+4342	JP	Tokyo Gakugei University	http://www.u-gakugei.ac.jp/
+4343	JP	Tokyo Institute of Polytechnics	http://www.t-kougei.ac.jp/
+4344	JP	Tokyo Institute of Technology	http://www.titech.ac.jp/
+4345	JP	Tokyo International University	http://www.tiu.ac.jp/
+4346	JP	Tokyo Kasei University	http://www.tokyo-kasei.ac.jp/
+4347	JP	Tokyo Keizai University	http://www.tku.ac.jp/
+4348	JP	Tokyo Medical and Dental University	http://www.tmd.ac.jp/
+4349	JP	Tokyo Medical College	http://www.tokyo-med.ac.jp/
+4350	JP	Tokyo Metropolitan Institute of Technology	http://www.tmit.ac.jp/
+4351	JP	Tokyo Metropolitan University	http://www.metro-u.ac.jp/
+4352	JP	Tokyo Metropolitan University of Health Sciences	http://www.metro-hs.ac.jp/
+4353	JP	Tokyo National University of Fine Arts and Music	http://www.geidai.ac.jp/
+4354	JP	Tokyo University	http://www.u-tokyo.ac.jp/
+4355	JP	Tokyo University of Agriculture	http://www.nodai.ac.jp/
+4356	JP	Tokyo University of Agriculture and Technology	http://www.tuat.ac.jp/
+4357	JP	Tokyo University of Art and Design	http://www.zokei.ac.jp/
+4358	JP	Tokyo University of Fisheries	http://www.tokyo-u-fish.ac.jp/
+4359	JP	Tokyo University of Foreign Studies	http://www.tufs.ac.jp/
+4360	JP	Tokyo University of Information Sciences	http://www.tuis.ac.jp/
+4361	JP	Tokyo University of Mercantile Marine	http://www.tosho-u.ac.jp/
+4362	JP	Tokyo University of Pharmacy and Life Science	http://www.toyaku.ac.jp/
+4363	JP	Tokyo Woman's Christian University	http://www.twcu.ac.jp/
+4364	JP	Tokyo Women's College of Physical Education	http://www.twcpe.ac.jp/
+4365	JP	Tokyo Women's Medial College	http://www.twmu.ac.jp/
+4366	JP	Tomakomai Komazawa University	http://www.t-komazawa.ac.jp/
+4367	JP	Tottori University	http://www.tottori-u.ac.jp/
+4368	JP	Tottori University of Environmental Studies	http://www.kankyo-u.ac.jp/
+4369	JP	Toyama Medical and Pharmaceutical University	http://www.toyama-mpu.ac.jp/
+4370	JP	Toyama Prefectural University	http://www.pu-toyama.ac.jp/
+4371	JP	Toyama University	http://www.toyama-u.ac.jp/
+4372	JP	Toyama University of International Studies	http://www.tuins.ac.jp/
+4373	JP	Toyo Eiwa Women's University	http://www.toyoeiwa.ac.jp/
+4374	JP	Toyo Gakuen University	http://www.toyogakuen-u.ac.jp/
+4375	JP	Toyohashi University of Technology	http://www.tut.ac.jp/
+4376	JP	Toyota Technological Institute	http://www.toyota-ti.ac.jp/
+4377	JP	Toyo University	http://www.toyo.ac.jp/
+4378	JP	Tsuda College	http://www.tsuda.ac.jp/
+4379	JP	Tsukuba University	http://www.tsukuba.ac.jp/
+4380	JP	Tsurumi University	http://www.tsurumi-u.ac.jp/
+4381	JP	Tsuru University	http://www.tsuru.ac.jp/
+4382	JP	Ueno Gakuen College	http://www.uenogakuen.ac.jp/
+4383	JP	United Nations University	http://www.unu.edu/
+4384	JP	University of Aizu	http://www.u-aizu.ac.jp/
+4385	JP	University of Bunkyo	http://www.u-bunkyo.ac.jp/
+4386	JP	University of East Asia	http://www.toua-u.ac.jp/
+4387	JP	University of Electro-Communications	http://www.uec.ac.jp/
+4388	JP	University of Marketing and Distribution Sciences	http://www.umds.ac.jp/
+4389	JP	University of Occupational and Environmental Health, Japan	http://www.uoeh-u.ac.jp/
+4390	JP	University of Shiga Prefecture	http://www.usp.ac.jp/
+4391	JP	University of the Air	http://www.u-air.ac.jp/
+4392	JP	University of the Ryukyus	http://www.u-ryukyu.ac.jp/
+4393	JP	University of the Sacred Heart Tokyo	http://www.u-sacred-heart.ac.jp/
+4394	JP	Utsunomiya University	http://www.utsunomiya-u.ac.jp/
+4395	JP	Wakayama Medical College	http://www.wakayama-med.ac.jp/
+4396	JP	Wakayama University	http://www.wakayama-u.ac.jp/
+4397	JP	Wakkanai Hokusei Gakuen University	http://www.wakhok.ac.jp/
+4398	JP	Wako University	http://www.wako.ac.jp/
+4399	JP	Waseda University	http://www.waseda.ac.jp/
+4400	JP	Wayo Women's University	http://www.wayo.ac.jp/
+4401	JP	Women's College of Fine Arts	http://www.joshibi.ac.jp/
+4402	JP	Yamagata University	http://www.yamagata-u.ac.jp/
+4403	JP	Yamaguchi Prefectural University	http://www.yamaguchi-pu.ac.jp/
+4404	JP	Yamaguchi University	http://www.yamaguchi-u.ac.jp/
+4405	JP	Yamanashi Gakuin University	http://www.ygu.ac.jp/
+4406	JP	Yamanashi Medical University	http://www.yamanashi-med.ac.jp/
+4407	JP	Yamanashi University	http://www.yamanashi.ac.jp/
+4408	JP	Yasuda Women's University	http://www.yasuda-u.ac.jp/
+4409	JP	Yokkaichi University	http://www.yokkaichi-u.ac.jp/
+4410	JP	Yokohama City University	http://www.yokohama-cu.ac.jp/
+4411	JP	Yokohama College of Commerce	http://www.shodai.ac.jp/
+4412	JP	Yokohama National University	http://www.ynu.ac.jp/
+4413	KE	Adventist University of Africa	http://www.aua.ac.ke/
+4414	KE	Africa International University	http://www.aiu.ac.ke/
+4415	KE	Africa Nazarene University	http://www.anu.ac.ke/
+4416	KE	Aga Khan University	http://www.aku.edu/
+4417	KE	Catholic University of Eastern Africa	http://www.cuea.edu/
+4418	KE	Chuka University	http://www.chuka.ac.ke/
+4419	KE	Daystar University	http://www.daystar.ac.ke/
+4420	KE	 Dedan Kimathi University of Technology	http://www.dkut.ac.ke/
+4421	KE	Egerton University	http://www.egerton.ac.ke/
+4422	KE	Great Lakes University of Kisumu	http://www.gluk.ac.ke/
+4423	KE	Gretsa Universtiy	http://www.gretsauniversity.ac.ke/
+4424	KE	Inoorero University	http://www.iu.ac.ke/
+4425	KE	Jaramogi Oginga Odinga University of Science and Technology	http://www.jooust.ac.ke/
+4426	KE	Jomo Kenyatta University of Agriculture and Technology	http://www.jkuat.ac.ke/
+4427	KE	Kabarak University	http://www.kabarak.ac.ke/
+4428	KE	Karatina University	http://www.karatinauniversity.ac.ke/
+4429	KE	Kenya College of Accountancy	http://www.kca.ac.ke/
+4430	KE	Kenya Medical Training College	http://www.kmtc.ac.ke/
+4431	KE	Kenya Methodist University	http://www.kemu.ac.ke/
+4432	KE	Kenyatta University	http://www.ku.ac.ke/
+4433	KE	Kiriri Womens University of Science and Technology	http://www.kwust.ac.ke/
+4434	KE	Kisii University	http://www.kisiiuniversity.ac.ke/
+4435	KE	Laikipia University	http://www.laikipia.ac.ke/
+4436	KE	Maasai Mara University	http://www.mmarau.ac.ke/
+4437	KE	Maseno University	http://www.maseno.ac.ke/
+4438	KE	Masinde Muliro University of Science and Technology	http://www.mmust.ac.ke/
+4439	KE	Meru University of Science and Technology	http://www.must.ac.ke/
+4440	KE	Moi University	http://www.mu.ac.ke/
+4441	KE	Mount Kenya University	http://www.mku.ac.ke/
+4442	KE	Multimedia University of Kenya	http://www.mmu.ac.ke/
+4443	KE	Nairobi Institute of Business Studies 	http://www.nibs.ac.ke/
+4444	KE	Nairobi Technical Training Institute 	http://www.ntti.ac.ke/
+4445	KE	Pan Africa Christian University	http://www.pacuniversity.ac.ke/
+4446	KE	Pioneer International University	http://www.piu.ac.ke/
+4447	KE	Presbyterian University of East Africa	http://www.puea.ac.ke/
+4448	KE	Pwani University	http://www.pu.ac.ke/
+4449	KE	Riara University School of Business and Law	http://www.riarauniversity.ac.ke/
+4450	KE	Scott Christian University	http://www.scott.ac.ke/
+4451	KE	South Eastern Kenya University	http://www.seku.ac.ke/
+4452	KE	St. Pauls University	http://www.spu.ac.ke/
+4453	KE	Strathmore University	http://www.strathmore.edu/
+4454	KE	Technical University of Kenya	http://www.tukenya.ac.ke/
+4455	KE	Technical University of Mombasa	http://www.tum.ac.ke/
+4456	KE	United States International University	http://www.usiu.ac.ke/
+4457	KE	University of Eastern Africa, Baraton	http://www.ueab.ac.ke/
+4458	KE	University of Eldoret	http://www.uoeld.ac.ke/
+4459	KE	University of Kabianga	http://www.kabianga.ac.ke/
+4460	KE	University of Nairobi	http://www.uonbi.ac.ke/
+4461	KE	Uzima University College 	http://www.uzimauniversity.ac.ke/
+4462	KE	Zetech College	http://www.zetechcollege.com/
+4463	KG	American University of Central Asia	http://www.auca.kg/
+4464	KG	Asian Medical Institute	http://www.asmi.edu.kg/
+4465	KG	Bishkek Humanities University	http://www.bhu.kg/
+4466	KG	International Ataturk Alatoo University	http://www.iaau.edu.kg/
+4467	KG	International University of Kyrgyzstan	http://www.iuk.kg/
+4468	KG	Jalalabad State University Kyrgyzstan	http://www.jasu.edu.kg/
+4469	KG	Kyrgyz National Agrarian University	http://www.knau.kg/
+4470	KG	Kyrgyz National University	http://www.university.kg/
+4471	KG	Kyrgyz Russian Slavic University	http://www.krsu.edu.kg/
+4472	KG	Kyrgyz State Technical University	http://www.kstu.kg/
+4473	KG	Kyrgyz State University of Construction, Transportation and Architecture	http://www.ksucta.kg/
+4474	KG	Kyrgyz Turkish  Manas University	http://www.manas.kg/
+4475	KG	Medical Faculty, Osh State University	http://www.oshmed.com/
+4476	KH	Angkor University	http://www.angkor.edu.kh/
+4477	KH	Asia Europe University	http://www.aeu.edu.kh/
+4478	KH	Build Bright University	http://www.bbu.edu.kh/
+4479	KH	Cambodian Mekong University	http://www.mekong.edu.kh/
+4480	KH	Cambodia University of Specialties	http://www.cus.edu.kh/
+4481	KH	Chamreun University of Poly Technology	http://www.cup.edu.kh/
+4482	KH	International University	http://www.iu.edu.kh/
+4483	KH	National Institute of Education	http://www.ine.edu.kh/
+4484	KH	National University of Management	http://www.num.edu.kh/
+4485	KH	Norton University	http://www.norton.edu.kh/
+4486	KH	Pannnasatra University of Cambodia	http://www.puc.edu.kh/
+4487	KH	Royal University of Agriculture	http://www.rua.edu.kh/
+4488	KH	Royal University of Fine Arts	http://www.rufa.edu.kh/
+4489	KH	Royal University of Law and Economics	http://www.rule.edu.kh/
+4490	KH	Royal University of Phnom Penh	http://www.rupp.edu.kh/
+4491	KH	Svey Reong University	http://www.sru.edu.kh/
+4492	KH	University of Cambodia	http://www.uc.edu.kh/
+4493	KH	University of Health and Science	http://www.univ-sante.edu.kh/
+4494	KH	University of Technology Phnom Penh	http://www.utpp.edu.kh/
+4495	KH	Western University	http://www.western.edu.kh/
+4496	KH	Zaman University	http://www.zamanuniversity.edu.kh/
+4497	KN	International University for Graduate Studies	http://www.iugrad.edu.kn/
+4498	KN	Ross University Caribbean School of Veterinary Medicine	http://www.rossu.edu/veterinary-school/
+4499	KN	St Theresa's Medical University	http://www.stmu.org/
+4500	KN	University of Silvaner	http://www.unisilvaner.info/
+4501	KN	Windsor University School of Medicine	http://www.windsor.edu/
+4502	KP	Pyongyang University of Science and Technology	http://www.pust.net/
+4503	KR	Ajou University	http://www.ajou.ac.kr/
+4504	KR	Andong National University	http://www.andong.ac.kr/
+4505	KR	Catholic University of Korea	http://www.cuk.ac.kr/
+4506	KR	Catholic University of Pusan	http://www.cup.ac.kr/
+4507	KR	Catholic University of Taegu-Hyosung	http://www.cataegu.ac.kr/
+4508	KR	Changwon National University	http://www.changwon.ac.kr/
+4509	KR	Cheju National University	http://www.cheju.ac.kr/
+4510	KR	Cheju National University of Education	http://www.cheju-e.ac.kr/
+4511	KR	Chinju National University	http://www.chinju.ac.kr/
+4512	KR	Chinju National University of Education	http://www.chinju-e.ac.kr/
+4513	KR	Chodang University	http://www.chodang.ac.kr/
+4514	KR	Chonbuk National University	http://www.chonbuk.ac.kr/
+4515	KR	Chonbuk Sanup University of Technology (Howon University)	http://www.howon.ac.kr/
+4516	KR	Chongju National University of Education	http://www.chongju-e.ac.kr/
+4517	KR	Chongju University	http://www.chongju.ac.kr/
+4518	KR	Chonju National University of Education	http://www.chonju-e.ac.kr/
+4519	KR	Chonnam National University	http://www.chonnam.ac.kr/
+4520	KR	Chosun University	http://www.chosun.ac.kr/
+4521	KR	Chunchon National University of Education	http://www.cnue-e.ac.kr/
+4522	KR	Chung-Ang University	http://www.cau.ac.kr/
+4523	KR	Chungbuk National University	http://www.chungbuk.ac.kr/
+4524	KR	Chung-Ju National University	http://www.chungju.ac.kr/
+4525	KR	Chungnam National University	http://www.chungnam.ac.kr/
+4526	KR	Daebul University	http://www.daebul.ac.kr/
+4527	KR	Dankook University	http://www.dankook.ac.kr/
+4528	KR	Dong-A University	http://www.donga.ac.kr/
+4529	KR	Dongduk Women's University	http://www.dongduk.ac.kr/
+4530	KR	Dong Eui University	http://www.dongeui.ac.kr/
+4531	KR	Dongguk University	http://www.dongguk.ac.kr/
+4532	KR	Dongseo University	http://www.dongseo.ac.kr/
+4533	KR	Dongshin University	http://www.dongshinu.ac.kr/
+4534	KR	Dong Yang University of Technology	http://www.dytc.ac.kr/
+4535	KR	Duksung Women's University	http://www.duksung.ac.kr/
+4536	KR	Ewha Women's University	http://www.ewha.ac.kr/
+4537	KR	Gwangju Catholic College	http://www.gjcatholic.ac.kr/
+4538	KR	Gyeongju University	http://www.gyeongju.ac.kr/
+4539	KR	Gyeongsang National University	http://www.gsnu.ac.kr/
+4540	KR	Halla University	http://www.halla.ac.kr/
+4541	KR	Hallym University	http://www.hallym.ac.kr/
+4542	KR	Hankuk Aviation University	http://www.hangkong.ac.kr/
+4543	KR	Hankuk University of Foreign Studies	http://www.hufs.ac.kr/
+4544	KR	Hankyong National University	http://www.hknu.ac.kr/
+4545	KR	Hannam University	http://www.hannam.ac.kr/
+4546	KR	Hansei University	http://www.hansei.ac.kr/
+4547	KR	Hanseo University	http://www.hanseo.ac.kr/
+4548	KR	Hanshin University	http://www.hanshin.ac.kr/
+4549	KR	Hansung University Seoul	http://www.hansung.ac.kr/
+4550	KR	Hanyang University	http://www.hanyang.ac.kr/
+4551	KR	Honam University	http://www.honam.ac.kr/
+4552	KR	Hongik University	http://www.hongik.ac.kr/
+4553	KR	Hoseo University	http://www.hoseo.ac.kr/
+4554	KR	Hyupsung University	http://www.hyupsung.ac.kr/
+4555	KR	Inchon National University of Education	http://www.inchon-e.ac.kr/
+4556	KR	Inchon University	http://www.inchon.ac.kr/
+4557	KR	Information and Communications University	http://www.icu.ac.kr/
+4558	KR	Inha University	http://www.inha.ac.kr/
+4559	KR	Inje University	http://www.inje.ac.kr/
+4560	KR	Jeonju University	http://www.jeonju.ac.kr/
+4561	KR	Kangnam University	http://www.kangnam.ac.kr/
+4562	KR	Kangnung National University	http://www.kangnung.ac.kr/
+4563	KR	Kangwon National University	http://www.kangwon.ac.kr/
+4564	KR	Kaya University	http://www.kaya.ac.kr/
+4565	KR	KDI School of Public Policy and Management	http://www.kdischool.ac.kr/
+4566	KR	Keimyung University	http://www.keimyung.ac.kr/
+4567	KR	Kongju National University	http://www.kyongju.ac.kr/
+4568	KR	Kongju National University of Education	http://www.kongju-e.ac.kr/
+4569	KR	Konkuk University	http://www.konkuk.ac.kr/
+4570	KR	Konyang University	http://www.konyang.ac.kr/
+4571	KR	Kookmin University	http://www.kookmin.ac.kr/
+4572	KR	Korea Advanced Institute of Science & Technology	http://www.kaist.ac.kr/
+4573	KR	Korea Maritime University	http://www.kmaritime.ac.kr/
+4574	KR	Korea National Open University	http://www.knou.ac.kr/
+4575	KR	Korea National University of Arts	http://www.knua.ac.kr/
+4576	KR	Korea National University of Education	http://www.knue.ac.kr/
+4577	KR	Korea National University of Physical Education	http://www.knupe.ac.kr/
+4578	KR	Korea University	http://www.korea.ac.kr/
+4579	KR	Kosin University	http://www.kosin.ac.kr/
+4580	KR	Kumoh National University of Technology	http://www.kumoh.ac.kr/
+4581	KR	Kunsan National University	http://www.kunsan.ac.kr/
+4582	KR	Kwan Dong University	http://www.kwandong.ac.kr/
+4583	KR	Kwangju National University of Education	http://www.kwangju-e.ac.kr/
+4584	KR	Kwangju University	http://www.kwangju.ac.kr/
+4585	KR	Kwangwoon University	http://www.kwangwoon.ac.kr/
+4586	KR	Kyonggi University	http://www.kyonggi.ac.kr/
+4587	KR	Kyongju University	http://www.kyongju.ac.kr/
+4588	KR	Kyunghee University	http://www.kyunghee.ac.kr/
+4589	KR	Kyungil University	http://www.kyungil.ac.kr/
+4590	KR	Kyungnam University	http://www.kyungnam.ac.kr/
+4591	KR	Kyungpook National University	http://www.kyungpook.ac.kr/
+4592	KR	Kyungsung University	http://www.kyungsung.ac.kr/
+4593	KR	Kyungwon University	http://www.kyungwon.ac.kr/
+4594	KR	Miryang National University	http://www.miryang.ac.kr/
+4595	KR	Mokpo National Maritime University	http://www.mmu.ac.kr/
+4596	KR	Mokpo National University	http://www.mokpo.ac.kr/
+4597	KR	Mokwon University Taejon	http://www.mokwon.ac.kr/
+4598	KR	Myongji University	http://www.myongji.ac.kr/
+4599	KR	Paichai University	http://www.paichai.ac.kr/
+4600	KR	Pohang University of Science and Technology	http://www.postech.ac.kr/
+4601	KR	Pukyong National University	http://www.pknu.ac.kr/
+4602	KR	Pusan National University	http://www.pusan.ac.kr/
+4603	KR	Pusan National University of Education	http://www.pusan-e.ac.kr/
+4604	KR	Pusan University of Foreign Studies	http://www.pufs.ac.kr/
+4605	KR	Pusan Women's University	http://www.pwc.ac.kr/
+4606	KR	Pyongtaek University 	http://www.ptuniv.ac.kr/
+4607	KR	Sahmyook University	http://www.syu.ac.kr/
+4608	KR	Samchok National University	http://www.samchok.ac.kr/
+4609	KR	Sang Ji University	http://www.sangji.ac.kr/
+4610	KR	Sang Myung University	http://www.sangmyung.ac.kr/
+4611	KR	Sejong University	http://www.sejong.ac.kr/
+4612	KR	Semyung University	http://www.semyung.ac.kr/
+4613	KR	Seokyeong University	http://www.skuniv.ac.kr/
+4614	KR	Seokyeong University	http://www.seokyeong.ac.kr/
+4615	KR	Seonam University	http://www.seonam.ac.kr/
+4616	KR	Seoul City University	http://www.uos.ac.kr/
+4617	KR	Seoul National University	http://www.snu.ac.kr/
+4618	KR	Seoul National University of Education	http://www.seoul-e.ac.kr/
+4619	KR	Seoul National University of Technology	http://www.snut.ac.kr/
+4620	KR	Seoul Teological University	http://www.stu.ac.kr/
+4621	KR	Seoul Women's University	http://www.swu.ac.kr/
+4622	KR	Seowon University	http://www.seowon.ac.kr/
+4623	KR	Silla University	http://www.silla.ac.kr/
+4624	KR	Sogang University	http://www.sogang.ac.kr/
+4625	KR	Sookmyung Women's University	http://www.sookmyung.ac.kr/
+4626	KR	Soonchunhyang University	http://www.sch.ac.kr/
+4627	KR	Soongsil University	http://www.soongsil.ac.kr/
+4628	KR	Sunchon National University	http://www.sunchon.ac.kr/
+4629	KR	Sungkyul University	http://www.sungkyul.ac.kr/
+4630	KR	Sung Kyun Kwan University	http://www.skku.ac.kr/
+4631	KR	Sungshin Women's University	http://www.sungshin.ac.kr/
+4632	KR	Sunmoon University	http://www.sunmoon.ac.kr/
+4633	KR	Suwon Catholic University	http://www.suwoncatholic.ac.kr/
+4634	KR	Suwon University	http://www.suwon.ac.kr/
+4635	KR	Taegu National University of Education	http://www.taegu-e.ac.kr/
+4636	KR	Taegu University	http://www.taegu.ac.kr/
+4637	KR	Taejon National University of Technology	http://www.tnut.ac.kr/
+4638	KR	Taejon University	http://www.taejon.ac.kr/
+4639	KR	Taeshin Christian University	http://www.taeshin.ac.kr/
+4640	KR	Tongmyung University of Information Technology	http://www.tit.ac.kr/
+4641	KR	Ulsan University	http://www.ulsan.ac.kr/
+4642	KR	University of Science and Technology	http://www.ust.ac.kr/
+4643	KR	Wonkwang University	http://www.wonkwang.ac.kr/
+4644	KR	Woosuk University	http://www.woosuk.ac.kr/
+4645	KR	Yeungnam University	http://www.yeungnam.ac.kr/
+4646	KR	Yonsei University	http://www.yonsei.ac.kr/
+4647	KR	Yosu National University	http://www.yosu.ac.kr/
+4648	KW	American University of Kuwait 	http://www.auk.edu.kw/
+4649	KW	American University of Middle East	http://www.aum.edu.kw/
+4650	KW	Arab Open University, Kuwait Branch	http://www.aou.edu.kw/
+4651	KW	Australlian College of Kuwait 	http://www.ackonline.com/
+4652	KW	Gulf University for Science and Technology	http://www.gust.edu.kw/
+4653	KW	Kuwait International Law School	http://www.kilaw.edu.kw/
+4654	KW	Kuwait Maastricht Business School	http://www.kmbs.edu.kw/
+4655	KW	Kuwait University	http://www.kuniv.edu.kw/
+4656	KY	International College of the Cayman Islands	http://www.icci.edu.ky/
+4657	KY	St. Matthews University	http://www.stmatthews.edu/
+4658	KZ	Abai State University	http://www.kaznpu.kz/
+4659	KZ	Abylai Khan University	http://www.ablaikhan.kz/
+4660	KZ	Aktau State University	http://www.aktsu.kz/
+4661	KZ	Al-Farabi Kazakh National University	http://www.kaznu.kz/
+4662	KZ	Atyrau State University	http://www.atgu.kz/
+4663	KZ	East Kazakhstan State University	http://www.vkgu.kz/
+4664	KZ	East Kazakstan State Technical University	http://www.ektu.kz/
+4665	KZ	Eurasian Institute of market	http://www.eurazir.kz/
+4666	KZ	International Kazakh-Turkish University	http://www.turkistan.kz/
+4667	KZ	Karaganda State Buketov University	http://www.ksu.kz/
+4668	KZ	Karaganda State Technical University	http://www.kstu.kz/
+4669	KZ	Kazak American University	http://www.kau.kz/
+4670	KZ	Kazakh British Technical University	http://www.kbtu.kz/
+4671	KZ	Kazakhstan Institute of Management, Economics, and Strategic Research	http://www.kimep.kz/
+4672	KZ	Kazak National Technical University	http://www.kazntu.kz/
+4673	KZ	Kazak State University of Agriculture	http://www.agriun.almaty.kz/
+4674	KZ	Kostanai State University	http://www.ksu.kst.kz/
+4675	KZ	L.N. Gumilyov Eurasian National University	http://www.enu.kz/
+4676	KZ	North Kazakhstan State University	http://www.nkzu.kz/
+4677	KZ	Pavlodar University	http://www.psu.kz/
+4678	KZ	Semey State Medical University	http://www.sgma.kz/
+4679	KZ	Semey State University	http://www.semgu.kz/
+4680	KZ	Suleyman Demirel University	http://www.sdu.edu.kz/
+4681	KZ	Turar Ryskulov Kazakh Economic University	http://www.kazeu.kz/
+4682	KZ	University of International Business	http://www.uib.kz/
+4683	KZ	Western Kazakhstan Agricultural University	http://www.wkau.kz/
+4684	KZ	Zhetysu State University 	http://www.zhgu.kz/
+4685	KZ	Zhezkazgan Baikonurov University	http://www.zhezu.kz/
+4686	LA	National University of Laos	http://www.nuol.edu.la/
+4687	LA	Soutsaka Institute of management and Technology	http://www.simt.edu.la/
+4688	LB	Al Imam Al-Ouzai University	http://www.wakf.org/
+4689	LB	Al-Islah University	http://www.islahonline.org/
+4690	LB	Al-Manar University	http://www.mut.edu.lb/
+4691	LB	American University College of Technology	http://www.aut.edu/
+4692	LB	American University of Beirut	http://www.aub.edu.lb/
+4693	LB	American University of Science and Technology	http://www.aust.edu.lb/
+4694	LB	Arab Open University	http://www.arabou-lb.edu.lb/
+4695	LB	Arts, Sciences and Technology University	http://www.aul.edu.lb/
+4696	LB	Balamand University	http://www.balamand.edu.lb/
+4697	LB	Beirut Arab University	http://www.bau.edu.lb/
+4698	LB	Business & Computer University College	http://www.hu.edu.lb/
+4699	LB	Centre Universitaire de Technologie	http://www.cut.edu.lb/
+4700	LB	Global University	http://www.gu.edu.lb/
+4701	LB	Haigazian University	http://www.haigazian.edu.lb/
+4702	LB	Hariri Canadian University	http://www.hariricanadian.edu.lb/
+4703	LB	Holy Spirit University of Kaslik	http://www.usek.edu.lb/
+4704	LB	Jinan University	http://www.jinan.edu.lb/
+4705	LB	Lebanese American University	http://www.lau.edu.lb/
+4706	LB	Lebanese International University	http://www.liu.edu.lb/
+4707	LB	Lebanese University	http://www.ul.edu.lb/
+4708	LB	Matn University	http://www.matnu.edu.lb/
+4709	LB	Near East School of Theology	http://www.theonest.edu.lb/
+4710	LB	Notre Dame University	http://www.ndu.edu.lb/
+4711	LB	St. Joseph University Beirut	http://www.usj.edu.lb/
+4712	LC	Spartan University of Health Sciences	http://www.spartanmed.org/
+4713	LI	Internationle Akademie für Philosophie	http://www.iap.li/
+4714	LI	Universität Liechtenstein	http://www.uni.li/
+4715	LK	Arthur C Clarke Institute of Modern Technologies	http://www.accimt.ac.lk/
+4716	LK	Buddhasravaka Bhikshu University	http://www.bbu.ac.lk/
+4717	LK	Buddhist and Pali University of Sri Lanka	http://www.bpu.ac.lk/
+4718	LK	Eastern University of Sri Lanka	http://www.esn.ac.lk/
+4719	LK	Horizon College of Business and Technology	http://www.horizoncampus.edu.lk/
+4720	LK	Kotelawala Defence University	http://www.kdu.ac.lk/
+4721	LK	Open University of Sri Lanka	http://www.ou.ac.lk/
+4722	LK	Postgraduate Institute of Agriculture (PGIA)	http://www.pgia.ac.lk/
+4723	LK	Postgraduate Institute of Pali & Buddhist Studies (University of Kelaniya)	http://www.kln.ac.lk/institutes/pgipbs/
+4724	LK	Rajarata University of Sri Lanka	http://www.rjt.ac.lk/
+4725	LK	Sabaragamuwa University of Sri Lanka	http://www.sab.ac.lk/
+4726	LK	South Asian Institute of Technology And Medicine (SAITM) 	http://www.saitm.edu.lk/
+4727	LK	South Eastern University of Sri Lanka	http://www.seu.ac.lk/
+4728	LK	Sri Lanka Institute of Advanced Technical Education	http://www.sliate.net/
+4729	LK	Sri Lanka Institute of Information Technology (SLIT)	http://www.sliit.lk/
+4730	LK	University of Colombo	http://www.cmb.ac.lk/
+4731	LK	University of Jaffna	http://www.jfn.ac.lk/
+4732	LK	University of Kelaniya	http://www.kln.ac.lk/
+4733	LK	University of Moratuwa	http://www.mrt.ac.lk/
+4734	LK	University of Peradeniya	http://www.pdn.ac.lk/
+4735	LK	University of Ruhuna	http://www.ruh.ac.lk/
+4736	LK	University of Sri Jayawardenapura	http://www.sjp.ac.lk/
+4737	LK	University of the Visual & Performing Arts	http://www.vpa.ac.lk/
+4738	LK	Uva Wellassa University	http://www.uwu.ac.lk/
+4739	LK	Wayamba University of Sri Lanka 	http://www.wyb.ac.lk/
+4740	LR	University of Liberia	http://www.universityliberia.org/
+4741	LS	National University of Lesotho	http://www.nul.ls/
+4742	LT	International School of Management	http://www.ism.lt/
+4743	LT	Kaunas Medical Academy	http://info.kma.lt/
+4744	LT	Kaunas University of Technology	http://www.ktu.lt/
+4745	LT	Klaipeda University	http://www.ku.lt/
+4746	LT	Lithuania Christian College	http://www.lcc.lt/
+4747	LT	Lithunian Academy of Music and Theatre	http://www.lmta.lt/
+4748	LT	Lithunian Institute of Physical Education	http://www.lkka.lt/
+4749	LT	Lithunian University of Agriculture	http://www.lzua.lt/
+4750	LT	Lithunian Veterinary Academy	http://www.lva.lt/
+4751	LT	Military academy of Lithuania	http://www.lka.lt/
+4752	LT	Mykolo Romerio university	http://www.mruni.eu/
+4753	LT	Siauliai University	http://www.su.lt/
+4754	LT	Vilnius Academy of Arts	http://www.mch.mii.lt/more/vda/
+4755	LT	Vilnius Gediminas Technical University	http://www.vgtu.lt/
+4756	LT	Vilnius Pedagogical University	http://www.vpu.lt/
+4757	LT	Vilnius University	http://www.vu.lt/
+4758	LT	Vytautas Magnus University	http://www.vdu.lt/
+4759	LU	International University Institute of Luxembourg	http://www.iuil.lu/
+4760	LU	University of Luxemburg	http://www.uni.lu/
+4761	LV	Baltic International Academy	http://www.bsa.edu.lv/
+4762	LV	Daugavpils University	http://www.dau.lv/
+4763	LV	Higher School of Psychology	http://www.psy.lv/
+4764	LV	Latvian Academy of Arts	http://www.lma.lv/
+4765	LV	Latvian Academy of Culture	http://www.lka.edu.lv/
+4766	LV	Latvian Academy of Music	http://www.lmuza.lv/academy/
+4767	LV	Latvian Academy of Sports Education	http://lspa.lanet.lv/
+4768	LV	Latvian Maritime Academy	http://www.lama.lv/
+4769	LV	Latvian University of Agriculture	http://www.llu.lv/
+4770	LV	Liepaja Pedagogical Higher School	http://www.cs.lpu.lv/
+4771	LV	Medical Academy of Latvia	http://www.aml.lv/
+4772	LV	National Defence Academy of Latvia	http://www.mil.lv/
+4773	LV	Police Academy of Latvia	http://www.polak.edu.lv/
+4774	LV	Rezekne Higher School	http://www.ru.lv/
+4775	LV	Riga Aviation University	http://www.rau.lv/
+4776	LV	Riga Teacher Training and Educational Management Academy	http://www.rpiva.lv/
+4777	LV	Riga Technical University	http://www.rtu.lv/
+4778	LV	School of Business and Finance	http://www.ba.lv/
+4779	LV	Stockholm School of Economics in Riga	http://www.sseriga.edu.lv/
+4780	LV	Transport and Telecommunication Institute	http://www.tsi.lv/
+4781	LV	University of Latvia	http://www.lu.lv/
+4782	LV	Vidzeme University College	http://www.va.lv/
+4783	LY	Al-Asmarya University for Islamic Studies	http://www.asmarya.edu.ly/
+4784	LY	Al-Jabal Al-Gharbi University	http://www.jgu.edu.ly/
+4785	LY	Elmergib University	http://www.elmergib.edu.ly/
+4786	LY	Libyan International Medical University (LIMU)	http://www.limu.edu.ly/
+4787	LY	Libya Open University	http://www.libopenuniv-edu.org/
+4788	LY	Omar Al-Mukhtar University	http://www.omu.edu.ly/
+4789	LY	Sebha University	http://www.sebhau.edu.ly/
+4790	LY	Sirte University	http://www.su.edu.ly/
+4791	LY	University of Benghazi	http://www.uob.edu.ly/
+4792	LY	University of Tripoli	http://www.uot.edu.ly/
+4793	LY	Zawiya University	http://www.zu.edu.ly/
+4794	MA	Al Akhawayn University	http://www.aui.ma/
+4795	MA	Ecole des Hautes Etudes Commerciales MAROC	http://www.hec.ac.ma/
+4796	MA	Ecole des Hautes Etudes en Gestion Informatique et Communication	http://www.edhec.ac.ma/
+4797	MA	Ecole Mohammadia d'Ingénieurs	http://www.emi.ac.ma/
+4798	MA	Ecole National d'Agriculture de Meknes	http://www.enameknes.ac.ma/
+4799	MA	Ecole Nationale d'Architecture	http://www.archi.ac.ma/
+4800	MA	Ecole Supérieure de Commerce et des Affaires	http://www.esca.ac.ma/
+4801	MA	Ecole Superieure des Télécommunications	http://www.suptelecom.net.ma/
+4802	MA	Ecole Supérieure d'Informatique et de Management	http://www.hightech.edu/
+4803	MA	Institut des Hautes Etudes de Management	http://www.hem.ac.ma/
+4804	MA	Institute of Management and Business Technology	http://www.imbt.ma/
+4805	MA	Institut National des Postes et Télécommunications	http://www.inpt.ac.ma/
+4806	MA	Institut Supérieur de Commerce et d'Administration des Entreprises	http://www.groupeiscae.ma/
+4807	MA	Institut Supérieur de Management et de Technologie (MATCI)	http://www.matci.ac.ma/
+4808	MA	International Institute for Higher Education	http://www.iihem.ac.ma/
+4809	MA	ISFORT - Institut de Formation en Technologie Alimentaire	http://www.isfort.ac.ma/
+4810	MA	Université Abdelmalek Essadi	http://www.uae.ac.ma/
+4811	MA	Université Cadi Ayyad	http://www.ucam.ac.ma/
+4812	MA	Université Chouaib Doukkali	http://www.ucd.ac.ma/
+4813	MA	Université Hassan Ier - Settat	http://www.uh1.ac.ma/
+4814	MA	Université Hassan II - Aïn Chock	http://www.rectorat-uh2c.ac.ma/
+4815	MA	Université Hassan II - Mohammadia	http://www.uh2m.ac.ma/
+4816	MA	Université Ibn Toufail	http://www.univ-ibntofail.ac.ma/
+4817	MA	Université Ibn Zohr Agadir	http://www.esta.ac.ma/
+4818	MA	Université Mohammed Ier	http://www.univ-oujda.ac.ma/
+4819	MA	Université Mohammed V - Agdal	http://www.um5a.ac.ma/
+4820	MA	Université Mohammed V - Souissi	http://www.um5s.ac.ma/
+4821	MA	Université Moulay Ismail Meknès	http://www.rumi.ac.ma/
+4822	MA	Université Sidi Mohammed Ben Abdellah	http://www.usmba.ac.ma/
+4823	MC	University of Southern Europe (Monaco Business School)	http://www.riviera.fr/usehome.htm
+4824	MD	Academy of Economic Studies of Moldova	http://www.ase.md/
+4825	MD	Balti State University "Alecu Russo"	http://www.usb.md/
+4826	MD	Comrat State University	http://www.kdu.md/
+4827	MD	Free International University of Moldova	http://www.ulim.md/
+4828	MD	Moldova Cooperative Trade University	http://www.uccm.md/
+4829	MD	Moldova State Agricultural University	http://www.uasm.md/
+4830	MD	Moldova State University	http://www.usm.md/
+4831	MD	Moldova State University of Medicine and Pharmacy "N. Testemitsanu"	http://www.usmf.md/
+4832	MD	Moldova Technical University	http://www.utm.md/
+4833	MD	Pedagogical State University "Ion Creanga"	http://upm.moldnet.md/
+4834	MD	Tiraspol State University	http://www.ust.md/
+4835	MD	University of Applied Sciences of Moldova	http://www.usam.md/
+4836	ME	University of Montenegro	http://www.ucg.cg.ac.yu/
+4837	MG	Université d'Antananarivo	http://www.univ-antananarivo.mg/
+4838	MG	Université d'Antsiranana	http://www.univ-antsiranana.mg/
+4839	MG	Université de Fianarantsoa	http://www.univ-fianar.mg/
+4840	MG	Université de Mahajanga	http://www.univ-mahajanga.mg/
+4841	MG	Université de Toamasina	http://www.univ-toamasina.mg/
+4842	MG	Université de Toliary	http://www.univ-toliara.mg/
+4843	MK	FON University	http://www.fon.edu.mk/
+4844	MK	South East European University	http://www.seeu.edu.mk/
+4845	MK	State University of Tetova	http://www.unite.edu.mk/
+4846	MK	St.Cyril and Methodius University	http://www.ukim.edu.mk/
+4847	MK	St.Kliment Ohridski University	http://www.uklo.edu.mk/
+4848	MK	University for Information Science and Technology  "St. Paul The Apostle" 	http://www.uist.edu.mk/
+4849	MK	University Goce Delcev	http://www.ugd.edu.mk/
+4850	ML	Université de Bamako	http://www.ml.refer.org/u-bamako/
+4851	MM	International Theravada Buddhist Missionary University	http://www.itbmu.org.mm/
+4852	MM	Mandalay Technological University	http://www.most.gov.mm/mtu/
+4853	MM	Myanmar Aerospace Engineering University	http://www.most.gov.mm/maeu/
+4854	MM	Technological University (Banmaw)	http://www.most.gov.mm/banmawtu/
+4855	MM	Technological University (Dawei)	http://www.most.gov.mm/daweitu/
+4856	MM	Technological University (Hinthada)	http://www.most.gov.mm/hinthadatu/
+4857	MM	Technological University (Hmawbi)	http://www.most.gov.mm/hmawbitu/
+4858	MM	Technological University (Hpaan)	http://www.most.gov.mm/hpaantu/
+4859	MM	Technological University (Kalay)	http://www.most.gov.mm/kalaytu/
+4860	MM	Technological University (Kyaing Tong)	http://www.most.gov.mm/kyaingtongtu/
+4861	MM	Technological University (Kyaukse)	http://www.most.gov.mm/kyauksetu/
+4862	MM	Technological University (Lashio)	http://www.most.gov.mm/lashiotu/
+4863	MM	Technological University (Loikaw)	http://www.most.gov.mm/loikawtu/
+4864	MM	Technological University (Magway)	http://www.most.gov.mm/magwaytu/
+4865	MM	Technological University (Mandalay)	http://www.most.gov.mm/mdytu/
+4866	MM	Technological University (Maubin)	http://www.most.gov.mm/maubintu/
+4867	MM	Technological University (Mawlamyaing)	http://www.most.gov.mm/mawlamyaingtu/
+4868	MM	Technological University (Meikhtila)	http://www.most.gov.mm/meikhtilatu/
+4869	MM	Technological University (Monywa)	http://www.most.gov.mm/monywatu/
+4870	MM	Technological University (Myeik)	http://www.most.gov.mm/myeiktu/
+4871	MM	Technological University (Myitkyina) 	http://www.most.gov.mm/myitkyinatu/
+4872	MM	Technological University (Pakokku)	http://www.most.gov.mm/pakokkutu/
+4873	MM	Technological University (Pathein)	http://www.most.gov.mm/patheintu/
+4874	MM	Technological University (Pinlon)	http://www.most.gov.mm/pinlontu/
+4875	MM	Technological University (Pyay)	http://www.most.gov.mm/ptu/
+4876	MM	Technological University (Sittwe)	http://www.most.gov.mm/sittwetu/
+4877	MM	Technological University (Taunggyi)	http://www.most.gov.mm/taunggyitu/
+4878	MM	Technological University (Taungoo)	http://www.most.gov.mm/taungootu/
+4879	MM	Technological University (Thanlyin)	http://www.most.gov.mm/thanlyintu/
+4880	MM	Technological University (West Yangon)	http://www.most.gov.mm/wytu/
+4881	MM	 Technological University (Yangon)	http://www.most.gov.mm/ytu/
+4882	MM	University of Computer Studies, Yangon	http://www.ucsy.edu.mm/
+4883	MM	University of Medicine 1, Yangon	http://www.um1ygn.edu.mm/
+4884	MM	University of Medicine Magway	http://www.ummg.edu.mm/
+4885	MN	Health sciences University of Mongolia	http://www.hsum-ac.mn/
+4886	MN	Institute of Commerce and Business	http://www.icb.edu.mn/
+4887	MN	Mongolian National University	http://www.num.edu.mn/
+4888	MN	Mongolian State University of Agriculture	http://www.msua.edu.mn/
+4889	MN	Mongolian State University of Arts and Culture	http://www.msuac.edu.mn/
+4890	MN	Mongolian State University of Education	http://www.msue.edu.mn/
+4891	MN	Mongolian University of Science and Technology	http://www.must.edu.mn/
+4892	MN	Orkhon University	http://www.orkhon.edu.mn/
+4893	MN	Ulaanbaatar University	http://www.ulaanbaatar.edu.mn/
+4894	MN	University of the Humanities	http://www.humanities.mn/
+4895	MO	Macau Polytechnic Institute	http://www.ipm.edu.mo/
+4896	MO	University of Macau	http://www.umac.mo/
+4897	MO	University of Saint Joseph	http://www.usj.edu.mo/
+4898	MQ	Université des Antilles et de la Guyane	http://www.univ-ag.fr/
+4899	MR	 Université de Nouakchott	http://www.univ-nkc.mr/
+4900	MS	University of Science, Arts and Technology	http://www.usat.ms/
+4901	MT	European Institute of Education	http://www.eieonline.com/
+4902	MT	International Tourism Institute	http://www.itismalta.com/
+4903	MT	University of Malta	http://www.um.edu.mt/
+4904	MU	University of Mauritius	http://www.uom.ac.mu/
+4905	MU	University of Technology	http://www.utm.ac.mu/
+4906	MV	Cyryx College	http://www.cyryxcollege.edu.mv/
+4907	MV	Maldives National University	http://www.mnu.edu.mv/
+4908	MV	Mandhu College	http://www.mandhu.com/edu/
+4909	MW	Catholic University of Malawi	http://www.cunima.net/
+4910	MW	Mzuzu University	http://www.mzuni.ac.mw/
+4911	MW	University of Livingstonia	http://www.ulivingstonia.com/
+4912	MW	University of Malawi	http://www.unima.mw/
+4913	MX	Benemerita Universidad Autónoma de Puebla	http://www.buap.mx/
+4914	MX	Centro de Enseñanza Técnica Industrial	http://www.ceti.mx/
+4915	MX	Centro de Estudios Universitarios Monterrey	http://www.ceu.edu.mx/
+4916	MX	Centro de Estudios Universitarios Xochicalco	http://www.ceux.mx/
+4917	MX	Centro Universitario Ixtlahuaca	http://www.ceunix.com.mx/
+4918	MX	CETYS Universidad	http://www.cetys.mx/
+4919	MX	Dirección General de Institutos Tecnológicos	http://www.dgit.gob.mx/
+4920	MX	El Colegio de México	http://www.colmex.mx/
+4921	MX	Escuela Bancaria y Comercial	http://www.ebc.mx/
+4922	MX	Escuela Nacional de Estudios Superiores Unidad León	http://www.enes.unam.mx/
+4923	MX	Instituto de Estudios Superiores de la Sierra	http://www.ties.com.mx/
+4924	MX	Instituto Politécnico Nacional	http://www.ipn.edu.mx/
+4925	MX	Instituto Politécnico Nacional, Campus Guanajuato	http://www.upiig.ipn.mx/
+4926	MX	Instituto Tecnológico Autonómo de México	http://www.itam.mx/
+4927	MX	Instituto Tecnológico de Aguascalientes	http://www.ita.mx/
+4928	MX	Instituto Tecnológico de Celaya	http://www.itc.mx/
+4929	MX	Instituto Tecnologico de Durango	http://www.itdurango.edu.mx/
+4930	MX	Instituto Tecnológico de León	http://www.itleon.edu.mx/
+4931	MX	Instituto Tecnologico de Minatitlan	http://www.itmina.edu.mx/
+4932	MX	Instituto Tecnológico de Morelia	http://www.itmorelia.edu.mx/
+4933	MX	Instituto Tecnológico de Querétaro	http://www.itq.edu.mx/
+4934	MX	Instituto Tecnológico de San Luis Potosí	http://www.itslp.edu.mx/
+4935	MX	Instituto Tecnológico de Sonora	http://www.itson.mx/
+4936	MX	Instituto Tecnológico y de Estudios Superiores de Monterrey (ITESM)	http://www.itesm.mx/
+4937	MX	Instituto Tecnológico y de Estudios Superiores de Occidente	http://www.iteso.mx/
+4938	MX	Politécnico de Guanajuato	http://www.poligto.edu.mx/
+4939	MX	Tecnologico de Baja California, Universidad	http://www.tecbc.mx/
+4940	MX	Universidad Anáhuac	http://www.anahuac.mx/
+4941	MX	Universidad Anáhuac del Sur	http://www.uas.mx/
+4942	MX	Universidad Autónoma Agraria "Antonio Narro"	http://www.uaaan.mx/
+4943	MX	Universidad Autónoma "Benito Juárez" de Oaxaca	http://www.uabjo.mx/
+4944	MX	Universidad Autónoma de Aguascalientes	http://www.uaa.mx:8001/
+4945	MX	Universidad Autónoma de Baja California	http://www.uabc.mx/
+4946	MX	Universidad Autónoma de Baja California Sur	http://www.uabcs.mx/
+4947	MX	Universidad Autónoma de Campeche	http://www.uacam.mx/
+4948	MX	Universidad Autónoma de Chapingo	http://www.chapingo.mx/
+4949	MX	Universidad Autónoma de Chiapas	http://www.unach.mx/
+4950	MX	Universidad Autónoma de Chihuahua	http://www.uach.mx/
+4951	MX	Universidad Autónoma de Ciudad Juárez	http://www.uacj.mx/
+4952	MX	Universidad Autónoma de Coahuila	http://www.uadec.mx/
+4953	MX	Universidad Autonoma  de Durango	http://www.uad.edu.mx/
+4954	MX	Universidad Autónoma de Fresnillo	http://www.uaf.mx/
+4955	MX	Universidad Autónoma de Guadalajara	http://www.uag.mx/
+4956	MX	Universidad Autónoma de Guerrero	http://www.uagro.mx/
+4957	MX	Universidad Autónoma de la Ciudad de México	http://www.uacm.edu.mx/
+4958	MX	Universidad Autónoma de la Laguna	http://www.ual.mx/
+4959	MX	Universidad Autónoma del Carmen	http://www.unacar.mx/
+4960	MX	Universidad Autónoma del Estado de Hidalgo	http://www.reduaeh.mx/
+4961	MX	Universidad Autónoma del Estado de México	http://www.uaemex.mx/
+4962	MX	Universidad Autónoma del Estado de Morelos	http://www.uaem.mx/
+4963	MX	Universidad Autónoma del Noreste	http://www.uane.edu.mx/
+4964	MX	Universidad Autónoma de Nayarit	http://www.uan.mx/
+4965	MX	Universidad Autónoma de Nuevo León	http://www.uanl.mx/
+4966	MX	Universidad Autónoma de Querétaro	http://www.uaq.mx/
+4967	MX	Universidad Autónoma de San Luis Potosí	http://www.uaslp.mx/
+4968	MX	Universidad Autónoma de Sinaloa	http://www.uasnet.mx/
+4969	MX	Universidad Autónoma de Tamaulipas	http://www.uat.mx/
+4970	MX	Universidad Autónoma de Tlaxcala	http://www.uatx.mx/
+4971	MX	Universidad Autónoma de Veracruz Villa Rica	http://www.univillarica.mx/
+4972	MX	Universidad Autónoma de Yucatán	http://www.uady.mx/
+4973	MX	Universidad Autónoma de Zacatecas	http://www.reduaz.mx/
+4974	MX	Universidad Autonoma España de Durango	http://www.uaed.edu.mx/
+4975	MX	Universidad Autónoma Metropolitana	http://www.uam.mx/
+4976	MX	Universidad Autónoma Metropolitana - Azcapotzalco	http://www-azc.uam.mx/
+4977	MX	Universidad Autónoma Metropolitana - Iztapalapa	http://www.iztapalapa.uam.mx/
+4978	MX	Universidad Autónoma Metropolitana - Xochimilco	http://cueyatl.uam.mx/
+4979	MX	Universidad Champagnat	http://www.champagnat.edu.mx/
+4980	MX	Universidad Chapultepéc	http://www.univchapultepec.edu.mx/
+4981	MX	Universidad Cientifica Latinoamericana de Hidalgo	http://www.uclah.edu.mx/
+4982	MX	Universidad Cristóbal Colón	http://www.ver.ucc.mx/
+4983	MX	Universidad Cuauhtémoc	http://www.cuauhtemoc.edu.mx/
+4984	MX	Universidad de Celaya	http://www.udec.edu.mx/
+4985	MX	Universidad de Ciencias y Artes de Chiapas	http://www.unicach.edu.mx/
+4986	MX	Universidad de Colima	http://www.ucol.mx/
+4987	MX	Universidad de Comunicación Avanzada	http://www.unica.edu.mx/
+4988	MX	Universidad de Cuautitlan Izcalli	http://www.udeci.edu.mx/
+4989	MX	Universidad de Guadalajara	http://www.udg.mx/
+4990	MX	Universidad de Guanajuato	http://www.ugto.mx/
+4991	MX	Universidad de Guanajuato, Campus León	http://www.campusleon.ugto.mx/
+4992	MX	Universidad de Hermosillo	http://www.udeh.edu.mx/
+4993	MX	Universidad de La Salle, Bajío	http://bajio.delasalle.edu.mx/
+4994	MX	Universidad de las Américas	http://www.udla.mx/
+4995	MX	Universidad de las Américas - Puebla	http://www.udlap.mx/
+4996	MX	Universidad de la Sierra A.C.	http://www.usac.edu.mx/
+4997	MX	Universidad del Bajío	http://www.ubac.edu.mx/
+4998	MX	Universidad del Centro de México	http://www.ucem.edu.mx/
+4999	MX	Universidad de León	http://www.universidaddeleon.edu.mx/
+5000	MX	Universidad del Mar	http://www.umar.mx/
+5001	MX	Universidad del Mayab	http://www.unimayab.edu.mx/
+5002	MX	Universidad del Noreste	http://www.une.edu.mx/
+5003	MX	Universidad del Noroeste	http://www.uno.mx/
+5004	MX	Universidad del Norte	http://www.un.edu.mx/
+5005	MX	Universidad del Tepeyac	http://www.tepeyac.edu.mx/
+5006	MX	Universidad del Valle de Atemajac	http://www.univa.mx/
+5007	MX	Universidad del Valle del Bravo	http://www.uvb.edu.mx/
+5008	MX	Universidad del Valle de México	http://www.uvmnet.edu/
+5009	MX	Universidad del Valle de Puebla	http://members.rotfl.com/uvp/
+5010	MX	Universidad del Valle de Toluca	http://www.uvt.edu.mx/
+5011	MX	Universidad de Montemorelos	http://www.umontemorelos.edu.mx/
+5012	MX	Universidad de Monterrey	http://www.udem.edu.mx/
+5013	MX	Universidad de Norteamerica	http://www.un.mx/
+5014	MX	Universidad de Occidente	http://www.udo.mx/
+5015	MX	Universidad de Quintana Roo	http://www.uqroo.mx/
+5016	MX	Universidad de San Miguel	http://www.udesanmiguel.edu.mx/
+5017	MX	Universidad de Sonora	http://www.uson.mx/
+5018	MX	Universidad Don Vasco	http://www.udv.edu.mx/
+5019	MX	Universidad España de Durango	http://www.unes.edu.mx/
+5020	MX	Universidad Franciscana de México	http://www.ufm.edu.mx/
+5021	MX	Universidad Franco-Mexicana	http://www.ufram.edu.mx/
+5022	MX	Universidad Fray Luca Paccioli	http://www.frayluca.edu.mx/
+5023	MX	Universidad Hispanoamericana	http://hispano.edu.mx/
+5024	MX	Universidad Iberoamericana	http://www.uia.mx/
+5025	MX	Universidad Iberoamericana, Campus León	http://www.leon.uia.mx/
+5026	MX	Universidad Insurgentes Plantel León	http://www.uileon.edu.mx/
+5027	MX	Universidad Intercontinental	http://www.uic.edu.mx/
+5028	MX	Universidad Itaca	http://www.i.edu.mx/
+5029	MX	Universidad Jóse Vasconcelos	http://www.univas.edu.mx/
+5030	MX	Universidad Juárez Autónoma de Tabasco	http://www.ujat.mx/
+5031	MX	Universidad Juárez del Estado de Durango	http://www.ujed.mx/
+5032	MX	Universidad Justo Sierra	http://www.ujsierra.mx/
+5033	MX	Universidad Kino	http://www.unikino.mx/
+5034	MX	Universidad la Concordia	http://www.universidadlaconcordia.edu.mx/
+5035	MX	Universidad La Salle	http://www.ulsa.edu.mx/
+5036	MX	Universidad La Salle Cuernavaca	http://www.ulsac.edu.mx/
+5037	MX	Universidad Lasallista Benavente	http://www.ulsab.edu.mx/
+5038	MX	Universidad Latina	http://www.unla.edu.mx/
+5039	MX	Universidad Latinoamericana	http://www.ula.edu.mx/
+5040	MX	Universidad Madero	http://www.umad.edu.mx/
+5041	MX	Universidad Mesoamericana de San Agustín	http://www.umsa.edu.mx/
+5042	MX	Universidad Metropolitana de Monterrey	http://www.umm.edu.mx/
+5043	MX	Universidad Metropolitana Latin Campus	http://www.umla.edu.mx/
+5044	MX	Universidad Mexicana	http://www.unimex.edu.mx/
+5045	MX	Universidad Mexicana del Noreste	http://www.umne.edu.mx/
+5046	MX	Universidad México Americana del Norte	http://www.uman.edu.mx/
+5047	MX	Universidad México Internacional	http://www.umi.edu.mx/
+5048	MX	Universidad Michoacana de San Nicolás de Hidalgo	http://www.umich.mx/
+5049	MX	Universidad Motolinía del Pedegral	http://www.universidadmotolinia.edu.mx/
+5050	MX	Universidad Motolinía del Pedregal	http://www.motolinia.com.mx/
+5051	MX	Universidad Nacional Autónoma de México	http://www.unam.mx/
+5052	MX	Universidad Nuevo Mundo	http://www.unum.edu.mx/
+5053	MX	Universidad Obrera de Mexico	http://www.uom.edu.mx/
+5054	MX	Universidad Olmeca	http://www.olmeca.edu.mx/
+5055	MX	Universidad Panamericana	http://www.up.mx/
+5056	MX	Universidad Pedagógica Nacional	http://www.upn.mx/
+5057	MX	Universidad Pedagógica Nacional, Unidad León	http://www.lef.upn.mx/
+5058	MX	Universidad Pedagógica Veracruzana	http://www.secupv.org/
+5059	MX	Universidad Popular Autonóma del Estado de Puebla	http://www.upaep.mx/
+5060	MX	Universidad Regiomontana	http://www.ur.mx/
+5061	MX	Universidad Regional del Sureste	http://www.urse.edu.mx/
+5062	MX	Universidad Regional Miguel Hidalgo	http://www.urmh.edu.mx/
+5063	MX	Universidad Salesiana	http://www.universidadsalesiana.edu.mx/
+5064	MX	Universidad Santa Fe	http://www.usf.com.mx/
+5065	MX	Universidad Simón Bolivar	http://www.usb.edu.mx/
+5066	MX	Universidad Tecnologica de la Mixteca	http://www.utm.mx/
+5067	MX	Universidad Tecnológica de México	http://www.unitec.mx/
+5068	MX	Universidad Tecnologica de Nezahualcoyotl	http://www.utneza.edu.mx/
+5069	MX	Universidad Valle del Grijalva	http://www.uvg1.net/
+5070	MX	Universidad Veracruzana	http://www.uv.mx/
+5071	MX	Universidad Xicotepetl	http://www.uxac.edu.mx/
+5072	MX	Westhill University	http://www.westhill.edu.mx/
+5073	MY	Advance Tertiary College	http://www.atc2u.com/
+5074	MY	Aimst University	http://www.aimst.edu.my/
+5075	MY	Al-Bukhari International University	http://www.aiu.edu.my/
+5076	MY	Allianze College of Medical Sciences (ACMS)	http://www.acms.edu.my/
+5077	MY	Al Madinah International University	http://www.mediu.edu.my/
+5078	MY	Asia E University	http://www.aeu.edu.my/
+5079	MY	Asia Pacific Institute of Information Technology (APIIT)	http://www.apiit.edu.my/
+5080	MY	Baitulmal Management Institute (IPB)	http://www.ipb.edu.my/
+5081	MY	Binary University College of Managemant & Entrepreneurship	http://www.binary.edu.my/
+5082	MY	Brickfields Asia College	http://www.bac.edu.my/
+5083	MY	British Malaysian Institute	http://www.bmi.edu.my/
+5084	MY	City University College of Science and Technology	http://www.city.edu.my/
+5085	MY	Curtin University of Technology, Sarawak Campus	http://www.curtin.edu.my/
+5086	MY	Cyberjaya University College of Medical Science	http://www.cybermed.edu.my/
+5087	MY	Darul Hikmah Islamic College	http://www.hikmah.edu.my/
+5088	MY	Darul Naim College of Technology	http://www.ktd.edu.my/
+5089	MY	Darul Quran Islamic College University	http://kudqi.net.my/
+5090	MY	Darul Takzim Institute of Technology	http://www.instedt.edu.my/
+5091	MY	Darul Ulum Islamic College	http://kidu-darululum.blogspot.com/
+5092	MY	FTMS Global Academy	http://www.ftmsglobal.com/
+5093	MY	Help University College	http://www.help.edu.my/
+5094	MY	Iact College	http://www.iact.edu.my/
+5095	MY	Institute of Teachers Education, Batu Lintang	http://www.ipbl.edu.my/
+5096	MY	Institute of Teachers Education, Darul Aman	http://www.ipda.edu.my/
+5097	MY	Institute of Teachers Education, Dato' Razali Ismail 	http://www.ipgmkdri.edu.my/
+5098	MY	Institute of Teachers Education, Ilmu Khas	http://www.ipik.edu.my/
+5099	MY	Institute of Teachers Education, Ipoh	http://www.ipip.edu.my/
+5100	MY	Institute of Teachers Education, Islamic Education	http://www.ipislam.edu.my/
+5101	MY	Institute of Teachers Education, Keningau	http://www.ipks.edu.my/
+5102	MY	Institute of Teachers Education, Kent	http://www.ipkent.edu.my/
+5103	MY	Institute of Teachers Education, Kota Bharu	http://www.ipgkkb.edu.my/
+5104	MY	Institute of Teachers Education, Malay Language	http://www.ipbmm.edu.my/
+5105	MY	Institute of Teachers Education, Melaka 	http://www.ippm.edu.my/
+5106	MY	Institute of Teachers Education, Penang	http://www.i4p.edu.my/
+5107	MY	Institute of Teachers Education, Perlis	http://www.ipgperlis.edu.my/
+5108	MY	Institute of Teachers Education, Perlis	http://www.ipgperlis.edu.my/
+5109	MY	Institute of Teachers Education, Raja Melewar	http://www.iprm.edu.my/
+5110	MY	Institute of Teachers Education, Rajang	http://www.ipgkrajang.edu.my/
+5111	MY	Institute of Teachers Education, Sarawak	http://www.ipsmiri.edu.my/
+5112	MY	Institute of Teachers Education, Sultan Abdul Halim	http://www.ipsah.edu.my/
+5113	MY	Institute of Teachers Education, Sultan Mizan	http://www.ipgmksm.edu.my/
+5114	MY	Institute of Teachers Education, Tawau	http://www.ipgmtawau.edu.my/
+5115	MY	Institute of Teachers Education, Technical Education 	http://www.ipteknik.edu.my/
+5116	MY	Institute of Teachers Education, Temenggong Ibrahim	http://www.ipgkti.edu.my/
+5117	MY	Institute of Teachers Education, Tengku Ampuan Afzan	http://www.iptaa.edu.my/
+5118	MY	Institute of Teachers Education, Tuanku Bainun	http://www.iptb.edu.my/
+5119	MY	Institute of Teachers Education, Tun Hussein Onn	http://www.iptho.edu.my/
+5120	MY	Institut Prima Bestari - Pine Academy 	http://www.pine.edu.my/
+5121	MY	International Islamic College	http://www.iic.edu.my/
+5122	MY	International Islamic College of Penang	http://www.kitab.edu.my/
+5123	MY	International Islamic University	http://www.iiu.edu.my/
+5124	MY	International Medical University	http://www.imu.edu.my/
+5125	MY	International University College of Nursing (IUCN)	http://www.iucn.edu.my/
+5126	MY	International University College of Technology Twintech (IUCTT)	http://www.iuctt.edu.my/
+5127	MY	Islamic College for Sciences and Technologies	http://www.kist.edu.my/
+5128	MY	Johore Bharu Primeir Polytechnic	http://www.polijb.edu.my/
+5129	MY	KBU International College	http://www.kbu.edu.my/
+5130	MY	KDU College Sdn Bhd	http://www.kdu.edu.my/
+5131	MY	Kolej Universiti Insaniah	http://www.kuin.edu.my/
+5132	MY	Kota Bharu Polytechnic	http://www.pkb.edu.my/
+5133	MY	Kota Kinabalu Polytechnic	http://www.pkksabah.edu.my/
+5134	MY	Kuala Lumpur Infrastructure University College	http://www.kliuc.edu.my/
+5135	MY	Kuala Lumpur Metropolitan University	http://www.klmu.edu.my/
+5136	MY	Kuala Terengganu City Polytechnic	http://www.pkkt.edu.my/
+5137	MY	Kuching Polytechnic	http://www.poliku.edu.my/
+5138	MY	Limkokwing University College of Creative Technology	http://www.limkokwing.edu.my/
+5139	MY	Linton University College	http://www.linton.edu.my/
+5140	MY	Mahsa University College for Health and Medical Science	http://www.mahsa.edu.my/
+5141	MY	Malaysia University of Science and Technology (MUST)	http://www.must.edu.my/
+5142	MY	Management and Science University	http://www.msu.edu.my/
+5143	MY	Mara Poly-Tech College	http://www.kptm.edu.my/
+5144	MY	Melaka City Polytechnic	http://www.polimelaka.edu.my/
+5145	MY	Melaka Islamic University College	http://www.kuim.edu.my/
+5146	MY	Merlimau Polytechnic	http://www.pmm.edu.my/
+5147	MY	Monash University, Malaysia Campus	http://www.monash.edu.my/
+5148	MY	Muadzam Shah Polytechnic	http://www.polimuadzam.edu.my/
+5149	MY	Multimedia University	http://www.mmu.edu.my/
+5150	MY	Murni Nursing College	http://www.murni.edu.my/
+5151	MY	Newcastle University, Medicine Malaysia 	http://numed.ncl.ac.uk/
+5152	MY	Nilai University College	http://www.nilai.edu.my/
+5153	MY	Olympia College	http://www.olympia.edu.my/
+5154	MY	Open University Malaysia	http://www.oum.edu.my/
+5155	MY	Penang International Dental College	http://www.pidc.edu.my/
+5156	MY	Perak Islamic College	http://www.kiperak.edu.my/
+5157	MY	Perdana University	http://www.perdanauniversity.edu.my/
+5158	MY	Perlis Islamic Higher Learning Institute	http://www.iptips.edu.my/
+5159	MY	Petronas Technology University	http://www.utp.edu.my/
+5160	MY	Port Dickson Polytechnic	http://www.polipd.edu.my/
+5161	MY	Primier International University Perak	http://www.piup.edu.my/
+5162	MY	PTPL College	http://www.ptpl.edu.my/
+5163	MY	PTPL College	http://www.ptpl.edu.my/
+5164	MY	Raffles University	http://www.raffles-university.edu.my/
+5165	MY	Saito College	http://www.saito.edu.my/
+5166	MY	Seberang Perai Polytechnic	http://www.psp.edu.my/
+5167	MY	Segi University College	http://www.segi.edu.my/
+5168	MY	Selangor Islamic University College	http://www.kuis.edu.my/
+5169	MY	Shahputra College	http://www.kolejshahputra.edu.my/
+5170	MY	Sultan Abdul Halim Muadzam Shah Polytechnic	http://www.polimas.edu.my/
+5171	MY	Sultanah Bahiyah Polytechnic	http://www.ptsb.edu.my/
+5172	MY	Sultan Ahmad Shah Islamic College	http://www.kipsas.edu.my/
+5173	MY	Sultan Azlan Shah Polytechnic 	http://www.psas.edu.my/
+5174	MY	Sultan Haji Ahmad Shah Polytechnic	http://www.polisas.edu.my/
+5175	MY	Sultan Idris Shah Polytechnic	http://www.psis.edu.my/
+5176	MY	Sultan Ismail Petra International Islamic College	http://www.kias.edu.my/
+5177	MY	Sultan Mizan Zainal Abidin Polytechnic	http://www.psmza.edu.my/
+5178	MY	Sultan Salahuddin Abdul Aziz Shah Polytechnic	http://www.psa.edu.my/
+5179	MY	Sunway University College	http://www.sunway.edu.my/
+5180	MY	Swinburne University of Technology, Sarawak Campus	http://www.swinburne.edu.my/
+5181	MY	Taj International College	http://www.taj.edu.my/
+5182	MY	Taylor's University College	http://www.taylors.edu.my/
+5183	MY	TPM College	http://www.tpmcollege.edu.my/
+5184	MY	Tunku Abdul Rahman Chinese College	http://www.tarc.edu.my/
+5185	MY	Tunku Abdul Rahman University (Chinese University)	http://www.utar.edu.my/
+5186	MY	Tunku Syed Sirajuddin Polytechnic	http://www.ptss.edu.my/
+5187	MY	UCSI University	http://www.ucsi.edu.my/
+5188	MY	Ungku Omar Premier Polytechnic	http://www.puo.edu.my/
+5189	MY	Universiti Darul Iman	http://www.udm.edu.my/
+5190	MY	Universiti Industri Selangor	http://www.unisel.edu.my/
+5191	MY	Universiti Kebangsaan Malaysia	http://www.ukm.my/
+5192	MY	Universiti Kuala Lumpur	http://www.unikl.edu.my/
+5193	MY	Universiti Kuala Lumpur Malaysian Institute of Information Technology (MIIT)	http://miit.unikl.edu.my/
+5194	MY	Universiti Malaya	http://www.um.edu.my/
+5195	MY	Universiti Malaysia Kelantan	http://www.umk.edu.my/
+5196	MY	Universiti Malaysia Perlis	http://www.unimap.edu.my/
+5197	MY	Universiti Malaysia Sabah	http://www.ums.edu.my/
+5198	MY	Universiti Malaysia Sarawak	http://www.unimas.my/
+5199	MY	Universiti Malaysia Terengganu	http://www.umt.edu.my/
+5200	MY	Universiti Pendidikan Sultan Idris	http://www.upsi.edu.my/
+5201	MY	Universiti Putra Malaysia	http://www.upm.edu.my/
+5202	MY	Universiti Sains Malaysia	http://www.usm.my/
+5203	MY	Universiti Sultan Zainal Abidin	http://www.unisza.edu.my/
+5204	MY	Universiti Teknikal Malaysia Melaka	http://www.utem.edu.my/
+5205	MY	Universiti Teknologi Malaysia	http://www.utm.my/
+5206	MY	Universiti Teknologi Mara	http://www.uitm.edu.my/
+5207	MY	Universiti Teknologi Petronas	http://www.utp.edu.my/
+5208	MY	Universiti Tenaga Nasional	http://www.uniten.edu.my/
+5209	MY	Universiti Tun Abdul Razak	http://www.unitar.edu.my/
+5210	MY	Universiti Tun Hussein Onn Malaysia	http://www.uthm.edu.my/
+5211	MY	Universiti Tunku Abdul Rahman	http://www.utar.edu.my/
+5212	MY	Universiti Utara Malaysia	http://www.uum.edu.my/
+5213	MY	University College of Technology & Innovation (UCTI)	http://www.ucti.edu.my/
+5214	MY	University Malaysia Pahang	http://www.ump.edu.my/
+5215	MY	University of Management and Technology 	http://www.umtech.edu.my/
+5216	MY	University of Nottingham, Malaysia Campus	http://www.nottingham.edu.my/
+5217	MY	University Tun Abdul Razak	http://www.unirazak.edu.my/
+5218	MY	Wawasan Open University	http://www.wou.edu.my/
+5219	MY	West Minster International College	http://www.westminster.edu.my/
+5220	MY	YPC-iTWEB College	http://www.kolejypc.edu.my/
+5221	MZ	Instituto Superior de Ciênicas e Tecnologia de Moçambique	http://www.isctem.ac.mz/
+5222	MZ	Instituto Superior de Relações Internacionais (ISRI) 	http://www.isri.ac.mz/
+5223	MZ	Instituto Superior Politécnico e Universitário	http://www.ispu.ac.mz/
+5224	MZ	Universidade Católica de Moçambique	http://www.ucm.ac.mz/
+5225	MZ	Universidade Eduardo Mondlane	http://www.uem.mz/
+5226	NA	Ilsa Independent College	http://www.ilsacollege.edu.na/
+5227	NA	Institute of Information Technology	http://www.iit.com.na/
+5228	NA	International University of Management	http://www.ium.edu.na/
+5229	NA	Polytechnic of Namibia	http://www.polytechnic.edu.na/
+5230	NA	University of Namibia	http://www.unam.na/
+5231	NC	University of New Caledonia	http://www.ufp.nc/
+5232	NE	Université Abdou Moumouni de Niamey	http://uam.refer.ne/
+5233	NG	Abia State Polytechnic	http://www.abiapoly.edu.ng/
+5234	NG	Abia State University	http://www.absu.edu.ng/
+5235	NG	ABTI American University of Nigeria	http://www.aun.edu.ng/
+5236	NG	Abubakar Tafawa Balewa University	http://www.atbu.edu.ng/
+5237	NG	Adamawa State University	http://www.adsu.edu.ng/
+5238	NG	Adekunle Ajasin University	http://www.aaua.edu.ng/
+5239	NG	Adeleke University	http://www.adelekeuniversity.edu.ng/
+5240	NG	Adeyemi College of Education	http://www.aceondo-ng.com/
+5241	NG	Afe Babalola University	http://www.abuad.edu.ng/
+5242	NG	African University of Science and Technology	http://www.aust-abuja.org/
+5243	NG	Ahmadu Bello University	http://www.abu.edu.ng/
+5244	NG	Ajayi Crowther University	http://www.acu.edu.ng/
+5245	NG	 Akanu Ibiam Federal Polytechnic, Unwana	http://www.polyunwana.net/
+5246	NG	Akwa Ibom State University of Technology	http://www.akutech.edu.ng/
+5247	NG	Al-hikmah University	http://www.alhikmah.edu.ng/
+5248	NG	Ambrose Alli University	http://www.aauekpoma.edu.ng/
+5249	NG	Anambra State University of Science and Technology	http://www.ansu.edu.ng/
+5250	NG	Auchi Polytechnic	http://www.auchipoly.edu.ng/
+5251	NG	Babcock University	http://www.babcockuni.edu.ng/
+5252	NG	Bauchi State University, Gadau	http://www.basug.edu.ng/
+5253	NG	Bayero University Kano	http://www.buk.edu.ng/
+5254	NG	Baze University Abuja	http://www.bazeuniversity.edu.ng
+5255	NG	Bells University of Technology	http://www.bellsuniversity.org/
+5256	NG	Benson Idahosa University	http://www.biu.edu.ng/
+5257	NG	Benue State University	http://www.bsum.edu.ng/
+5258	NG	Bingham University	http://www.binghamuni.edu.ng/
+5259	NG	Bowen University	http://bowenuniversity-edu.org/
+5260	NG	Caleb University	http://www.calebuniversity.edu.ng/
+5261	NG	Caritas University	http://www.caritasuni.edu.ng/
+5262	NG	College of Education Ikere	http://www.coeikere.edu.ng/
+5263	NG	College of Education Oju	http://www.coeoju.com/
+5264	NG	Covenant University	http://www.covenantuniversity.edu.ng/
+5265	NG	Crawford University 	http://www.crawforduniversity.edu.ng/
+5266	NG	Crescent University	http://www.crescent-university.edu.ng/
+5267	NG	Cross River University of Science and Technology	http://www.crutech.edu.ng/
+5268	NG	Ebonyi State University	http://www.ebsu-edu.net/
+5269	NG	Ekiti State University	http://www.eksu.edu.ng/
+5270	NG	Enugu State University of Science and Technology	http://www.esut.edu.ng/
+5271	NG	Federal College Of Education (Technical), Akoka	http://www.fcetakoka-edu.net/
+5272	NG	Federal Polytechnic Bauchi, Nigeria	http://fptb.edu.ng/
+5273	NG	Federal University of Petroleum Resources	http://www.fupre.edu.ng/
+5274	NG	Federal University of Technology, Akure	http://www.futa.edu.ng/
+5275	NG	Federal University of Technology, Minna	http://www.futminna.edu.ng/
+5276	NG	Federal University of Technology, Owerri	http://www.futo.edu.ng/
+5277	NG	Federal University of Technology, Yola	http://www.futy.edu.ng/
+5278	NG	Fountain University	http://www.fountainuniversity.edu.ng/
+5279	NG	Godfrey Okoye University	http://www.go-uni-enugu.net/
+5280	NG	Godfrey Okoye University 	http://www.gouni.edu.ng/
+5281	NG	Gombe State University	http://www.gsu.edu.ng/
+5282	NG	Ibrahim Babangida University	http://www.ibbu.edu.ng/
+5283	NG	Igbinedion University	http://www.iuokada.edu.ng/
+5284	NG	Imo State University	http://www.imsu.edu.ng/
+5285	NG	Joseph Ayo Babalola University	http://www.jabu.edu.ng/
+5286	NG	Kaduna State University	http://www.kasuportal.net/
+5287	NG	Kano State University of Technology Wudil	http://www.kustwudil.edu.ng/
+5288	NG	Katsina University	http://www.kuk.edu.ng/
+5289	NG	Kebbi State University of Science and Technology	http://www.ksusta.edu.ng/
+5290	NG	Kogi State University	http://www.ksuportal.edu.ng/
+5291	NG	Kwararafa University	http://www.kwararafauniversity.edu.ng/
+5292	NG	Kwara State Polytecnic	http://www.kwarapoly.edu.ng/
+5293	NG	Kwara State University 	http://www.kwasu.edu.ng/
+5294	NG	Ladoke Akintola University of Technology	http://www.lautech.edu.ng/
+5295	NG	Lagos City Polytechnic	http://www.mylcp.net/
+5296	NG	Lagos State Polytechnic	http://www.laspotech.net/
+5297	NG	Lagos State University	http://www.lasunigeria.org/
+5298	NG	Landmark University	http://www.lmu.edu.ng/
+5299	NG	Lead City University of Ibadan	http://www.lcu.edu.ng/
+5300	NG	Madonna University	http://www.madonnauniversity.edu.ng/
+5301	NG	Michael Okpara University of Agriculture	http://www.mouau.edu.ng/
+5302	NG	Nasarawa State University Keffi	http://www.nsuk.edu.ng/
+5303	NG	National Open University of Nigeria	http://www.nou.edu.ng/
+5304	NG	Niger Delta University	http://www.ndu.edu.ng/
+5305	NG	Nigerian Defence Academy	http://www.nda.edu.ng/
+5306	NG	Nigerian Turkish Nile University	http://www.ntnu.edu.ng/
+5307	NG	Nnamdi Azikiwe University	http://www.unizik.edu.ng/
+5308	NG	Novena University	http://www.novenauniversity.edu.ng/
+5309	NG	Obafemi Awolowo University Ile-Ife	http://www.oauife.edu.ng/
+5310	NG	Obong University	http://www.obonguniversity.net/
+5311	NG	Oduduwa University	http://www.oduduwauniversity.edu.ng/
+5312	NG	Olabisi Onabanjo University 	http://www.oouagoiwoye.edu.ng/
+5313	NG	Ondo State University of Science and Technology	http://www.osustech.edu.ng/
+5314	NG	Osun State University	http://www.uniosun.edu.ng/
+5315	NG	Pan-African University	http://www.pau.edu.ng/
+5316	NG	Paul University	http://www.pauluniversity.edu.ng/
+5317	NG	Polytechnic Ibadan	http://www.polyibadan.edu.ng/
+5318	NG	Redeemers University	http://www.run.edu.ng/
+5319	NG	Renaissance University	http://www.rnu.edu.ng/
+5320	NG	Rivers State University of Science and Technology	http://www.ust.edu.ng/
+5321	NG	Salem University	http://www.salemuniversity.edu.ng/
+5322	NG	Sokoto State University 	http://www.ssu.edu.ng/
+5323	NG	Tai Solarin University of Education	http://www.tasued.edu.ng/
+5324	NG	Tansian University	http://www.tansianuniversity.edu.ng/
+5325	NG	Taraba State University	http://www.tsuniversity.edu.ng/
+5326	NG	The Achievers University	http://www.achievers.edu.ng/
+5327	NG	The Federal Polytechnic Offa	http://www.fedpoffa.edu.ng/
+5328	NG	Umaru Musa Yar'Adua University 	http://www.umyu.edu.ng/
+5329	NG	University of Abuja	http://www.unibuja.edu.ng/
+5330	NG	University of Agriculture Abeokuta	http://www.unaab.edu.ng/
+5331	NG	University of Agriculture Makurdi	http://www.uam.edu.ng/
+5332	NG	University of Benin	http://www.uniben.edu/
+5333	NG	University of Calabar	http://www.unical.edu.ng/
+5334	NG	University of Ibadan	http://www.ui.edu.ng/
+5335	NG	University of Ilorin	http://www.unilorin.edu.ng/
+5336	NG	University of Jos	http://www.unijos.edu.ng/
+5337	NG	University of Lagos	http://www.unilag.edu.ng/
+5338	NG	University of Maiduguri	http://www.unimaid.edu.ng/
+5339	NG	University of Mkar	http://www.unimkar.edu.ng/
+5340	NG	University of Nigeria	http://www.unn.edu.ng/
+5341	NG	University of Portharcourt	http://www.uniport.edu.ng/
+5342	NG	University of Uyo	http://www.uniuyo.edu.ng/
+5343	NG	Usmanu Danfodiyo University Sokoto	http://www.udusok.edu.ng/
+5344	NG	Veritas University	http://www.veritas.edu.ng/
+5345	NG	Wellspring University	http://www.wellspringuniversity.edu.ng/
+5346	NG	Wesley University of Science and Technology	http://www.wustoportal.edu.ng/
+5347	NG	Western Delta University	http://www.wdu.edu.ng/
+5348	NG	Yaba College of Technology	http://www.yabatech.edu.ng/
+5349	NI	Universidad Americana	http://www.uam.edu.ni/
+5350	NI	Universidad Catolica "Redemptoris Mater"	http://www.unica.edu.ni/
+5351	NI	Universidad Central de Nicaragua	http://www.ucn.edu.ni/
+5352	NI	Universidad Centroamericana	http://www.uca.edu.ni/
+5353	NI	Universidad Centroamericana de Ciencias Empresariales (UCEM)	http://www.ucem.edu.ni/
+5354	NI	Universidad Ciencias Comerciales	http://www.ucc.edu.ni/
+5355	NI	Universidad de las Américas (ULAM)	http://www.ulam.edu.ni/
+5356	NI	Universidad de las Regiones Autónomas de la Costa Caribe Nicaragüense	http://www.uraccan.edu.ni/
+5357	NI	Universidad de Managua (U de M)	http://www.udem.edu.ni/
+5358	NI	Universidad Hispanoamericana	http://www.uhispam.edu.ni/
+5359	NI	Universidad Iberoamericana de Ciencia y Tecnologia	http://www.unicit.edu.ni/
+5360	NI	Universidad Internacional de Integración de América Latina	http://www.unival.edu.ni/
+5361	NI	Universidad Nacional Agraria	http://www.una.edu.ni/
+5362	NI	Universidad Nacional Autonoma de Nicaragua	http://www.unan.edu.ni/
+5363	NI	Universidad Nacional de Ingenieria	http://www.uni.edu.ni/
+5364	NI	Universidad Nicaragüense de Ciencia y Tecnológica	http://www.ucyt.edu.ni/
+5365	NI	Universidad Politecnica de Nicaragua	http://www.upoli.edu.ni/
+5366	NI	Universidad Popular de Nicaragua (UPONIC)	http://www.uponic.edu.ni/
+5367	NL	Christelijke Hogeschool Windesheim	http://www.windesheim.nl/
+5368	NL	De Haagse Hogeschool	http://www.dehaagsehogeschool.nl/
+5369	NL	Delft University of Technology	http://www.tudelft.nl/
+5370	NL	Dutch Delta University	http://www.ddu.nl/
+5371	NL	Eindhoven University of Technology	http://www.tue.nl/
+5372	NL	Erasmus University Rotterdam	http://www.eur.nl/
+5373	NL	European Open University	http://www.europeanopenuniversity.com/
+5374	NL	Fontys University of Applied Sciences	http://www.fontys.edu/
+5375	NL	Foundation University	http://www.foundationuniversity.com/
+5376	NL	Free University Amsterdam	http://www.vu.nl/
+5377	NL	Hanzehogeschool Groningen	http://www.hanze.nl/
+5378	NL	Hogeschool Inholland	http://www.inholland.nl/
+5379	NL	Hogeschool Leiden	http://www.hsleiden.nl/
+5380	NL	Hogeschool Rotterdam	http://www.hro.nl/
+5381	NL	Hogeschool Utrecht	http://www.hu.nl/
+5382	NL	Hogeschool van Amsterdam	http://www.hva.nl/
+5383	NL	Hogeschool voor de Kunsten Utrecht (HKU)	http://www.hku.nl/
+5384	NL	Hotelschool The Hague	http://www.hotelschool.nl/
+5385	NL	Institute of Social Studies	http://www.iss.nl/
+5386	NL	International Institute for Geo - Information Science and Earth Observation	http://www.itc.nl/
+5387	NL	Islamic University of Rotterdam	http://www.islamicuniversity.nl/
+5388	NL	Leiden University	http://www.leidenuniv.nl/
+5389	NL	NHL University of Applied Sciences	http://www.nhl.nl/
+5390	NL	NHTV Breda University of Professional Education	http://www.nhtv.nl
+5391	NL	NTI University	http://www.nti.nl/
+5392	NL	Open University of the Netherlands	http://www.ou.nl/
+5393	NL	Radboud University of Nijmegen	http://www.ru.nl/
+5394	NL	Roosevelt Academy University College	http://www.roac.nl/
+5395	NL	Saxion Universities 	http://saxion.edu/
+5396	NL	Stenden University	http://www.stenden.com/
+5397	NL	Tilburg University	http://www.tilburguniversity.nl/
+5398	NL	UNESCO-IHE Institute for Water Education	http://www.unesco-ihe.org/
+5399	NL	Universiteit Doesburg (UNDO)	http://www.universiteitdoesburg.nl/
+5400	NL	University for Humanistics (UH)	http://www.uvh.nl/
+5401	NL	University of Amsterdam	http://www.uva.nl/
+5402	NL	University of Groningen	http://www.rug.nl/
+5403	NL	University of Maastricht	http://www.unimaas.nl/
+5404	NL	University of Nijenrode	http://www.nijenrode.nl/
+5405	NL	University of Twente	http://www.utwente.nl/
+5406	NL	Utrecht University	http://www.uu.nl/
+5407	NL	Wageningen University	http://www.wageningenuniversity.nl/
+5408	NL	Wittenborg University	http://www.wittenborg.eu/
+5409	NL	Zuyd University	http://www.zuyd.nl/
+5410	NO	Agder University College	http://www.hia.no/
+5411	NO	Agricultural University of Norway	http://www.nlh.no/
+5412	NO	Bergen University College	http://www.hib.no/
+5413	NO	Bodo Regional University	http://www.hibo.no/
+5414	NO	Finnmark University College	http://www.hifm.no/
+5415	NO	Lillehammer University College	http://www.hil.no/
+5416	NO	Molde University College	http://www.himolde.no/
+5417	NO	National Academy of Fine Arts	http://ska.khio.no/main
+5418	NO	National College of Art and Design	http://www.khio.no/shks/
+5419	NO	Norway's Information Technology University College	http://www.nith.no/
+5420	NO	Norwegian College of Veterinary Medicine	http://www.veths.no/
+5421	NO	Norwegian School of Economics and Business Administration	http://www.nhh.no/
+5422	NO	Norwegian School of Management BI	http://www.bi.no/
+5423	NO	Norwegian State Academy of Music	http://www.nmh.no/
+5424	NO	Norwegian Teacher Academy for Studies in Religion and Education	http://www.nla.no/
+5425	NO	Norwegian University of Life Sciences	http://www.umb.no/
+5426	NO	Norwegian University of Science and Technology	http://www.ntnu.no/
+5427	NO	Norwegian University of Sport and Physical Education	http://www.nih.no/
+5428	NO	Oslo School of Architecture	http://www.aho.no/
+5429	NO	University of Bergen	http://www.uib.no/
+5430	NO	University of Oslo	http://www.uio.no/
+5431	NO	University of Stavanger	http://www.uis.no/
+5432	NO	University of Tromsø	http://www.uit.no/
+5433	NP	Agriculture and Forestry University	http://www.afu.edu.np/
+5434	NP	B.P.Koirala Institute of Health Sciences	http://www.bpkihs.edu/
+5435	NP	Kathmandu University	http://www.ku.edu.np/
+5436	NP	Lumbini Buddhist University	http://www.lbu.edu.np/
+5437	NP	Nepal Sanskrit University	http://www.nsu.edu.np/
+5438	NP	Pokhara University	http://www.pu.edu.np/
+5439	NP	Purbanchal University	http://www.purbuniv.edu.np/
+5440	NP	Tribhuvan University Kathmandu	http://www.tribhuvan-university.edu.np/
+5441	NU	St Clements University - Higher Education School	http://www.stclements.edu.nu/
+5442	NZ	Auckland University of Technology	http://www.aut.ac.nz/
+5443	NZ	Christchurch Polytechnic Institute of Technology	http://www.cpit.ac.nz/
+5444	NZ	Lincoln University	http://www.lincoln.ac.nz/
+5445	NZ	Massey University	http://www.massey.ac.nz/
+5446	NZ	Open Polytechnic 	http://www.openpolytechnic.ac.nz/
+5447	NZ	University of Auckland	http://www.auckland.ac.nz/
+5448	NZ	University of Canterbury	http://www.canterbury.ac.nz/
+5449	NZ	University of Otago	http://www.otago.ac.nz/
+5450	NZ	University of Waikato	http://www.waikato.ac.nz/
+5451	NZ	Victoria University of Wellington	http://www.vuw.ac.nz/
+5452	OM	Al-Buraimi University College	http://www.buc.edu.om/
+5453	OM	Arab Open University	http://www.aou.edu.om/
+5454	OM	Dhofar University	http://www.du.edu.om/
+5455	OM	Ibra College of Technology	http://www.ict.edu.om/
+5456	OM	Majan University College	http://www.majancollege.edu.om/
+5457	OM	Muscat College	http://www.muscatcollege.edu.om/
+5458	OM	Oman College Of Management & Technology	http://www.omancollege.edu.om/
+5459	OM	Sohar University	http://www.soharuni.edu.om/
+5460	OM	Sultan Qaboos University	http://www.squ.edu.om/
+5461	OM	Sur University College	http://www.suc.edu.om/
+5462	OM	University of Nizwa	http://www.unizwa.edu.om/
+5463	PA	Columbus University	http://www.columbus.edu/
+5464	PA	Floret Global University	http://www.floret.edu.pa/
+5465	PA	Instituto de Enseñanza Superior Oteima	http://www.institutoteima.ac.pa/
+5466	PA	Universidad Abierta y a Distancia de Panama	http://www.unadp.ac.pa/
+5467	PA	Universidad Autonoma de Chiriqui	http://www.unachi.ac.pa/
+5468	PA	Universidad Católica Santa María La Antigua	http://www.usma.ac.pa/
+5469	PA	Universidad de Cartago	http://www.ucapanama.org/
+5470	PA	Universidad del Istmo	http://www.udi.edu/
+5471	PA	Universidad de Panamá	http://www.up.ac.pa/
+5472	PA	Universidad Especializada de Las Americas	http://www.udelas.ac.pa/
+5473	PA	Universidad Interamericana de Educacion a Distancia de Panama	http://www.uniedpa.com/
+5474	PA	Universidad Latina de Panamá	http://www.ulat.ac.pa/
+5475	PA	Universidad Latinoamericana de Ciencia y Tecnologia, Panamá	http://www.ulacit.ac.pa/
+5476	PA	Universidad Tecnológica de Panamá	http://www.utp.ac.pa/
+5477	PA	Universidad Tecnológica Oteima	http://www.oteima.ac.pa/
+5478	PA	Victoria International University	http://www.viu.edu.pa/
+5479	PA	West Coast University (WCU)	http://www.westcoastuniversity-edu.com/
+5480	PE	Pontificia Universidad Católica del Perú	http://www.pucp.edu.pe/
+5481	PE	Universidad Alas Peruanas	http://www.uap.edu.pe/
+5482	PE	Universidad Andina del Cusco	http://www.uandina.edu.pe/
+5483	PE	Universidad Andina Nestor Caceares Velasquez	http://www.uancv.edu.pe/
+5484	PE	Universidad Católica de Santa María	http://www.ucsm.edu.pe/
+5485	PE	Universidad Católica Santo Toribio de Mogrovejo	http://www.usat.edu.pe/
+5486	PE	Universidad César Vallejo	http://www.ucv.edu.pe/
+5487	PE	Universidad Cientifica del Sur	http://www.ucsur.edu.pe/
+5488	PE	Universidad de Chiclayo	http://www.udch.edu.pe/
+5489	PE	Universidad de Ciencias y Humanidades	http://www.uch.edu.pe/
+5490	PE	Universidad de Huánuco	http://www.udh.edu.pe/
+5491	PE	Universidad de Lambayeque	http://www.udl.edu.pe/
+5492	PE	Universidad de Lima	http://www.ulima.edu.pe/
+5493	PE	Universidad del Pacifico	http://www.up.edu.pe/
+5494	PE	Universidad de Piura	http://www.udep.edu.pe/
+5495	PE	Universidad Femenina del Sagrado Corazón	http://www.unife.edu.pe/
+5496	PE	Universidad Los Angeles de Chimbote	http://www.uladech.edu.pe/
+5497	PE	Universidad Marcelino Champagnat	http://www.champagnat.edu.pe/
+5498	PE	Universidad Nacional Agraria de la Selva	http://www.unas.edu.pe/
+5499	PE	Universidad Nacional Agraria La Molina	http://www.lamolina.edu.pe/
+5500	PE	Universidad Nacional Agraria La Selva	http://www.unas.edu.pe/
+5501	PE	Universidad Nacional Daniel Alcides Carrion	http://www.undac.edu.pe/
+5502	PE	Universidad Nacional de Cajamarca	http://www.unc.edu.pe/
+5503	PE	Universidad Nacional de Educación Enrique Guzmán y Valle	http://www.une.edu.pe/
+5504	PE	Universidad Nacional de Ingeniería	http://www.uni.edu.pe/
+5505	PE	Universidad Nacional de la Amazonía Peruana	http://www.unapiquitos.edu.pe/
+5506	PE	Universidad Nacional de La Libertad, Trujillo	http://www.unitru.edu.pe/
+5507	PE	Universidad Nacional del Altiplano	http://www.unap.edu.pe/
+5508	PE	Universidad Nacional del Callao	http://www.unac.edu.pe/
+5509	PE	Universidad Nacional del Centro del Perú	http://www.uncp.edu.pe/
+5510	PE	Universidad Nacional de Piura	http://www.unp.edu.pe/
+5511	PE	Universidad Nacional de San Agustin	http://www.unsa.edu.pe/
+5512	PE	Universidad Nacional de San Antonio Abad	http://www.unsaac.edu.pe/
+5513	PE	Universidad Nacional de San Cristóbal de Huamanga	http://www.unsch.edu.pe/
+5514	PE	Universidad Nacional de San Martín	http://www.unsm.edu.pe/
+5515	PE	Universidad Nacional de Santa - Chimbote	http://www.uns.edu.pe/
+5516	PE	Universidad Nacional de Tumbes	http://www.untumbes.edu.pe/
+5517	PE	Universidad Nacional de Ucayali	http://www.unu.edu.pe/
+5518	PE	Universidad Nacional Federico Villarreal	http://www.unfv.edu.pe/
+5519	PE	Universidad Nacional Hermilio Valdizan	http://www.unheval.edu.pe/
+5520	PE	Universidad Nacional Jorge Basadre Grohmann	http://www.unjbg.edu.pe/
+5521	PE	Universidad Nacional José Faustino Sánchez Carrión	http://www.unjfsc.edu.pe/
+5522	PE	Universidad Nacional Mayor de San Marcos	http://www.unmsm.edu.pe/
+5523	PE	Universidad Nacional Pedro Ruíz Gallo	http://www.unprg.edu.pe/
+5524	PE	Universidad Nacional San Luis Gonzaga	http://www.unica.edu.pe/
+5525	PE	Universidad Nacional Santiago Antúnez de Mayolo	http://www.unasam.edu.pe/
+5526	PE	Universidad Norbert Wiener	http://www.uwiener.edu.pe/
+5527	PE	Universidad Particular de Chiclayo	http://www.udch.edu.pe/
+5528	PE	Universidad Particular Inca Garcilaso de la Vega	http://www.uigv.edu.pe/
+5529	PE	Universidad Peruana Cayetano Heredia	http://www.upch.edu.pe/
+5530	PE	Universidad Peruana de Ciencias Aplicadas	http://www.upc.edu.pe/
+5531	PE	Universidad Peruana de Ciencias e Informática	http://www.upci.edu.pe/
+5532	PE	Universidad Peruana Union	http://www.upeu.edu.pe/
+5533	PE	Universidad Privada Antenor Orrego	http://www.upao.edu.pe/
+5534	PE	Universidad Privada del Norte	http://www.upnorte.edu.pe/
+5535	PE	Universidad Privada de Tacna	http://www.upt.edu.pe/
+5536	PE	Universidad Privada Juan Mejía Baca	http://www.umb.edu.pe/
+5537	PE	Universidad Privada Los Andes	http://www.upla.edu.pe/
+5538	PE	Universidad Privada San Juan Bautista	http://www.upsjb.edu.pe/
+5539	PE	Universidad Privada San Pedro	http://www.usanpedro.edu.pe/
+5540	PE	Universidad Privada Sergio Bernales	http://www.upsb.edu.pe/
+5541	PE	Universidad Ricardo Palma	http://www.urp.edu.pe/
+5542	PE	Universidad San Ignacio de Loyola	http://www.sil.edu.pe/
+5543	PE	Universidad San Martin de Porres	http://www.usmp.edu.pe/
+5544	PE	Universidad San Pablo	http://www.usp.edu.pe/
+5545	PE	Universidad Señor de Sipán	http://www.uss.edu.pe/
+5546	PE	Universidad Tecnológica de los Andes de Apurímac	http://www.utea.edu.pe/
+5547	PE	Universidad Tecnológica del Peru	http://www.utp.edu.pe/
+5548	PF	Université de la Polynésie Française	http://www.upf.pf/
+5549	PG	Divine Word University	http://www.dwu.ac.pg/
+5550	PG	Pacific Adventist University	http://www.pau.ac.pg/
+5551	PG	Papua New Guinea University of Technology	http://www.unitech.ac.pg/
+5552	PG	University of Goroka	http://www.uog.ac.pg/
+5553	PG	University of Papua New Guinea	http://www.upng.ac.pg/
+5554	PH	Adamson University	http://www.adamson.edu.ph/
+5555	PH	Adventist University of the Philippines	http://www.aup.edu.ph/
+5556	PH	Angeles University	http://www.auf.edu.ph/
+5557	PH	Aquinas University	http://www.aquinas-university.edu/
+5558	PH	Araullo University	http://www.aupen.edu.ph/
+5559	PH	Arellano University	http://www.arellano.edu.ph/
+5560	PH	Ateneo de Davao University	http://www.addu.edu.ph/
+5561	PH	Ateneo de Manila University	http://www.admu.edu.ph/
+5562	PH	Ateneo de Naga University	http://www.adnu.edu.ph/
+5563	PH	Ateneo de Zamboanga University	http://www.adzu.edu.ph/
+5564	PH	Benguet State University	http://www.bsu.edu.ph/
+5565	PH	Bicol University	http://www.bicol-u.edu.ph/
+5566	PH	Bulacan State University	http://www.bulsu.edu.ph/
+5567	PH	Cagayan State University	http://www.csu.edu.ph/
+5568	PH	Capitol University	http://www.cu-cdo.edu.ph/
+5569	PH	Central Luzon State University	http://www2.mozcom.com/~clsu/
+5570	PH	Central Mindanao University	http://www.cmu.edu.ph/
+5571	PH	Central Philippine University	http://www.cpuic.edu/
+5572	PH	Centro Escolar University	http://www.ceu.edu.ph/
+5573	PH	Colegio de San Juan de Letran	http://www.letran.edu/
+5574	PH	College of the Holy Spirit	http://www.holyspirit.edu.ph/
+5575	PH	Davao Doctors College	http://www.davaodoctors.edu.ph/
+5576	PH	De La Salle University	http://www.dlsu.edu.ph/
+5577	PH	De La Salle University, Araneta	http://www.araneta.dlsu.edu.ph/
+5578	PH	Divine Word College of Legazpi	http://www.dwc-legazpi.edu/
+5579	PH	Don Mariano Marcos Memorial State University	http://www.dmmmsu.edu.ph/
+5580	PH	Far Eastern University	http://www.feu.edu.ph/
+5581	PH	Feati University	http://www.featiu.edu.ph/
+5582	PH	Foundation University	http://www.foundationu.com/
+5583	PH	Holy Angel University	http://www.hau.edu.ph/
+5584	PH	Information and Communications Technology Academy	http://www.iacademy.ph/
+5585	PH	Irish University Business School, Cebu	http://www.iubs.co.uk/
+5586	PH	Isabela State University	http://www.isu.edu.ph/
+5587	PH	Leyte Normal University	http://lnu.evis.net.ph/
+5588	PH	Leyte State University 	http://www.lsu-visca.edu.ph/
+5589	PH	Liceo de Cagayan University	http://www.ldcu.edu.ph/
+5590	PH	Lyceum of the Philippines University	http://www.lpu.edu.ph/
+5591	PH	Manila Central University	http://www.mcu.edu.ph/
+5592	PH	Manuel L. Quezon University	http://www.mlqu.edu.ph/
+5593	PH	Manuel S. Enverga University Foundation	http://www.mseuf.edu.ph/
+5594	PH	Mariano Marcos State University	http://www.mmsu.edu.ph/
+5595	PH	Mindanao State University	http://www.msumain.edu.ph/
+5596	PH	Mindanao State University - Iligan Institute of Technology	http://www.msuiit.edu.ph/
+5597	PH	Misamis University	http://www.mu.fapenet.org/
+5598	PH	Mountain View College	http://www.mvc.edu.ph/
+5599	PH	National University	http://www.nu.edu.ph/
+5600	PH	New Era University	http://www.neu.edu.ph/
+5601	PH	Northwestern University of the Philippines	http://www.nulaoag.com/
+5602	PH	Notre Dame of Marbel University	http://www.ndmu.edu.ph/
+5603	PH	Notre Dame University	http://www.ndu.fapenet.org/
+5604	PH	Our Lady of Fatima University	http://www.fatima.edu.ph/
+5605	PH	Palawan State University	http://www.psu-online.edu.ph/
+5606	PH	Pangasinan State University	http://www.psu.edu.ph/
+5607	PH	Philippine Christian University	http://www.pcu.edu.ph/
+5608	PH	Philippine Military Academy	http://www.pma.ph/
+5609	PH	Philippine Normal University	http://www.pnumanila.com.ph/
+5610	PH	Philippine Women's University	http://www.pwu.edu/
+5611	PH	Polytechnic University of the Philippines	http://www.pup.edu.ph/
+5612	PH	Rizal Technological University	http://www.rtu.edu.ph/
+5613	PH	Saint Ferdinand College	http://www.sfc.edu.ph/
+5614	PH	Saint Louis College	http://www.slc-sflu.edu.ph/
+5615	PH	Saint Louis University	http://www.slu.edu.ph/
+5616	PH	Saint Mary's University	http://www.smu.edu.ph/
+5617	PH	Saint Paul University	http://www.spu.edu.ph/
+5618	PH	Samar State University	http://www.ssu.edu.ph/
+5619	PH	San Beda College	http://www.sanbeda.edu.ph/
+5620	PH	Silliman University	http://www.su.edu.ph/
+5621	PH	Southwestern University	http://www.swu.edu.ph/
+5622	PH	Tarlac State University	http://www2.mozcom.com/~tsu-ics/
+5623	PH	Technological University of the Philippines	http://www.tup.edu.ph/
+5624	PH	University of Asia and the Pacific	http://www.uap.edu.ph/
+5625	PH	University of Baguio	http://www.ubaguio.edu/
+5626	PH	University of Batangas	http://www.ub.edu.ph/
+5627	PH	University of Bohol	http://www.universityofbohol.com/
+5628	PH	University of Cagayan Valley	http://www.ucv.edu.ph/
+5629	PH	University of Cebu	http://www.universityofcebu.edu.ph/
+5630	PH	University of Eastern Philippines	http://www.uep.educ.ph/
+5631	PH	University of lloilo	http://www.ui.phinma.edu.ph/
+5632	PH	University of Manila	http://www.univman.edu.ph/
+5633	PH	University of Mindanao	http://www.umindanao.edu.ph/
+5634	PH	University of Negros Occidental-Recoletos	http://www.uno-r.edu.ph/
+5635	PH	University of Northeastern Philippines	http://www.unep.edu.ph/
+5636	PH	University of Northern Philippines	http://www.unp.edu.ph/
+5637	PH	University of Nueva Caceres	http://www.unc.edu.ph/
+5638	PH	University of Pangasinan	http://www.upang.edu.ph/
+5639	PH	University of Perpetual Help	http://www.uphr.edu.ph/
+5640	PH	University of Perpetual Help, System Dalta	http://www.perpetualdalta.edu.ph/
+5641	PH	University of Regina Carmeli	http://www.urc.edu.ph/
+5642	PH	University of Saint La Salle	http://www.usls.edu/
+5643	PH	University of San Agustin	http://www.usa.edu.ph/
+5644	PH	University of San Carlos	http://www.usc.edu.ph/
+5645	PH	University of San Jose Recoletos	http://www.usjr.edu.ph/
+5646	PH	University of Santo Tomas	http://www.ust.edu.ph/
+5647	PH	University of Southeastern Philippines	http://www.usep.edu.ph/
+5648	PH	University of Southern Mindanao	http://www.usm.edu.ph/
+5649	PH	University of Southern Philippines Foundation	http://www.usp.ph/
+5650	PH	University of the Assumption	http://www.ua.edu.ph/
+5651	PH	University of the City of Manila	http://www.plm.edu.ph/
+5652	PH	University of the Cordilleras	http://www.uc-bcf.edu.ph/
+5653	PH	University of the East, Coloocan	http://www.ue.edu.ph/caloocan/
+5654	PH	University of the East, Manila	http://www.ue.edu.ph/manila/
+5655	PH	University of the East, Ramon Magsaysay Memorial Medical Center	http://www.uerm.edu.ph/
+5656	PH	University of the Immaculate Conception	http://uic.globe.com.ph/
+5657	PH	University of the Philippines Baguio	http://www.upb.edu.ph/
+5658	PH	University of the Philippines Diliman	http://www.upd.edu.ph/
+5659	PH	University of the Philippines Los Banos	http://www.uplb.edu.ph/
+5660	PH	University of the Philippines Manila	http://www.upm.edu.ph/
+5661	PH	University of the Philippines Mindanao	http://www.upmin.edu.ph/
+5662	PH	University of the Philippines Open University	http://www.upou.org/
+5663	PH	University of the Philippines Visayas	http://www.upv.edu.ph/
+5664	PH	University of the Philippines Visayas - Cebu High School	http://www.uphighschoolcebu.edu.ph/
+5665	PH	University of the Visayas	http://www.uv.edu.ph/
+5666	PH	Virgen Milagrosa University Foundation	http://www.vmuf.edu.ph/
+5667	PH	Wesleyan University Philippines	http://www.wesleyan.edu.ph/
+5668	PH	Western Mindanao State University	http://www.wmsu.edu.ph/
+5669	PH	West Visayas State University	http://www.wvsu.edu.ph/
+5670	PH	Xavier University	http://www.xu.edu.ph/
+5671	PK	Abasyn University Peshawar	http://www.abasyn.edu.pk/
+5672	PK	Aga Khan University	http://www.aku.edu/
+5673	PK	Air University	http://www.au.edu.pk/
+5674	PK	Alhamd Islamic University	http://www.aiu.edu.pk/
+5675	PK	Al-Khair University	http://www.alkhair.edu.pk/
+5676	PK	Allama Iqbal Open University	http://www.aiou.edu.pk/
+5677	PK	Alpha Omega University	http://www.alphaomega.edu.pk/
+5678	PK	American University of Hawaii, Punjab Campus	http://www.auh.edu.pk/
+5679	PK	Arid Agriculture University	http://www.uaar.edu.pk/
+5680	PK	Asian Management Institute	http://www.ami.edu.pk/
+5681	PK	Asia Pacific Institute of Information Technology Pakistan (APIIT PAK)	http://www.apiit.edu.pk/
+5682	PK	Azad Jammu and Kashmir University	http://www.ajku.edu.pk/
+5683	PK	Bahauddin Zakariya University, Multan	http://www.bzu.edu.pk/
+5684	PK	Bahria University	http://www.bahria.edu.pk/
+5685	PK	Balochistan University of Engineering and Technology Khuzdar	http://www.buetk.edu.pk/
+5686	PK	Balochistan University of Information Technology & Management Sciences 	http://www.buitms.edu.pk/
+5687	PK	Baqai Medical University	http://baqai.freeyellow.com/
+5688	PK	Cecos Univeristy of Information Technology	http://www.cecos.edu.pk/
+5689	PK	College of Business Management ( CBM )	http://www.cbm.edu.pk/
+5690	PK	COMSATS Institute of Information Technology	http://www.ciit.edu.pk/
+5691	PK	COMSATS Institute of Information Technology, Abbottabad	http://www.ciit-atd.edu.pk/
+5692	PK	COMSATS Institute of Information Technology, Attock	http://www.ciit-attock.edu.pk/
+5693	PK	COMSATS Institute of Information Technology, Lahore	http://www.ciitlahore.edu.pk/
+5694	PK	COMSATS Institute of Information Technology, Wah	http://www.ciit-wah.edu.pk/
+5695	PK	COSMIQ Institute of Technology	http://www.cosmiq.edu.pk/
+5696	PK	Dadabhoy Institute of Higher Education	http://www.dadabhoy.edu.pk/
+5697	PK	Dawood College of Engineering and Technology	http://www.dcet.edu.pk/
+5698	PK	Dow University of Health Sciences	http://www.duhs.edu.pk/
+5699	PK	Faisalabad Institute of Textile and Fashion Design	http://www.fitfd.edu.pk/
+5700	PK	FAST - National University of Computer and Emerging Sciences (NUCES)	http://www.nu.edu.pk/
+5701	PK	Federal Urdu University of Arts,Science and Technology	http://www.fuuast.edu.pk/
+5702	PK	Gandhara Institute of Medical Sciences	http://www.gandhara.edu.pk/
+5703	PK	Gangdara Institute Of Science & Technology	http://www.gist.edu.pk/
+5704	PK	GC University	http://www.gcu.edu.pk/
+5705	PK	Ghulam Ishaq Khan Institute of Science & Technology	http://www.giki.edu.pk/
+5706	PK	Gift University	http://www.gift.edu.pk/
+5707	PK	Gomal University	http://www.gu.edu.pk/
+5708	PK	Government College University Faisalabad	http://www.gcuf.edu.pk/
+5709	PK	Government College University Lahore	http://www.gcu.edu.pk/
+5710	PK	Greenwich University	http://www.guic.edu.pk/
+5711	PK	Hahnamann Honoeopathic Medical College	http://www.pakistanhomoeopathy.com/
+5712	PK	Hajvery University Lahore for Women	http://www.hajvery.edu.pk/
+5713	PK	Hamdard University	http://www.hamdard.edu.pk/
+5714	PK	Hazara University	http://www.hu.edu.pk/
+5715	PK	Hitec University	http://www.hitecuni.edu.pk/
+5716	PK	Indus Institute of Higher Education	http://www.indus.edu.pk/
+5717	PK	Institute of Business Administration (IBA)	http://www.iba.edu.pk/
+5718	PK	Institute of Business Administration Sukkur	http://www.iba-suk.edu.pk/
+5719	PK	Institute of Business Management 	http://www.iobm.edu.pk/
+5720	PK	Institute of Business & Technology	http://www.biztek.edu.pk/
+5721	PK	Institute of Industrial Electronics Engineering	http://www.iiee.edu.pk/
+5722	PK	Institute of Management Sciences, Lahore (IMS)	http://www.pakaims.edu.pk/
+5723	PK	Institute of Management Sciences, Peshawar	http://www.imsciences.edu.pk/
+5724	PK	Institute of Space Technology	http://www.ist.edu.pk/
+5725	PK	International Islamic University, Islamabad	http://www.iiu.edu.pk/
+5726	PK	Iqra University	http://www.iqra.edu.pk/
+5727	PK	Islamia University of Bahawalpur	http://www.iub.edu.pk/
+5728	PK	Isra University	http://www.isra.edu.pk/
+5729	PK	Jinnah University for Women	http://www.juw.edu.pk/
+5730	PK	Karachi Institute Of Economics And Technology	http://www.pafkiet.edu.pk/
+5731	PK	Karachi Institute of Information Technology	http://www.kiit.edu.pk/
+5732	PK	Karachi Medical and Dental College	http://www.kmdc.edu.pk/
+5733	PK	Karachi School of Art	http://www.ksa.edu.pk/
+5734	PK	Karakoram International University	http://www.kiu.edu.pk/
+5735	PK	KASB Institute of Technology	http://www.kasbit.edu.pk/
+5736	PK	Kohat University of Science and Technology  (KUST)	http://www.kust.edu.pk/
+5737	PK	Lahore College for Women University	http://www.lcwu.edu.pk/
+5738	PK	Lahore University of Management Sciences	http://www.lums.edu.pk/
+5739	PK	Liaquat University of Medical & Health Sciences Jamshoro	http://www.lumhs.edu.pk/
+5740	PK	Mehran University of Engineering & Technology	http://www.muet.edu.pk/
+5741	PK	Minhaj University Lahore	http://www.mul.edu.pk/
+5742	PK	Mohammad Ali Jinnah University	http://www.jinnah.edu.pk/
+5743	PK	Mohammad Ali Jinnah University, Karachi	http://www.jinnah.edu/
+5744	PK	Mohi-ud-Din Islamic University	http://www.miu.edu.pk/
+5745	PK	Mooreland University	http://www.moorelanduniversity.com/
+5746	PK	National College of Arts	http://www.nca.edu.pk/
+5747	PK	National University of Computer & Emerging Sciences	http://www.nu.edu.pk/
+5748	PK	National University of Modern Languages	http://www.numl.edu.pk/
+5749	PK	National University of Science and Technology	http://www.nust.edu.pk/
+5750	PK	NED University of Engineering and Technology Karachi	http://www.neduet.edu.pk/
+5751	PK	Newports Institute of Communication & Economics	http://www.newports.edu.pk/
+5752	PK	North West Frontier Province Agricultural University	http://www.aup.edu.pk/
+5753	PK	Nuclear Institute for Agriculture and Biology (NIAB)	http://www.niab.org.pk/
+5754	PK	Pak-AIMS (American Institute of Management Sciences)	http://www.pakaims.edu/
+5755	PK	Pakistan Institute of Engineering and Applied Sciences (PIEAS)	http://www.pieas.edu.pk/
+5756	PK	Pakistan Virtual University	http://www.vu.edu.pk/
+5757	PK	Planwel University	http://www.planwel.edu/
+5758	PK	Preston Institute of Management Sciences and Technology (PIMSAT)	http://www.pimsat-khi.edu.pk/
+5759	PK	Preston University, Pakistan Campus	http://www.prestonpak.edu.pk/
+5760	PK	Punjab Institute of Computer science	http://www.pics.edu.pk/
+5761	PK	Punjab University College of Information Tecnology	http://www.pucit.edu.pk/
+5762	PK	Pyramid Education Center	http://www.pedu.edu.pk/
+5763	PK	Qauid-e-Awam University of Engineering Sciences & Technology	http://www.panasia.org.sg/tcdc/pakistan/qauid_sindh/index.html
+5764	PK	Quaid-i-Azam University	http://www.qau.edu.pk/
+5765	PK	Qurtuba University of Science and Infromation Technology	http://www.qurtuba.edu.pk/
+5766	PK	Riphah International Univeristy	http://www.riphah.edu.pk/
+5767	PK	Sarhad University of Science & Information Technology, Peshawar 	http://www.suit.edu.pk/
+5768	PK	Shah Abdul Latif University Khairpur	http://www.salu.edu.pk/
+5769	PK	Shaheed Benazir Bhutto Women University 	http://www.fwu.edu.pk/
+5770	PK	Shaheed Zulifkar Ali Bhutto Institute of Science and Technology	http://www.szabist.edu.pk/
+5771	PK	Sindh Agricultural University	http://www.sau.edu.pk/
+5772	PK	Sindh Madressatul Islam University	http://www.smiu.edu.pk/
+5773	PK	Sir Syed Institute Of Technology Islamabad	http://www.ssms.edu.pk/
+5774	PK	Sir Syed University of Engineering and Technology	http://www.ssuet.edu.pk/
+5775	PK	Textile Institute of Pakistan	http://www.tip.edu.pk/
+5776	PK	The Global College Lahore	http://www.global.edu.pk/
+5777	PK	The Government Sadiq College Women University Bahawalpur	http://www.gscwu.edu.pk/
+5778	PK	The Superior College 	http://www.superior.edu.pk/
+5779	PK	University of Agriculture Faisalabad	http://www.uaf.edu.pk/
+5780	PK	University of Balochistan	http://www.uob.edu.pk/
+5781	PK	University of Central Punjab	http://www.ucp.edu.pk/
+5782	PK	University of East	http://www.uoe.edu.pk/
+5783	PK	University of Education	http://www.ue.edu.pk/
+5784	PK	University of Engineering and Technology Lahore	http://www.uet.edu/
+5785	PK	University of Engineering and Technology Peshawar	http://www.nwfpuet.edu.pk/
+5786	PK	University of Engineering and Technology Taxila	http://www.uettaxila.edu.pk/
+5787	PK	University of Faisalabad	http://www.tuf.edu.pk/
+5788	PK	University of Gujrat	http://www.uog.edu.pk/
+5789	PK	University of Islamic Studies	http://www.aldirasat.edu.pk/
+5790	PK	University of Karachi	http://www.uok.edu.pk/
+5791	PK	University of Lahore	http://www.uol.edu.pk/
+5792	PK	University of Malakand	http://www.uom.edu.pk/
+5793	PK	University of Management and Technology	http://www.umt.edu.pk/
+5794	PK	University of Munawwar-ul-Islam	http://www.umi.edu.pk/
+5795	PK	University of NorthWest	http://www.unw.edu.pk/
+5796	PK	University of Peshawar	http://www.upesh.edu/
+5797	PK	University of Sargodha	http://www.uos.edu.pk/
+5798	PK	University of Science & Technology Bannu	http://www.ustb.edu.pk/
+5799	PK	University of Sindh	http://www.usindh.edu.pk/
+5800	PK	University of South Asia	http://www.usa.edu.pk/
+5801	PK	University of the Punjab	http://www.pu.edu.pk/
+5802	PK	University of the Punjab, Gujranwala Campus	http://www.pugc.edu.pk/
+5803	PK	University of Veterinary & Animal Science	http://www.uvas.edu.pk/
+5804	PK	University of Wah	http://www.uw.edu.pk/
+5805	PK	Virtual University of Pakistan	http://www.vu.edu.pk/
+5806	PK	Wah Medical College	http://www.wahmedicalcollege.edu.pk/
+5807	PK	Zawiya Academy	http://www.zawiya.edu.pk/
+5808	PK	Zia-ud-Din Medical University	http://www.geocities.com/CollegePark/7329/
+5809	PL	Academy of Economics in Cracow	http://www.ae.krakow.pl/
+5810	PL	Academy of Economics in Katowice	http://www.ae.katowice.pl/
+5811	PL	Academy of Economics in Poznan	http://www.ae.poznan.pl/
+5812	PL	Academy of Economics in Wroclaw	http://www.ae.wroc.pl/
+5813	PL	Academy of Humanities and Economics in Lodz	http://www.ahe.edu.pl/
+5814	PL	Academy of International Economic and Political Relations, Gdynia	http://www.wsms.edu.pl/
+5815	PL	Adam Mickiewicz University of Poznan	http://www.amu.edu.pl/
+5816	PL	AGH University of Science and Technology	http://www.agh.edu.pl/
+5817	PL	Agricultural-Technical Academy in Olsztyn	http://www.art.olsztyn.pl/
+5818	PL	Agricultural University of Cracow	http://www.ar.krakow.pl/
+5819	PL	Agricultural University of Lublin	http://www.ar.lublin.pl/
+5820	PL	Agricultural University of Poznan	http://www.au.poznan.pl/
+5821	PL	Agricultural University of Szczecin	http://www.ar.szczecin.pl/
+5822	PL	Agricultural University of Warsaw	http://www.sggw.waw.pl/
+5823	PL	Agricultural University of Wroclaw	http://www.ar.wroc.pl/
+5824	PL	Akademia Podlaska	http://www.ap.siedlce.pl/
+5825	PL	Aleksander Gieysztor School of Humanities in Pultusk	http://www.wsh.edu.pl/
+5826	PL	Aleksander Zelwerowicz State Theatre Academy	http://www.at.edu.pl/
+5827	PL	Andrzej Frycz Modrzewski Cracow College	http://www.ksw.edu.pl/
+5828	PL	Cardinal Stefan Wyszynski University in Warsaw	http://www.uksw.edu.pl/
+5829	PL	Catholic University of Lublin	http://www.kul.lublin.pl/
+5830	PL	Christian Theological Academy in Warszaw	http://www.qdnet.pl/ChAT/
+5831	PL	College of Computer Science in Lodz	http://www.wsinf.edu.pl/
+5832	PL	Collegium Civitas	http://www.collegium.edu.pl/
+5833	PL	European Academy of Arts in Warsaw	http://www.eas.edu.pl/
+5834	PL	Fine Arts Academy in Gdansk	http://www.asp.gda.pl/
+5835	PL	Fine Arts Academy in Katowice	http://www.aspkat.edu.pl/
+5836	PL	Fine Arts Academy in Poznan	http://www.asp.poznan.pl/
+5837	PL	Fine Arts Academy in Warsaw	http://www.asp.waw.pl/
+5838	PL	Fine Arts Academy in Wroclaw	http://www.asp.wroc.pl/
+5839	PL	Fine Arts Academy "Jan Matejko" in Cracow	http://149.156.19.10/
+5840	PL	Fine Arts Academy Wladyslaw Strzeminski in Lodz	http://www.asp.lodz.pl/
+5841	PL	French Institute of Management	http://www.ifg.com.pl/
+5842	PL	Gdansk Management College	http://www.wsz.pl/
+5843	PL	Gdynia Maritime Academy	http://www.wsm.gdynia.pl/
+5844	PL	Higher School o Business in Tarnow	http://wsb.toi.tarnow.pl/
+5845	PL	Higher School o Business/National Louis University(WSB/NLU) in Nowy Sacz	http://www.wsb-nlu.edu.pl/
+5846	PL	Jagiellonian University Cracow	http://www.uj.edu.pl/
+5847	PL	Józef Tyszkiewicz College of Business and Computer Science in Bielsko-Biala	http://www.tyszkiewicz.edu.pl/
+5848	PL	Józef Tyszkiewicz College of Business and Computer Science in Bielsko-Biala	http://www.tyszkiewicz.edu.pl/
+5849	PL	Katowice School of Economics	http://www.gwsh.pl/
+5850	PL	Lazarski School of Commerce and Law	http://www.lazarski.pl/
+5851	PL	Leon Kozminski Academy of Entrepreneurship and Mangement	http://www.wspiz.edu.pl/
+5852	PL	Leon Kozminski Academy of Entrepreneurship and Mangement in Warsaw	http://www.wspiz.edu.pl/
+5853	PL	Ludwik Solski State Academy of Theatre in Cracow	http://www.pwst.krakow.pl/
+5854	PL	Maria Curie-Sklodowska University Lublin	http://www.umcs.lublin.pl/
+5855	PL	Maria Grzegorzewska College for Special Education	http://www.wsps.waw.pl/
+5856	PL	Maritime University in Szczecin	http://www.wsm.szczecin.pl/
+5857	PL	Medical Academy in Bialystok	http://www.amb.edu.pl/
+5858	PL	Medical Academy in Gdansk	http://www.amg.gda.pl/
+5859	PL	Medical Academy in Lodz	http://www.am.lodz.pl/
+5860	PL	Medical Academy in Lublin	http://www.am.lublin.pl/
+5861	PL	Medical Academy in Warszawa	http://www.amwaw.edu.pl/
+5862	PL	Medical Academy in Wroclaw	http://www.am.wroc.pl/
+5863	PL	Medical Academy Karol Marcinkowski in Poznan	http://www.usoms.poznan.pl/
+5864	PL	Medical Academy Ludwik Rydygier in Bydgoszcz	http://www.amb.bydgoszcz.pl/
+5865	PL	Music Academy "Felix Nowowiejski" in Bydgoszcz	http://www.amuz.bydgoszcz.pl/
+5866	PL	Music Academy "Fryderyk Chopin" in Warszaw	http://www.chopin.edu.pl/
+5867	PL	Music Academy "Ignacy Jana Paderewski" in Poznan	http://www.amuz.poznan.pl/
+5868	PL	Music Academy in Cracow	http://www.amuz.krakow.pl/
+5869	PL	Music Academy in Lodz	http://www.amuz.lodz.pl/
+5870	PL	Music Academy "Karol Lipinski" in Wroclaw	http://www.amuz.wroc.pl/
+5871	PL	Music Academy "Karol Szymanowski" in Katowice	http://www.am.katowice.pl/
+5872	PL	Music Academy "Stanislaw Moniuszko" in Gdansk	http://www.amuz.gda.pl/
+5873	PL	Nicolaus Copernicus University of Torun	http://www.uni.torun.pl/
+5874	PL	Pawel Wlodkowic University College in Plock	http://www.wlodkowic.pl/
+5875	PL	Pedagogical University of Bydgoszcz	http://www.wsp.bydgoszcz.pl/
+5876	PL	Pedagogical University of Czestochowa	http://www.wsp.czest.pl/
+5877	PL	Pedagogical University of Kielce	http://www.pu.kielce.pl/
+5878	PL	Pedagogical University of Krakow	http://www.wsp.krakow.pl/
+5879	PL	Pedagogical University of Rzeszow	http://www.univ.rzeszow.pl/
+5880	PL	Pedagogical University of Slupsk	http://www.wsp.slupsk.pl/
+5881	PL	Pedagogical University of the Polish Association for Adult Education in Warsaw	http://www.wsptwpwaw.edu.pl/
+5882	PL	Pedagogical University of Zielona Gora	http://www.wsp.zgora.pl/
+5883	PL	Physical Education Academy "Eugeniusz Piasecki" in Poznan	http://www.awf.poznan.pl/
+5884	PL	Physical Education Academy in Katowice	http://www.awf.katowice.pl/
+5885	PL	Physical Education Academy in Wroclaw	http://www.awf.wroc.pl/
+5886	PL	Physical Education Academy "Jedrzej Sniadecki" in Gdansk	http://www.awf.gda.pl/
+5887	PL	Physical Education Academy "Jozef Pilsudski" in Warsaw	http://www.awf.edu.pl/
+5888	PL	Polish-Japanese Institute of Information Technology in Warsaw	http://www.pjwstk.edu.pl/
+5889	PL	Polish Open University in Warsaw (WSZ/POU)	http://www.wsz-pou.edu.pl/
+5890	PL	Polonia University in Czêstochowa	http://www.ap.edu.pl/
+5891	PL	Pomeranian Academy of Medicine in Szczecin	http://www.pam.szczecin.pl/
+5892	PL	Poznan School of Banking	http://www.wsb.poznan.pl/
+5893	PL	Poznan University of Life Sciences	http://www.puls.edu.pl/
+5894	PL	Ryszard Lazarski University of Commerce and Law in Warsaw	http://www.wship.edu.pl/
+5895	PL	School of Banking and Management in Cracow	http://www.wszib.krakow.pl/
+5896	PL	Silesian Academy of Medicine in Katowice	http://www.slam.katowice.pl/
+5897	PL	Silesian School of Economics and Languages	http://www.gallus.pl/
+5898	PL	Silesian Technical University of Gliwice	http://www.polsl.gliwice.pl/
+5899	PL	Staszic Pila College	http://www.pwsz.pila.pl/
+5900	PL	State Film, Television and Theatre Higher School Leon Schiller in Lodz	http://www.filmowka.lodz.pl/
+5901	PL	Teacher Training College of Revalidation, Rehabilitation and Physical Education	http://www.nkrriwf.pl/
+5902	PL	Technical University of Bialystok	http://www.pb.bialystok.pl/
+5903	PL	Technical University of Cracow	http://www.pk.edu.pl/
+5904	PL	Technical University of Czestochowa	http://www.pcz.czest.pl/
+5905	PL	Technical University of Gdansk	http://www.pg.gda.pl/
+5906	PL	Technical University of Kielce	http://www.tu.kielce.pl/
+5907	PL	Technical University of Koszalin	http://www.tu.koszalin.pl/
+5908	PL	Technical University of Lodz	http://www.p.lodz.pl/
+5909	PL	Technical University of Lublin	http://www.pol.lublin.pl/
+5910	PL	Technical University of Opole	http://www.po.opole.pl/
+5911	PL	Technical University of Poznan	http://www.put.poznan.pl/
+5912	PL	Technical University of Radom	http://www.man.radom.pl/
+5913	PL	Technical University of Rzeszow	http://www.prz.rzeszow.pl/
+5914	PL	Technical University of Szczecin	http://www.tuniv.szczecin.pl/
+5915	PL	Technical University of Warsaw	http://www.pw.edu.pl/
+5916	PL	Technical University of Wroclaw	http://www.pwr.wroc.pl/
+5917	PL	Technical University of Zielona Gora	http://www.pz.zgora.pl/
+5918	PL	University of Bialystok	http://www.ub.edu.pl/
+5919	PL	University of Finance and Management in Bialystok	http://www.wsfiz.edu.pl/
+5920	PL	University of Gdansk	http://www.univ.gda.pl/
+5921	PL	University of Information Technology and Management in Rzeszow	http://www.wsiz.rzeszow.pl/
+5922	PL	University of Insurance and Banking in Warsaw	http://www.wsub.waw.pl/
+5923	PL	University of Lodz	http://www.uni.lodz.pl/
+5924	PL	University of Lower Silesia of the Association for the Advancement of Education in Wroclaw.	http://www.dswe.wroc.pl/
+5925	PL	University of Management and Marketing	http://www.wszim.edu.pl/
+5926	PL	University of Opole	http://www.uni.opole.pl/
+5927	PL	University of Silesia	http://www.us.edu.pl/
+5928	PL	University of Szczecin	http://www.univ.szczecin.pl/
+5929	PL	University of Technology and Life Sciences	http://www.utp.edu.pl/
+5930	PL	University of Wamia and Masuria in Olsztyn	http://www.uwm.edu.pl/
+5931	PL	University of Warsaw	http://www.uw.edu.pl/
+5932	PL	University of Wroclaw	http://www.uni.wroc.pl/
+5933	PL	University School of Physical Education	http://www.awf.krakow.pl/
+5934	PL	Walcz College	http://www.pwsz.eu/
+5935	PL	Warsaw School of Economics	http://www.sgh.waw.pl/
+5936	PL	Warsaw School of Information Technology	http://www.wsisiz.edu.pl/
+5937	PL	Warsaw School of Social Psychology	http://www.swps.edu.pl/
+5938	PL	West Pomeranian Business School in Szczecin	http://www.zpsb.szczecin.pl/
+5939	PL	Zachodniopomorska School of Science and Engineering	 http://www.zut.edu.pl/
+5940	PR	Caribbean University	http://www.caribbean.edu/
+5941	PR	Centro de Estudios Avanzados de Puerto Rico y el Caribe	http://www.ceaprc.org/
+5942	PR	Pontificia Universidad Catolica de Puerto Rico	http://www.pucpr.edu/
+5943	PR	San Juan Bautista School of Medicine	http://www.sanjuanbautista.edu/
+5944	PR	Sistema Universitario Ana G. Méndez	http://www.suagm.edu/
+5945	PR	Universidad Central de Bayamón	http://www.ucb.edu.pr/
+5946	PR	Universidad Central del Caribe	http://www.uccaribe.edu/
+5947	PR	Universidad del Sagrado Corazon	http://www.sagrado.edu/
+5948	PR	Universidad del Turabo	http://www.ut.pr/
+5949	PR	Universidad de Puerto Rico	http://www.upr.clu.edu/
+5950	PR	Universidad de Puerto Rico, Aguadilla	http://www.uprag.edu/
+5951	PR	Universidad de Puerto Rico, Arecibo	http://www.upra.edu/
+5952	PR	Universidad de Puerto Rico, Bayamon	http://www.uprb.edu/
+5953	PR	Universidad de Puerto Rico, Carolina	http://www.uprc.edu/
+5954	PR	Universidad de Puerto Rico, Cayey	http://www.cayey.upr.edu/
+5955	PR	Universidad de Puerto Rico, Ciencias Medicas	http://www.rcm.upr.edu/
+5956	PR	Universidad de Puerto Rico, Humacao	http://cuhwww.upr.clu.edu/
+5957	PR	Universidad de Puerto Rico, Mayaguez	http://www.uprm.edu/
+5958	PR	Universidad de Puerto Rico, Ponce	http://upr-ponce.upr.edu/
+5959	PR	Universidad de Puerto Rico, Rio Pedras	http://www.uprrp.edu/
+5960	PR	Universidad de Puerto Rico, Utuado	http://www.uprutuado.edu/
+5961	PR	Universidad Interamericana de Puerto Rico	http://www.inter.edu/
+5962	PR	Universidad Interamericana de Puerto Rico, Bayamón	http://www.bc.inter.edu/
+5963	PR	Universidad Interamericana de Puerto Rico, San Germán	http://www.sg.inter.edu/
+5964	PR	Universidad Metropolitana	http://www.suagm.edu/suagm/umet/
+5965	PR	Universidad Politecnica de Puerto Rico	http://www.pupr.edu/
+5966	PS	Al-Aqsa University	http://www.alaqsa.edu.ps/
+5967	PS	Al-Azhar University of Gaza	http://www.alazhar.edu.ps/
+5968	PS	Al-Quds Open University	http://www.qou.edu/
+5969	PS	Al-Quds University - The Arab University in Jerusalem	http://www.alquds.edu/
+5970	PS	An-Najah National University	http://www.najah.edu/
+5971	PS	Arab American University - Jenin	http://www.aauj.edu/
+5972	PS	Bethlehem University	http://www.bethlehem.edu/
+5973	PS	Birzeit University	http://www.birzeit.edu/
+5974	PS	Hebron University	http://www.hebron.edu/
+5975	PS	Islamic University of Gaza	http://www.iugaza.edu.ps/
+5976	PS	Palestine Polytechnic University	http://www.ppu.edu/
+5977	PS	Palestine Technical College-Dier Elbalah	http://www.ptcdb.edu.ps/
+5978	PS	Palestine Technical University - Kadoorie	http://www.ptuk.edu.ps/
+5979	PS	Ummah University	http://www.uou.edu.ps/
+5980	PS	University College of Applied Sciences	http://www.ucas.edu.ps/
+5981	PS	University of Palestine	http://www.up.edu.ps/
+5982	PT	Academia Nacional Superior de Orquesta	http://www.oml.pt/anso/
+5983	PT	Escola Nautica Infante D. Henrique	http://www.enautica.pt/
+5984	PT	Escola Superior de Artes e Design	http://www.esad.pt/
+5985	PT	Escola Superior de Hotelaria e Turismo do Estoril	http://www.eshte.pt/
+5986	PT	European University Portugal	http://www.europeanuniversity.pt/
+5987	PT	Instituto de Artes Visuais, Design e Marketing - IADE	http://www.iade.pt/
+5988	PT	Instituto Piaget	http://www.ipiaget.org/
+5989	PT	Instituto Politécnico da Guarda	http://www.ipg.pt/
+5990	PT	Instituto Politécnico de Beja	http://www.ipbeja.pt/
+5991	PT	Instituto Politécnico de Bragança	http://www.ipb.pt/
+5992	PT	Instituto Politécnico de Castelo Branco	http://www.ipcb.pt/
+5993	PT	Instituto Politécnico de Coimbra	http://www.ipc.pt/
+5994	PT	Instituto Politécnico de Leiria	http://www.iplei.pt/
+5995	PT	Instituto Politécnico de Lisboa	http://www.ipl.pt/
+5996	PT	Instituto Politécnico de Portalegre	http://www.ipportalegre.pt/
+5997	PT	Instituto Politécnico de Santarém	http://www.ipsantarem.pt/
+5998	PT	Instituto Politécnico de Setúbal	http://www.ips.pt/
+5999	PT	Instituto Politécnico de Tomar	http://www.ipt.pt/
+6000	PT	Instituto Politécnico de Viana do Castelo	http://www.ipvc.pt/
+6001	PT	Instituto Politécnico do Cávado e do Ave	http://www.ipca.pt/
+6002	PT	Instituto Politecnico do Porto	http://www.ipp.pt/
+6003	PT	Instituto Superior Bissaya Barreto	http://www.isbb.pt/
+6004	PT	Instituto Superior D. Afonso III - INUAF	http://www.inuaf-studia.pt/
+6005	PT	Instituto Superior de Assistentes e Intérpretes	http://www.isai.pt/
+6006	PT	Instituto Superior de Ciências do Trabalho e da Empresa	http://www.iscte.pt/
+6007	PT	Instituto Superior de Ciências Educativas	http://www.pedago.pt/isce.htm
+6008	PT	Instituto Superior de Ciências Empresariais e de Turismo	http://www.iscet.pt/
+6009	PT	Instituto Superior de Entre Douro e Vouga	http://www.isvouga.com/
+6010	PT	Instituto Superior de Gestão - ISG	http://www.isg.pt/
+6011	PT	Instituto Superior de Informática e Gestão	http://www.cocite.pt/
+6012	PT	Instituto Superior de Línguas e Administração	http://www.isla.pt/
+6013	PT	Instituto Superior de Paços de Brandão	http://www.ispab.pt/
+6014	PT	Instituto Superior de Psicologia Aplicada	http://www.ispa.pt/
+6015	PT	Instituto Superior de Saúde do Alto Ave	http://www.isave.edu.pt/
+6016	PT	Instituto Superior de Tecnologias Avançadas - ISTEC	http://www.istec.pt/
+6017	PT	Instituto Superior de Transportes e Comunicações	http://www.istp.pt/
+6018	PT	Instituto Superior Novas Profissões - INP	http://www.inp.pt/
+6019	PT	Instituto Superior Politécnico Gaya	http://www.ispgaya.pt/
+6020	PT	Universidade Aberta Lisboa	http://www.univ-ab.pt/
+6021	PT	Universidade Atlântica	http://www.uatla.pt/
+6022	PT	Universidade Autónoma de Lisboa Luís de Camoes	http://www.universidade-autonoma.pt/
+6023	PT	Universidade Catolica Portuguesa	http://www.ucp.pt/
+6024	PT	Universidade da Beira Interior	http://www.ubi.pt/
+6025	PT	Universidade da Madeira	http://www.uma.pt/
+6026	PT	Universidade de Aveiro	http://www.ua.pt/
+6027	PT	Universidade de Coimbra	http://www.uc.pt/
+6028	PT	Universidade de Evora	http://www.uevora.pt/
+6029	PT	Universidade de Lisboa	http://www.ul.pt/
+6030	PT	Universidade de Tras-os-Montes e Alto Douro	http://www.utad.pt/
+6031	PT	Universidade do Algarve	http://www.ualg.pt/
+6032	PT	Universidade do Minho	http://www.uminho.pt/
+6033	PT	Universidade do Porto	http://www.up.pt/
+6034	PT	Universidade dos Acores	http://www.uac.pt/
+6035	PT	Universidade Fernando Pessoa	http://www.ufp.pt/
+6036	PT	Universidade Independente	http://www.uni.pt/
+6037	PT	Universidade Internacional Lisboa	http://www.uinternacional.pt/
+6038	PT	Universidade Lusiada	http://www.ulusiada.pt/
+6039	PT	Universidade Lusófona de Humanidades e Technologias	http://www.ulusofona.pt/
+6040	PT	Universidade Moderna de Lisboa	http://www.umoderna.pt/
+6041	PT	Universidade Nova de Lisboa	http://www.unl.pt/
+6042	PT	Universidade Portucalense Infante D. Henrique	http://www.uportu.pt/
+6043	PT	Universidade Tecnica de Lisboa	http://www.utl.pt/
+6044	PY	Universidad Americana	http://www.uamericana.edu.py/
+6045	PY	Universidad Autónoma de Asunción	http://www.uaa.edu.py/
+6046	PY	Universidad Autónoma del Paraguay	http://www.uap.edu.py/
+6047	PY	Universidad Católica Nuestra Senora de la Asunción	http://www.uc.edu.py/
+6048	PY	Universidad Columbia del Paraguay	http://www.columbia.edu.py/
+6049	PY	Universidad Comunera	http://www.ucom.edu.py/
+6050	PY	Universidad de la Integración de las Americas (UNIDAD)	http://www.unida.edu.py/
+6051	PY	Universidad del Cono Sur de las Américas	http://www.ucsa.edu.py/
+6052	PY	Universidad del Norte	http://www.uninorte.edu.py/
+6053	PY	Universidad Metropolitana de Asunción	http://www.uma.edu.py/
+6054	PY	Universidad Nacional de Asunción	http://www.una.py/
+6055	PY	Universidad Nacional del Este	http://www.une.edu.py/
+6056	PY	Universidad Privada del Este	http://www.upe.edu.py/
+6057	QA	Northwestern University In Qatar	http://www.qatar.northwestern.edu/
+6058	QA	University of Qatar	http://www.qu.edu.qa/
+6059	RE	Université de la Reunion	http://www.univ-reunion.fr/
+6060	RO	1 December University of Alba Iulia	http://www.uab.ro/
+6061	RO	Academia de Studii Economice din Bucuresti	http://www.ase.ro/
+6062	RO	Academia Tehnica Militara	http://www.mta.ro/
+6063	RO	Academy of Arts "George Enescu" Iasi	http://www.arteiasi.ro/
+6064	RO	Academy of Music "Georghe Dima" Cluj-Napoca	http://www.amgd.eu/
+6065	RO	AISTEDA	http://www.aistedaab.ro/
+6066	RO	Babes-Bolyai University of Cluj-Napoca	http://www.ubbcluj.ro/
+6067	RO	Banat's University of Agricultural Sciences	http://www.usab-tm.ro/
+6068	RO	Constantin Brancoveanu University Pitesti	http://www.univcb.ro/
+6069	RO	Emanuel University	http://www.emanuel.ro/
+6070	RO	Institute of Architecture "Ion Mincu" Bucharest	http://www.iaim.ro/
+6071	RO	Maritime University Constanta	http://www.universitateamaritima.ro/
+6072	RO	National Academy for Physical Education and Sports Bucharest	http://www.anefs-edu.ro/
+6073	RO	National School of Political and Administrative Studies Bucharest	http://www.snspa.ro/
+6074	RO	National University of Arts	http://www.unarte.ro/
+6075	RO	National University of Music	http://www.unmb.ro/
+6076	RO	National University of Theater and Film Arts	http://www.unatc.ro/
+6077	RO	North University of Baia Mare	http://www.ubm.ro/
+6078	RO	Oradea University	http://www.oradeauniversity.com
+6079	RO	Petru Maior University of Targu Mures	http://www.upm.ro/
+6080	RO	Romanian-American University	http://www.rau.ro/
+6081	RO	Spiru Haret University	http://www.spiruharet.ro/
+6082	RO	Targu-Mures University of Theatre	http://www.uat.ro/
+6083	RO	Technical University of Civil Engineering Bucharest	http://www.utcb.ro/
+6084	RO	Technical University of Cluj-Napoca	http://www.utcluj.ro/
+6085	RO	Technical University of Iasi	http://www.tuiasi.ro/
+6086	RO	Technical University of Timisoara	http://www.utt.ro/
+6087	RO	Universitatea de Vest "Vasile Goldi&#351;" 	http://www.uvvg.ro/
+6088	RO	University "Aurel Vlaicu" Arad	http://www.uav.ro/
+6089	RO	University Lucian Blaga of Sibiu	http://www.ulbsibiu.ro/
+6090	RO	University of Agriculture and Veterinary Medicine Bucharest	http://www.usab.ro/
+6091	RO	University of Agriculture and Veterinary Medicine Cluj-Napoca	http://www.usamvcluj.ro/
+6092	RO	University of Agriculture and Veterinary Medicine Iasi	http://www.univagro-iasi.ro/
+6093	RO	University of Agriculture and Veterinary Medicine Timisoara	http://www.usab-tm.ro/
+6094	RO	University of Art and Design Cluj-Napoca	http://www.uartdcluj.ro/
+6095	RO	University of Bacau	http://www.ub.ro/
+6096	RO	University of Bucharest	http://www.unibuc.ro/
+6097	RO	University of Constanta	http://www.univ-ovidius.ro/
+6098	RO	University of Constanta Medical School	http://www.ovidunivconstanta-edu.org/
+6099	RO	University of Craiova	http://www.central.ucv.ro/
+6100	RO	University of Galatzi	http://www.ugal.ro/
+6101	RO	University of Iasi	http://www.uaic.ro/
+6102	RO	University of Medicine and Pharmacology of Oradea	http://www.oradeauniversity.com/
+6103	RO	University of Medicine and Pharmacy of Bucharest	http://www.univermed-cdgm.ro/
+6104	RO	University of Medicine and Pharmacy of Cluj-Napoca	http://www.umfcluj.ro/
+6105	RO	University of Medicine and Pharmacy of Iasi	http://www.umfiasi.ro/
+6106	RO	University of Medicine and Pharmacy of Targu Mures	http://www.umftgm.ro/
+6107	RO	University of Medicine and Pharmacy of Timisoara	http://www.umft.ro/
+6108	RO	University of Oradea	http://www.uoradea.ro/
+6109	RO	University of Petrosani	http://www.upet.ro/
+6110	RO	University of Pitesti	http://www.upit.ro/
+6111	RO	University of Resita	http://www.uem.ro/
+6112	RO	University of Sibiu	http://www.sibiu.ro/
+6113	RO	University of Suceava	http://www.usv.ro/
+6114	RO	University of Targu Jiu	http://www.utgjiu.ro/
+6115	RO	University Oil- Gas Ploiesti	http://www.upg-ploiesti.ro/
+6116	RO	University "Petre Andrei" Iasi	http://www.upa.ro/
+6117	RO	University Politehnica of Bucharest	http://www.pub.ro/
+6118	RO	University "Titu Maiorescu"	http://www.utm.ro/
+6119	RO	University "Transilvany" of Brasov	http://www.unitbv.ro/
+6120	RO	Valahia University of Targoviste	http://www.valahia.ro/
+6121	RO	West University of Timisoara	http://www.uvt.ro/
+6122	RS	Drzavni Univerzitet u Novom Pazaru	http://www.np.ac.rs/
+6123	RS	European University	http://www.eu.ac.rs/
+6124	RS	International University of Novi Pazar	http://www.uninp.edu.rs/
+6125	RS	Megatrend University of Applied Sciences	http://www.megatrend-edu.net/
+6126	RS	Metropolitan University	http://www.metropolitan.edu.rs/
+6127	RS	Privredna Akademija (Business Academy)	http://www.privrednaakademija.edu.rs/
+6128	RS	Singidunum University	http://www.singidunum.edu.rs/
+6129	RS	University of Belgrade	http://www.bg.ac.rs/
+6130	RS	University of Fine Arts Belgrade	http://www.arts.bg.ac.rs/
+6131	RS	University of Kragujevac	http://www.kg.ac.rs/
+6132	RS	University of Nis	http://www.ni.ac.rs/
+6133	RS	University of Novi Sad	http://www.uns.ac.rs/
+6134	RS	University of Priština	http://www.pr.ac.rs/
+6135	RU	Academy of Management and Entrepreneurship	http://www.ame.ru/
+6136	RU	Adygeja State University	http://www.adygnet.ru/
+6137	RU	Altai State Medical University	http://www.asmu.ru/
+6138	RU	Altai State Technical University	http://www.astu.secna.ru/
+6139	RU	Altai State University	http://www.asu.ru/
+6140	RU	Amur State University	http://www.amursu.ru/
+6141	RU	Arhangelsk State Technical University	http://www.agtu.ru/
+6142	RU	Astrahan State Medical Academy	http://agma.astranet.ru/
+6143	RU	Astrahan State Technical University	http://www.astu.org/
+6144	RU	Astrakhan State University	http://www.aspu.ru/
+6145	RU	Baikal National University of Economics and Law	http://www.isea.ru/
+6146	RU	Baltic State Technical University	http://www.voenmeh.ru/
+6147	RU	Bashkir State Agrarian University	http://www.bashedu.ru/vuz/bgau_e.htm
+6148	RU	Bashkir State Medical University	http://www.bashedu.ru/vuz/bgmu_e.htm
+6149	RU	Bashkir State Pedagogical University named After M. Akmullah	http://www.bspu.ru/
+6150	RU	Bashkir State University	http://www.bashedu.ru/
+6151	RU	Bauman Moscow State Technical University	http://www.bmstu.ru/
+6152	RU	Belgorod State Agricultural Academy	http://www.bsaa.ru/
+6153	RU	Belgorod State Technical University	http://www.bstu.ru/
+6154	RU	Belgorod State University	http://www.bsu.edu.ru/
+6155	RU	Birsk State Pedagogical Institute	http://www.bashedu.ru/vuz/birskgpi_e.htm
+6156	RU	Biysk State Padagogical University after V.M. Shukshin 	http://www.bigpi.biysk.ru/wwwsite/
+6157	RU	Bratsk State Technical University	http://www.brstu.ru/
+6158	RU	Brjansk State Technical University	http://www.tu-bryansk.ru/
+6159	RU	Burjat State University	http://www.bsu.burnet.ru/
+6160	RU	Cheljabinsk State Institute of Teacher Training	http://cspi.urc.ac.ru/
+6161	RU	Cheljabinsk State University	http://www.csu.ac.ru/
+6162	RU	Cheljabinsk University of Agricultural Engineering	http://www.urc.ac.ru/Universities/AGRO/
+6163	RU	Chuvash State University	http://www.chuvsu.ru/
+6164	RU	Dagestan State University	http://www.dgu.ru/
+6165	RU	Don State Agrarian University	http://www.dongau.ru/
+6166	RU	Don State Technical University	http://www.dstu.edu.ru/
+6167	RU	Dubna International University for Nature, Society and Man	http://www.uni-dubna.ru/
+6168	RU	East-Siberian State Institute of Culture	http://www.vsgaki.burnet.ru/
+6169	RU	East-Siberian State University	http://www.vsgtu.eastsib.ru/
+6170	RU	East-Siberian State University of Technology	http://www.esstu.ru/
+6171	RU	European University at St.Petersburg	http://www.eu.spb.ru/
+6172	RU	Far Easten State University of Humanities	http://www.khspu.ru/
+6173	RU	Far Eastern State Technical Fisheries University	http://www.dalrybvtuz.ru/
+6174	RU	Far Eastern State Technical University	http://www.festu.ru/
+6175	RU	Far Eastern State University	http://www.dvgu.ru/
+6176	RU	Far East State Transport University	http://www.dvgups.ru/
+6177	RU	Finance Academy	http://www.fa.ru/
+6178	RU	Gnesins Russian Academy of Music	http://www.gnesin-academy.ru/
+6179	RU	Gorno-Altaisk State University	http://www.gasu.ru/
+6180	RU	Gubkin Russian State University of Oil and Gas	http://www.gubkin.ru/
+6181	RU	Herzen State Pedagogical University of Russia	http://www.herzen.spb.ru/
+6182	RU	Higher School of Economics	http://www.hse.ru/
+6183	RU	Immanuel Kant State University of Russia	http://www.kantiana.ru/
+6184	RU	I.M. Sechenov Moscow Medical Academy	http://www.mma.ru/
+6185	RU	Institute for the Economy in Transition	http://www.iet.ru/
+6186	RU	Institute of Business and Politics	http://www.ibp-moscow.ru/
+6187	RU	Institute of Management and Economy	http://www.ime.ru/
+6188	RU	International Banking Institute, St. Petersburg	http://www.ibi.spb.ru/
+6189	RU	International East-European University	http://www.ieeu.udm.ru/
+6190	RU	International University of Engineering, Moscow	http://www.miu.ru/
+6191	RU	International University of Fundamental Studies, St. Petersburg	http://www.iufs.edu/
+6192	RU	Irkutsk State Academy of Economics	http://www.isea.irk.ru/
+6193	RU	Irkutsk State Technical University	http://www.istu.irk.ru/
+6194	RU	Irkutsk State University	http://www.isu.ru/
+6195	RU	Ivanovo State Academy of Medicine	http://isma.indi.ru/
+6196	RU	Ivanovo State Power University	http://www.ispu.ru/
+6197	RU	Ivanovo State Textile Academy	http://education.ivanovo.ru:8101/IGTA/
+6198	RU	Ivanovo State University	http://www.ivanovo.ac.ru/
+6199	RU	Ivanovo State University of Chemistry and Technology	http://www.isuct.ru/
+6200	RU	Izhevsk State Technical University	http://www.istu.ru/
+6201	RU	Jewish University in Moscow	http://www.jum.ru/
+6202	RU	Kabardino-Balkarian State University	http://www.kbsu.ru/
+6203	RU	Kaliningrad State Technical University	http://www.klgtu.ru/
+6204	RU	Kalmyk State University	http://www.kalmsu.ru/
+6205	RU	Kaluga State Pedagogical University	http://kspu.kaluga.ru/
+6206	RU	Kamchatka State University Vitus Bering	http://www.kamgu.ru/
+6207	RU	Karelian State Pedagogical University	http://kspu.ptz.ru/
+6208	RU	Kazan State Academy of Architecture and Civil Engineering	http://www.ksaba.ru/
+6209	RU	Kazan State Finance and Economics Institute 	http://www.ksfei.ru/
+6210	RU	Kazan State Music Conservatory	http://www.kazanconservatory.ru/
+6211	RU	Kazan State Pedagogical University	http://www.kgpu.ru/
+6212	RU	Kazan State University	http://www.ksu.ru/
+6213	RU	Kazan State University of Medicine	http://www.kgmu.kcn.ru/
+6214	RU	Kazan State University of Technology	http://www.kai.ru/
+6215	RU	Kemerovo State University	http://www.kemsu.ru/
+6216	RU	Khabarovsk State Academy of Economics and Law	http://www.ael.ru/
+6217	RU	Khabarovsk State University of Technology	http://www.khstu.ru/
+6218	RU	Komsomolsk-on-Amur State Technical University	http://www.knastu.ru/
+6219	RU	Kostroma State Technological University	http://www.kstu.edu.ru/
+6220	RU	Krasnoyarsk State Technical University	http://www.kgtu.runnet.ru/
+6221	RU	Kuban State University	http://www.kubsu.ru/
+6222	RU	Kuban State University of Agriculture	http://www.kubagro.ru/
+6223	RU	Kuban State University of Technology	http://www.kubstu.ru/
+6224	RU	Kurgan International University	http://www.kiu.ru/
+6225	RU	Kursk State Medical University	http://www.ksmu.kursknet.ru/
+6226	RU	Kursk State Technical University	http://www.kstu.kursk.ru/
+6227	RU	Kursk State University	http://www.kursk-uni.ru/
+6228	RU	Kuzbass State Technical University	http://www.kuzstu.ac.ru/
+6229	RU	Linguistic University of Nizhny Novgorod	http://www.lunn.sci-nnov.ru/
+6230	RU	Lipeck State Technical University	http://www.stu.lipetsk.ru/
+6231	RU	Magnitogorsk State University	http://www.masu.ru/
+6232	RU	Marij State Technical University	http://www.marstu.mari.ru/
+6233	RU	Marij State University	http://margu.mari.ru/
+6234	RU	Maxim Gorky Institute of Literature	http://filine.centro.ru/Gorky/
+6235	RU	Mendeleev Russian University of Chemical Technology	http://www.muctr.edu.ru/
+6236	RU	Modern Institute of Managament	http://miom.org/
+6237	RU	Modern University for the Humanities	http://www.muh.ru/
+6238	RU	Mordovian State University	http://www.mrsu.ru/
+6239	RU	Moscow External University of the Humanities	http://www.chat.ru/~megu/
+6240	RU	Moscow Institute of Physics and Technology	http://www.mipt.ru/
+6241	RU	Moscow International Higher Business School (MIRBIS)	http://www.mirbis.ru/
+6242	RU	Moscow P. I. Tchaikovsky Conservatory	http://www.mosconsv.ru/
+6243	RU	Moscow Power Engineering Institute (Technical University)	http://www.mpei.ac.ru/
+6244	RU	Moscow State Academy of Applied Biotechnology	http://www.msaab.ru/
+6245	RU	Moscow State Automobile and Road Technical University	http://www.madi.ru/
+6246	RU	Moscow State Industrial University	http://www.msiu.ru/
+6247	RU	Moscow State Institute of International Relations MFA Russia (MGIMO-University)	http://www.mgimo.ru/
+6248	RU	Moscow State Institute of Radiotechnics, Electronics and Automation (Technical University)	http://www.mirea.ru/
+6249	RU	Moscow State Institute of Steel and Alloys	http://www.misis.ru/
+6250	RU	Moscow State Technical University of Civil Aviation	http://www.mstuca.ru/
+6251	RU	Moscow State Textile University A.N. Kosygin	http://www.msta.ac.ru/
+6252	RU	Moscow State University	http://www.msu.ru/
+6253	RU	Moscow State University M.V. Lomonosov	http://www.msu.ru/
+6254	RU	Moscow State University of Civil Engineering	http://mgsu.norna.ru/
+6255	RU	Moscow State University of Commerce	http://www.rsute.ru/
+6256	RU	Moscow State University of Culture	http://www.msuc.edu.ru/
+6257	RU	Moscow State University of Ecological Engineering	http://www.msuie.ru/
+6258	RU	Moscow State University of Economics, Statistics and Informatics	http://www.mesi.ru/
+6259	RU	Moscow State University of Environmental Engineering	http://www.msuee.ru/
+6260	RU	Moscow State University of Forestry Engineering	http://www.mgul.ac.ru/
+6261	RU	Moscow State University of Geodesy and Cartography	http://www.miigaik.ru/
+6262	RU	Moscow State University of Railway Transport	http://www.miit.ru/
+6263	RU	Moscow State University of Technology (Stankin)	http://www.stankin.ru/
+6264	RU	Moscow Technical University of Informatics and Communication	http://www.mtuci.ru/
+6265	RU	Moscow University Touro	http://www.touro.ru/
+6266	RU	Murmansk State Technical University	http://www.mstu.edu.ru/
+6267	RU	National Research University of Electronic Technology	http://www.miet.ru/
+6268	RU	Nayanova University	http://www.nayanova.edu/
+6269	RU	Nevsky Institute of Language and Culture	http://www.nilc.spb.ru/
+6270	RU	New Economic School	http://www.nes.ru/
+6271	RU	NGO Vladikavkaz Institute of Economics, Management, and Law	http://www.vieup.ru/
+6272	RU	Nizhny Novgorod State Academy of Medicine	http://www.n-nov.mednet.com/
+6273	RU	Nizhny Novgorod State Architectural - Building University	http://www.ngasu.sci-nnov.ru/
+6274	RU	Nizhny Novgorod State Technical University	http://www.nntu.sci-nnov.ru/
+6275	RU	Nizhny Novgorod State University	http://www.unn.ac.ru/
+6276	RU	Northern State Medical University	http://www.nsmu.ru/
+6277	RU	North Ossetian State University	http://www.nosu.ru/
+6278	RU	North-West State Technical University	http://www.nwpi.ru/
+6279	RU	Novgorod State University	http://www.novsu.ac.ru/
+6280	RU	Novosibirsk State Academy of Economics and Mangement	http://cit.drbit.com.ru/
+6281	RU	Novosibirsk State Agricultural University	http://www.nsau.edu.ru/
+6282	RU	Novosibirsk State Medical Academy	http://www.medin.nsc.ru/
+6283	RU	Novosibirsk State Music Academy M. Glinka	http://www.conservatoire.ru/
+6284	RU	Novosibirsk State Technical University	http://www.nstu.ru/
+6285	RU	Novosibirsk State University	http://www.nsu.ru/
+6286	RU	Obninsk State Technical University for Nuclear Power Engineering	http://www.iate.obninsk.ru/
+6287	RU	Omsk State Agrarian University	http://www.omgau.ru/
+6288	RU	Omsk State Medicical Academy	http://www.omsk-osma.ru/
+6289	RU	Omsk State Pedagogical University	http://www.omsk.edu/
+6290	RU	Omsk State Technical University	http://www.omgtu.ru/
+6291	RU	Omsk State Transport University	http://www.omgups.ru/
+6292	RU	Omsk State University	http://www.univer.omsk.su/
+6293	RU	Orenburg State University	http://www.osu.ru/
+6294	RU	Oriental University	http://www.orun.ru/
+6295	RU	Penza State University	http://www.pnzgu.ru/
+6296	RU	People' s Friendship University of Russia	http://www.pfu.edu.ru/
+6297	RU	Perm State Academy of Agriculture	http://www.pstu.ac.ru/
+6298	RU	Perm State Medical Academy	http://www.psma.ru/
+6299	RU	Perm State Pedagogical University	http://www.pspu.ac.ru/
+6300	RU	Perm State Pharmaceutical Academy	http://www.psfa.ru/
+6301	RU	Perm State Technical University	http://www.pstu.ac.ru/
+6302	RU	Perm State University	http://www.psu.ru/
+6303	RU	Petrozavodsk State University	http://www.karelia.ru/psu/
+6304	RU	Pjatigorsk State Linguistic University	http://www.pglu.ru/
+6305	RU	Plekhanov Russian Academy of Economics	http://www.rea.ru/
+6306	RU	Pomorsk State University	http://www.pomorsu.ru/
+6307	RU	Pomor State University	http://www.pomorsu.ru/
+6308	RU	Rostov State Medical University	http://www.rsmu.da.ru/
+6309	RU	Rostov State University	http://www.rsu.ru/
+6310	RU	Russian Academy of Arts	http://www.rah.ru/
+6311	RU	Russian Academy of Theatre Arts	http://www.gitis.net/
+6312	RU	Russian Customs Academy, Vladivostok Branch	http://www.vfrta.ru/
+6313	RU	Russian State Geological Prospecting University 	http://www.mgri-rggru.ru/
+6314	RU	Russian State Hydrometeorological University	http://www.rshu.ru/
+6315	RU	Russian State Medical University	http://www.rsmu.ru/
+6316	RU	Russian State University for the Humanities	http://www.rsuh.ru/
+6317	RU	Ryazan State Pedagogical University	http://www.ttc.ryazan.ru/
+6318	RU	Rybinsk State Academy of Aviational Technology	http://www.rgata.yaroslavl.ru/
+6319	RU	Sakhalin State University	http://www.sakhgu.sakhalin.ru/
+6320	RU	Samara State Academy for Railway Transportation	http://www.samiit.ru/
+6321	RU	Samara State Academy of Architecture and Civil Engineering	http://www.ssaba.smr.ru/
+6322	RU	Samara State Aerospace University	http://www.ssau.ru/
+6323	RU	Samara State Agricultural Academy	http://www.ssaa.ru/
+6324	RU	Samara State Medical University	http://www.samsmu.ru/
+6325	RU	Samara State Technical University	http://www.sstu.samara.ru/
+6326	RU	Samara State University	http://www.ssu.samara.ru/
+6327	RU	Samara State University of Economics	http://www.sseu.ru/
+6328	RU	Samara State University of Teacher Training	http://www.ssttu.samara.ru/
+6329	RU	Saratov State Academy of Law	http://www.sgap.ru/
+6330	RU	Saratov State Agrarian University	http://www.sgau.ru/
+6331	RU	Saratov State Medical University	http://www.med.sgu.ru/
+6332	RU	Saratov State Socio-Economic University	http://www.ssea.runnet.ru/
+6333	RU	Saratov State Technical University	http://www.sstu-edu.ru/
+6334	RU	Saratov State University	http://www.sgu.ru/
+6335	RU	Siberian Academy of Public Services	http://www.sapanet.ru/
+6336	RU	Siberian State Industrial University	http://sibsiu.kemerovo.su/
+6337	RU	Siberian State Medical University	http://www.ssmu.ru/
+6338	RU	Siberian State Transport University	http://www.stu.ru/
+6339	RU	Siberian State University of Telecommunications and Informatics	http://www.neic.nsk.su/
+6340	RU	Skrjabin Moscow State Academy of Veterinary Medicine and Biotechnology	http://www.mgavm.ru/
+6341	RU	Smolensk Humanitarian University	http://shu.smolensk.su/
+6342	RU	Smolensk State Medical Academy	http://www.sgma.info/
+6343	RU	Smolny University	http://www.smolny-un.spb.ru/
+6344	RU	Southern Ural State University	http://www.tu-chel.ac.ru/
+6345	RU	State Maritine Academy	http://www.gma.ru/
+6346	RU	State University of Aerospace Technologies	http://www.intstudy.mai.ru/
+6347	RU	State University of Management	http://www.guu.ru/
+6348	RU	Stavropol State Technical University	http://www.ncstu.ru/
+6349	RU	Stavropol State University	http://www.stavsu.ru/
+6350	RU	Sterlitamak State Pedagogical Institute	http://www.bashedu.ru/vuz/sgpi_e.htm
+6351	RU	St. Petersburg Institute of Arts and Restoration	http://www.spbiir.ru/
+6352	RU	St. Petersburg Institute of Sales Management and Economics	http://www.spbtei.ru/
+6353	RU	St. Petersburg Repin State Academic Institute of Painting Sculpture and Achitecture	http://artacademy.spb.ru/
+6354	RU	St. Petersburg State Academy for Engineering Economics (ENGECON)	http://www.engec.ru/
+6355	RU	St. Petersburg State Agrarian University	http://www.spbgau.spb.ru/
+6356	RU	St. Petersburg State Chemical Pharmaceutical Academy	http://www.spcpa.ru/
+6357	RU	St. Petersburg State Cinema and TV University	http://www.gukit.ru/
+6358	RU	St. Petersburg State Conservatory	http://www.conservatory.ru/
+6359	RU	St. Petersburg State Electrotechnical University	http://www.eltech.ru/
+6360	RU	St. Petersburg State Forest-Technical Academy	http://www.ftacademy.ru/
+6361	RU	St. Petersburg State Institute of Technology (Technological University)	http://www.gti.spb.ru/
+6362	RU	St. Petersburg State Marine Technical University	http://www.smtu.ru/
+6363	RU	St. Petersburg StateMechnikov  Medical Academy	http://www.spsmma.com/
+6364	RU	St. Petersburg State Medical Academy	http://www.mechnik.spb.ru/
+6365	RU	St. Petersburg State Mining Institute (Technical University)	http://www.spmi.edu.ru/
+6366	RU	St. Petersburg State Mountain Institut	http://www.gorny-ins.ru/
+6367	RU	St. Petersburg State Pediatric Medical Academy	http://www.gpma.ru/
+6368	RU	St. Petersburg State Polytechnical University	http://www.spbstu.ru/
+6369	RU	St. Petersburg State Technical University	http://www.unilib.neva.ru/
+6370	RU	St. Petersburg State Technological University of Plant Polymers	http://www.gturp.spb.ru/
+6371	RU	St. Petersburg State Theatre Arts Academy	http://www.tart.spb.ru/
+6372	RU	St. Petersburg State University	http://www.spbu.ru/
+6373	RU	St. Petersburg State University of Aerospace Instrumentation	http://www.suai.ru/
+6374	RU	St. Petersburg State University of Architecture and Civil Engineering	http://www.spbgasu.ru/
+6375	RU	St. Petersburg State University of Civil Aviation	http://www.academiaga.ru/
+6376	RU	St. Petersburg State University of Culture and Arts	http://www.spbguki.ru/
+6377	RU	St. Petersburg State University of Culture and Arts	http://www.spbguki.ru/
+6378	RU	St. Petersburg State University of Economics and Finance	http://www.uef.ru/
+6379	RU	St. Petersburg State University of Engineering and Economics	http://www.engec.ru/
+6380	RU	St. Petersburg State University of Information Technologies, Mechanics and Optics	http://www.ifmo.ru/
+6381	RU	St. Petersburg State University of Technology and Design	http://www.sutd.ru/
+6382	RU	St. Petersburg State University of Telecommunication	http://www.sut.ru/
+6383	RU	St. Petersburg State University of Waterway Communications	http://www.spbuwc.ru/
+6384	RU	Surgut State University	http://www.surgu.wsnet.ru/
+6385	RU	Syktyvkar State University	http://ssu.komi.com:8101/
+6386	RU	Taganrog State Pedagogical Institute	http://www.tgpi.ttn.ru/
+6387	RU	Taganrog State University of Radioengineering	http://www.tsure.ru/
+6388	RU	Tambov State Technical University	http://www.tstu.ru/
+6389	RU	Timirjazev Moscow Academy of Agricultutre	http://www.timacad.ru/
+6390	RU	Togliatti State University	http://www.tltsu.ru/
+6391	RU	Tomsk Polytechnic University	http://www.tpu.ru/
+6392	RU	Tomsk State Pedagogical University	http://www.tspu.edu.ru/
+6393	RU	Tomsk State University	http://www.tsu.ru/
+6394	RU	Tomsk State University of Architecture and Building	http://www.tsuab.ru/
+6395	RU	Tomsk State University of Control Systems and Radioelectronics	http://www.tusur.ru/
+6396	RU	Tula State University	http://www.tsu.tula.ru/
+6397	RU	Tuva State University	http://tuvsu.ru/
+6398	RU	Tver State Medical Academy	http://www.tsma.ru/
+6399	RU	Tver State Technical University	http://www.tstu.tver.ru/
+6400	RU	Tver State University	http://university.tversu.ru/
+6401	RU	Tyumen State Agricultural Academy	http://www.tgsha.ru/
+6402	RU	Tyumen State University	http://www.tsu.tmn.ru/
+6403	RU	Tyumen State University of Gas and Oil	http://www.tsogu.ru/
+6404	RU	Udmurt State University	http://www.uni.udm.ru/
+6405	RU	Ufa State Aviation Technical University	http://www.ugatu.ac.ru/
+6406	RU	Ufa State Institute of Arts	http://www.bashedu.ru/vuz/ugii_e.htm
+6407	RU	Ufa State Petroleum Technological University	http://www.rusoil.net/
+6408	RU	Ukhta State Technical University	http://uii.sever.ru/
+6409	RU	Ulyanovsk Higher School of Civil Aviation	http://www.uvauga.ru/
+6410	RU	Ulyanovsk State Agricultural Academy	http://www.ugsha.ru/
+6411	RU	Ulyanovsk State Pedagogical University	http://www.ulspu.ru/
+6412	RU	Ulyanovsk State Technical University	http://www.ulstu.ru/
+6413	RU	Ulyanovsk State University	http://www.ulsu.ru/
+6414	RU	Ural Academy of Public Administration	http://www.uapa.ru/
+6415	RU	Ural Gorkij State University	http://www.usu.ru/
+6416	RU	Ural State Academy of Architecture and Arts	http://www.usaaa.ru/
+6417	RU	Ural State Academy of Law	http://www.usla.ru/
+6418	RU	Ural State Academy of Mining and Geology	http://www.usmga.ru/
+6419	RU	Ural State Academy of Railway Transport	http://www.usart.ru/
+6420	RU	Ural State Conservatory	http://www.uscon.ru/
+6421	RU	Ural State Forestry Technical Academy	http://www.usfea.ru/
+6422	RU	Ural State Technical University	http://www.ustu.ru/
+6423	RU	Ural State University of Economics	http://www.usue.ru/
+6424	RU	Vaganova Academy of Russian Ballet	http://www.kirovballet.com/vaganova.html
+6425	RU	Vladimir State University	http://www.vlsu.ru/
+6426	RU	Vladivostock State University of Economics	http://www.vvsu.ru/
+6427	RU	Volga State Academy of Water Transport	http://www.aqua.sci-nnov.ru/
+6428	RU	Volgograd Medical Academy	http://www.avtlg.ru/~vlgmed/
+6429	RU	Volgograd State Academy of Physical Education	http://www.vgafk.ru/
+6430	RU	Volgograd State Pedagogical University	http://www.vspu.ru/
+6431	RU	Volgograd State Technical University	http://www.vstu.ru/
+6432	RU	Volgograd State University	http://www.volsu.ru/
+6433	RU	Volgograd State University of Architecture and Civil Engineering (VolgGASU)	http://www.vgasa.ru/
+6434	RU	Vologda State Pedagogical University	http://www.uni-vologda.ac.ru/
+6435	RU	Voronezh State Academy of Technology	http://www.vgta.vrn.ru/
+6436	RU	Voronezh State Agricultural University	http://www.vsau.ru/
+6437	RU	Voronezh State Medical Academy	http://www.vsma.info/
+6438	RU	Voronezh State Pedagogical University	http://www.vspu.ac.ru/
+6439	RU	Voronezh State Technical University	http://www.vorstu.ac.ru/
+6440	RU	Voronezh State University	http://www.vsu.ru/
+6441	RU	Vyatka State Pedagogical University	http://www.vspu.kirov.ru/
+6442	RU	Yakutsk State University	http://www.ysu.ru/
+6443	RU	Yaroslavl International University of Business and New Technologies	http://www.iubnt.yar.ru/
+6444	RU	Yaroslavl State Medical Academy	http://www.yma.ac.ru/
+6445	RU	Yaroslavl State Pedagogical University	http://www.yspu.yar.ru/
+6446	RU	Yaroslavl State Technical University	http://www.ystu.yar.ru/
+6447	RU	Yaroslavl State Theatre Institute	http://www.theatrins-yar.ru/
+6448	RU	Yaroslavl State University	http://www.uniyar.ac.ru/
+6449	RU	Yelets State University	http://www.elsu.ru/
+6450	RU	Yugra State University	http://www.ugrasu.ru/
+6451	RW	Adventist University of Central Africa	http://www.auca.ac.rw/
+6452	RW	Higher Institute of Agriculture and Animal Husbandry	http://www.isae.ac.rw/
+6453	RW	Institut d'Agriculture, de Technologie et d'Education de Kibungo	http://www.inatek.ac.rw/
+6454	RW	Kigali Health Institute	http://www.khi.ac.rw/
+6455	RW	Kigali Independent University	http://www.ulk.ac.rw/
+6456	RW	Kigali Institute of Education	http://www.kie.ac.rw/
+6457	RW	Kigali Institute of Science & Technology	http://www.kist.ac.rw/
+6458	RW	National University of Rwanda	http://www.nur.ac.rw/
+6459	RW	School of Finance and Banking	http://www.sfb.ac.rw/
+6460	RW	Umutara Polytechnic	http://www.umutarapolytech.ac.rw/
+6461	RW	Université Catholique de Kabgayi	http://www.uck.ac.rw/
+6462	SA	Al-baha University	http://www.bu.edu.sa/
+6463	SA	Al-Batterjee Medical College	http://www.bmcmedcollege.com/
+6464	SA	Alfaisal University	http://www.alfaisal.edu/
+6465	SA	Al-Imam Mohamed Ibn Saud Islamic University	http://www.imamu.edu.sa/
+6466	SA	Aljouf University	http://www.ju.edu.sa/
+6467	SA	Alkharj University	http://www.ku.edu.sa/
+6468	SA	Al-Yamamah College	http://www.alyamamah.edu.sa/
+6469	SA	Arab Open University	http://www.arabou.org.sa/
+6470	SA	Batterjee Medical College	http://www.bmc.edu.sa/
+6471	SA	Buraydah College for Applied Medical Sciences	http://www.bpc.edu.sa/
+6472	SA	College of Busniess Admnistration	http://www.cba.edu.sa/
+6473	SA	College of Nursing and Allied Health Scinces	http://www.ngha.med.sa/
+6474	SA	College of Technology at Abha	http://www.act.gotevot.edu.sa/
+6475	SA	College of Technology at Dammam	http://www.dct.gotevot.edu.sa/
+6476	SA	College of Technology at Jazan	http://www.tnmeyah.net/jct/
+6477	SA	College of Technology at Jeddah	http://www.jct.edu.sa/
+6478	SA	College of Technology at Kharj	http://kct.gotevot.edu.sa/
+6479	SA	College of Technology at Riyadh	http://www.rct.edu.sa/
+6480	SA	College of Telecommunication & Information 	http://www.cti.edu.sa/
+6481	SA	Dammam Community College	http://www.dcc.edu.sa/
+6482	SA	Dar al Hekma College	http://www.daralhekma.edu.sa/
+6483	SA	Dar Al-Uloom Colleges	http://www.dau.edu.sa/
+6484	SA	Effat College	http://www.effatcollege.edu.sa/
+6485	SA	Fahad Bin Sultan University	http://www.fbsc.edu.sa/
+6486	SA	Ibn Sina National College for Medical Studies 	http://www.ibnsina.edu.sa/
+6487	SA	Institute of Public Administration	http://www.ipa.edu.sa/
+6488	SA	Islamic University of Medinah	http://www.iu.edu.sa/
+6489	SA	Jazan University	http://www.jazanu.edu.sa/
+6490	SA	Jubail Industrial College	http://www.jic.edu.sa/
+6491	SA	Jubail University College	http://www.ucj.edu.sa/
+6492	SA	King Abdul Aziz University	http://www.kau.edu.sa/
+6493	SA	King Abdullah University of Science and Technology 	http://www.kaust.edu.sa/
+6494	SA	King Fahad University of Petroleum and Minerals	http://www.kfupm.edu.sa/
+6495	SA	King Fahd Security College	http://www.kfsc.edu.sa/
+6496	SA	King Faisal University	http://www.kfu.edu.sa/
+6497	SA	King Khaled University	http://www.kku.edu.sa/
+6498	SA	King Saud bin Abdulaziz University for Health Sciences 	http://www.ksau-hs.edu.sa/
+6499	SA	King Saud University	http://www.ksu.edu.sa/
+6500	SA	Knowledge College for Science and Technology	http://www.mcst.edu.sa/
+6501	SA	Knowledge International University	http://www.almaarifah.com/
+6502	SA	Majmaah University	http://www.mu.edu.sa/
+6503	SA	Naif Arab University for Security Sciences	http://www.nauss.edu.sa/
+6504	SA	Najran University	http://www.nu.edu.sa/
+6505	SA	Northern Border University	http://www.nbu.edu.sa/
+6506	SA	Prince Mohammad Bin Fahd University	http://www.pmu.edu.sa/
+6507	SA	Princess Nora Bint Abdulrahman University	http://www.rug.edu.sa/
+6508	SA	Prince Sultan College for Tourism and Hotel Scinces	http://www.pscabha.edu.sa/
+6509	SA	Prince Sultan University	http://www.psu.edu.sa/
+6510	SA	Private College of Dentistry and Pharmacy	http://www.pcdp.edu.sa/
+6511	SA	Qassim Private College	http://www.qc.edu.sa/
+6512	SA	Qassim University	http://www.qu.edu.sa/
+6513	SA	Riyadh College of Dentistry and Pharmacy	http://www.riyadh.edu.sa/
+6514	SA	Saad College of Nursing and Allied Health Sciences	http://www.saadcollege.com/
+6515	SA	Saudi Electronic University	http://www.seu.edu.sa/
+6516	SA	Shaqra University	http://www.su.edu.sa/
+6517	SA	Taibah University	http://www.taibahu.edu.sa/
+6518	SA	Taif University	http://www.tu.edu.sa/
+6519	SA	Umm Al-Qura University	http://www.uqu.edu.sa/
+6520	SA	University of Dammam	http://www.ud.edu.sa/
+6521	SA	University of Hail	http://www.uoh.edu.sa/
+6522	SA	University of Tabuk	http://www.ut.edu.sa/
+6523	SA	Yanbu Industrial College	http://www.yic.edu.sa/
+6524	SA	Yanbu Technical Institute	http://www.yti.edu.sa/
+6525	SA	Yanbu University College	http://www.yuc.edu.sa/
+6526	SB	University of the South Pacific	http://www.usp.ac.fj/
+6527	SC	University of Seychelles	http://www.unisey.ac.sc/
+6528	SC	University of Seychelles - American Institute of Medicine	http://www.usaim.edu/
+6529	SD	Ahfad University for Women	http://www.ahfad.edu.sd/
+6530	SD	Al Fashir University	http://www.fashir.edu.sd/
+6531	SD	Al-Zaiem Al-Azhari University	http://www.aau.edu.sd/
+6532	SD	Bakht Er-Ruda University	http://www.bakhtalruda.edu.sd/
+6533	SD	Bayan College for Science & Technology	http://www.bayantech.edu/
+6534	SD	Blue Nile University	http://www.bnu.edu.sd/
+6535	SD	Canadian Sudanese College	http://www.ccs.edu.sd/
+6536	SD	Dalanj University	http://www.dalanjuniversity.edu.sd/
+6537	SD	Elrazi College Of Medical & Technological Sciences	http://www.elrazicollege.net/
+6538	SD	Gezira College of Technology	http://www.geziracollege.edu.sd/
+6539	SD	High Institute for Banking & Financial Studies	http://www.hibfs.edu.sd/
+6540	SD	International University of Africa (IUA)	http://www.iua.edu.sd/
+6541	SD	Kassala University	http://www.kassalauni.edu.sd/
+6542	SD	National College for Medical and Technical Studies	http://www.nc.edu.sd/
+6543	SD	National Ribat University	http://www.ribat.edu.sd/
+6544	SD	Neelain University	http://www.neelain.edu.sd/
+6545	SD	Nile Valley University	http://www.nilevalley.edu.sd/
+6546	SD	Omdurman Ahlia University	http://www.oau.edu.sd/
+6547	SD	Omdurman Islamic University	http://www.oiu.edu.sd/
+6548	SD	Open University of Sudan (OUS)	http://www.ous.edu.sd/
+6549	SD	Red Sea University	http://www.rsu.edu.sd/
+6550	SD	Shendi University	http://www.ush.sd/
+6551	SD	Sinnar University	http://www.sinnaruniv.edu.sd/
+6552	SD	Sudan Academy of Sciences	http://www.sas-sd.net/
+6553	SD	Sudan University for Science and Technology	http://www.sustech.edu/
+6554	SD	University of Dongola	http://www.uofd.edu.sd/
+6555	SD	University of El Imam El Mahdi University	http://www.elmahdi.edu.sd/
+6556	SD	University of Gadarif	http://www.gaduniv.edu.sd/
+6557	SD	University of Gezira	http://www.uofg.edu.sd/
+6558	SD	University of Holy Quran and Islamic Siences	http://www.quran-unv.edu.sd/
+6559	SD	University of Khartoum	http://www.uofk.edu/
+6560	SD	University of Kordofan	http://www.kordofan.edu.sd/
+6561	SD	University Of Medical Sciences & Technology (UMST)	http://www.umst-edu.com/
+6562	SD	University of Science and Technology	http://www.ust.edu.sd/
+6563	SD	Upper Nile University	http://www.unu.edu.sd/
+6564	SE	Blekinge Institute of Technology	http://www.bth.se/
+6565	SE	Chalmers University of Technology	http://www.chalmers.se/
+6566	SE	Dalarna University College	http://www.du.se/
+6567	SE	Free University Stockholm	http://www.stockholm-fu.com/
+6568	SE	Göteborg University	http://www.gu.se/
+6569	SE	Gotland University College	http://www.hgo.se/
+6570	SE	Halmstad University College	http://www.hh.se/
+6571	SE	Jönköping University College	http://www.hj.se/
+6572	SE	Jönköping University College of Health Sciences	http://www.hj.se/hhj/
+6573	SE	Kalmar University College	http://www.hik.se/
+6574	SE	Karlstad University	http://www.kau.se/
+6575	SE	Karolinska Institute Stockholm	http://www.ki.se/
+6576	SE	Linköping University	http://www.liu.se/
+6577	SE	Lulea University of Technology	http://www.luth.se/
+6578	SE	Lund University	http://www.lu.se/
+6579	SE	Mälardalen University	http://www.mdh.se/
+6580	SE	Malmö University College	http://www.mah.se/
+6581	SE	Mid-Sweden University	http://www.miun.se/
+6582	SE	Nordic School of Public Health	http://www.nhv.se/
+6583	SE	Örebro University	http://www.oru.se/
+6584	SE	Royal lnstitute of Technology	http://www.kth.se/
+6585	SE	School of Design and Crafts	http://www.hdk.gu.se/
+6586	SE	Södertörn University College	http://www.sh.se/
+6587	SE	Stockholm Institute of Education	http://www.lhs.se/
+6588	SE	Stockholm School of Economics	http://www.hhs.se/
+6589	SE	Stockholm University	http://www.su.se/
+6590	SE	Swedish University of Agricultural Sciences	http://www.slu.se/
+6591	SE	Umea University	http://www.umu.se/
+6592	SE	University College of Arts, Crafts and Design	http://www.konstfack.se/
+6593	SE	University College of Borås	http://www.hb.se/
+6594	SE	University College of Gävle	http://www.hig.se/
+6595	SE	University College of Kristianstad	http://www.hkr.se/
+6596	SE	University College of Skövde	http://www.his.se/
+6597	SE	University College of Trollhättan/Uddevalla	http://www.htu.se/
+6598	SE	Uppsala University	http://www.uu.se/
+6599	SE	Växjö University	http://www.vxu.se/
+6600	SE	World Maritime University	http://www.wmu.se/
+6601	SG	Aventis School of Management	http://www.aventis.edu.sg/
+6602	SG	Nanyang Technological University	http://www.ntu.edu.sg/
+6603	SG	National University of Singapore	http://www.nus.edu.sg/
+6604	SG	Singapore Institute of Management (SIM)	http://www.sim.edu.sg/
+6605	SG	Singapore Management University	http://www.smu.edu.sg/
+6606	SG	Taoist College Singapore	http://www.taoistcollege.org.sg/
+6607	SI	University of Ljubljana	http://www.uni-lj.si/
+6608	SI	University of Maribor	http://www.uni-mb.si/
+6609	SI	University of Nova Gorica	http://www.ung.si/
+6610	SI	University of Primorska	http://www.upr.si/
+6611	SK	Academy of Arts in Banská Bystrica	http://www.aku.sk/
+6612	SK	Academy of Fine Arts and Design in Bratislava	http://www.vsvu.sk/
+6613	SK	Armed Forces Academy of General Milan Rastislav Štefánik	http://www.aos.sk/
+6614	SK	Bratislava International School of Liberal Arts	http://www.bisla.sk/
+6615	SK	Catholic University in Ruzomberok	http://www.ku.sk/
+6616	SK	Catholic University in Ružomberok	http://www.ku.sk/
+6617	SK	College in Sládkovičovo	http://www.vssladkovicovo.sk/
+6618	SK	Comenius University in Bratislava	http://www.uniba.sk/
+6619	SK	International School of Management in Prešov	http://www.ismpo.sk/
+6620	SK	Janos Selye University	http://www.selyeuni.sk/
+6621	SK	Law University of Bratislava	http://www.uninova.sk/
+6622	SK	Matej Bel University in Banská Bystrica	http://www.umb.sk/
+6623	SK	Pavol Jozef Safarik University in Kosice	http://www.upjs.sk/
+6624	SK	Police Academy in Bratislava	http://www.akademiapz.sk/
+6625	SK	School of Management	http://www.vsm.sk/
+6626	SK	Slovak Medical University	http:///www.szu.sk/
+6627	SK	Slovak University of Agriculture in Nitra	http://www.uniag.sk/
+6628	SK	Slovak University of Technology in Bratislava	http://www.stuba.sk/
+6629	SK	St. Elizabeth’s College of Health and Social Sciences in Bratislava	http://www.vssvalzbety.sk/
+6630	SK	Technical Institute of Dubnica in Dubnica nad Váhom	http://www.dti.sk/
+6631	SK	Technical University in Kosice	http://www.tuke.sk/
+6632	SK	Technical University in Zvolen	http://www.tuzvo.sk/
+6633	SK	University Konstantina Filozov in Nitra	http://www.ukf.sk/
+6634	SK	University of Alexandra Dubček in Trenčín	http://www.tnuni.sk/
+6635	SK	University of Central Europe in Skalica	http://www.sevs.sk/
+6636	SK	University of Economics in Bratislava	http://www.euba.sk/
+6637	SK	University of Performing Arts in Bratislava	http://www.vsmu.sk/
+6638	SK	University of Presov	http://www.unipo.sk/
+6639	SK	University of St. Cyril and Methodius in Trnava	http://www.ucm.sk/
+6640	SK	University of SV Cyril and Methodius in Trnava	http://www.ucm.sk/
+6641	SK	University of Trnava	http://www.truni.sk/
+6642	SK	University of Veterinary Medicine in Kosice	http://www.uvm.sk/
+6643	SK	University of Zilinska	http://www.uniza.sk/
+6644	SL	Fourah Bay College, University of Sierra Leone	http://fbcusl.8k.com/
+6645	SL	LICCSAL Business College	http://www.liccsalsl.org/
+6646	SL	Njala University	http://www.nu-online.com/
+6647	SL	University of Sierra Leone	http://www.tusol.org/
+6648	SM	University of San Marino	http://www.unirsm.sm/
+6649	SN	L'Université de l'Entreprise	http://www.afi-ue.sn/
+6650	SN	Université Alioune Diop de Bambey	http://www.bambey.univ.sn/
+6651	SN	Universite Amadou Hampaté Ba	http://www.uahb.sn/
+6652	SN	Université Cheikh Anta Diop	http://www.ucad.sn/
+6653	SN	Université Dakar Bourguiba	http://www.udb.sn/
+6654	SN	Université de Thiès	http://www.univ-thies.sn/
+6655	SN	Université de Ziguinchor	http://www.univ-zig.sn/
+6656	SN	Université du Sahel	http://www.unis.sn/
+6657	SN	Université Euro-Afrique	http://www.uea.edu.sn/
+6658	SN	Université Gaston Berger Saint-Louis	http://www.ugb.sn/
+6659	SO	Amoud University	http://www.amouduniversity.org/
+6660	SO	Benadir University	http://www.benadiruniversity.net/
+6661	SO	Bosaso College	http://www.bosasocollege.com/
+6662	SO	East Africa University Bosaso	http://www.eastafricauniversity.net/
+6663	SO	East Somalia University	http://www.eastsomaliauniversity.com/
+6664	SO	Eelo American University	http://www.eelouniversity.org/
+6665	SO	Gollis University	http://www.gollisuniversity.com/
+6666	SO	Hiiraan University	http://www.hiiraanuniversity.info/
+6667	SO	Maakhir University	http://maakhiruniversity.net/
+6668	SO	Mogadishu University	http://www.mogadishuuniversity.com/
+6669	SO	Nugaal University	http://www.nugaaluniversity.com/
+6670	SO	Puntland State University	http://www.puntlandstateuniversity.com/
+6671	SO	Sanaag University of Science and Technology	http://www.sanaaguniversity.com/
+6672	SO	Somaliland University of Technology	http://www.somtech.org/
+6673	SO	University of Burao	http://www.buraouniversity.com/
+6674	SO	University of Hargeisa	http://www.hargeisauniversity.net/
+6675	SO	University of Somalia	http://www.universityofsomalia.net/
+6676	SR	Anton de Kom University	http://www.uvs.edu/
+6677	SS	University of Juba	http://www.juba.edu.sd/
+6678	SS	University of Northern Bahr El-Ghazal	http://www.unbeg.edu.sd/
+6679	SV	Universidad Albert Einstein	http://www.uae.edu.sv/
+6680	SV	Universidad Autónoma de Santa Ana	http://www.unasa.edu.sv/
+6681	SV	Universidad Capitain General Gerardo Barrios	http://www.ugb.edu.sv/
+6682	SV	Universidad Católica de Occidente	http://www.unico.edu.sv/
+6683	SV	Universidad Centroamericana "José Simeón Canas"	http://www.uca.edu.sv/
+6684	SV	Universidad Cristiana de las Asambleas de Dios	http://www.ucad.edu.sv/
+6685	SV	Universidad de El Salvador	http://www.ues.edu.sv/
+6686	SV	Universidad de Oriente	http://www.univo.edu.sv/
+6687	SV	Universidad de Sonsonate	http://www.usonsonate.edu.sv/
+6688	SV	Universidad Don Bosco	http://www.cdb.edu.sv/
+6689	SV	Universidad Dr. Andreas Bello	http://www.unab.edu.sv/
+6690	SV	Universidad Dr. Jose Matias Delgado	http://www.ujmd.edu.sv/
+6691	SV	Universidad Evangélica de El Salvador	http://www.uees.edu.sv/
+6692	SV	Universidad Francisco Gavidia	http://www.ufg.edu.sv/
+6693	SV	Universidad Isaac Newton	http://www.usin.edu.sv/
+6694	SV	Universidad Luterana Salvadorena	http://www.netcomsa.com/uls/
+6695	SV	Universidad Modular Abierta	http://www.uma.edu.sv/
+6696	SV	Universidad Monsenor Oscar Arnulfo Romeo	http://www.umoar.edu.sv/
+6697	SV	Universidad Nueva San Salvador	http://www.unssa.edu.sv/
+6698	SV	Universidad Panamericana de San Salvador	http://www.upan.edu.sv/
+6699	SV	Universidad Pedagógica de El Salvador	http://www.universidadpedagogica.com/
+6700	SV	Universidad Politécnica de El Salvador	http://www.upes.edu.sv/
+6701	SV	Universidad Salvadorena "Alberto Masferrer"	http://www.usam.edu.sv/
+6702	SV	Universidad Técnica Latinoamericana	http://www.utla.edu.sv/
+6703	SV	Universidad Tecnológica de El Salvador	http://www.utec.edu.sv/
+6704	SY	Al-Baath University	http://www.albaath-univ.edu.sy/
+6705	SY	Al-Wataniya Private University	http://www.wpu.edu.sy/
+6706	SY	Arab European University	http://www.aiu.edu.sy/
+6707	SY	Damascus University	http://www.damascusuniversity.edu.sy/
+6708	SY	Higher Institute of Business Administration	http://www.hiba.edu.sy/
+6709	SY	International University for Science & Technology 	http://www.iust.edu.sy/
+6710	SY	Ittihad Private University	http://www.ipu.edu.sy/
+6711	SY	Mamoun Private University for Science and Technology	http://www.must.edu.sy/
+6712	SY	Syrian International Private University for Science & Technology	http://www.siust.edu.sy/
+6713	SY	Syrian Virtual University	http://www.svuonline.org/
+6714	SY	Tishreen University	http://www.tishreen.edu.sy/
+6715	SY	University of Aleppo	http://www.alepuniv.edu.sy/
+6716	SY	University of Kalamoon	http://www.uok.edu.sy/
+6717	SY	Wadi International University	http://www.wiu.edu.sy/
+6718	SY	Yarmouk Private University 	http://www.ypu.edu.sy/
+6719	SZ	University of Swaziland	http://www.uniswa.sz/
+6720	TC	Charisma University	http://www.charismauniversity.org/
+6721	TD	Université de N'Djamena	http://www.univ-ndjamena.org/
+6722	TG	Université de Lomé	http://www.univ-lome.tg/
+6723	TH	Asian Institute of Technology	http://www.ait.ac.th/
+6724	TH	Asian University of Science and Technology	http://www.asianust.ac.th/
+6725	TH	Assumption University of Thailand	http://www.au.edu/
+6726	TH	Bangkok University	http://www.bu.ac.th/
+6727	TH	Burapha University	http://www.buu.ac.th/
+6728	TH	Chaopraya University 	http://www.cpu.ac.th/
+6729	TH	Chiang Mai Rajabhat University	http://www.cmru.ac.th/
+6730	TH	Chiang Mai University	http://www.chiangmai.ac.th/
+6731	TH	Chiang Mai Vocational College	http://www.cmvc.ac.th/
+6732	TH	Chulalongkorn University	http://www.chula.ac.th/
+6733	TH	Dhurakijpundit University	http://www.dpu.ac.th/
+6734	TH	Eastern Asia University	http://www.eau.ac.th/
+6735	TH	Engineering Faculty of Asian University	http://www.efau.org/
+6736	TH	Hatyai University	http://www.hu.ac.th/
+6737	TH	Huachiew Chalermprakiet University	http://www.hcu.ac.th/
+6738	TH	International Buddhist College	http://www.ibc.ac.th/
+6739	TH	Kasem Bundit University	http://www.kbu.ac.th/
+6740	TH	Kasetsart University	http://www.ku.ac.th/
+6741	TH	Khon Kaen University	http://www.kku.ac.th/
+6742	TH	King Mongkut's University of Technology Ladkrabang	http://www.kmitl.ac.th/
+6743	TH	King Mongkut's University of Technology North Bangkok	http://www.kmutnb.ac.th/
+6744	TH	King Mongkut's University of Technology Thonburi	http://www.kmutt.ac.th/
+6745	TH	Krirk University	http://www.krirk.ac.th/
+6746	TH	Lampang College of Commerce and Technology	http://www.lcct.ac.th/
+6747	TH	Lampang Rajabhat University	http://www.lpru.ac.th/
+6748	TH	Lampang Vocational College   	http://www.lampangvc.ac.th/
+6749	TH	Lamphun College of Agriculture and Technology	http://www.lcat.ac.th/
+6750	TH	Mae Fah Luang University 	http://www.mfu.ac.th/
+6751	TH	Maejo University	http://www.mju.ac.th/
+6752	TH	Mahachulalongkorn Buddhist University	http://www.mcu.ac.th/
+6753	TH	Mahamakut Buddhist University	http://www.mbu.ac.th/
+6754	TH	Mahanakorn University of Technology	http://www.mut.ac.th/
+6755	TH	Mahasarakham University	http://www.msu.ac.th/
+6756	TH	Mahidol University	http://www.mahidol.ac.th/
+6757	TH	Mahidol University International College	http://www.muic.mahidol.ac.th/
+6758	TH	Naresuan University	http://www.nu.ac.th/
+6759	TH	National Institute of Development Administration	http://www.nida.ac.th/
+6760	TH	Nivadhana University	http://www.nivadhana.ac.th/
+6761	TH	Pathumthani University	http://www.ptu.ac.th/
+6762	TH	Payap University Chaiang Mai	http://www.payap.ac.th/
+6763	TH	Phranakhon Si Ayutthaya Rajabhat University	http://www.aru.ac.th/
+6764	TH	Prince of Songkla University	http://www.psu.ac.th/
+6765	TH	Rajamangala University of Technology, Lanna Chiang Rai	http://chiangraicampus.rmutl.ac.th/
+6766	TH	Rajamangala University of Technology, Lanna Nan	http://www.nan.rmutl.ac.th/
+6767	TH	Rajamangala University of Technology, Phra Nakhon	http://www.rmutp.ac.th/
+6768	TH	Ramkhamhaeng University	http://www.ru.ac.th/
+6769	TH	Rangsit University	http://www.rsu.ac.th/
+6770	TH	Shinawatra University	http://www.shinawatra.ac.th/
+6771	TH	Siam Technology College	http://www.siamtechu.net/
+6772	TH	Siam University	http://www.siam.edu/
+6773	TH	Silpakorn University	http://www.su.ac.th/
+6774	TH	South-East Asia University	http://www.sau.ac.th/
+6775	TH	Srinakharinwirot University	http://www.swu.ac.th/
+6776	TH	Sripatum University	http://www.spu.ac.th/
+6777	TH	Stamford International University	http://www.stamford.edu/
+6778	TH	St. John's University	http://www.stjohn.ac.th/
+6779	TH	Suan Dusit Rajabhat University	http://www.dusit.ac.th/
+6780	TH	Sukhothai Thammathirat Open University	http://www.stou.ac.th/
+6781	TH	Suranaree University of Technology	http://www.sut.ac.th/
+6782	TH	Thaksin University	http://www.tsu.ac.th/
+6783	TH	Thammasat University	http://www.tu.ac.th/
+6784	TH	Ubonratchathani University	http://www.ubu.ac.th/
+6785	TH	University of the Thai Chamber of Commerce	http://www.utcc.ac.th/
+6786	TH	Vongchavalitkul University	http://www.vu.ac.th/
+6787	TH	Walailak University	http://www.wu.ac.th/
+6788	TH	Webster University, Thailand	http://www.webster.ac.th/
+6789	TH	Yonok University	http://www.yonok.ac.th/
+6790	TJ	Tajik Agrarian University	http://www.tajagroun.tj/
+6791	TJ	Tajikistan International University	http://www.tiu.tj/
+6792	TJ	Tajik National University	http://tgnu.tarena.tj/
+6793	TM	International Turkmen Turkish University	http://www.ittu.edu.tm/
+6794	TN	Instituts Supérieurs de Formation des Maîtres	http://www.disfm.rnu.tn/
+6795	TN	Instituts Supérieurs des Etudes Technologiques	http://www.isetr.rnu.tn/
+6796	TN	Institut Supérieur de Gestion de Tunis	http://www.isg.rnu.tn/
+6797	TN	Université Centrale	http://www.ucaat.com/
+6798	TN	Université de 7 Novembre à Carthage	http://u7nc.uvt.rnu.tn/
+6799	TN	Université de Gabès	http://www.univgb.rnu.tn/
+6800	TN	Université de Gafsa	http://www.ugaf.rnu.tn/
+6801	TN	Université de Jendouba	http://www.uj.rnu.tn/
+6802	TN	Université de Kairouan	http://www.univ-k.rnu.tn/
+6803	TN	Université de la Manouba	http://www.uma.rnu.tn/
+6804	TN	Université de Monastir	http://www.um.rnu.tn/
+6805	TN	Université de Sfax	http://www.uss.rnu.tn/
+6806	TN	Université de Tunis	http://www.utunis.rnu.tn/
+6807	TN	Université de Tunis El Manar	http://www.utm.rnu.tn/
+6808	TN	Université du Centre, Sousse	http://www.uc.rnu.tn/
+6809	TN	Université Ez-Zitouna	http://www.uz.rnu.tn/
+6810	TN	Université Libre de Tunis	http://www.ult.ens.tn/
+6811	TN	Université Virtuelle de Tunis	http://www.uvt.rnu.tn/
+6812	TN	University of Aviation and Technology	http://www.unat.ens.tn/
+6813	TO	University of the South Pacific Centre	http://www.usp.ac.fj/
+6814	TR	Abant Izzet Baysal University	http://www.ibu.edu.tr/
+6815	TR	Adnan Menderes University	http://www.adu.edu.tr/
+6816	TR	Afyon Kocatepe University	http://www.aku.edu.tr/
+6817	TR	Ahi Evran University	http://www.ahievran.edu.tr/
+6818	TR	Akdeniz University	http://www.akdeniz.edu.tr/
+6819	TR	Anadolu University	http://www.anadolu.edu.tr/
+6820	TR	Ankara University	http://www.ankara.edu.tr/
+6821	TR	Atatürk University	http://www.atauni.edu.tr/
+6822	TR	Atilim University	http://www.atilim.edu.tr/
+6823	TR	Bahcesehir University	http://www.bahcesehir.edu.tr/
+6824	TR	Balikesir University	http://www.balikesir.edu.tr/
+6825	TR	Baskent University	http://www.baskent.edu.tr/
+6826	TR	Beykent University	http://www.beykent.edu.tr/
+6827	TR	Bilecik University	http://www.bilecik.edu.tr/
+6828	TR	Bilkent University	http://www.bilkent.edu.tr/
+6829	TR	Bogazici University	http://www.boun.edu.tr/
+6830	TR	Cag University	http://www.cag.edu.tr/
+6831	TR	Canakkale (18th March) University	http://www.comu.edu.tr/
+6832	TR	Cankaya University	http://www.cankaya.edu.tr/
+6833	TR	Celal Bayar University	http://www.bayar.edu.tr/
+6834	TR	Cukurova University	http://www.cu.edu.tr/
+6835	TR	Cumhuriyet (Republik) University	http://www.cumhuriyet.edu.tr/
+6836	TR	Dicle (Tirgris) University	http://www.dicle.edu.tr/
+6837	TR	Dogus University	http://www.dogus.edu.tr/
+6838	TR	Dokuz Eylül University	http://www.deu.edu.tr/
+6839	TR	Dumlupinar University	http://www.dumlupinar.edu.tr/
+6840	TR	Ege University	http://www.ege.edu.tr/
+6841	TR	Erciyes University	http://www.erciyes.edu.tr/
+6842	TR	Fatih University	http://www.fatih.edu.tr/
+6843	TR	Firat (Euphrates) University	http://www.firat.edu.tr/
+6844	TR	Galatasaray University	http://www.gsu.edu.tr/
+6845	TR	Gaziantep University	http://www.gantep.edu.tr/
+6846	TR	Gaziosmanpasa University	http://www.gop.edu.tr/
+6847	TR	Gazi University Ankara	http://www.gazi.edu.tr/
+6848	TR	Gebze Institute of Technology	http://www.gyte.edu.tr/
+6849	TR	Gediz University	http://www.gediz.edu.tr/
+6850	TR	Gulhane Military Medical Academy	http://www.gata.edu.tr/
+6851	TR	Hacettepe University	http://www.hun.edu.tr/
+6852	TR	Halic University	http://www.halic.edu.tr/
+6853	TR	Harran University	http://www.harran.edu.tr/
+6854	TR	Iasar University	http://www.yasar.edu.tr/
+6855	TR	Inönü University	http://www.inonu.edu.tr/
+6856	TR	Isik University	http://www.isikun.edu.tr/
+6857	TR	Istanbul Arel University	http://www.arel.edu.tr/
+6858	TR	Istanbul Bilgi University	http://www.ibun.edu.tr/
+6859	TR	Istanbul Kultur University	http://www.iku.edu.tr/
+6860	TR	İstanbul Şehir University	http://www.sehir.edu.tr/
+6861	TR	Istanbul Technical University	http://www.itu.edu.tr/
+6862	TR	Istanbul Ticaret University	http://www.iticu.edu.tr/
+6863	TR	Istanbul University	http://www.istanbul.edu.tr/
+6864	TR	Izmir Economic University	http://www.izmirekonomi.edu.tr/
+6865	TR	Izmir Institute of Technology	http://www.iyte.edu.tr/
+6866	TR	Kadir Has University	http://www.khas.edu.tr/
+6867	TR	Kafkas University	http://www.kafkas.edu.tr/
+6868	TR	Kahramanmaras Sütcü Imam University	http://www.ksu.edu.tr/
+6869	TR	Karadeniz Technical University	http://www.ktu.edu.tr/
+6870	TR	Kilis 7 Aralık University	http://www.kilis.edu.tr/
+6871	TR	Kirikkale University	http://www.kku.edu.tr/
+6872	TR	Kocaeli University	http://www.kou.edu.tr/
+6873	TR	Koc University	http://www.ku.edu.tr/
+6874	TR	Maltepe University	http://www.maltepe.edu.tr/
+6875	TR	Marmara University	http://www.marmara.edu.tr/
+6876	TR	Mersin University	http://www.mersin.edu.tr/
+6877	TR	Middle East Technical University	http://www.odtu.edu.tr/
+6878	TR	Mimar Sinan University	http://www.msu.edu.tr/
+6879	TR	Mugla University	http://www.mu.edu.tr/
+6880	TR	Mustafa Kemal University	http://www.mku.edu.tr/
+6881	TR	Namik Kemal University	http://www.nku.edu.tr/
+6882	TR	Necmettin Erbakan University	http://www.konya.edu.tr/
+6883	TR	Nigde University	http://www.nigde.edu.tr/
+6884	TR	Ondokuz Mayis University Samsun	http://www.omu.edu.tr/
+6885	TR	Osmangazi University	http://www.ogu.edu.tr/
+6886	TR	Ozyegin University	http://www.ozyegin.edu.tr/
+6887	TR	Pamukkale University	http://www.pamukkale.edu.tr/
+6888	TR	Sabanci University	http://www.sabanciuniv.edu.tr/
+6889	TR	Sakarya University	http://www.sau.edu.tr/
+6890	TR	Selcuk University	http://www.selcuk.edu.tr/
+6891	TR	Suleyman Demirel University	http://www.sdu.edu.tr/
+6892	TR	Tobb Economics and Technology University	http://www.etu.edu.tr/
+6893	TR	Trakya University	http://www.trakya.edu.tr/
+6894	TR	Türkisch-Deutsche Universität	http://www.tau.edu.tr/
+6895	TR	Turkish Military Academy	http://www.kho.edu.tr/
+6896	TR	Turkish Naval Academy	http://www.dho.edu.tr/
+6897	TR	Ufuk University	http://www.ufuk.edu.tr/
+6898	TR	Uludag University	http://www.uludag.edu.tr/
+6899	TR	Yalova University	http://www.yalova.edu.tr/
+6900	TR	Yasar University	http://www.yasar.edu.tr/
+6901	TR	Yeditepe University	http://www.yeditepe.edu.tr/
+6902	TR	Yildirim Beyazit University	http://www.ybu.edu.tr/
+6903	TR	Yildiz Technical University	http://www.yildiz.edu.tr/
+6904	TR	Yüzüncü Yil (Centennial) University	http://www.yyu.edu.tr/
+6905	TR	Zonguldak Karaelmas University	http://www.karaelmas.edu.tr/
+6906	TT	University of the Southern Caribbean	http://www.usc.edu.tt/
+6907	TT	University of the West Indies St. Augustine	http://www.uwi.tt/
+6908	TT	University of Trinidad and Tobago	http://www.utt.edu.tt/
+6909	TW	Aletheia University	http://www.au.edu.tw/
+6910	TW	Central Police University	http://www.cpu.edu.tw/
+6911	TW	Chang Gung University	http://www.cgu.edu.tw/
+6912	TW	Chang Jung University	http://www.cju.edu.tw/
+6913	TW	Chao Yang University of Science and Technology	http://www.cyut.edu.tw/
+6914	TW	Chia Nana College of Pharmacy and Science	http://www.chna.edu.tw/
+6915	TW	China Medical College	http://www.cmc.edu.tw/
+6916	TW	Chinese Culture University	http://www.pccu.edu.tw/
+6917	TW	Ching Kuo Institue of Management & Health	http://www.cku.edu.tw/
+6918	TW	Chung Hua University	http://www.chu.edu.tw/
+6919	TW	Chung Shan Medical and Dental College	http://www.csmc.edu.tw/
+6920	TW	Chung Yuan Christian University	http://www.cycu.edu.tw/
+6921	TW	Da-Yeh University	http://www.dyu.edu.tw/
+6922	TW	Feng Chia University	http://www.fcu.edu.tw/
+6923	TW	Fu Jen Catholic University	http://www.fju.edu.tw/
+6924	TW	Hsuan Chuang University	http://www.hcu.edu.tw/
+6925	TW	Huafan University	http://www.hfu.edu.tw/
+6926	TW	I-Shou University	http://www.isu.edu.tw/
+6927	TW	Kaohsiung Medical College	http://www.kmc.edu.tw/
+6928	TW	Kaohsuing Open University	http://www.ouk.edu.tw/
+6929	TW	Kung Shan Institute of Technology	http://www.ksit.edu.tw/
+6930	TW	Kun Shan University	http://www.ksu.edu.tw/
+6931	TW	Ling Tung University	http://www.ltc.edu.tw/
+6932	TW	LungHwa University of Science and Technology	http://www.lhu.edu.tw/
+6933	TW	Ming Chuan University	http://www.mcu.edu.tw/
+6934	TW	Nanhua University	http://www.nhu.edu.tw/
+6935	TW	National Central University	http://www.ncu.edu.tw/
+6936	TW	National Changhua University of Education	http://www.ncue.edu.tw/
+6937	TW	National Chengchi University	http://www.nccu.edu.tw/
+6938	TW	National Cheng Kung University	http://english.web.ncku.edu.tw/
+6939	TW	National Chiao Tung University	http://www.nctu.edu.tw/
+6940	TW	National Chiayi University	http://www.ncyu.edu.tw/
+6941	TW	National Chi Nan University	http://www.ncnu.edu.tw/
+6942	TW	National Chung Cheng University	http://www.ccu.edu.tw/
+6943	TW	National Chung Hsing University, Taichung	http://www.nchu.edu.tw/
+6944	TW	National Chung Hsing University, Taipei	http://www.nchulc.edu.tw/
+6945	TW	National College of Physical Education and Sports	http://www.ncpes.edu.tw/
+6946	TW	National Dong Hwa University	http://www.ndhu.edu.tw/
+6947	TW	National Formosa University	http://www.nfu.edu.tw/
+6948	TW	National Hsin-Chu Teachers College	http://www.nhctc.edu.tw/
+6949	TW	National Hualien Teachers College	http://www.nhltc.edu.tw/
+6950	TW	National Ilan University	http://www.niu.edu.tw/
+6951	TW	National Institute of the Arts	http://www.nia.edu.tw/
+6952	TW	National Kaohsiung First University of Science and Technology	http://www.nkfu.edu.tw/
+6953	TW	National Kaohsiung Normal University	http://www.nknu.edu.tw/
+6954	TW	National Kaohsiung University of Applied Sciences	http://www.kuas.edu.tw/
+6955	TW	National Open University	http://www.nou.edu.tw/
+6956	TW	National Pingtung Teachers College	http://www.npttc.edu.tw/
+6957	TW	National Pingtung University of Science and Technology	http://www.npust.edu.tw/
+6958	TW	National Sun Yat-Sen University	http://www.nsysu.edu.tw/
+6959	TW	National Taichung Teachers College	http://www.ntctc.edu.tw/
+6960	TW	National Tainan Teachers College	http://www.ntntc.edu.tw/
+6961	TW	National Taipei College of Nursing	http://www.ntcn.edu.tw/
+6962	TW	National Taipei Teachers College	http://www.ntptc.edu.tw/
+6963	TW	National Taipei University	http://www.ntpu.edu.tw/
+6964	TW	National Taipei University of Technology	http://www.ntut.edu.tw/
+6965	TW	National Taitung Teachers College	http://www.ntttc.edu.tw/
+6966	TW	National Taiwan College of Arts	http://www.ntca.edu.tw/
+6967	TW	National Taiwan College of Physical Education and Sports	http://www.ntcpe.edu.tw/
+6968	TW	National Taiwan College of the Arts	http://www.ntca.edu.tw/
+6969	TW	National Taiwan Normal University	http://www.ntnu.edu.tw/
+6970	TW	National Taiwan Ocean University	http://www.ntou.edu.tw/
+6971	TW	National Taiwan University	http://www.ntu.edu.tw/
+6972	TW	National Taiwan University of Science and Technology	http://www.ntust.edu.tw/
+6973	TW	National Tsinghua University	http://www.nthu.edu.tw/
+6974	TW	National United University	http://www.nuu.edu.tw/
+6975	TW	National University of Kaohsiung	http://www.nuk.edu.tw/
+6976	TW	National Yang Ming Medical College	http://www.ym.edu.tw/
+6977	TW	National Yunlin University of Science and Technology	http://www.yuntech.edu.tw/
+6978	TW	Providence University	http://www.pu.edu.tw/
+6979	TW	Shih Chien University	http://www.scc.edu.tw/
+6980	TW	Shih Hsin University	http://www.shu.edu.tw/
+6981	TW	Soochow University	http://www.scu.edu.tw/
+6982	TW	Southern Taiwan University of Technology	http://www.stut.edu.tw/
+6983	TW	St. John's & St. Mary's Institute of Technology	http://www.sjsmit.edu.tw/
+6984	TW	TaiChung Healthcare and Management University	http://www.thmu.edu.tw/
+6985	TW	Tainan National College of the Arts	http://www.tnca.edu.tw/
+6986	TW	Taipei Medical College	http://www.tmc.edu.tw/
+6987	TW	Taipei Municipal Teachers College	http://www.tmtc.edu.tw/
+6988	TW	Taipei Physical Education College	http://www.tpec.edu.tw/
+6989	TW	Tamkang University	http://www.tku.edu.tw/
+6990	TW	Tatung Institute of Technology	http://www.ttit.edu.tw/
+6991	TW	TaTung University 	http://www.ttu.edu.tw/
+6992	TW	Tunghai University	http://www.thu.edu.tw/
+6993	TW	Tzu Chi College of Medicine and Humanities	http://www.tcu.edu.tw/
+6994	TW	Yuan Ze University	http://www.yzu.edu.tw/
+6995	TZ	African Virtual University	http://www.avu.org/
+6996	TZ	Aga Khan University	http://www.aku.edu/
+6997	TZ	Dares Salaam Institute of Technology	http://www.dit.ac.tz/
+6998	TZ	Hubert Kairuki Memorial University	http://www.hkmu.ac.tz/
+6999	TZ	Institute of Accountancy Arusha	http://www.iaa.ac.tz/
+7000	TZ	Institute of Finance Management	http://www.ifm.ac.tz/
+7001	TZ	International Medical & Technological University	http://www.imtu.edu/index.htm
+7002	TZ	Kilimanjaro Christian Medical College	http://www.kcmc.ac.tz/
+7003	TZ	Moshi University College of Cooperative and Business Studies	http://www.muccobs.ac.tz/
+7004	TZ	Mount Meru University	http://www.mmu.ac.tz/
+7005	TZ	Muhimbili University of Health and Allied Sciences (MUHAS)	http://www.muchs.ac.tz/
+7006	TZ	Mwalimu Nyerere Memorial Academy	http://www.mnma.ac.tz/
+7007	TZ	Mzumbe University (Chuo Kikuu Mzumbe)	http://www.mzumbe.ac.tz/
+7008	TZ	Open University of Tanzania	http://www.out.ac.tz/
+7009	TZ	Sebatian Kolowa University College	http://www.sekuco.org/
+7010	TZ	Sokoine University of Agriculture	http://www.suanet.ac.tz/
+7011	TZ	St. Augustine University of Tanzania	http://www.saut.ac.tz/
+7012	TZ	St. Joseph Group of Institutes	http://www.stjosephtanzania.com/sjcet/index.html
+7013	TZ	Tumaini University - Iringa University College	http://www.tumaini.ac.tz/
+7014	TZ	University of Dar Es Salaam	http://www.udsm.ac.tz/
+7015	TZ	University of Dodoma	http://www.udom.ac.tz/
+7016	UA	Alfred Nobel University of Economics and Law 	http://www.duep.edu/
+7017	UA	Bila Cerkva State Agrarian University	http://www.btsau.kiev.ua/
+7018	UA	Chernivci National University	http://www.chnu.cv.ua/
+7019	UA	Crimea State Medical University	http://www.crsmu.com/
+7020	UA	Dneprodzerzhinsk State Technical University	http://www.dstu.dp.ua/
+7021	UA	Dnepropetrovsk National University	http://www.dnu.dp.ua/
+7022	UA	Dnepropetrovsk National University of Railway Transport	http://www.diit.edu.ua/
+7023	UA	Donetsk National Technical University	http://www.donntu.edu.ua/
+7024	UA	Donetsk National University	http://www.donnu.edu.ua/
+7025	UA	Donetsk State Medical University	http://www.donmeduni.com/
+7026	UA	East Ukrainian National University	http://www.snu.edu.ua/
+7027	UA	Ivano-Frankivsk National University of Oli and Gas	http://www.ifdtung.if.ua/
+7028	UA	Kharkiv National University	http://www.univer.kharkov.ua/
+7029	UA	Kharkiv National University of Economics	http://www.hneu.edu.ua/
+7030	UA	Kharkiv National University of Radio Electronics	http://www.kture.kharkov.ua/
+7031	UA	Kharkiv State Medical University	http://www.ksmu.kharkov.ua/
+7032	UA	Kharkiv State Technical University of Construction and Architecture	http://www.kstuca.kharkov.ua/
+7033	UA	Kharkiv State Transport Technical University	http://www.khadi.kharkov.ua/
+7034	UA	Kherson State University	http://www.university.kherson.ua/
+7035	UA	Khmelnitsky National University	http://www.tup.km.ua/
+7036	UA	Kiev National Economic University Named after Vadym Hetman	http://www.kneu.edu.ua/
+7037	UA	Kiev National University of Construction and Architecture	http://www.knuba.edu.ua/
+7038	UA	Kiev School Of Economics	http://www.kse.org.ua/
+7039	UA	Kiev Slavonic University	http://www.ksu.edu.ua/
+7040	UA	KROK Economics and Law University	http://www.krok.edu.ua/
+7041	UA	Luhansk State Medical University	http://www.lsmu.com/
+7042	UA	Luhansk Taras Shevchenko National Pedagogical University	http://www.lgpu.lg.ua/
+7043	UA	Lviv Medical University	http://www.meduniv.lviv.ua/
+7044	UA	Lviv National Medical Univeristy	http://www.meduniv.lviv.ua/
+7045	UA	Lviv National University Ivan Franko	http://www.franko.lviv.ua/
+7046	UA	Lviv Polytechnic National University	http://www.lp.edu.ua/
+7047	UA	National Aerospace University Kharkov Aviation Institute	http://www.khai.edu/
+7048	UA	National Agricultural University	http://www.nauu.kiev.ua/
+7049	UA	National Aviation Univesity	http://www.nau.edu.ua/
+7050	UA	National Medical University O.O. Bogomolets	http://www.nmu.edu.ua/
+7051	UA	National Metallurgical Academy of Ukraine	http://www.nmetau.edu.ua/
+7052	UA	National Mining University	http://www.nmu.org.ua/
+7053	UA	National Pedagogical University M. Dragomanov 	http://www.npu.edu.ua/
+7054	UA	National Pirogov Memorial Medical University	http://www.vnmu.vn.ua/
+7055	UA	National Taras Shevchenko University of Kiev	http://www.univ.kiev.ua/
+7056	UA	National Technical University (Kharkiv Polytechnical Institute)	http://www.kpi.kharkov.ua/
+7057	UA	National Technical University (Kiev Politechnical Institute)	http://www.kpi.ua/
+7058	UA	National Transport University	http://www.ntu.kar.net/
+7059	UA	National University of Food Technologies	http://www.usuft.kiev.ua/
+7060	UA	National University of Internal Affairs	http://www.univd.edu.ua/
+7061	UA	National University of Kiev-Mohyla Academy	http://www.ukma.kiev.ua/
+7062	UA	National University of Ostroh Academy	http://www.uosa.uar.net/
+7063	UA	National University of Shipbuilding	http://www.usmtu.edu.ua/
+7064	UA	Odessa National Academy of Food Technologies	http://www.osaft.odessa.ua/
+7065	UA	Odessa National I.I. Mecnikov University	http://www.onu.edu.ua/
+7066	UA	Odessa National Marine University	http://www.osmu.odessa.ua/
+7067	UA	Odessa National Maritime Academy	http://www.ma.odessa.ua/
+7068	UA	Odessa National Polytechnic University	http://www.opu.odessa.ua/
+7069	UA	Odessa State Academy of Construction and Architecture	http://www.ogasa.odessa.ua/
+7070	UA	Odessa State Medical University	http://www.arosmu.org/
+7071	UA	Petro Mohyla Black Sea State University	http://www.kma.mk.ua/
+7072	UA	Poltava National Technical University	http://www.pntu.edu.ua/
+7073	UA	Poltava University of Consumer Cooperatives in Ukraine	http://www.pusku.edu.ua/
+7074	UA	Precarpathian University	http://www.pu.if.ua/
+7075	UA	Sevastopol National Technical University	http://sevntu.com.ua/
+7076	UA	State Pedagogical University in Kryvyi Rih	http://www.kdpu.edu.ua/
+7077	UA	Sumy National Agrarian University	http://www.sau.sumy.ua/
+7078	UA	Sumy State University	http://www.sumdu.edu.ua/
+7079	UA	Taurida National V.I.Vernadsky University	http://www.tnu.crimea.ua/
+7080	UA	Technological University of Podillya	http://www.tup.km.ua/
+7081	UA	Ternopil Academy of National Economy	http://www.tane.edu.ua/
+7082	UA	Ternopil State Ivan Pul'uj Technical University	http://www.tu.edu.te.ua/
+7083	UA	Ukrainian Academy of Banking	http://www.academy.sumy.ua/
+7084	UA	Ukrainian Academy of Pharmacy	http://www.ukrfa.kharkov.ua/
+7085	UA	Ukrainian Medical Stomatological Academy	http://www.uamsa.net/
+7086	UA	Ukrainian National Forestry University	http://www.forest.lviv.ua/
+7087	UA	Uzhgorod National University	http://www.univ.uzhgorod.ua/
+7088	UA	Vinnica National Technical University	http://www.vstu.vinnica.ua/
+7089	UA	Volyn National University Lesja Ukrainka	http://www.vdu.edu.ua/
+7090	UA	Zaporizhzhe National Technical University	http://www.zntu.edu.ua/
+7091	UA	Zaporizhzhe National University	http://www.znu.edu.ua/
+7092	UG	Aga Khan University	http://www.aku.edu/
+7093	UG	Bugema University	http://www.bugemauniv.ac.ug/
+7094	UG	Busitema University	http://www.busitema.ac.ug/
+7095	UG	Busoga University	http://www.busogauniversity.ac.ug/
+7096	UG	Central Buganda University	http://www.cbu2000.com/
+7097	UG	Gulu University	http://www.gu.ac.ug/
+7098	UG	Islamic University in Uganda	http://www.iuiu.ac.ug/
+7099	UG	Kampala International University	http://www.kiu.ac.ug/
+7100	UG	Kampala University	http://www.ku.ac.ug/
+7101	UG	Kyambogo University	http://www.kyu.ac.ug/
+7102	UG	Makerere University	http://www.mak.ac.ug/
+7103	UG	Mbarara University of Science and Technology	http://www.must.ac.ug/
+7104	UG	Mountains of the Moon University	http://www.mmu.ac.ug/
+7105	UG	Mutesa 1 Royal University	http://www.mru.ac.ug/
+7106	UG	Ndejje University	http://www.ndejjeuniversity.ac.ug/
+7107	UG	Nkumba University	http://www.nkumbauniversity.ac.ug/
+7108	UG	St. Augustine International University	http://www.saiu.ac.ug/
+7109	UG	Uganda Christian University	http://www.ucu.ac.ug/
+7110	UG	Uganda Martyr's University	http://www.umu.ac.ug/
+7111	US	Abilene Christian University	http://www.acu.edu/
+7112	US	Academy of Art College	http://www.academyart.edu/
+7113	US	Adams State College	http://www.adams.edu/
+7114	US	Adelphi University	http://www.adelphi.edu/
+7115	US	Adler School of Professional Psychology	http://www.adler.edu/
+7116	US	Adrian College	http://www.adrian.edu/
+7117	US	Agnes Scott College	http://www.scottlan.edu/
+7118	US	Air Force Institute of Technology	http://www.afit.af.mil/
+7119	US	Alabama Agricultural and Mechanical University	http://www.aamu.edu/
+7120	US	Alabama State University	http://www.alasu.edu/
+7121	US	Alaska Bible College	http://www.akbible.edu/
+7122	US	Alaska Pacific University	http://www.alaskapacific.edu/
+7123	US	Albany College of Pharmacy	http://www.acp.edu/
+7124	US	Albany Law School	http://www.albanylaw.edu/
+7125	US	Albany Medical Center	http://www.amc.edu/
+7126	US	Albany State University	http://www.asurams.edu/
+7127	US	Albertus Magnus College	http://www.albertus.edu/
+7128	US	Albion College	http://www.albion.edu/
+7129	US	Albright College	http://www.albright.edu/
+7130	US	Alcorn State University	http://www.alcorn.edu/
+7131	US	Alderson Broaddus College	http://www.ab.edu/
+7132	US	Alfred Adler Graduate School	http://www.alfredadler.edu/
+7133	US	Alfred University	http://www.alfred.edu/
+7134	US	Alice Lloyd College	http://www.alc.edu/
+7135	US	Allegheny College	http://www.alleg.edu/
+7136	US	Allen University	http://www.scicu.org/allen/
+7137	US	Alma College	http://www.alma.edu/
+7138	US	Alvernia College	http://www.alvernia.edu/
+7139	US	Alverno College	http://www.alverno.edu/
+7140	US	Ambassador University	http://www.ambassador.edu/
+7141	US	Amber University	http://www.amberu.edu/
+7142	US	American Academy of Nutrition	http://www.nutritioneducation.com/
+7143	US	American Business & Technology University	http://www.abtu.edu/
+7144	US	American Conservatory of Music	http://members.aol.com/amerconsmu/
+7145	US	American Conservatory Theater	http://www.act-sfbay.org/
+7146	US	American-European School of Management 	http://www.aesom.com/
+7147	US	American Film Institute Center for Advanced Film and Television Studies	http://www.afionline.org/cafts/cafts.home.html
+7148	US	American Indian College	http://www.aicag.edu/
+7149	US	American InterContinental University - Atlanta	http://www.aiuniv.edu/
+7150	US	American InterContinental University - Ft. Lauderdale	http://www.aiuniv.edu/
+7151	US	American InterContinental University - Georgia	http://www.aiuniv.edu/
+7152	US	American InterContinental University Online	http://www.aiu-online.com/
+7153	US	American International College	http://www.aic.edu/
+7154	US	American Jewish University	http://www.ajula.edu/
+7155	US	American Military University	http://www.amunet.edu/
+7156	US	American Public University	http://www.apus.edu/
+7157	US	American University	http://www.american.edu/
+7158	US	American World University	http://www.awu.edu/
+7159	US	Amherst College	http://www.amherst.edu/
+7160	US	Anderson College	http://www.anderson-college.edu/
+7161	US	Anderson University	http://www.anderson.edu/
+7162	US	Andon College - Modesto	http://www.andoncollege.com/
+7163	US	Andon College - Stockton	http://www.andoncollege.org/
+7164	US	Andrew Jackson University	http://www.aju.edu/
+7165	US	Andrews University	http://www.andrews.edu/
+7166	US	Angelo State University	http://www.angelo.edu/
+7167	US	Anna Maria College	http://www.anna-maria.edu/
+7168	US	Antioch New England Graduate School	http://www.antiochne.edu/
+7169	US	Antioch University	http://www.antioch.edu/
+7170	US	Antioch University Los Angeles	http://www.antiochla.edu/
+7171	US	Antioch University Santa Barbara	http://www.antiochsb.edu/
+7172	US	Antioch University Seattle	http://www.antiochsea.edu/
+7173	US	Appalachian Bible College	http://www.appbibco.edu/
+7174	US	Appalachian State University	http://www.appstate.edu/
+7175	US	Aquinas College	http://www.aquinas.edu/
+7176	US	Arcadia University	http://www.arcadia.edu/
+7177	US	Argosy University	http://www.argosy.edu/
+7178	US	Argosy University - Hawaii	http://www.argosyu.edu/
+7179	US	Arizona Christian University	http://www.arizonachristian.edu
+7180	US	Arizona State University	http://www.asu.edu/
+7181	US	Arizona State University, Downtown Phoenix Campus	https://campus.asu.edu/downtown
+7182	US	Arizona State University, Polytechnic Campus	https://campus.asu.edu/polytechnic
+7183	US	Arizona State University, Tempe Campus	https://campus.asu.edu/tempe
+7184	US	Arizona State University, West Campus	https://campus.asu.edu/west
+7185	US	Arkansas State University	http://www.astate.edu/
+7186	US	Arkansas State University, Beebe	http://www.asub.edu/
+7187	US	Arkansas State University, Mountain Home	http://www.asumh.edu/
+7188	US	Arkansas State University, Newport	http://www.asun.edu/
+7189	US	Arkansas Tech University	http://www.atu.edu/
+7190	US	Arlington Baptist College	http://www.abconline.edu/
+7191	US	Armstrong Atlantic State University	http://www.armstrong.edu/
+7192	US	Armstrong University	http://www.armstrong-u.edu/
+7193	US	Art Academy of Cincinnati	http://www.artacademy.edu/
+7194	US	Art Center College of Design	http://www.artcenter.edu/
+7195	US	Arthur D. Little Management Education Institute	http://www.adlsom.edu/
+7196	US	Art Institute of Charlotte	http://www.aich.artinstitutes.edu/
+7197	US	Art Institute of Southern California	http://www.aisc.edu/
+7198	US	Asbury College	http://www.asbury.edu/
+7199	US	Ashland University	http://www.ashland.edu/
+7200	US	Assumption College	http://www.assumption.edu/
+7201	US	Athenaeum of Ohio	http://www.mtsm.org/
+7202	US	Athens State College	http://www.athens.edu/
+7203	US	Atlanta Christian College	http://www.acc.edu/
+7204	US	Atlanta College of Art	http://www.aca.edu/
+7205	US	Atlantic International University	http://www.aiu.edu/
+7206	US	Atlantic Union College	http://www.atlanticuc.edu/
+7207	US	Atlantic University	http://www.atlanticuniv.edu/
+7208	US	Auburn University	http://www.auburn.edu/
+7209	US	Auburn University at Montgomery	http://www.aum.edu/
+7210	US	Audrey Cohen College	http://www.audrey-cohen.edu/
+7211	US	Augsburg College	http://www.augsburg.edu/
+7212	US	Augustana College	http://www.augustana.edu/
+7213	US	Augustana College	http://www.augie.edu/
+7214	US	Augusta State University	http://www.aug.edu/
+7215	US	Aurora University	http://www.aurora.edu/
+7216	US	Austin College	http://www.austinc.edu/
+7217	US	Austin Community College	http://www.austin.cc.tx.us/
+7218	US	Austin Peay State University	http://www.apsu.edu/
+7219	US	Ave Maria University	http://www.avemaria.edu/
+7220	US	Averett College	http://www.averett.edu/
+7221	US	Avila College	http://www.avila.edu/
+7222	US	Azusa Pacific University	http://www.apu.edu/
+7223	US	Babson College	http://www.babson.edu/
+7224	US	Baker College of Auburn Hills	http://www.baker.edu/visit/auburn.html
+7225	US	Baker College of Cadillac	http://www.baker.edu/visit/cadillac.html
+7226	US	Baker College of Flint	http://www.baker.edu/visit/flint.html
+7227	US	Baker College of Mount Clemens	http://www.baker.edu/visit/mtclemens.html
+7228	US	Baker College of Muskegon	http://www.baker.edu/visit/muskegon.html
+7229	US	Baker College of Owosso	http://www.baker.edu/visit/owosso.html
+7230	US	Baker College of Port Huron	http://www.baker.edu/visit/porthuron.html
+7231	US	Baker University	http://www.bakeru.edu/
+7232	US	Baldwin-Wallace College	http://www.baldwinw.edu/
+7233	US	Ball State University	http://www.bsu.edu/
+7234	US	Baltimore Hebrew University	http://www.bhu.edu/
+7235	US	Baltimore International College	http://www.bic.edu/
+7236	US	Bank Street College of Education	http://www.bnkst.edu/
+7237	US	Baptist Bible College of Missouri	http://www.bbcnet.edu/
+7238	US	Baptist Bible College of Pennsylvania	http://www.bbc.edu/
+7239	US	Barat College	http://www.barat.edu/
+7240	US	Barber-Scotia College	http://www.b-sc.edu/
+7241	US	Barclay College	http://www.barclaycollege.edu/
+7242	US	Bard College	http://www.bard.edu/
+7243	US	Bard Graduate Center for Studies in the Decorative Arts	http://www.bard.edu/graduate/BGC/intro.html
+7244	US	Barnard College - Columbia University	http://www.barnard.edu/
+7245	US	Barry University	http://www.barry.edu/
+7246	US	Bartlesville Wesleyan College	http://www.bwc.edu/
+7247	US	Barton College	http://www.barton.edu/
+7248	US	Bastyr University	http://www.bastyr.edu/
+7249	US	Bates College	http://www.bates.edu/
+7250	US	Bauder College	http://www.bauder.edu/
+7251	US	Baylor College of Dentistry	http://www.tambcd.edu/
+7252	US	Baylor College of Medicine	http://www.bcm.tmc.edu/
+7253	US	Baylor University	http://www.baylor.edu/
+7254	US	Belhaven College	http://www.belhaven.edu/
+7255	US	Bellarmine College	http://www.bellarmine.edu/
+7256	US	Bellevue University	http://www.bellevue.edu/
+7257	US	Bellin College of Nursing	http://www.bellin.org/bcn/
+7258	US	Belmont Abbey College	http://www.bac.edu/
+7259	US	Belmont University	http://www.belmont.edu/
+7260	US	Beloit College	http://www.beloit.edu/
+7261	US	Bemidji State Univeristy	http://www.bemidji.msus.edu/
+7262	US	Benedict College	http://www.benedict.edu/
+7263	US	Benedictine College	http://www.benedictine.edu/
+7264	US	Benedictine University	http://www.ben.edu/
+7265	US	Benedictine University, Springfield College in Illinois	http://www.sci.edu/
+7266	US	Bennett College	http://www.bennett.edu/
+7267	US	Bennington College	http://www.bennington.edu/
+7268	US	Bentley College	http://www.bentley.edu/
+7269	US	Berea College	http://www.berea.edu/
+7270	US	Berean University of the Assemblies of God	http://www.berean.edu/
+7271	US	Berklee College of Music	http://www.berklee.edu/
+7272	US	Berne University	http://www.berne.edu/
+7273	US	Berry College	http://www.berry.edu/
+7274	US	Bethany College California	http://www.bethany.edu/
+7275	US	Bethany College Kansas	http://www.bethanylb.edu/
+7276	US	Bethany College West Virginia	http://www.bethany.wvnet.edu/
+7277	US	Bethel College McKenzie	http://www.bethel-college.edu/
+7278	US	Bethel College Mishawaka	http://www.bethel-in.edu/
+7279	US	Bethel College Newton	http://www.bethelks.edu/
+7280	US	Beth-El College of Nursing and Health Sciences	http://www.uccs.edu/~bethel/
+7281	US	Bethel College St. Paul	http://www.bethel.edu/
+7282	US	Bethune-Cookman College	http://www.bethune.cookman.edu/
+7283	US	Biola University	http://www.biola.edu/
+7284	US	Birmingham-Southern College	http://www.bsc.edu/
+7285	US	Blackburn College	http://www.blackburn.edu/
+7286	US	Black Hawk College	http://www.bhc.edu/
+7287	US	Black Hills State University	http://www.bhsu.edu/
+7288	US	Blessing-Rieman College of Nursing	http://www.brcn.edu/
+7289	US	Bloomfield College	http://www.bloomfield.edu/
+7290	US	Bloomsburg University of Pennsylvania	http://www.bloomu.edu/
+7291	US	Bluefield College	http://www.bluefield.edu/
+7292	US	Bluefield State College	http://www.bluefield.wvnet.edu/
+7293	US	Blue Mountain College	http://www.bmc.edu/
+7294	US	Bluffton College	http://www.bluffton.edu/
+7295	US	Bob Jones University	http://www.bju.edu/
+7296	US	Boise Bible College	http://www.boisebible.edu/
+7297	US	Boise State University	http://www.boisestate.edu/
+7298	US	Boricua College	http://www.boricuacollege.edu/
+7299	US	Boston Architectural Center	http://www.the-bac.edu/
+7300	US	Boston College	http://www.bc.edu/
+7301	US	Boston University	http://www.bu.edu/
+7302	US	Bowdoin College	http://www.bowdoin.edu/
+7303	US	Bowie State University	http://www.bowiestate.edu/
+7304	US	Bowling Green State University	http://www.bgsu.edu/
+7305	US	Bowling Green State University, Firelands	http://www.firelands.bgsu.edu/
+7306	US	Bradley University	http://www.bradley.edu/
+7307	US	Brandeis University	http://www.brandeis.edu/
+7308	US	Brandman University	http://www.brandman.edu/
+7309	US	Brenau University	http://www.brenau.edu/
+7310	US	Brescia University	http://www.brescia.edu/
+7311	US	Brevard College	http://www.brevard.edu/
+7312	US	Brewton-Parker College	http://www.bpc.edu/
+7313	US	Breyer State University (Virtual University)	http://www.breyerstate.com/
+7314	US	Briar Cliff College	http://www.briar-cliff.edu/
+7315	US	Bridgewater College	http://www.bridgewater.edu/
+7316	US	Bridgewater State College	http://www.bridgew.edu/
+7317	US	Brigham Young University	http://www.byui.edu/
+7318	US	Brigham Young University	http://www.byu.edu/
+7319	US	Brigham Young University Hawaii	http://www.byuh.edu/
+7320	US	Brooklyn Law School	http://www.brooklaw.edu/
+7321	US	Brooks Institute of Photography	http://www.brooks.edu/
+7322	US	Brown University	http://www.brown.edu/
+7323	US	Brunswick Community College	http://www.brunswickcc.edu/
+7324	US	Bryan College	http://www.bryan.edu/
+7325	US	Bryant and Stratton College	http://www.bryantstratton.edu/
+7326	US	Bryant University	http://www.bryant.edu/
+7327	US	Bryn Athyn College of the New Church	http://www.newchurch.edu/college/
+7328	US	Bryn Mawr College	http://www.brynmawr.edu/
+7329	US	Bucknell University	http://www.bucknell.edu/
+7330	US	Buena Vista University	http://www.bvu.edu/
+7331	US	Burlington College	http://www.burlcol.edu/
+7332	US	Butler University	http://www.butler.edu/
+7333	US	Cabrini College	http://www.cabrini.edu/
+7334	US	Caldwell College	http://www.caldwell.edu/
+7335	US	California Baptist College	http://www.calbaptist.edu/
+7336	US	California Coast University	http://www.calcoast.edu/
+7337	US	California College for Health Sciences	http://www.cchs.edu/
+7338	US	California College of Arts and Crafts	http://www.ccac-art.edu/
+7339	US	California College of Podiatric Medicine	http://www.ccpm.edu/
+7340	US	California College San Diego	http://www.cc-sd.edu/
+7341	US	California Institute of Integral Studies	http://www.ciis.edu/
+7342	US	California Institute of Technology	http://www.caltech.edu/
+7343	US	California Institute of the Arts	http://www.calarts.edu/
+7344	US	California Lutheran University	http://www.callutheran.edu/
+7345	US	California Maritime Academy	http://www.csum.edu/
+7346	US	California Polytechnic State University - San Luis Obispo	http://www.calpoly.edu/
+7347	US	California School of Professional Psychology - Berkley/Alameda	http://www.cspp.edu/
+7348	US	California School of Professional Psychology - Fresno	http://www.cspp.edu/catalog/8.htm
+7349	US	California School of Professional Psychology - Los Angels	http://www.cspp.edu/catalog/9.htm
+7350	US	California School of Professional Psychology - San Diego	http://www.cspp.edu/catalog/10.htm
+7351	US	California State Polytechnic University - Pomona	http://www.csupomona.edu/
+7352	US	California State University, Bakersfield	http://www.csubak.edu/
+7353	US	California State University, Channel Islands	http://www.csuci.edu/
+7354	US	California State University, Chico	http://www.csuchico.edu/
+7355	US	California State University, Dominguez Hills	http://www.csudh.edu/
+7356	US	California State University, Fresno	http://www.csufresno.edu/
+7357	US	California State University, Fullerton	http://www.fullerton.edu/
+7358	US	California State University, Hayward	http://www.csuhayward.edu/
+7359	US	California State University, Long Beach	http://www.csulb.edu/
+7360	US	California State University, Los Angeles	http://www.calstatela.edu/
+7361	US	California State University, Monterey Bay	http://www.monterey.edu/
+7362	US	California State University, Northridge	http://www.csun.edu/
+7363	US	California State University, Sacramento	http://www.csus.edu/
+7364	US	California State University, San Bernadino	http://www.csusb.edu/
+7365	US	California State University, San Marcos	http://www.csusm.edu/
+7366	US	California State University, Stanislaus	http://www.csustan.edu/
+7367	US	California University of Management and Sciences	http://cauniversity.edu.cufce.org/
+7368	US	California University of Pennsylvania	http://www.cup.edu/
+7369	US	California Western School of Law	http://www.cwsl.edu/
+7370	US	Calumet College of St. Joseph	http://www.ccsj.edu/
+7371	US	Calvary Bible College	http://www.calvary.edu/
+7372	US	Calvin College	http://www.calvin.edu/
+7373	US	Cambridge College	http://www.cambridge.edu/
+7374	US	Cameron University	http://www.cameron.edu/
+7375	US	Campbellsville College	http://www.campbellsvil.edu/
+7376	US	Campbell University	http://www.campbell.edu/
+7377	US	Canisius College	http://www.canisius.edu/
+7378	US	Capella University	http://www.capella.edu/
+7379	US	Capital University	http://www.capital.edu/
+7380	US	Capital University Law School	http://www.law.capital.edu/
+7381	US	Capitol College	http://www.capitol-college.edu/
+7382	US	Cardinal Stritch University	http://www.stritch.edu/
+7383	US	Carleton College	http://www.carleton.edu/
+7384	US	Carlos Albizu University	http://www.albizu.edu/
+7385	US	Carlow College	http://www.carlow.edu/
+7386	US	Carnegie Mellon University	http://www.cmu.edu/
+7387	US	Carroll College Helena	http://www.carroll.edu/
+7388	US	Carroll College Waukesha	http://www.cc.edu/
+7389	US	Carson-Newman College	http://www.cn.edu/
+7390	US	Carthage College	http://www.carthage.edu/
+7391	US	Case Western Reserve University	http://www.cwru.edu/
+7392	US	Castleton State College	http://www.csc.vsc.edu/
+7393	US	Catawba College	http://www.catawba.edu/
+7394	US	Catholic Theological Union	http://www.ctu.edu/
+7395	US	Cedar Crest College	http://www.cedarcrest.edu/
+7396	US	Cedarville College	http://www.cedarville.edu/
+7397	US	Centenary College	http://www.centenarycollege.edu/
+7398	US	Centenary College of Louisiana	http://www.centenary.edu/
+7399	US	Center for Humanistic Studies	http://www.humanpsych.edu/
+7400	US	Central Baptist College	http://www.cbc.edu/
+7401	US	Central Bible College	http://www.cbcag.edu/
+7402	US	Central Christian College of the Bible	http://www.cccb.edu/
+7403	US	Central College	http://www.central.edu/
+7404	US	Central Connecticut State University	http://www.ccsu.edu/
+7405	US	Central Methodist College	http://www.cmc.edu/
+7406	US	Central Michigan University	http://www.cmich.edu/
+7407	US	Central State University	http://www.centralstate.edu/
+7408	US	Central Washington University	http://www.cwu.edu/
+7409	US	Centre College	http://www.centre.edu/
+7410	US	Chadron State College	http://www.csc.edu/
+7411	US	Chaminade University of Honolulu	http://www.chaminade.edu/
+7412	US	Champlain College	http://www.champlain.edu/
+7413	US	Chapman University	http://www.chapman.edu/
+7414	US	Charles R. Drew University of Medicine and Science	http://www.cdrewu.edu/
+7415	US	Charleston Southern University	http://www.csuniv.edu/
+7416	US	Charter Oak State College	http://www.cosc.edu/
+7417	US	Chatham College	http://www.chatham.edu/
+7418	US	Chestnut Hill College	http://www.chc.edu/
+7419	US	Cheyney University of Pennsylvania	http://www.cheyney.edu/
+7420	US	Chicago State University	http://www.csu.edu/
+7421	US	Chowan College	http://www.chowan.edu/
+7422	US	Christendom College	http://www.christendom.edu/
+7423	US	Christian Brothers University	http://www.cbu.edu/
+7424	US	Christian Heritage College	http://www.christianheritage.edu/
+7425	US	Christopher Newport University	http://www.cnu.edu/
+7426	US	Circleville Bible College	http://www.biblecollege.edu/
+7427	US	City University	http://www.cityu.edu/
+7428	US	City University of New York, Bernard M. Baruch College	http://www.baruch.cuny.edu/
+7429	US	City University of New York, Brooklyn College	http://www.brooklyn.cuny.edu/
+7430	US	City University of New York, City College	http://www.ccny.cuny.edu/
+7431	US	City University of New York, College of Staten Island	http://www.csi.cuny.edu/
+7432	US	City University of New York (CUNY) System	http://www.cuny.edu/
+7433	US	City University of New York, Graduate School and University Center	http://www.gc.cuny.edu/
+7434	US	City University of New York, Hunter College	http://www.hunter.cuny.edu/
+7435	US	City University of New York, John Jay College of Criminal Justice	http://www.jjay.cuny.edu/
+7436	US	City University of New York, Lehman College	http://www.lehman.cuny.edu/
+7437	US	City University of New York, Medgar Evers College	http://www.mec.cuny.edu/
+7438	US	City University of New York Medical School / Sophie Davis School of Biomedical Education	http://med.cuny.edu/
+7439	US	City University of New York, New York City Technical College	http://www.nyctc.cuny.edu/
+7440	US	City University of New York, Queens College	http://www.qc.edu/
+7441	US	City University of New York, School of Law at Queens College	http://www.law.cuny.edu/
+7442	US	City University of New York, York College	http://www.york.cuny.edu/
+7443	US	Claflin College	http://www.scicu.org/claflin/
+7444	US	Claremont Graduate University	http://www.cgu.edu/
+7445	US	Claremont Lincoln University	http://www.claremontlincoln.org/
+7446	US	Claremont McKenna College	http://www.mckenna.edu/
+7447	US	Clarion University	http://www.clarion.edu/
+7448	US	Clark Atlanta University	http://www.cau.edu/
+7449	US	Clarke College	http://www.clarke.edu/
+7450	US	Clarkson College	http://www.clarksoncollege.edu/
+7451	US	Clarkson University	http://www.clarkson.edu/
+7452	US	Clark University	http://www.clarku.edu/
+7453	US	Clayton College & State University	http://www.clayton.edu/
+7454	US	Clearwater Christian College	http://www.clearwater.edu/
+7455	US	Cleary College	http://www.cleary.edu/
+7456	US	Clemson University	http://www.clemson.edu/
+7457	US	Cleveland Chiropractic College, Kansas City	http://www.clevelandchiropractic.edu/
+7458	US	Cleveland Chiropractic College, Los Angeles	http://www.clevelandchiropractic.edu/
+7459	US	Cleveland Institute of Art	http://www.cia.edu/
+7460	US	Cleveland Institute of Music	http://www.cim.edu/
+7461	US	Cleveland State University	http://www.csuohio.edu/
+7462	US	Coastal Carolina University	http://www.coastal.edu/
+7463	US	Coe College	http://www.coe.edu/
+7464	US	Cogswell Polytechnical College	http://www.cogswell.edu/
+7465	US	Coker College	http://www.coker.edu/
+7466	US	Colby College	http://www.colby.edu/
+7467	US	Colby-Sawyer College	http://www.colby-sawyer.edu/
+7468	US	Coleman College	http://www.coleman.edu/
+7469	US	Colgate University	http://www.colgate.edu/
+7470	US	CollegeAmerica, Denver	http://www.collegeamerica.edu/
+7471	US	CollegeAmerica, Phoenix	http://www.collegeamerica.edu/
+7472	US	College for Creative Studies	http://www.ccscad.edu/
+7473	US	College for Financial Planning	http://www.fp.edu/
+7474	US	College for Lifelong Learning	http://www.cll.edu/
+7475	US	College Misericordia	http://www.miseri.edu/
+7476	US	College of Aeronautics	http://www.aero.edu/
+7477	US	College of Charleston	http://www.cofc.edu/
+7478	US	College of DuPage	http://www.cod.edu/
+7479	US	College of Idaho	http://www.collegeofidaho.edu/
+7480	US	College of Mount St. Joseph	http://www.msj.edu/
+7481	US	College of Mount St. Vincent	http://www.cmsv.edu/
+7482	US	College of New Rochelle	http://www.cnr.edu/
+7483	US	College of Notre Dame	http://www.cnd.edu/
+7484	US	College of Notre Dame of Maryland	http://www.ndm.edu/
+7485	US	College of Osteopathic Medicine of the Pacific (Western University of Health Sciences)	http://www.westernu.edu/comp.html
+7486	US	College of St. Benedict and St. John's University	http://www.csbsju.edu/
+7487	US	College of St. Catherine	http://www.stkate.edu/
+7488	US	College of St. Elizabeth	http://www.st-elizabeth.edu/
+7489	US	College of St. Joseph	http://www.csj.edu/
+7490	US	College of St. Mary	http://www.csm.edu/
+7491	US	College of St. Rose	http://www.strose.edu/
+7492	US	College of St. Scholastica	http://www.css.edu/
+7493	US	College of the Atlantic	http://www.coa.edu/
+7494	US	College of the Holy Cross	http://www.holycross.edu/
+7495	US	College of the Ozarks	http://www.cofo.edu/
+7496	US	College of Visual Arts	http://www.cva.edu/
+7497	US	College of William and Mary	http://www.wm.edu/
+7498	US	Colorado Christian University	http://www.ccu.edu/
+7499	US	Colorado College	http://www.cc.colorado.edu/
+7500	US	Colorado School of Mines	http://www.mines.edu/
+7501	US	Colorado State University	http://www.colostate.edu/
+7502	US	Colorado State University-Pueblo	http://www.colostate-pueblo.edu/
+7503	US	Colorado Technical University	http://www.colotechu.edu/
+7504	US	Columbia College Chicago	http://www.colum.edu/
+7505	US	Columbia College Hollywood	http://www.columbiacollege.edu/
+7506	US	Columbia College of Missouri	http://www.ccis.edu/
+7507	US	Columbia College South Carolina	http://www.colacoll.edu/
+7508	US	Columbia Commonwealth University	http://www.ccwu.edu/
+7509	US	Columbia International University	http://www.ciu.edu/
+7510	US	Columbia Southern University	http://www.columbiasouthern.edu/
+7511	US	Columbia Union College	http://www.cuc.edu/
+7512	US	Columbia University	http://www.columbia.edu/
+7513	US	Columbus College of Art and Design	http://www.ccad.edu/
+7514	US	Columbus State University	http://www.colstate.edu/
+7515	US	Columbus University	http://www.columbusu.com/
+7516	US	Community College of Denver	http://ccd.rightchoice.org/
+7517	US	Concord College	http://www.concord.edu/
+7518	US	Concordia College, Ann Arbor	http://www.ccaa.edu/
+7519	US	Concordia College, Bronxville	http://www.concordia-ny.edu/
+7520	US	Concordia College, Moorhead	http://www.cord.edu/
+7521	US	Concordia College, Selma	http://higher-ed.lcms.org/selma.htm
+7522	US	Concordia College, Seward	http://www.cune.edu/
+7523	US	Concordia College, St. Paul	http://www.csp.edu/
+7524	US	Concordia University, Austin	http://www.concordia.edu/
+7525	US	Concordia University, Irvine	http://www.cui.edu/
+7526	US	Concordia University, Mequon	http://www.cuw.edu/
+7527	US	Concordia University, Portland	http://www.cu-portland.edu/
+7528	US	Concordia University, River Forest	http://www.curf.edu/
+7529	US	Connecticut College	http://www.conncoll.edu/
+7530	US	Converse College	http://www.converse.edu/
+7531	US	Conway School of Landscape Design	http://www.csld.edu/
+7532	US	Coppin State College	http://www.coppin.edu/
+7533	US	Cornell College	http://www.cornell-iowa.edu/
+7534	US	Cornell University	http://www.cornell.edu/
+7535	US	Cornish College of the Arts	http://www.cornish.edu/
+7536	US	Cosmopolitan University	http://www.cosmoedu.net/
+7537	US	Covenant College	http://www.covenant.edu/
+7538	US	Cranbrook Academy of Art	http://www.cranbrookart.edu/
+7539	US	Creighton University	http://www.creighton.edu/
+7540	US	Crichton College	http://www.crichton.edu/
+7541	US	Crown College	http://www.crown.edu/
+7542	US	Culver-Stockton College	http://www.culver.edu/
+7543	US	Cumberland College	http://www.cumber.edu/
+7544	US	Cumberland University	http://www.cumberland.edu/
+7545	US	Curry College	http://www.curry.edu:8080/
+7546	US	Daemen College	http://www.daemen.edu/
+7547	US	Dakota State University	http://www.dsu.edu/
+7548	US	Dakota Wesleyan University	http://www.dwu.edu/
+7549	US	Dallas Baptist University	http://www.dbu.edu/
+7550	US	Dallas Christian College	http://www.dallas.edu/
+7551	US	Dana College	http://www.dana.edu/
+7552	US	Daniel Webster College	http://www.dwc.edu/
+7553	US	Danville Area Community College	http://www.dacc.cc.il.us/
+7554	US	Dartmouth College	http://www.dartmouth.edu/
+7555	US	Darton College	http://www.darton.edu/
+7556	US	Davenport College of Business, Grand Rapids	http://www.davenport.edu/grandrapids/
+7557	US	Davenport College of Business, Kalamazoo	http://www.davenport.edu/kalamazoo/
+7558	US	Davenport College of Business, Lansing	http://www.davenport.edu/lansing/
+7559	US	Davidson College	http://www.davidson.edu/
+7560	US	Davis and Elkins College	http://www.dne.edu/
+7561	US	Deaconess College of Nursing	http://www.deaconess.edu/
+7562	US	Delaware State University	http://www.dsc.edu/
+7563	US	Delaware Valley College	http://www.devalcol.edu/
+7564	US	Delta International University	http://www.delta-university.org/
+7565	US	Delta State University	http://www.deltast.edu/
+7566	US	Denison University	http://www.denison.edu/
+7567	US	Denver Paralegal Institute	http://www.paralegal-education.com/campuses/cosprings/
+7568	US	Denver Technical College	http://www.dtc.edu/
+7569	US	DePaul University	http://www.depaul.edu/
+7570	US	DePauw University	http://www.depauw.edu/
+7571	US	DeSales University	http://www.desales.edu/
+7572	US	Design Institute of San Diego	http://www.disd.edu/
+7573	US	Detroit College of Business	http://www.dcb.edu/
+7574	US	Detroit College of Business - Flint	http://www.davenport.edu/e3front.dll?durki=1283
+7575	US	Detroit College of Business - Warren	http://www.davenport.edu/e3front.dll?durki=108
+7576	US	Detroit College of Law	http://www.dcl.edu/
+7577	US	DeVry Institute of Technology, Chicago	http://www.chi.devry.edu/
+7578	US	DeVry Institute of Technology, Columbus	http://www.devrycols.edu/
+7579	US	DeVry Institute of Technology, Decatur	http://www.atl.devry.edu/
+7580	US	DeVry Institute of Technology, DuPage	http://www.dpg.devry.edu/
+7581	US	DeVry Institute of Technology, Irving	http://www.dal.devry.edu/
+7582	US	DeVry Institute of Technology, Kansas City	http://www.kc.devry.edu/
+7583	US	DeVry Institute of Technology, Phoenix	http://www.phx.devry.edu/
+7584	US	DeVry Institute of Technology, Pomona	http://www.pom.devry.edu/
+7585	US	Dickinson College	http://www.dickinson.edu/
+7586	US	Dickinson State University	http://www.dsu.nodak.edu/
+7587	US	Dillard University	http://www.dillard.edu/
+7588	US	Divine Word College	http://www.svd.org
+7589	US	Dixie College	http://www.dixie.edu/
+7590	US	Doane College	http://www.doane.edu/
+7591	US	Dominican College	http://www.dc.edu/
+7592	US	Dominican College of San Rafael	http://www.dominican.edu/
+7593	US	Dominican School of Philosophy and Theology	http://www.dspt.edu/
+7594	US	Dominican University	http://www.dom.edu/
+7595	US	Dominion College	http://www.dominion.edu/
+7596	US	Dordt College	http://www.dordt.edu/
+7597	US	Dowling College	http://www.dowling.edu/
+7598	US	Drake University	http://www.drake.edu/
+7599	US	Drew University	http://www.drew.edu/
+7600	US	Drexel University	http://www.drexel.edu/
+7601	US	Drury College	http://www.drury.edu/
+7602	US	Duke University	http://www.duke.edu/
+7603	US	Duluth Business University	http://www.dbumn.edu/
+7604	US	Duquesne University	http://www.duq.edu/
+7605	US	D'Youville College	http://www.dyc.edu/
+7606	US	Earlham College	http://www.earlham.edu/
+7607	US	EarthNet Institute	http://www.eni.edu/
+7608	US	East Carolina University	http://www.ecu.edu/
+7609	US	East Central University	http://www.ecok.edu/
+7610	US	Eastern College	http://www.eastern.edu/
+7611	US	Eastern Connecticut State University	http://www.ecsu.ctstateu.edu/
+7612	US	Eastern Conservatory of Music	http://easternconservatory-music.org/
+7613	US	Eastern Illinois University	http://www.eiu.edu/
+7614	US	Eastern Kentucky University	http://www.eku.edu/
+7615	US	Eastern Mennonite University	http://www.emu.edu/
+7616	US	Eastern Michigan University	http://www.emich.edu/
+7617	US	Eastern Nazarene College	http://www.enc.edu/
+7618	US	Eastern New Mexico University	http://www.enmu.edu/
+7619	US	Eastern Oregon University	http://www.eou.edu/
+7620	US	Eastern Virginia Medical School	http://www.evms.edu/
+7621	US	Eastern Washington University	http://www.ewu.edu/
+7622	US	East Stroudsburg State University	http://www.esu.edu/
+7623	US	East Tennessee State University	http://www.etsu.edu/
+7624	US	East Texas Baptist University	http://www.etbu.edu/
+7625	US	East-West University	http://www.eastwest.edu/
+7626	US	Eckerd College	http://www.eckerd.edu/
+7627	US	Edgewood College	http://www.edgewood.edu/
+7628	US	Edinboro University of Pennsylvania	http://www.edinboro.edu/
+7629	US	Edison Community College	http://www.edison.edu/
+7630	US	Edward Waters College	http://www.ewc.edu/
+7631	US	Elizabeth City State University	http://www.ecsu.edu/
+7632	US	Elizabethtown College	http://www.etown.edu/
+7633	US	Elmhurst College	http://www.elmhurst.edu/
+7634	US	Elmira College	http://www.elmira.edu/
+7635	US	Elms College	http://www.elms.edu/
+7636	US	Elon College	http://www.elon.edu/
+7637	US	Embry-Riddle Aeronautical University	http://www.embryriddle.edu/
+7638	US	Embry Riddle Aeronautical University, Prescott	http://www.prescott.erau.edu/
+7639	US	Emerson College	http://www.emerson.edu/
+7640	US	Emmanuel College	http://www.emmanuel.edu/
+7641	US	Emmanuel College Georgia	http://www.emmanuel-college.edu/
+7642	US	Emmaus Bible College	http://www.emmaus.edu/
+7643	US	Emory & Henry College	http://www.ehc.edu/
+7644	US	Emory University	http://www.emory.edu/
+7645	US	Emporia State University	http://www.emporia.edu/
+7646	US	Erskine College	http://www.erskine.edu/
+7647	US	Eugene Bible College	http://www.ebc.edu/
+7648	US	Eureka College	http://www.eureka.edu/
+7649	US	Evangel University	http://www.evangel.edu/
+7650	US	Evergreen State College	http://www.evergreen.edu/
+7651	US	Excel College	http://www.excelcollege.org/
+7652	US	Excelsior College	http://www.regents.edu/
+7653	US	Fairfield University	http://www.fairfield.edu/
+7654	US	Fairleigh Dickinson University, Florham-Madison Campus	http://www.fdu.edu/visitorcenter/fmwelcome.html
+7655	US	Fairleigh Dickinson University, Teaneck-Hackensack Campus	http://www.fdu.edu/visitorcenter/thwelcome.html
+7656	US	Fairmont State College	http://www.fscwv.edu/
+7657	US	Fashion Institute of New York	http://www.fitnyc.suny.edu/
+7658	US	Faulkner University	http://www.faulkner.edu/
+7659	US	Fayetteville State University	http://www.uncfsu.edu/
+7660	US	Felician College	http://www.felician.edu/
+7661	US	Ferris State University	http://www.ferris.edu/
+7662	US	Ferrum College	http://www.ferrum.edu/
+7663	US	Fielding Institute	http://www.fielding.edu/
+7664	US	Finch University of Health Sciences - The Chicago Medical School	http://www.finchcms.edu/
+7665	US	Finlandia University	http://www.finlandia.edu/
+7666	US	Fisher College	http://www.fisher.edu/
+7667	US	Fisk University	http://www.fisk.edu/
+7668	US	Fitchburg State College	http://www.fsc.edu/
+7669	US	Flagler College	http://www.flagler.edu/
+7670	US	Florida Agricultural and Mechanical University	http://www.famu.edu/
+7671	US	Florida Atlantic University	http://www.fau.edu/
+7672	US	Florida Christian College	http://www.fcc.edu/
+7673	US	Florida Community College at Jacksonville	http://www.fccj.org/
+7674	US	Florida Gulf Coast University	http://www.fgcu.edu/
+7675	US	Florida Institute of Technology	http://www.fit.edu/
+7676	US	Florida International University	http://www.fiu.edu/
+7677	US	Florida Memorial College	http://www.fmc.edu/
+7678	US	Florida Metropolitan University, Fort Lauderdale College	http://www.fmu.edu/784/f-784.htm
+7679	US	Florida Metropolitan University, Tampa College	http://www.fmu.edu/762/f-762.htm
+7680	US	Florida Metropolitan University, Tampa College Brandon	http://www.fmu.edu/764/f-764.htm
+7681	US	Florida Metropolitan University, Tampa College Lakeland	http://www.fmu.edu/765/f-765.htm
+7682	US	Florida Southern College	http://www.flsouthern.edu/
+7683	US	Florida State University	http://www.fsu.edu/
+7684	US	Florida University of Medicine	http://www.fuom.us/
+7685	US	Fontbonne College	http://www.fontbonne.edu/
+7686	US	Foothill-De Anza Community College District	http://www.fhda.edu/
+7687	US	Fordham University	http://www.fordham.edu/
+7688	US	Forest Institute of Professional Psychology	http://www.forestinstitute.org/
+7689	US	Fort Hays State University	http://www.fhsu.edu/
+7690	US	Fort Lewis College	http://www.fortlewis.edu/
+7691	US	Fort Valley State College	http://www.fvsc.peachnet.edu/
+7692	US	Framingham State College	http://www.framingham.edu/
+7693	US	Franciscan School of Theology	http://www.fst.edu/
+7694	US	Franciscan University of Steubenville	http://www.franuniv.edu/
+7695	US	Francis Marion University	http://www.fmarion.edu/
+7696	US	Franklin and Marshall College	http://www.fandm.edu/
+7697	US	Franklin College	http://www.franklincoll.edu/
+7698	US	Franklin Pierce College	http://www.fpc.edu/
+7699	US	Franklin Pierce Law Center	http://www.fplc.edu/
+7700	US	Franklin University	http://www.franklin.edu/
+7701	US	Franklin W. Olin College of Engineering	http://www.olin.edu/
+7702	US	Frank Lloyd Wright School of Architecture	http://www.taliesin.edu/
+7703	US	Fred Hutchinson Cancer Research Center	http://www.fhcrc.org/
+7704	US	Freed-Hardeman University	http://www.fhu.edu/
+7705	US	Free University (Virginia Theological University)	http://www.vtu.edu/
+7706	US	Free Will Baptist Bible College	http://www.fwbbc.edu/
+7707	US	Fresno City College	http://www.fresnocitycollege.edu/
+7708	US	Fresno Pacific University	http://www.fresno.edu/
+7709	US	Friends University	http://www.friends.edu/
+7710	US	Frostburg State University	http://www.fsu.umd.edu/
+7711	US	Full Sail University	http://www.fullsail.com/
+7712	US	Furman University	http://www.furman.edu/
+7713	US	Gallaudet University	http://www.gallaudet.edu/
+7714	US	Gannon University	http://www.gannon.edu/
+7715	US	Gardner Webb University	http://www.gardner-webb.edu/
+7716	US	Gemological Institute of America	http://www.gia.edu/
+7717	US	Geneva College	http://www.geneva.edu/
+7718	US	George Fox University	http://www.georgefox.edu/
+7719	US	George Mason University	http://www.gmu.edu/
+7720	US	Georgetown College	http://www.georgetowncollege.edu/
+7721	US	Georgetown University	http://www.georgetown.edu/
+7722	US	George Washington University	http://www.gwu.edu/
+7723	US	George Wythe College	http://www.gwc.edu/
+7724	US	Georgia Baptist College of Nursing	http://www.gbcn.edu/
+7725	US	Georgia College & State University	http://www.gcsu.edu/
+7726	US	Georgia Health Sciences University	http://www.georgiahealth.edu/
+7727	US	Georgia Institute of Technology	http://www.gatech.edu/
+7728	US	Georgian Court College	http://www.georgian.edu/
+7729	US	Georgia School of Professional Psychology	http://www.aspp.edu/ga.html
+7730	US	Georgia Southern University	http://www.georgiasouthern.edu/
+7731	US	Georgia Southwestern University	http://www.gsw.edu/
+7732	US	Georgia State University	http://www.gsu.edu/
+7733	US	Gettysburg College	http://www.gettysburg.edu/
+7734	US	Glendale University College of Law	http://www.glendalelaw.edu/
+7735	US	Glenville State College	http://www.glenville.wvnet.edu/
+7736	US	Goddard College	http://www.goddard.edu/
+7737	US	God's Bible School and College	http://www.gbs.edu/
+7738	US	Golden Gate University	http://www.ggu.edu/
+7739	US	Goldey-Beacom College	http://goldey.gbc.edu/
+7740	US	Gonzaga University	http://www.gonzaga.edu/
+7741	US	Gordon College	http://www.gordon.edu/
+7742	US	Gordon Conwell Theological Seminary	http://www.gcts.edu/
+7743	US	Goshen College	http://www.goshen.edu/
+7744	US	Goucher College	http://www.goucher.edu/
+7745	US	Governors State University	http://www.govst.edu/
+7746	US	Grace Bible College	http://www.gbcol.edu/
+7747	US	Grace College	http://www.grace.edu/
+7748	US	Graceland College	http://www.graceland.edu/
+7749	US	Grace University	http://www.graceu.edu/
+7750	US	Graduate Theological Union	http://www.gtu.edu/
+7751	US	Grambling State University	http://www.gram.edu/
+7752	US	Grand Canyon University	http://www.gcu.edu/
+7753	US	Grand Valley State University	http://www.gvsu.edu/
+7754	US	Grand View College	http://www.gvc.edu/
+7755	US	Grantham University	http://www.grantham.edu/
+7756	US	Gratz College	http://www.gratzcollege.edu/
+7757	US	Great Lakes Christian College	http://www.glcc.edu/
+7758	US	Green Mountain College	http://www.greenmtn.edu/
+7759	US	Greensboro College	http://www.gborocollege.edu/
+7760	US	Greenville College	http://www.greenville.edu/
+7761	US	Grinnell College	http://www.grinnell.edu/
+7762	US	Grove City College	http://www.gcc.edu/
+7763	US	Guilford College	http://www.guilford.edu/
+7764	US	Gustavus Adolphus College	http://www.gac.edu/
+7765	US	Gwynedd-Mercy College	http://www.gmc.edu/
+7766	US	Hagerstown Community College	http://www.hcc.cc.md.us/
+7767	US	Hamilton College	http://www.hamilton.edu/
+7768	US	Hamilton Technical College	http://www.vca1.com/hamiltontech/
+7769	US	Hamline University	http://www.hamline.edu/
+7770	US	Hampden-Sydney College	http://www.hsc.edu/
+7771	US	Hampshire College	http://www.hampshire.edu/
+7772	US	Hampton College	http://www.hamptoncollege.org/
+7773	US	Hampton University	http://www.hamptonu.edu/
+7774	US	Hannibal-Lagrange College	http://www.hlg.edu/
+7775	US	Hanover College	http://www.hanover.edu/
+7776	US	Harding University	http://www.harding.edu/
+7777	US	Harding University Graduate School of Religion	http://www.hugsr.edu/
+7778	US	Hardin-Simmons University	http://www.hsutx.edu/
+7779	US	Harrington Institute of Interior Design	http://www.interiordesign.edu/
+7780	US	Harris-Stowe State University	http://www.hssu.edu/
+7781	US	Hartford College for Women	http://www.hartford.edu/SchoolsColleges/HCW/HCW.html
+7782	US	Hartford Graduate Center (Rensselaer at Hartford)	http://www.hgc.edu/
+7783	US	Hartwick College	http://www.hartwick.edu/
+7784	US	Harvard University	http://www.harvard.edu/
+7785	US	Harvey Mudd College	http://www.hmc.edu/
+7786	US	Hastings College	http://www.hastings.edu/
+7787	US	Haverford College	http://www.haverford.edu/
+7788	US	Hawaii Pacific University	http://www.hpu.edu/
+7789	US	Heartland Baptist Bible College	http://www.hbbc.edu/
+7790	US	Hebrew College	http://www.hebrewcollege.edu/
+7791	US	Heidelberg College	http://www.heidelberg.edu/
+7792	US	Henderson State Univerisity	http://www.hsu.edu/
+7793	US	Hendrix College	http://www.hendrix.edu/
+7794	US	Heritage College	http://www.heritage.edu/
+7795	US	Hesser College	http://www.hesser.edu/
+7796	US	High Point University	http://www.highpoint.edu/
+7797	US	Hilbert College	http://www.hilbert.edu/
+7798	US	Hillsdale College	http://www.hillsdale.edu/
+7799	US	Hiram College	http://www.hiram.edu/
+7800	US	Hobart and William Smith Colleges	http://www.hws.edu/
+7801	US	Hobe Sound Bible College	http://www.hsbc.edu/
+7802	US	Hodges University	http://www.hodges.edu/
+7803	US	Hofstra University	http://www.hofstra.edu/
+7804	US	Hollins University	http://www.hollins.edu/
+7805	US	Holy Apostles College	http://www.holy-apostles.org/
+7806	US	Holy Cross College	http://www.hcc-nd.edu/
+7807	US	Holy Family College	http://www.hfc.edu/
+7808	US	Holy Names College	http://www.hnc.edu/
+7809	US	Hood College	http://www.hood.edu/
+7810	US	Hope College	http://www.hope.edu/
+7811	US	Hope International University	http://www.hiu.edu/
+7812	US	Houghton College	http://www.houghton.edu/
+7813	US	Houston Baptist University	http://www.hbu.edu/
+7814	US	Howard Payne University	http://www.hputx.edu/
+7815	US	Howard University	http://www.howard.edu/
+7816	US	Humboldt State University	http://www.humboldt.edu/
+7817	US	Humphreys College	http://www.humphreys.edu/
+7818	US	Huntington College	http://www.huntcol.edu/
+7819	US	Huron University	http://www.huron.edu/
+7820	US	Husson College	http://www.husson.edu/
+7821	US	Huston-Tillotson College	http://www.htc.edu/
+7822	US	ICI University	http://www.ici.edu/
+7823	US	ICT College	http://www.ictcollege.edu/
+7824	US	Idaho State University	http://www.isu.edu/
+7825	US	Iglobal University	http://www.iglobal.edu/
+7826	US	Illinois Benedictine University	http://www.ben.edu/
+7827	US	Illinois College	http://www.ic.edu/
+7828	US	Illinois College of Optometry	http://www.ico.edu/
+7829	US	Illinois Institute of Technology	http://www.iit.edu/
+7830	US	Illinois School of Professional Psychology - Chicago Campus	http://www.aspp.edu/ilch.html
+7831	US	Illinois School of Professional Psychology - Meadows Campus	http://www.aspp.edu/ilrm.html
+7832	US	Illinois State University	http://www.ilstu.edu/
+7833	US	Illinois Valley Community College	http://www.ivcc.edu/
+7834	US	Illinois Wesleyan University	http://www.iwu.edu/
+7835	US	Immaculata University	http://www.immaculata.edu/
+7836	US	IMPAC University	http://www.impacu.edu/
+7837	US	Indiana Institute of Technologyy	http://www.indtech.edu/
+7838	US	Indiana State University	http://www.indstate.edu/
+7839	US	Indiana University at Bloomington	http://www.iub.edu/
+7840	US	Indiana University at Kokomo	http://www.iuk.edu/
+7841	US	Indiana University at South Bend	http://www.iusb.edu/
+7842	US	Indiana University - East	http://www.iue.indiana.edu/
+7843	US	Indiana University - Northwest	http://www.iun.indiana.edu/
+7844	US	Indiana University of Pennsylvania	http://www.iup.edu/
+7845	US	Indiana University-Purdue University at Columbus	http://www.columbus.iupui.edu/
+7846	US	Indiana University-Purdue University at Fort Wayne	http://www.ipfw.edu/
+7847	US	Indiana University-Purdue University at Indianapolis	http://www.iupui.edu/
+7848	US	Indiana University - Southeast	http://www.ius.indiana.edu/
+7849	US	Indiana University (System)	http://www.indiana.edu/
+7850	US	Indiana Wesleyan University	http://www.indwes.edu/
+7851	US	Institute of Clinical Social Work	http://www.icsw.com/
+7852	US	Institute of Paper Science and Technology	http://www.ipst.edu/
+7853	US	Institute of Textile Technology	http://www.itt.edu/
+7854	US	Institute of Transpersonal Psychology	http://www.itp.edu/
+7855	US	IntelliTec College - Grand Junction	http://www.intelliteccollege.edu/
+7856	US	International Academy of  Merchandising and Design Chicago	http://www.iamd.edu/
+7857	US	International Academy of  Merchandising and Design Tampa	http://www.academy.edu/
+7858	US	International Bible College	http://www.i-b-c.edu/
+7859	US	International College	http://www.internationalcollege.edu/
+7860	US	Iona College	http://www.iona.edu/
+7861	US	Iowa State University of Science and Technology	http://www.iastate.edu/
+7862	US	Iowa Wesleyan College	http://www.iwc.edu/
+7863	US	Ithaca College	http://www.ithaca.edu/
+7864	US	ITT Technical Institute Fort Wayne	http://www.itttech.edu/campus/
+7865	US	ITT Technical Institute Indianapolis	http://www.itttech.edu/campus/
+7866	US	ITT Technical Institute Maitland	http://www.itttech.edu/campus/
+7867	US	ITT Technical Institute Portland	http://www.itttech.edu/campus/
+7868	US	ITT Technical Institute West Covina	http://www.itttech.edu/campus/
+7869	US	Jackson State University	http://www.jsums.edu/
+7870	US	Jacksonville State University	http://www.jsu.edu/
+7871	US	Jacksonville University	http://www.ju.edu/
+7872	US	James Madison University	http://www.jmu.edu/
+7873	US	Jamestown College	http://www.jc.edu/
+7874	US	Jarvis Christian College	http://www.jarvis.edu/
+7875	US	John Brown University	http://www.jbu.edu/
+7876	US	John Carroll University	http://www.jcu.edu/
+7877	US	John F. Kennedy University	http://www.jfku.edu/
+7878	US	John Marshall Law School	http://www.jmls.edu/
+7879	US	John Paul the Great Catholic University	http://www.jpcatholic.com/
+7880	US	Johns Hopkins University	http://www.jhu.edu/
+7881	US	Johnson Bible College	http://www.jbc.edu/
+7882	US	Johnson County Community College	http://www.jccc.edu/
+7883	US	Johnson C. Smith University	http://www.jcsu.edu/
+7884	US	Johnson State College	http://www.jsc.vsc.edu/
+7885	US	Johnson & Wales University	http://www.jwu.edu/
+7886	US	Johnson & Wales University, Charleston	http://www.jwu.edu/charles/camp_charles.htm
+7887	US	John Wesley College	http://www.johnwesley.edu/
+7888	US	Jones College	http://www.jones.edu/
+7889	US	Jones International University	http://www.jonesinternational.edu/
+7890	US	Judson College Elgin	http://www.judson-il.edu/
+7891	US	Judson College Marion	http://home.judson.edu/
+7892	US	Juniata College	http://www.juniata.edu/
+7893	US	Kalamazoo College	http://www.kzoo.edu/
+7894	US	Kankakee Community College	http://www.kankakeecc.org/
+7895	US	Kansas City Art Institute	http://www.kcai.edu/
+7896	US	Kansas State University	http://www.ksu.edu/
+7897	US	Kansas Wesleyan University	http://www.kwu.edu/
+7898	US	Kaplan University	http://www.kaplan.edu/
+7899	US	Katharine Gibbs School	http://www.kgibbs.com/
+7900	US	Kean University of New Jersey	http://www.kean.edu/
+7901	US	Keck Graduate Institute of Applied Life Sciences	http://www.kgi.edu/
+7902	US	Keene State College	http://www.keene.edu/
+7903	US	Keller Graduate School of Management	http://www.keller.edu/
+7904	US	Kendall College	http://www.kendall.edu/
+7905	US	Kendall College of Art and Design	http://www.kcad.edu/
+7906	US	Kennesaw State University	http://www.kennesaw.edu/
+7907	US	Kent State University	http://www.kent.edu/
+7908	US	Kent State University - Ashtabula	http://www.ashtabula.kent.edu/
+7909	US	Kent State University - East Liverpool	http://www.kenteliv.kent.edu/
+7910	US	Kent State University - Salem	http://www.salem.kent.edu/
+7911	US	Kent State University - Stark	http://www.stark.kent.edu/
+7912	US	Kent State University - Trumbull	http://www.trumbull.kent.edu/
+7913	US	Kent State University - Tuscarawas	http://www.tusc.kent.edu/
+7914	US	Kentucky Christian College	http://www.kcc.edu/
+7915	US	Kentucky State University	http://www.kysu.edu/
+7916	US	Kentucky Wesleyan College	http://www.kwc.edu/
+7917	US	Kenyon College	http://www.kenyon.edu/
+7918	US	Kettering University (GMI)	http://www.kettering.edu/
+7919	US	Keuka College	http://www.keuka.edu/
+7920	US	King College	http://www.king.edu/
+7921	US	King's College	http://www.kings.edu/
+7922	US	Kirksville College of Osteopathic Medicine	http://www.kcom.edu/
+7923	US	Kirkwood Community College	http://www.kirkwood.edu/
+7924	US	Knox College	http://www.knox.edu/
+7925	US	Knoxville College	http://www.knoxvillecollege.edu/
+7926	US	Kutztown University of Pennsylvania	http://www.kutztown.edu/
+7927	US	Laboratory Institute of Merchandising	http://www.limcollege.edu/
+7928	US	Lafayette College	http://www.lafayette.edu/
+7929	US	Lagrange College	http://www.lgc.edu/
+7930	US	Lake Erie College	http://www.lakeerie.edu/
+7931	US	Lake Forest College	http://www.lfc.edu/
+7932	US	Lake Forest Graduate School of Management	http://www.lfgsm.edu/
+7933	US	Lakeland College	http://www.lakeland.edu/
+7934	US	Lake Superior State University	http://www.lssu.edu/
+7935	US	Lakeview College of Nursing	http://www.lakeviewcol.edu/
+7936	US	Lamar University	http://www.lamar.edu/
+7937	US	Lamar University - Port Arthur	http://www.pa.lamar.edu/
+7938	US	Lambuth University	http://www.lambuth.edu/
+7939	US	Lancaster Bible College	http://www.lbc.edu/
+7940	US	Lander University	http://www.lander.edu/
+7941	US	Lane College	http://www.lanecollege.edu/
+7942	US	Langston University	http://www.lunet.edu/
+7943	US	La Roche College	http://www.laroche.edu/
+7944	US	La Salle University	http://www.lasalle.edu/
+7945	US	Lasell College	http://www.lasell.edu/
+7946	US	La Sierra University	http://www.lasierra.edu/
+7947	US	Laurus Technical Institute	http://www.laurus.edu/
+7948	US	Lawrence Technological University	http://www.ltu.edu/
+7949	US	Lawrence University	http://www.lawrence.edu/
+7950	US	Lebanon Valley College	http://www.lvc.edu/
+7951	US	Lees-McRae College	http://www.lmc.edu/
+7952	US	Lee University	http://www.leeuniversity.edu/
+7953	US	Lehigh Univervsity	http://www.lehigh.edu/
+7954	US	Le Moyne College	http://www.lemoyne.edu/
+7955	US	Le Moyne-Owen College	http://www.lemoyne-owen.edu/
+7956	US	Lenoir-Rhyne College	http://www.lrc.edu/
+7957	US	Lesley University	http://www.lesley.edu/
+7958	US	Letourneau University	http://www.letu.edu/
+7959	US	Lewis and Clark College	http://www.lclark.edu/
+7960	US	Lewis & Clark Community College	http://www.lc.cc.il.us/
+7961	US	Lewis-Clark State College	http://www.lcsc.edu/
+7962	US	Lewis University	http://www.lewisu.edu/
+7963	US	Liberty University	http://www.liberty.edu/
+7964	US	Life Chiropractic College West	http://www.lifewest.edu/
+7965	US	Life University	http://www.life.edu/
+7966	US	Limestone College	http://www.limestone.edu/
+7967	US	Lincoln Memorial University	http://www.lmunet.edu/
+7968	US	Lincoln University Missouri	http://www.lincolnu.edu/
+7969	US	Lincoln University Pennsylvania	http://www.lincoln.edu/
+7970	US	Lincoln University San Francisco	http://www.lincolnuca.edu/
+7971	US	Lindenwood University	http://www.lindenwood.edu/
+7972	US	Lindsey Wilson College	http://www.lindsey.edu/
+7973	US	Linfield College	http://www.linfield.edu/
+7974	US	Lipscomb University	http://www.lipscomb.edu/
+7975	US	Livingstone College	http://www.livingstone.edu/
+7976	US	Lock Haven University of Pennsylvania	http://www.lhup.edu/
+7977	US	Logan College of Chiropractic	http://www.logan.edu/
+7978	US	Loma Linda University	http://www.llu.edu/
+7979	US	Long Island University	http://www.liunet.edu/
+7980	US	Long Island University, C.W. Post Campus	http://www.cwpost.liunet.edu/cwis/cwp/post.html
+7981	US	Long Island University, Southampton College	http://www.southampton.liunet.edu/
+7982	US	Longwood College	http://www.lwc.edu/
+7983	US	Loras College	http://www.loras.edu/
+7984	US	Los Angeles College of Chiropractic	http://www.lacc.edu/
+7985	US	Louisiana Baptist University	http://www.lbu.edu/
+7986	US	Louisiana College	http://www.lacollege.edu/
+7987	US	Louisiana State University and Agricultural and Mechanical College	http://www.lsu.edu/
+7988	US	Louisiana State University at Alexandria	http://www.lsua.edu/
+7989	US	Louisiana State University at Eunice	http://www.lsue.edu/
+7990	US	Louisiana State University Health Sciences Center New Orleans	http://www.lsuhsc.edu/
+7991	US	Louisiana State University in Shreveport	http://www.lsus.edu/
+7992	US	Louisiana Tech University	http://www.latech.edu/
+7993	US	Lourdes College	http://www.lourdes.edu/
+7994	US	Loyola College in Maryland	http://www.loyola.edu/
+7995	US	Loyola Marymount University	http://www.lmu.edu/
+7996	US	Loyola University New Orleans	http://www.loyno.edu/
+7997	US	Loyola University of Chicago	http://www.luc.edu/
+7998	US	Lubbock Christian University	http://www.lcu.edu/
+7999	US	Lutheran Bible Institute of Seattle	http://www.lbi.edu/
+8000	US	Luther College	http://www.luther.edu/
+8001	US	Lycoming College	http://www.lycoming.edu/
+8002	US	Lynchburg College	http://www.lynchburg.edu/
+8003	US	Lyndon State College	http://www.lsc.vsc.edu/
+8004	US	Lynn University	http://www.lynn.edu/
+8005	US	Lyon College	http://www.lyon.edu/
+8006	US	Macalester College	http://www.macalstr.edu/
+8007	US	MacMurray College	http://www.mac.edu/
+8008	US	Macon State College	http://www.maconstate.edu/
+8009	US	Madison University (Distance Education)	http://www.madisonu.com/
+8010	US	Madonna University	http://madonna2.siteobjects.com/pages/index.cfm
+8011	US	Maharishi University of Management	http://www.mum.edu/
+8012	US	Maine College of Art	http://www.meca.edu/
+8013	US	Maine Maritime Academy	http://www.mainemaritime.edu/
+8014	US	Malone College	http://www.malone.edu/
+8015	US	Manchester College	http://www.manchester.edu/
+8016	US	Manhattan Christian College	http://www.mccks.edu/
+8017	US	Manhattan College	http://www.mancol.edu/
+8018	US	Manhattan School of Music	http://www.msmnyc.edu/
+8019	US	Manhattanville College	http://www.mville.edu/
+8020	US	Mankato State University	http://www.mankato.msus.edu/
+8021	US	Mansfield University of Pennsylvania	http://www.mnsfld.edu/
+8022	US	Maranatha Baptist Bible College	http://www.mbbc.edu/
+8023	US	Marian College	http://www.marian.edu/
+8024	US	Marian College of Fond Du Lac	http://www.mariancoll.edu/
+8025	US	Marietta College	http://www.marietta.edu/
+8026	US	Marist College	http://www.marist.edu/
+8027	US	Marlboro College	http://www.marlboro.edu/
+8028	US	Marquette University	http://www.mu.edu/
+8029	US	Marshall University	http://www.marshall.edu/
+8030	US	Mars Hill College	http://www.mhc.edu/
+8031	US	Martin Luther College	http://www.mlc-wels.edu/
+8032	US	Martin Methodist College	http://www.martinmethodist.edu/
+8033	US	Martin University	http://www.martin.edu/
+8034	US	Mary Baldwin College	http://www.mbc.edu/
+8035	US	Marycrest International University	http://www.mcrest.edu/
+8036	US	Marygrove College	http://www.marygrove.edu/
+8037	US	Marylhurst University	http://www.marylhurst.edu/
+8038	US	Marymount College New York	http://www.marymt.edu/
+8039	US	Marymount Manhattan College	http://marymount.mmm.edu/
+8040	US	Marymount University	http://www.marymount.edu/
+8041	US	Maryville College	http://www.maryvillecollege.edu/
+8042	US	Maryville University of St. Louis	http://www.maryvillestl.edu/
+8043	US	Mary Washington College	http://www.mwc.edu/
+8044	US	Marywood University	http://www.marywood.edu/
+8045	US	Massachusetts College of Art	http://www.massart.edu/
+8046	US	Massachusetts College of Liberal Arts	http://www.mcla.mass.edu/
+8047	US	Massachusetts College of Pharmacy and Allied Health Sciences	http://www.mcp.edu/
+8048	US	Massachusetts Institute of Technology	http://www.mit.edu/
+8049	US	Massachusetts Maritime Academy	http://www.mma.mass.edu/
+8050	US	Massachusetts School of Professional Psychology	http://www.mspp.edu/
+8051	US	Mayo Graduate School	http://www.mayo.edu/mgs/gs.html
+8052	US	Mayo Medical School	http://www.mayo.edu/education/mms/
+8053	US	Mayville State University	http://www.masu.nodak.edu/
+8054	US	McKendree College	http://www.mckendree.edu/
+8055	US	McMurry University	http://www.mcm.edu/
+8056	US	McNeese State University	http://www.mcneese.edu/
+8057	US	McPherson College	http://www.mcpherson.edu/
+8058	US	Medaille College	http://www.medaille.edu/
+8059	US	Medcenter One College of Nursing	http://www.medcenterone.com/nursing/nursing.htm
+8060	US	Medical College of Georgia	http://www.mcg.edu/
+8061	US	Medical College of Ohio	http://www.mco.edu/
+8062	US	Medical College of Pennsylvania and Hahnemann University	http://www.mcphu.edu/
+8063	US	Medical College of Wisconsin	http://www.mcw.edu/
+8064	US	Medical University of South Carolina	http://www.musc.edu/
+8065	US	Meharry Medical College	http://www.mmc.edu/
+8066	US	Memphis College of Art	http://www.mca.edu/
+8067	US	Menlo College	http://www.menlo.edu/
+8068	US	Mennonite College of Nursing	http://www.mcn.ilstu.edu/
+8069	US	Mercer University	http://www.mercer.edu/
+8070	US	Mercer University, Cecil B. Day Campus	http://www.mercer.edu/cbd/
+8071	US	Mercy College	http://www.mercynet.edu/
+8072	US	Mercyhurst College	http://www.mercyhurst.edu/
+8073	US	Meredith College	http://www.meredith.edu/
+8074	US	Merrimack College	http://www.merrimack.edu/
+8075	US	Mesa State College	http://www.mesastate.edu/
+8076	US	Messiah College	http://www.messiah.edu/
+8077	US	Methodist College	http://www.methodist.edu/
+8078	US	Metropolitan State College of Denver	http://www.mscd.edu/
+8079	US	Metropolitan State University	http://www.metro.msus.edu/
+8080	US	MGH Institute of Health Professions	http://www.mghihp.edu/
+8081	US	Miami Dade College	http://www.mdc.edu/
+8082	US	Miami University of Ohio	http://www.muohio.edu/
+8083	US	Miami University of Ohio - Hamilton	http://www.ham.muohio.edu/
+8084	US	Miami University of Ohio - Middletown	http://www.mid.muohio.edu/
+8085	US	Michigan School of Professional Psychology	http://www.mispp.edu/
+8086	US	Michigan State University	http://www.msu.edu/
+8087	US	Michigan Technological University	http://www.mtu.edu/
+8088	US	Mid-America Nazarene University	http://www.mnu.edu/
+8089	US	Mid-American Bible College	http://www.concentric.net/~rkriesel/MBC/MBC.shtml
+8090	US	Mid-Continent Baptist Bible College	http://www.mcbc.edu/
+8091	US	Middlebury College	http://www.middlebury.edu/
+8092	US	Middle Tennessee State University	http://www.mtsu.edu/
+8093	US	Midland Lutheran College	http://www.mlc.edu/
+8094	US	Midway College	http://www.midway.edu/
+8095	US	Midwestern State University	http://www.mwsu.edu/
+8096	US	Midwestern University	http://www.midwestern.edu/
+8097	US	Miles College	http://www.miles.edu/
+8098	US	Millennia Atlantic University	http://www.maufl.edu/
+8099	US	Millersville University of Pennsylvania	http://www.millersv.edu/
+8100	US	Milligan College	http://www.milligan.edu/
+8101	US	Millikin University	http://www.millikin.edu/
+8102	US	Millsaps College	http://www.millsaps.edu/
+8103	US	Mills College	http://www.mills.edu/
+8104	US	Mills Grae University	http://www.mgu.edu/
+8105	US	Milwaukee Institute of Art and Design	http://www.miad.edu/
+8106	US	Milwaukee School of Engineering	http://www.msoe.edu/
+8107	US	Minneapolis College of Art and Design	http://www.mcad.edu/
+8108	US	Minnesota Bible College	http://www.mnbc.edu/
+8109	US	Minnesota School of Professional Psychology	http://www.aspp.edu/mn.html
+8110	US	Minot State University	http://www.misu.nodak.edu/
+8111	US	Mississippi College	http://www.mc.edu/
+8112	US	Mississippi State University	http://www.msstate.edu/
+8113	US	Mississippi University for Women	http://www.muw.edu/
+8114	US	Mississippi Valley State University	http://www.mvsu.edu/
+8115	US	Missouri Baptist College	http://www.mobap.edu/
+8116	US	Missouri Southern State College	http://www.mssc.edu/
+8117	US	Missouri Tech	http://www.motech.edu/
+8118	US	Missouri University of Science and Technology	http://www.mst.edu/
+8119	US	Missouri Valley College	http://www.murlin.com/~webfx/mvc/
+8120	US	Missouri Western State College	http://www.mwsc.edu/
+8121	US	Molloy College	http://www.molloy.edu/
+8122	US	Monmouth University	http://www.monmouth.edu/
+8123	US	Montana State University	http://www.montana.edu/
+8124	US	Montana State University - Billings	http://www.msubillings.edu/
+8125	US	Montana State University - Northern	http://www.msun.edu/
+8126	US	Montana Tech	http://www.mtech.edu/
+8127	US	Montclair State University	http://www.montclair.edu/
+8128	US	Monterey Institute of International Studies	http://www.miis.edu/
+8129	US	Montreat College	http://www.montreat.edu/
+8130	US	Montserrat College of Art	http://www.montserrat.edu/
+8131	US	Moody Bible Institute	http://www.moody.edu/
+8132	US	Moore College of Art and Design	http://www.moore.edu/
+8133	US	Moorhead State University	http://www.moorhead.msus.edu/
+8134	US	Moraine Valley Community College	http://www.morainevalley.edu/
+8135	US	Moravian College	http://www.moravian.edu/
+8136	US	Morehead State University	http://www.morehead-st.edu/
+8137	US	Morehouse College	http://www.morehouse.edu/
+8138	US	Morehouse School of Medicine	http://www.msm.edu/
+8139	US	Morgan State University	http://www.morgan.edu/
+8140	US	Morningside College	http://www.morningside.edu/
+8141	US	Morris Brown College	http://www.morrisbrown.edu/
+8142	US	Morris College	http://www.scicu.org/morris/
+8143	US	Morrison College	http://www.morrison.neumont.edu/
+8144	US	Mountain State University	http://www.mountainstate.edu/
+8145	US	Mount Aloysius College	http://www.mtaloy.edu/
+8146	US	Mount Carmel College of Nursing	http://www.mccn.edu/
+8147	US	Mount Holyoke College	http://www.mtholyoke.edu/
+8148	US	Mount Ida College	http://www.mountida.edu/
+8149	US	Mount Marty College	http://www.mtmc.edu/
+8150	US	Mount Mary College	http://www.mtmary.edu/
+8151	US	Mount Mercy College	http://www.mtmercy.edu/
+8152	US	Mount Olive College	http://www.mountolivecollege.edu/
+8153	US	Mount Senario College	http://www.mscfs.edu/
+8154	US	Mount Sinai School of Medicine	http://www.mssm.edu/
+8155	US	Mount St. Clare College	http://www.clare.edu/
+8156	US	Mount St. Mary College	http://www.msmc.edu/
+8157	US	Mount St. Mary's College California	http://www.msmc.la.edu/
+8158	US	Mount St. Mary's College Maryland	http://www.msmary.edu/
+8159	US	Mount Union College	http://www.mountunion.edu/
+8160	US	Mount Vernon College	http://www.gwu.edu/~mvcgw/
+8161	US	Mount Vernon Nazarene College	http://www.mvnc.edu/
+8162	US	Muhlenberg College	http://www.muhlberg.edu/
+8163	US	Multnomah Bible College	http://www.multnomah.edu/
+8164	US	Murray State University	http://www.mursuky.edu/
+8165	US	Muskingum College	http://www.muskingum.edu/
+8166	US	NAES College	http://www.naes.indian.com/
+8167	US	National American University	http://www.national.edu/
+8168	US	National American University, Albuquerque	http://www.national.edu/albuquerque.html
+8169	US	National American University, Colorado Springs	http://www.national.edu/col_springs.html
+8170	US	National American University, Denver	http://www.national.edu/denver.html
+8171	US	National American University, Kansas City	http://www.national.edu/kansas_city.html
+8172	US	National American University, Roseville	http://www.national.edu/roseville.html
+8173	US	National American University, Sioux Falls	http://www.national.edu/sioux_falls.html
+8174	US	National College of Chiropractic	http://www.national.chiropractic.edu/
+8175	US	National College of Naturopathic Medicine	http://www.ncnm.edu/
+8176	US	National Defense University	http://www.ndu.edu/
+8177	US	National Hispanic University	http://www.nhu.edu/
+8178	US	National-Louis University	http://www.nl.edu/
+8179	US	National Technological University	http://www.ntu.edu/
+8180	US	National Theatre Conservatory	http://www.denvercenter.org/education/ed_ntc.htm
+8181	US	National University	http://www.nu.edu/
+8182	US	Naval Postgraduate School	http://www.nps.navy.mil/
+8183	US	Nazarene Bible College	http://www.nbc.edu/
+8184	US	Nazareth College	http://www.naz.edu/
+8185	US	Nebraska Christian College	http://www.nechristian.edu/
+8186	US	Nebraska Methodist College of Nursing and Allied Health	http://www.methodistcollege.edu/nurseover.html
+8187	US	Nebraska Wesleyan University	http://www.nebrwesleyan.edu/
+8188	US	Neumann College	http://www.neumann.edu/
+8189	US	Newberry College	http://www.newberry.edu/
+8190	US	New College of California	http://www.newcollege.edu/
+8191	US	New College of Florida	http://www.ncf.edu/
+8192	US	New England College	http://www.nec.edu/
+8193	US	New England College of Optometry	http://www.ne-optometry.edu/
+8194	US	New England Conservatory of Music	http://www.newenglandconservatory.edu/
+8195	US	New England Institute of Technology	http://www.neit.edu/
+8196	US	New England School of Art and Design	http://www.suffolk.edu/nesad/
+8197	US	New England School of Communications	http://www.nescom.edu/
+8198	US	New England School of Law	http://www.nesl.edu/
+8199	US	New Hampshire College	http://www.nhc.edu/
+8200	US	New Jersey City University	http://www.njcu.edu/
+8201	US	New Jersey Institute of Technology	http://www.njit.edu/
+8202	US	Newman University	http://www.ksnewman.edu/
+8203	US	New Mexico Highlands University	http://www.nmhu.edu/
+8204	US	New Mexico Institute of Mining and Technology	http://www.nmt.edu/
+8205	US	New Mexico State University	http://www.nmsu.edu/
+8206	US	Newschool of Architecture and Design	http://www.newschoolarch.edu/
+8207	US	New York Academy of Art, Graduate School of Figurative Art	http://www.nyaa.edu/
+8208	US	New York Chiropractic College	http://www.nycc.edu/
+8209	US	New York College of Podiatric Medicine	http://www.nycpm.edu/
+8210	US	New York Film Academy	http://www.nyfa.edu/
+8211	US	New York Institute of Technology	http://www.nyit.edu/
+8212	US	New York Law School	http://www.nyls.edu/
+8213	US	New York Medical College	http://www.nymc.edu/
+8214	US	New York School of Interior Design	http://www.nysid.edu/
+8215	US	New York University	http://www.nyu.edu/
+8216	US	Niagara University	http://www.niagara.edu/
+8217	US	Nicholls State University	http://www.nicholls.edu/
+8218	US	Nichols College	http://www.nichols.edu/
+8219	US	Norfolk State University	http://www.nsu.edu/
+8220	US	North Carolina Agricultural and Technical State University	http://www.ncat.edu/
+8221	US	North Carolina Central University	http://www.nccu.edu/
+8222	US	North Carolina School of the Arts	http://www.ncarts.edu/
+8223	US	North Carolina State University	http://www.ncsu.edu/
+8224	US	North Carolina Wesleyan College	http://www.ncwc.edu/
+8225	US	North Central Bible College	http://www.ncbc.edu/
+8226	US	North Central College	http://www.noctrl.edu/
+8227	US	Northcentral University	http://www.ncu.edu/
+8228	US	North Dakota State University	http://www.ndsu.nodak.edu/
+8229	US	Northeastern Illinois University	http://www.neiu.edu/
+8230	US	Northeastern Ohio University College of Medicine	http://www.neoucom.edu/
+8231	US	Northeastern State University	http://www.nsuok.edu/
+8232	US	Northeastern University	http://www.neu.edu/
+8233	US	Northern Arizona University	http://www.nau.edu/
+8234	US	Northern Illinois University	http://www.niu.edu/
+8235	US	Northern Kentucky University	http://www.nku.edu/
+8236	US	Northern Michigan University	http://www.nmu.edu/
+8237	US	Northern State University	http://www.northern.edu/
+8238	US	Northern Virginia Community College	http://www.nv.cc.va.us/
+8239	US	Northface University	http://www.northface.edu/
+8240	US	North Georgia College	http://www.ngc.peachnet.edu/
+8241	US	North Greenville College	http://www.ngc.edu/
+8242	US	Northland College	http://www.northland.edu/
+8243	US	North Park University	http://www.northpark.edu/
+8244	US	Northwest Christian College	http://www.nwcc.edu/
+8245	US	Northwest College of Art	http://www.nca.edu/
+8246	US	Northwestern College Iowa	http://www.nwciowa.edu/
+8247	US	Northwestern College of Chiropractic	http://www.nwchiro.edu/
+8248	US	Northwestern College St. Paul	http://www.nwc.edu/
+8249	US	Northwestern Oklahoma State University	http://www.nwalva.edu/
+8250	US	Northwestern State University of Louisiana	http://www.nsula.edu/
+8251	US	Northwestern University	http://www.nwu.edu/
+8252	US	Northwest Missouri State University	http://www.nwmissouri.edu/
+8253	US	Northwest Nazarene University	http://www.nnu.edu/
+8254	US	Northwest University	http://www.northwestu.edu/
+8255	US	Northwood University	http://www.northwood.edu/
+8256	US	Northwood University, Florida Campus	http://www.northwood.edu/campuses/florida/
+8257	US	Northwood University, Texas Campus	http://www.northwood.edu/campuses/texas/
+8258	US	Norwich University	http://www.norwich.edu/
+8259	US	Notre Dame College	http://www.notredame.edu/
+8260	US	Notre Dame College of Ohio	http://www.ndc.edu/
+8261	US	Notre Dame de Namur University	http://www.ndnu.edu/
+8262	US	Nova Southeastern University	http://www.nova.edu/
+8263	US	Nyack College	http://www.nyackcollege.edu/
+8264	US	Oakland City University	http://www.oak.edu/
+8265	US	Oakland University	http://www.oakland.edu/
+8266	US	Oakton Community College	http://www.oakton.edu/
+8267	US	Oakwood College	http://www.oakwood.edu/
+8268	US	Oberlin College	http://www.oberlin.edu/
+8269	US	Occidental College	http://www.oxy.edu/
+8270	US	Oglala Lakota College	http://www.olc.edu/
+8271	US	Oglethorpe University	http://www.oglethorpe.edu/
+8272	US	Ohio College of Podiatric Medicine	http://www.ocpm.edu/
+8273	US	Ohio Dominican College	http://www.odc.edu/
+8274	US	Ohio Northern University	http://www.onu.edu/
+8275	US	Ohio State University	http://www.ohio-state.edu/
+8276	US	Ohio State University - Lima	http://www.lima.ohio-state.edu/
+8277	US	Ohio State University - Mansfield	http://www.mansfield.ohio-state.edu/
+8278	US	Ohio State University - Marion	http://www.marion.ohio-state.edu/
+8279	US	Ohio State University - Newark	http://www.newark.ohio-state.edu/
+8280	US	Ohio University	http://www.ohiou.edu/
+8281	US	Ohio University - Chillicothe	http://www.ohiou.edu/chillicothe/
+8282	US	Ohio University - Eastern	http://www.eastern.ohiou.edu/
+8283	US	Ohio University - Lancaster	http://www.lancaster.ohiou.edu/
+8284	US	Ohio University - Southern	http://www.ohiou.edu/southern/
+8285	US	Ohio University - Zanesville	http://www.zanesville.ohiou.edu/
+8286	US	Ohio Valley College	http://www.ovc.edu/
+8287	US	Ohio Wesleyan University	http://www.owu.edu/
+8288	US	Oklahoma Baptist University	http://www.okbu.edu/
+8289	US	Oklahoma Christian University	http://www.oc.edu/
+8290	US	Oklahoma City University	http://www.okcu.edu/
+8291	US	Oklahoma Panhandle State University	http://www.opsu.edu/
+8292	US	Oklahoma State University	http://www.okstate.edu/
+8293	US	Oklahoma State University Center for Health Sciences	http://osu.com.okstate.edu/
+8294	US	Oklahoma State University - Institute of Technology	http://www.osuit.edu/
+8295	US	Oklahoma State University - Oklahoma City	http://www.osuokc.edu/
+8296	US	Oklahoma State University - Tulsa	http://www.osu-tulsa.okstate.edu/
+8297	US	Old Dominion University	http://www.odu.edu/
+8298	US	Olive-Harvey College	http://www.ccc.edu/oliveharvey/
+8299	US	Olivet College	http://www.olivetcollege.edu/
+8300	US	Olivet Nazarene University	http://www.olivet.edu/
+8301	US	O'More College of Design	http://www.omorecollege.edu/
+8302	US	Oral Roberts University	http://www.oru.edu/
+8303	US	Oregon College of Arts and Crafts	http://www.ocac.edu/
+8304	US	Oregon Graduate Institute of Science and Technology	http://www.ogi.edu/
+8305	US	Oregon Health Sciences University	http://www.ohsu.edu/
+8306	US	Oregon Institute of Technology	http://www.oit.edu/
+8307	US	Oregon State University	http://www.orst.edu/
+8308	US	Otis College of Art & Design	http://www.otisart.edu/
+8309	US	Ottawa University	http://www.ottawa.edu/
+8310	US	Otterbein College	http://www.otterbein.edu/
+8311	US	Ouachita Baptist University	http://www.obu.edu/
+8312	US	Our Lady of Holy Cross College	http://www.olhcc.edu/
+8313	US	Our Lady of the Lake University	http://www.ollusa.edu/
+8314	US	Ozark Christian College	http://www.occ.edu/
+8315	US	Pace University	http://www.pace.edu/
+8316	US	Pace University  Pleasantville/Briarcliff	http://www.pace.edu/campus/pville.html
+8317	US	Pacifica Graduate Institute	http://www.pacifica.edu/
+8318	US	Pacific College of Oriental Medicine	http://www.ormed.edu/
+8319	US	Pacific Graduate School of Psychology	http://www.pgsp.edu/
+8320	US	Pacific Lutheran University	http://www.plu.edu/
+8321	US	Pacific Northwest College of Art	http://www.pnca.edu/
+8322	US	Pacific Oaks College	http://www.pacificoaks.edu/
+8323	US	Pacific Union College	http://www.puc.edu/
+8324	US	Pacific University	http://www.pacificu.edu/
+8325	US	Paier College of Art	http://www.paierart.com/
+8326	US	Paine College	http://www.paine.edu/
+8327	US	Palm Beach Atlantic University	http://www.pba.edu/
+8328	US	Palm Beach State College	http://www.palmbeachstate.edu/
+8329	US	Palmer College of Chiropractic	http://www.palmer.edu/
+8330	US	Palmer College of Chiropractic West	http://www.palmer.edu/PCCW/pcwmain.htm
+8331	US	Park College	http://www.park.edu/
+8332	US	Parsons School of Design	http://www.parsons.edu/
+8333	US	Paul Quinn College	http://www.pqc.edu/
+8334	US	Peace College	http://www.peace.edu/
+8335	US	Pebble Hills University	http://www.pebblehills.edu/
+8336	US	Pennsylvania Academy of the Fine Arts	http://www.pafa.org/
+8337	US	Pennsylvania College of Optometry	http://www.pco.edu/
+8338	US	Pennsylvania Institute of Technology	http://www.pit.edu/
+8339	US	Pennsylvania State University	http://www.psu.edu/
+8340	US	Pennsylvania State University - Abington	http://www.abington.psu.edu/
+8341	US	Pennsylvania State University - Altoona	http://www.aa.psu.edu/
+8342	US	Pennsylvania State University at Erie - Behrend College	http://www.pserie.psu.edu/
+8343	US	Pennsylvania State University at Harrisburg - The Capital College	http://www.hbg.psu.edu/
+8344	US	Pennsylvania State University - Berks-Lehigh Valley College	http://www.bk.psu.edu/
+8345	US	Pennsylvania State University Delaware County	http://www.de.psu.edu/
+8346	US	Pennsylvania State University Great Valley	http://www.gv.psu.edu/
+8347	US	Pennsylvania State University - Lehigh Valley	http://www.an.psu.edu/
+8348	US	Pennsylvania State University - Milton S.Hershey Medical Center	http://www.collmed.psu.edu/
+8349	US	Pennsylvania State University - Schuylkill	http://www.sl.psu.edu/
+8350	US	Pepperdine University	http://www.pepperdine.edu/
+8351	US	Peru State College	http://www.peru.edu/
+8352	US	Pfeiffer University	http://www.pfeiffer.edu/
+8353	US	Philadelphia College of Bible	http://www.pcb.edu/
+8354	US	Philadelphia College of Osteopathic Medicine	http://www.pcom.edu/
+8355	US	Philadelphia University	http://www.philau.edu/
+8356	US	Philander Smith College	http://www.philander.edu/
+8357	US	Phillips Graduate Institute	http://www.pgi.edu/
+8358	US	Phillips University	http://www.phillips.edu/
+8359	US	Piedmont Baptist College	http://www.pbc.edu/
+8360	US	Piedmont College	http://www.piedmont.edu/
+8361	US	Pikeville College	http://www.pc.edu/
+8362	US	Pillsbury Baptist Bible College	http://www.pillsbury.edu/
+8363	US	Pittsburg State University	http://www.pittstate.edu/
+8364	US	Pitzer College	http://www.pitzer.edu/
+8365	US	Plymouth State College	http://www.plymouth.edu/
+8366	US	Point Loma Nazarene College	http://www.ptloma.edu/
+8367	US	Point Park College	http://www.ppc.edu/
+8368	US	Polytechnic University	http://www.poly.edu/
+8369	US	Polytechnic University, Long Island Campus	http://www.poly.edu/li/
+8370	US	Polytechnic University, Westchester Graduate Center	http://www.poly.edu/west/
+8371	US	Pomona College	http://www.pomona.edu/
+8372	US	Portland Community College	http://www.pcc.edu/
+8373	US	Portland State University	http://www.pdx.edu/
+8374	US	Post University of Waterbury	http://www.post.edu/
+8375	US	Prairie View Agricultural and Mechanical University	http://www.pvamu.edu/
+8376	US	Pratt Institute	http://www.pratt.edu/
+8377	US	Presbyterian College	http://www.presby.edu/
+8378	US	Prescott College	http://www.prescott.edu/
+8379	US	Preston University	http://www.preston.edu/
+8380	US	Princeton University	http://www.princeton.edu/
+8381	US	Principia College	http://www.prin.edu/
+8382	US	Providence College	http://www.providence.edu/
+8383	US	Puget Sound Christian College	http://members.aa.net/~bluvase/pscchome.html
+8384	US	Purdue University	http://www.purdue.edu/
+8385	US	Purdue University Calumet	http://www.calumet.purdue.edu/
+8386	US	Purdue University North Central	http://www.pnc.edu/
+8387	US	Quantum-Veritas International University	http://www.qvius.edu/
+8388	US	Queens College	http://www.queens.edu/
+8389	US	Quincy University	http://www.quincy.edu/
+8390	US	Quinnipiac College	http://www.quinnipiac.edu/
+8391	US	Radford University	http://www.runet.edu/
+8392	US	Ramapo College of New Jersey	http://www.ramapo.edu/
+8393	US	Rand Graduate School of Policy Studies	http://www.rgs.edu/
+8394	US	Randolph-Macon College	http://www.rmc.edu/
+8395	US	Randolph-Macon Woman's College	http://www.rmwc.edu/
+8396	US	Rasmussen College	http://www.rasmussen.edu/
+8397	US	Rasmussen College, Florida Campuses	http://www.rasmussen.edu/locations/florida/
+8398	US	Rasmussen College, Illinois Campuses	http://www.rasmussen.edu/locations/illinois/
+8399	US	Rasmussen College, Minnesota Campuses	http://www.rasmussen.edu/locations/minnesota/
+8400	US	Rasmussen College, North Dakota Campuses	http://www.rasmussen.edu/locations/north-dakota/
+8401	US	Rasmussen College, Wisconsin Campuses	http://www.rasmussen.edu/locations/wisconsin/
+8402	US	Reed College	http://www.reed.edu/
+8403	US	Reformed Bible College	http://www.reformed.edu/
+8404	US	Regent International University	http://www.regentinternational.net/
+8405	US	Regent University	http://www.regent.edu/
+8406	US	Regis College	http://www.regiscollege.edu/
+8407	US	Regis University	http://www.regis.edu/
+8408	US	Reinhardt College	http://www.reinhardt.edu/
+8409	US	Rensselaer Polytechnic Institute	http://www.rpi.edu/
+8410	US	Research College of Nursing - Rockhurst University	http://www.rockhurst.edu/3.0/academic_programs/nursing/admis3.html
+8411	US	Rhode Island College	http://www.ric.edu/
+8412	US	Rhode Island School of Design	http://www.risd.edu/
+8413	US	Rhodes College	http://www.rhodes.edu/
+8414	US	Rice University	http://www.rice.edu/
+8415	US	Richard Stockton College of New Jersey	http://www.stockton.edu/
+8416	US	Rider University	http://www.rider.edu/
+8417	US	Ringling College of Art and Design	http://www.ringling.edu/
+8418	US	Ripon College	http://www.ripon.edu/
+8419	US	Rivier College	http://www.rivier.edu/
+8420	US	Roanoke Bible College	http://www.roanokebible.edu/
+8421	US	Roanoke College	http://www.roanoke.edu/
+8422	US	Robert Morris College	http://www.robert-morris.edu/
+8423	US	Robert Morris College of Chicago	http://www.rmcil.edu/
+8424	US	Roberts Wesleyan College	http://www.rwc.edu/
+8425	US	Rochester College	http://www.rc.edu/
+8426	US	Rochester Institute of Technology	http://www.rit.edu/
+8427	US	Rockford College	http://www.rockford.edu/
+8428	US	Rockhurst College	http://www.rockhurst.edu/
+8429	US	Rock Valley College	http://www.rvc.cc.il.us/
+8430	US	Rocky Mountain College	http://www.rocky.edu/
+8431	US	Rocky Mountain College of Art and Design	http://www.rmcad.edu/
+8432	US	Rogers State University	http://www.rsu.edu/
+8433	US	Roger Williams University	http://www.rwu.edu/
+8434	US	Rollins College	http://www.rollins.edu/
+8435	US	Roosevelt University	http://www.roosevelt.edu/
+8436	US	Rose-Hulman Institute of Technology	http://www.rose-hulman.edu/
+8437	US	Rosemont College	http://www.rosemont.edu/
+8438	US	Ross University, School of Medicine	http://www.rossmed.edu/
+8439	US	Rowan University	http://www.rowan.edu/
+8440	US	Rush University	http://www.rushu.rush.edu/
+8441	US	Russel Sage College	http://www.sage.edu/RSC/
+8442	US	Rust College	http://www.rustcollege.edu/
+8443	US	Rutgers, The State University of New Jersey	http://www.rutgers.edu/
+8444	US	Rutgers, The State University of New Jersey - Camden	http://camden-www.rutgers.edu/
+8445	US	Rutgers, The State University of New Jersey - Newark	http://rutgers-newark.rutgers.edu/
+8446	US	Sacred Heart University	http://www.sacredheart.edu/
+8447	US	Sage Graduate School	http://www.sage.edu/SGS/
+8448	US	Saginaw Valley State University	http://www.svsu.edu/
+8449	US	Salem College	http://www.salem.edu/
+8450	US	Salem International University	http://www.salemiu.edu/
+8451	US	Salem State College	http://www.salem.mass.edu/
+8452	US	Salem Teikyo University	http://www.salem-teikyo.wvnet.edu/
+8453	US	Salisbury State University	http://www.ssu.edu/
+8454	US	Salve Regina University	http://www.salve.edu/
+8455	US	Samford University	http://www.samford.edu/
+8456	US	Sam Houston State University	http://www.shsu.edu/
+8457	US	Samuel Merritt College	http://www.samuelmerritt.edu/
+8458	US	San Diego State University	http://www.sdsu.edu/
+8459	US	San Diego University for Integrative Studies	http://www.sduis.edu/
+8460	US	Sanford-Brown Institute	http://www.sbjacksonville.com/
+8461	US	San Francisco Art Institute	http://www.sfai.edu/
+8462	US	San Francisco Conservatory of Music	http://www.sfcm.edu/
+8463	US	San Francisco State University	http://www.sfsu.edu/
+8464	US	San Joaquin College of Law	http://www.sjcl.org/
+8465	US	San Jose Christian College	http://www.sjchristiancol.edu/
+8466	US	San Jose State University	http://www.sjsu.edu/
+8467	US	Santa Clara University	http://www.scu.edu/
+8468	US	Sarah Lawrence College	http://www.slc.edu/
+8469	US	Savannah College of Art and Design	http://www.scad.edu/
+8470	US	Savannah State University	http://www.savstate.edu/
+8471	US	Saybrook Institute	http://www.saybrook.org/
+8472	US	Schiller International University	http://www.schiller.edu/
+8473	US	Scholl College of Podiatric Medicine	http://www.scholl.edu/
+8474	US	School for International Training	http://www.sit.edu/
+8475	US	School of the Museum of Fine Arts	http://www.smfa.edu/
+8476	US	School of the Visual Arts	http://www.schoolofvisualarts.edu/
+8477	US	Schreiner College	http://www.schreiner.edu/
+8478	US	Scripps College	http://www.scrippscol.edu/
+8479	US	Seattle Pacific University	http://www.spu.edu/
+8480	US	Seattle University	http://www.seattleu.edu/
+8481	US	Seton Hall University	http://www.shu.edu/
+8482	US	Seton Hill College	http://www.setonhill.edu/
+8483	US	Shawnee Community College	http://www.shawnee.cc.il.us/
+8484	US	Shawnee State University	http://www.shawnee.edu/
+8485	US	Shaw University	http://www.shawuniversity.edu/
+8486	US	Sheldon Jackson College	http://www.sheldonjackson.edu/
+8487	US	Shenandoah University	http://www.su.edu/
+8488	US	Shepherd College	http://www.shepherd.edu/
+8489	US	Sherman College of Straight Chiropractic	http://www.sherman.edu/
+8490	US	Shimer College	http://www.shimer.edu/
+8491	US	Shippensburg University of Pennsylvania	http://www.ship.edu/
+8492	US	Shoreline Community College	http://www.shoreline.edu/
+8493	US	Shorter College	http://www.shorter.edu/
+8494	US	Siena College	http://www.siena.edu/
+8495	US	Siena Heights University	http://www.sienahts.edu/
+8496	US	Sierra Nevada College	http://www.sierranevada.edu/
+8497	US	Silver Lake College	http://www.sl.edu/
+8498	US	Simmons College	http://www.simmons.edu/
+8499	US	Simon's Rock College	http://www.simons-rock.edu/
+8500	US	Simpson College	http://www.simpsonca.edu/
+8501	US	Simpson College Iowa	http://www.simpson.edu/
+8502	US	Sinte Gleska University	http://sinte.indian.com/
+8503	US	Skadron College	http://skadron.com/
+8504	US	Skidmore College	http://www.skidmore.edu/
+8505	US	Slippery Rock University	http://www.sru.edu/
+8506	US	Smith College	http://www.smith.edu/
+8507	US	Sojourner-Douglass College	http://www.sdc.edu/
+8508	US	Soka University of America	http://www.soka.edu
+8509	US	Sonoma State University	http://www.sonoma.edu/
+8510	US	South Carolina State University	http://www.scsu.edu/
+8511	US	South Dakota School of Mines and Technology	http://www.sdsmt.edu/
+8512	US	South Dakota State University	http://www.sdstate.edu/
+8513	US	Southeastern Baptist College	http://www.southeasternbaptist.edu/
+8514	US	Southeastern Bible College	http://www.sebc.edu/
+8515	US	Southeastern College of the Assemblies of God	http://www.secollege.edu/
+8516	US	Southeastern Louisiana University	http://www.southeastern.edu/
+8517	US	Southeastern Oklahoma State University	http://www.sosu.edu/
+8518	US	Southeastern University	http://www.seu.edu/
+8519	US	Southeast Missouri State University	http://www.semo.edu/
+8520	US	Southern Adventist University	http://www.southern.edu/
+8521	US	Southern Arkansas University	http://www.saumag.edu/
+8522	US	Southern California College	http://www.sccu.edu/
+8523	US	Southern California College of Optometry	http://www.scco.edu/
+8524	US	Southern California Institute of Architecture	http://www.sciarc.edu/
+8525	US	Southern College of Optometry	http://www.sco.edu/
+8526	US	Southern Connecticut State University	http://www.scsu.ctstateu.edu/
+8527	US	Southern Illinois University at Carbondale	http://www.siu.edu/
+8528	US	Southern Illinois University at Edwardsville	http://www.siue.edu/
+8529	US	Southern Methodist University	http://www.smu.edu/
+8530	US	Southern Nazarene University	http://www.snu.edu/
+8531	US	Southern New Hampshire University	http://www.snhu.edu/
+8532	US	Southern Oregon University	http://www.sou.edu/
+8533	US	Southern Polytechnic State Univerisity	http://www.spsu.edu/
+8534	US	Southern University - Baton Rouge	http://www.subr.edu/
+8535	US	Southern University - New Orleans	http://www.suno.edu/
+8536	US	Southern University - Shreveport	http://www.susla.edu/
+8537	US	Southern Utah University	http://www.suu.edu/
+8538	US	Southern Vermont College	http://www.svc.edu/
+8539	US	Southern Wesleyan University	http://www.swu.edu/
+8540	US	South Florida Bible College & Theological Seminary	http://www.sfbc.edu/
+8541	US	South Texas College of Law	http://www.stcl.edu/
+8542	US	Southwest Baptist University	http://www.sbuniv.edu/
+8543	US	Southwestern Adventist University	http://www.swau.edu/
+8544	US	Southwestern Assemblies of God University	http://www.sagu.edu/
+8545	US	Southwestern Baptist Theological Seminary	http://www.swbts.edu/
+8546	US	Southwestern Christian College	http://www.soulsociety.com/swcc.html
+8547	US	Southwestern Christian University	http://www.swcu.edu/
+8548	US	Southwestern College Kansas	http://www.sckans.edu/
+8549	US	Southwestern College Santa Fe	http://www.swc.edu/
+8550	US	Southwestern Oklahoma State University	http://www.swosu.edu/
+8551	US	Southwestern University	http://www.southwestern.edu/
+8552	US	Southwestern University School of Law	http://www.swlaw.edu/
+8553	US	Southwest Missouri State University	http://www.smsu.edu/
+8554	US	Southwest Missouri State University - West Plains	http://www.wp.smsu.edu/
+8555	US	Southwest State University	http://www.southwest.msus.edu/
+8556	US	Southwest Texas State University	http://www.swt.edu/
+8557	US	Southwest University	http://www.southwest.edu/
+8558	US	Spalding University	http://www.spalding.edu/
+8559	US	Spelman College	http://www.spelman.edu/
+8560	US	Spertus Institute of Jewish Studies	http://www.spertus.edu/
+8561	US	Spring Arbor College	http://www.arbor.edu/
+8562	US	Springfield College	http://www.spfldcol.edu/
+8563	US	Spring Hill College	http://www.shc.edu/
+8564	US	St. Ambrose University	http://www.sau.edu/
+8565	US	Standford Online University	http://www.standford-university.cjb.net/
+8566	US	Standford University	http://standford-university.edu.tf/
+8567	US	St. Andrews Presbyterian College	http://www.sapc.edu/
+8568	US	Stanford University	http://www.stanford.edu/
+8569	US	St. Anselm College	http://www.anselm.edu/
+8570	US	St. Anthony College of Nursing	http://www.sacn.edu/
+8571	US	State University of New York at Albany	http://www.albany.edu/
+8572	US	State University of New York at Binghamton	http://www.binghamton.edu/
+8573	US	State University of New York at Buffalo	http://www.buffalo.edu/
+8574	US	State University of New York at New Paltz	http://www.newpaltz.edu/
+8575	US	State University of New York at Oswego	http://www.oswego.edu/
+8576	US	State University of New York at Stony Brook	http://www.sunysb.edu/
+8577	US	State University of New York College at Brockport	http://www.brockport.edu/
+8578	US	State University of New York College at Cortland	http://www.cortland.edu/
+8579	US	State University of New York College at Fredonia	http://www.fredonia.edu/
+8580	US	State University of New York College at Geneseo	http://www.geneseo.edu/
+8581	US	State University of New York College at Old Westbury	http://www.oldwestbury.edu/
+8582	US	State University of New York College at Oneonta	http://www.oneonta.edu/
+8583	US	State University of New York College at Plattsburgh	http://www.plattsburgh.edu/
+8584	US	State University of New York College at Potsdam	http://www.potsdam.edu/
+8585	US	State University of New York College at Purchase	http://www.purchase.edu/
+8586	US	State University of New York College of Agriculture and Technology at Cobleskill	http://www.cobleskill.edu/
+8587	US	State University of New York College of Environmental Science and Forestry	http://www.esf.edu/
+8588	US	State University of New York College of Optometry	http://www.sunyopt.edu/
+8589	US	State University of New York College of Technology at Alfred	http://www.alfredtech.edu/
+8590	US	State University of New York College of Technology at Farmingdale	http://www.farmingdale.edu/
+8591	US	State University of New York Downstate Medical Center	http://www.hscbklyn.edu/
+8592	US	State University of New York Empire State College	http://www.esc.edu/
+8593	US	State University of New York Health Sience Centre Syracuse	http://www.hscsyr.edu/
+8594	US	State University of New York Institute of Technology at Utica/Rome	http://www.sunyit.edu/
+8595	US	State University of New York Maritime College	http://www.sunymaritime.edu/
+8596	US	State University of New York School of Engineering and Applied Sciences	http://www.eng.buffalo.edu/
+8597	US	State University of New York (SUNY)	http://www.sunycentral.edu/
+8598	US	State University of New York Upstate Medical University 	http://www.upstate.edu/
+8599	US	State University of West Georgia	http://www.westga.edu/
+8600	US	St. Augustine's College North Carolina	http://www.st-aug.edu/
+8601	US	St. Bernard's Institute	http://www.sbi.edu/
+8602	US	St. Bonaventure University	http://www.sbu.edu/
+8603	US	St. Cloud State University	http://www.stcloudstate.edu/
+8604	US	St. Edwards University	http://www.stedwards.edu/
+8605	US	Stefan University	http://www.stefan-university.edu/
+8606	US	Stephen F. Austin State University	http://www.sfasu.edu/
+8607	US	Stephens College	http://www.stephens.edu/
+8608	US	Sterling College	http://www.sterling.edu/
+8609	US	Stetson University	http://www.stetson.edu/
+8610	US	Stevens Institute of Technology	http://www.stevens-tech.edu/
+8611	US	St. Francis College, Brooklyn Heights	http://www.stfranciscollege.edu/
+8612	US	St. Francis College, Fort Wayne	http://www.sfc.edu/
+8613	US	St. Francis College, Loretto	http://www.sfcpa.edu/
+8614	US	St. Francis Medical Center College of Nursing	http://www.osfsaintfrancis.org/
+8615	US	St. George's University	http://www.sgu.edu/
+8616	US	Stillman College	http://www.stillman.edu/
+8617	US	St. John Fisher College	http://www.sjfc.edu/
+8618	US	St. John's College Maryland	http://www.sjca.edu/
+8619	US	St. John's College New Mexico	http://www.sjcsf.edu/
+8620	US	St. John's Seminary	http://www.stjohnsem.edu/
+8621	US	St. John's University	http://www.stjohns.edu/
+8622	US	St. Joseph College	http://www.sjc.edu/
+8623	US	St. Joseph College of Nursing	http://www.stfrancis.edu/sjcn/sjcnhome.htm
+8624	US	St. Joseph's College	http://www.saintjoe.edu/
+8625	US	St. Joseph's College New York	http://www.sjcny.edu/
+8626	US	St. Joseph's College New York, Suffolk Campus	http://www.sjcny.edu/patchogue/
+8627	US	St. Joseph's College of Maine	http://www.sjcme.edu/
+8628	US	St. Joseph's University	http://www.sju.edu/
+8629	US	St. Lawrence University	http://www.stlawu.edu/
+8630	US	St. Leo College	http://www.saintleo.edu/
+8631	US	St. Louis Christian College	http://www.slcc4ministry.edu/
+8632	US	St. Louis College of Pharmacy	http://www.stlcop.edu/
+8633	US	St. Louis University	http://www.slu.edu/
+8634	US	St. Luke's College	http://www.saint-lukes.org/about/slc/
+8635	US	St. Martin's College	http://www.stmartin.edu/
+8636	US	St. Mary College	http://www.smcks.edu/
+8637	US	St. Mary-of-the-Woods College	http://www.smwc.edu/
+8638	US	St. Mary's College Indiana	http://www.saintmarys.edu/
+8639	US	St. Mary's College of California	http://www.stmarys-ca.edu/
+8640	US	St. Mary's College of Maryland	http://www.smcm.edu/
+8641	US	St. Mary's University of Minnesota	http://www.smumn.edu/
+8642	US	St. Mary's University of San Antonio	http://www.stmarytx.edu/
+8643	US	St. Meinrad College	http://www.saintmeinrad.edu/
+8644	US	St. Michael's College	http://www.smcvt.edu/
+8645	US	St. Norbert College	http://www.snc.edu/
+8646	US	St. Olaf College	http://www.stolaf.edu/
+8647	US	Stonehill College	http://www.stonehill.edu/
+8648	US	St. Paul's College	http://www.saintpauls.edu/
+8649	US	St. Petersburg College	http://www.spcollege.edu/
+8650	US	St. Peter's College	http://www.spc.edu/
+8651	US	Strayer University	http://www.strayer.edu/
+8652	US	St. Thomas Aquinas College	http://www.stac.edu/
+8653	US	St. Thomas University	http://www.stu.edu/
+8654	US	St. Vincent College	http://www.stvincent.edu/
+8655	US	St. Xavier University	http://www.sxu.edu/
+8656	US	Suffolk University	http://www.suffolk.edu/
+8657	US	Sullivan College	http://www.sullivan.edu/
+8658	US	Sul Ross State University	http://www.sulross.edu/
+8659	US	Susquehanna University	http://www.susqu.edu/
+8660	US	Swarthmore College	http://www.swarthmore.edu/
+8661	US	Sweet Briar College	http://www.sbc.edu/
+8662	US	Syracuse University	http://www.syr.edu/
+8663	US	Tabor College	http://www.tabor.edu/
+8664	US	Talladega College	http://www.talladega.edu/
+8665	US	Tarleton State University	http://www.tarleton.edu/
+8666	US	Taylor University	http://www.tayloru.edu/
+8667	US	Taylor University, Fort Wayne Campus	http://www.tayloru.edu/fw/
+8668	US	Teachers College, Columbia University	http://www.tc.columbia.edu/
+8669	US	Temple University	http://www.temple.edu/
+8670	US	Temple University School of Podiatric Medicine	http://www.pcpm.edu/
+8671	US	Tennessee State University	http://www.tnstate.edu/
+8672	US	Tennessee Technological University	http://www.tntech.edu/
+8673	US	Tennessee Temple University	http://www.tntemple.edu/
+8674	US	Tennessee Wesleyan College	http://www.twcnet.edu/
+8675	US	Texas A&M International University	http://www.tamiu.edu/
+8676	US	Texas A&M University	http://www.tamu.edu/
+8677	US	Texas A&M University - Commerce	http://www.tamu-commerce.edu/
+8678	US	Texas A&M University - Corpus Christi	http://www.tamucc.edu/
+8679	US	Texas A&M University - Galveston	http://www.tamug.tamu.edu/
+8680	US	Texas A&M University - Kingsville	http://www.tamuk.edu/
+8681	US	Texas A&M University - Texarkana	http://www.tamut.edu/
+8682	US	Texas Chiropractic College	http://www.txchiro.edu/
+8683	US	Texas Christian University	http://www.tcu.edu/
+8684	US	Texas College	http://www.texascollege.edu/
+8685	US	Texas College of Osteopathic Medicine	http://www.hsc.unt.edu/education/tcom/
+8686	US	Texas Lutheran University	http://www.txlutheran.edu/
+8687	US	Texas Southern University	http://www.tsu.edu/
+8688	US	Texas Tech University	http://www.ttu.edu/
+8689	US	Texas Tech University Health Science Center	http://www.ttuhsc.edu/
+8690	US	Texas Wesleyan University	http://www.txwesleyan.edu/
+8691	US	Texas Woman's University	http://www.twu.edu/
+8692	US	The American College	http://www.amercoll.edu/
+8693	US	The Art Institute of Boston	http://www.aiboston.edu/
+8694	US	The Art Institutes International Portland	http://www.aipd.aii.edu/
+8695	US	The Art Institutes International San Francisco	http://www.aisf.aii.edu/
+8696	US	The Boston Conservatory	http://www.bostonconservatory.edu/
+8697	US	The Catholic University of America	http://www.cua.edu/
+8698	US	The Chicago School of Professional Psychology	http://www.thechicagoschool.edu/
+8699	US	The College of Insurance	http://www.tci.edu/
+8700	US	The College of New Jersey	http://www.tcnj.edu/
+8701	US	The College of Santa Fe	http://www.csf.edu/
+8702	US	The College of St. Scholastica	http://www.css.edu/
+8703	US	The College of Westchester	http://www.cw.edu/
+8704	US	The College of Wooster	http://www.wooster.edu/
+8705	US	The Cooper Union for the Advancement of Science and Art	http://www.cooper.edu/
+8706	US	The Corcoran College of Art	http://www.corcoran.edu/college/
+8707	US	The Curtis Institute of Music	http://www.curtis.edu/
+8708	US	The Defiance College	http://www.defiance.edu/
+8709	US	The Dickinson School of Law	http://www.dsl.edu/
+8710	US	The Illinois Institute of Art-Chicago	http://www.ilic.artinstitutes.edu/
+8711	US	The Johns Hopkins University	http://www.jhu.edu/
+8712	US	The Juilliard School	http://www.juilliard.edu/
+8713	US	The Leadership Institute of Seattle	http://www.lios.org/
+8714	US	The Maryland Institute, College of Art	http://www.mica.edu/
+8715	US	The Master's College	http://www.masters.edu/
+8716	US	The McGregor School of Antioch University	http://www.mcgregor.edu/
+8717	US	The Naropa Institute	http://www.naropa.edu/
+8718	US	The New School	http://www.newschool.edu/
+8719	US	The Rockefeller University	http://www.rockefeller.edu/
+8720	US	The School of the Art Institute of Chicago	http://www.artic.edu/
+8721	US	The Scripps Research Institute	http://www.scripps.edu/
+8722	US	The Southern Christian University	http://www.southernchristian.edu/
+8723	US	The Tulane University of New Orleans	http://www.tulane.edu/
+8724	US	The Union Institute	http://www.tui.edu/
+8725	US	Thiel College	http://www.thiel.edu/
+8726	US	Thomas A. Edison State College	http://www.tesc.edu/
+8727	US	Thomas Aquinas College	http://www.thomasaquinas.edu/
+8728	US	Thomas College Maine	http://www.thomas.edu/
+8729	US	Thomas Jefferson University	http://www.tju.edu/
+8730	US	Thomas More College	http://www.thomasmore.edu/
+8731	US	Thomas More College of Liberal Arts	http://www.thomasmorecollege.edu/
+8732	US	Thomas University	http://www.thomasu.edu/
+8733	US	Thunderbird School of Global Management	http://www.thunderbird.edu/
+8734	US	Tiffin University	http://www.tiffin.edu/
+8735	US	Toccoa Falls College	http://www.toccoafalls.edu/
+8736	US	Tomball College	http://wwwtc.nhmccd.edu/
+8737	US	Tougaloo College	http://www.tougaloo.edu/
+8738	US	Touro College	http://www.touro.edu/
+8739	US	Touro University	http://www.tu.edu/
+8740	US	Towson University	http://www.towson.edu/
+8741	US	Transylvania University	http://www.transy.edu/
+8742	US	Trevecca Nazarene University	http://www.trevecca.edu/
+8743	US	Tri-College University	http://www.ndsu.nodak.edu/tricollege/
+8744	US	Trident University	http://www.trident.edu/
+8745	US	Trinity Bible College	http://www.tbc2day.edu/
+8746	US	Trinity Christian College	http://www.trnty.edu/
+8747	US	Trinity College Connecticut	http://www.trincoll.edu/
+8748	US	Trinity College of Florida	http://www.trinitycollege.edu/
+8749	US	Trinity College of Vermont	http://www.trinityvt.edu/
+8750	US	Trinity International University	http://www.trin.edu/
+8751	US	Trinity International University (Excel), Miami	http://www.tiu.edu/excel/index.html
+8752	US	Trinity University	http://www.trinitydc.edu/
+8753	US	Trinity University	http://www.trinity.edu/
+8754	US	Tri-State University	http://www.tristate.edu/
+8755	US	Triton College	http://www.triton.cc.il.us/
+8756	US	Troy University	http://www.troy.edu/
+8757	US	Troy University, Dothan	http://dothan.troy.edu/
+8758	US	Troy University, Montgomery	http://montgomery.troy.edu/
+8759	US	Troy University, Phenix City	http://phenix.troy.edu/
+8760	US	Troy University, Troy	http://troy.troy.edu/
+8761	US	Truman College	http://www.trumancollege.net/
+8762	US	Truman State University	http://www.truman.edu/
+8763	US	Tufts University	http://www.tufts.edu/
+8764	US	Tui Online University	http://www.tuiu.edu/
+8765	US	Tusculum College	http://www.tusculum.edu/
+8766	US	Tuskegee University	http://www.tusk.edu/
+8767	US	Uniformed Services Universty of the Health Sciences	http://www.usuhs.mil/
+8768	US	Union College	http://www.union.edu/
+8769	US	Union College Kentucky	http://www.unionky.edu/
+8770	US	Union College Nebraska	http://www.ucollege.edu/
+8771	US	Union Theological Seminary (UTS)	http://www.union-psce.edu/
+8772	US	Union University	http://www.uu.edu/
+8773	US	United States Air Force Academy	http://www.usafa.af.mil/
+8774	US	United States Coast Guard Academy	http://www.cga.edu/
+8775	US	United States International University	http://www.usiu.edu/
+8776	US	United States Merchant Marine Academy	http://www.usmma.edu/
+8777	US	United States Military Academy	http://www.usma.edu/
+8778	US	United States Naval Academy	http://www.usna.edu/
+8779	US	United States Sports Academy	http://www.sport.ussa.edu/
+8780	US	Unity College	http://www.unity.edu/
+8781	US	University of Advancing Technology (UAT)	http://www.uat.edu/
+8782	US	University of Akron	http://www.uakron.edu/
+8783	US	University of Alabama - Birmingham	http://www.uab.edu/
+8784	US	University of Alabama - Huntsville	http://www.uah.edu/
+8785	US	University of Alabama - Tuscaloosa	http://www.ua.edu/
+8786	US	University of Alanta	http://www.uofa.edu/
+8787	US	University of Alaska - Anchorage	http://www.uaa.alaska.edu/
+8788	US	University of Alaska - Fairbanks	http://www.uaf.edu/
+8789	US	University of Alaska - Southeast	http://www.uas.alaska.edu/
+8790	US	University of Alaska (System)	http://www.alaska.edu/
+8791	US	University of Arizona	http://www.arizona.edu/
+8792	US	University of Arkansas at Fayetteville	http://www.uark.edu/
+8793	US	University of Arkansas at Little Rock	http://www.ualr.edu/
+8794	US	University of Arkansas at Monticello	http://www.uamont.edu/
+8795	US	University of Arkansas at Pine Bluff	http://www.uapb.edu/
+8796	US	University of Arkansas for Medical Sciences	http://www.uams.edu/
+8797	US	University of Arkansas (System)	http://www.uasys.edu/
+8798	US	University of Baltimore	http://www.ubalt.edu/
+8799	US	University of Bridgeport	http://www.bridgeport.edu/
+8800	US	University of California, Berkeley	http://www.berkeley.edu/
+8801	US	University of California, Davis	http://www.ucdavis.edu/
+8802	US	University of California, Hastings College of Law	http://www.uchastings.edu/
+8803	US	University of California, Irvine	http://www.uci.edu/
+8804	US	University of California, Los Angeles	http://www.ucla.edu/
+8805	US	University of California, Merced	http://www.ucmerced.edu/
+8806	US	University of California, Oakland	http://www.ucop.edu/
+8807	US	University of California, Riverside	http://www.ucr.edu/
+8808	US	University of California, San Diego	http://www.ucsd.edu/
+8809	US	University of California, San Francisco	http://www.ucsf.edu/
+8810	US	University of California, Santa Barbara	http://www.ucsb.edu/
+8811	US	University of California, Santa Cruz	http://www.ucsc.edu/
+8812	US	University of California System	http://www.universityofcalifornia.edu/
+8813	US	University of Central Arkansas	http://www.uca.edu/
+8814	US	University of Central Florida	http://www.ucf.edu/
+8815	US	University of Central Missouri	http://www.ucmo.edu/
+8816	US	University of Central Oklahoma	http://www.ucok.edu/
+8817	US	University of Central Texas	http://www.vvm.com/uct/
+8818	US	University of Charleston	http://www.uchaswv.edu/
+8819	US	University of Charleston South Carolina	http://univchas.cofc.edu/
+8820	US	University of Chicago	http://www.uchicago.edu/
+8821	US	University of Cincinnati	http://www.uc.edu/
+8822	US	University of Colorado at Boulder	http://www.colorado.edu/
+8823	US	University of Colorado at Colorado Springs	http://www.uccs.edu/
+8824	US	University of Colorado at Denver	http://www.cudenver.edu/
+8825	US	University of Colorado Health Sciences Center	http://www.uchsc.edu/
+8826	US	University of Connecticut	http://www.uconn.edu/
+8827	US	University of Connecticut at Avery Point	http://www.averypoint.uconn.edu/
+8828	US	University of Connecticut at Hartford	http://vm.uconn.edu/~wwwhtfd/ugrad/
+8829	US	University of Connecticut at Stamford	http://www.stamford.uconn.edu/
+8830	US	University of Connecticut at Waterbury	http://www.waterbury.uconn.edu/
+8831	US	University of Connecticut Health Center	http://www.uchc.edu/
+8832	US	University of Dallas	http://www.udallas.edu/
+8833	US	University of Dayton	http://www.udayton.edu/
+8834	US	University of Delaware	http://www.udel.edu/
+8835	US	University of Denver	http://www.du.edu/
+8836	US	University of Detroit Mercy	http://www.udmercy.edu/
+8837	US	University of Dubuque	http://www.dbq.edu/
+8838	US	University of Evansville	http://www.evansville.edu/
+8839	US	University of Findlay	http://www.findlay.edu/
+8840	US	University of Florida	http://www.ufl.edu/
+8841	US	University of Georgia	http://www.uga.edu/
+8842	US	University of Great Falls	http://www.ugf.edu/
+8843	US	University of Hartford	http://www.hartford.edu/
+8844	US	University of Hawaii - Hilo	http://www.uhh.hawaii.edu/
+8845	US	University of Hawaii - Manoa	http://www.uhm.hawaii.edu/
+8846	US	University Of Hawaii - System	http://www.hawaii.edu/
+8847	US	University of Hawaii - West Oahu	http://www.uhwo.hawaii.edu/
+8848	US	University of Health Sciences	http://www.uhs.edu/
+8849	US	University of Houston	http://www.uh.edu/
+8850	US	University of Houston, Clear Lake	http://www.cl.uh.edu/
+8851	US	University of Houston, Downtown	http://www.dt.uh.edu/
+8852	US	University of Houston, Victoria	http://www.vic.uh.edu/
+8853	US	University of Idaho	http://www.uidaho.edu/
+8854	US	University of Illinois	http://www.uillinois.edu/
+8855	US	University of Illinois at Chicago	http://www.uic.edu/
+8856	US	University of Illinois at Springfield	http://www.uis.edu/
+8857	US	University of Illinois at Urbana-Champaign	http://www.uiuc.edu/
+8858	US	University of Indianapolis	http://www.uindy.edu/
+8859	US	University of Iowa	http://www.uiowa.edu/
+8860	US	University of Kansas	http://www.ku.edu/
+8861	US	University of Kentucky	http://www.uky.edu/
+8862	US	University of La Verne	http://www.ulaverne.edu/
+8863	US	University of Louisiana at Lafayette	http://www.louisiana.edu/
+8864	US	University of Louisiana at Monroe	http://www.ulm.edu/
+8865	US	University of Louisville	http://www.louisville.edu/
+8866	US	University of Maine, Augusta	http://www.uma.maine.edu/
+8867	US	University of Maine, Farmington	http://www.umf.maine.edu/
+8868	US	University of Maine, Fort Kent	http://www.umfk.maine.edu/
+8869	US	University of Maine, Machias	http://www.umm.maine.edu/
+8870	US	University of Maine, Orono	http://www.umaine.edu/
+8871	US	University of Maine, Presque Isle	http://www.umpi.maine.edu/
+8872	US	University of Maine (System)	http://www.maine.edu/
+8873	US	University of Management & Technology	http://www.umtweb.edu/
+8874	US	University of Mary	http://www.umary.edu/
+8875	US	University of Mary Hardin-Baylor	http://www.umhb.edu/
+8876	US	University of Maryland at Baltimore	http://www.umbc.edu/
+8877	US	University of Maryland at College Park	http://www.umd.edu/
+8878	US	University of Maryland Baltimore County	http://www.umbc.edu/
+8879	US	University of Maryland Eastern Shore	http://www.umes.edu/
+8880	US	University of Maryland Medicine	http://www.umm.edu/
+8881	US	University of Maryland (System)	http://www.ums.edu/
+8882	US	University of Maryland University College	http://www.umuc.edu/
+8883	US	University of Massachusetts at Amherst	http://www.umass.edu/
+8884	US	University of Massachusetts at Boston	http://www.umb.edu/
+8885	US	University of Massachusetts at Dartmouth	http://www.umassd.edu/
+8886	US	University of Massachusetts at Lowell	http://www.uml.edu/
+8887	US	University of Massachusetts Medical Center at Worcester	http://www.ummed.edu/
+8888	US	University of Massachusetts (System)	http://www.massachusetts.edu/
+8889	US	University of Medicine and Dentistry of New Jersey	http://www.umdnj.edu/
+8890	US	University of Memphis	http://www.memphis.edu/
+8891	US	University of Miami	http://www.miami.edu/
+8892	US	University of Michigan - Ann Arbor	http://www.umich.edu/
+8893	US	University of Michigan - Dearborn	http://www.umd.umich.edu/
+8894	US	University of Michigan - Flint	http://www.flint.umich.edu/
+8895	US	University of Minnesota - Crookston	http://www.crk.umn.edu/
+8896	US	University of Minnesota - Duluth	http://www.d.umn.edu/
+8897	US	University of Minnesota - Morris	http://www.mrs.umn.edu/
+8898	US	University of Minnesota - Twin Cities Campus	http://www1.umn.edu/twincities/
+8899	US	University of Mississippi	http://www.olemiss.edu/
+8900	US	University of Mississippi Medical Center	http://www.umc.edu/
+8901	US	University of Missouri - Columbia	http://www.missouri.edu/
+8902	US	University of Missouri - Kansas City	http://www.umkc.edu/
+8903	US	University of Missouri - Saint Louis	http://www.umsl.edu/
+8904	US	University of Mobile	http://www.umobile.edu/
+8905	US	University of Montana	http://www.umt.edu/
+8906	US	University of Montana Western	http://www.umwestern.edu/
+8907	US	University of Montevallo	http://www.montevallo.edu/
+8908	US	University of Nebraska - Kearney	http://www.unk.edu/
+8909	US	University of Nebraska - Lincoln	http://www.unl.edu/
+8910	US	University of Nebraska Medical Center	http://www.unmc.edu/
+8911	US	University of Nebraska - Omaha	http://www.unomaha.edu/
+8912	US	University of Nebraska (System)	http://www.nebraska.edu/
+8913	US	University of Nevada - Las Vegas	http://www.unlv.edu/
+8914	US	University of Nevada - Reno	http://www.unr.edu/
+8915	US	University of New England	http://www.une.edu/
+8916	US	University of New England, Westbrook College Campus	http://www.une.edu/wcdirctn.html
+8917	US	University of New Hampshire	http://www.unh.edu/
+8918	US	University of New Hampshire - Manchester	http://www.unh.edu/unhm/
+8919	US	University of New Haven	http://www.newhaven.edu/
+8920	US	University of New Mexico	http://www.unm.edu/
+8921	US	University of New Orleans	http://www.uno.edu/
+8922	US	University of North Alabama	http://www.una.edu/
+8923	US	University of North America	http://www.universityofnorthamerica.org/
+8924	US	University of North Carolina at Asheville	http://www.unca.edu/
+8925	US	University of North Carolina at Chapel Hill	http://www.unc.edu/
+8926	US	University of North Carolina at Charlotte	http://www.uncc.edu/
+8927	US	University of North Carolina at Greensboro	http://www.uncg.edu/
+8928	US	University of North Carolina at Pembroke	http://www.uncp.edu/
+8929	US	University of North Carolina at Wilmington	http://www.uncwil.edu/
+8930	US	University of North Dakota	http://www.und.nodak.edu/
+8931	US	University of Northern Colorado	http://www.univnorthco.edu/
+8932	US	University of Northern Iowa	http://www.uni.edu/
+8933	US	University of Northern Virginia	http://www.unva.edu/
+8934	US	University of Northern Washington	http://www.unw.edu/
+8935	US	University of North Florida	http://www.unf.edu/
+8936	US	University of North Texas	http://www.unt.edu/
+8937	US	University of North Texas Health Science Center at Fort Worth	http://www.hsc.unt.edu/
+8938	US	University of NorthWest	http://www.unw.ac/
+8939	US	University of Notre Dame	http://www.nd.edu/
+8940	US	University of Oklahoma	http://www.ou.edu/
+8941	US	University of Oklahoma Health Sciences Center	http://www.ouhsc.edu/
+8942	US	University of Oregon	http://www.uoregon.edu/
+8943	US	University of Osteopathic Medicine and Health Science	http://www.uomhs.edu/
+8944	US	University of Pennsylvania	http://www.upenn.edu/
+8945	US	University of Phoenix	http://www.phoenix.edu/
+8946	US	University of Pittsburgh	http://www.pitt.edu/
+8947	US	University of Pittsburgh at Bradford	http://www.upb.pitt.edu/
+8948	US	University of Pittsburgh at Greensburg	http://www.pitt.edu/~upg/
+8949	US	University of Pittsburgh at Johnstown	http://www.pitt.edu/~upjweb/
+8950	US	University of Portland	http://www.uofport.edu/
+8951	US	University of Puget Sound	http://www.ups.edu/
+8952	US	University of Redlands	http://www.redlands.edu/
+8953	US	University of Rhode Island	http://www.uri.edu/
+8954	US	University of Richmond	http://www.urich.edu/
+8955	US	University of Rio Grande	http://www.urgrgcc.edu/
+8956	US	University of Rochester	http://www.rochester.edu/
+8957	US	University of San Diego	http://www.sandiego.edu/
+8958	US	University of San Francisco	http://www.usfca.edu/
+8959	US	University of Science and Arts of Oklahoma	http://www.usao.edu/
+8960	US	University of Scranton	http://www.uofs.edu/
+8961	US	University of Sioux Falls	http://www.thecoo.edu/
+8962	US	University of South Alabama	http://www.usouthal.edu/
+8963	US	University of South Carolina	http://www.sc.edu/
+8964	US	University of South Carolina - Aiken	http://www.usca.sc.edu/
+8965	US	University of South Carolina - Beaufort	http://www.sc.edu/beaufort/
+8966	US	University of South Carolina - Lancaster	http://www.sc.edu/lancaster/
+8967	US	University of South Carolina - Salkehatchie	http://www.rcce.sc.edu/salkehatchie/
+8968	US	University of South Carolina - Spartanburg	http://www.uscs.edu/
+8969	US	University of South Carolina - Sumter	http://www.uscsumter.edu/
+8970	US	University of South Carolina - Union	http://www.sc.edu/union/
+8971	US	University of South Dakota	http://www.usd.edu/
+8972	US	University of Southern California	http://www.usc.edu/
+8973	US	University of Southern Indiana	http://www.usi.edu/
+8974	US	University of Southern Maine	http://www.usm.maine.edu/
+8975	US	University of Southern Mississippi	http://www.usm.edu/
+8976	US	University of South Florida	http://www.usf.edu/
+8977	US	University of St. Francis	http://www.stfrancis.edu/
+8978	US	University of St. Thomas, Houston	http://www.stthom.edu/
+8979	US	University of St. Thomas, St. Paul	http://www.stthomas.edu/
+8980	US	University of Tampa	http://www.utampa.edu/
+8981	US	University of Tennessee - Chattanooga	http://www.utc.edu/
+8982	US	University of Tennessee - Knoxville	http://www.utk.edu/
+8983	US	University of Tennessee - Martin	http://www.utm.edu/
+8984	US	University of Tennessee - Memphis	http://www.utmem.edu/
+8985	US	University of Tennessee Space Institute	http://www.utsi.edu/
+8986	US	University of Texas	http://www.utsystem.edu/
+8987	US	University of Texas at Arlington	http://www.uta.edu/
+8988	US	University of Texas at Austin	http://www.utexas.edu/
+8989	US	University of Texas at Brownsville	http://www.utb.edu/
+8990	US	University of Texas at Dallas	http://www.utdallas.edu/
+8991	US	University of Texas at El Paso	http://www.utep.edu/
+8992	US	University of Texas at San Antonio	http://www.utsa.edu/
+8993	US	University of Texas at Tyler	http://www.uttyl.edu/
+8994	US	University of Texas Health Center at Houston	http://www.uthouston.edu/
+8995	US	University of Texas Health Center at Tyler	http://www.uthct.edu/
+8996	US	University of Texas Health Science Center at San Antonio	http://www.uthscsa.edu/
+8997	US	University of Texas M.D. Anderson Cancer Center	http://www.mdanderson.org/
+8998	US	University of Texas Medical Branch Galveston	http://www.utmb.edu/
+8999	US	University of Texas of the Permian Basin	http://www.utpb.edu/
+9000	US	University of Texas Pan American	http://www.panam.edu/
+9001	US	University of Texas Southwestern Medical Center at Dallas	http://www.utsouthwestern.edu/
+9002	US	University of the Arts	http://www.uarts.edu/
+9003	US	University of the District of Columbia	http://www.udc.edu/
+9004	US	University of the Incarnate World	http://www.uiw.edu/
+9005	US	University of the Ozarks	http://www.ozarks.edu/
+9006	US	University of the Pacific	http://www.pacific.edu/
+9007	US	University of the Sciences in Philadelphia	http://www.usip.edu/
+9008	US	University of the South	http://www.sewanee.edu/
+9009	US	University of the Southwest	http://www.usw.edu/
+9010	US	University of Toledo	http://www.utoledo.edu/
+9011	US	University of Tulsa	http://www.utulsa.edu/
+9012	US	University of Utah	http://www.utah.edu/
+9013	US	University of Vermont	http://www.uvm.edu/
+9014	US	University of Virginia	http://www.virginia.edu/
+9015	US	University of Virginia, College at Wise	http://www.wise.virginia.edu/
+9016	US	University of Washington	http://www.washington.edu/
+9017	US	University of Washington, Tacoma	http://www.tacoma.washington.edu/
+9018	US	University of West Alabama	http://www.uwa.edu/
+9019	US	University of West Florida	http://www.uwf.edu/
+9020	US	University of West Los Angeles	http://www.uwla.edu/
+9021	US	University of Wisconsin - Eau Claire	http://www.uwec.edu/
+9022	US	University of Wisconsin - Green Bay	http://www.uwgb.edu/
+9023	US	University of Wisconsin - La Crosse	http://www.uwlax.edu/
+9024	US	University of Wisconsin - Madison	http://www.wisc.edu/
+9025	US	University of Wisconsin - Milwaukee	http://www.uwm.edu/
+9026	US	University of Wisconsin - Oshkosh	http://www.uwosh.edu/
+9027	US	University of Wisconsin - Parkside	http://www.uwp.edu/
+9028	US	University of Wisconsin - Platteville	http://www.uwplatt.edu/
+9029	US	University of Wisconsin - River Falls	http://www.uwrf.edu/
+9030	US	University of Wisconsin - Stevens Point	http://www.uwsp.edu/
+9031	US	University of Wisconsin - Stout	http://www.uwstout.edu/
+9032	US	University of Wisconsin - Superior	http://www.uwsuper.edu/
+9033	US	University of Wisconsin - Whitewater	http://www.uww.edu/
+9034	US	University of Wyoming	http://www.uwyo.edu/
+9035	US	Upper Iowa University	http://www.uiu.edu/
+9036	US	Urbana University	http://www.urbana.edu/
+9037	US	Ursinus College	http://www.ursinus.edu/
+9038	US	Ursuline College	http://www.ursuline.edu/
+9039	US	Utah State University	http://www.usu.edu/
+9040	US	Utah Valley State College	http://www.uvsc.edu/
+9041	US	Utica College	http://www.ucsu.edu/
+9042	US	Valdosta State University	http://www.valdosta.edu/
+9043	US	Valley City State University	http://www.vcsu.nodak.edu/
+9044	US	Valley Forge Christian College	http://www.vfcc.edu/
+9045	US	Valparaiso University	http://www.valpo.edu/
+9046	US	Vanderbilt University	http://www.vanderbilt.edu/
+9047	US	VanderCook College of Music	http://www.vandercook.edu/
+9048	US	Vanguard University of Southern California	http://www.vanguard.edu/
+9049	US	Vassar College	http://www.vassar.edu/
+9050	US	Vennard College	http://www.vennard.edu/
+9051	US	Vermont Law School	http://www.vermontlaw.edu/
+9052	US	Vermont Technical College	http://www.vtc.vsc.edu/
+9053	US	Villa Julie College	http://www.vjc.edu/
+9054	US	Villanova University	http://www.villanova.edu/
+9055	US	Virginia College	http://www.vc.edu/
+9056	US	Virginia Commonwealth University	http://www.vcu.edu/
+9057	US	Virginia Intermont College	http://www.vic.edu/
+9058	US	Virginia International University	http://www.viu.edu/
+9059	US	Virginia Military Institute	http://www.vmi.edu/
+9060	US	Virginia Polytechnic Institute and State University (Virginia Tech)	http://www.vt.edu/
+9061	US	Virginia State University	http://www.vsu.edu/
+9062	US	Virginia Union University	http://www.vuu.edu/
+9063	US	Virginia Wesleyan College	http://www.vwc.edu/
+9064	US	Viterbo College	http://www.viterbo.edu/
+9065	US	Voorhees College	http://www.voorhees.edu/
+9066	US	Wabash College	http://www.wabash.edu/
+9067	US	Wagner College	http://www.wagner.edu/
+9068	US	Wake Forest University	http://www.wfu.edu/
+9069	US	Walden University	http://www.waldenu.edu/
+9070	US	Walla Walla College	http://www.wwc.edu/
+9071	US	Walsh College of Accountancy and Business Administration	http://www.walshcol.edu/
+9072	US	Walsh University	http://www.walsh.edu/
+9073	US	Warner Pacific College	http://www.warnerpacific.edu/
+9074	US	Warner Southern College	http://www.warner.edu/
+9075	US	Warren Wilson College	http://www.warren-wilson.edu/
+9076	US	Wartburg College	http://www.wartburg.edu/
+9077	US	Washburn University	http://www.washburn.edu/
+9078	US	Washington and Lee University	http://www.wlu.edu/
+9079	US	Washington Bible College	http://www.bible.edu/
+9080	US	Washington College	http://www.washcoll.edu/
+9081	US	Washington State University	http://www.wsu.edu/
+9082	US	Washington State University, Spokane	http://www.spokane.wsu.edu/
+9083	US	Washington State University, Tri-Cities	http://www.tricity.wsu.edu/
+9084	US	Washington State University, Vancouver	http://www.vancouver.wsu.edu/
+9085	US	Washington University in St. Louis	http://www.wustl.edu/
+9086	US	Wayland Baptist University	http://www.wbu.edu/
+9087	US	Waynesburg College	http://www.waynesburg.edu/
+9088	US	Wayne State College	http://www.wsc.edu/
+9089	US	Wayne State University	http://www.wayne.edu/
+9090	US	Webber College	http://www.webber.edu/
+9091	US	Webb Institute	http://www.webb-institute.edu/
+9092	US	Weber State University	http://www.weber.edu/
+9093	US	Webster University	http://www.webster.edu/
+9094	US	Webster University North Florida	http://www.webster.edu/jack/
+9095	US	Weill Medical College of Cornell University	http://www.med.cornell.edu/
+9096	US	Wellesley College	http://www.wellesley.edu/
+9097	US	Wells College	http://www.wells.edu/
+9098	US	Wentworth Institute of Technology	http://www.wit.edu/
+9099	US	Wesleyan College	http://www.wesleyan-college.edu/
+9100	US	Wesleyan University	http://www.wesleyan.edu/
+9101	US	Wesley College	http://www.wesley.edu/
+9102	US	Wesley College Mississippi	http://www.wesleycollege.com/
+9103	US	Westbrook University 	http://www.westbrooku.edu/
+9104	US	West Chester University of Pennsylvania	http://www.wcupa.edu/
+9105	US	West Coast University	http://www.westcoastuniversity.com/
+9106	US	Western Baptist College	http://www.wbc.edu/
+9107	US	Western Bible College	http://www.westernbible.edu/
+9108	US	Western Carolina University	http://www.wcu.edu/
+9109	US	Western Connecticut State University	http://www.wcsu.ctstateu.edu/
+9110	US	Western Governors University	http://www.wgu.edu/
+9111	US	Western Illinois University	http://www.wiu.edu/
+9112	US	Western International University	http://www.west.edu/
+9113	US	Western Kentucky University	http://www.wku.edu/
+9114	US	Western Maryland College	http://www.wmdc.edu/
+9115	US	Western Michigan University	http://www.wmich.edu/
+9116	US	Western New England College	http://www.wnec.edu/
+9117	US	Western New Mexico University	http://www.wnmu.edu/
+9118	US	Western Oregon University	http://www.wou.edu/
+9119	US	Western State College	http://www.western.edu/
+9120	US	Western States Chiropractic College	http://www.wschiro.edu/
+9121	US	Western State University College of Law	http://www.wsulaw.edu/
+9122	US	Western State University College of Law - Orange County	http://www.wsulaw.edu/
+9123	US	Western Washington University	http://www.wwu.edu/
+9124	US	Westfield State College	http://www.wsc.mass.edu/
+9125	US	West Liberty State College	http://www.wlsc.wvnet.edu/
+9126	US	Westminster College Fulton	http://www.wcmo.edu/
+9127	US	Westminster College New Wilmington	http://www.westminster.edu/
+9128	US	Westminster College of Salt Lake City	http://www.wcslc.edu/
+9129	US	Westmont College	http://www.westmont.edu/
+9130	US	West Suburban College of Nursing	http://www.curf.edu/~wscasseyp/wscn.htm
+9131	US	West Texas A&M University	http://www.wtamu.edu/
+9132	US	West Virginia School of Osteopathic Medicine	http://www.wvsom.edu/
+9133	US	West Virginia State College	http://www.wvsc.edu/
+9134	US	West Virginia University	http://www.wvu.edu/
+9135	US	West Virginia University Institute of Technology	http://wvit.wvnet.edu/
+9136	US	West Virginia Wesleyan College	http://www.wvwc.edu/
+9137	US	Westwood College	http://www.westwood.edu/
+9138	US	Wheaton College Massachusetts	http://www.wheatonma.edu/
+9139	US	Wheeling Jesuit University	http://www.wju.edu/
+9140	US	Wheelock College	http://www.wheelock.edu/
+9141	US	Whitman College	http://www.whitman.edu/
+9142	US	Whittier College	http://www.whittier.edu/
+9143	US	Whitworth College	http://www.whitworth.edu/
+9144	US	Wichita State University	http://www.twsu.edu/
+9145	US	Widener University	http://www.widener.edu/
+9146	US	Wilberforce University	http://www.wilberforce.edu/
+9147	US	Wilbur Wright College	http://www.ccc.edu/wright/
+9148	US	Wiley College	http://www.wileyc.edu/
+9149	US	Wilkes University	http://www.wilkes.edu/
+9150	US	Willamette University	http://www.willamette.edu/
+9151	US	William Carey College	http://www.wmcarey.edu/
+9152	US	William Jewell College	http://www.jewell.edu/
+9153	US	William Mitchell College of Law	http://www.wmitchell.edu/
+9154	US	William Paterson University	http://www.wpunj.edu/
+9155	US	William Penn College	http://www.wmpenn.edu/
+9156	US	Williams Baptist College	http://www.wbcoll.edu/
+9157	US	Williams College	http://www.williams.edu/
+9158	US	William Tyndale College	http://www.williamtyndale.edu/
+9159	US	William Woods University	http://www.wmwoods.edu/
+9160	US	Wilmington College	http://www.wilmcoll.edu/
+9161	US	Wilmington College	http://www.wilmington.edu/
+9162	US	Wilson College	http://www.wilson.edu/
+9163	US	Wingate University	http://www.wingate.edu/
+9164	US	Winona State University	http://www.winona.msus.edu/
+9165	US	Winston-Salem State University	http://www.wssu.edu/
+9166	US	Winthrop University	http://www.winthrop.edu/
+9167	US	Wisconsin Lutheran College	http://www.wlc.edu/
+9168	US	Wisconsin School of Professional Psychology	http://www.execpc.com/~wspp/
+9169	US	Wittenberg University	http://www.wittenberg.edu/
+9170	US	Wofford College	http://www.wofford.edu/
+9171	US	Woodbury University	http://www.woodburyu.edu/
+9172	US	Worcester Polytechnic Institute	http://www.wpi.edu/
+9173	US	Worcester State College	http://www.worc.mass.edu/
+9174	US	Wright Institute	http://www.wrightinst.edu/
+9175	US	Wright State University	http://www.wright.edu/
+9176	US	Xavier University	http://www.xu.edu/
+9177	US	Xavier University of Louisiana	http://www.xula.edu/
+9178	US	Yale University	http://www.yale.edu/
+9179	US	Yeshiva University	http://www.yu.edu/
+9180	US	York College Nebraska	http://www.york.edu/
+9181	US	York College of Pennsylvania	http://www.yorkcol.edu/
+9182	US	Yorker International University	http://www.nyuniversity.net/
+9183	US	York University	http://www.yorkuniversity.us/
+9184	US	Youngstown State University	http://www.ysu.edu/
+9185	UY	Insituto Universitario - Centro Latinoamericano de Economia Humana - IU Claeh	http://www.claeh.edu.uy/
+9186	UY	Universidad Católica del Uruguay	http://www.ucu.edu.uy/
+9187	UY	Universidad de la Empresa (UDE)	http://www.ude.edu.uy/
+9188	UY	Universidad de la República	http://www.universidad.edu.uy/
+9189	UY	Universidad de Montevideo	http://www.um.edu.uy/
+9190	UY	Universidad ORT Uruguay	http://www.ort.edu.uy/
+9191	UZ	Ferghana Politechnical Institute	http://ferpi.dem.ru/
+9192	UZ	International Business School Kelajak ILMI	http://www.ibs.uz/
+9193	UZ	Kokand State Pedagogical Institute	http://www.qdpi.uz/
+9194	UZ	Management Development Institute of Singapore, Tashkent	http://www.mdis.uz/
+9195	UZ	National University of Uzbekistan	http://www.nuu.uz/
+9196	UZ	Nukus State Teachers Training Institute	http://www.ndpi.uz/
+9197	UZ	Samarkand State University	http://www.samdu.uz/
+9198	UZ	Tashkent Automobile and Roads Institute	http://www.tayi.uz/
+9199	UZ	Tashkent Institute of Irrigation and Melioration	http://www.tiim.uz/
+9200	UZ	Tashkent Islam University	http://www.tiu.uz/
+9201	UZ	Tashkent Medical Academy	http://www.tma.uz/
+9202	UZ	Tashkent Pharmaceutical Institute	http://www.pharmi.uz/
+9203	UZ	Tashkent School of Finance	http://www.tfi.uz/
+9204	UZ	Tashkent State Agrarian University	http://www.agrar.uz/
+9205	UZ	Tashkent State Technical University	http://www.tdtu.uz/
+9206	UZ	Tashkent State University of Economics	http://www.tdiu.uz/
+9207	UZ	Tashkent State University of Oriental Studies 	http://www.tashgiv.uz/
+9208	UZ	Tashkent University of Information Technologies	http://www.tuit.uz/
+9209	UZ	Turin Polytechnic University In Tashkent	http://www.polito.uz/
+9210	UZ	University of World Economy and Diplomacy	http://www.uwed.uz/
+9211	UZ	Uzbek State World Languages University	http://www.uzswlu.uz/
+9212	UZ	Westminster International University in Tashkent	http://www.wiut.uz/
+9213	VA	Athenaeum Pontificium Regina Apostolorum	http://www.upra.org/
+9214	VA	Pontifcia Università Gregoriana	http://www.unigre.urbe.it/
+9215	VA	Pontifcia Universitas a S.Thomas Aquinate in Urbe	http://www.pust.urbe.it/
+9216	VA	Pontifcia Universitas Lateranensis	http://www.pul.it/
+9217	VA	Pontifcia Università Urbaniana	http://www.urbaniana.edu/
+9218	VA	Università Pontifcia Salesiana	http://www.ups.urbe.it/
+9219	VC	Trinity University School of Medicine	http://www.tusom.org/
+9220	VE	Universidad Bicentenaria de Aragua	http://www.uba.edu.ve/
+9221	VE	Universidad Bolivariana de Venezuela	http://www.ubv.edu.ve/
+9222	VE	Universidad Católica Andres Bello	http://www.ucab.edu.ve/
+9223	VE	Universidad Católica Cecilio Acosta	http://www.unica.edu.ve/
+9224	VE	Universidad Católica del Táchira	http://www.ucat.edu.ve/
+9225	VE	Universidad Central de Venezuela	http://www.ucv.ve/
+9226	VE	Universidad Centro Occidental Lisandro Alvarado	http://www.ucla.edu.ve/
+9227	VE	Universidad de Carabobo	http://www.uc.edu.ve/
+9228	VE	Universidad de Los Andes	http://www.ula.ve/
+9229	VE	Universidad del Zulia	http://www.luz.ve/index2.html
+9230	VE	Universidad de Oriente	http://www.udo.edu.ve/
+9231	VE	Universidad Dr. Rafael Belloso Chacín	http://www.urbe.edu/
+9232	VE	Universidad Fermin Toro	http://www.uft.edu.ve/
+9233	VE	Universidad Gran Mariscal de Ayacucho	http://www.ugma.edu.ve/
+9234	VE	Universidad José Antonio Páez	http://www.ujap.edu.ve/
+9235	VE	Universidad José Maria Vargas	http://www.ujmv.edu/
+9236	VE	Universidad Metropolitana	http://www.unimet.edu.ve/
+9237	VE	Universidad Monteávila	http://www.universidad-monteavila.edu.ve/
+9238	VE	Universidad Nacional Abierta	http://www.una.edu.ve/
+9239	VE	Universidad Nacional Experimental de Guayana	http://www.uneg.edu.ve/
+9240	VE	Universidad Nacional Experimental de la Fuerza Armada	http://www.unefa.edu.ve/
+9241	VE	Universidad Nacional Experimental de los Llanos Occidentales "Ezequiel Zamora"	http://www.unellez.edu.ve/
+9242	VE	Universidad Nacional Experimental del Táchira	http://www.unet.edu.ve/
+9243	VE	Universidad Nacional Experimental "Francisco de Miranda"	http://www.unefm.edu.ve/
+9244	VE	Universidad Nacional Experimental Politécnica "Antonio José de Sucre"	http://www.unexpo.edu.ve/
+9245	VE	Universidad Nacional Experimental "Rafael Maria Baralt"	http://www.unermb.edu.ve/
+9246	VE	Universidad Nacional Experimental Romulo Gallegos	http://www.unerg.edu.ve/
+9247	VE	Universidad Nacional Experimental "Simón Rodriguez"	http://www.unesr.edu.ve/
+9248	VE	Universidad Nacional Experimental Sur del Lago "Jesús Maria Semprum"	http://www.unesur.edu.ve/
+9249	VE	Universidad Nueva Esparta	http://www.une.edu.ve/
+9250	VE	Universidad Pedagógica Experimental Libertador	http://www.upel.edu.ve/
+9251	VE	Universidad Rafael Urdaneta	http://www.uru.edu/
+9252	VE	Universidad Santa Maria Caracas	http://usm.trompo.com/
+9253	VE	Universidad Simón Bolivar	http://www.usb.ve/
+9254	VE	Universidad Tecnológica del Centro	http://www.unitec.edu.ve/
+9255	VE	Universidad Valle del Momboy	http://www.uvm.edu.ve/
+9256	VE	Universidad Yacambu	http://www.yacambu.edu.ve/
+9257	VI	University of the Virgin Islands	http://www.uvi.edu/
+9258	VN	Banking University of Ho Chi Minh City	http://www.buh.edu.vn/
+9259	VN	Binh Duong University	http://www.bdu.edu.vn/
+9260	VN	Can-Tho University	http://www.ctu.edu.vn/
+9261	VN	Danang College Of Technology	http://www.dct.udn.vn/
+9262	VN	Foreign Trade University	http://www.ftu.edu.vn/
+9263	VN	FPT University	http://www.fpt.edu.vn/
+9264	VN	Hai Duong University	http://www.uhd.edu.vn/
+9265	VN	Hanoi Medical University	http://www.hmu.edu.vn/
+9266	VN	Hanoi National Economics University	http://www.neu.edu.vn/
+9267	VN	Hanoi Open University	http://www.hou.edu.vn/
+9268	VN	Hanoi University of Architecture	http://www.hau.edu.vn/
+9269	VN	Hanoi University of Civil Engineering	http://www.dhxd.edu.vn/
+9270	VN	Hanoi University of Mining and Geology	http://www.humg.edu.vn/
+9271	VN	Hanoi University of Science	http://www.hus.edu.vn/
+9272	VN	Hanoi University of Science & Technology	http://www.hust.edu.vn/
+9273	VN	Ho Chi Minh City Open University	http://www.ou.edu.vn/
+9274	VN	Ho Chi Minh City University of Agriculture and Forestry	http://www.hcmuaf.edu.vn/
+9275	VN	Ho Chi Minh City University of Architecture	http://www.uah.edu.vn/
+9276	VN	Ho Chi Minh City University of Economics	http://www.ueh.edu.vn/
+9277	VN	Ho Chi Minh City University of Foreign Languages and Information Technology	http://www.huflit.edu.vn/
+9278	VN	Ho Chi Minh City University of Law	http://www.hcmulaw.edu.vn/
+9279	VN	Ho Chi Minh City University of Medicine and Pharmacy	http://www.yds.edu.vn/
+9280	VN	Ho Chi Minh City University of Natural Sciences	http://www.hcmuns.edu.vn/
+9281	VN	Ho Chi Minh City University of Pedagogics	http://www.hcmup.edu.vn/
+9282	VN	Ho Chi Minh City University of Social Sciences and Humanities	http://www.hcmussh.edu.vn/
+9283	VN	Ho Chi Minh City University of Technology	http://www.hcmut.edu.vn/
+9284	VN	Ho Chi Minh City University of Transport	http://www.hcmutrans.edu.vn/
+9285	VN	Hong Bang University International	http://www.hbu.edu.vn/
+9286	VN	Hue University	http://www.hueuni.edu.vn/
+9287	VN	Hue University of Agriculture and Forestry 	http://www.huaf.edu.vn/
+9288	VN	Institute of Finance	http://www.hvtc.edu.vn/
+9289	VN	Posts & Telecommunications Institute of Technology	http://www.ptit.edu.vn/
+9290	VN	RMIT International University Vietnam	http://www.rmit.edu.vn/
+9291	VN	Saigon University	http://www.sgu.edu.vn/
+9292	VN	Tay Nguyen University	http://www.taynguyenuni.edu.vn/
+9293	VN	Thainguyen University of Agriculture and Forestry	http://www.tuaf.edu.vn/
+9294	VN	University of Da Lat	http://www.dlu.edu.vn/
+9295	VN	University of Da Nang	http://www.udn.vn/
+9296	VN	University of Technical Education Ho Chi Minh City	http://www.hcmute.edu.vn/
+9297	VN	University of Transport and Communications	http://www.utc.edu.vn/
+9298	VN	Vietnam Maritime University	http://www.vimaru.edu.vn/
+9299	VN	Vietnam National University Hanoi	http://www.vnu.edu.vn/
+9300	VN	Vietnam National University Ho Chi Minh City	http://www.vnuhcm.edu.vn/
+9301	VN	Vietnam National University of Agriculture	http://www.vnua.edu.vn/
+9302	VN	Water Resources University	http://www.hwru.edu.vn/
+9303	WS	National University of Samoa	http://www.nus.edu.ws/
+9304	WS	University of the South Pacific School of Agriculture	http://www.usp.ac.fj/wwwsoa/
+9305	YE	Alahgaff University	http://www.ahgaff.edu/
+9306	YE	Al-Eman University	http://www.jameataleman.org/
+9307	YE	Al-Nasser University	http://www.al-edu.com/
+9308	YE	Hadhramout University of Science and Technology 	http://www.hust.edu.ye/
+9309	YE	Hodeidah University	http://www.hoduniv.net.ye/
+9310	YE	Queen Arwa University	http://www.arwauniversity.org/
+9311	YE	Saba University	http://www.sabauni.net/
+9312	YE	Sana'a University	http://www.su.edu.ye/
+9313	YE	Taiz University	http://www.taiz.edu.ye/
+9314	YE	Thamar University	http://www.thuniv.net/
+9315	YE	University of Aden	http://www.aden-univ.net/
+9316	YE	University of Modern Sciences	http://www.ums-edu.com/
+9317	YE	University of Science and Technology Sana'a	http://www.ust.edu/
+9318	YE	Yemenia University	http://www.yuniv.net/
+9319	ZA	Cape Peninsula University of Technology	http://www.cput.ac.za/
+9320	ZA	Central University of Technology, Free State	http://www.cut.ac.za/
+9321	ZA	Durban Institute of Technology	http://www.dit.ac.za/
+9322	ZA	Nelson Mandela Metropolitan University	http://www.nmmu.ac.za/
+9323	ZA	Rhodes University	http://www.ru.ac.za/
+9324	ZA	Tshwane University of Technology	http://www.tut.ac.za/
+9325	ZA	University of Cape Town	http://www.uct.ac.za/
+9326	ZA	University of Fort Hare	http://www.ufh.ac.za/
+9327	ZA	University of Johannesburg	http://www.uj.ac.za/
+9328	ZA	University of KwaZulu-Natal	http://www.ukzn.ac.za/
+9329	ZA	University of Limpopo	http://www.ul.ac.za/
+9330	ZA	University of North West	http://www.uniwest.ac.za/
+9331	ZA	University of Pretoria	http://www.up.ac.za/
+9332	ZA	University of South Africa	http://www.unisa.ac.za/
+9333	ZA	University of Stellenbosch	http://www.sun.ac.za/
+9334	ZA	University of the Free State	http://www.uovs.ac.za/
+9335	ZA	University of the Western Cape	http://www.uwc.ac.za/
+9336	ZA	University of Venda	http://www.univen.ac.za/
+9337	ZA	University of Witwatersrand	http://www.wits.ac.za/
+9338	ZA	University of Zululand	http://www.uzulu.ac.za/
+9339	ZA	Vaal University of Technology	http://www.vut.ac.za/
+9340	ZA	Walter Sisulu University for Technology and Science	http://www.wsu.ac.za/
+9341	ZM	Cavendish University	http://www.cavendishza.org/
+9342	ZM	Copperbelt University	http://www.cbu.edu.zm/
+9343	ZM	Mulungushi University	http://www.mu.ac.zm/
+9344	ZM	Northrise University	http://www.northrise.org/
+9345	ZM	Rusangu University	http://www.rusangu-university.edu.zm/
+9346	ZM	University of Lusaka	http://www.unilus.ac.zm/
+9347	ZM	University of Zambia	http://www.unza.zm/
+9348	ZM	Zambian Open University	http://www.zaou.ac.zm/
+9349	ZW	Africa University	http://www.africau.edu/
+9350	ZW	Bindura University of Science Education	http://www.buse.ac.zw/
+9351	ZW	Catholic University in Zimbabwe	http://www.cuz.ac.zw/
+9352	ZW	Chinhoyi University of Technology	http://www.cut.ac.zw/
+9353	ZW	Great Zimbabwe University	http://www.gzu.ac.zw/
+9354	ZW	Harare Institute of Technology	http://www.hit.ac.zw/
+9355	ZW	Lupane State University	http://www.lsu.ac.zw/
+9356	ZW	Midlands State University	http://www.msu.ac.zw/
+9357	ZW	National University of Science and Technology Bulawayo	http://www.nust.ac.zw/
+9358	ZW	Reformed Church University	http://www.rcu.ac.zw/
+9359	ZW	Solusi University	http://www.solusi.ac.zw/
+9360	ZW	University of Zimbabwe	http://www.uz.ac.zw/
+9361	ZW	Women's University in Africa	http://www.wua.ac.zw/
+9362	ZW	Zimbabwe Ezekiel Guti University	http://www.zegu.ac.zw/
+9363	ZW	Zimbabwe Open University	http://www.zou.ac.zw/
+\.
+
+
+--
+-- Name: hs_dictionary_university_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_dictionary_university_id_seq', 9363, true);
+
+
+--
+-- Data for Name: hs_file_types_cvaggregationstatistic; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvaggregationstatistic (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvaggregationstatistic_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvelevationdatum; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvelevationdatum (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvelevationdatum_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvelevationdatum_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvmedium; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvmedium (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvmedium_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvmedium_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvmethodtype; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvmethodtype (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvmethodtype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvmethodtype_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvsitetype; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvsitetype (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvsitetype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvsitetype_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvspeciation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvspeciation (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvspeciation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvspeciation_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvstatus; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvstatus (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvstatus_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvstatus_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvunitstype; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvunitstype (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvunitstype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvunitstype_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvvariablename; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvvariablename (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvvariablename_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvvariablename_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_cvvariabletype; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_cvvariabletype (id, term, name, is_dirty, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_cvvariabletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_cvvariabletype_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_file_types_genericfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12188,7 +22747,7 @@ SELECT pg_catalog.setval('hs_file_types_netcdflogicalfile_id_seq', 1, false);
 -- Data for Name: hs_file_types_reftimeseriesfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_file_types_reftimeseriesfilemetadata (id, extra_metadata, keywords, is_dirty, json_file_content) FROM stdin;
+COPY hs_file_types_reftimeseriesfilemetadata (id, extra_metadata, keywords, is_dirty, json_file_content, abstract) FROM stdin;
 \.
 
 
@@ -12212,6 +22771,36 @@ COPY hs_file_types_reftimeserieslogicalfile (id, dataset_name, metadata_id) FROM
 --
 
 SELECT pg_catalog.setval('hs_file_types_reftimeserieslogicalfile_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_timeseriesfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_timeseriesfilemetadata (id, value_counts, extra_metadata, keywords, is_dirty, abstract) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_timeseriesfilemetadata_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_timeserieslogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_timeserieslogicalfile (id, dataset_name, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_timeserieslogicalfile_id_seq', 1, false);
 
 
 --
@@ -12348,7 +22937,7 @@ COPY hs_labels_userlabels (id, user_id) FROM stdin;
 -- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_labels_userlabels_id_seq', 1, true);
+SELECT pg_catalog.setval('hs_labels_userlabels_id_seq', 7, true);
 
 
 --
@@ -12566,7 +23155,7 @@ SELECT pg_catalog.setval('hs_modflow_modelinstance_griddimensions_id_seq', 1, fa
 -- Data for Name: hs_modflow_modelinstance_groundwaterflow; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_modflow_modelinstance_groundwaterflow (id, object_id, "flowPackage", "flowParameter", content_type_id) FROM stdin;
+COPY hs_modflow_modelinstance_groundwaterflow (id, object_id, "flowPackage", "flowParameter", content_type_id, "horizontalFlowBarrierPackage", "seawaterIntrusionPackage", "unsaturatedZonePackage") FROM stdin;
 \.
 
 
@@ -12887,6 +23476,51 @@ SELECT pg_catalog.setval('hs_tools_resource_apphomepageurl_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_tools_resource_helppageurl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_helppageurl (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_helppageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_helppageurl_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_issuespageurl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_issuespageurl (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_issuespageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_issuespageurl_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_mailinglisturl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_mailinglisturl (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_mailinglisturl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_mailinglisturl_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_tools_resource_requesturlbase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12899,6 +23533,51 @@ COPY hs_tools_resource_requesturlbase (id, object_id, value, content_type_id) FR
 --
 
 SELECT pg_catalog.setval('hs_tools_resource_requesturlbase_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_roadmap; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_roadmap (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_roadmap_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_roadmap_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_showonopenwithlist; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_showonopenwithlist (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_showonopenwithlist_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_sourcecodeurl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_sourcecodeurl (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_sourcecodeurl_id_seq', 1, false);
 
 
 --
@@ -12992,6 +23671,21 @@ SELECT pg_catalog.setval('hs_tools_resource_supportedsharingstatuschoices_id_seq
 
 
 --
+-- Data for Name: hs_tools_resource_testingprotocolurl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_testingprotocolurl (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_testingprotocolurl_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_tools_resource_toolicon; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -13010,7 +23704,7 @@ SELECT pg_catalog.setval('hs_tools_resource_toolicon_id_seq', 1, false);
 -- Data for Name: hs_tools_resource_toolmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_tools_resource_toolmetadata (coremetadata_ptr_id) FROM stdin;
+COPY hs_tools_resource_toolmetadata (coremetadata_ptr_id, approved) FROM stdin;
 \.
 
 
@@ -13382,16 +24076,16 @@ COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, descrip
 8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	8	\N		Resend Verification Email	form	f
 11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	11	\N		Create Resource	richtextpage	f
 12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	12	\N		Sign Up	richtextpage	f
-9		1	Terms of Use	https://help.hydroshare.org/about-hydroshare/policies/terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2017-09-01 18:25:48.01336+00	2	2016-01-25 19:33:24+00	\N	\N	t	9	\N		Terms of Use	richtextpage	f
-10		1	Statement of Privacy	https://help.hydroshare.org/about-hydroshare/policies/statement-of-privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2017-09-01 18:26:27.33157+00	2	2016-01-25 19:34:22+00	\N	\N	t	10	\N		Statement of Privacy	richtextpage	f
-2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
+2		1	Home	/		CommonsShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
 3		1	My Resources	my-resources	My Resources	my-resources	t	2016-01-25 19:22:48.667099+00	2016-01-25 19:29:50.956511+00	2	2016-01-25 19:22:48+00	\N	\N	t	1	\N	1,2,3	My Resources	richtextpage	f
 4		1	Discover	search	Discover	Discover	t	2016-01-25 19:23:52.174668+00	2016-01-25 19:52:37.387455+00	2	2016-01-25 19:23:52+00	\N	\N	t	2	\N	1,2,3	Discover	richtextpage	f
 13		1	Collaborate	collaborate		collaborate	t	2016-06-23 17:07:04.042277+00	2016-06-23 17:07:04.042277+00	2	2016-06-23 17:07:04.008329+00	\N	\N	t	3	\N	1	Collaborate	richtextpage	f
-6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
-14		1	Help	http://help.hydroshare.org/	\N	Help	t	2017-09-01 18:12:49.579765+00	2017-09-01 18:13:50.018396+00	2	2017-09-01 18:12:49+00	\N	\N	f	5	\N	1	Help	link	f
-15		1	About	http://help.hydroshare.org//about-hydroshare/	\N	About	t	2017-09-01 18:13:41.539301+00	2017-09-01 18:13:50.015184+00	2	2017-09-01 18:13:41.539168+00	\N	\N	f	6	\N	1	About	link	f
-7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	7	\N		Verify Account	richtextpage	f
+7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for CommonsShare! We have sent you an email from commonsshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with CommonsShare.	t	2016-01-25 19:28:12.867432+00	2018-01-08 22:52:48.855937+00	2	2016-01-25 19:28:12+00	\N	\N	t	7	\N		Verify Account	richtextpage	f
+6		1	Apps	https://heliumshare.renci.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2018-01-08 22:29:55.520735+00	2	2016-01-25 19:26:44+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
+15		1	About	https://hydroshare.org/pages/about-hydroshare/	\N	About	t	2017-09-01 18:13:41.539301+00	2018-01-08 22:48:43.757602+00	2	2017-09-01 18:13:41+00	\N	\N	f	6	\N		About	link	f
+14		1	Help	https://hydroshare.org/pages	\N	Help	t	2017-09-01 18:12:49.579765+00	2018-01-08 22:48:43.761139+00	2	2017-09-01 18:12:49+00	\N	\N	f	5	\N		Help	link	f
+9		1	Terms of Use	terms-of-use	Terms of Use	CommonsShare Terms of Use\nLast modified January 8, 2018	t	2016-01-25 19:33:24.439209+00	2018-01-09 00:41:14.276924+00	2	2016-01-25 19:33:24+00	\N	\N	t	9	\N		Terms of Use	richtextpage	f
+10		1	Statement of Privacy	privacy	Statement of Privacy	CommonsShare Statement of Privacy\nLast modified January 8, 2018	t	2016-01-25 19:34:22.084583+00	2018-01-09 00:43:12.524218+00	2	2016-01-25 19:34:22+00	\N	\N	t	10	\N		Statement of Privacy	richtextpage	f
 \.
 
 
@@ -13407,14 +24101,14 @@ SELECT pg_catalog.setval('pages_page_id_seq', 15, true);
 --
 
 COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
-7	<p class="p1">Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p class="p2"><a href="http://dev.hydroshare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
 3	<p>my-resources</p>
 11	<p>create resource</p>
 12	<p>sign up</p>
 4	<p>Discover</p>
 13	<p>collaborate</p>
-9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
-10	<h2 class="p1"><b>HydroShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
+7	<p class="p1">Thank you for signing up for CommonsShare! We have sent you an email from commonsshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with CommonsShare.</p>\n<p class="p2"></p>
+9	<h2 class="p1"><b>CommonsShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified January 8, 2018</i></p>\n<p class="p2">Thank you for using the CommonsShare hydrologic data sharing system hosted at commonsshare.org.  CommonsShare services are provided by a team of researchers associated with the Renaissance Computing Institute (RENCI) at the University of North Carolina at Chapel Hill and funded by the National Institutes of Health.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina (UNC), the UNC School of Medicine and the School of Information and Library Science as well as RTI International, Jackson Laboratory for Genomic Medicine, Johns Hopkins University, Lawrence Berkeley National Laboratory, Maastricht University, University of New Mexico, and Oregon Health and Science University. Your access to commonsshare.org is subject to your agreement to these Terms of Use. By using our services at commonsshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of commonsshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The commonsshare.org site is intended to support data and workflow sharing.  This is broadly interpreted to include any discipline or endeavor that has something to do with biology.  You are responsible at all times for using commonsshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of commonsshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use commonsshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use commonsshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of commonsshare.org or the hardware or software of any other person who accesses commonsshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on commonsshare.org, except where such alterations or deletions are consistent with the access control settings of that content in commonsshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of commonsshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to commonsshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter commonsshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Commonsshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of commonsshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">COMMONSSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Commonsshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from commonsshare.org. Commonsshare.org and its participating institutions do not warrant that Commonsshare.org will operate in an uninterrupted or error-free manner or that Commonsshare.org is free of viruses or other harmful components. Use of commonsshare.org is at your own risk.</p>\n<p class="p2">You agree that commonsshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of any resource that you access through commonsshare.org.</p>\n<p class="p2">The commonsshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the CommonsShare research team or their sponsors, nor does their posting imply the endorsement of CommonsShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to commonsshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
+10	<h2 class="p1"><b>CommonsShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified January 8, 2018</i></p>\n<p class="p2">CommonsShare is operated by a team of researchers associated with the Renaissance Computing Institute at University of North Carolina (UNC) and funded by the National Institutes of Health.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, the UNC School of Medicine and the School of Information and Library Science as well as RTI International, Jackson Laboratory for Genomic Medicine, Johns Hopkins University, Lawrence Berkeley National Laboratory, Maastricht University, University of New Mexico, and Oregon Health and Science University.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate commonsshare.org security procedures. The CommonsShare participating institutions and the National Institutes of Health (which funds commonsshare.org development) regularly request commonsshare.org usages statistics and other information. Usage of commonsshare.org is monitored and usage statistics are collected and reported on a regular basis. Commonsshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Commonsshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While CommonsShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on commonsshare.org is potentially available to other users of commonsshare.org and the public. The CommonsShare participating institutions and commonsshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on commonsshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
 \.
 
 
@@ -13634,7 +24328,7 @@ COPY spatial_ref_sys  FROM stdin;
 --
 
 COPY theme_homepage (page_ptr_id, heading, slide_in_one_icon, slide_in_one, slide_in_two_icon, slide_in_two, slide_in_three_icon, slide_in_three, header_background, header_image, welcome_heading, content, recent_blog_heading, number_recent_posts, message_end_date, message_start_date, message_type, show_message) FROM stdin;
-2	HydroShare									Share and Collaborate	<p class="p1">HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.</p>	Latest blog posts	3	\N	\N	Information	f
+2	CommonsShare									Share and Collaborate	<p class="p1">CommonsShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.</p>	Latest blog posts	3	\N	\N	Information	f
 \.
 
 
@@ -13658,7 +24352,7 @@ SELECT pg_catalog.setval('theme_iconbox_id_seq', 1, false);
 --
 
 COPY theme_quotamessage (id, warning_content_prepend, grace_period_content_prepend, enforce_content_prepend, content, soft_limit_percent, hard_limit_percent, grace_period) FROM stdin;
-1	Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in HydroShare. 	You have exceeded your HydroShare quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in HydroShare. 	Your action was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact help@cuahsi.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.	80	125	7
+1	Welcome to CommonsShare	You have exceeded your CommonsShare quota. Your quota for CommonsShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in CommonsShare. 	Your action was refused because you have exceeded your quota. Your quota for CommonsShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact help@cuahsi.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.	80	125	7
 \.
 
 
@@ -13674,7 +24368,7 @@ SELECT pg_catalog.setval('theme_quotamessage_id_seq', 1, true);
 --
 
 COPY theme_siteconfiguration (id, col1_heading, col1_content, col2_heading, col2_content, col3_heading, col3_content, twitter_link, facebook_link, pinterest_link, youtube_link, github_link, linkedin_link, vk_link, gplus_link, has_social_network_links, copyright, site_id) FROM stdin;
-1	Contact us	<p class="p1">Email us at <a href="mailto:help@cuahsi.org">help@cuahsi.org</a></p>	Follow		Open Source	<p class="p1">HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"><b>Github</b></a>.</p>\n<p class="p1">Report a bug <a href="https://github.com/hydroshare/hydroshare/issues?state=open"><b>here</b></a></p>\n<p class="p1">This is HydroShare Version<b> DEVELOPMENT</b></p>	http://twitter.com/cuahsi 	https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590		http://www.youtube.com/user/CUAHSI	http://github.com/hydroshare	https://www.linkedin.com/company/2632114			t	&copy {% now "Y" %} CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.	1
+1	Contact us	<p class="p1">Email us at help@commonsshare.org </p>	Follow		Open Source	<p class="p1">CommonsShare is Open Source. </p>\n<p class="p1">This is CommonsShare Version<b> 0.9b</b></p>	https://twitter.com/renci	https://www.facebook.com/renci.org/				https://www.linkedin.com/company/renaissance-computing-institute/			t	&copy {% now "Y" %} CUAHSI and University of North Carolina at Chapel Hill. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453, 1148090, 1659300, 1664018, 1664061, and 1664119, and National Institutes of Health (NIH) under award OT3-OD025464-01.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF or NIH.	1
 \.
 
 
@@ -13698,7 +24392,7 @@ COPY theme_userprofile (id, picture, title, subject_areas, organization, phone_1
 -- Name: theme_userprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('theme_userprofile_id_seq', 4, true);
+SELECT pg_catalog.setval('theme_userprofile_id_seq', 15, true);
 
 
 --
@@ -13713,7 +24407,7 @@ COPY theme_userquota (id, allocated_value, used_value, unit, zone, remaining_gra
 -- Name: theme_userquota_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('theme_userquota_id_seq', 1, false);
+SELECT pg_catalog.setval('theme_userquota_id_seq', 6, true);
 
 
 --
@@ -15029,6 +25723,102 @@ ALTER TABLE ONLY hs_core_type
 
 
 --
+-- Name: hs_dictionary_uncategorizedterm_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_dictionary_uncategorizedterm
+    ADD CONSTRAINT hs_dictionary_uncategorizedterm_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_dictionary_university_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_dictionary_university
+    ADD CONSTRAINT hs_dictionary_university_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvaggregationstatistic
+    ADD CONSTRAINT hs_file_types_cvaggregationstatistic_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvelevationdatum_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvelevationdatum
+    ADD CONSTRAINT hs_file_types_cvelevationdatum_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvmedium_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvmedium
+    ADD CONSTRAINT hs_file_types_cvmedium_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvmethodtype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvmethodtype
+    ADD CONSTRAINT hs_file_types_cvmethodtype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvsitetype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvsitetype
+    ADD CONSTRAINT hs_file_types_cvsitetype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvspeciation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvspeciation
+    ADD CONSTRAINT hs_file_types_cvspeciation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvstatus_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvstatus
+    ADD CONSTRAINT hs_file_types_cvstatus_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvunitstype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvunitstype
+    ADD CONSTRAINT hs_file_types_cvunitstype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvvariablename_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariablename
+    ADD CONSTRAINT hs_file_types_cvvariablename_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvvariabletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariabletype
+    ADD CONSTRAINT hs_file_types_cvvariabletype_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_file_types_genericfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -15146,6 +25936,30 @@ ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile
 
 ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile
     ADD CONSTRAINT hs_file_types_reftimeserieslogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_timeseriesfilemetadata
+    ADD CONSTRAINT hs_file_types_timeseriesfilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_timeserieslogicalfile
+    ADD CONSTRAINT hs_file_types_timeserieslogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_timeserieslogicalfile
+    ADD CONSTRAINT hs_file_types_timeserieslogicalfile_pkey PRIMARY KEY (id);
 
 
 --
@@ -15781,6 +26595,54 @@ ALTER TABLE ONLY hs_tools_resource_apphomepageurl
 
 
 --
+-- Name: hs_tools_resource_helppag_content_type_id_2185b86b4a80d66e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_helppageurl
+    ADD CONSTRAINT hs_tools_resource_helppag_content_type_id_2185b86b4a80d66e_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_helppageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_helppageurl
+    ADD CONSTRAINT hs_tools_resource_helppageurl_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_issuesp_content_type_id_3bdef048e9c810b1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_issuespageurl
+    ADD CONSTRAINT hs_tools_resource_issuesp_content_type_id_3bdef048e9c810b1_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_issuespageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_issuespageurl
+    ADD CONSTRAINT hs_tools_resource_issuespageurl_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_mailing_content_type_id_13ae5c30fc27ab2c_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_mailinglisturl
+    ADD CONSTRAINT hs_tools_resource_mailing_content_type_id_13ae5c30fc27ab2c_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_mailinglisturl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_mailinglisturl
+    ADD CONSTRAINT hs_tools_resource_mailinglisturl_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -15794,6 +26656,70 @@ ALTER TABLE ONLY hs_tools_resource_requesturlbase
 
 ALTER TABLE ONLY hs_tools_resource_requesturlbase
     ADD CONSTRAINT hs_tools_resource_requesturlbase_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_roadmap_content_type_id_6cd359fac7c8ba3d_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_roadmap
+    ADD CONSTRAINT hs_tools_resource_roadmap_content_type_id_6cd359fac7c8ba3d_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_roadmap_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_roadmap
+    ADD CONSTRAINT hs_tools_resource_roadmap_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_showono_content_type_id_635239339de900f6_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_showonopenwithlist
+    ADD CONSTRAINT hs_tools_resource_showono_content_type_id_635239339de900f6_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_showonopenwithlist
+    ADD CONSTRAINT hs_tools_resource_showonopenwithlist_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_sourcec_content_type_id_3fabaa90f21eacc0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_sourcecodeurl
+    ADD CONSTRAINT hs_tools_resource_sourcec_content_type_id_3fabaa90f21eacc0_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_sourcecodeurl
+    ADD CONSTRAINT hs_tools_resource_sourcecodeurl_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_support_content_type_id_4ed7121ea2a91d3e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedsharingstatus
+    ADD CONSTRAINT hs_tools_resource_support_content_type_id_4ed7121ea2a91d3e_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_supporte_content_type_id_c6800002b2e3484_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes
+    ADD CONSTRAINT hs_tools_resource_supporte_content_type_id_c6800002b2e3484_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -15858,6 +26784,22 @@ ALTER TABLE ONLY hs_tools_resource_supportedsharingstatus_sharing_status
 
 ALTER TABLE ONLY hs_tools_resource_supportedsharingstatuschoices
     ADD CONSTRAINT hs_tools_resource_supportedsharingstatuschoices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_testing_content_type_id_40c34a833b4e2ea7_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_testingprotocolurl
+    ADD CONSTRAINT hs_tools_resource_testing_content_type_id_40c34a833b4e2ea7_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_testingprotocolurl
+    ADD CONSTRAINT hs_tools_resource_testingprotocolurl_pkey PRIMARY KEY (id);
 
 
 --
@@ -17480,6 +28422,76 @@ CREATE INDEX hs_core_type_417f1b1c ON hs_core_type USING btree (content_type_id)
 
 
 --
+-- Name: hs_file_types_cvaggregationstatistic_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvaggregationstatistic_ffe73c23 ON hs_file_types_cvaggregationstatistic USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvelevationdatum_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvelevationdatum_ffe73c23 ON hs_file_types_cvelevationdatum USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvmedium_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvmedium_ffe73c23 ON hs_file_types_cvmedium USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvmethodtype_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvmethodtype_ffe73c23 ON hs_file_types_cvmethodtype USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvsitetype_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvsitetype_ffe73c23 ON hs_file_types_cvsitetype USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvspeciation_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvspeciation_ffe73c23 ON hs_file_types_cvspeciation USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvstatus_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvstatus_ffe73c23 ON hs_file_types_cvstatus USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvunitstype_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvunitstype_ffe73c23 ON hs_file_types_cvunitstype USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvvariablename_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvvariablename_ffe73c23 ON hs_file_types_cvvariablename USING btree (metadata_id);
+
+
+--
+-- Name: hs_file_types_cvvariabletype_ffe73c23; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_file_types_cvvariabletype_ffe73c23 ON hs_file_types_cvvariabletype USING btree (metadata_id);
+
+
+--
 -- Name: hs_geo_raster_resource_bandinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -17774,10 +28786,52 @@ CREATE INDEX hs_tools_resource_apphomepageurl_417f1b1c ON hs_tools_resource_apph
 
 
 --
+-- Name: hs_tools_resource_helppageurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_helppageurl_417f1b1c ON hs_tools_resource_helppageurl USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_issuespageurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_issuespageurl_417f1b1c ON hs_tools_resource_issuespageurl USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_mailinglisturl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_mailinglisturl_417f1b1c ON hs_tools_resource_mailinglisturl USING btree (content_type_id);
+
+
+--
 -- Name: hs_tools_resource_requesturlbase_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE INDEX hs_tools_resource_requesturlbase_417f1b1c ON hs_tools_resource_requesturlbase USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_roadmap_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_roadmap_417f1b1c ON hs_tools_resource_roadmap USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_showonopenwithlist_417f1b1c ON hs_tools_resource_showonopenwithlist USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_sourcecodeurl_417f1b1c ON hs_tools_resource_sourcecodeurl USING btree (content_type_id);
 
 
 --
@@ -17820,6 +28874,13 @@ CREATE INDEX hs_tools_resource_supportedsharingstatus_sharing_status_ba95e5d ON 
 --
 
 CREATE INDEX hs_tools_resource_supportedsharingstatus_sharing_status_c4e90cb ON hs_tools_resource_supportedsharingstatus_sharing_status USING btree (supportedsharingstatus_id);
+
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_testingprotocolurl_417f1b1c ON hs_tools_resource_testingprotocolurl USING btree (content_type_id);
 
 
 --
@@ -18152,11 +29213,27 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives
 
 
 --
+-- Name: D167d7c33c21312b10c8aa6a4ac9a8f6; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvaggregationstatistic
+    ADD CONSTRAINT "D167d7c33c21312b10c8aa6a4ac9a8f6" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D16cd563c928a22ccbdb7c425a399b3c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY django_docker_processes_dockerlink
     ADD CONSTRAINT "D16cd563c928a22ccbdb7c425a399b3c" FOREIGN KEY (docker_profile_from_id) REFERENCES django_docker_processes_dockerprofile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D1a367102f971ec74f91923f88623b83; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvunitstype
+    ADD CONSTRAINT "D1a367102f971ec74f91923f88623b83" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -18248,6 +29325,14 @@ ALTER TABLE ONLY hs_app_timeseries_cvunitstype
 
 
 --
+-- Name: D2d4631a5a05bfcf76abcc0bc594ebb0; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvmedium
+    ADD CONSTRAINT "D2d4631a5a05bfcf76abcc0bc594ebb0" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D31151cd560fcd8a9d7eac2bbb5b84c9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18312,6 +29397,14 @@ ALTER TABLE ONLY ga_resources_relatedresource
 
 
 --
+-- Name: D3f3dad96c7a9bcf802046da2ae6feb2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvstatus
+    ADD CONSTRAINT "D3f3dad96c7a9bcf802046da2ae6feb2" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D4174b69c892f2b9a3bd164e041c7307; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18360,6 +29453,14 @@ ALTER TABLE ONLY hs_app_timeseries_cvvariabletype
 
 
 --
+-- Name: D57f322bdcc1bcfff15c8400d7ccc594; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariablename
+    ADD CONSTRAINT "D57f322bdcc1bcfff15c8400d7ccc594" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D59977fad305f0130e8e94d0cf611f50; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18373,6 +29474,14 @@ ALTER TABLE ONLY hs_app_timeseries_timeseriesmetadata
 
 ALTER TABLE ONLY django_docker_processes_overridelink
     ADD CONSTRAINT "D5b97bbd43dc74b22e279a355699342b" FOREIGN KEY (docker_profile_from_id) REFERENCES django_docker_processes_dockerprofile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D60187c898267facf4f8d2c2cc61e239; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvmethodtype
+    ADD CONSTRAINT "D60187c898267facf4f8d2c2cc61e239" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -18400,6 +29509,14 @@ ALTER TABLE ONLY hs_core_resourcefile
 
 
 --
+-- Name: D63cf5b02c9a66d14e1da898608427e9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvspeciation
+    ADD CONSTRAINT "D63cf5b02c9a66d14e1da898608427e9" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D66495776709e8754037f4f18d4258ac; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18421,6 +29538,14 @@ ALTER TABLE ONLY ga_ows_ogrdataset
 
 ALTER TABLE ONLY ga_resources_renderedlayer_styles
     ADD CONSTRAINT "D6b8a9e44c81b6ef0edc08ba3acdf181" FOREIGN KEY (renderedlayer_id) REFERENCES ga_resources_renderedlayer(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D6ce1cce29f9422b95ad4410d6740414; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvsitetype
+    ADD CONSTRAINT "D6ce1cce29f9422b95ad4410d6740414" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -18469,6 +29594,14 @@ ALTER TABLE ONLY hs_app_timeseries_cvmethodtype
 
 ALTER TABLE ONLY ga_resources_renderedlayer
     ADD CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e" FOREIGN KEY (data_resource_id) REFERENCES ga_resources_dataresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D836dbc14046809590aa7cad6bac093f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvvariabletype
+    ADD CONSTRAINT "D836dbc14046809590aa7cad6bac093f" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -18720,6 +29853,14 @@ ALTER TABLE ONLY hs_labels_resourcelabels
 
 
 --
+-- Name: d9aa3e95ac5c219f8a5d3d7670c8f8eb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_cvelevationdatum
+    ADD CONSTRAINT d9aa3e95ac5c219f8a5d3d7670c8f8eb FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: da2196e2988877260c8db8e9bb03265e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18853,6 +29994,14 @@ ALTER TABLE ONLY hs_modflow_modelinstance_boundarycondition_head_dependent_f1e14
 
 ALTER TABLE ONLY hs_modflow_modelinstance_boundarycondition_specified_head_b132e
     ADD CONSTRAINT efd23ef67e432910030e9dce3658b101 FOREIGN KEY (boundarycondition_id) REFERENCES hs_modflow_modelinstance_boundarycondition(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: f37a10a92016c23352bb1a1de64ad71b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_timeserieslogicalfile
+    ADD CONSTRAINT f37a10a92016c23352bb1a1de64ad71b FOREIGN KEY (metadata_id) REFERENCES hs_file_types_timeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -19696,11 +30845,43 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelmethod
 
 
 --
+-- Name: hs_t_content_type_id_18b30cbacb75c6a3_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_mailinglisturl
+    ADD CONSTRAINT hs_t_content_type_id_18b30cbacb75c6a3_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_t_content_type_id_302b8ed0fd50d9ed_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_showonopenwithlist
+    ADD CONSTRAINT hs_t_content_type_id_302b8ed0fd50d9ed_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_tools_resource_toolicon
     ADD CONSTRAINT hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_t_content_type_id_471753f01ed042b1_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_helppageurl
+    ADD CONSTRAINT hs_t_content_type_id_471753f01ed042b1_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_t_content_type_id_4a683ca6d8f55876_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_testingprotocolurl
+    ADD CONSTRAINT hs_t_content_type_id_4a683ca6d8f55876_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -19728,11 +30909,35 @@ ALTER TABLE ONLY hs_tools_resource_supportedrestypes
 
 
 --
+-- Name: hs_t_content_type_id_77f09f9a20df4580_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_issuespageurl
+    ADD CONSTRAINT hs_t_content_type_id_77f09f9a20df4580_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_t_content_type_id_7ad784d08e5c5171_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_sourcecodeurl
+    ADD CONSTRAINT hs_t_content_type_id_7ad784d08e5c5171_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_t_content_type_id_7b1338cffe685cdf_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_tools_resource_supportedsharingstatus
     ADD CONSTRAINT hs_t_content_type_id_7b1338cffe685cdf_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_t_content_type_id_7bdd6cce382045fa_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_roadmap
+    ADD CONSTRAINT hs_t_content_type_id_7bdd6cce382045fa_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
