@@ -3810,7 +3810,7 @@ class CoreMetaData(models.Model):
                                         # convert dict to json for form validation
                                         party_data['identifiers'] = json.dumps(
                                             party_data['identifiers'])
-                            except Exception as ex:
+                            except Exception:
                                 raise ValidationError("Invalid identifier data for "
                                                       "creator/contributor")
                             validation_form = validation_forms_mapping[element_name](

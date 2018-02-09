@@ -17,6 +17,7 @@ from hydroshare import utils
 from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
     FundingAgency, Description
 
+
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
     """Return a horizontal list of radio buttons."""
 
@@ -273,7 +274,7 @@ class PartyValidationForm(forms.Form):
             # data is expected as json string - convert it to a dict
             try:
                 data = json.loads(data)
-            except ValueError as ex:
+            except ValueError:
                 raise forms.ValidationError("Invalid data found for identifiers.")
 
             # validate identifier values - check for duplicate links

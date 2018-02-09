@@ -55,12 +55,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             "creators": [{
                 "name": "Creator 1",
                 "organization": None
-            },
-            {
-                "name": "Creator 2",
-                "organization": "USU",
-                "identifiers": {"ORCID": "http://orcid.org/011",
-                                "ResearchGate": "http://researchgate.org/001"}
+            }, {
+                    "name": "Creator 2",
+                    "organization": "USU",
+                    "identifiers": {"ORCID": "http://orcid.org/011",
+                                    "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",

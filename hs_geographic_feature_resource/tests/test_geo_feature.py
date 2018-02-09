@@ -48,8 +48,6 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         cr_address = "Provo, UT, USA"
         cr_phone = '123-456-7890'
         cr_homepage = 'http://home.byu.edu/'
-        cr_res_id = 'http://research.org/001'
-        cr_res_gate_id = 'http://research-gate.org/001'
         resource.create_metadata_element(self.resGeoFeature.short_id,
                                          'creator',
                                          name=cr_name,
@@ -74,8 +72,6 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         con_address = "Provo, UT, USA"
         con_phone = '123-456-7890'
         con_homepage = 'http://usu.edu/homepage/009'
-        con_res_id = 'http://research.org/009'
-        con_res_gate_id = 'http://research-gate.org/009'
         resource.create_metadata_element(self.resGeoFeature.short_id,
                                          'contributor',
                                          name=con_name,
@@ -86,8 +82,8 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          phone=con_phone,
                                          homepage=con_homepage,
                                          identifiers={'ORCID': 'http://orcid.org/john',
-                                                        'ResearchGate':
-                                                            'http://researchgate.org/john'})
+                                                      'ResearchGate':
+                                                          'http://researchgate.org/john'})
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id,
