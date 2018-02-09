@@ -45,7 +45,7 @@ logger = logging.getLogger('django')
 def manage_task_nightly():
     # The nightly running task do DOI activation check and over-quota check
 
-    #Check DOI activation on failed and pending resources and send email.
+    # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
     # retrieve all published resources with failed metadata deposition with CrossRef if any and
     # retry metadata deposition
