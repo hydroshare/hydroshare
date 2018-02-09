@@ -16,6 +16,7 @@ from rest_framework import status
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.contrib.auth.models import User
 
 from celery.task import periodic_task
 from celery.schedules import crontab
@@ -41,8 +42,10 @@ logger = logging.getLogger('django')
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
-def check_doi_activation():
-    """Check DOI activation on failed and pending resources and send email."""
+def manage_task_nightly():
+    # The nightly running task do DOI activation check and over-quota check
+
+    #Check DOI activation on failed and pending resources and send email.
     msg_lst = []
     # retrieve all published resources with failed metadata deposition with CrossRef if any and
     # retry metadata deposition
@@ -109,6 +112,43 @@ def check_doi_activation():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+    # check over quota cases and send quota warning emails as needed
+    hs_internal_zone = "hydroshare"
+    if not QuotaMessage.objects.exists():
+        QuotaMessage.objects.create()
+    qmsg = QuotaMessage.objects.first()
+    users = User.objects.filter(is_active=True).all()
+    for u in users:
+        uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
+        used_percent = uq.used_percent
+        if used_percent >= qmsg.soft_limit_percent:
+            if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
+                if uq.remaining_grace_period < 0:
+                    # triggers grace period counting
+                    uq.remaining_grace_period = qmsg.grace_period
+                elif uq.remaining_grace_period > 0:
+                    # reduce remaining_grace_period by one day
+                    uq.remaining_grace_period -= 1
+            elif used_percent >= qmsg.hard_limit_percent:
+                # set grace period to 0 when user quota exceeds hard limit
+                uq.remaining_grace_period = 0
+            uq.save()
+            user = uq.user
+            uemail = user.email
+            msg_str = 'Dear ' + u.username + ':\n\n'
+            msg_str += get_quota_message(user)
+
+            msg_str += '\n\nHydroShare Support'
+            subject = 'Quota warning'
+            # send email for people monitoring and follow-up as needed
+            send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
+                      [uemail])
+        else:
+            if uq.remaining_grace_period >= 0:
+                # turn grace period off now that the user is below quota soft limit
+                uq.remaining_grace_period = -1
+                uq.save()
 
 
 @shared_task
@@ -286,10 +326,6 @@ def update_quota_usage_task(username):
                      'user ' + username)
         return False
 
-    if not QuotaMessage.objects.exists():
-        QuotaMessage.objects.create()
-    qmsg = QuotaMessage.objects.first()
-
     attname = username + '-usage'
     istorage = IrodsStorage()
     # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
@@ -345,32 +381,4 @@ def update_quota_usage_task(username):
 
     uq.update_used_value(used_val)
 
-    used_percent = uq.used_percent
-    if used_percent >= qmsg.soft_limit_percent:
-        if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-            if uq.remaining_grace_period < 0:
-                # triggers grace period counting
-                uq.remaining_grace_period = qmsg.grace_period
-            elif uq.remaining_grace_period > 0:
-                # reduce remaining_grace_period by one day
-                uq.remaining_grace_period -= 1
-        elif used_percent >= qmsg.hard_limit_percent:
-            # set grace period to 0 when user quota exceeds hard limit
-            uq.remaining_grace_period = 0
-        uq.save()
-        user = uq.user
-        uemail = user.email
-        msg_str = 'Dear ' + username + ':\n\n'
-        msg_str += get_quota_message(user)
-
-        msg_str += '\n\nHydroShare Support'
-        subject = 'Quota warning'
-        # send email for people monitoring and follow-up as needed
-        send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
-                  [uemail])
-    else:
-        if uq.remaining_grace_period >= 0:
-            # turn grace period off now that the user is below quota soft limit
-            uq.remaining_grace_period = -1
-            uq.save()
     return True
