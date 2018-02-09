@@ -10,8 +10,8 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
+function getFolderTemplateInstance(folderName, url) {
+    return "<li class='fb-folder droppable draggable' title='" + folderName + "' data-url='" + url + "&#13;Type: File Folder'>" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
@@ -139,9 +139,9 @@ function updateSelectionMenuContext() {
     }
 
     if (selected.hasClass("fb-folder")) {
-        flagDisableDownload = true;
+        flagDisableDownload = false;
         flagDisableUnzip = true;
-        flagDisableGetLink = true;
+        flagDisableGetLink = false;
     }
 
     if (!sourcePaths.length) {

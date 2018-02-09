@@ -71,6 +71,15 @@ def data_store_structure(request):
     res_coll = os.path.join(resource.root_path, store_path)
     try:
         store = istorage.listdir(res_coll)
+        dirs = []
+        for dname in store[0]:  # directories
+            d_pk = dname.decode('utf-8')
+            name_with_full_path = os.path.join(res_coll, dname)
+            # TODO /django_irods/download/ shouldn't be hardcoded
+            d_url = '/django_irods/download/' + name_with_full_path
+            # TODO check if folder is found in django
+            dirs.append({'name': d_pk, 'url': d_url})
+
         files = []
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')
@@ -107,7 +116,7 @@ def data_store_structure(request):
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
-                     'folders': store[0],
+                     'folders': dirs,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
