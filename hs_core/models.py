@@ -428,10 +428,14 @@ class Party(AbstractMetaDataElement):
     def _validate_identifiers(cls, kwargs):
         if 'identifiers' in kwargs:
             if not isinstance(kwargs['identifiers'], dict):
-                try:
-                    kwargs['identifiers'] = json.loads(kwargs['identifiers'])
-                except ValueError:
-                    raise ValidationError("Value for identifiers not in the correct format")
+                if kwargs['identifiers']:
+                    # validation form can populate the dict(kwargs) with key 'identifiers" with
+                    # value of empty string if data passed to the validation form did not had this
+                    # key. In that case no need to convert the string to dict
+                    try:
+                        kwargs['identifiers'] = json.loads(kwargs['identifiers'])
+                    except ValueError:
+                        raise ValidationError("Value for identifiers not in the correct format")
             identifiers = kwargs['identifiers']
             if identifiers:
                 # validate identifier values - check for duplicate links
