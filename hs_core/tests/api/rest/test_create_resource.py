@@ -129,7 +129,7 @@ class TestCreateResource(HSRESTTestCase):
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
         con_identifiers = {'ORCID': 'http://orcid.org/mike_s',
-                          'ResearchGate': 'http://researchgate.org/mike_s'}
+                           'ResearchGate': 'http://researchgate.org/mike_s'}
         metadata.append({'contributor': {'name': con_name,
                                          'organization': con_org, 'email': con_email,
                                          'address': con_address, 'phone': con_phone,
