@@ -363,16 +363,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
-        # test deleting a link
-        # usu_link = cr_lisa.external_links.all().filter(type='usuProfile').first()
+        # test deleting identifiers for lisa
         kwargs = {'identifiers': {}}
         resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
-        # lisa should have no external profile link
+        # lisa should have no external profile links/identifiers
         cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
         self.assertEqual(len(cr_lisa.identifiers), 0,
                          msg="Creator Lisa does not have 0 identifier.")
 
-        # TESTING LINKS FOR CONTRIBUTOR: add contributor element with profile links
+        # TESTING LINKS FOR CONTRIBUTOR: add contributor element with profile links/identifiers
         kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
                   'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
         resource.create_metadata_element(self.res.short_id, 'contributor', **kwargs)

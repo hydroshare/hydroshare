@@ -307,18 +307,20 @@ class Party(AbstractMetaDataElement):
     def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
         identifier_links = request.POST.getlist('identifier_link')
+        identifiers = None
+        if identifier_links and identifier_names:
+            if len(identifier_names) != len(identifier_links):
+                raise Exception("Invalid data for identifiers")
+            identifiers = dict(zip(identifier_names, identifier_links))
+            if len(identifier_names) != len(identifiers.keys()):
+                raise Exception("Invalid data for identifiers")
 
-        if len(identifier_names) != len(identifier_links):
-            raise Exception("Invalid data for identifiers")
-        identifiers = dict(zip(identifier_names, identifier_links))
-        if len(identifier_names) != len(identifiers.keys()):
-            raise Exception("Invalid data for identifiers")
-
-        if as_json:
-            identifiers = json.dumps(identifiers)
+            if as_json:
+                identifiers = json.dumps(identifiers)
 
         post_data_dict = request.POST.dict()
-        post_data_dict['identifiers'] = identifiers
+        if identifiers is not None:
+            post_data_dict['identifiers'] = identifiers
 
         return post_data_dict
 
