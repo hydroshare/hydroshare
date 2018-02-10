@@ -117,10 +117,6 @@ class DiscoveryForm(FacetedSearchForm):
         resource_type_sq = None
         availability_sq = None
 
-        # spammed facets eliminated due to poor metadata quality
-        # variable_sq = None
-        # sample_medium_sq = None
-
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
 
@@ -134,53 +130,39 @@ class DiscoveryForm(FacetedSearchForm):
             if value:
                 if "creator" in field:
                     if creator_sq is None:
-                        creator_sq = SQ(creator=value)
+                        creator_sq = SQ(creator__exact=value)
                     else:
-                        creator_sq.add(SQ(creator=value), SQ.OR)
+                        creator_sq.add(SQ(creator__exact=value), SQ.OR)
 
                 if "contributor" in field:
                     if contributor_sq is None:
-                        contributor_sq = SQ(contributor=value)
+                        contributor_sq = SQ(contributor__exact=value)
                     else:
-                        contributor_sq.add(SQ(contributor=value), SQ.OR)
+                        contributor_sq.add(SQ(contributor__exact=value), SQ.OR)
 
                 elif "owner" in field:
                     if owner_sq is None:
-                        owner_sq = SQ(owner=value)
+                        owner_sq = SQ(owner__exact=value)
                     else:
-                        owner_sq.add(SQ(owner=value), SQ.OR)
+                        owner_sq.add(SQ(owner__exact=value), SQ.OR)
 
                 elif "subject" in field:
                     if subject_sq is None:
-                        subject_sq = SQ(subject=value)
+                        subject_sq = SQ(subject__exact=value)
                     else:
-                        subject_sq.add(SQ(subject=value), SQ.OR)
+                        subject_sq.add(SQ(subject__exact=value), SQ.OR)
 
                 elif "resource_type" in field:
                     if resource_type_sq is None:
-                        resource_type_sq = SQ(resource_type=value)
+                        resource_type_sq = SQ(resource_type__exact=value)
                     else:
-                        resource_type_sq.add(SQ(resource_type=value), SQ.OR)
+                        resource_type_sq.add(SQ(resource_type__exact=value), SQ.OR)
 
                 elif "availability" in field:
                     if availability_sq is None:
-                        availability_sq = SQ(availability=value)
+                        availability_sq = SQ(availability__exact=value)
                     else:
-                        availability_sq.add(SQ(availability=value), SQ.OR)
-
-                # spammed facets eliminated due to poor metadata quality
-
-                # elif 'variable' in field:
-                #     if variable_sq is None:
-                #         variable_sq = SQ(variable=value)
-                #     else:
-                #         variable_sq.add(SQ(variable=value), SQ.OR)
-
-                # elif 'sample_medium' in field:
-                #     if sample_medium_sq is None:
-                #         sample_medium_sq = SQ(sample_medium=value)
-                #     else:
-                #         sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
+                        availability_sq.add(SQ(availability__exact=value), SQ.OR)
 
                 else:
                     continue
@@ -197,12 +179,5 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(resource_type_sq)
         if availability_sq is not None:
             sqs = sqs.filter(availability_sq)
-
-        # spammed facets eliminated due to poor metadata quality
-
-        # if variable_sq is not None:
-        #     sqs = sqs.filter(variable_sq)
-        # if sample_medium_sq is not None:
-        #     sqs = sqs.filter(sample_medium_sq)
 
         return sqs
