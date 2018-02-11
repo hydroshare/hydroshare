@@ -15,7 +15,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title
+from hs_core.models import Title, ResourceFile
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm
@@ -219,17 +219,11 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         :return If the files meet the requirements of this aggregation type, then returns this
         aggregation class name, otherwise empty string.
         """
-        if len(files) < 3:
-            # minimum 3 files required
+
+        if _check_if_shape_files(files, temp_files=False):
+            return cls.__name__
+        else:
             return ""
-        for fl in files:
-            if fl.extension == ".zip":
-                return ""
-            if fl.extension not in cls.get_allowed_uploaded_file_types():
-                return ""
-
-        return cls.__name__
-
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
@@ -243,23 +237,47 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
 
         log = logging.getLogger()
         if file_id is None and folder_path is None:
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
-        # get the file from irods
-        res_file = utils.get_resource_file_by_id(resource, file_id)
+        if file_id is not None:
+            # user selected a file to set aggregation - get the file from irods
+            res_file = utils.get_resource_file_by_id(resource, file_id)
+        else:
+            # user selected a folder to set aggregation - check if the specified folder exists
+            storage = resource.get_irods_storage()
+            if folder_path.startswith("data/contents/"):
+                folder_path = folder_path[len("data/contents/"):]
+            path_to_check = os.path.join(resource.file_path, folder_path)
+            if not storage.exists(path_to_check):
+                raise ValidationError("Specified folder path does not exist in irods.")
+
+            # get the shp file from the specified folder location
+            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                 sub_folders=False)
+            if not res_files:
+                raise ValidationError("The specified folder does not contain any file.")
+            else:
+                # check if the specified folder is suitable for aggregation
+                if cls.check_files_for_aggregation_type(res_files):
+                    # there must be a .shp file - get that file for setting file type
+                    res_file = [f for f in res_files if f.extension.lower() == '.shp'][0]
+                else:
+                    res_file = None
 
         if res_file is None or not res_file.exists:
             raise ValidationError("File not found.")
 
-        if res_file.extension.lower() not in ('.zip', '.shp'):
+        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
+            # when a file is specified by the user for creating this file type it must be a
+            # zip or shp file
             raise ValidationError("Not a valid geographic feature file.")
 
         if res_file.has_logical_file:
-            raise ValidationError("Selected file is already part of a file type.")
+            raise ValidationError("Selected file is already part of a aggregation.")
 
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
@@ -281,7 +299,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         file_folder = res_file.file_folder
         file_type_success = False
         upload_folder = ''
-        msg = "GeoFeature file type. Error when setting file type. Error:{}"
+        msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
         with transaction.atomic():
             # create a GeoFeature logical file object to be associated with
             # resource files
@@ -291,45 +309,71 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             # name of the file selected to set file type
             logical_file.dataset_name = base_file_name
             logical_file.save()
+            files_to_add_to_resource = []
             try:
-                # create a folder for the geofeature file type using the base file
-                # name as the name for the new folder
-                new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                               base_file_name)
-                create_folder(resource.short_id, new_folder_path)
-                log.info("Folder created:{}".format(new_folder_path))
+                if folder_path is None:
+                    # we are here means aggregation is being created by selecting a file
 
-                new_folder_name = new_folder_path.split('/')[-1]
-                if file_folder is None:
-                    upload_folder = new_folder_name
+                    # create a folder for the geofeature file type using the base file
+                    # name as the name for the new folder
+                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                   base_file_name)
+                    create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
+
+                    new_folder_name = new_folder_path.split('/')[-1]
+                    if file_folder is None:
+                        upload_folder = new_folder_name
+                    else:
+                        upload_folder = os.path.join(file_folder, new_folder_name)
+                    # we need to upload files to the resource only if the selected file is a zip
+                    # file - since we created new files by unzipping
+                    if res_file.extension == ".zip":
+                        files_to_add_to_resource = shape_files
+                    else:
+                        # selected file must be a shp file - that means we didn't create any new
+                        # files - we just need to move all the existing files to a new folder
+                        for shp_res_file in shp_res_files:
+                            # first make the existing file as part of the aggregation/file type
+                            logical_file.add_resource_file(shp_res_file)
+                            # then move to the new folder
+                            tgt_file_path = os.path.join(new_folder_path, shp_res_file.file_name)
+                            src_file_path = os.path.join('data/contents', shp_res_file.short_path)
+                            move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
+                                                          tgt_file_path, validate_move_rename=False)
+
+                    for fl in files_to_add_to_resource:
+                        # we are here means the user selected a zip file to create aggregation
+                        uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                                     name=os.path.basename(fl))
+                        new_res_file = utils.add_file_to_resource(
+                            resource, uploaded_file, folder=upload_folder
+                        )
+
+                        # delete the generic logical file object
+                        if new_res_file.logical_file is not None:
+                            # deleting the file level metadata object will delete the associated
+                            # logical file object
+                            new_res_file.logical_file.metadata.delete()
+
+                        # make each resource file we added part of the logical file
+                        logical_file.add_resource_file(new_res_file)
                 else:
-                    upload_folder = os.path.join(file_folder, new_folder_name)
-                # add all new files to the resource
-                files_to_add_to_resource = shape_files
-                for fl in files_to_add_to_resource:
-                    uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                                 name=os.path.basename(fl))
-                    # the added resource file will be part of a new generic logical file by default
-                    new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=upload_folder
-                    )
+                    # user selected a folder to create aggregation
+                    # make all the files part of the aggregation
+                    for shp_res_file in res_files:
+                        logical_file.add_resource_file(shp_res_file)
 
-                    # delete the generic logical file object
-                    if new_res_file.logical_file is not None:
-                        # deleting the file level metadata object will delete the associated
-                        # logical file object
-                        new_res_file.logical_file.metadata.delete()
-
-                    # make each resource file we added part of the logical file
-                    logical_file.add_resource_file(new_res_file)
-
-                log.info("GeoFeature file type - files were added to the file type.")
+                log.info("GeoFeature aggregation - files were added to the aggregation.")
                 add_metadata(resource, meta_dict, xml_file, logical_file)
-                log.info("GeoFeature file type and resource level metadata updated.")
-                # delete the original resource files used as part of setting file type
-                for fl in shp_res_files:
-                    delete_resource_file(resource.short_id, fl.id, user)
-                log.info("Deleted original resource files.")
+                log.info("GeoFeature aggregation and resource level metadata updated.")
+                # set resource to private if logical file is missing required metadata
+                resource.update_public_and_discoverable()
+                # if zip file was selected for creating aggregation delete it
+                if folder_path is None and res_file.extension == ".zip":
+                    delete_resource_file(resource.short_id, res_file.id, user)
+                    log.info("Deleted the original zip file as part of creating an aggregation "
+                             "from this zip file.")
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -523,11 +567,13 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
     return shape_temp_files, shape_res_files
 
 
-def _check_if_shape_files(files):
+def _check_if_shape_files(files, temp_files=True):
     """
     checks if the list of file temp paths in *files* are part of shape files
     must have all these file extensions: (shp, shx, dbf)
-    :param files: list of files located in temp directory in django
+    :param files: list of files located in temp directory in django if temp_file is True, otherwise
+    list of resource files are from django db
+    :param  temp_files: a flag to treat list of files *files* as temp files or not
     :return: True/False
     """
     # Note: this is the original function (check_fn_for_shp) in geo feature resource receivers.py
@@ -536,24 +582,49 @@ def _check_if_shape_files(files):
     # at least needs to have 3 mandatory files: shp, shx, dbf
     if len(files) >= 3:
         # check that there are no files with same extension
-        file_extensions = set([os.path.splitext(os.path.basename(f).lower())[1] for f in files])
+        if temp_files:
+            # files are on temp directory
+            file_extensions = set([os.path.splitext(os.path.basename(f).lower())[1] for f in files])
+        else:
+            # files are in db
+            file_extensions = set([f.extension.lower() for f in files])
+
         if len(file_extensions) != len(files):
             return False
         # check if there is the xml file
         xml_file = ''
         for f in files:
-            if f.lower().endswith('.shp.xml'):
-                xml_file = f
+            if temp_files:
+                # files are on temp directory
+                if f.lower().endswith('.shp.xml'):
+                    xml_file = f
+            else:
+                # files are in db
+                if f.file_name.lower().endswith('.shp.xml'):
+                    xml_file = f
 
-        file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
-                          not f.lower().endswith('.shp.xml')])
+        if temp_files:
+            # files are on temp directory
+            file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
+                              not f.lower().endswith('.shp.xml')])
+        else:
+            # files are in db
+            file_names = set([os.path.splitext(os.path.basename(f.file_name))[0] for f in files if
+                              not f.file_name.lower().endswith('.shp.xml')])
         if len(file_names) > 1:
             # file names are not the same
             return False
+
         # check if xml file name matches with other file names
         if xml_file:
             # -8 for '.shp.xml'
-            if os.path.basename(xml_file)[:-8] not in file_names:
+            if temp_files:
+                # files are on temp directory
+                xml_file_name = os.path.basename(xml_file)
+            else:
+                # files are in db
+                xml_file_name = xml_file.file_name
+            if xml_file_name[:-8] not in file_names:
                 return False
         for ext in file_extensions:
             if ext not in GeoFeatureLogicalFile.get_allowed_storage_file_types():
@@ -565,12 +636,14 @@ def _check_if_shape_files(files):
         return False
 
     # test if we can open the shp file
-    shp_file = [f for f in files if f.lower().endswith('.shp')][0]
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    dataset = driver.Open(shp_file)
-    if dataset is None:
-        return False
-    dataset = None
+    if temp_files:
+        # files are on temp directory
+        shp_file = [f for f in files if f.lower().endswith('.shp')][0]
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        dataset = driver.Open(shp_file)
+        if dataset is None:
+            return False
+        dataset = None
 
     return True
 
