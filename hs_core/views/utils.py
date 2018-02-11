@@ -485,11 +485,8 @@ def link_irods_file_to_django(resource, filepath):
             file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
-            # this should assign a logical file object to this new file
-            # if this resource supports logical file
-            resource.set_default_logical_file()
 
-
+            
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
