@@ -4,8 +4,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor
 
-from hs_file_types.models import GenericLogicalFile, GeoFeatureFileMetaData, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, TimeSeriesFileMetaData
+from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
+    NetCDFLogicalFile, TimeSeriesLogicalFile
 
 
 class CompositeResource(BaseResource):
@@ -83,7 +83,7 @@ class CompositeResource(BaseResource):
             return aggregation_type_to_set
         if len(files_in_folder) > 1:
             # check for raster and geo feature
-            aggregation_type_to_set = GeoFeatureFileMetaData.check_files_for_aggregation_type(
+            aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
@@ -99,7 +99,7 @@ class CompositeResource(BaseResource):
             if aggregation_type_to_set:
                 return aggregation_type_to_set
             # check for TimeSeries aggregation type
-            aggregation_type_to_set = TimeSeriesFileMetaData.check_files_for_aggregation_type(
+            aggregation_type_to_set = TimeSeriesLogicalFile.check_files_for_aggregation_type(
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
