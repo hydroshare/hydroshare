@@ -409,7 +409,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             raise ValidationError("Not a NetCDF file.")
 
         if res_file.has_logical_file:
-            raise ValidationError("The selected file is already part of a logical file.")
+            raise ValidationError("The selected file is already part of an aggregation.")
 
         # base file name (no path included)
         file_name = res_file.file_name
@@ -463,7 +463,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                                                        nc_file_name)
 
                         create_folder(resource.short_id, new_folder_path)
-                        log.info("Folder created:{}".format(new_folder_path))
+                        log.info("NetCDF Aggregation creation - folder created:{}".format(
+                            new_folder_path))
                         # first make the selected file as part of the aggregation/file type
                         logical_file.add_resource_file(res_file)
 
@@ -474,9 +475,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                                       tgt_file_path, validate_move_rename=False)
 
                         new_folder_name = new_folder_path.split('/')[-1]
-                    if file_folder is None:
                         upload_folder = new_folder_name
                     else:
+                        # folder has been selected to create aggregation
                         upload_folder = folder_path
                         logical_file.add_resource_file(res_file)
 
@@ -484,8 +485,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     for f in files_to_add_to_resource:
                         uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                      name=os.path.basename(f))
-                        # the added resource file will be part of a new generic logical file
-                        # by default
+
                         new_res_file = utils.add_file_to_resource(
                             resource, uploaded_file, folder=upload_folder
                         )
@@ -499,7 +499,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # make each resource file we added part of the logical file
                         logical_file.add_resource_file(new_res_file)
 
-                    log.info("NetCDF file type - new files were added to the resource.")
+                    log.info("NetCDF aggregation creation - new files were added to the resource.")
 
                     # use the extracted metadata to populate resource metadata
                     for element in resource_metadata:
@@ -513,7 +513,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         else:
                             resource.metadata.create_element(k, **v)
 
-                    log.info("Resource - metadata was saved to DB")
+                    log.info("NetCDF Aggregation creation - Resource metadata was saved to DB")
 
                     # use the extracted metadata to populate file metadata
                     for element in file_type_metadata:
@@ -531,25 +531,25 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                     resource.metadata.create_element('subject', value=kw)
                         else:
                             logical_file.metadata.create_element(k, **v)
-                    log.info("NetCDF file type - metadata was saved to DB")
+                    log.info("NetCDF aggregation - metadata was saved in aggregation")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
                 except Exception as ex:
-                    msg = "NetCDF file type. Error when setting file type. Error:{}"
+                    msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
                     msg = msg.format(ex.message)
                     log.exception(msg)
                     if upload_folder:
                         # delete any new files uploaded as part of setting file type
                         folder_to_remove = os.path.join('data', 'contents', upload_folder)
                         remove_folder(user, resource.short_id, folder_to_remove)
-                        log.info("Deleted newly created file type folder")
+                        log.info("Deleted newly created aggregation folder")
                     raise ValidationError(msg)
                 finally:
                     # remove temp dir
                     if os.path.isdir(temp_dir):
                         shutil.rmtree(temp_dir)
         else:
-            err_msg = "Not a valid NetCDF file. File type file validation failed."
+            err_msg = "Not a valid NetCDF file. Aggregation file validation failed."
             log.error(err_msg)
             # remove temp dir
             if os.path.isdir(temp_dir):
