@@ -12756,13 +12756,6 @@ SELECT pg_catalog.setval('hs_core_contributor_id_seq', 1, false);
 --
 
 COPY hs_core_coremetadata (id) FROM stdin;
-1
-2
-3
-4
-5
-6
-7
 \.
 
 
