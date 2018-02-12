@@ -1688,6 +1688,22 @@ a.tag:hover {
 .tab-elements .nav-tabs > li.active > a {
     border-bottom-color: transparent;
 }
+
+.full-width-tabs-container .panel-heading {
+    color: #757575;
+    text-shadow: 0 1px 0 #fff;
+}
+
+.nav-tabs > li > a {
+    background: #FFF;
+    color:#757575;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
 /* ===== Responsive CSS ===== */
 
 .navbar-inverse .navbar-toggle:hover,
@@ -1923,7 +1939,7 @@ ul.resource-search-options {
 }
 
 /* New access panel style */
-div.user-scope .user-username-content {
+table.user-scope .user-username-content {
     color: rgba(0,0,0,0.54);
 }
 
@@ -1955,6 +1971,14 @@ td.user-actions .btn-remove-row {
 td.user-actions > span:hover {
     cursor: pointer;
     color: #777;
+}
+
+table.user-scope td:first-child {
+	padding-right: 20px;
+}
+
+table.user-scope tr {
+	border-bottom: 0 !important;
 }
 
 .access-table tr:last-child {
@@ -2340,48 +2364,13 @@ div#coverage-spatial .coordinates-label-addon {
     margin-left: -1px;
 }
 
-
 /*			User profile revamp css			*/
-.profile-pic {
-    width: 150px;
-    height: 150px;
-    margin: auto;
-    margin-top: 20px;
-}
-
-.profile-pic:before {
-    font-size: 130px;
-    width: 150px;
-    height: 150px;
-    text-align: center;
-    line-height: 100px;
-    border: 7px solid #DDD;
-    border-radius: 50%;
-    color: #2D9EB3;
-}
-
 .profile-pic-thumbnail {
     width: 40px;
     height: 40px;
     margin-right:10px;
     margin-bottom: 10px;
     float: left;
-}
-
-.dropdown-profile-pic-thumbnail {
-    width: 80px;
-    height: 80px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-}
-
-.profile-header {
-    margin: 40px 0;
-}
-
-#exposeMask {
-    width: auto !important;
-    height: auto !important;
 }
 
 .round-image {
@@ -2566,36 +2555,11 @@ table.overview tr > td:first-child {
     margin-bottom: 10px;
 }
 
-.table-res-type-icon {
-    background-color: #FFF;
-    border: 1px solid #ddd;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-}
-
-.table-user-contributions tbody > tr > td {
-    border: 0;
-    cursor:pointer;
-}
-
-.table-user-contributions tr {
-    border: 1px solid #DDD;
-}
-
-.table-user-contributions tbody > tr.active {
-    border-left: 2px solid #0A91AB;
-    pointer-events: none;
-}
-
-.table-user-contributions tbody > tr.active td:first-child {
-    font-weight:bold;
-}
-
-.contribution {
-    border: 1px solid #ddd;
-    margin-bottom: 20px;
-    padding: 10px 0;
+.dropdown-profile-pic-thumbnail {
+    width: 80px;
+    height: 80px;
+    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
 h4.title {
@@ -3147,6 +3111,14 @@ span.you-flag {
     margin-bottom:10px;
 }
 
+.table-res-type-icon {
+    background-color: #FFF;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
 /*  Home page revamp */
 #home-page-carousel {
 	height: 400px;
@@ -3442,7 +3414,7 @@ div.description.active {
     border-bottom-left-radius: 4px;
 }
 
-#btn-save-profile {
+.btn-save-profile {
     margin-left: 10px;
 }
 

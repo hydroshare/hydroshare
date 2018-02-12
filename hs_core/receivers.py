@@ -2,7 +2,7 @@
 
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, Party
 from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -22,9 +22,21 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == "description":   # abstract
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "creator":
-        element_form = CreatorValidationForm(request.POST)
+        try:
+            post_data_dict = Party.get_post_data_with_identifiers(request=request)
+        except Exception as ex:
+            return {'is_valid': False, 'element_data_dict': None,
+                    "errors": {"identifiers": [ex.message]}}
+
+        element_form = CreatorValidationForm(post_data_dict)
+
     elif element_name == "contributor":
-        element_form = ContributorValidationForm(request.POST)
+        try:
+            post_data_dict = Party.get_post_data_with_identifiers(request=request)
+        except Exception as ex:
+            return {'is_valid': False, 'element_data_dict': None,
+                    "errors": {"identifiers": [ex.message]}}
+        element_form = ContributorValidationForm(post_data_dict)
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
     elif element_name == 'source':
@@ -84,6 +96,12 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         form_data = {}
         for field_name in element_validation_form().fields:
             if element_name.lower() == "creator" or element_name.lower() == "contributor":
+                try:
+                    post_data_dict = Party.get_post_data_with_identifiers(request=request)
+                except Exception as ex:
+                    return {'is_valid': False, 'element_data_dict': None,
+                            "errors": {"identifiers": [ex.message]}}
+
                 # for creator or contributor who is not a hydroshare user the 'description'
                 # key might be missing in the POST form data
                 if field_name == 'description':
@@ -92,11 +110,15 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                         matching_key = matching_key[0]
                     else:
                         continue
+                elif field_name == 'identifiers':
+                    matching_key = 'identifiers'
                 else:
                     matching_key = [key for key in request.POST if '-'+field_name in key][0]
+
+                form_data[field_name] = post_data_dict[matching_key]
             else:
                 matching_key = [key for key in request.POST if '-'+field_name in key][0]
-            form_data[field_name] = request.POST[matching_key]
+                form_data[field_name] = request.POST[matching_key]
 
         element_form = element_validation_form(form_data)
     elif element_name == 'rights':
