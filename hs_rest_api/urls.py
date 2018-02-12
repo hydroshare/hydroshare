@@ -4,6 +4,8 @@ from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 
+from .resources.file_metadata import FileMetaDataEndpoint
+
 from rest_framework_swagger.views import get_swagger_view
 
 schema_view = get_swagger_view(title='Hydroshare API')
@@ -87,6 +89,9 @@ urlpatterns = patterns(
         core_views.resource_rest_api.ResourceFileCRUD.as_view(),
         name='get_update_delete_resource_file'),
 
+    url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/metadata/$',
+        FileMetaDataEndpoint.as_view, name="resource_file_metadata")
+
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$',
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
@@ -149,4 +154,6 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
+
+
 )
