@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 import zipfile
@@ -16,6 +15,7 @@ from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
+from theme.models import QuotaMessage
 
 
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
@@ -144,7 +144,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
             {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
                              'organization': 'Utah State University',
-                             'profile_links': [{'type': 'yahooProfile', 'url': 'http://yahoo.com/LH001'}]}},
+                             'identifiers': {'ORCID': 'http://orcid.org/john', 'ResearchGate': 'http://researchgate.org/john'}}},
             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
@@ -413,11 +413,19 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_over_quota(self):
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         uquota.used_value = uquota.allocated_value * 1.3
         uquota.save()
-        # create_resource should raise quota exception now that the creator user is over hard limit
+
+        # create_resource should raise quota exception now that the creator user is over hard
+        # limit and enforce quota flag is set to True
         with self.assertRaises(QuotaException):
             resource_pre_create_actions(resource_type='GenericResource',
                                         resource_title='My Test Resource',
@@ -425,3 +433,19 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                         files=(self.file_one,),
                                         metadata=None,
                                         requesting_user=self.user,)
+
+        qmsg.enforce_quota = False
+        qmsg.save()
+        # create resource should not raise quota exception now that enforce_quota flag
+        # is set to False
+        try:
+            resource_pre_create_actions(resource_type='GenericResource',
+                                        resource_title='My Test Resource',
+                                        page_redirect_url_key=None,
+                                        files=(self.file_one,),
+                                        metadata=None,
+                                        requesting_user=self.user, )
+        except QuotaException as ex:
+            self.fail(
+                "create resource should not raise QuotaException for over quota cases "
+                " if quota is not enforced - Quota Exception: " + ex.message)

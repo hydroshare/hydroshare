@@ -2,6 +2,7 @@
 
 from dateutil import parser
 import tempfile
+import os
 
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -108,6 +109,27 @@ class TestCaseCommonUtilities(object):
         self.irods_storage = IrodsStorage('federated')
         for file_name, target_name in file_name_to_target_name_dict.iteritems():
             self.irods_storage.saveFile(file_name, target_name)
+
+    def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
+        '''
+        Have to use HS_USER_ZONE_PROXY_USER with rodsadmin role to get user type AVU in user zone
+        and verify its quota usage is set correctly
+        :param attname: quota usage attribute name set on iRODS proxy user in user zone
+        :param qsize: quota size (type string) to be verified to equal to the value set for attname.
+        '''
+        istorage = IrodsStorage()
+        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
+                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                  host=settings.HS_USER_ZONE_HOST,
+                                  port=settings.IRODS_PORT,
+                                  zone=settings.HS_USER_IRODS_ZONE,
+                                  sess_id='user_proxy_session')
+
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
+                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        get_qsize = istorage.getAVU(uz_bagit_path, attname)
+        self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):
         """Test common iRODS file operations.
