@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from hs_access_control.models import PrivilegeCodes
 from hs_core.models import BaseResource
+from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
 # from hs_core.hydroshare.utils import user_from_id
 import re
@@ -188,3 +189,64 @@ class Features(object):
                         else:
                             apps[user_id].add(resource_id)
         return apps
+
+    @staticmethod
+    def resource_features(obj):
+        ind = BaseResourceIndex()
+        output = {}
+        output['sample_medium'] = ind.prepare_sample_medium(obj)
+        output['creator'] = ind.prepare_creator(obj)
+        output['title'] = ind.prepare_title(obj)
+        output['abstract'] = ind.prepare_abstract(obj)
+        output['author_raw'] = ind.prepare_author_raw(obj)
+        output['author'] = ind.prepare_author(obj)
+        output['author_url'] = ind.prepare_author_url(obj)
+        output['creator'] = ind.prepare_creator(obj)
+        output['contributor'] = ind.prepare_contributor(obj)
+        output['subject'] = ind.prepare_subject(obj)
+        output['organization'] = ind.prepare_organization(obj)
+        output['publisher'] = ind.prepare_publisher(obj)
+        output['creator_email'] = ind.prepare_creator_email(obj)
+        output['availability'] = ind.prepare_availability(obj)
+        output['replaced'] = ind.prepare_replaced(obj)
+        output['coverage'] = ind.prepare_coverage(obj)
+        output['coverage_type'] = ind.prepare_coverage_type(obj)
+        output['coverage_east'] = ind.prepare_coverage_east(obj)
+        output['coverage_north'] = ind.prepare_coverage_north(obj)
+        output['coverage_northlimit'] = ind.prepare_coverage_northlimit(obj)
+        output['coverage_eastlimit'] = ind.prepare_coverage_eastlimit(obj)
+        output['coverage_southlimit'] = ind.prepare_coverage_southlimit(obj)
+        output['coverage_westlimit'] = ind.prepare_coverage_westlimit(obj)
+        output['coverage_start_date'] = ind.prepare_coverage_start_date(obj)
+        output['coverage_end_date'] = ind.prepare_coverage_end_date(obj)
+        output['format'] = ind.prepare_format(obj)
+        output['identifier'] = ind.prepare_identifier(obj)
+        output['language'] = ind.prepare_language(obj)
+        output['source'] = ind.prepare_source(obj)
+        output['relation'] = ind.prepare_relation(obj)
+        output['resource_type'] = ind.prepare_resource_type(obj)
+        output['comment'] = ind.prepare_comment(obj)
+        output['comments_count'] = ind.prepare_comments_count(obj)
+        output['owner_login'] = ind.prepare_owner_login(obj)
+        output['owner'] = ind.prepare_owner(obj)
+        output['owners_count'] = ind.prepare_owners_count(obj)
+        output['geometry_type'] = ind.prepare_geometry_type(obj)
+        output['field_name'] = ind.prepare_field_name(obj)
+        output['field_type'] = ind.prepare_field_type(obj)
+        output['field_type_code'] = ind.prepare_field_type_code(obj)
+        output['variable'] = ind.prepare_variable(obj)
+        output['variable_type'] = ind.prepare_variable_type(obj)
+        output['variable_shape'] = ind.prepare_variable_shape(obj)
+        output['variable_descriptive_name'] = ind.prepare_variable_descriptive_name(obj)
+        output['variable_speciation'] = ind.prepare_variable_speciation(obj)
+        output['site'] = ind.prepare_site(obj)
+        output['method'] = ind.prepare_method(obj)
+        output['quality_level'] = ind.prepare_quality_level(obj)
+        output['data_source'] = ind.prepare_data_source(obj)
+        output['sample_medium'] = ind.prepare_sample_medium(obj)
+        output['units'] = ind.prepare_units(obj)
+        output['units_type'] = ind.prepare_units_type(obj)
+        output['aggregation_statistics'] = ind.prepare_aggregation_statistics(obj)
+        output['absolute_url'] = ind.prepare_absolute_url(obj)
+        output['extra'] = ind.prepare_extra(obj)
+        return output
