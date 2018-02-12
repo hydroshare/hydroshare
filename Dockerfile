@@ -9,7 +9,9 @@ RUN pip install \
   django-test-without-migrations \
   django-rest-swagger \
   jsonschema \
-  nameparser
+  nameparser \
+  probablepeople \
+  geopy
 ### End - HydroShare Development Image Additions ###
 
 USER root

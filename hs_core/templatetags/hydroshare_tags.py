@@ -7,6 +7,8 @@ from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
+from hs_core.search_indexes import normalize_name
+
 
 register = template.Library()
 
@@ -153,3 +155,22 @@ def res_uuid_from_res_path(path):
 @register.filter
 def remove_last_char(statement):
     return statement[:len(statement)-1]
+
+
+@register.filter
+def five_options_around(page):
+    """ Create five page numbers around current page for discovery pagination. """
+    if page.number <= 3:
+        return range(1, min(5, page.paginator.num_pages) + 1)
+    elif page.number >= (page.paginator.num_pages - 2):
+        return range(max((page.paginator.num_pages - 4), 1),
+                     page.paginator.num_pages + 1)
+    else:
+        return range(max(1, (page.number - 2)),
+                     min((page.number + 2), page.paginator.num_pages) + 1)
+
+
+@register.filter
+def normalize_human_name(name):
+    """ Normalize 'First M. Last' to 'Last, First M.'"""
+    return normalize_name(name)
