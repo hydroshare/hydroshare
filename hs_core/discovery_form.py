@@ -180,11 +180,4 @@ class DiscoveryForm(FacetedSearchForm):
         if availability_sq is not None:
             sqs = sqs.filter(availability_sq)
 
-        # spammed facets eliminated due to poor metadata quality
-
-        # if variable_sq is not None:
-        #     sqs = sqs.filter(variable_sq)
-        # if sample_medium_sq is not None:
-        #     sqs = sqs.filter(sample_medium_sq)
-
         return sqs
