@@ -860,6 +860,7 @@ def get_party_data_from_user(user):
     party_data['description'] = '/user/{uid}/'.format(uid=user.pk)
     party_data['phone'] = user_profile.phone_1
     party_data['organization'] = user_profile.organization
+    party_data['identifiers'] = user_profile.identifiers
     return party_data
 
 
