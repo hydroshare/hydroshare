@@ -568,6 +568,7 @@ $(document).ready(function () {
     }
 
     $(".icon-remove").click(onRemoveKeyword);
+
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {
         e.which = e.which || e.keyCode;

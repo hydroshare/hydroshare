@@ -23,7 +23,7 @@
         </td></tr>
         <tr><th>Owners:</th><td>
             {% for u in owners %}
-                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                 <span>{{ u|contact }}</span>
             {% endfor %}
         </td></tr>
@@ -39,7 +39,7 @@
                 <th>Authors:</th>
                 <td><span id="authors">
                         {% for author in creator_formset.initial %}
-                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                            {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                             {% if author.name %}
                                 {% if author.description %}
                                     <a href="{{ author.description }}">{{ author.name }}</a>
@@ -59,7 +59,7 @@
             </tr>
             <tr><th>Owners:</th><td>
                 {% for u in owners %}
-                    {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                    {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                     <span>{{ u|contact }}</span>
                 {% endfor %}
             </td></tr>
