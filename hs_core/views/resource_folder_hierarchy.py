@@ -74,9 +74,9 @@ def data_store_structure(request):
         dirs = []
         for dname in store[0]:  # directories
             d_pk = dname.decode('utf-8')
-            name_with_full_path = os.path.join(res_coll, dname)
+            name_with_full_path = os.path.join(res_coll, d_pk)
             # TODO /django_irods/download/ shouldn't be hardcoded
-            d_url = '/django_irods/download/' + name_with_full_path
+            d_url = '/django_irods/download/zips/' + name_with_full_path
             # TODO check if folder is found in django
             dirs.append({'name': d_pk, 'url': d_url})
 

@@ -13,6 +13,7 @@ import requests
 from xml.etree import ElementTree
 
 from rest_framework import status
+from django_irods.storage import IrodsStorage
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -159,6 +160,36 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         # Delete upload file
         os.unlink(zip_file_path)
 
+
+@shared_task
+def delete_zip(resource_id, zip_path):
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = get_resource_by_shortkey(resource_id)
+    istorage = res.get_irods_storage()
+
+    irods_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    full_zip_path = '{irods}/{path}'.format(irods=irods_prefix, res_id=resource_id, path=zip_path)
+    istorage.delete(full_zip_path)
+
+@shared_task
+def create_temp_zip(resource_id, input_path, output_path):
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = get_resource_by_shortkey(resource_id)
+    istorage = res.get_irods_storage()
+    path = str(input_path)[len("/data/contents"):]
+
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    full_input_path = '{irods}/{res_id}/{path}'.format(irods=irods_dest_prefix, res_id=resource_id, path=input_path)
+    if res.resource_federation_path:
+        full_input_path = os.path.join(res.resource_federation_path, resource_id, input_path)
+        #full_output_path = os.path.join(res.resource_federation_path, resource_id, path + ".zip")
+
+    try:
+        istorage.zipup(full_input_path, output_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return False
+    return True
 
 @shared_task
 def create_bag_by_irods(resource_id):
