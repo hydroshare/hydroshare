@@ -552,11 +552,6 @@ $(document).ready(function () {
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    $(".list-separator").parent().hover(function(){
-        $(this).css("text-decoration", "none");
-        $(this).css("pointer-events", "none");
-    });
-
     var keywordString = $("#keywords-string").val();
     $("#id-subject").find("#id_value").val(keywordString);
 

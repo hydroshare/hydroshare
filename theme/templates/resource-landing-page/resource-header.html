@@ -38,7 +38,6 @@
             <tr>
                 <th>Authors:</th>
                 <td><span id="authors">
-
                         {% for author in creator_formset.initial %}
                             {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
                             {% if author.name %}
