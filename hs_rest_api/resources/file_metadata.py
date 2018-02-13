@@ -8,7 +8,13 @@ from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
 
-class FileMetaData(generics.RetrieveUpdateDestroyAPIView):
+class FileMetaDataListCreate(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminUser,
+
+
+class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, pk, pathname):
         return HttpResponseRedirect(url)
         pass

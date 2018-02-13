@@ -4,7 +4,7 @@ from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 
-from .resources.file_metadata import FileMetaDataEndpoint
+from .resources.file_metadata import FileMetaDataListCreate, FileMetaDataRetrieveUpdateDestroy
 
 from rest_framework_swagger.views import get_swagger_view
 
@@ -90,7 +90,10 @@ urlpatterns = patterns(
         name='get_update_delete_resource_file'),
 
     url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/metadata/$',
-        FileMetaDataEndpoint.as_view, name="resource_file_metadata")
+        FileMetaDataListCreate.as_view, name="resource_file_metadata"),
+
+    url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/metadata/(?<metadata_id>.*)/$',
+        FileMetaDataRetrieveUpdateDestroy.as_view, name="resource_file_metadata"),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$',
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
