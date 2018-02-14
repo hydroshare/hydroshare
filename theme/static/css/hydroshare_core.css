@@ -2740,7 +2740,7 @@ span.you-flag {
 }
 
 #items-discovered, #item-selectors {
-	width: 100% !important;
+	width: calc(100% - 2px) !important;	/* Makes up for border width */
 }
 
 .resource-custom-table {
@@ -2752,7 +2752,7 @@ span.you-flag {
 }
 
 #collected-by-table {
-    border: 0px !important;
+    border: 0 !important;
 }
 
 #item-selectors.group-resource-list {
