@@ -12,9 +12,9 @@
                     {% else %}
                         <span>{{ cr.name }}</span>
                     {% endif %}
-                {% else %}
-                    {% if cr.description %}
-                        <a href="{{ cr.description }}">{{ cr.organization }}</a>
+                {% else %}{# Author is an organization #}
+                    {% if cr.homepage %}
+                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
                     {% else %}
                         <span>{{ cr.organization }}</span>
                     {% endif %}
@@ -46,9 +46,9 @@
                                 {% else %}
                                     <span>{{ author.name }}</span>
                                 {% endif %}
-                            {% else %}
-                                {% if author.description %}
-                                    <a href="{{ author.description }}">{{ author.organization }}</a>
+                            {% else %}{# Author is an organization #}
+                                {% if author.homepage %}
+                                    <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
                                 {% else %}
                                     <span>{{ author.organization }}</span>
                                 {% endif %}
