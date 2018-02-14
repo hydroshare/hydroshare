@@ -18,7 +18,6 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-
     // Set initial coverage fields state
     if ($("#id_type_1").is(':checked')) { //box type coverage
         $("#div_id_north").hide();
@@ -42,9 +41,9 @@ $(document).ready(function () {
 function drawInitialShape() {
     // This field is populated if the page is in view mode
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
-
     var resourceType = $("#resource-type").val();
     var spatialCoverageType = $("#spatial-coverage-type").val();
+
     // Center the map
     if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
         deleteAllShapes();
@@ -76,9 +75,10 @@ function drawInitialShape() {
                 position: myLatLng,
                 map: coverageMap
             });
+
             allShapes.push(marker);
-            // Center map at new market
-            coverageMap.setCenter(marker.getPosition());
+            coverageMap.setCenter(marker.getPosition());    // Center map at new market
+
             $("#resetZoomBtn").click(function () {
                 coverageMap.setCenter(marker.getPosition());
             });
@@ -175,7 +175,7 @@ function initMap() {
         // data-shape-type is set to have a value only in resource view mode
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
         resourceType = $("#resource-type").val();
-        if (resourceType === "Time Series" || resourceType === "Composite Resource"){
+        if (resourceType === "Time Series"){
             // set to view mode
             shapeType = " ";
         }

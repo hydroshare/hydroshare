@@ -241,19 +241,20 @@
                             </div>
                             <div class="col-xs-12 col-sm-6 col-md-6 col-lg-9" id="coverage-header">
                                 <div id="div_id_type">
-                                <label class="radio-inline">
+                                    <label class="radio-inline">
                                         <input type="radio"
                                                {% if coverage_spatial_form.initial.type == "point" %}checked="checked"{% endif %}
                                                name="type" id="id_type_2"
-                                               value="point">Point</label>
+                                               value="point">Point
+                                    </label>
                                     <label class="radio-inline">
                                         <input type="radio"
                                                {% if coverage_spatial_form.initial.type == "box" %}checked="checked"{% endif %}
                                                name="type" id="id_type_1"
-                                               value="box">Box</label>
-
-
+                                               value="box">Box
+                                    </label>
                                 </div>
+
                                 <div id="coverageMap"></div>
 
                                 <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"

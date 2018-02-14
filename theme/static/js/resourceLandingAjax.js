@@ -564,12 +564,13 @@ function share_resource_ajax_submit(form_id) {
 }
 
 function metadata_update_ajax_submit(form_id){
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
+    const $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata updated.\
     </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+
+    var $alert_error = '<div class="alert alert-danger" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Error! </strong> \
         Metadata failed to update.\
@@ -582,6 +583,7 @@ function metadata_update_ajax_submit(form_id){
     var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
     var datastring = $form.serialize();
+
     $.ajax({
         type: "POST",
         url: $form.attr('action'),
@@ -1534,10 +1536,10 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $box_radio = $id_type_div.find("#id_type_1");
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
-            $box_radio.parent().closest("label").addClass("text-muted");
-            $box_radio.attr('disabled', true);
-            $point_radio.parent().closest("label").removeClass("text-muted");
-            $point_radio.attr('disabled', false);
+            // $box_radio.parent().closest("label").addClass("text-muted");
+            // $box_radio.attr('disabled', true);
+            // $point_radio.parent().closest("label").removeClass("text-muted");
+            // $point_radio.attr('disabled', false);
             $("#id_north").val(spatialCoverage.north);
             $("#id_east").val(spatialCoverage.east);
             $("#div_id_north").show();
@@ -1552,10 +1554,10 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         }
         else { //coverage type is 'box'
             $box_radio.attr('checked', 'checked');
-            $point_radio.parent().closest("label").addClass("text-muted");
-            $point_radio.attr('disabled', true);
-            $box_radio.parent().closest("label").removeClass("text-muted");
-            $box_radio.attr('disabled', false);
+            // $point_radio.parent().closest("label").addClass("text-muted");
+            // $point_radio.attr('disabled', true);
+            // $box_radio.parent().closest("label").removeClass("text-muted");
+            // $box_radio.attr('disabled', false);
             $("#id_eastlimit").val(spatialCoverage.eastlimit);
             $("#id_northlimit").val(spatialCoverage.northlimit);
             $("#id_westlimit").val(spatialCoverage.westlimit);
