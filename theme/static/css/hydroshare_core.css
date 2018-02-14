@@ -2740,7 +2740,7 @@ span.you-flag {
 }
 
 #items-discovered, #item-selectors {
-	width: calc(100% - 2px) !important;	/* Makes up for border width */
+	width: calc(100% - 2px) !important;		/* Makes up for border width */
 }
 
 .resource-custom-table {
