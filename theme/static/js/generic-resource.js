@@ -616,7 +616,7 @@ $(document).ready(function () {
     }
     // disable all save changes button on load
     $("form").each(function () {
-        $save_button = $(this).find("button").first();
+        var $save_button = $(this).find("button").first();
         if ($save_button.text() === "Save changes") {
             $save_button.hide();
         }
