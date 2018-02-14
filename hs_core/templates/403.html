@@ -19,7 +19,7 @@
                             <th>Owners:</th>
                             <td>
                             {% for u in res.raccess.owners.all %}
-                                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                                 <span>{{ u|contact }}</span>
                             {% endfor %}
                             </td>
