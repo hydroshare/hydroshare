@@ -176,13 +176,11 @@ def create_temp_zip(resource_id, input_path, output_path):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()
-    path = str(input_path)[len("/data/contents"):]
 
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
     full_input_path = '{irods}/{res_id}/{path}'.format(irods=irods_dest_prefix, res_id=resource_id, path=input_path)
     if res.resource_federation_path:
         full_input_path = os.path.join(res.resource_federation_path, resource_id, input_path)
-        #full_output_path = os.path.join(res.resource_federation_path, resource_id, path + ".zip")
 
     try:
         istorage.zipup(full_input_path, output_path)
