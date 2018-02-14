@@ -311,8 +311,10 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    var $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
-    var $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
+    var $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i>" +
+        "<strong>Success:</strong> Extended metadata updated";
+    var $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i>" +
+        "<strong>Error:</strong> Extended metadata failed to update";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -461,6 +463,7 @@ $(document).ready(function () {
         else
             $('#download-bag-btn').attr('disabled', 'disabled');
     });
+
     $("#agree-chk-download-file").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked)
@@ -498,6 +501,7 @@ $(document).ready(function () {
         $("div[data-hs-user-type]").hide();
         $("div[data-hs-user-type='" + type + "']").show();
     }
+
     $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
     $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
 
@@ -507,6 +511,7 @@ $(document).ready(function () {
         $("div[data-hs-org-type]").hide();
         $("div[data-hs-org-type='" + type + "']").show();
     }
+
     $("input[name='choose_org_type']").click(onOrgTypeChange);
 
     // Display toggle for author type radio buttons ('person' or 'organization')
@@ -515,6 +520,7 @@ $(document).ready(function () {
         $("div[data-hs-person-type]").hide();
         $("div[data-hs-person-type='" + type + "']").show();
     }
+
     $("input[name='add_author_person']").click(onPersonTypeChange);
 
 
@@ -557,6 +563,7 @@ $(document).ready(function () {
     // Populate keywords field
     var keywords = keywordString.split(",");
     $("#lst-tags").empty();
+
     for (var i = 0; i < keywords.length; i++) {
         if (keywords[i] != "") {
             var li = $("<li class='tag'><span></span></li>");
@@ -750,18 +757,13 @@ $(document).ready(function () {
         showAddEditExtraMetaPopup(false, '');
     });
 
-    $(".btn-edit-extra-metadata").click(function () {
-        var loopCounter = $(this).attr("data-loop-counter");
-        showAddEditExtraMetaPopup(true, loopCounter);
-    });
-
     $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
         removeExtraMetadataFromTable(loopCounter);
         saveExtraMetadata();
     });
 
-    $("#extraMetaTable").on("click", ".btn-edit-icon", function () {
+    $("#extraMetaTable").on("click", ".btn-edit-extra-metadata", function () {
         var index = $(this).attr("data-loop-counter");
         showAddEditExtraMetaPopup(true, index);
     });
