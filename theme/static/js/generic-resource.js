@@ -271,7 +271,6 @@ function addEditExtraMeta2Table() {
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
 
     $('#extraMetaDialog').modal('hide');
-    $('#save-extra-meta-btn').show();
 
     // Bind click events
     $(".btn-edit-icon").click(function() {
@@ -339,7 +338,6 @@ function saveExtraMetadata()
         success: function(result) {
             json_response = result;
             if (json_response.status === 'success') {
-                 $('#save-extra-meta-btn').hide();
                  customAlert($alert_success_extra_meta, 3000);
                 if(json_response.is_dirty) {
                     $('#netcdf-file-update').show();
@@ -355,11 +353,9 @@ function saveExtraMetadata()
     });
 } // function saveExtraMetadata()
 
-function removeExtraMetadataFromTable(row_id)
-{
+function removeExtraMetadataFromTable(row_id) {
     var removed_row = $('#extraMetaTable').DataTable().row('#' + row_id);
     removed_row.remove().draw(false);
-    $('#save-extra-meta-btn').show();
 }
 
 function update_download_status(task_id, download_path) {
@@ -745,7 +741,6 @@ $(document).ready(function () {
             $("#invite-flag button[data-value='users']").disabled = true;
             $("#invite-flag button[data-value='groups']").disabled = false;
 
-
             $("#invite-flag button[data-value='users']").removeClass("btn-primary");
             $("#invite-flag button[data-value='users']").addClass("btn-default");
             $("#invite-flag button[data-value='groups']").removeClass("btn-default");
@@ -765,9 +760,8 @@ $(document).ready(function () {
     $(".btn-remove-extra-metadata").click(function () {
         var loopCounter = $(this).attr("data-loop-counter");
         removeExtraMetadataFromTable(loopCounter);
+        saveExtraMetadata();
     });
-
-    $("#save-extra-meta-btn").click(saveExtraMetadata);
 
     $("#btn-confirm-edit-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");

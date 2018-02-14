@@ -1162,7 +1162,7 @@
                                             <th>Name</th>
                                             <th>Value</th>
                                             {% if metadata_form %}
-                                                <th>Edit/Remove</th>
+                                                <th></th>
                                             {% endif %}
                                         </tr>
                                         </thead>
@@ -1195,13 +1195,7 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
-
-                                    {% if metadata_form %}
-                                        <br>
-                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn"
-                                               value="Save Changes" style="display: none"/>
-                                    {% endif %}
-                            </div>
+                                </div>
                             {% endif %}
 
                             {# ===========   File Type Metadata Tab ================== #}
