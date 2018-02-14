@@ -544,7 +544,6 @@ $(document).ready(function () {
     $("#btn-shareable").on("change", shareable_ajax_submit);
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
-
     $("#btnOpenWithApp").click(label_ajax_submit);
 
     // Apply theme to comment's submit button
