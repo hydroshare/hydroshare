@@ -7,7 +7,8 @@ from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.hydroshare.utils import QuotaException
+from hs_core.hydroshare.utils import QuotaException, resource_file_add_pre_process
+from theme.models import QuotaMessage
 
 
 class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
@@ -91,12 +92,34 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
                               title='Test Resource',
                               metadata=[],)
 
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         uquota.used_value = uquota.allocated_value * 1.3
+        uquota.save()
 
         # add files should raise quota exception now that the quota holder is over hard limit
-        add_resource_files(res.short_id, self.myfile1, self.myfile2, self.myfile3)
-        self.assertRaises(QuotaException)
+        # and quota enforce flag is set to True
+        files = [self.myfile1, self.myfile2, self.myfile3]
+        with self.assertRaises(QuotaException):
+            resource_file_add_pre_process(resource=res, files=files,
+                                          user=self.user,
+                                          extract_metadata=False)
+
+        qmsg.enforce_quota = False
+        qmsg.save()
+        # add files should not raise quota exception since enforce_quota flag is set to False
+        try:
+            resource_file_add_pre_process(resource=res, files=files,
+                                          user=self.user,
+                                          extract_metadata=False)
+        except QuotaException as ex:
+            self.fail("add resource file action should not raise QuotaException for "
+                      "over quota cases if quota is not enforced - Quota Exception: " + ex.message)
 
         res.delete()

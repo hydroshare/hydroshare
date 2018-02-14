@@ -68,4 +68,5 @@ $(document).ready(function() {
         share_resource_ajax_submit(formID);
     });
 
+    $("input#id_user-autocomplete").addClass("form-control");
 });

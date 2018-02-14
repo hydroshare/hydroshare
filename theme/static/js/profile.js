@@ -24,6 +24,8 @@ function validateForm() {
     var flagRequiredElements = validateRequiredElements();
     var flagEmail = validateEmail();
 
+    cleanIdentifiers();
+
     return  flagRequiredElements && flagEmail;
 }
 
@@ -61,7 +63,6 @@ function validateEmail() {
 function errorLabel(message) {
     return "<div class='error-label'><div class='label label-danger'>" + message + "</div></div>";
 }
-
 
 function setEditMode() {
     $("[data-page-mode='view']").hide();
@@ -198,14 +199,12 @@ $(document).ready(function () {
     option.val("Unspecified");
     option.text("Unspecified");
 
-    // TODO: TESTING
     $("#btn-create-irods-account").click(create_irods_account);
-    // TODO: TESTING
     $("#btn-delete-irods-account").click(delete_irods_account);
 
     // Only enable Confirm button when input password is longer than 8 characters
     $("#id_irods_password").keyup(function () {
-        pwdlen = $("input#id_irods_password").val().length;
+        var pwdlen = $("input#id_irods_password").val().length;
         if (pwdlen >= 8)
             $('#btn-create-irods-account').removeAttr('disabled');
         else
@@ -245,11 +244,12 @@ $(document).ready(function () {
     });
 
     $("[data-page-mode='edit']").hide();
+
     $("#btn-edit-profile").click(function () {
         setEditMode();
     });
 
-    $("#btn-cancel-profile-edit").click(function () {
+    $(".btn-cancel-profile-edit").click(function () {
         setViewMode();
     });
 
@@ -307,7 +307,6 @@ $(document).ready(function () {
     }
 
     $("tr[data-type='all']").find(".badge").text(collection["total"]);
-
 
     // Unspecified goes away as soon as a user clicks.
     $("input[name='state']").click(function () {
