@@ -59,10 +59,7 @@ $(document).ready(function() {
         get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)
     });
 
-    $("#btn-confirm-extended-metadata").click(function (event) {
-        event.preventDefault();
-        addEditExtraMeta2Table();
-    });
+    $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
 
     $("#btn-confirm-add-access").click(function () {
         var formID = $(this).closest("form").attr("id");

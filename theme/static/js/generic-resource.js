@@ -243,6 +243,12 @@ function addEditExtraMeta2Table() {
         return;
     }
 
+    if (extra_meta_name.length == 0 || extra_meta_value.length == 0) {
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>Both name and value are required fields that cannot be left blank.</div>");
+        $("#extra_meta_msg").show();
+        return;
+    }
+
     if (edit_extra_meta_row_id == "") {
         // Add new
         var new_row_id_0_base = findMaxRowID(t) + 1;
@@ -288,20 +294,18 @@ function addEditExtraMeta2Table() {
     saveExtraMetadata();
 }
 
-function findMaxRowID(table)
-{
+function findMaxRowID(table) {
     var max_id = -1;
     table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-        if(parseInt(this.node().id) > max_id)
-        {
+        if(parseInt(this.node().id) > max_id) {
            max_id = parseInt(this.node().id);
         }
     });
+
     return max_id;
 }
 
-function foundDuplicatedName(table, newName, except_row_id)
-{
+function foundDuplicatedName(table, newName, except_row_id) {
     var found_first_duplicated = false;
     var first_duplicated_row_id = -1;
 
@@ -313,11 +317,11 @@ function foundDuplicatedName(table, newName, except_row_id)
             }
         }
     });
+
     return found_first_duplicated;
 }
 
-function saveExtraMetadata()
-{
+function saveExtraMetadata() {
     $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
     $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
 
