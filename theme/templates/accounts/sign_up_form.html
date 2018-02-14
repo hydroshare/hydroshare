@@ -21,9 +21,6 @@
 <form id="form-signup" action="/accounts/signup/" method="post" role="form">
     {% csrf_token %}
     {{ form.non_field_errors }}
-    <!-- recaptcha -->
-    <input type="hidden" name="challenge" />
-    <input type="hidden" name="response" />
     <div class="row">
         <div class="form-group half">
           {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
@@ -47,8 +44,8 @@
         </div>
     </div>
     <div class="row">
-
-      <div id="recaptcha-div"></div>
+      <script src='https://www.google.com/recaptcha/api.js'></script>
+      <div class="g-recaptcha" data-sitekey="SITE_KEY"></div>
 
       <div id="missing-data-div"></div>
 
@@ -58,14 +55,13 @@
 </form>
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
-<script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
          $('input[type="button"]').prop('disabled', false);
          // remove the content of the 'missing-data-div' upon data editing in any of the
         // form fields
          var fieldsToCheck = ["#id_first_name", "#id_last_name", "#id_username", "#id_email",
-             "#id_password1", "#id_password2", "#recaptcha_response_field"];
+             "#id_password1", "#id_password2"];
 
          var i;
          for (i=0; i< fieldsToCheck.length; i++){
@@ -97,24 +93,13 @@
     }
 
     $(function() {
-        function cb() {
-            $("#recaptcha_privacy").attr('style', "display:none");
-            Recaptcha.focus_response_field();
-        }
-
-        Recaptcha.create("6LdNC_USAAAAAHSocU3ZpfEFHBwORoMdOBcrSUPP",
-        "recaptcha-div", {
-          theme: "clean",
-          callback: cb // Recaptcha.focus_response_field
-        });
-
         $("#signup").click(function() {
             var password = $("#id_password1").val();
             var pwconfirm = $("#id_password2").val();
             // These are the required form fields
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
-                "#id_password2", "#recaptcha_response_field", "[name='organization']"];
-            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', 'ReCaptcha', "Organization"];
+                "#id_password2",  "[name='organization']"];
+            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
@@ -157,8 +142,6 @@
             }
             if (password && pwconfirm) {
                 if (password === pwconfirm) {
-                    $("[name=challenge]").val(Recaptcha.get_challenge());
-                    $("[name=response]").val(Recaptcha.get_response());
                     $('#form-signup').submit();
                 } else {
                     $("#id_password1").val('');

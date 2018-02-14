@@ -552,11 +552,6 @@ $(document).ready(function () {
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    $(".list-separator").parent().hover(function(){
-        $(this).css("text-decoration", "none");
-        $(this).css("pointer-events", "none");
-    });
-
     var keywordString = $("#keywords-string").val();
     $("#id-subject").find("#id_value").val(keywordString);
 
@@ -574,6 +569,7 @@ $(document).ready(function () {
     }
 
     $(".icon-remove").click(onRemoveKeyword);
+
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {
         e.which = e.which || e.keyCode;
