@@ -523,7 +523,6 @@ $(document).ready(function () {
 
     $("input[name='add_author_person']").click(onPersonTypeChange);
 
-
     $("#citation-text").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
         if (document.selection) {
