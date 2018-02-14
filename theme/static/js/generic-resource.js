@@ -238,13 +238,15 @@ function addEditExtraMeta2Table() {
 
     if (foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
         $("#extra_meta_name_input").addClass("form-invalid");
-        $("#extra_meta_msg").html("<div class='alert alert-danger'>The name already exists. Please input a different name.</div>");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The name already exists. Please input a different name.</div>");
         $("#extra_meta_msg").show();
         return;
     }
 
     if (extra_meta_name.length == 0 || extra_meta_value.length == 0) {
-        $("#extra_meta_msg").html("<div class='alert alert-danger'>Both name and value are required fields that cannot be left blank.</div>");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "Both name and value are required fields that cannot be left blank.</div>");
         $("#extra_meta_msg").show();
         return;
     }
@@ -252,11 +254,11 @@ function addEditExtraMeta2Table() {
     if (edit_extra_meta_row_id == "") {
         // Add new
         var new_row_id_0_base = findMaxRowID(t) + 1;
-        var edit_icon_str = '<span data-arg="' + new_row_id_0_base +
-            '" class="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon"' +
+        var edit_icon_str = '<span data-loop-counter="' + new_row_id_0_base +
+            '" class="btn-edit-icon btn-edit-extra-metadata glyphicon glyphicon-pencil icon-blue table-icon" ' +
             'data-toggle="tooltip" data-placement="top" title="Edit"></span>';
-        var remove_icon_str = '<span data-arg="' + new_row_id_0_base +
-            '" class="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon"' +
+        var remove_icon_str = '<span data-loop-counter="' + new_row_id_0_base +
+            '" class="btn-remove-icon btn-remove-extra-metadata glyphicon glyphicon-trash btn-remove table-icon" ' +
             'data-toggle="tooltip" data-placement="top" title="Remove"></span>';
         var row_ele = t.row.add([extra_meta_name, extra_meta_value, edit_icon_str +
             " " + remove_icon_str]).node();
@@ -277,20 +279,7 @@ function addEditExtraMeta2Table() {
     });
 
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
-
-    $('#extraMetaDialog').modal('hide');
-
-    // Bind click events
-    $(".btn-edit-icon").click(function() {
-        var arg = $(this).attr("data-arg");
-        showAddEditExtraMetaPopup(true, arg);
-    });
-
-    $(".btn-remove-icon").click(function() {
-        var arg = $(this).attr("data-arg");
-        removeExtraMetadataFromTable(arg);
-    });
-
+    $("#extraMetaDialog").modal('hide');
     saveExtraMetadata();
 }
 
@@ -322,8 +311,8 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
-    $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
+    var $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
+    var $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -337,6 +326,7 @@ function saveExtraMetadata() {
     json_obj = JSON.parse(json_str);
     var shortID = $("#short-id").val();
     var update_key_value_metadata_url = "/hsapi/_internal/" + shortID + "/update-key-value-metadata/";
+
     $.ajax({
         type: "POST",
         url: update_key_value_metadata_url,
@@ -344,15 +334,15 @@ function saveExtraMetadata() {
         data: json_obj,
 
         success: function(result) {
-            json_response = result;
+            var json_response = result;
             if (json_response.status === 'success') {
-                 customAlert($alert_success_extra_meta, 3000);
-                if(json_response.is_dirty) {
+                customAlert($alert_success_extra_meta, 3000);
+                if (json_response.is_dirty) {
                     $('#netcdf-file-update').show();
                 }
             }
             else {
-                 customAlert($alert_error_extra_meta, 3000);
+                customAlert($alert_error_extra_meta, 3000);
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -765,10 +755,15 @@ $(document).ready(function () {
         showAddEditExtraMetaPopup(true, loopCounter);
     });
 
-    $(".btn-remove-extra-metadata").click(function () {
+    $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
         removeExtraMetadataFromTable(loopCounter);
         saveExtraMetadata();
+    });
+
+    $("#extraMetaTable").on("click", ".btn-edit-icon", function () {
+        var index = $(this).attr("data-loop-counter");
+        showAddEditExtraMetaPopup(true, index);
     });
 
     $("#btn-confirm-edit-key-value").click(function () {
