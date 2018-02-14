@@ -1151,11 +1151,7 @@
                             <!-- ========= EXTRA METADATA TAB ========= -->
                             {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                 <div class="tab-pane" id="extraMetaTab">
-                                    {% if metadata_form %}
-                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                            <i class="fa fa-plus"></i> Add New Entry
-                                        </a>
-                                    {% endif %}
+                                    <legend>Extended Metadata</legend>
                                     <table id="extraMetaTable" class="hs-table table" width="100%">
                                         <thead>
                                         <tr>
@@ -1178,13 +1174,11 @@
                                                     {% if metadata_form %}
                                                         <td>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  data-form-type="toggle-favorite"
                                                                   class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
                                                                   data-toggle="tooltip" data-placement="top"
                                                                   title="Edit">
                                                             </span>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  data-form-type="toggle-favorite"
                                                                   class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
                                                                   data-toggle="tooltip" data-placement="top"
                                                                   title="Remove">
@@ -1195,6 +1189,14 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
+
+                                    <br>
+
+                                    {% if metadata_form %}
+                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
+                                            <i class="fa fa-plus"></i> Add New Entry
+                                        </a>
+                                    {% endif %}
                                 </div>
                             {% endif %}
 
@@ -1202,7 +1204,7 @@
                             {% if cm.resource_type == "CompositeResource" %}
                                 <div class="tab-pane" id="fileTypeMetaDataTab">
                                     <div class="alert alert-warning alert-dismissible" role="alert">
-                                        <h4>Select a file to see file type metadata.</h4>
+                                        <span>Select a file to see file type metadata.</span>
                                     </div>
                                 </div>
                             {% endif %}

@@ -62,7 +62,6 @@ $(document).ready(function() {
     $("#btn-confirm-extended-metadata").click(function (event) {
         event.preventDefault();
         addEditExtraMeta2Table();
-        saveExtraMetadata();
     });
 
     $("#btn-confirm-add-access").click(function () {

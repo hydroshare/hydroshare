@@ -205,6 +205,11 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $("#old_extra_meta_name").val('');
     $("#extra_meta_name_input").val('');
     $("#extra_meta_value_input").val('');
+
+    // Restore validation UI state
+    $("#extra_meta_msg").hide();
+    $("#extra_meta_name_input").removeClass("form-invalid");
+
     if (edit) {
         var t = $('#extraMetaTable').DataTable();
         var row_to_edit = t.row("#" + row_id_str);
@@ -222,22 +227,18 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $('#extraMetaDialog').modal('show');
 }
 
-
 function addEditExtraMeta2Table() {
+    // Restore validation UI state
     $("#extra_meta_msg").hide();
+    $("#extra_meta_name_input").removeClass("form-invalid");
     var t = $('#extraMetaTable').DataTable();
     var extra_meta_name = $("#extra_meta_name_input").val().trim();
     var extra_meta_value = $("#extra_meta_value_input").val().trim();
     var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
 
-    if(extra_meta_name.length==0 || extra_meta_value.length==0) {
-        $("#extra_meta_msg").html("<font color='red'>Both name and value are required fields that cannot be left blank.</font>");
-        $("#extra_meta_msg").show();
-        return;
-    }
-
-    if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
-        $("#extra_meta_msg").html("<font color='red'>The name already exists. Please input a different name.</font>");
+    if (foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
+        $("#extra_meta_name_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>The name already exists. Please input a different name.</div>");
         $("#extra_meta_msg").show();
         return;
     }
@@ -263,6 +264,7 @@ function addEditExtraMeta2Table() {
         updated_data_array[1] = extra_meta_value;
         row_to_edit.data(updated_data_array);
     }
+
     t.rows().invalidate().draw();
     $("#extraMetaTable").find("td:nth-child(2)").each(function() {
         $(this).urlClickable();
@@ -282,6 +284,8 @@ function addEditExtraMeta2Table() {
         var arg = $(this).attr("data-arg");
         removeExtraMetadataFromTable(arg);
     });
+
+    saveExtraMetadata();
 }
 
 function findMaxRowID(table)
