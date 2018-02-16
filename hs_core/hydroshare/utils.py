@@ -986,6 +986,14 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     return ret
 
 
+def push_res_to_geohub(user, shortkey):
+    res = get_resource_by_shortkey(shortkey)
+    istorage = res.get_irods_storage()
+    src_path = res.root_path
+    dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username, shortkey)
+    istorage.copyFiles(src_path, dest_path)
+
+
 def add_metadata_element_to_xml(root, md_element, md_fields):
     """
     helper function to generate xml elements for a given metadata element that belongs to

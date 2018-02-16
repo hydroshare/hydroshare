@@ -1,16 +1,17 @@
 import csv
 from cStringIO import StringIO
+import urlparse
 
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
+from django.conf import settings
 
 from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import get_std_log_fields
-
-import urlparse
+from hs_core.hydroshare.utils import push_res_to_geohub
 
 
 class AppLaunch(TemplateView):
@@ -48,6 +49,11 @@ class AppLaunch(TemplateView):
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
             session.record('app_launch', value=msg)
+
+            if settings.GEOHUB_HOMEPAGE_URL in url:
+                # TO DO: need to retrieve resource id from query dict
+                res_id = ''
+                push_res_to_geohub(request.user, res_id)
 
         return HttpResponseRedirect(url)
 
