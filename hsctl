@@ -343,11 +343,10 @@ rebuild_hs() {
     sleep 3s
     solr_schema_hs
     sleep 2s
-    # rebuild_solr_index
-    sleep 2s
     solr_reload_hs
     sleep 2s
     rebuild_solr_index
+    sleep 2s
     restart_hs
     echo "END BUILD"
 }

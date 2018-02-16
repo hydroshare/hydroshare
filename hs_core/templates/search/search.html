@@ -11,7 +11,12 @@
             </h2>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-xs-12">
+            <button id="solr-help-info" class="btn btn-info" data-toggle="popover" 
+                    data-placement="right">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+            </button>
             <div id="discover-resource-search" class="resource-search">
+
                 <form id="search-field" method="get" action="." class="search-field">
                     {% for field in form %}
                         {% if field.auto_id  == "id_q" %}
@@ -23,6 +28,11 @@
                     {% endfor %}
                 </form>
             </div>
+            <div> 
+                {% if parse_error %}
+                    <em><font color='red'>{{ parse_error }}</font></em> 
+                {% endif %}
+            </div> 
             <br>
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
@@ -34,94 +44,48 @@
 
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
-                    {% if values and key != 'public' and key != 'discoverable' and key != 'published' %}
-                        <div id="faceting-{{ key }}">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title">
-                                        <a data-toggle="collapse" href="#{{ key }}">
-                                            {% if key == 'creators'%}
-                                                &nbsp; Filter by Author
-                                            {% elif key ==  'subjects'%}
-                                                &nbsp; Filter by Subject
-                                            {% elif key ==  'resource_type'%}
-                                                &nbsp; Filter by Resource Type
-                                            {% elif key ==  'owners_names'%}
-                                                &nbsp; Filter by Owner
-                                            {% elif key ==  'variable_names'%}
-                                                &nbsp; Filter by Variable
-                                            {% elif key ==  'sample_mediums'%}
-                                                &nbsp; Filter by Sample Medium
-                                            {% elif key ==  'units_names'%}
-                                                &nbsp; Filter by Units Name
-                                            {% endif %}
-                                            <span class="glyphicon glyphicon-minus pull-left" >
-
-                                            </span>
-                                        </a>
-                                    </h4>
-                                </div>
-
-                                <div id="{{ key }}" class="facet-list panel-collapse collapse in">
-                                    <ul class="list-group" id="list-group-{{ key }}">
-                                    {% for item in values %}
-                                        {% if item.1 > 0 %}
-                                            <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
-                                                <span class="badge">{{ item.1 }}</span>
-                                                <label class="checkbox noselect">
-                                                    <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
-                                            </li>
+                    <div id="faceting-{{ key }}">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" href="#{{ key }}">
+                                        {% if key == 'creator'%}
+                                            &nbsp; Filter by author
+                                        {% elif key == 'contributor'%}
+                                            &nbsp; Filter by contributor
+                                        {% elif key ==  'subject'%}
+                                            &nbsp; Filter by subject
+                                        {% elif key ==  'resource_type'%}
+                                            &nbsp; Filter by resource type
+                                        {% elif key ==  'owner'%}
+                                            &nbsp; Filter by owner
+                                        {% elif key ==  'availability'%}
+                                            &nbsp; Filter by availability
                                         {% endif %}
-                                    {% endfor %}
-                                    </ul>
-                                </div>
+                                        <span class="glyphicon glyphicon-minus pull-left" >
+
+                                        </span>
+                                    </a>
+                                </h4>
                             </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
 
-                <div id="faceting-availability">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#availability">
-                                    &nbsp; Filter by Availability
-                                    <span class="glyphicon glyphicon-minus pull-left"></span>
-                                </a>
-                            </h4>
-                        </div>
-
-                        <div id="availability" class="facet-list panel-collapse collapse in">
-                            <ul class="list-group" id="list-group-availability">
-                                {% for key, values in facets.fields.items %}
-                                    {% if key == 'public' or key == 'discoverable' or key == 'published' %}
-                                        {% for item in values %}
-                                            {% if item.1 > 0 and item.0 != 'false' %}
-                                                <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
-                                                    <span class="badge">{{ item.1 }}</span>
-                                                    <label class="checkbox noselect">
-                                                        <input type="checkbox" class="faceted-selections"
-                                                               id="{{ key }}-{{ item.0 }}"
-                                                               value="{{ key }},{{ item.0 }}">
-                                                        {% if key == 'public' and item.0 == 'true' %}
-                                                            Public
-                                                        {% elif key == 'public' and item.0 == 'false' %}
-                                                            Private
-                                                        {% elif key == 'discoverable' %}
-                                                            Discoverable
-                                                        {% elif key == 'published' %}
-                                                            Published
-                                                        {% endif %}
-                                                    </label>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
+                            <div id="{{ key }}" class="facet-list panel-collapse collapse in">
+                                <ul class="list-group" id="list-group-{{ key }}">
+                                {% for item in values %}
+                                    {% if item.1 > 0 %}
+                                        <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
+                                            <span class="badge">{{ item.1 }}</span>
+                                            <label class="checkbox noselect">
+                                                <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
+                                        </li>
                                     {% endif %}
                                 {% endfor %}
-                            </ul>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% endfor %}
+
             </div>
         </div>
         <div class="col-sm-9 col-xs-12" id="items">
@@ -204,6 +168,46 @@
 
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
+                    <div id="discover-page-options-1">
+                    {% if page_obj.has_other_pages %}
+                        &laquo;
+
+                        {% if page_obj.number != 1 %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page=1"); return false;'>First</a> 
+                        {% else %} 
+                            First
+                        {% endif %}
+                        |
+                        {% if page_obj.has_previous %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.prev_page_number }}"); return false;'>Previous</a> 
+                        {% else %} 
+                            Previous 
+                        {% endif %}
+                        |
+                        {% for pnum in page_obj|five_options_around %}
+                            {% if pnum == page_obj.number %}
+                               {{ pnum }}
+                            {% else %} 
+                                <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}"); return false;'>{{ pnum }}</a> 
+                            {% endif %} 
+                        {% endfor %} 
+                        |
+                        {% if page_obj.has_next %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}"); return false;'>Next</a> 
+                        {% else %}
+                            Next 
+                        {% endif %} 
+                        |
+                        {% if page_obj.number != page_obj.paginator.num_pages %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.paginator.num_pages }}"); return false;'>Last</a> 
+                        {% else %} 
+                            Last
+                        {% endif %}
+                        &raquo;
+                    {% endif %}
+
+                    {{ page_obj }} &laquo;results {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}&raquo;  
+                    </div>
                     <span id="discover-list-loading-spinner" class="discover-loading-icon icon-blue">
                           <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
                     </span>
@@ -215,9 +219,7 @@
                                 <th>Title</th>
                                 <th>First Author</th>
                                 <th>Date Created</th>
-                                <th>Date Created</th>{# Used in table sorting #}
                                 <th>Last Modified</th>
-                                <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
 
@@ -227,16 +229,19 @@
                                     <td data-col="resource-type">
                                         {% include "includes/res_type_col.html" with resource=result.object %}
                                     </td>
-                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></strong></td>
-                                    {% if result.object.first_creator.description %}
-                                        <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
+                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.get_stored_fields.title }}</a></strong></td>
+                                    {% if result.get_stored_fields.author_url %}
+                                        <td><a href="{{ result.get_stored_fields.author_url }}">{{ result.get_stored_fields.author  }}</a></td>
                                     {% else %}
-                                        <td>{{ result.object.first_creator.name }}</td>
+                                        <td>{{ result.get_stored_fields.author }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.created|date:"M d, Y" }} at {{ result.object.created|time }}</td>
-                                    <td>{{ result.object.created|date:"U" }}</td> {# Used in table sorting #}
-                                    <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
-                                    <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.get_stored_fields.created|date:"M d, Y" }} at {{ result.get_stored_fields.created|time }}</td>
+                                    {% if result.get_stored_fields.modified %}
+                                    <td>{{ result.get_stored_fields.modified|date:"M d, Y" }} at {{ result.get_stored_fields.modified|time }}</td>
+                                    {% else %} 
+                                    <td></td> 
+                                    {% endif %} 
+                                    
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -245,20 +250,45 @@
                     {% if not page_obj.object_list %}
                     <h4 class="text-muted">Sorry, no results match those criteria. Please try broadening your search.</h4>
                     {% endif %}
-                    <div id="discover-page-options">
-                    {% if page_obj.has_previous or page_obj.has_next %}
-                            {% if page_obj.has_previous %}
-                                <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
-                            {% endif %}&laquo; Previous
-                            {% if page_obj.has_previous %}</a>{% endif %}
-                            |
-                            {% if page_obj.has_next %}
-                                <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">
-                            {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
-                    {% endif %}
+                    <div id="discover-page-options-2">
                     {% if page_obj.has_other_pages %}
-                        {{ page_obj }} ( results {{ page_obj.start_index }} to {{ page_obj.end_index }} )  
+                        &laquo;
+
+                        {% if page_obj.number != 1 %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page=1"); return false;'>First</a> 
+                        {% else %} 
+                            First
+                        {% endif %}
+                        |
+                        {% if page_obj.has_previous %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.prev_page_number }}"); return false;'>Previous</a> 
+                        {% else %} 
+                            Previous 
+                        {% endif %}
+                        |
+                        {% for pnum in page_obj|five_options_around %}
+                            {% if pnum == page_obj.number %}
+                               {{ pnum }}
+                            {% else %} 
+                                <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}"); return false;'>{{ pnum }}</a> 
+                            {% endif %} 
+                        {% endfor %} 
+                        |
+                        {% if page_obj.has_next %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}"); return false;'>Next</a> 
+                        {% else %}
+                            Next 
+                        {% endif %} 
+                        |
+                        {% if page_obj.number != page_obj.paginator.num_pages %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.paginator.num_pages }}"); return false;'>Last</a> 
+                        {% else %} 
+                            Last
+                        {% endif %}
+                        &raquo;
                     {% endif %}
+
+                    {{ page_obj }} &laquo;results {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}&raquo;  
                     </div>
                     
                     <br>

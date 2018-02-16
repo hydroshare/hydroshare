@@ -479,6 +479,7 @@ function share_resource_ajax_submit(form_id) {
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
                 rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
+
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
@@ -490,21 +491,23 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (json_response.name) {
-                    rowTemplate.find("span[data-col='name']").text(json_response.name);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.name);
                 }
                 else {
-                    rowTemplate.find("span[data-col='name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.username);
                 }
+
+                rowTemplate.find("div[data-col='name'] a").attr("href", "/" + shareType + "/" + share_with);
 
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
 
                 if (shareType == "user") {
-                    rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='user-name']").text(json_response.username);
                 }
                 else {
-                    rowTemplate.find("span[data-col='user-name']").text("(Group)");
+                    rowTemplate.find("div[data-col='user-name']").text("(Group)");
                 }
 
                 if (shareType == "user") {
@@ -516,7 +519,14 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     rowTemplate.find(".profile-pic-thumbnail").remove();
-                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    if (json_response.group_pic != "No picture provided") {
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    }
+                    else {
+                        // Set default group picture
+                        var defaultImgURL = $("#templateRow .group-preview-image-default")[0].style.backgroundImage;
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: " + defaultImgURL);
+                    }
                 }
 
                 if (access_type == "view") {
@@ -534,7 +544,7 @@ function share_resource_ajax_submit(form_id) {
                     rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                     rowTemplate.find(".share-form-owner").parent().addClass("active");
                 }
-                $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
+                $(".access-table > tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
                 updateActionsState(json_response.current_user_privilege);
             }
@@ -961,6 +971,20 @@ function get_user_info_ajax_submit(url, obj) {
                 formContainer.find("input[name='address']").val(json_response.address);
                 formContainer.find("input[name='phone']").val(json_response.phone);
                 formContainer.find("input[name='homepage']").val(json_response.website);
+
+                for (var identif in json_response.identifiers) {
+                    modalBody = formContainer.find(".modal-body");
+                    modalBody.append(
+                        $('<input />').attr('type', 'hidden')
+                            .attr('name', "identifier_name")
+                            .attr('value', identif));
+
+                    modalBody.append(
+                        $('<input />').attr('type', 'hidden')
+                            .attr('name', "identifier_link")
+                            .attr('value', json_response.identifiers[identif]));
+                }
+
             }
             formContainer.submit();
         },

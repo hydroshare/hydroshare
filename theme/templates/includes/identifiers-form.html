@@ -1,0 +1,103 @@
+{% load mezzanine_tags hydroshare_tags %}
+{% block extra_css %}
+
+<link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
+{% endblock %}
+<div class="edit-identifiers-container">
+    <!--Template use for dynamic instances-->
+    <div class="well identifier-template hidden">
+        <div style="height:22px;">
+            <button type="button" class="close">&times;</button>
+        </div>
+
+        <fieldset class="select-identifier-fieldset">
+            <label>Identifier Name</label>
+            <select class="form-control select-identifier">
+                <option disabled selected> -- Select an option -- </option>
+                <option value="Google Scholar">Google Scholar</option>
+                <option value="ORCID">ORCID</option>
+                <option value="ResearchGate">ResearchGate</option>
+                <option value="ResearcherID">ResearcherID</option>
+                <option value="Other">Other</option>
+            </select>
+        </fieldset>
+
+        <fieldset class="hidden identifier-specify">
+            <label>Specify</label>
+            <input class="form-control">
+        </fieldset>
+
+        <fieldset class="identifier-link-container">
+            <label>Identifier Link</label>
+            <input class="form-control identifier-link">
+        </fieldset>
+    </div>
+
+    {% for name, link in identifiers.items %}
+    <div class="well">
+        <div style="height:22px;">
+            <button type="button" class="close">&times;</button>
+        </div>
+
+        <fieldset class="select-identifier-fieldset">
+            <label>Identifier Name</label>
+            <select class="form-control select-identifier"
+                    {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
+                    name="identifier_name"
+                    value="{{ name }}"
+                    {% else %}
+                    value = "Other"
+                    {% endif %}
+            >
+                <option value="Google Scholar"
+                        {% if name == "Google Scholar" %}selected{% endif %}>
+                    Google Scholar
+                </option>
+                <option value="ORCID"
+                        {% if name == "ORCID" %}selected{% endif %}>
+                    ORCID
+                </option>
+                <option value="ResearchGate"
+                        {% if name == "ResearchGate" %}selected{% endif %}>
+                    ResearchGate
+                </option>
+                <option value="ResearcherID"
+                        {% if name == "ResearcherID" %}selected{% endif %}>
+                    ResearcherID
+                </option>
+
+                <option value="Other"
+                        {% if not name == "Google Scholar" and not name == "ORCID" and not name == "ResearchGate" and not name == "ResearcherID" %}
+                        selected
+                        {% endif %}
+                >Other
+                </option>
+            </select>
+        </fieldset>
+
+        {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
+        <fieldset class="hidden identifier-specify">
+            <label>Specify</label>
+            <input class="form-control">
+        </fieldset>
+        {% else %}
+        <fieldset class="identifier-specify">
+            <label>Specify</label>
+            <input name="identifier_name"
+                   value="{{ name }}"
+                   class="form-control">
+        </fieldset>
+        {% endif %}
+
+        <fieldset>
+            <label>Identifier Link</label>
+            <input name="identifier_link"
+                   class="form-control identifier-link" value="{{ link }}">
+        </fieldset>
+    </div>
+    {% endfor %}
+</div>
+
+<button type="button" class="btn btn-success btn-add-identifier">
+    <i class="fa fa-plus" aria-hidden="true"></i> Add New
+</button>

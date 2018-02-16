@@ -1,17 +1,21 @@
 """Django forms for hs_core module."""
 
 import copy
+import json
 
-from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
-    FundingAgency, Description
 from django.forms import ModelForm, BaseFormSet
 from django.contrib.admin.widgets import forms
 from django.utils.safestring import mark_safe
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
+
 from hydroshare import utils
+from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
+    FundingAgency, Description
 
 
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
@@ -254,6 +258,7 @@ class PartyValidationForm(forms.Form):
     address = forms.CharField(max_length=250, required=False)
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
+    identifiers = forms.CharField(required=False)
 
     def clean_description(self):
         """Create absolute URL for Party.description field."""
@@ -262,6 +267,36 @@ class PartyValidationForm(forms.Form):
             url_parts = user_absolute_url.split('/')
             return '/user/{user_id}/'.format(user_id=url_parts[4])
         return user_absolute_url
+
+    def clean_identifiers(self):
+        data = self.cleaned_data['identifiers']
+        if data:
+            # data is expected as json string - convert it to a dict
+            try:
+                data = json.loads(data)
+            except ValueError:
+                raise forms.ValidationError("Invalid data found for identifiers.")
+
+            # validate identifier values - check for duplicate links
+            links = [l.lower() for l in data.values()]
+            if len(links) != len(set(links)):
+                raise forms.ValidationError("Invalid data found for identifiers. "
+                                            "Duplicate identifier links found.")
+
+            for link in links:
+                validator = URLValidator()
+                try:
+                    validator(link)
+                except ValidationError:
+                    raise forms.ValidationError("Invalid data found for identifiers. "
+                                                "Identifier link must be a URL.")
+
+            # validate identifier keys - check for duplicate names
+            names = [n.lower() for n in data.keys()]
+            if len(names) != len(set(names)):
+                raise forms.ValidationError("Invalid data found for identifiers. "
+                                            "Duplicate identifier names found")
+        return data
 
     def clean(self):
         """Validate that name and/or organization are present in form data."""
