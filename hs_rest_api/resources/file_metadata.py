@@ -1,46 +1,84 @@
-from django.http import JsonResponse
+import json
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.request import Request
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
+from hs_core.models import ResourceFile, Coverage
+from hs_file_types.views import _get_logical_file
 
-class FileMetaDataListCreate(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAdminUser,
+
+# TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
+class JSONSerializerField(serializers.Field):
+    """ Serializer for JSONField -- required to make field writable"""
+    def to_internal_value(self, data):
+        return data
+    def to_representation(self, value):
+        return value
+
+
+class FileMetaDataSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    keywords = JSONSerializerField()
+    spatial_coverage = JSONSerializerField()
+    extra_metadata = JSONSerializerField()
+    temporal_coverage = JSONSerializerField()
 
 
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    def get(self, request, pk, pathname):
-        return HttpResponseRedirect(url)
-        pass
+    serializer_class = FileMetaDataSerializer
+    allowed_methods = ('GET', 'PUT')
 
-    def post():
-        # keywords:123213
+    def get(self, request, pk, file_id):
+        """ Get a resource file's metadata. """
 
-        #dataset_name:File Metadata 1
+        resource_file = ResourceFile.objects.get(id=file_id)
+        file_metadata = resource_file.metadata
 
-        ## Keyvalue
-        # key:12312321
-        # value:12312312321
+        # TODO: How to leverage serializer for this?
+        return Response({
+            "title": file_metadata.logical_file.dataset_name,
+            "keywords": file_metadata.keywords,
+            "spatial_coverage": file_metadata.spatial_coverage.value,
+            "extra_metadata": file_metadata.extra_metadata,
+            "temporal_coverage": file_metadata.temporal_coverage.value
+        })
 
-        ## Temporal Coverage
-        # start:02/15/2018
-        # end:02/21/2018
+    def put(self, request, pk, file_id):
+        """ Update a resource file's metadata """
 
-        ## Spatial Coverage
-        # type:point
-        # name:21323
-        # projection:WGS 84 EPSG:4326
-        # east:-80.6836
-        # north:35.0300
-        # northlimit:
-        # eastlimit:
-        # southlimit:
-        # westlimit:
-        # units:Decimal degrees
-        pass
+        metadata_json = json.loads(request.body)
+        file_serializer =  FileMetaDataSerializer(metadata_json)
+
+        title = file_serializer.data.pop("title", "")
+        resource_file = ResourceFile.objects.get(id=file_id)
+        resource_file.metadata.logical_file.dataset_name = title
+        resource_file.metadata.logical_file.save()
+
+        spatial_coverage = file_serializer.data.pop("spatial_coverage", {})
+        Coverage.update(resource_file.metadata.spatial_coverage.id,
+            _value=json.dumps(spatial_coverage))
+
+        temporal_coverage = file_serializer.data.pop("temporal_coverage", {})
+        Coverage.update(resource_file.metadata.temporal_coverage.id,
+            _value=json.dumps(temporal_coverage))
+
+        keywords = file_serializer.data.pop("keywords", [])
+        extra_metadata = file_serializer.data.pop("extra_metadata", [])
+        resource_file.metadata.extra_metadata = extra_metadata
+        resource_file.metadata.keywords = keywords
+        resource_file.metadata.save()
+
+        # TODO: How to leverage serializer for this?
+        file_metadata = resource_file.metadata
+        return Response({
+            "title": file_metadata.logical_file.dataset_name,
+            "keywords": file_metadata.keywords,
+            "spatial_coverage": file_metadata.spatial_coverage.value,
+            "extra_metadata": file_metadata.extra_metadata,
+            "temporal_coverage": file_metadata.temporal_coverage.value
+        })
