@@ -7,6 +7,7 @@ import os
 import sys
 import traceback
 import zipfile
+from datetime import timedelta, date
 from xml.etree import ElementTree
 
 import requests
@@ -33,6 +34,15 @@ from theme.utils import get_quota_message
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+def nightly_zips_cleanup():
+    # delete 2 days ago to avoid deleting zips just before midnight
+    date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
+    irods_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    zips_daily_date = "{irods}/zips/{daily_date}".format(irods=irods_prefix, daily_date=date_folder)
+    IrodsStorage().delete(zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -204,7 +214,7 @@ def delete_zip(resource_id, zip_path):
     istorage = res.get_irods_storage()
 
     irods_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    full_zip_path = '{irods}/{path}'.format(irods=irods_prefix, res_id=resource_id, path=zip_path)
+    full_zip_path = '{irods}/{path}'.format(irods=irods_prefix, path=zip_path)
     istorage.delete(full_zip_path)
 
 
