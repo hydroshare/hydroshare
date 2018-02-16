@@ -1,11 +1,10 @@
+import json
 import os
 import tempfile
-import json
 
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-
 from .base import HSRESTTestCase
 
 
@@ -62,14 +61,14 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         download_path = response_json["download_path"]
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
         download_split = download_path.split("/")
-        self.assertEqual("django_irods", download_split[1]);
-        self.assertEqual("rest_download", download_split[2]);
-        self.assertEqual("zips", download_split[3]);
-        self.assertEqual(self.pid, download_split[4]);
+        self.assertEqual("django_irods", download_split[1])
+        self.assertEqual("rest_download", download_split[2])
+        self.assertEqual("zips", download_split[3])
+        self.assertEqual(self.pid, download_split[4])
         # index 5 is the random folder
-        self.assertEqual("data", download_split[6]);
-        self.assertEqual("contents", download_split[7]);
-        self.assertEqual("foo.zip", download_split[8]);
+        self.assertEqual("data", download_split[6])
+        self.assertEqual("contents", download_split[7])
+        self.assertEqual("foo.zip", download_split[8])
 
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)

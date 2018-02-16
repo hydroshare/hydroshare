@@ -1,13 +1,13 @@
-import tempfile
 import os
+import tempfile
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.tasks import create_temp_zip
-from hs_core.models import GenericResource
 from hs_core.hydroshare import resource
+from hs_core.models import GenericResource
+from hs_core.tasks import create_temp_zip
 
 
 class TestFolderDownloadZip(TestCase):
@@ -39,9 +39,9 @@ class TestFolderDownloadZip(TestCase):
         self.rtype = 'GenericResource'
         self.title = 'My Test resource'
         self.test_res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title,
-                                       unpack_file=False)
+                                                 self.user,
+                                                 self.title,
+                                                 unpack_file=False)
 
         # create a folder 'foo'
         url = str.format('/hsapi/resource/{}/folders/foo/', self.test_res.short_id)

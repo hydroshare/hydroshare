@@ -2,38 +2,31 @@
 
 from __future__ import absolute_import
 
+import logging
 import os
 import sys
 import traceback
 import zipfile
-import logging
-
-import requests
-
 from xml.etree import ElementTree
 
-from rest_framework import status
-from django_irods.storage import IrodsStorage
-
-from django.conf import settings
-from django.core.mail import send_mail
-from django.contrib.auth.models import User
-
-from celery.task import periodic_task
-from celery.schedules import crontab
+import requests
 from celery import shared_task
+from celery.schedules import crontab
+from celery.task import periodic_task
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from rest_framework import status
 
-from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from django_irods.storage import IrodsStorage
+from hs_core.models import BaseResource
 from theme.models import UserQuota, QuotaMessage
 from theme.utils import get_quota_message
-
-from django_irods.icommands import SessionException
-
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -214,6 +207,7 @@ def delete_zip(resource_id, zip_path):
     full_zip_path = '{irods}/{path}'.format(irods=irods_prefix, res_id=resource_id, path=zip_path)
     istorage.delete(full_zip_path)
 
+
 @shared_task
 def create_temp_zip(resource_id, input_path, output_path):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
@@ -231,6 +225,7 @@ def create_temp_zip(resource_id, input_path, output_path):
         logger.error(ex.stderr)
         return False
     return True
+
 
 @shared_task
 def create_bag_by_irods(resource_id):
