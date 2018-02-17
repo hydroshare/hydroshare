@@ -4186,6 +4186,9 @@ class CoreMetaData(models.Model):
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
         for name, link in person.identifiers.iteritems():
+            name = name.replace(" ", "")
+            if not name.endswith("ID"):
+                name = name + "ID"
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
