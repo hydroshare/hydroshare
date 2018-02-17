@@ -1,20 +1,16 @@
 import json
 
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import generics, status
-from rest_framework.request import Request
+from rest_framework import generics
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
 from hs_core.models import ResourceFile, Coverage
-from hs_file_types.views import _get_logical_file
 
 
 # TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
 class JSONSerializerField(serializers.Field):
     """ Serializer for JSONField -- required to make field writable"""
+
     def to_internal_value(self, data):
         return data
     def to_representation(self, value):
@@ -35,7 +31,6 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
     def get(self, request, pk, file_id):
         """ Get a resource file's metadata. """
-
         resource_file = ResourceFile.objects.get(id=file_id)
         file_metadata = resource_file.metadata
 
@@ -50,9 +45,8 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, pk, file_id):
         """ Update a resource file's metadata """
-
         metadata_json = json.loads(request.body)
-        file_serializer =  FileMetaDataSerializer(metadata_json)
+        file_serializer = FileMetaDataSerializer(metadata_json)
 
         title = file_serializer.data.pop("title", "")
         resource_file = ResourceFile.objects.get(id=file_id)
@@ -61,11 +55,11 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
         spatial_coverage = file_serializer.data.pop("spatial_coverage", {})
         Coverage.update(resource_file.metadata.spatial_coverage.id,
-            _value=json.dumps(spatial_coverage))
+                        _value=json.dumps(spatial_coverage))
 
         temporal_coverage = file_serializer.data.pop("temporal_coverage", {})
         Coverage.update(resource_file.metadata.temporal_coverage.id,
-            _value=json.dumps(temporal_coverage))
+                        _value=json.dumps(temporal_coverage))
 
         keywords = file_serializer.data.pop("keywords", [])
         extra_metadata = file_serializer.data.pop("extra_metadata", [])
