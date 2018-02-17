@@ -294,6 +294,11 @@ class Party(AbstractMetaDataElement):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default={})
 
+    # used for validation of user entered identifiers
+    pre_defined_identifiers = {'ResearchGate': 'https://www.researchgate.net/',
+                               'ORCID': 'https://orcid.org/',
+                               'Google Scholar': 'https://scholar.google.com/',
+                               'ResearcherID': 'https://www.researcherid.com/'}
     def __unicode__(self):
         """Return name field for unicode representation."""
         return self.name
@@ -329,7 +334,10 @@ class Party(AbstractMetaDataElement):
         """Define custom create method for Party model."""
         element_name = cls.__name__
 
-        cls._validate_identifiers(kwargs)
+        identifiers = kwargs.get('identifiers', '')
+        if identifiers:
+            cls.validate_identifiers(identifiers)
+
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         if element_name == 'Creator':
@@ -377,7 +385,10 @@ class Party(AbstractMetaDataElement):
                 creator_order = 1
             del kwargs['order']
 
-        cls._validate_identifiers(kwargs)
+        identifiers = kwargs.get('identifiers', '')
+        if identifiers:
+            cls.validate_identifiers(identifiers)
+
         party = super(Party, cls).update(element_id, **kwargs)
 
         if isinstance(party, Creator) and creator_order is not None:
@@ -425,38 +436,50 @@ class Party(AbstractMetaDataElement):
         party.delete()
 
     @classmethod
-    def _validate_identifiers(cls, kwargs):
-        if 'identifiers' in kwargs:
-            if not isinstance(kwargs['identifiers'], dict):
-                if kwargs['identifiers']:
-                    # validation form can populate the dict(kwargs) with key 'identifiers" with
-                    # value of empty string if data passed to the validation form did not had this
-                    # key. In that case no need to convert the string to dict
-                    try:
-                        kwargs['identifiers'] = json.loads(kwargs['identifiers'])
-                    except ValueError:
-                        raise ValidationError("Value for identifiers not in the correct format")
-            identifiers = kwargs['identifiers']
+    def validate_identifiers(cls, identifiers):
+        """Validates optional identifiers for user/creator/contributor
+        :param  identifiers: identifier data as a json string or as a dict
+        """
+
+        if not isinstance(identifiers, dict):
             if identifiers:
-                # validate identifier values - check for duplicate links
-                links = [l.lower() for l in identifiers.values()]
-                if len(links) != len(set(links)):
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "Duplicate identifier links found.")
+                # validation form can populate the dict(kwargs) with key 'identifiers" with
+                # value of empty string if data passed to the validation form did not had this
+                # key. In that case no need to convert the string to dict
+                try:
+                    identifiers = json.loads(identifiers)
+                except ValueError:
+                    raise ValidationError("Value for identifiers not in the correct format")
+        # identifiers = kwargs['identifiers']
+        if identifiers:
+            # validate identifier values - check for duplicate links
+            links = [l.lower() for l in identifiers.values()]
+            if len(links) != len(set(links)):
+                raise ValidationError("Invalid data found for identifiers. "
+                                      "Duplicate identifier links found.")
 
-                for link in links:
-                    validator = URLValidator()
-                    try:
-                        validator(link)
-                    except ValidationError:
-                        raise ValidationError("Invalid data found for identifiers. "
-                                              "Identifier link must be a URL.")
-
-                # validate identifier keys - check for duplicate names
-                names = [n.lower() for n in identifiers.keys()]
-                if len(names) != len(set(names)):
+            for link in links:
+                validator = URLValidator()
+                try:
+                    validator(link)
+                except ValidationError:
                     raise ValidationError("Invalid data found for identifiers. "
-                                          "Duplicate identifier names found")
+                                          "Identifier link must be a URL.")
+
+            # validate identifier keys - check for duplicate names
+            names = [n.lower() for n in identifiers.keys()]
+            if len(names) != len(set(names)):
+                raise ValidationError("Invalid data found for identifiers. "
+                                      "Duplicate identifier names found")
+
+            # validate that the links for the known identifiers are valid
+            for id_name in cls.pre_defined_identifiers:
+                id_link = identifiers.get(id_name, '')
+                if id_link:
+                    if not id_link.startswith(cls.pre_defined_identifiers[id_name]) \
+                            or len(id_link) <= len(cls.pre_defined_identifiers[id_name]):
+                        raise ValidationError("URL for {} is invalid".format(id_name))
+        return identifiers
 
 
 class Contributor(Party):

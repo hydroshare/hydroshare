@@ -219,7 +219,7 @@ def update_user_profile(request):
     # create a dict of identifier names and links for the identifiers field of the  UserProfile
     try:
         post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
-        identifiers = post_data_dict['identifiers']
+        identifiers = post_data_dict.get('identifiers', {})
     except Exception as ex:
         messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])

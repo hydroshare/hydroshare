@@ -22,6 +22,7 @@ from mezzanine.conf import settings
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
+from hs_core.models import Party
 
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
@@ -329,24 +330,4 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
-        if data:
-            # validate identifier values - check for duplicate links
-            links = [l.lower() for l in data.values()]
-            if len(links) != len(set(links)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier links found.")
-
-            for link in links:
-                validator = URLValidator()
-                try:
-                    validator(link)
-                except ValidationError:
-                    raise forms.ValidationError("Invalid data found for identifiers. "
-                                                "Identifier link must be a URL.")
-
-            # validate identifier keys - check for duplicate names
-            names = [n.lower() for n in data.keys()]
-            if len(names) != len(set(names)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier names found")
-        return data
+        return Party.validate_identifiers(data)
