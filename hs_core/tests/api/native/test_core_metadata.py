@@ -321,7 +321,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
     def test_party_external_links(self):
         # TESTING LINKS FOR CREATOR: add creator element with profile links (identifiers)
         kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
-                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+                  'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001'}}
         resource.create_metadata_element(self.res.short_id, 'creator', **kwargs)
         # test external link (identifiers)
         cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
@@ -332,13 +332,13 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that trying to add an identifier that doesn't have a valid url value should
         # raise exception
-        kwargs = {'identifiers': {'ResearchGate': 'researchgate.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGateID': 'researchgate.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator',
                                              cr_lisa.id, **kwargs)
 
         # test that the url for ResearchGate must start with https://www.researchgate.net/
-        kwargs = {'identifiers': {'ResearchGate': 'https://researchgate.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGateID': 'https://researchgate.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator',
                                              cr_lisa.id, **kwargs)
@@ -350,7 +350,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                  cr_lisa.id, **kwargs)
 
         # test that the url for Google Scholar must start with https://scholar.google.com/
-        kwargs = {'identifiers': {'Google Scholar': 'https://scholar.google.org/LH001'}}
+        kwargs = {'identifiers': {'GoogleScholarID': 'https://scholar.google.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator',
                                              cr_lisa.id, **kwargs)
@@ -362,7 +362,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                              cr_lisa.id, **kwargs)
 
         # test that multiple identifiers can be created for one creator
-        kwargs = {'identifiers': {'ResearchGate': 'https://www.researchgate.net/LH001',
+        kwargs = {'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001',
                                  'ORCID': 'https://orcid.org/LH001'}}
 
         resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
@@ -372,7 +372,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Creator Lisa does not have 2 identifier.")
 
         for name, link in cr_lisa.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID'])
+            self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001'])
 
         # test that duplicate identifier name is not allowed - should raise validation error
@@ -397,7 +397,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # TESTING LINKS FOR CONTRIBUTOR: add contributor element with profile links/identifiers
         kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
-                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+                  'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001'}}
         resource.create_metadata_element(self.res.short_id, 'contributor', **kwargs)
         # test external link
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
@@ -407,9 +407,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="contributor Lisa does not have 1 external link.")
 
         # test that multiple identifiers can be created for one contributor
-        kwargs = {'identifiers': {'ResearchGate': 'https://www.researchgate.net/LH001',
+        kwargs = {'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001',
                                   'ORCID': 'https://orcid.org/LH001',
-                                  'Google Scholar': 'https://scholar.google.com/LH001',
+                                  'GoogleScholarID': 'https://scholar.google.com/LH001',
                                   'ResearcherID': 'https://www.researcherid.com/LH001'}}
         resource.update_metadata_element(self.res.short_id, 'contributor', con_lisa.id, **kwargs)
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
@@ -417,7 +417,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Contributor Lisa does not have 4 identifier.")
 
         for name, link in con_lisa.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID', 'Google Scholar', 'ResearcherID'])
+            self.assertIn(name, ['ResearchGateID', 'ORCID', 'GoogleScholarID', 'ResearcherID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001',
                                  'https://scholar.google.com/LH001',
                                  'https://www.researcherid.com/LH001'])
@@ -1432,8 +1432,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        identifiers = {'researchID': 'http://research.org/001',
-                       'researchGateID': 'http://research-gate.org/001'}
+        identifiers = {'ResearcherID': 'https://www.researcherid.com/001',
+                       'ResearchGateID': 'https://www.researchgate.net/001'}
         self.res.metadata.create_element('creator',
                                          name=cr_name,
                                          description=cr_des,

@@ -36,7 +36,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
                              'organization': 'Utah State University',
                              'identifiers': {'ORCID': 'https://orcid.org/john',
-                                             'ResearchGate': 'https://www.researchgate.net/john'}
+                                             'ResearchGateID': 'https://www.researchgate.net/john'}
                              }},
             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                       'end': '12/12/2012'}}},
@@ -97,7 +97,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(contributor.email, 'kmarshal@yahoo.com')
         self.assertEquals(contributor.organization, 'Utah State University')
         for name, link in contributor.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID'])
+            self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://orcid.org/john', 'https://www.researchgate.net/john'])
 
         # there should be now 2 coverage elements

@@ -58,7 +58,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          phone=cr_phone,
                                          homepage=cr_homepage,
                                          identifiers={'ORCID': 'http://orcid.org/john',
-                                                      'ResearchGate':
+                                                      'ResearchGateID':
                                                           'http://researchgate.org/john'})
 
         # add another creator with only the name
@@ -82,7 +82,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          phone=con_phone,
                                          homepage=con_homepage,
                                          identifiers={'ORCID': 'http://orcid.org/john',
-                                                      'ResearchGate':
+                                                      'ResearchGateID':
                                                           'http://researchgate.org/john'})
 
         # add another creator with only the name

@@ -129,7 +129,7 @@ class TestCreateResource(HSRESTTestCase):
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
         con_identifiers = {'ORCID': 'https://orcid.org/mike_s',
-                           'ResearchGate': 'https://www.researchgate.net/mike_s'}
+                           'ResearchGateID': 'https://www.researchgate.net/mike_s'}
         metadata.append({'contributor': {'name': con_name,
                                          'organization': con_org, 'email': con_email,
                                          'address': con_address, 'phone': con_phone,
@@ -144,7 +144,7 @@ class TestCreateResource(HSRESTTestCase):
         cr_phone = '801-567=9090'
         cr_homepage = 'http://byu.edu/homepage/002'
         cr_identifiers = {'ORCID': 'https://orcid.org/john_smith',
-                          'ResearchGate': 'https://www.researchgate.net/john_smith'}
+                          'ResearchGateID': 'https://www.researchgate.net/john_smith'}
         metadata.append({'creator': {'name': cr_name, 'organization': cr_org,
                                      'email': cr_email, 'address': cr_address,
                                      'phone': cr_phone, 'homepage': cr_homepage,
