@@ -294,11 +294,11 @@ class Party(AbstractMetaDataElement):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default={})
 
-    # used for validation of user entered identifiers
-    pre_defined_identifiers = {'ResearchGate': 'https://www.researchgate.net/',
-                               'ORCID': 'https://orcid.org/',
-                               'Google Scholar': 'https://scholar.google.com/',
-                               'ResearcherID': 'https://www.researcherid.com/'}
+    # list of identifier currently supported
+    supported_identifiers = {'ResearchGateID': 'https://www.researchgate.net/',
+                             'ORCID': 'https://orcid.org/',
+                             'GoogleScholarID': 'https://scholar.google.com/',
+                             'ResearcherID': 'https://www.researcherid.com/'}
     def __unicode__(self):
         """Return name field for unicode representation."""
         return self.name
@@ -454,6 +454,11 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Value for identifiers not in the correct format")
         # identifiers = kwargs['identifiers']
         if identifiers:
+            # validate the identifiers are one of the supported ones
+            for name in identifiers:
+                if name not in cls.supported_identifiers:
+                    raise ValidationError("Invalid data found for identifiers. "
+                                          "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
             links = [l.lower() for l in identifiers.values()]
             if len(links) != len(set(links)):
@@ -475,11 +480,11 @@ class Party(AbstractMetaDataElement):
                                       "Duplicate identifier names found")
 
             # validate that the links for the known identifiers are valid
-            for id_name in cls.pre_defined_identifiers:
+            for id_name in cls.supported_identifiers:
                 id_link = identifiers.get(id_name, '')
                 if id_link:
-                    if not id_link.startswith(cls.pre_defined_identifiers[id_name]) \
-                            or len(id_link) <= len(cls.pre_defined_identifiers[id_name]):
+                    if not id_link.startswith(cls.supported_identifiers[id_name]) \
+                            or len(id_link) <= len(cls.supported_identifiers[id_name]):
                         raise ValidationError("URL for {} is invalid".format(id_name))
         return identifiers
 
@@ -4188,9 +4193,6 @@ class CoreMetaData(models.Model):
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
         for name, link in person.identifiers.iteritems():
-            name = name.replace(" ", "")
-            if not name.endswith("ID"):
-                name = name + "ID"
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
