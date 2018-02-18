@@ -1,13 +1,10 @@
 """Django forms for hs_core module."""
 
 import copy
-import json
 
 from django.forms import ModelForm, BaseFormSet
 from django.contrib.admin.widgets import forms
 from django.utils.safestring import mark_safe
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML

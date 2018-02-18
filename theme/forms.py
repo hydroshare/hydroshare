@@ -9,8 +9,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
 from django.contrib.auth.models import User
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 from mezzanine.core.forms import Html5Mixin
 from mezzanine.generic.models import ThreadedComment, Rating
