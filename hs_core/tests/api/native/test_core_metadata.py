@@ -337,9 +337,33 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             resource.update_metadata_element(self.res.short_id, 'creator',
                                              cr_lisa.id, **kwargs)
 
+        # test that the url for ResearchGate must start with https://www.researchgate.net/
+        kwargs = {'identifiers': {'ResearchGate': 'https://researchgate.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
+        # test that the url for ORCID must start with https://orcid.org/
+        kwargs = {'identifiers': {'ORCID': 'http://orcid.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                                 cr_lisa.id, **kwargs)
+
+        # test that the url for Google Scholar must start with https://scholar.google.com/
+        kwargs = {'identifiers': {'Google Scholar': 'https://scholar.google.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
+        # test that the url for ResearcherID must start with https://www.researcherid.com/
+        kwargs = {'identifiers': {'ResearcherID': 'https://researcherid.com/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
         # test that multiple identifiers can be created for one creator
-        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
-                                 'ORCID': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGate': 'https://www.researchgate.net/LH001',
+                                 'ORCID': 'https://orcid.org/LH001'}}
 
         resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
         # lisa should have 2 external profile link
@@ -349,17 +373,17 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         for name, link in cr_lisa.identifiers.iteritems():
             self.assertIn(name, ['ResearchGate', 'ORCID'])
-            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
+            self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001'])
 
         # test that duplicate identifier name is not allowed - should raise validation error
-        kwargs = {'identifiers': {'ORCID': 'http://researchgate.org/LH001',
-                                 'orcid': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ORCID': 'https://www.researchgate.net/LH001',
+                                 'orcid': 'https://orcid.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
 
         # test that duplicate identifier link is not allowed - should raise validation error
-        kwargs = {'identifiers': {'researchGate': 'http://researchgate.org/LH001',
-                                 'ORCID': 'http://researchgate.org/LH001'}}
+        kwargs = {'identifiers': {'researchGate': 'https://www.researchgate.net/LH001',
+                                 'ORCID': 'https://www.researchgate.net/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
@@ -383,16 +407,20 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="contributor Lisa does not have 1 external link.")
 
         # test that multiple identifiers can be created for one contributor
-        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
-                                  'ORCID': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGate': 'https://www.researchgate.net/LH001',
+                                  'ORCID': 'https://orcid.org/LH001',
+                                  'Google Scholar': 'https://scholar.google.com/LH001',
+                                  'ResearcherID': 'https://www.researcherid.com/LH001'}}
         resource.update_metadata_element(self.res.short_id, 'contributor', con_lisa.id, **kwargs)
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
-        self.assertEqual(len(con_lisa.identifiers), 2,
-                         msg="Contributor Lisa does not have 2 identifier.")
+        self.assertEqual(len(con_lisa.identifiers), 4,
+                         msg="Contributor Lisa does not have 4 identifier.")
 
         for name, link in con_lisa.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID'])
-            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
+            self.assertIn(name, ['ResearchGate', 'ORCID', 'Google Scholar', 'ResearcherID'])
+            self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001',
+                                 'https://scholar.google.com/LH001',
+                                 'https://www.researcherid.com/LH001'])
 
         # test deleting all identifiers for the contributor
         kwargs = {'identifiers': {}}

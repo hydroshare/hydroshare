@@ -336,7 +336,8 @@ class Party(AbstractMetaDataElement):
 
         identifiers = kwargs.get('identifiers', '')
         if identifiers:
-            cls.validate_identifiers(identifiers)
+            identifiers = cls.validate_identifiers(identifiers)
+            kwargs['identifiers'] = identifiers
 
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
@@ -387,7 +388,8 @@ class Party(AbstractMetaDataElement):
 
         identifiers = kwargs.get('identifiers', '')
         if identifiers:
-            cls.validate_identifiers(identifiers)
+            identifiers = cls.validate_identifiers(identifiers)
+            kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
 

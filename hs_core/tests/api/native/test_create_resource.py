@@ -144,7 +144,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
             {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
                              'organization': 'Utah State University',
-                             'identifiers': {'ORCID': 'http://orcid.org/john', 'ResearchGate': 'http://researchgate.org/john'}}},
+                             'identifiers': {'ORCID': 'https://orcid.org/john', 'ResearchGate': 'https://www.researchgate.net/john'}}},
             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
