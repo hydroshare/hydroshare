@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.features import Features
+from hs_explore.utils import Utils
 from datetime import datetime
 from pprint import pprint
 
@@ -34,4 +35,5 @@ class Command(BaseCommand):
         # print the feature vector for all resources.
 
         for r in BaseResource.objects.all():
-            pprint(Features.resource_features(r))
+            # pprint(Features.resource_features(r))
+            Utils.write_dict("ALL_RESOURCES_ALL_FEATURES.OUT", Features.resource_features(r))

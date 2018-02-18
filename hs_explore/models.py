@@ -38,7 +38,7 @@ class Recommend(models.Model):
     # def get_privilege(cls, **kwargs):
     #     return none;
 
-    @classmethod
+    #@classmethod
     def read(filename):
         dict1 = defaultdict(set)
         with open(filename, 'r') as f:
@@ -124,40 +124,41 @@ class Recommend(models.Model):
 
         return top_n
 
-    user_dl = read(USER_DL_FILE)
-    resource_dl = read(RESOURCE_DL_FILE)
+    def run_svd(self):
+        user_dl = read(USER_DL_FILE)
+        resource_dl = read(RESOURCE_DL_FILE)
 
-    user_resource_orig, user_resource, R = clean(user_dl, resource_dl)
+        user_resource_orig, user_resource, R = clean(user_dl, resource_dl)
 
-    write(SUPRISE_OUTPUT_FILE, user_resource_orig)
+        write(SUPRISE_OUTPUT_FILE, user_resource_orig)
 
-    # First train an SVD algorithm on the custom dataset.
-    # Pode botar tb: timestamp
-    reader = Reader(line_format='user item rating', sep=' ', skip_lines=0, rating_scale=(1, 5))
+        # First train an SVD algorithm on the custom dataset.
+        # Pode botar tb: timestamp
+        reader = Reader(line_format='user item rating', sep=' ', skip_lines=0, rating_scale=(1, 5))
+    
+        custom_dataset_path = (os.path.dirname(os.path.realpath(__file__)) + '/' + SUPRISE_OUTPUT_FILE)
+        print("> Using: " + custom_dataset_path)
+        print("> Loading data...")
+        data = Dataset.load_from_file(file_path=custom_dataset_path, reader=reader)
 
-    custom_dataset_path = (os.path.dirname(os.path.realpath(__file__)) + '/' + SUPRISE_OUTPUT_FILE)
-    print("> Using: " + custom_dataset_path)
-    print("> Loading data...")
-    data = Dataset.load_from_file(file_path=custom_dataset_path, reader=reader)
+        print("Creating trainset...")
+        trainset = data.build_full_trainset()
 
-    print("Creating trainset...")
-    trainset = data.build_full_trainset()
+        print("Training...")
+        algo = SVD()
+        algo.train(trainset)
 
-    print("Training...")
-    algo = SVD()
-    algo.train(trainset)
+        # Than predict ratings for all pairs (u, i) that are NOT in the training set.
+        print("Predicting...")
+        testset = trainset.build_anti_testset()
+        # print "len testset=", (len(testset))
+        predictions = algo.test(testset)
+        # print "len predictions=", (len(predictions))
 
-    # Than predict ratings for all pairs (u, i) that are NOT in the training set.
-    print("Predicting...")
-    testset = trainset.build_anti_testset()
-    # print "len testset=", (len(testset))
-    predictions = algo.test(testset)
-    # print "len predictions=", (len(predictions))
+        top_n = get_top_n(predictions, n=10)
+        # print("OK")
 
-    top_n = get_top_n(predictions, n=10)
-    # print("OK")
-
-    # Print the recommended items for each user
-    print("> Results:")
-    for uid, user_ratings in top_n.items():
-        print(uid, [iid for (iid, _) in user_ratings])
+        # Print the recommended items for each user
+        print("> Results:")
+        for uid, user_ratings in top_n.items():
+            print(uid, [iid for (iid, _) in user_ratings])
