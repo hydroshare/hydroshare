@@ -1,5 +1,7 @@
 import json
 
+from django.shortcuts import get_object_or_404
+
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import serializers
@@ -19,41 +21,48 @@ class JSONSerializerField(serializers.Field):
 
 
 class FileMetaDataSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    keywords = JSONSerializerField()
-    spatial_coverage = JSONSerializerField()
-    extra_metadata = JSONSerializerField()
-    temporal_coverage = JSONSerializerField()
+    title = serializers.CharField(required=False)
+    keywords = JSONSerializerField(required=False)
+    spatial_coverage = JSONSerializerField(required=False)
+    extra_metadata = JSONSerializerField(required=False)
+    temporal_coverage = JSONSerializerField(required=False)
 
 
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
     allowed_methods = ('GET', 'PUT')
 
-    def validate(self, data):
-        if not resource_file.has_logical_file:
-            raise serializers.ValidationError(u"Resource file has no logical file.")
-
     def get(self, request, pk, file_id):
         """ Get a resource file's metadata. """
-        resource_file = ResourceFile.objects.get(id=file_id)
+        resource_file = get_object_or_404(ResourceFile, id=file_id)
 
-        if resource_file.metadata == None:
+        if resource_file.metadata is None or not resource_file.has_logical_file:
             return Response({}, status=404)
+
+        title = resource_file.metadata.logical_file.dataset_name \
+            if resource_file.metadata.logical_file else ""
+        keywords = resource_file.metadata.keywords \
+            if resource_file.metadata else []
+        spatial_coverage = resource_file.metadata.spatial_coverage.value \
+            if resource_file.metadata.spatial_coverage else {}
+        extra_metadata = resource_file.metadata.extra_metadata \
+            if resource_file.metadata else []
+        spatial_coverage = resource_file.metadata.temporal_coverage.value if \
+            resource_file.metadata.temporal_coverage else {}
 
         # TODO: How to leverage serializer for this?
         return Response({
-            "title": file_metadata.logical_file.dataset_name,
-            "keywords": file_metadata.keywords,
-            "spatial_coverage": file_metadata.spatial_coverage.value,
-            "extra_metadata": file_metadata.extra_metadata,
-            "temporal_coverage": file_metadata.temporal_coverage.value
+            "title": title,
+            "keywords": keywords,
+            "spatial_coverage": spatial_coverage,
+            "extra_metadata": extra_metadata,
+            "temporal_coverage": spatial_coverage
         })
 
     def put(self, request, pk, file_id):
         """ Update a resource file's metadata """
-        metadata_json = json.loads(request.body)
-        file_serializer = FileMetaDataSerializer(metadata_json)
+        print(request.data)
+        file_serializer = FileMetaDataSerializer(request.data)
 
         title = file_serializer.data.pop("title", "")
         resource_file = ResourceFile.objects.get(id=file_id)
