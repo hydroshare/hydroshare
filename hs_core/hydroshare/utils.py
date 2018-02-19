@@ -991,7 +991,11 @@ def push_res_to_geohub(user, shortkey):
     istorage = res.get_irods_storage()
     src_path = res.root_path
     dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username, shortkey)
-    istorage.copyFiles(src_path, dest_path)
+    if istorage.exists(dest_path):
+        # if resource directory already exists in target, cannot include it in target
+        # path due to mygeohub iRODS server federation permission settings
+        dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username)
+    istorage.copyFiles(src_path, dest_path, settings.GEOHUB_HS_IRODS_RESC)
 
 
 def add_metadata_element_to_xml(root, md_element, md_fields):

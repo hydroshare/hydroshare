@@ -52,7 +52,7 @@ class AppLaunch(TemplateView):
 
             if settings.GEOHUB_HOMEPAGE_URL in url:
                 # TO DO: need to retrieve resource id from query dict
-                res_id = ''
+                res_id = url.split('/')[-1]
                 push_res_to_geohub(request.user, res_id)
 
         return HttpResponseRedirect(url)
