@@ -183,13 +183,22 @@ function onRemoveKeywordFileType(event) {
     $("#id-keywords-filetype-msg").hide();
 }
 
-function customAlert(msg, duration) {
+// Alert Types: "error", "success", "info"
+function customAlert(alertTitle, msg, alertType, duration) {
+    alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
     var left = ($(window).width() / 2) - 150;
     var style = "top:" + top + "px;left:" + left + "px";
+    var alertTypes = {
+        success: {class: "alert alert-success", icon: "fa fa-check"},
+        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
+        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
+    };
     el.setAttribute("style", style);
-    el.setAttribute("class", "custom-alert");
+    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
+    msg = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + msg;
     el.innerHTML = msg;
     setTimeout(function () {
         $(el).fadeOut(300, function () {
@@ -311,10 +320,8 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    var $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i>" +
-        "<strong>Success:</strong> Extended metadata updated";
-    var $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i>" +
-        "<strong>Error:</strong> Extended metadata failed to update";
+    var successMsg = "Extended metadata updated.";
+    var errorMsg = "Extended metadata failed to update.";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -338,17 +345,17 @@ function saveExtraMetadata() {
         success: function(result) {
             var json_response = result;
             if (json_response.status === 'success') {
-                customAlert($alert_success_extra_meta, 3000);
+                customAlert("Success!", successMsg, "success", 3000);
                 if (json_response.is_dirty) {
                     $('#netcdf-file-update').show();
                 }
             }
             else {
-                customAlert($alert_error_extra_meta, 3000);
+                customAlert("Error!", errorMsg, "error", 3000);
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            customAlert($alert_error_extra_meta, 3000);
+            customAlert("Error!", errorMsg, "error", 3000);
         }
     });
 } // function saveExtraMetadata()
