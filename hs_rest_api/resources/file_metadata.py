@@ -13,6 +13,7 @@ class JSONSerializerField(serializers.Field):
 
     def to_internal_value(self, data):
         return data
+
     def to_representation(self, value):
         return value
 
@@ -29,10 +30,16 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
     allowed_methods = ('GET', 'PUT')
 
+    def validate(self, data):
+        if not resource_file.has_logical_file:
+            raise serializers.ValidationError(u"Resource file has no logical file.")
+
     def get(self, request, pk, file_id):
         """ Get a resource file's metadata. """
         resource_file = ResourceFile.objects.get(id=file_id)
-        file_metadata = resource_file.metadata
+
+        if resource_file.metadata == None:
+            return Response({}, status=404)
 
         # TODO: How to leverage serializer for this?
         return Response({
