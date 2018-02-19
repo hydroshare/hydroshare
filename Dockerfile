@@ -11,7 +11,8 @@ RUN pip install \
   jsonschema \
   nameparser \
   probablepeople \
-  geopy
+  geopy \
+  scikit-surprise
 ### End - HydroShare Development Image Additions ###
 
 USER root
