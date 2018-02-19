@@ -299,6 +299,7 @@ class Party(AbstractMetaDataElement):
                              'ORCID': 'https://orcid.org/',
                              'GoogleScholarID': 'https://scholar.google.com/',
                              'ResearcherID': 'https://www.researcherid.com/'}
+
     def __unicode__(self):
         """Return name field for unicode representation."""
         return self.name
