@@ -1,6 +1,7 @@
 from django.db import models, transaction
 from hs_core.models import BaseResource
 from django.contrib.auth.models import User
+from hs_core.hydroshare import user_from_id, get_resource_by_shortkey
 
 
 class Status(object):
@@ -11,7 +12,7 @@ class Status(object):
     STATUS_CHOICES = (
         (STATUS_NEW, 'New'),
         (STATUS_VIEWED, 'Viewed'),
-        (STATUS_APPROVED, 'Approved'), 
+        (STATUS_APPROVED, 'Approved'),
         (STATUS_DISMISSED, 'Dismissed')
     )
 
@@ -29,6 +30,13 @@ class Recommend(models.Model):
     def recommend(u, r):
         with transaction.atomic:
             Recommend.objects.get_or_create(user=u, resource=r)
+
+    @classmethod
+    def recommend_ids(uid, rid):
+        """ use string ids rather than User and Resource objects """
+        u = user_from_id(uid, raise404=False)
+        r = get_resource_by_shortkey(rid, or_404=False)
+        Recommend.recommend(u, r)
 
     def viewed(self):
         self.state = Status.STATUS_VIEWED
