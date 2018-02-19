@@ -184,7 +184,7 @@ function onRemoveKeywordFileType(event) {
 }
 
 // Alert Types: "error", "success", "info"
-function customAlert(alertTitle, msg, alertType, duration) {
+function customAlert(alertTitle, alertMessage, alertType, duration) {
     alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
@@ -197,9 +197,9 @@ function customAlert(alertTitle, msg, alertType, duration) {
     };
     el.setAttribute("style", style);
     el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
-    msg = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
-        + alertTitle + '</strong><br>' + msg;
-    el.innerHTML = msg;
+    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + alertMessage;
+    el.innerHTML = alertMessage;
     setTimeout(function () {
         $(el).fadeOut(300, function () {
             $(this).remove();
