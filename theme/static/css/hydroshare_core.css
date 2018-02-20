@@ -1391,19 +1391,7 @@ body > .main-container {
 
 .custom-alert {
 	position: fixed;
-	background-color: lightgreen;
-	padding: 0 10px;
-	text-align: center;
-	line-height: 50px;
-	text-shadow: 1px -1px #BEFFBE;
 	z-index: 2;
-}
-
-.custom-alert-icon {
-    font-size: 24px;
-    color: #337133;
-    top: 5px;
-    margin-right: 10px;
 }
 
 .alert-dismissible {
