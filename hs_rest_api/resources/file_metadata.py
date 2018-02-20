@@ -61,7 +61,6 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, pk, file_id):
         """ Update a resource file's metadata """
-        print(request.data)
         file_serializer = FileMetaDataSerializer(request.data)
 
         title = file_serializer.data.pop("title", "")
@@ -69,26 +68,45 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         resource_file.metadata.logical_file.dataset_name = title
         resource_file.metadata.logical_file.save()
 
-        spatial_coverage = file_serializer.data.pop("spatial_coverage", {})
-        Coverage.update(resource_file.metadata.spatial_coverage.id,
-                        _value=json.dumps(spatial_coverage))
+        spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
+        if spatial_coverage is not None:
+            if resource_file.metadata.spatial_coverage is not None:
+                Coverage.update(resource_file.metadata.spatial_coverage.id,
+                                _value=json.dumps(spatial_coverage))
+            # elif resource_file.metadata.spatial_coverage is None:
+                # TODO: What is the proper way to create spatial coverage??
 
-        temporal_coverage = file_serializer.data.pop("temporal_coverage", {})
-        Coverage.update(resource_file.metadata.temporal_coverage.id,
-                        _value=json.dumps(temporal_coverage))
+        temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
+        if temporal_coverage is not None:
+            Coverage.update(resource_file.metadata.temporal_coverage.id,
+                            _value=json.dumps(temporal_coverage))
 
-        keywords = file_serializer.data.pop("keywords", [])
-        extra_metadata = file_serializer.data.pop("extra_metadata", [])
-        resource_file.metadata.extra_metadata = extra_metadata
-        resource_file.metadata.keywords = keywords
+        keywords = file_serializer.data.pop("keywords", None)
+        if keywords is not None:
+            resource_file.metadata.keywords = keywords
+
+        extra_metadata = file_serializer.data.pop("extra_metadata", None)
+        if extra_metadata is not None:
+            resource_file.metadata.extra_metadata = extra_metadata
+
         resource_file.metadata.save()
 
         # TODO: How to leverage serializer for this?
-        file_metadata = resource_file.metadata
+        title = resource_file.metadata.logical_file.dataset_name \
+            if resource_file.metadata.logical_file else ""
+        keywords = resource_file.metadata.keywords \
+            if resource_file.metadata else []
+        spatial_coverage = resource_file.metadata.spatial_coverage.value \
+            if resource_file.metadata.spatial_coverage else {}
+        extra_metadata = resource_file.metadata.extra_metadata \
+            if resource_file.metadata else []
+        spatial_coverage = resource_file.metadata.temporal_coverage.value if \
+            resource_file.metadata.temporal_coverage else {}
+
         return Response({
-            "title": file_metadata.logical_file.dataset_name,
-            "keywords": file_metadata.keywords,
-            "spatial_coverage": file_metadata.spatial_coverage.value,
-            "extra_metadata": file_metadata.extra_metadata,
-            "temporal_coverage": file_metadata.temporal_coverage.value
+            "title": title,
+            "keywords": keywords,
+            "spatial_coverage": spatial_coverage,
+            "extra_metadata": extra_metadata,
+            "temporal_coverage": spatial_coverage
         })
