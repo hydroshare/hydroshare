@@ -3,11 +3,9 @@ import json
 import tempfile
 
 from django.core.urlresolvers import reverse
-from django.db import transaction
+from rest_framework import status
 
 from hs_core.tests.api.rest.base import HSRESTTestCase
-
-from rest_framework import status
 
 
 class TestResourceFileMetadataEndpoint(HSRESTTestCase):
@@ -39,7 +37,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(reverse('get_update_delete_resource', kwargs={"pk": res_id}))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-        response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id }))
+        response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
         response_json = json.loads(response.content)
         self.assertEqual(response_json.get("results"), [])
 
@@ -49,11 +47,12 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         txt = open(txt_file_path, 'w')
         txt.write("Hello World, again.\n")
         txt.close()
-        response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}), {
-            'file': (txt_file_name,
-            open(txt_file_path),
-            'text/plain')
-        })
+        response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}),
+                                    {
+                                        'file': (txt_file_name,
+                                        open(txt_file_path),
+                                        'text/plain')
+                                    })
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
         response_json = json.loads(response.content)

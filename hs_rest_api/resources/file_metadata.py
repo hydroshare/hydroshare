@@ -142,7 +142,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                                 _value=json.dumps(spatial_coverage))
             elif resource_file.metadata.spatial_coverage is None:
                 resource_file.metadata.create_element('coverage', type="point",
-                                                      _value =json.dumps(spatial_coverage))
+                                                      _value=json.dumps(spatial_coverage))
 
         temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
         if temporal_coverage is not None:
@@ -151,7 +151,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                                 _value=json.dumps(temporal_coverage))
             elif resource_file.metadata.temporal_coverage is None:
                 resource_file.metadata.create_element('coverage', type="period",
-                                                      _value =json.dumps(temporal_coverage))
+                                                      _value=json.dumps(temporal_coverage))
 
         keywords = file_serializer.data.pop("keywords", None)
         if keywords is not None:
