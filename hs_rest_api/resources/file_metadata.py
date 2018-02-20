@@ -33,7 +33,39 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk, file_id):
-        """ Get a resource file's metadata. """
+        """
+        Get a resource file's metadata.
+
+        ## Parameters
+        * `id` - alphanumeric uuid of the resource, i.e. cde01b3898c94cdab78a2318330cf795
+        * `file_id` - integer id of the resource file. You can use the `/hsapi/resource/{id}/files`
+        to get these
+
+        ## Returns
+        ```
+        {
+            "keywords": [
+                "keyword1",
+                "keyword2"
+            ],
+            "spatial_coverage": {
+                "units": "Decimal degrees",
+                "east": -84.0465,
+                "north": 49.6791,
+                "name": "12232",
+                "projection": "WGS 84 EPSG:4326"
+            },
+            "extra_metadata": {
+                "extended1": "one"
+            },
+            "temporal_coverage": {
+                "start": "2018-02-22",
+                "end": "2018-02-24"
+            },
+            "title": "File Metadata Title"
+        }
+        ```
+        """
         resource_file = get_object_or_404(ResourceFile, id=file_id)
 
         if resource_file.metadata is None or not resource_file.has_logical_file:
@@ -47,7 +79,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             if resource_file.metadata.spatial_coverage else {}
         extra_metadata = resource_file.metadata.extra_metadata \
             if resource_file.metadata else []
-        spatial_coverage = resource_file.metadata.temporal_coverage.value if \
+        temporal_coverage = resource_file.metadata.temporal_coverage.value if \
             resource_file.metadata.temporal_coverage else {}
 
         # TODO: How to leverage serializer for this?
@@ -56,11 +88,46 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             "keywords": keywords,
             "spatial_coverage": spatial_coverage,
             "extra_metadata": extra_metadata,
-            "temporal_coverage": spatial_coverage
+            "temporal_coverage": temporal_coverage
         })
 
     def put(self, request, pk, file_id):
-        """ Update a resource file's metadata """
+        """
+        Update a resource file's metadata
+
+        Accepts application/json encoding.
+
+        ## Parameters
+        * `id` - alphanumeric uuid of the resource, i.e. cde01b3898c94cdab78a2318330cf795
+        * `file_id` - integer id of the resource file. You can use the `/hsapi/resource/{id}/files`
+        to get these
+        * `data` - see the "returns" section for formatting
+
+        ## Returns
+        ```
+        {
+            "keywords": [
+                "keyword1",
+                "keyword2"
+            ],
+            "spatial_coverage": {
+                "units": "Decimal degrees",
+                "east": -84.0465,
+                "north": 49.6791,
+                "name": "12232",
+                "projection": "WGS 84 EPSG:4326"
+            },
+            "extra_metadata": {
+                "extended1": "one"
+            },
+            "temporal_coverage": {
+                "start": "2018-02-22",
+                "end": "2018-02-24"
+            },
+            "title": "File Metadata Title"
+        }
+        ```
+        """
         file_serializer = FileMetaDataSerializer(request.data)
 
         title = file_serializer.data.pop("title", "")
