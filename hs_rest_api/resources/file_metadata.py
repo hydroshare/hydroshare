@@ -180,5 +180,5 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             "keywords": keywords,
             "spatial_coverage": spatial_coverage,
             "extra_metadata": extra_metadata,
-            "temporal_coverage": spatial_coverage
+            "temporal_coverage": temporal_coverage
         })
