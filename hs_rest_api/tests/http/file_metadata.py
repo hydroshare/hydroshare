@@ -7,7 +7,6 @@ from django.db import transaction
 
 from hs_core.tests.api.rest.base import HSRESTTestCase
 
-# TODO: Use proper statuses
 from rest_framework import status
 
 
@@ -31,14 +30,14 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             'resource_type': 'CompositeResource',
             'title': "File Metadata Test Resource"
         })
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.content)
         res_id = response_json.get("resource_id")
         self.resources_to_delete.append(res_id)
 
         # Verify resource exists
         response = self.client.get(reverse('get_update_delete_resource', kwargs={"pk": res_id}))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id }))
         response_json = json.loads(response.content)
@@ -67,7 +66,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "file_id": file_id
         })
         response = self.client.get(file_metadata_url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Update title
         response = self.client.put(file_metadata_url, {
