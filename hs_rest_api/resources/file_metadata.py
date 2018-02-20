@@ -172,7 +172,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             if resource_file.metadata.spatial_coverage else {}
         extra_metadata = resource_file.metadata.extra_metadata \
             if resource_file.metadata else []
-        spatial_coverage = resource_file.metadata.temporal_coverage.value if \
+        temporal_coverage = resource_file.metadata.temporal_coverage.value if \
             resource_file.metadata.temporal_coverage else {}
 
         return Response({
