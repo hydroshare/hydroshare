@@ -288,7 +288,7 @@ function add_collection_item_ajax() {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
-                                customAlert("Collection Status:", "sufficient to publish or make public", "success", 3000);
+                                customAlert("Collection Status:", "Sufficient to publish or make public", "success", 3000);
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
