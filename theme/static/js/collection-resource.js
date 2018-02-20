@@ -5,7 +5,7 @@
 var paging = false;
 var page_length = 15;
 var page_type = "numbers";
-var page_length_change = false;
+
 $(document).ready(function() {
 
     //------------------ table headers ------------
@@ -95,7 +95,6 @@ $(document).ready(function() {
             "emptyTable": "All deleted resources have been cleared"
         }
     });
-
 
     // Mark checkbox when row is clicked
     $("#collection-table-candidate td").click(onCollectionTableRowClick);
