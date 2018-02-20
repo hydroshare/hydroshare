@@ -140,13 +140,18 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             if resource_file.metadata.spatial_coverage is not None:
                 Coverage.update(resource_file.metadata.spatial_coverage.id,
                                 _value=json.dumps(spatial_coverage))
-            # elif resource_file.metadata.spatial_coverage is None:
-                # TODO: What is the proper way to create spatial coverage??
+            elif resource_file.metadata.spatial_coverage is None:
+                resource_file.metadata.create_element('coverage', type="point",
+                                                      _value =json.dumps(spatial_coverage))
 
         temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
         if temporal_coverage is not None:
-            Coverage.update(resource_file.metadata.temporal_coverage.id,
-                            _value=json.dumps(temporal_coverage))
+            if resource_file.metadata.temporal_coverage is not None:
+                Coverage.update(resource_file.metadata.temporal_coverage.id,
+                                _value=json.dumps(temporal_coverage))
+            elif resource_file.metadata.temporal_coverage is None:
+                resource_file.metadata.create_element('coverage', type="period",
+                                                      _value =json.dumps(temporal_coverage))
 
         keywords = file_serializer.data.pop("keywords", None)
         if keywords is not None:

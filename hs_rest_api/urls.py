@@ -4,9 +4,9 @@ from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 
-from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
-
 from rest_framework_swagger.views import get_swagger_view
+
+from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
 schema_view = get_swagger_view(title='Hydroshare API')
 
