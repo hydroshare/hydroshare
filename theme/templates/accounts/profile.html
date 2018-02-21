@@ -183,6 +183,16 @@
                                         </small>
                                     </fieldset>
                                 </div>
+
+                                <div class="row">
+                                    {# email subscription #}
+                                    <fieldset class="col-sm-12">
+                                        <input type="checkbox" name="email_opt_out" id="id_email_opt_out"
+                                                {% if profile.email_opt_out %} checked {% endif %}>
+                                        <label class="form-check" for="id_email_opt_out">Opt out of receiving system
+                                            announcement emails such as announcements of planned downtime for system upgrades.</label>
+                                    </fieldset>
+                                </div>
                             </div>
                             {% endif %}
 
