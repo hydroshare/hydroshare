@@ -1,5 +1,3 @@
-import json
-
 from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
@@ -7,7 +5,7 @@ from rest_framework import generics
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, PermissionDenied, NotFound
 
-from hs_core.models import ResourceFile, Coverage
+from hs_core.models import ResourceFile
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 
@@ -148,8 +146,9 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
             if spatial_coverage is not None:
                 if resource_file.metadata.spatial_coverage is not None:
+                    cov_id =  resource_file.metadata.spatial_coverage.id
                     resource_file.metadata.update_element('coverage',
-                                                          resource_file.metadata.spatial_coverage.id,
+                                                          cov_id,
                                                           type='point',
                                                           value=spatial_coverage)
                 elif resource_file.metadata.spatial_coverage is None:
@@ -159,8 +158,9 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
             if temporal_coverage is not None:
                 if resource_file.metadata.temporal_coverage is not None:
+                    cov_id = resource_file.metadata.temporal_coverage.id
                     resource_file.metadata.update_element('coverage',
-                                                          resource_file.metadata.temporal_coverage.id,
+                                                          cov_id,
                                                           type='period',
                                                           value=temporal_coverage)
                 elif resource_file.metadata.temporal_coverage is None:

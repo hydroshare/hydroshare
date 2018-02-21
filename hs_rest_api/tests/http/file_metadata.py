@@ -50,8 +50,8 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}),
                                     {
                                         'file': (txt_file_name,
-                                        open(txt_file_path),
-                                        'text/plain')
+                                                 open(txt_file_path),
+                                                'text/plain')
                                     })
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
