@@ -5,8 +5,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import serializers
+from rest_framework.exceptions import APIException, PermissionDenied, NotFound
 
 from hs_core.models import ResourceFile, Coverage
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 
 # TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
@@ -69,7 +71,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         resource_file = get_object_or_404(ResourceFile, id=file_id)
 
         if resource_file.metadata is None or not resource_file.has_logical_file:
-            return Response({}, status=404)
+            raise NotFound()
 
         title = resource_file.metadata.logical_file.dataset_name \
             if resource_file.metadata.logical_file else ""
@@ -78,7 +80,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         spatial_coverage = resource_file.metadata.spatial_coverage.value \
             if resource_file.metadata.spatial_coverage else {}
         extra_metadata = resource_file.metadata.extra_metadata \
-            if resource_file.metadata else []
+            if resource_file.metadata else {}
         temporal_coverage = resource_file.metadata.temporal_coverage.value if \
             resource_file.metadata.temporal_coverage else {}
 
@@ -128,40 +130,54 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         }
         ```
         """
+        resource, authorized, user = authorize(
+            request, pk,
+            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+            raises_exception=False)
+        if not authorized:
+            raise PermissionDenied()
+
         file_serializer = FileMetaDataSerializer(request.data)
 
-        title = file_serializer.data.pop("title", "")
-        resource_file = ResourceFile.objects.get(id=file_id)
-        resource_file.metadata.logical_file.dataset_name = title
-        resource_file.metadata.logical_file.save()
+        try:
+            title = file_serializer.data.pop("title", "")
+            resource_file = ResourceFile.objects.get(id=file_id)
+            resource_file.metadata.logical_file.dataset_name = title
+            resource_file.metadata.logical_file.save()
 
-        spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
-        if spatial_coverage is not None:
-            if resource_file.metadata.spatial_coverage is not None:
-                Coverage.update(resource_file.metadata.spatial_coverage.id,
-                                _value=json.dumps(spatial_coverage))
-            elif resource_file.metadata.spatial_coverage is None:
-                resource_file.metadata.create_element('coverage', type="point",
-                                                      _value=json.dumps(spatial_coverage))
+            spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
+            if spatial_coverage is not None:
+                if resource_file.metadata.spatial_coverage is not None:
+                    resource_file.metadata.update_element('coverage',
+                                                          resource_file.metadata.spatial_coverage.id,
+                                                          type='point',
+                                                          value=spatial_coverage)
+                elif resource_file.metadata.spatial_coverage is None:
+                    resource_file.metadata.create_element('coverage', type="point",
+                                                          value=spatial_coverage)
 
-        temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
-        if temporal_coverage is not None:
-            if resource_file.metadata.temporal_coverage is not None:
-                Coverage.update(resource_file.metadata.temporal_coverage.id,
-                                _value=json.dumps(temporal_coverage))
-            elif resource_file.metadata.temporal_coverage is None:
-                resource_file.metadata.create_element('coverage', type="period",
-                                                      _value=json.dumps(temporal_coverage))
+            temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
+            if temporal_coverage is not None:
+                if resource_file.metadata.temporal_coverage is not None:
+                    resource_file.metadata.update_element('coverage',
+                                                          resource_file.metadata.temporal_coverage.id,
+                                                          type='period',
+                                                          value=temporal_coverage)
+                elif resource_file.metadata.temporal_coverage is None:
+                    resource_file.metadata.create_element('coverage', type="period",
+                                                          value=temporal_coverage)
 
-        keywords = file_serializer.data.pop("keywords", None)
-        if keywords is not None:
-            resource_file.metadata.keywords = keywords
+            keywords = file_serializer.data.pop("keywords", None)
+            if keywords is not None:
+                resource_file.metadata.keywords = keywords
 
-        extra_metadata = file_serializer.data.pop("extra_metadata", None)
-        if extra_metadata is not None:
-            resource_file.metadata.extra_metadata = extra_metadata
+            extra_metadata = file_serializer.data.pop("extra_metadata", None)
+            if extra_metadata is not None:
+                resource_file.metadata.extra_metadata = extra_metadata
 
-        resource_file.metadata.save()
+            resource_file.metadata.save()
+        except Exception as e:
+            raise APIException(e)
 
         # TODO: How to leverage serializer for this?
         title = resource_file.metadata.logical_file.dataset_name \
@@ -171,7 +187,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         spatial_coverage = resource_file.metadata.spatial_coverage.value \
             if resource_file.metadata.spatial_coverage else {}
         extra_metadata = resource_file.metadata.extra_metadata \
-            if resource_file.metadata else []
+            if resource_file.metadata else {}
         temporal_coverage = resource_file.metadata.temporal_coverage.value if \
             resource_file.metadata.temporal_coverage else {}
 
