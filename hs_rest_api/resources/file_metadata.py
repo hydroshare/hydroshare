@@ -8,6 +8,8 @@ from rest_framework.exceptions import APIException, PermissionDenied, NotFound
 from hs_core.models import ResourceFile
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
+from hs_rest_api.permissions import CanViewOrEditResourceMetadata
+
 
 # TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
 class JSONSerializerField(serializers.Field):
@@ -31,6 +33,7 @@ class FileMetaDataSerializer(serializers.Serializer):
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
     allowed_methods = ('GET', 'PUT')
+    permission_classes =  (CanViewOrEditResourceMetadata,)
 
     def get(self, request, pk, file_id):
         """
@@ -128,12 +131,6 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         }
         ```
         """
-        resource, authorized, user = authorize(
-            request, pk,
-            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-            raises_exception=False)
-        if not authorized:
-            raise PermissionDenied()
 
         file_serializer = FileMetaDataSerializer(request.data)
 

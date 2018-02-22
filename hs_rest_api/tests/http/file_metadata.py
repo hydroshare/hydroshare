@@ -21,7 +21,8 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "pk": "abc123",
             "file_id": 1234
         }))
-        self.assertEqual(response.content, '{"detail":"Not found."}')
+        self.assertEqual(response.content,
+                         '{"detail":"No resource was found for resource id:abc123"}')
 
         # Create resource
         response = self.client.post(reverse('list_create_resource'), {
