@@ -199,12 +199,14 @@ function irods_upload() {
         type: "POST",
         data: {
             upload: $('#upload_store').val(),
-            res_type: $('#res_type').val()
+            res_type: $('#res_type').val(),
+            file_ref: $('#file_ref_chk').is(":checked")? true : false
         },
         success: function(json) {
             $("#irods-sel-file").text(json.irods_sel_file);
             $('#irods_file_names').val(json.irods_file_names);
             $('#irods_federated').val(json.irods_federated);
+            $('#is_file_reference').val(json.is_file_reference);
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
             if(json.irods_federated)

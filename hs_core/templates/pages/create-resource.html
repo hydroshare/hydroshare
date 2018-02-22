@@ -58,9 +58,9 @@
                 <div id="dropdown-resource-type" class="dropdown">
                     <div id="select-resource-type" class="resource-type selected-type" data-toggle="dropdown"
                          aria-haspopup="true" aria-expanded="true">
-                        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                             alt="Composite Resource Icon" class="resource-type-icon"/>
-                        <div class="resource-type-name">&nbsp;Composite&nbsp;<span class="caret"></span></div>
+                        <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                             alt="Generic Resource Icon" class="resource-type-icon"/>
+                        <div class="resource-type-name">&nbsp;Generic&nbsp;<span class="caret"></span></div>
                     </div>
 
                     <ul class="dropdown-menu shadow-md" aria-labelledby="select-resource-type">
@@ -68,20 +68,20 @@
                         <li class="dropdown-header">General</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
-                               title="A resource which can include multiple files without file format limitations."
-                               data-value="CompositeResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                     alt="Composite Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Composite</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
                                title="An arbitrary file or collection of files that are logically grouped together as a resource."
                                data-value="GenericResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                      alt="Generic Resource Icon" class="resource-type-icon"/>
                                 <div class="resource-type-name">&nbsp;Generic</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="A resource which can include multiple files without file format limitations."
+                               data-value="CompositeResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                     alt="Composite Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Composite</div>
                             </a>
                         </li>
                         <li>
@@ -142,9 +142,9 @@
                                 </div>
                                 <div id="dz-container">
                                     <input id="form-title" type="hidden" name="title" value=""/>
-                                    {# Defaults to CompositeResource #}
+                                    {# Defaults to GenericResource #}
                                     <input id="form-resource-type" type="hidden" name="resource-type"
-                                           value="CompositeResource"/>
+                                           value="GenericResource"/>
                                 </div>
                             </div>
 
@@ -165,7 +165,7 @@
                             <div class="row">
                                 <div class="col-xs-12">
                                     <hr>
-                                    <label>To load files from an iRODS server including your iRODS user CommonsShare server:</label>
+                                    <label>To load files from an iRODS server:</label>
 
                                     <div id="irods-browse">
                                         <div id="log-into-irods">
@@ -182,6 +182,7 @@
                                         <input type="hidden" id="irods-zone" name="irods-zone" value="">
                                         <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                                         <input type="hidden" id="irods_federated" name="irods_federated" value="">
+                                        <input type="hidden" id="is_file_reference" name="is_file_reference" value="">
 
                                         <a id="btn-select-irods-file" type="button"
                                            class="btn btn-success hidden"

@@ -21,7 +21,7 @@
     margin-top: 10px;
     height: 250px;
     overflow: auto;
-    resize: vertical;
+    resize: both;
     border: 1px solid #DDD;
     padding: 4px;
 }

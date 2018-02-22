@@ -295,7 +295,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names=[], fed_res_path='', move=False,
+        files=(), source_names=[], fed_res_path='', move=False, is_file_reference=False,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
     """
@@ -346,6 +346,9 @@ def create_resource(
          is stored, default is empty string
     :param move: a value of False or True indicating whether the content files
          should be erased from the source directory. default is False.
+    :param is_file_reference: a value of False or True indicating whether the files stored in
+        source_files are references to external files without being physically stored in
+        HydroShare internally. default is False.
     :param create_bag: whether to create a bag for the newly created resource or not.
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
@@ -392,7 +395,7 @@ def create_resource(
             resource.save()
 
         # TODO: It would be safer to require an explicit zone path rather than harvesting file path
-        elif len(source_names) > 0:
+        elif len(source_names) > 0 and fed_res_path:
             fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
             resource.resource_federation_path = fed_zone_home_path
             resource.save()
@@ -409,7 +412,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, source_names=source_names,
-                               move=move)
+                               move=move, is_file_reference=is_file_reference)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -626,6 +629,8 @@ def add_resource_files(pk, *files, **kwargs):
     ret = []
     source_names = kwargs.pop('source_names', [])
 
+    is_file_reference = kwargs.pop('is_file_reference', False)
+
     if __debug__:
         assert(isinstance(source_names, list))
 
@@ -645,7 +650,8 @@ def add_resource_files(pk, *files, **kwargs):
             ret.append(utils.add_file_to_resource(resource, None,
                                                   folder=folder,
                                                   source_name=ifname,
-                                                  move=move))
+                                                  move=move,
+                                                  is_file_reference=is_file_reference))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)

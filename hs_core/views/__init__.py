@@ -1100,11 +1100,12 @@ def create_resource(request, *args, **kwargs):
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
+    is_file_reference = request.POST.get("is_file_reference", 'false').lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
-        if federated:
+        if federated or is_file_reference:
             source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
@@ -1155,6 +1156,7 @@ def create_resource(request, *args, **kwargs):
             # TODO: should probably be resource_federation_path like it is set to.
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=(fed_copy_or_move == 'move'),
+            is_file_reference=is_file_reference,
             content=res_title
     )
 

@@ -896,7 +896,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 # TODO: make this part of resource api. resource --> self.
 def resource_file_add_process(resource, files, user, extract_metadata=False,
-                              source_names=[], **kwargs):
+                              source_names=[], is_file_reference=False, **kwargs):
 
     from .resource import add_resource_files
     if __debug__:
@@ -930,7 +930,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False):
+                         move=False, is_file_reference=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -948,7 +948,9 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                  indicates copy is needed, a value of True indicates no copy, but
                  the file will be moved from private user account to proxy user account.
                  The default value is False.
-
+    :param is_file_reference: indicate whether the file being added is a reference to an external
+                              file stored in an external zone or URL. source_name will hold
+                              the reference file path or url
     :return: The identifier of the ResourceFile added.
     """
 
@@ -966,7 +968,8 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name,
+                                      is_file_reference=is_file_reference, move=move)
         except SessionException as ex:
             try:
                 ret.delete()

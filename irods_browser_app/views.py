@@ -132,6 +132,7 @@ def upload(request):
             response_data['irods_sel_file'] = ', '.join(os.path.basename(f.rstrip(os.sep)) for f in fnames_list)
             homepath = fnames_list[0]
             response_data['irods_federated'] = utils.is_federated(homepath)
+            response_data['is_file_reference'] = request.POST['file_ref']
         else:
             response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
             response_data['irods_file_names'] = ''
@@ -158,10 +159,12 @@ def upload_add(request):
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
 
+    is_file_ref = request.POST.get('file_ref_chk', False)
+
     # TODO: read resource type from resource, not from input file 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
     source_names = []
-    irods_federated = False
+
     if not valid:
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -169,7 +172,7 @@ def upload_add(request):
         homepath = irods_fnames_list[0]
         # TODO: this should happen whether resource is federated or not
         irods_federated = utils.is_federated(homepath)
-        if irods_federated:
+        if irods_federated or is_file_ref:
             source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
@@ -187,7 +190,8 @@ def upload_add(request):
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, 
-                                            source_names=source_names, folder=None)
+                                            source_names=source_names, folder=None,
+                                            is_file_reference=is_file_ref)
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])

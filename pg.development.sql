@@ -12816,13 +12816,6 @@ SELECT pg_catalog.setval('hs_core_date_id_seq', 1, false);
 --
 
 COPY hs_core_description (id, object_id, abstract, content_type_id) FROM stdin;
-1	1	The data are accessed in a cloud environment provided by KC4 and the compute capabilities provided by KC5, where the team executes a CWL workflow for post-processing of GTEx data and adapts the Bgee differential gene expression pipeline to identify sex differences. KC2 GUIDs best practices are applied to, and KC1 FAIR metrics are used to evaluate, a secondary dataset with integrated GTEx cardiac gene expression data and MOD cardiac morphology data.	68
-2	3	Perform enrichment test using phenotype ontology	68
-3	2	Explore relationships between environmental exposures and clinical data.	68
-4	4	This is annotation for the novel CWL data.	68
-5	5	Abstract for my secure CWL workflow.	68
-6	7	This is annotation for the novel CWL data.	68
-7	6	An example CWL workflow for demonstration purposes.	68
 \.
 
 
@@ -12830,7 +12823,7 @@ COPY hs_core_description (id, object_id, abstract, content_type_id) FROM stdin;
 -- Name: hs_core_description_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_core_description_id_seq', 7, true);
+SELECT pg_catalog.setval('hs_core_description_id_seq', 1, true);
 
 
 --
