@@ -550,6 +550,7 @@ def create_irods_account(request):
         )
 
 
+@login_required
 def create_scidas_virtual_app(request, res_id, cluster):
     user = get_user(request)
     if not user.is_authenticated() or not user.is_active:
