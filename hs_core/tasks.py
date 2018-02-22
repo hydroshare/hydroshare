@@ -7,6 +7,7 @@ import sys
 import traceback
 import zipfile
 import logging
+import json
 
 import requests
 
@@ -14,9 +15,9 @@ from xml.etree import ElementTree
 
 from rest_framework import status
 
+from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.mail import send_mail
-from django.contrib.auth.models import User
 
 from celery.task import periodic_task
 from celery.schedules import crontab
@@ -28,7 +29,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage
+from theme.models import UserQuota, QuotaMessage, UserProfile, User
 from theme.utils import get_quota_message
 
 from django_irods.icommands import SessionException
@@ -39,6 +40,36 @@ from django_irods.icommands import SessionException
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+def sync_email_subscriptions():
+    sixty_days = datetime.today() - timedelta(days=60)
+    active_subscribed = UserProfile.objects.filter(email_opt_out=False, user__last_login__gte=sixty_days, user__is_active=True)
+    sync_mailchimp(active_subscribed, "e210a70864")
+    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
+    sync_mailchimp(subscribed, "f0c27254e3")
+
+
+def sync_mailchimp(active_subscribed, list_id):
+    session = requests.Session()
+    # get total members
+    response = session.get("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members".format(list_id=list_id), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+    total_items = json.loads(response.content)["total_items"]
+    # get list of all member ids
+    response = session.get("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members?offset=0&count={total_items}".format(list_id=list_id, total_items=total_items), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+    # clear the email list
+    for member in json.loads(response.content)["members"]:
+        print("found member")
+        if member["status"] == "subscribed":
+            session.delete("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members/{id}".format(list_id=list_id, id=member["id"]), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+            print("deleted")
+    # add active subscribed users to mailchimp
+    for subscriber in active_subscribed:
+        json_data = { "email_address": subscriber.user.email, "status": "subscribed", "merge_fields": { "FNAME": subscriber.user.first_name, "LNAME": subscriber.user.last_name } }
+        print(json_data)
+        session_response = session.post("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members".format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+        print(session_response)
+        print(session_response.content)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
