@@ -49,11 +49,9 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         txt.write("Hello World, again.\n")
         txt.close()
         response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}),
-                                    {
-                                        'file': (txt_file_name,
-                                                 open(txt_file_path),
-                                                'text/plain')
-                                    })
+                                    {'file': (txt_file_name,
+                                              open(txt_file_path),
+                                              'text/plain')})
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
         response_json = json.loads(response.content)

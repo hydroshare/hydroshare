@@ -3,10 +3,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, PermissionDenied, NotFound
+from rest_framework.exceptions import APIException, NotFound
 
 from hs_core.models import ResourceFile
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 from hs_rest_api.permissions import CanViewOrEditResourceMetadata
 
@@ -33,7 +32,7 @@ class FileMetaDataSerializer(serializers.Serializer):
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
     allowed_methods = ('GET', 'PUT')
-    permission_classes =  (CanViewOrEditResourceMetadata,)
+    permission_classes = (CanViewOrEditResourceMetadata,)
 
     def get(self, request, pk, file_id):
         """
@@ -143,7 +142,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
             if spatial_coverage is not None:
                 if resource_file.metadata.spatial_coverage is not None:
-                    cov_id =  resource_file.metadata.spatial_coverage.id
+                    cov_id = resource_file.metadata.spatial_coverage.id
                     resource_file.metadata.update_element('coverage',
                                                           cov_id,
                                                           type='point',
