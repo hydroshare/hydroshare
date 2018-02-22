@@ -550,6 +550,7 @@ def create_irods_account(request):
         )
 
 
+@login_required
 def create_scidas_virtual_app(request, res_id, cluster):
     user = get_user(request)
     if not user.is_authenticated() or not user.is_active:
@@ -578,7 +579,7 @@ def create_scidas_virtual_app(request, res_id, cluster):
                     if 'id' in jdata and 'containers' in jdata:
                         p_data = jdata
 
-    url = "http://sc17demo1.scidas.org:9090/appliance"
+    url = settings.PIVOT_URL
     app_id = user.username + '_cs_app_id'
     preset_url = ''
     if not p_data:
