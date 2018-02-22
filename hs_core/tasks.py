@@ -58,18 +58,34 @@ def sync_mailchimp(active_subscribed, list_id):
     # get list of all member ids
     response = session.get("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members?offset=0&count={total_items}".format(list_id=list_id, total_items=total_items), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
     # clear the email list
+    delete_count = 0
     for member in json.loads(response.content)["members"]:
-        print("found member")
         if member["status"] == "subscribed":
-            session.delete("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members/{id}".format(list_id=list_id, id=member["id"]), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
-            print("deleted")
+            session_response = session.delete("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members/{id}".format(list_id=list_id, id=member["id"]), auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+            if session_response.status_code != 204:
+                logger.info("Expected 204 status code, got " + str(session_response.status_code))
+                logger.debug(session_response.content)
+            else:
+                delete_count += 1
     # add active subscribed users to mailchimp
+    add_count = 0
     for subscriber in active_subscribed:
         json_data = { "email_address": subscriber.user.email, "status": "subscribed", "merge_fields": { "FNAME": subscriber.user.first_name, "LNAME": subscriber.user.last_name } }
-        print(json_data)
         session_response = session.post("https://us3.api.mailchimp.com/3.0/lists/{list_id}/members".format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
-        print(session_response)
-        print(session_response.content)
+        if session_response.status_code != 200:
+            logger.info("Expected 200 status code, got " + str(session_response.status_code))
+            logger.debug(session_response.content)
+        else:
+            add_count += 1
+    if delete_count == active_subscribed.count():
+        logger.info("successfully cleared mailchimp for list id " + list_id)
+    else:
+        logger.info("cleared " + str(delete_count) + " out of " + str(active_subscribed.count()) + " for list id " + list_id)
+
+    if active_subscribed.count() == add_count:
+        logger.info("successfully synced all subscriptions for list id " + list_id)
+    else:
+        logger.info("added " + str(add_count) + " out of " + str(active_subscribed.count()) + " for list id " + list_id)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
