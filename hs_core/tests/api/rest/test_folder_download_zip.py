@@ -6,6 +6,7 @@ from rest_framework import status
 
 from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
+from datetime import timedelta, date
 
 
 class TestPublicZipEndpoint(HSRESTTestCase):
@@ -53,7 +54,9 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.client.post(url3, params)
 
     def test_folder_download_rest(self):
-        zip_download_url = "/django_irods/rest_download/zips/{pid}/data/contents/foo".format(pid=self.pid)
+        date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
+        zip_download_url = "/django_irods/rest_download/zips/{today}/{pid}/data/contents/foo".format(today=date_folder
+                                                                                                     , pid=self.pid)
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)
