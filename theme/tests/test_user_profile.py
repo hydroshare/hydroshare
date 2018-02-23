@@ -1,6 +1,7 @@
 from django.test import TestCase
 from theme.models import UserProfile, User
 
+
 class UserTestCase(TestCase):
     def setUp(self):
         User.objects.create(email="test@testing.com")
