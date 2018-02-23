@@ -101,7 +101,14 @@ def data_store_structure(request):
             else:  # file is not found in Django
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
                              .format(name_with_full_path))
-
+        # show reference file links if any which don't have physical presence in iRODS
+        for f in ResourceFile.objects.filter(object_id=resource.id):
+            if not f.resource_file and not f.fed_resource_file and f.reference_file_path:
+                files.append({'name': f.reference_file_path, 'size': f.reference_file_size,
+                              'type': get_file_mime_type(f.reference_file_path),
+                              'pk': f.pk, 'url': '',
+                              'logical_type': '',
+                              'logical_file_id': ''})
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

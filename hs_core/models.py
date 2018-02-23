@@ -2621,11 +2621,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # This is used to hold the reference path to an external file, e.g., a logical iRODS
     # path refering to a file stored in an external iRODS zone, a URL that points to an external file
     reference_file_path = models.CharField(max_length=255, null=True, blank=True)
-
-    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size routine
-    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    reference_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # CommonsShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
