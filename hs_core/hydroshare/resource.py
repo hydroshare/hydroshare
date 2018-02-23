@@ -652,9 +652,9 @@ def add_resource_files(pk, *files, **kwargs):
                                                   source_name=ifname,
                                                   move=move,
                                                   is_file_reference=is_file_reference))
-    if not ret:
-        # no file has been added, make sure data/contents directory exists if no file is added
-        utils.create_empty_contents_directory(resource)
+
+    # make sure data/contents directory exists if not exist already
+    utils.create_empty_contents_directory(resource)
 
     return ret
 
