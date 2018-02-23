@@ -54,24 +54,22 @@ def sync_email_subscriptions():
 
 def sync_mailchimp(active_subscribed, list_id):
     session = requests.Session()
+    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
     # get total members
-    response = session.get(
-        "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members".format(list_id=list_id),
-        auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
+        'hs-celery', settings.MAILCHIMP_PASSWORD))
     total_items = json.loads(response.content)["total_items"]
     # get list of all member ids
-    response = session.get(
-        "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members?offset=0&count={total_items}"
-            .format(list_id=list_id, total_items=total_items),
-        auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+    response = session.get(url + "?offset=0&count={total_items}".format(list_id=list_id,
+                                                                        total_items=total_items),
+                           auth=requests.auth.HTTPBasicAuth('hs-celery',
+                                                            settings.MAILCHIMP_PASSWORD))
     # clear the email list
     delete_count = 0
     for member in json.loads(response.content)["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
-                "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members/{id}".format(
-                    list_id=list_id,
-                    id=member["id"]),
+                url + "/{id}".format(list_id=list_id, id=member["id"]),
                 auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
             if session_response.status_code != 204:
                 logger.info("Expected 204 status code, got " + str(session_response.status_code))
@@ -85,9 +83,8 @@ def sync_mailchimp(active_subscribed, list_id):
                      "merge_fields": {"FNAME": subscriber.user.first_name,
                                       "LNAME": subscriber.user.last_name}}
         session_response = session.post(
-            "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members".format(list_id=list_id),
-            json=json_data,
-            auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
+                'hs-celery', settings.MAILCHIMP_PASSWORD))
         if session_response.status_code != 200:
             logger.info("Expected 200 status code, got " + str(session_response.status_code))
             logger.debug(session_response.content)
