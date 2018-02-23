@@ -295,7 +295,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names=[], fed_res_path='', move=False, is_file_reference=False,
+        files=(), source_names=[], source_sizes=[], fed_res_path='', move=False, is_file_reference=False,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
     """
@@ -341,6 +341,8 @@ def create_resource(
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param source_names: a list of file names from a federated zone to be
          used to create the resource in the federated zone, default is empty list
+    :param source_sizes: a list of file sizes corresponding to source_names if if_file_reference is True; otherwise,
+         it is not of any use and should be empty.
     :param fed_res_path: the federated zone path in the format of
          /federation_zone/home/localHydroProxy that indicate where the resource
          is stored, default is empty string
@@ -411,7 +413,7 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, source_names=source_names,
+            add_resource_files(resource.short_id, *files, source_names=source_names, source_sizes=source_sizes,
                                move=move, is_file_reference=is_file_reference)
 
         # by default resource is private
@@ -628,7 +630,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
     source_names = kwargs.pop('source_names', [])
-
+    source_sizes = kwargs.pop('source_sizes', [])
     is_file_reference = kwargs.pop('is_file_reference', False)
 
     if __debug__:
@@ -646,10 +648,19 @@ def add_resource_files(pk, *files, **kwargs):
         ret.append(utils.add_file_to_resource(resource, f, folder=folder))
 
     if len(source_names) > 0:
+        if len(source_names) != len(source_sizes):
+            # if length is not equal, there is an issue with source_sizes input parameter, so it will not be
+            # used by setting it to be empty
+            source_sizes = []
+
+        idx = 0
         for ifname in source_names:
+            s_size = source_sizes[idx] if source_sizes else 0
+            idx += 1
             ret.append(utils.add_file_to_resource(resource, None,
                                                   folder=folder,
                                                   source_name=ifname,
+                                                  source_size=s_size,
                                                   move=move,
                                                   is_file_reference=is_file_reference))
 

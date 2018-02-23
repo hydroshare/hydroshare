@@ -929,7 +929,7 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, source_name='',
+def add_file_to_resource(resource, f, folder=None, source_name='', source_size=0,
                          move=False, is_file_reference=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
@@ -943,6 +943,8 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                         disk, or from the federated zone directly where f is empty
                         but source_name has the whole data object
                         iRODS path in the federated zone
+    :param source_size: the size of the reference file in source_name if is_file_reference is True; otherwise, it is
+                        set to 0 and useless.
     :param move: indicate whether the file should be copied or moved from private user
                  account to proxy user account in federated zone; A value of False
                  indicates copy is needed, a value of True indicates no copy, but
@@ -968,7 +970,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name,
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, source_size=source_size,
                                       is_file_reference=is_file_reference, move=move)
         except SessionException as ex:
             try:

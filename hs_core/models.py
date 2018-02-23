@@ -2640,7 +2640,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None, is_file_reference=False, move=False):
+    def create(cls, resource, file, folder=None, source=None, source_size=0, is_file_reference=False, move=False):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2651,6 +2651,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
+        :param source_size: the size of the referenced source is if_file_reference is True, otherwise, it is set to 0
+               and useless.
         :param is_file_reference: if True, source will hold the reference path to an external file
         :param move: if True, move the file rather than copying.
 
@@ -2703,6 +2705,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     kwargs['resource_file'] = None
                     kwargs['fed_resource_file'] = None
                     kwargs['reference_file_path'] = source
+                    kwargs['reference_file_size'] = str(source_size)
                     return ResourceFile.objects.create(**kwargs)
                 else:
                     # source is a path to an iRODS file to be copied here.
