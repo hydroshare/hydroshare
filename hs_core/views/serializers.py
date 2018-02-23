@@ -110,6 +110,7 @@ class ResourceListItemSerializer(serializers.Serializer):
 
 
 class ResourceFileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     url = serializers.URLField()
     size = serializers.IntegerField()
     content_type = serializers.CharField(max_length=255)
@@ -141,6 +142,7 @@ ResourceListItem = namedtuple('ResourceListItem',
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
+                               'id',
                                'size',
                                'content_type'])
 
