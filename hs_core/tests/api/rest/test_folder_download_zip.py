@@ -6,7 +6,7 @@ from rest_framework import status
 
 from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
-from datetime import timedelta, date
+from datetime import date
 
 
 class TestPublicZipEndpoint(HSRESTTestCase):
@@ -54,9 +54,9 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.client.post(url3, params)
 
     def test_folder_download_rest(self):
-        date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
-        zip_download_url = "/django_irods/rest_download/zips/{today}/{pid}/data/contents/foo".format(today=date_folder
-                                                                                                     , pid=self.pid)
+        date_folder = (date.today()).strftime('%Y-%m-%d')
+        zip_download_url = "/django_irods/rest_download/zips/{pid}/data/contents/foo".format(
+             pid=self.pid)
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)
@@ -67,11 +67,12 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.assertEqual("django_irods", download_split[1])
         self.assertEqual("rest_download", download_split[2])
         self.assertEqual("zips", download_split[3])
-        self.assertEqual(self.pid, download_split[4])
+        self.assertEqual(date_folder, download_split[4])
+        self.assertEqual(self.pid, download_split[5])
         # index 5 is the random folder
-        self.assertEqual("data", download_split[6])
-        self.assertEqual("contents", download_split[7])
-        self.assertEqual("foo.zip", download_split[8])
+        self.assertEqual("data", download_split[7])
+        self.assertEqual("contents", download_split[8])
+        self.assertEqual("foo.zip", download_split[9])
 
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)

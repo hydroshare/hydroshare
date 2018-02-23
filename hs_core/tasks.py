@@ -225,7 +225,8 @@ def create_temp_zip(resource_id, input_path, output_path):
     istorage = res.get_irods_storage()
 
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    full_input_path = '{irods}/{res_id}/{path}'.format(irods=irods_dest_prefix, res_id=resource_id, path=input_path)
+    full_input_path = '{irods}/{res_id}/{path}'.format(irods=irods_dest_prefix, res_id=resource_id,
+                                                       path=input_path)
     if res.resource_federation_path:
         full_input_path = os.path.join(res.resource_federation_path, resource_id, input_path)
 
