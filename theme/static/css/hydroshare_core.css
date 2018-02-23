@@ -1391,19 +1391,7 @@ body > .main-container {
 
 .custom-alert {
 	position: fixed;
-	background-color: lightgreen;
-	padding: 0 10px;
-	text-align: center;
-	line-height: 50px;
-	text-shadow: 1px -1px #BEFFBE;
 	z-index: 2;
-}
-
-.custom-alert-icon {
-    font-size: 24px;
-    color: #337133;
-    top: 5px;
-    margin-right: 10px;
 }
 
 .alert-dismissible {
@@ -2740,7 +2728,7 @@ span.you-flag {
 }
 
 #items-discovered, #item-selectors {
-	width: 100% !important;
+	width: calc(100% - 2px) !important;		/* Makes up for border width */
 }
 
 .resource-custom-table {
@@ -2752,7 +2740,7 @@ span.you-flag {
 }
 
 #collected-by-table {
-    border: 0px !important;
+    border: 0 !important;
 }
 
 #item-selectors.group-resource-list {

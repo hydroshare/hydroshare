@@ -70,6 +70,7 @@ class ResourceFileToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
+        id = f.id
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -77,6 +78,7 @@ class ResourceFileToListItemMixin(object):
         else:
             ftype = repr(None)
         resource_file_info_item = serializers.ResourceFileItem(url=url,
+                                                               id=id,
                                                                size=fsize,
                                                                content_type=ftype)
         return resource_file_info_item
