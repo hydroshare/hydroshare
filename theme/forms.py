@@ -9,8 +9,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
 from django.contrib.auth.models import User
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 from mezzanine.core.forms import Html5Mixin
 from mezzanine.generic.models import ThreadedComment, Rating
@@ -22,6 +20,9 @@ from mezzanine.conf import settings
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
+from hs_core.models import Party
+
+from hydroshare import settings as hydroshare_settings
 
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
@@ -229,9 +230,6 @@ class SignupForm(forms.ModelForm):
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
-    Captcha = forms.CharField(required=False)
-    challenge = forms.CharField()
-    response = forms.CharField()
     organization = forms.CharField(required=True)
 
     def __init__(self, request, *args, **kwargs):
@@ -239,20 +237,23 @@ class SignupForm(forms.ModelForm):
         super(SignupForm, self).__init__(*args, **kwargs)
 
     def verify_captcha(self):
-        params = dict(self.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY',
-                                       "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
-        params['remoteip'] = self.request.META['REMOTE_ADDR']
-        resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if not lines[0].startswith('false'):
-            return True
-        return False
+        url = hydroshare_settings.RECAPTCHA_VERIFY_URL
+        values = {
+            'secret': hydroshare_settings.RECAPTCHA_SECRET_KEY,
+            'response': self.request.POST.get('g-recaptcha-response')
+        }
+        response = requests.post(url, values)
+        result = response.json()
+        if(result["success"]):
+            return (True, [])
+
+        return (False, result["error-codes"])
 
     def clean(self):
-        if not self.verify_captcha():
-            self.add_error('Captcha', "You did not complete the CAPTCHA correctly. "
-                                      "Please try again.")
+        success, error_codes = self.verify_captcha()
+
+        if not success:
+            self.add_error(None, " ".join(error_codes))
 
     def clean_password2(self):
         data = self.cleaned_data
@@ -329,24 +330,4 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
-        if data:
-            # validate identifier values - check for duplicate links
-            links = [l.lower() for l in data.values()]
-            if len(links) != len(set(links)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier links found.")
-
-            for link in links:
-                validator = URLValidator()
-                try:
-                    validator(link)
-                except ValidationError:
-                    raise forms.ValidationError("Invalid data found for identifiers. "
-                                                "Identifier link must be a URL.")
-
-            # validate identifier keys - check for duplicate names
-            names = [n.lower() for n in data.keys()]
-            if len(names) != len(set(names)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier names found")
-        return data
+        return Party.validate_identifiers(data)

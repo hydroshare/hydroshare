@@ -680,19 +680,19 @@ function metadata_update_ajax_submit(form_id){
                         $('#metadata-status').text(json_response.metadata_status);
                         if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
                             if(resourceType != 'Web App Resource')
-                                promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be published or made public";
+                                promptMessage = "This resource can be published or made public.";
                             else
-                                promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be made public";
+                                promptMessage = "This resource can be made public.";
                             if (!metadata_update_ajax_submit.resourceSatusDisplayed){
                                 metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                                if (json_response.hasOwnProperty('res_public_status')){
-                                    if (json_response.res_public_status.toLowerCase() === "not public"){
-                                    // if the resource is already public no need to show the following alert message
-                                    customAlert(promptMessage, 3000);
+                                if (json_response.hasOwnProperty('res_public_status')) {
+                                    if (json_response.res_public_status.toLowerCase() === "not public") {
+                                        // if the resource is already public no need to show the following alert message
+                                        customAlert("Resource Status:", promptMessage, "success", 3000);
                                     }
                                 }
                                 else {
-                                    customAlert(promptMessage, 3000);
+                                    customAlert("Resource Status:", promptMessage, "success", 3000);
                                 }
                             }
                             $("#missing-metadata-or-file:not(.persistent)").fadeOut();
