@@ -151,7 +151,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should not be any GeoRasterLogicalFile object
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         # there should be no GenericLogicalFile objects
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should be 1 GeoRasterLogicalFile object
@@ -160,7 +160,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                         if f.extension == ".txt"][0]
 
         # set generic logical file
-        GenericLogicalFile.set_file_type(self.composite_resource, txt_res_file.id, self.user)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, txt_res_file.id)
         txt_res_file = [f for f in self.composite_resource.files.all()
                         if f.extension == ".txt"][0]
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
@@ -445,7 +445,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                     if f.extension == ".txt"][0]
 
         # crate a generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GenericLogicalFile"][0]
         gen_logical_file = res_file.logical_file
@@ -466,7 +466,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         tif_res_file = [f for f in self.composite_resource.files.all()
                         if f.extension == ".tif"][0]
 
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         # add generic logical file type metadata
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
@@ -512,7 +512,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                   files=(self.raster_file_obj,), user=self.user)
 
         res_file = self.composite_resource.files.all().first()
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # raster logical file should have a coverage element of type box
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
@@ -606,7 +606,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                     if f.extension == ".txt"][0]
 
         # crate a generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GenericLogicalFile"][0]
@@ -776,7 +776,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
         self.assertTrue(tif_res_file.resource_file.name.endswith(
@@ -845,7 +845,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
         self.assertTrue(tif_res_file.resource_file.name.endswith(
@@ -906,7 +906,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
         # resource file exists in a new folder 'small_logan'
@@ -951,7 +951,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
         # resource file exists in a new folder 'small_logan'
