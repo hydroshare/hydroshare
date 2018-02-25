@@ -518,23 +518,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
 
         log = logging.getLogger()
-        if file_id is None and folder_path is None:
-            raise ValueError("Must specify id of the file or path of the folder to set as an "
-                             "aggregation type")
-        # get the resource file
-        res_file = utils.get_resource_file_by_id(resource, file_id)
-
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
-
-        if res_file.extension.lower() not in ('.sqlite', '.csv'):
-            raise ValidationError("Not a valid time series supported file.")
-
-        if res_file.has_logical_file:
-            raise ValidationError("Selected file is already part of a logical file.")
+        res_file = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # get the file from irods to temp dir
         temp_res_file = utils.get_file_from_irods(res_file)
@@ -554,12 +541,12 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             raise ValidationError(validate_err_message)
 
         file_name = res_file.file_name
-        # file name without the extension
+        # file name without the extension - used for naming the new aggregation folder
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
         file_type_success = False
         upload_folder = ''
-        msg = "TimeSeries file type. Error when setting file type. Error:{}"
+        msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
             logical_file = cls.create()
@@ -569,46 +556,44 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             logical_file.dataset_name = base_file_name
             logical_file.save()
             try:
-                # create a folder for the timeseries file type using the base file
-                # name as the name for the new folder
-                new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                               base_file_name)
-                create_folder(resource.short_id, new_folder_path)
-                log.info("Folder created:{}".format(new_folder_path))
+                if folder_path is None:
+                    # we are here means aggregation is being created by selecting a file
 
-                new_folder_name = new_folder_path.split('/')[-1]
-                if file_folder is None:
-                    upload_folder = new_folder_name
+                    # create a folder for the timeseries file type using the base file
+                    # name as the name for the new folder
+                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                   base_file_name)
+                    create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
+
+                    # first make the selected file as part of the aggregation/file type
+                    logical_file.add_resource_file(res_file)
+
+                    # then move the selected file to the new folder location
+                    tgt_file_path = os.path.join(new_folder_path, res_file.file_name)
+                    src_file_path = os.path.join('data/contents', res_file.short_path)
+                    move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
+                                                  tgt_file_path, validate_move_rename=False)
+
+                    new_folder_name = new_folder_path.split('/')[-1]
+                    if file_folder is None:
+                        upload_folder = new_folder_name
+                    else:
+                        upload_folder = os.path.join(file_folder, new_folder_name)
                 else:
-                    upload_folder = os.path.join(file_folder, new_folder_name)
+                    # folder has been selected for creating the aggregation
+                    upload_folder = folder_path
+                    logical_file.add_resource_file(res_file)
 
-                # add the file to the resource
-                uploaded_file = UploadedFile(file=open(temp_res_file, 'rb'),
-                                             name=os.path.basename(temp_res_file))
+                # add a blank ODM2 sqlite file
+                if res_file.extension.lower() == '.csv':
+                    new_sqlite_file = add_blank_sqlite_file(resource, upload_folder)
+                    logical_file.add_resource_file(new_sqlite_file)
 
-                # the added resource file will be part of a new generic logical file by default
-                new_res_file = utils.add_file_to_resource(
-                    resource, uploaded_file, folder=upload_folder
-                )
-
-                # delete the generic logical file object
-                if new_res_file.logical_file is not None:
-                    # deleting the file level metadata object will delete the associated
-                    # logical file object
-                    new_res_file.logical_file.metadata.delete()
-
-                # make each resource file we added part of the logical file
-                logical_file.add_resource_file(new_res_file)
-
-                # add the blank sqlite file
-                if res_file.extension == '.csv':
-                    new_res_file = add_blank_sqlite_file(resource, upload_folder)
-                    logical_file.add_resource_file(new_res_file)
-
-                info_msg = "TimeSeries file type - {} file was added to the file type."
+                info_msg = "TimeSeries aggregation type - {} file was added to the aggregation."
                 info_msg = info_msg.format(res_file.extension[1:])
                 log.info(info_msg)
-                if res_file.extension == ".sqlite":
+                if res_file.extension.lower() == ".sqlite":
                     extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
                     if extract_err_message:
                         raise ValidationError(extract_err_message)
@@ -616,10 +601,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
-                log.info("TimeSeries file type and resource level metadata updated.")
-                # delete the original sqlite/csv file used as part of setting file type
-                delete_resource_file(resource.short_id, file_id, user)
-                log.info("Deleted original resource file.")
+                log.info("TimeSeries aggregation was created.")
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -629,11 +611,12 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-        if not file_type_success and upload_folder:
+        new_folder_created = upload_folder and not folder_path
+        if not file_type_success and new_folder_created:
             # delete any new files uploaded as part of setting file type
             folder_to_remove = os.path.join('data', 'contents', upload_folder)
             remove_folder(user, resource.short_id, folder_to_remove)
-            log.info("Deleted newly created file type folder")
+            log.info("Deleted the newly created aggregation folder")
             raise ValidationError(msg)
 
     def get_copy(self):
@@ -649,6 +632,16 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         copy_cv_terms(src_metadata=self.metadata, tgt_metadata=copy_of_logical_file.metadata)
         return copy_of_logical_file
 
+    @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        res_file = super(TimeSeriesLogicalFile, cls)._validate_set_file_type_inputs(resource,
+                                                                                    file_id,
+                                                                                    folder_path)
+        if folder_path is None and res_file.extension.lower() not in ('.sqlite', '.csv'):
+            # when a file is specified by the user for creating this file type it must be a
+            # sqlite or csv file
+            raise ValidationError("Not a valid timeseries file.")
+        return res_file
 
 def copy_cv_terms(src_metadata, tgt_metadata):
     """copy CV related metadata items from the source metadata *src_metadata*
