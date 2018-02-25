@@ -79,7 +79,6 @@ class Command(BaseCommand):
                    resource.resource_type == 'GenericResource' or \
                    resource.resource_type == 'ModelInstanceResource' or \
                    resource.resource_type == 'ModelProgramResource':
-                    logger = logging.getLogger(__name__)
                     _, count = ingest_irods_files(resource,
                                                   logger,
                                                   stop_on_error=False,
