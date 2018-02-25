@@ -82,7 +82,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
 
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test extracted metadata
         assert_time_series_file_type_metadata(self)
         # test file level keywords
@@ -110,7 +110,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
 
         # set the CSV file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that the ODM2.sqlite blank file got added to the resource
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -260,7 +260,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
 
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -438,7 +438,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # file level metadata
@@ -516,7 +516,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # set the sqlite file to TimeSeriesLogicalFile (aggregation)
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type TimeSeriesLogicalFile
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
@@ -553,7 +553,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
 
         # test that we have one logical file of type TimeSeries
@@ -615,7 +615,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the sqlite file
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test renaming of files that are associated with timeseries LFO - should raise exception
         self.assertEqual(self.composite_resource.files.count(), 1)
@@ -643,7 +643,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type TimeSeries
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
@@ -712,7 +712,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # trying to set this invalid sqlite file to timeseries file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
-            TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -739,7 +739,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # trying to set this invalid csv file to timeseries file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
-            TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
