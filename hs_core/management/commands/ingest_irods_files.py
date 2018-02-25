@@ -51,7 +51,6 @@ class Command(BaseCommand):
                         logger.info(msg)
                     if echo_errors:
                         print(msg)
-
                     continue  # next resource
 
                 # Pabitra: Not sure why are we skipping other resource types
@@ -68,33 +67,35 @@ class Command(BaseCommand):
                     # get the typed resource
                     try:
                         resource = r.get_content_model()
-                        _, count = ingest_irods_files(resource,
-                                                      logger,
-                                                      stop_on_error=False,
-                                                      echo_errors=not options['log'],
-                                                      log_errors=options['log'],
-                                                      return_errors=False)
-                        if count:
-                            msg = "... affected resource {} has type {}"\
-                                  .format(resource.short_id, resource.resource_type)
-                            if log_errors:
-                                logger.info(msg)
-                            if echo_errors:
-                                print(msg)
-
                     except Exception as e:
-                        msg = "resource {} has no proxy resource".format(r.short_id)
+                        msg = "resource {} has no proxy resource: {}"\
+                              .format(r.short_id, e.value)
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
-                        msg = "... affected resource {} has type {}"\
-                              .format(resource.short_id, resource.resource_type)
+                        msg = "... affected resource {} has type {}, title '{}'"\
+                              .format(r.short_id, r.resource_type, r.title)
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
-                        print("{}: exception is {}".format(r.short_id, e.message))
+                        continue
+
+                    _, count = ingest_irods_files(resource,
+                                                  logger,
+                                                  stop_on_error=False,
+                                                  echo_errors=not options['log'],
+                                                  log_errors=options['log'],
+                                                  return_errors=False)
+                    if count:
+                        msg = "... affected resource {} has type {}, title '{}'"\
+                              .format(resource.short_id, resource.resource_type,
+                                      resource.title)
+                        if log_errors:
+                            logger.info(msg)
+                        if echo_errors:
+                            print(msg)
 
         else:  # check all resources
             print("LOOKING FOR UNREGISTERED IRODS FILES FOR ALL RESOURCES")
@@ -111,8 +112,18 @@ class Command(BaseCommand):
                         # get the typed resource
                         resource = r.get_content_model()
                     except Exception as e:
-                        print("resource {} has no proxy model".format(r.short_id))
-                        print("resource {} exception is {}".format(r.short_id, e.message))
+                        msg = "resource {} has no proxy resource: {}"\
+                              .format(r.short_id, e.value)
+                        if log_errors:
+                            logger.info(msg)
+                        if echo_errors:
+                            print(msg)
+                        msg = "... affected resource {} has type {}, title '{}'"\
+                              .format(r.short_id, r.resource_type, r.title)
+                        if log_errors:
+                            logger.info(msg)
+                        if echo_errors:
+                            print(msg)
                         continue  # next resource
 
                     _, count = ingest_irods_files(resource,
@@ -122,8 +133,8 @@ class Command(BaseCommand):
                                                   log_errors=options['log'],
                                                   return_errors=False)
                     if count:
-                        msg = "... affected resource {} has type {}"\
-                              .format(resource.short_id, resource.resource_type)
+                        msg = "... affected resource {} has type {}, title '{}'"\
+                              .format(resource.short_id, resource.resource_type, resource.title)
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
