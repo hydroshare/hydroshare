@@ -227,57 +227,13 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """
-        Sets a .shp or .zip resource file, or a folder to GeoFeatureLogicalFile type
-        :param resource: an instance of resource type CompositeResource
-        :param file_id: (optional) id of the resource file to be set as GeoFeatureLogicalFile type
-        :param folder_path: (optional) path of the folder to be set as GeoFeatureLogicalFile type
-        :param user: user who is setting the file type
-        :return:
-        """
+        """ Sets a .shp or .zip resource file, or a folder to GeoFeatureLogicalFile type """
 
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
 
         log = logging.getLogger()
-        if file_id is None and folder_path is None:
-            raise ValueError("Must specify id of the file or path of the folder to set as an "
-                             "aggregation type")
-        if file_id is not None:
-            # user selected a file to set aggregation - get the file from irods
-            res_file = utils.get_resource_file_by_id(resource, file_id)
-        else:
-            # user selected a folder to set aggregation - check if the specified folder exists
-            storage = resource.get_irods_storage()
-            if folder_path.startswith("data/contents/"):
-                folder_path = folder_path[len("data/contents/"):]
-            path_to_check = os.path.join(resource.file_path, folder_path)
-            if not storage.exists(path_to_check):
-                raise ValidationError("Specified folder path does not exist in irods.")
-
-            # get the shp file from the specified folder location
-            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                 sub_folders=False)
-            if not res_files:
-                raise ValidationError("The specified folder does not contain any file.")
-            else:
-                # check if the specified folder is suitable for aggregation
-                if cls.check_files_for_aggregation_type(res_files):
-                    # there must be a .shp file - get that file for setting file type
-                    res_file = [f for f in res_files if f.extension.lower() == '.shp'][0]
-                else:
-                    res_file = None
-
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
-
-        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
-            # when a file is specified by the user for creating this file type it must be a
-            # zip or shp file
-            raise ValidationError("Not a valid geographic feature file.")
-
-        if res_file.has_logical_file:
-            raise ValidationError("Selected file is already part of a aggregation.")
+        res_file = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
@@ -350,17 +306,13 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                             resource, uploaded_file, folder=upload_folder
                         )
 
-                        # delete the generic logical file object
-                        if new_res_file.logical_file is not None:
-                            # deleting the file level metadata object will delete the associated
-                            # logical file object
-                            new_res_file.logical_file.metadata.delete()
-
                         # make each resource file we added part of the logical file
                         logical_file.add_resource_file(new_res_file)
                 else:
                     # user selected a folder to create aggregation
-                    # make all the files part of the aggregation
+                    # make all the files in the selected folder as part of the aggregation
+                    res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                         sub_folders=False)
                     for shp_res_file in res_files:
                         logical_file.add_resource_file(shp_res_file)
 
@@ -376,6 +328,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                              "from this zip file.")
                 file_type_success = True
             except Exception as ex:
+                msg = "NetCDF aggregation type. Error when creating aggregation type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
             finally:
@@ -383,12 +336,29 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-        if not file_type_success and upload_folder:
-            # delete any new files uploaded as part of setting file type
+        # delete the new folder if it was created for the aggregation
+        new_folder_created = upload_folder and not folder_path
+        if not file_type_success and new_folder_created:
             folder_to_remove = os.path.join('data', 'contents', upload_folder)
             remove_folder(user, resource.short_id, folder_to_remove)
-            log.info("Deleted newly created file type folder")
+            log.info("Deleted newly created aggregation folder")
             raise ValidationError(msg)
+
+    @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        res_file = super(GeoFeatureLogicalFile, cls)._validate_set_file_type_inputs(resource, file_id, folder_path)
+        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
+            # when a file is specified by the user for creating this file type it must be a
+            # zip or shp file
+            raise ValidationError("Not a valid geographic feature file.")
+        return res_file
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets a resource file that has extension .shp from the list of files *resource_files* """
+
+        res_files = [f for f in resource_files if f.extension.lower() == '.shp']
+        return res_files[0] if res_files else None
 
 
 def extract_metadata_and_files(resource, res_file, file_type=True):

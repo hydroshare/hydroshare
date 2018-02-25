@@ -361,59 +361,17 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """
-            Sets a tif or zip raster resource file to GeoRasterFile type
-            :param resource: an instance of resource type CompositeResource
-            :param file_id: (optional) id of the resource file to be set as NetCDFLogicalFile type
-            :param folder_path: (optional) path of the folder to be set as NetCDFLogicalFile type
-            :param user: user who is setting the file type
-            :return:
-            """
+        """ Sets a netcdf file (.nc) resource file or a folder to NetCDFLogicalFile type """
 
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
 
         log = logging.getLogger()
-        if file_id is None and folder_path is None:
-            raise ValueError("Must specify id of the file or path of the folder to set as an "
-                             "aggregation type")
-
-        if file_id is not None:
-            # get the file from irods
-            res_file = utils.get_resource_file_by_id(resource, file_id)
-        else:
-            # check if the specified folder exists
-            storage = resource.get_irods_storage()
-            if folder_path.startswith("data/contents/"):
-                folder_path = folder_path[len("data/contents/"):]
-            path_to_check = os.path.join(resource.file_path, folder_path)
-            if not storage.exists(path_to_check):
-                raise ValidationError("Specified folder path does not exist in irods.")
-
-            # get the nc file from the specified folder location
-            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                 sub_folders=False)
-            if not res_files:
-                raise ValidationError("The specified folder does not contain any file.")
-            else:
-                # check if the specified folder is suitable for aggregation
-                if cls.check_files_for_aggregation_type(res_files):
-                    res_file = res_files[0]
-                else:
-                    res_file = None
-
-        if res_file is None:
-            raise ValidationError("File not found.")
-
-        if res_file.extension != '.nc':
-            raise ValidationError("Not a NetCDF file.")
-
-        if res_file.has_logical_file:
-            raise ValidationError("The selected file is already part of an aggregation.")
+        res_file = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # base file name (no path included)
         file_name = res_file.file_name
-        # file name without the extension
+        # file name without the extension - needed for naming the new aggregation folder
         nc_file_name = file_name[:-len(res_file.extension)]
 
         resource_metadata = []
@@ -428,7 +386,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         # file validation and metadata extraction
         nc_dataset = nc_utils.get_nc_dataset(temp_file)
         if isinstance(nc_dataset, netCDF4.Dataset):
-            # Extract the metadata from netcdf file
+            msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
+            file_type_success = True
+            # extract the metadata from netcdf file
             res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
             # populate resource_metadata and file_type_metadata lists with extracted metadata
             add_metadata_to_list(resource_metadata, res_dublin_core_meta,
@@ -490,12 +450,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             resource, uploaded_file, folder=upload_folder
                         )
 
-                        # delete the generic logical file object
-                        if new_res_file.logical_file is not None:
-                            # deleting the file level metadata object will delete the associated
-                            # logical file object
-                            new_res_file.logical_file.metadata.delete()
-
                         # make each resource file we added part of the logical file
                         logical_file.add_resource_file(new_res_file)
 
@@ -534,27 +488,36 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     log.info("NetCDF aggregation - metadata was saved in aggregation")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
+                    file_type_success = True
                 except Exception as ex:
-                    msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
                     msg = msg.format(ex.message)
                     log.exception(msg)
-                    if upload_folder:
-                        # delete any new files uploaded as part of setting file type
-                        folder_to_remove = os.path.join('data', 'contents', upload_folder)
-                        remove_folder(user, resource.short_id, folder_to_remove)
-                        log.info("Deleted newly created aggregation folder")
-                    raise ValidationError(msg)
                 finally:
                     # remove temp dir
                     if os.path.isdir(temp_dir):
                         shutil.rmtree(temp_dir)
+
+            new_folder_created = upload_folder and not folder_path
+            if not file_type_success and new_folder_created:
+                # delete if a new folder was created for the aggregation
+                folder_to_remove = os.path.join('data', 'contents', upload_folder)
+                remove_folder(user, resource.short_id, folder_to_remove)
+                log.info("Deleted newly created aggregation folder")
+                raise ValidationError(msg)
         else:
-            err_msg = "Not a valid NetCDF file. Aggregation file validation failed."
+            err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
             log.error(err_msg)
             # remove temp dir
             if os.path.isdir(temp_dir):
                 shutil.rmtree(temp_dir)
             raise ValidationError(err_msg)
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets a resource file that has extension .nc from the list of files *resource_files* """
+
+        res_files = [f for f in resource_files if f.extension.lower() == '.nc']
+        return res_files[0] if res_files else None
 
 
 def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_meta,

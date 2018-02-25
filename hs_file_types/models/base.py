@@ -14,7 +14,8 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 
 from lxml import etree
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url, \
+    get_resource_file_by_id
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 
 
@@ -625,7 +626,7 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """Sub classes must implement this method to create specific logical file type
+        """Sub classes must implement this method to create specific logical file (aggregation) type
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
         if this is missing then folder_path must be specified
@@ -635,6 +636,72 @@ class AbstractLogicalFile(models.Model):
         :return:
         """
         raise NotImplementedError()
+
+    @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        """Validation of *file_id* and *folder_path* for creating file type (aggregation)
+
+        :param resource: an instance of resource type CompositeResource
+        :param file_id: (optional) id of the resource file to be set as an aggregation type -
+        if this is missing then folder_path must be specified
+        :param folder_path: (optional) path of the folder which needs to be set to an aggregation
+        type - if this is missing then file_id must be specified
+        :raise  ValidationError if validation fails
+        :return an instance of ResourceFile if validation is successful
+        """
+
+        if file_id is None and folder_path is None:
+            raise ValueError("Must specify id of the file or path of the folder to set as an "
+                             "aggregation type")
+        if file_id is not None:
+            # user selected a file to set aggregation
+            res_file = get_resource_file_by_id(resource, file_id)
+        else:
+            # user selected a folder to set aggregation - check if the specified folder exists
+            storage = resource.get_irods_storage()
+            if folder_path.startswith("data/contents/"):
+                folder_path = folder_path[len("data/contents/"):]
+            path_to_check = os.path.join(resource.file_path, folder_path)
+            if not storage.exists(path_to_check):
+                raise ValidationError("Specified folder path does not exist in irods.")
+
+            # get the shp file from the specified folder location
+            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                 sub_folders=False)
+            if not res_files:
+                raise ValidationError("The specified folder does not contain any file.")
+            else:
+                # check if the specified folder is suitable for aggregation
+                if cls.check_files_for_aggregation_type(res_files):
+                    # get the primary file suitable for creating a specific aggregation type
+                    res_file = cls.get_primary_resouce_file(res_files)
+                else:
+                    res_file = None
+
+        if res_file is None or not res_file.exists:
+            raise ValidationError("File not found.")
+
+        if res_file.has_logical_file:
+            msg = "Selected {} is already part of a aggregation."
+            if folder_path is None:
+                msg = msg.format('file')
+            else:
+                msg = msg.format('folder')
+            raise ValidationError(msg)
+
+        return res_file
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Returns one specific file as the primary file from the list of resource
+        files *resource_files*
+        A file is a primary file which can be used for creating a file type (aggregation).
+        Subclasses must implement this.
+        :param  resource_files: a list of resource files - instances of ResourceFile
+        :return a resource file (instance of ResourceFile) if found, otherwise, None
+        """
+
+        raise NotImplementedError
 
     @staticmethod
     def get_aggregation_display_name():
