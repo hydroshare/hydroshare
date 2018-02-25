@@ -317,21 +317,18 @@ class TestCopyResource(TestCase):
             files=files
         )
 
-        # set the logical file
+        # run the resource post creation signal
         utils.resource_post_create_actions(resource=self.composite_resource, user=self.owner,
                                            metadata=self.composite_resource.metadata)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with file type
+        self.assertEqual(res_file.has_logical_file, False)
 
         # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.owner)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.owner, res_file.id)
 
         # ensure a nonowner who does not have permission to view a resource cannot copy it
         with self.assertRaises(PermissionDenied):

@@ -84,7 +84,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(res_file.extension, '.zip')
 
         # set the zip file to GeoFeatureFile type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test file type and file type metadata
         assert_geofeature_file_type_metadata(self, expected_folder_name)
@@ -113,7 +113,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(res_file.has_logical_file, False)
 
         # set the zip file to GeoFeatureFile type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test files in the file type
         self.assertEqual(self.composite_resource.files.count(), 15)
@@ -201,7 +201,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         # set the shp file to GeoFeatureFile type
         shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, shp_res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, shp_res_file.id)
 
         # test files in the file type
         self.assertEqual(self.composite_resource.files.count(), 3)
@@ -267,7 +267,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         # set the tif file to GeoFeatureFile type
         with self.assertRaises(ValidationError):
-            GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test file was rolled back
         self.assertEqual(self.composite_resource.files.count(), 1)
@@ -287,7 +287,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -312,7 +312,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # set the zip file to GeoFeatureLogicalFile (aggregation) type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file (aggregation) of type GeoFeatureLogicalFile
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
@@ -356,7 +356,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the zip file
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test that we have one logical file of type GeoFeatureLogicalFile type as a result
         # of metadata extraction
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
@@ -384,7 +384,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with raster LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 3)
         res_file = self.composite_resource.files.first()
@@ -421,7 +421,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type GeoFeatureLogicalFile as a result
         # of metadata extraction
@@ -452,7 +452,7 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self._create_composite_resource(self.osm_all_files_zip_file)
         res_file = self.composite_resource.files.first()
         # set the zip file to GeoFeatureFile type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test files in the file type
         self.assertEqual(self.composite_resource.files.count(), 15)

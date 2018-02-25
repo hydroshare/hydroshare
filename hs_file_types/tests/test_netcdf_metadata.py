@@ -74,7 +74,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
 
         # set the nc file to NetCDF file type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test extracted metadata
         res_title = 'Test NetCDF File Type Metadata'
         assert_netcdf_file_type_metadata(self, res_title)
@@ -105,7 +105,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
 
         # set the nc file to NetCDF file type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test resource title was updated with the extracted netcdf data
         res_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
         self.assertEqual(self.composite_resource.metadata.title.value, res_title)
@@ -230,7 +230,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type NetCDFLogicalFile as a result
         # of metadata extraction
@@ -273,7 +273,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # set the nc file to NetCDFLogicalFile aggregation
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file (aggregation) of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -305,7 +305,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type NetCDFLogicalFile as a result
         # of metadata extraction
@@ -355,7 +355,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type NetCDFLogicalFile as a result
         # of metadata extraction
@@ -398,7 +398,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with netcdf LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 2)
         src_path = 'data/contents/netcdf_valid/netcdf_valid.nc'
@@ -449,7 +449,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # trying to set this invalid tif file to NetCDF file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
-            NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -463,7 +463,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
