@@ -214,6 +214,59 @@ class Features(object):
         return mine
 
     @staticmethod
+    def user_owned_groups():
+        groups = {}
+        for u in User.objects.all():
+            for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER):
+                if u.username not in groups:
+                    groups[u.username] = set(g)
+                else:
+                    groups[u.username].add(g)
+        return groups
+
+    @staticmethod
+    def user_edited_groups():
+        groups = {}
+        for u in User.objects.all():
+            for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE):
+                if u.username not in groups:
+                    groups[u.username] = set(g)
+                else:
+                    groups[u.username].add(g)
+        return groups
+
+    @staticmethod
+    def user_viewed_groups():
+        groups = {}
+        for u in User.objects.all():
+            for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW):
+                if u.username not in groups:
+                    groups[u.username] = set(g)
+                else:
+                    groups[u.username].add(g)
+        return groups
+
+    @staticmethod
+    def resources_editable_via_group(g):
+        output = set()
+        for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE):
+            output = output.add(r.short_id)
+        return output
+
+    @staticmethod
+    def resources_viewable_via_group(g):
+        output = set()
+        for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW):
+            output = output.add(r.short_id)
+        return output
+
+    @staticmethod
+    def explain_group(g):
+        return {'name': g.name,
+                'description': g.gaccess.description,
+                'purpose': g.gaccess.purpose}
+
+    @staticmethod
     def resource_features(obj):
         ind = BaseResourceIndex()
         output = {}
