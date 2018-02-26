@@ -3,6 +3,7 @@ from hs_access_control.models import PrivilegeCodes
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
+# from hs_labels.models import UserResourceLabels, UserResourceFlags
 # from hs_core.hydroshare.utils import user_from_id
 import re
 
@@ -189,6 +190,28 @@ class Features(object):
                         else:
                             apps[user_id].add(resource_id)
         return apps
+
+    @staticmethod
+    def user_favorites():
+        favs = {}
+        for u in User.objects.all():
+            for r in u.u2urf.favorited_resources():
+                if u.username not in favs:
+                    favs[u.username] = set(r.short_id)
+                else:
+                    favs[u.username].add(r.short_id)
+        return favs
+
+    @staticmethod
+    def user_my_resources():
+        mine = {}
+        for u in User.objects.all():
+            for r in u.u2urf.my_resources():
+                if u.username not in mine:
+                    mine[u.username] = set(r.short_id)
+                else:
+                    mine[u.username].add(r.short_id)
+        return mine
 
     @staticmethod
     def resource_features(obj):
