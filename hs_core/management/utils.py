@@ -43,10 +43,21 @@ def ingest_irods_files(self,
         if log_errors:
             logger.info(msg)
 
-    # flag non-existent resources in iRODS
     else:
+        # flag non-existent resources in iRODS
         if not istorage.exists(self.root_path):
             msg = "root path {} does not exist in iRODS".format(self.root_path)
+            ecount += 1
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.error(msg)
+            if return_errors:
+                errors.append(msg)
+
+        # flag non-existent file paths in iRODS
+        elif not istorage.exists(self.file_path):
+            msg = "file path {} does not exist in iRODS".format(self.file_path)
             ecount += 1
             if echo_errors:
                 print(msg)
@@ -182,6 +193,7 @@ class CheckResource(object):
             res = BaseResource.objects.get(short_id=self.short_id)
         except BaseResource.DoesNotExist:
             print("{} does not exist in Django".format(self.short_id))
+            return
 
         self.resource = res.get_content_model()
         assert self.resource, (res, res.content_model)
@@ -197,6 +209,8 @@ class CheckResource(object):
         if not istorage.exists(self.resource.root_path):
             self.label()
             print("  root path {} does not exist in iRODS".format(self.resource.root_path))
+            print("  ... resource {} has type {}".format(self.resource.short_id,
+                                                         self.resource.resource_type))
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):

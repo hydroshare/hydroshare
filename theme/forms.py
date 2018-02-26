@@ -20,6 +20,9 @@ from mezzanine.conf import settings
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
+from hs_core.models import Party
+
+from hydroshare import settings as hydroshare_settings
 
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
@@ -227,9 +230,6 @@ class SignupForm(forms.ModelForm):
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
-    Captcha = forms.CharField(required=False)
-    challenge = forms.CharField()
-    response = forms.CharField()
     organization = forms.CharField(required=True)
 
     def __init__(self, request, *args, **kwargs):
@@ -237,20 +237,23 @@ class SignupForm(forms.ModelForm):
         super(SignupForm, self).__init__(*args, **kwargs)
 
     def verify_captcha(self):
-        params = dict(self.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY',
-                                       "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
-        params['remoteip'] = self.request.META['REMOTE_ADDR']
-        resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if not lines[0].startswith('false'):
-            return True
-        return False
+        url = hydroshare_settings.RECAPTCHA_VERIFY_URL
+        values = {
+            'secret': hydroshare_settings.RECAPTCHA_SECRET_KEY,
+            'response': self.request.POST.get('g-recaptcha-response')
+        }
+        response = requests.post(url, values)
+        result = response.json()
+        if(result["success"]):
+            return (True, [])
+
+        return (False, result["error-codes"])
 
     def clean(self):
-        if not self.verify_captcha():
-            self.add_error('Captcha', "You did not complete the CAPTCHA correctly. "
-                                      "Please try again.")
+        success, error_codes = self.verify_captcha()
+
+        if not success:
+            self.add_error(None, " ".join(error_codes))
 
     def clean_password2(self):
         data = self.cleaned_data
@@ -299,6 +302,10 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        self.fields['identifiers'].required = False
+
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account']
@@ -320,3 +327,7 @@ class UserProfileForm(forms.ModelForm):
         if len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
+
+    def clean_identifiers(self):
+        data = self.cleaned_data['identifiers']
+        return Party.validate_identifiers(data)
