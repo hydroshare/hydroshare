@@ -3,7 +3,6 @@ from django.core.mail import send_mail
 from django.db import models
 
 from hs_core.models import BaseResource
-from .utils import send_update_email
 
 PUBLICATION_STATUSES = [
     ('pending', 'Pending Approval'),
