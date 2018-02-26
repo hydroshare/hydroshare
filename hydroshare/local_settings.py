@@ -170,9 +170,9 @@ HS_WWW_IRODS_ZONE = ''
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Info needed for mygeohub MultiSpec tool launch from HydroShare
-GEOHUB_HS_IRODS_PATH = '/rcacZone/home/mygeohub/external/hydroshare'
-GEOHUB_HS_IRODS_RESC = 'demoResc'
-GEOHUB_HOMEPAGE_URL = 'mygeohub.org/tools/multispec'
+GEOHUB_HS_IRODS_PATH = ''
+GEOHUB_HS_IRODS_RESC = ''
+GEOHUB_HOMEPAGE_URL = ''
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
