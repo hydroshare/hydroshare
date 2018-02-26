@@ -341,6 +341,15 @@ class NetcdfResource(BaseResource):
                 break
         return hs_term_dict
 
+    # return single file name included in the resource
+    def get_res_file_name(self):
+        for res_file in self.files.all():
+            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
+            if f_ext.lower() == '.nc':
+                return f_fullname
+
+        return ''
+
     def update_netcdf_file(self, user):
         if not self.metadata.is_dirty:
             return

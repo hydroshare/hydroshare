@@ -11,7 +11,8 @@ from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
-from hs_core.hydroshare.utils import add_metadata_element_to_xml
+from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
+    get_resource_file_name_and_extension
 
 
 # extended metadata for raster resource type to store the original box type coverage
@@ -369,6 +370,15 @@ class RasterResource(BaseResource):
     def can_have_multiple_files(cls):
         # can have only 1 file
         return False
+
+    # return single file name included in the resource
+    def get_res_file_name(self):
+        for res_file in self.files.all():
+            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
+            if f_ext.lower() == '.tif' or f_ext.lower() == '.zip':
+                return f_fullname
+
+        return ''
 
 
 # this would allow us to pick up additional form elements for the template

@@ -51,9 +51,16 @@ class AppLaunch(TemplateView):
             session.record('app_launch', value=msg)
 
             if settings.GEOHUB_HOMEPAGE_URL in url:
-                # TO DO: need to retrieve resource id from query dict
-                res_id = url.split('/')[-1]
-                push_res_to_geohub(request.user, res_id)
+                if settings.GEOHUB_HOMEPAGE_URL.endswith('/'):
+                    base_url = settings.GEOHUB_HOMEPAGE_URL + request.user.username + '/'
+                else:
+                    base_url = settings.GEOHUB_HOMEPAGE_URL + '/' + request.user.username + '/'
+                start = url.find(base_url)
+                if start > 0:
+                    start = start + len(base_url)
+                    end = start + url[start:].find('/')
+                    res_id = url[start:end]
+                    url = push_res_to_geohub(url, request.user, res_id)
 
         return HttpResponseRedirect(url)
 

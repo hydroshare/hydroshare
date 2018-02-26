@@ -10,7 +10,8 @@ from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
-from hs_core.hydroshare.utils import add_metadata_element_to_xml
+from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
+    get_resource_file_name_and_extension
 
 
 class OriginalCoverage(AbstractMetaDataElement):
@@ -259,6 +260,15 @@ class GeographicFeatureResource(BaseResource):
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True
+
+    # return single file name included in the resource
+    def get_res_file_name(self):
+        for res_file in self.files.all():
+            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
+            if f_ext.lower() == '.shp':
+                return f_fullname
+
+        return ''
 
 
 processor_for(GeographicFeatureResource)(resource_processor)
