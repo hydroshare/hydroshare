@@ -9,10 +9,14 @@ class CanViewOrEditResourceMetadata(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if request.method == "GET":
+        if request.method == "GET" and 'pk' in view.kwargs:
             _, authorized, _ = authorize(request, view.kwargs['pk'],
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
-        else:
+        elif 'pk' in view.kwargs:
             _, authorized, _ = authorize(request, view.kwargs['pk'],
                                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        else:
+            # Just to get this to show up in swagger
+            authorized = True
+
         return authorized
