@@ -647,7 +647,7 @@ class AbstractLogicalFile(models.Model):
         :param folder_path: (optional) path of the folder which needs to be set to an aggregation
         type - if this is missing then file_id must be specified
         :raise  ValidationError if validation fails
-        :return an instance of ResourceFile if validation is successful
+        :return an instance of ResourceFile if validation is successful and the folder_path
         """
 
         if file_id is None and folder_path is None:
@@ -689,7 +689,7 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format('folder')
             raise ValidationError(msg)
 
-        return res_file
+        return res_file, folder_path
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
@@ -708,6 +708,40 @@ class AbstractLogicalFile(models.Model):
         """Sub classes must implement this method to return a name for this
         logical (aggregation) type used in UI"""
         raise NotImplementedError()
+
+    @staticmethod
+    def cleanup_on_fail_to_create_aggregation(user, resource, folder_to_delete, original_folder,
+                                              aggregation_from_folder):
+        """Deletes folder if a new aggregation folder *folder_to_delete*  was created
+        :param  user: user hwo was trying to create the aggregation
+        :param  resource: an instance of CompositeResource for which the aggregation was created
+        :param  folder_to_delete: the aggregation folder to delete
+        :param  original_folder: folder path for the files originally located before moving to the
+        new aggregation folder
+        :param  aggregation_from_folder: (bool) a flag to indicate if the aggregation was being
+        created from a folder or not
+        """
+        # had to import it here to avoid import loop
+        from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
+
+        new_folder_created = folder_to_delete and not aggregation_from_folder
+        if new_folder_created:
+
+            # delete if a new folder was created for the aggregation
+            folder_to_remove = os.path.join('data', 'contents', folder_to_delete)
+            res_files = ResourceFile.list_folder(resource=resource, folder=folder_to_delete,
+                                                 sub_folders=False)
+            # move the files from the folder to delete to the original folder
+            if original_folder is None:
+                original_folder = ''
+            original_folder_path = os.path.join('data', 'contents', original_folder)
+            for f in res_files:
+                # TODO: user ResourceFile.create() to do this file move
+                tgt_file_path = os.path.join(original_folder_path, f.file_name)
+                src_file_path = os.path.join('data', 'contents', f.short_path)
+                move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
+                                              tgt_file_path, validate_move_rename=False)
+            remove_folder(user, resource.short_id, folder_to_remove)
 
     def get_aggregation_type_name(self):
         """Return the class name of the logical type (aggregation type)"""

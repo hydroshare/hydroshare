@@ -16,6 +16,7 @@ from django.forms.models import formset_factory, BaseFormSet
 from dominate.tags import div, legend, form, button, p, textarea, strong, input
 
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import Creator, Contributor, ResourceFile
 
@@ -364,10 +365,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """ Sets a netcdf file (.nc) resource file or a folder to NetCDFLogicalFile type """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
+        from hs_core.views.utils import create_folder
 
         log = logging.getLogger()
-        res_file = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # base file name (no path included)
         file_name = res_file.file_name
@@ -376,7 +377,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         resource_metadata = []
         file_type_metadata = []
-        files_to_add_to_resource = []
         upload_folder = ''
 
         # get the file from irods to temp dir
@@ -387,7 +387,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         nc_dataset = nc_utils.get_nc_dataset(temp_file)
         if isinstance(nc_dataset, netCDF4.Dataset):
             msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
-            file_type_success = True
+            file_type_success = False
             # extract the metadata from netcdf file
             res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
             # populate resource_metadata and file_type_metadata lists with extracted metadata
@@ -396,8 +396,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
             # create the ncdump text file
             dump_file = create_header_info_txt_file(temp_file, nc_file_name)
-            files_to_add_to_resource.append(dump_file)
             file_folder = res_file.file_folder
+
             with transaction.atomic():
                 # create a netcdf logical file object to be associated with
                 # resource files
@@ -425,35 +425,35 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         create_folder(resource.short_id, new_folder_path)
                         log.info("NetCDF Aggregation creation - folder created:{}".format(
                             new_folder_path))
-                        # first make the selected file as part of the aggregation/file type
-                        logical_file.add_resource_file(res_file)
 
-                        # then move file to the new folder location
-                        tgt_file_path = os.path.join(new_folder_path, res_file.file_name)
-                        src_file_path = os.path.join('data/contents', res_file.short_path)
-                        move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
-                                                      tgt_file_path, validate_move_rename=False)
+                        # copy the selected file to the new aggregation folder location
+                        tgt_folder = new_folder_path[len('data/contents/'):]
+                        copied_res_file = ResourceFile.create(resource=resource,
+                                                              file=None,
+                                                              folder=tgt_folder,
+                                                              source=res_file.storage_path)
+                        # make the copied file as part of the aggregation/file type
+                        logical_file.add_resource_file(copied_res_file)
 
                         new_folder_name = new_folder_path.split('/')[-1]
                         upload_folder = new_folder_name
                     else:
                         # folder has been selected to create aggregation
                         upload_folder = folder_path
+                        # make the .nc file part of the aggregation
                         logical_file.add_resource_file(res_file)
 
-                    # add all new files to the resource
-                    for f in files_to_add_to_resource:
-                        uploaded_file = UploadedFile(file=open(f, 'rb'),
-                                                     name=os.path.basename(f))
+                    # add the new dump txt file to the resource
+                    uploaded_file = UploadedFile(file=open(dump_file, 'rb'),
+                                                 name=os.path.basename(dump_file))
 
-                        new_res_file = utils.add_file_to_resource(
-                            resource, uploaded_file, folder=upload_folder
-                        )
+                    new_res_file = utils.add_file_to_resource(
+                        resource, uploaded_file, folder=upload_folder
+                    )
 
-                        # make each resource file we added part of the logical file
-                        logical_file.add_resource_file(new_res_file)
-
-                    log.info("NetCDF aggregation creation - new files were added to the resource.")
+                    # make this new resource file we added part of the logical file
+                    logical_file.add_resource_file(new_res_file)
+                    log.info("NetCDF aggregation creation - a new file was added to the resource.")
 
                     # use the extracted metadata to populate resource metadata
                     for element in resource_metadata:
@@ -488,6 +488,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     log.info("NetCDF aggregation - metadata was saved in aggregation")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
+                    # delete the original resource file if we did not create agrregation
+                    # from a folder
+                    if folder_path is None:
+                        delete_resource_file(resource.short_id, res_file.id, user)
                     file_type_success = True
                 except Exception as ex:
                     msg = msg.format(ex.message)
@@ -497,13 +501,12 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     if os.path.isdir(temp_dir):
                         shutil.rmtree(temp_dir)
 
-            new_folder_created = upload_folder and not folder_path
-            if not file_type_success and new_folder_created:
-                # delete if a new folder was created for the aggregation
-                folder_to_remove = os.path.join('data', 'contents', upload_folder)
-                remove_folder(user, resource.short_id, folder_to_remove)
-                log.info("Deleted newly created aggregation folder")
+            if not file_type_success:
+                aggregation_from_folder = folder_path is not None
+                cls.cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
+                                                          file_folder, aggregation_from_folder)
                 raise ValidationError(msg)
+
         else:
             err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
             log.error(err_msg)

@@ -82,17 +82,23 @@ class CompositeResource(BaseResource):
             # folder is empty
             return aggregation_type_to_set
         if len(files_in_folder) > 1:
-            # check for raster and geo feature
+            # check for geo feature
             aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
 
+            # check for raster
             aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
         else:
+            # check for raster
+            aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
+                files_in_folder)
+            if aggregation_type_to_set:
+                return aggregation_type_to_set
             # check for NetCDF aggregation type
             aggregation_type_to_set = NetCDFLogicalFile.check_files_for_aggregation_type(
                 files_in_folder)
