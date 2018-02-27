@@ -94,7 +94,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
 
 # Since an SessionException will be raised for all irods-related operations from django_irods
 # module, there is no need to raise iRODS SessionException from within this function
-def get_irods_reference_file_size(username, password, host, port, zone, irods_fnames):
+def get_size_and_avu_for_irods_ref_files(username, password, host, port, zone, irods_fnames):
     """
     use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
     :param username: iRODS login account username used to download irods data object for uploading
@@ -106,7 +106,8 @@ def get_irods_reference_file_size(username, password, host, port, zone, irods_fn
     :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
             to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
             any method calls from IrodsStorage() if an error or exception ever occurs
-    :return: list of file sizes corresponding to irods_fnames
+    :return: list of file sizes corresponding to irods_fnames, and extra metadata dicts with each dict item
+             corresponding to iRODS AVUs on the file or data object with file name preappended to attributes
     """
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
@@ -114,13 +115,18 @@ def get_irods_reference_file_size(username, password, host, port, zone, irods_fn
     ifnames = string.split(irods_fnames, ',')
 
     ifsizes = []
+    ifextra_mds = {}
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         ifsizes.append(size)
+        extra_md_dict = irods_storage.getAVU(ifname, type='-d')
+        for key, val in extra_md_dict.iteritems():
+            ukey = ifname + '_' + key
+            ifextra_mds[ukey] = val
 
     # delete the user session after iRODS file operations are done
     irods_storage.delete_user_session()
-    return ifsizes
+    return ifsizes, ifextra_mds
 
 
 def run_ssh_command(host, uname, pwd, exec_cmd):
