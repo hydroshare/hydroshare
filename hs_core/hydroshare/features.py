@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User, Group
-from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes, GroupAccess
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
+
 # from hs_labels.models import UserResourceLabels, UserResourceFlags
 # from hs_core.hydroshare.utils import user_from_id
 import re
@@ -194,10 +195,10 @@ class Features(object):
     @staticmethod
     def user_favorites():
         favs = {}
-        for u in User.objects.all():
-            for r in u.u2urf.favorited_resources():
+        for u in User.objects.filter(is_active=True):
+            for r in u.ulabels.favorited_resources:
                 if u.username not in favs:
-                    favs[u.username] = set(r.short_id)
+                    favs[u.username] = set([r.short_id])
                 else:
                     favs[u.username].add(r.short_id)
         return favs
@@ -205,10 +206,10 @@ class Features(object):
     @staticmethod
     def user_my_resources():
         mine = {}
-        for u in User.objects.all():
-            for r in u.u2urf.my_resources():
+        for u in User.objects.filter(is_active=True):
+            for r in u.ulabels.my_resources:
                 if u.username not in mine:
-                    mine[u.username] = set(r.short_id)
+                    mine[u.username] = set([r.short_id])
                 else:
                     mine[u.username].add(r.short_id)
         return mine
@@ -216,55 +217,61 @@ class Features(object):
     @staticmethod
     def user_owned_groups():
         groups = {}
-        for u in User.objects.all():
+        for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER):
                 if u.username not in groups:
-                    groups[u.username] = set(g)
+                    groups[u.username] = set([g.name])
                 else:
-                    groups[u.username].add(g)
+                    groups[u.username].add(g.name)
         return groups
 
     @staticmethod
     def user_edited_groups():
         groups = {}
-        for u in User.objects.all():
+        for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE):
                 if u.username not in groups:
-                    groups[u.username] = set(g)
+                    groups[u.username] = set([g.name])
                 else:
-                    groups[u.username].add(g)
+                    groups[u.username].add(g.name)
         return groups
 
     @staticmethod
     def user_viewed_groups():
         groups = {}
-        for u in User.objects.all():
+        for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW):
                 if u.username not in groups:
-                    groups[u.username] = set(g)
+                    groups[u.username] = set([g.name])
                 else:
                     groups[u.username].add(g)
         return groups
 
     @staticmethod
     def resources_editable_via_group(g):
-        output = set()
-        for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE):
-            output = output.add(r.short_id)
+        output = set([])
+        if GroupAccess.objects.filter(group=g).exists(): 
+            for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE):
+                output.add(r.short_id)
         return output
 
     @staticmethod
     def resources_viewable_via_group(g):
-        output = set()
-        for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW):
-            output = output.add(r.short_id)
+        output = set([])
+        if GroupAccess.objects.filter(group=g).exists(): 
+            for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW):
+                output.add(r.short_id)
         return output
 
     @staticmethod
-    def explain_group(g):
-        return {'name': g.name,
-                'description': g.gaccess.description,
-                'purpose': g.gaccess.purpose}
+    def explain_group(gname):
+        g = Group.objects.get(name=gname)
+        if GroupAccess.objects.filter(group=g).exists(): 
+            return {'name': g.name,
+                    'description': g.gaccess.description,
+                    'purpose': g.gaccess.purpose}
+        else: 
+            return {'name': g.name} 
 
     @staticmethod
     def resource_features(obj):
