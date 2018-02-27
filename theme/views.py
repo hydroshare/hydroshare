@@ -45,17 +45,22 @@ class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
 
     def get_context_data(self, **kwargs):
+        u = User.objects.none()
         if 'user' in kwargs:
             try:
                 u = User.objects.get(pk=int(kwargs['user']))
             except:
                 u = User.objects.get(username=kwargs['user'])
 
-        else:
+        elif self.request.GET.get('user', False):
             try:
                 u = User.objects.get(pk=int(self.request.GET['user']))
             except:
                 u = User.objects.get(username=self.request.GET['user'])
+
+        elif not self.request.user.is_anonymous():
+            # if the user is logged in and no user is specified, show logged in user
+            u = User.objects.get(pk=int(self.request.user.id))
 
         # get all resources the profile user owns
         resources = u.uaccess.owned_resources
@@ -168,7 +173,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         try:
             new_user = form.save()
         except ValidationError as e:
-            messages.error(request, e.message)
+            if e.message == "Email already in use.":
+                messages.error(request, '<p>An account with this email already exists.  Log in '
+                                        'or click <a href="/accounts/password/reset/" >here</a> '
+                                        'to reset password',
+                               extra_tags="html")
+            else:
+                messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             if not new_user.is_active:
@@ -291,6 +302,20 @@ def update_user_profile(request):
         messages.error(request, ex.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+def resend_verification_email(request, email):
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        user = User.objects.filter(username=email).first()
+    if user is None:
+        messages.error(request, _("Could not find user or email " + email))
+        return redirect("/accounts/login/")
+    if user.is_active :
+        messages.error(request, _("User with email " + user.email + " is already active"))
+        return redirect("/accounts/login/")
+    send_verification_mail(request, user, "signup_verify")
+    messages.error(request, _("Resent verification email to " + user.email))
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def request_password_reset(request):
@@ -469,7 +494,12 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     User is redirected to password reset page where the user can enter new password.
     """
 
-    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    user = authenticate(uidb36=uidb36, token=token)
+    if not user.is_active:
+        # password reset for user that hasn't hit the verification email, since they're resetting
+        # the password, we know the email is good
+        user.is_active = True
+        user.save()
     if user is not None:
         auth_login(request, user)
         # redirect to user to password reset page
