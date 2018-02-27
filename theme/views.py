@@ -175,8 +175,8 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         except ValidationError as e:
             if e.message == "Email already in use.":
                 messages.error(request, '<p>An account with this email already exists.  Log in '
-                                        'or click <a href="/accounts/password/reset/" >here</a> '
-                                        'to reset password',
+                                'or click <a href="' + reverse("mezzanine_password_reset") +
+                               '" >here</a> to reset password',
                                extra_tags="html")
             else:
                 messages.error(request, e.message)
@@ -309,10 +309,10 @@ def resend_verification_email(request, email):
         user = User.objects.filter(username=email).first()
     if user is None:
         messages.error(request, _("Could not find user or email " + email))
-        return redirect("/accounts/login/")
+        return redirect(reverse("login"))
     if user.is_active :
         messages.error(request, _("User with email " + user.email + " is already active"))
-        return redirect("/accounts/login/")
+        return redirect(reverse("login"))
     send_verification_mail(request, user, "signup_verify")
     messages.error(request, _("Resent verification email to " + user.email))
     return redirect(request.META['HTTP_REFERER'])
