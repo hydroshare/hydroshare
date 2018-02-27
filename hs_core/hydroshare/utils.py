@@ -991,7 +991,12 @@ def push_res_to_geohub(url, user, shortkey):
         dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username)
 
     istorage.copyFiles(src_path, dest_path, settings.GEOHUB_HS_IRODS_RESC)
-    fname = res.get_res_file_name()
+    try:
+        fname = res.get_res_file_name()
+    except Exception as ex:
+        logger.debug("Exception raised when calling get_res_file_name on resource {0}: {1}".format(
+            shortkey, ex.message))
+        fname = ''
     if fname:
         if not url.endswith('/'):
             url += '/'

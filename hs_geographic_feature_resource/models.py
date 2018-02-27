@@ -261,15 +261,6 @@ class GeographicFeatureResource(BaseResource):
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True
 
-    # return single file name included in the resource
-    def get_res_file_name(self):
-        for res_file in self.files.all():
-            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
-            if f_ext.lower() == '.shp':
-                return f_fullname
-
-        return ''
-
 
 processor_for(GeographicFeatureResource)(resource_processor)
 
