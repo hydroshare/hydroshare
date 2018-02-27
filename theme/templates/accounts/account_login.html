@@ -28,8 +28,8 @@
                         <div class="alert alert-danger non-field-error">
                             {% for error in form.non_field_errors %}
                                 {% if 'inactive' in error %}
-                                    <p>This account's email has not been verified.<a
-                                            href="/resend_verification_email/{{ form.username.value }}"> Click </a>to resend verification email.</p>
+                                    <p>This account's email has not been verified.<a href="
+                                        {% url 'resend_verification_email' email=form.username.value %}"> Click </a>to resend verification email.</p>
                                 {%  else %}
                                     {{ error }}
                                 {%  endif %}
