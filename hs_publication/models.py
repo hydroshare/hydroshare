@@ -20,8 +20,8 @@ class PublicationQueue(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             send_mail(
-                'Your resource publication status has changed.',
-                'The current status is: %s\nThe reason:\n%s' % (self.status, self.note),
+                'Your resource publication status has changed to: %s\n' +
+                'Explanation:\n%s' % (self.status, self.note),
                 'publication@cuahsi.org',
                 [self.resource.user.email],
                 fail_silently=False,
