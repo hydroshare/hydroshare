@@ -896,14 +896,16 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 # TODO: make this part of resource api. resource --> self.
 def resource_file_add_process(resource, files, user, extract_metadata=False,
-                              source_names=[], is_file_reference=False, **kwargs):
+                              source_names=[], source_sizes=[], is_file_reference=False, **kwargs):
 
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               source_names=source_names)
+                                               source_names=source_names,
+                                               source_sizes=source_sizes,
+                                               is_file_reference=is_file_reference)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file

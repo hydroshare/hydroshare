@@ -8,7 +8,7 @@ from irods.exception import CollectionDoesNotExist
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
+from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, get_size_and_avu_for_irods_ref_files
 from hs_core.hydroshare import utils
 
 def search_ds(coll):
@@ -155,13 +155,12 @@ def upload_add(request):
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
+    is_file_ref = request.POST.get("is_file_reference", 'false').lower() == 'true'
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
 
-    is_file_ref = request.POST.get('file_ref_chk', False)
-
-    # TODO: read resource type from resource, not from input file 
+    # TODO: read resource type from resource, not from input file
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
     source_names = []
 
@@ -172,26 +171,41 @@ def upload_add(request):
         homepath = irods_fnames_list[0]
         # TODO: this should happen whether resource is federated or not
         irods_federated = utils.is_federated(homepath)
-        if irods_federated or is_file_ref:
-            source_names = irods_fnames.split(',')
-        else:
-            user = request.POST.get('irods-username')
-            password = request.POST.get("irods-password")
-            port = request.POST.get("irods-port")
-            host = request.POST.get("irods-host")
-            zone = request.POST.get("irods-zone")
-            try:
-                upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-            except SessionException as ex:
-                request.session['validation_error'] = ex.stderr
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        irods_fsizes = []
+        irods_avus = {}
+        if irods_fnames:
+            if irods_federated:
+                source_names = irods_fnames.split(',')
+            else:
+                user = request.POST.get('irods-username')
+                password = request.POST.get("irods-password")
+                port = request.POST.get("irods-port")
+                host = request.POST.get("irods-host")
+                zone = request.POST.get("irods-zone")
+                if is_file_ref:
+                    source_names = irods_fnames.split(',')
+                    try:
+                        irods_fsizes, irods_avus = get_size_and_avu_for_irods_ref_files(username=user,
+                                                                                              password=password,
+                                                                                              host=host,
+                                                                                              port=port,
+                                                                                              zone=zone,
+                                                                                              irods_fnames=irods_fnames)
+                    except SessionException as ex:
+                        request.session['validation_error'] = ex.stderr
+                        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+                else:
+                    try:
+                        upload_from_irods(username=user, password=password, host=host, port=port,
+                                          zone=zone, irods_fnames=irods_fnames, res_files=res_files)
+                    except SessionException as ex:
+                        request.session['validation_error'] = ex.stderr
+                        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, 
-                                            source_names=source_names, folder=None,
-                                            is_file_reference=is_file_ref)
+                                            source_names=source_names, folder=None)
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -204,7 +218,9 @@ def upload_add(request):
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, 
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   source_names=source_names, folder=None)
+                                                   is_file_reference=is_file_ref,
+                                                   source_names=source_names,
+                                                   source_sizes=irods_fsizes, folder=None)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         if ex.message:
@@ -213,6 +229,11 @@ def upload_add(request):
             request.session['validation_error'] = ex.stderr
     except SessionException as ex:
         request.session['validation_error'] = ex.stderr
+
+    # add extra metadata if irods_avus is not empty
+    if irods_avus:
+        resource.extra_metadata = irods_avus
+        resource.save()
 
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
