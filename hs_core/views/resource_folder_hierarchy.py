@@ -105,7 +105,7 @@ def data_store_structure(request):
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if not f.resource_file and not f.fed_resource_file and f.reference_file_path:
                 files.append({'name': f.reference_file_path, 'size': f.reference_file_size,
-                              'type': get_file_mime_type(f.reference_file_path),
+                              'type': 'reference',
                               'pk': f.pk, 'url': '',
                               'logical_type': '',
                               'logical_file_id': ''})
