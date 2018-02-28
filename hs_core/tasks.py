@@ -47,9 +47,9 @@ def sync_email_subscriptions():
     active_subscribed = UserProfile.objects.filter(email_opt_out=False,
                                                    user__last_login__gte=sixty_days,
                                                    user__is_active=True)
-    sync_mailchimp(active_subscribed, "e210a70864")
+    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
     subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
-    sync_mailchimp(subscribed, "f0c27254e3")
+    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
 
 
 def sync_mailchimp(active_subscribed, list_id):
