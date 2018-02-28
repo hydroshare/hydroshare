@@ -1396,7 +1396,8 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
                 # redirect to group profile page
                 return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
             else:
-                messages.error(request, "The link you clicked is no longer valid.")
+                messages.error(request, "The link you clicked is no longer valid. Please ask to "
+                                        "join the group again.")
                 return redirect("/")
         else:
             messages.error(request, "The group is no longer active.")
