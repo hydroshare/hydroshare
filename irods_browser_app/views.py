@@ -232,7 +232,12 @@ def upload_add(request):
 
     # add extra metadata if irods_avus is not empty
     if irods_avus:
-        resource.extra_metadata = irods_avus
+        updated_metadata = resource.extra_metadata
+        if updated_metadata:
+            updated_metadata.update(irods_avus)
+        else:
+            updated_metadata = irods_avus
+        resource.extra_metadata = updated_metadata
         resource.save()
 
     request.session['resource-mode'] = 'edit'
