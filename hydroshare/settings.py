@@ -707,4 +707,4 @@ SWAGGER_SETTINGS = {
     "VALIDATOR_URL": False
 }
 
-SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W01"]
+SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W01", "mezzanine.core.W02"]
