@@ -519,7 +519,7 @@ function bindFileBrowserItemEvents() {
         prevent = true;
         onOpenFolder();
     });
-    $("#hs-file-browser li.fb-folder").click(function () {
+    $("#hs-file-browser li.fb-folder, #hs-file-browser li.fb-file").click(function () {
          timer = setTimeout(function() {
              if(!prevent){
                  showFileTypeMetadata(false, "");
@@ -570,15 +570,25 @@ function showFileTypeMetadata(file_type_time_series, url){
     // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
     // set to true and the *url* must be set
     // remove anything displayed currently for the aggregation metadata
-    $("#fileTypeMetaDataTab").html(file_metadata_alert);
-    var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+     $("#fileTypeMetaDataTab").html(file_metadata_alert);
+
+     var selectedItem = $("#fb-files-container li.ui-selected");
+     var logical_file_id = selectedItem.attr("data-logical-file-id");
      if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
      }
-     var logical_type = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
+
+     var logical_type = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type");
      if (!logical_type){
         return; 
-     } 
+     }
+     if(selectedItem.hasClass("fb-file")){
+         // only in the case Ref TimeSeries file type we need to show
+         // file type metadata when a file is selected
+         if(logical_type !== "RefTimeseriesLogicalFile"){
+             return;
+         }
+     }
      var resource_mode = $("#resource-mode").val();
      if (!resource_mode){ 
         return; 
