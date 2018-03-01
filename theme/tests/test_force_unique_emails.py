@@ -1,5 +1,5 @@
 from django.test import TestCase
-from theme.models import force_unique_emails, User, UserProfile
+from theme.models import User
 from django.core.exceptions import ValidationError
 
 
@@ -13,14 +13,12 @@ class ForceUniqueEmails(TestCase):
         except Exception as e:
             self.assertTrue(isinstance(e, ValidationError))
 
-
     def test_force_email_required(self):
         try:
             User.objects.create()
             self.fail("Should have thrown ValidationError, email is required")
         except Exception as e:
             self.assertTrue(isinstance(e, ValidationError))
-
 
     def test_duplicate_username(self):
         User.objects.create(email="test@testing.com", username="scoot")
@@ -29,5 +27,3 @@ class ForceUniqueEmails(TestCase):
             self.fail("Should have thrown ValidationError, duplicate username")
         except Exception as e:
             self.assertTrue(isinstance(e, ValidationError))
-
-
