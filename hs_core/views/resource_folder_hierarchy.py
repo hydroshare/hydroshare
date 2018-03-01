@@ -73,7 +73,6 @@ def data_store_structure(request):
         for dname in store[0]:  # directories
             d_pk = dname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, d_pk)
-            istorage = resource.get_irods_storage()
             d_url = istorage.url(os.path.join('zips', name_with_full_path))
             dirs.append({'name': d_pk, 'url': d_url})
 

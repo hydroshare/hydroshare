@@ -36,13 +36,17 @@ from theme.utils import get_quota_message
 logger = logging.getLogger('django')
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
-    # delete 2 days ago to avoid deleting zips just before midnight
+    # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
-    irods_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    zips_daily_date = "{irods}/zips/{daily_date}".format(irods=irods_prefix, daily_date=date_folder)
-    IrodsStorage().delete(zips_daily_date)
+    zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
+    istorage = IrodsStorage()
+    if istorage.exists(zips_daily_date):
+        istorage.delete(zips_daily_date)
+        logger.debug("Removed daily zip folder " + zips_daily_date)
+    else:
+        logger.debug("No daily date folder found for " + zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -208,30 +212,23 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def delete_zip(resource_id, zip_path):
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
-    res = get_resource_by_shortkey(resource_id)
-    istorage = res.get_irods_storage()
-
-    irods_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    full_zip_path = '{irods}/{path}'.format(irods=irods_prefix, path=zip_path)
-    istorage.delete(full_zip_path)
+def delete_zip(zip_path):
+    istorage = IrodsStorage()
+    if istorage.exists(zip_path):
+        istorage.delete(zip_path)
+        logger.debug("Removed zip folder " + zip_path)
+    else:
+        logger.debug("No folder found for " + zip_path)
 
 
 @shared_task
 def create_temp_zip(resource_id, input_path, output_path):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
-    istorage = res.get_irods_storage()
-
-    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    full_input_path = '{irods}/{res_id}/{path}'.format(irods=irods_dest_prefix, res_id=resource_id,
-                                                       path=input_path)
-    if res.resource_federation_path:
-        full_input_path = os.path.join(res.resource_federation_path, resource_id, input_path)
+    full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
 
     try:
-        istorage.zipup(full_input_path, output_path)
+        IrodsStorage().zipup(full_input_path, output_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return False

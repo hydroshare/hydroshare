@@ -8,9 +8,12 @@ from hs_core import hydroshare
 from hs_core.hydroshare import resource
 from hs_core.models import GenericResource
 from hs_core.tasks import create_temp_zip
+from django_irods.storage import IrodsStorage
 
 
 class TestFolderDownloadZip(TestCase):
+    output_path = "zips/rand/foo.zip";
+
     def setUp(self):
         super(TestFolderDownloadZip, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -66,9 +69,15 @@ class TestFolderDownloadZip(TestCase):
         if self.test_res:
             self.test_res.delete()
         GenericResource.objects.all().delete()
+        istorage = IrodsStorage()
+        if istorage.exists(self.output_path):
+            istorage.delete(self.output_path)
 
     def test_create_temp_zip(self):
+        input_path = "/data/contents/foo"
         try:
-            create_temp_zip(self.test_res.short_id, "/data/contents/foo", "zips/rand/foo.zip")
+            self.assertTrue(create_temp_zip(self.test_res.short_id, input_path,
+                                   self.output_path))
+            self.assertTrue(IrodsStorage().exists(self.output_path))
         except Exception as ex:
             self.fail("create_temp_zip() raised exception.{}".format(ex.message))
