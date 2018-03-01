@@ -67,4 +67,18 @@ $(document).ready(function() {
     });
 
     $("input#id_user-autocomplete").addClass("form-control");
+
+    $("#publish-btn-2").click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: "/hsapi/resource/" + resID + "/publish/",
+            type: "POST",
+            data: {},
+            success: console.log,
+            error: console.log
+        });
+
+        return false
+    });
 });

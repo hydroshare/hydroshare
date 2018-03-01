@@ -682,19 +682,6 @@ def create_new_version_resource_public(request, pk):
     return HttpResponse(redirect.url.split('/')[2], status=202)
 
 
-def publish(request, shortkey, *args, **kwargs):
-    # only resource owners are allowed to change resource flags (e.g published)
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-
-    try:
-        hydroshare.publish_resource(request.user, shortkey)
-    except ValidationError as exp:
-        request.session['validation_error'] = exp.message
-    else:
-        request.session['just_published'] = True
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)

@@ -7,6 +7,7 @@ from hs_file_types import views as file_type_views
 from rest_framework_swagger.views import get_swagger_view
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
+from .resources.publication_queue import PublicationQueueCreate
 
 schema_view = get_swagger_view(title='Hydroshare API')
 
@@ -34,6 +35,11 @@ urlpatterns = patterns(
     # Public endpoint for resource flags
     url(r'^resource/(?P<pk>[0-9a-f-]+)/flag/$', core_views.set_resource_flag_public,
         name='public_set_resource_flag'),
+
+    # Add a resource to the publication queue
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/publish/$',
+        PublicationQueueCreate.as_view(),
+        name='request_resource_publication'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$',
         core_views.resource_rest_api.ResourceReadUpdateDelete.as_view(),

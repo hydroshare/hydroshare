@@ -10,6 +10,7 @@ PUBLICATION_STATUSES = [
     ('denied', 'Publication Request Denied')
 ]
 
+
 class PublicationQueue(models.Model):
     resource = models.ForeignKey(BaseResource)
     status = models.CharField(max_length=8, choices=PUBLICATION_STATUSES, default="pending")
@@ -27,6 +28,9 @@ class PublicationQueue(models.Model):
                 fail_silently=False,
             )
         super(PublicationQueue, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.resource.short_id
 
     class Meta:
         verbose_name = "Publication Queue Item"

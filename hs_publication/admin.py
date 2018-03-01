@@ -4,6 +4,7 @@ from .models import PublicationQueue
 
 
 class PublicationQueueAdmin(admin.ModelAdmin):
-    pass
+    fields = (('resource',), 'status', 'note')
+    readonly_fields = ('resource',)
 
 admin.site.register(PublicationQueue, PublicationQueueAdmin)
