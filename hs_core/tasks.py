@@ -44,9 +44,6 @@ def nightly_zips_cleanup():
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
-        logger.debug("Removed daily zip folder " + zips_daily_date)
-    else:
-        logger.debug("No daily date folder found for " + zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -216,9 +213,6 @@ def delete_zip(zip_path):
     istorage = IrodsStorage()
     if istorage.exists(zip_path):
         istorage.delete(zip_path)
-        logger.debug("Removed zip folder " + zip_path)
-    else:
-        logger.debug("No folder found for " + zip_path)
 
 
 @shared_task
