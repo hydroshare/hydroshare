@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from hs_core.models import BaseResource
 
-from hs_publication import tasks, utils
+from hs_publication import tasks
 from hs_publication.models import PublicationQueue
 
 class PublicationQueueNotificationEmailTestCase(TestCase):
