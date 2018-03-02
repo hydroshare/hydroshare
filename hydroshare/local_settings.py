@@ -182,3 +182,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
 TIME_ZONE = "Etc/UTC"
+
+PIVOT_URL = ""
