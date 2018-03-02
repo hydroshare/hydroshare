@@ -1,73 +1,52 @@
-import os
-import tempfile
-
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from hs_core import hydroshare
-from hs_core.hydroshare import resource
+from hs_core.hydroshare.users import create_account
+from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.models import GenericResource
 from hs_core.tasks import create_temp_zip
 from django_irods.storage import IrodsStorage
+from hs_core.models import ResourceFile
 
 
 class TestFolderDownloadZip(TestCase):
-    output_path = "zips/rand/foo.zip";
 
     def setUp(self):
         super(TestFolderDownloadZip, self).setUp()
-        self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
-        self.user = hydroshare.create_account(
-            'test_user@email.com',
-            username='mytestuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
+        self.output_path = "zips/rand/foo.zip"
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = create_account(
+            'shauntheta@gmail.com',
+            username='shaun',
+            first_name='Shaun',
+            last_name='Livingston',
             superuser=False,
-            groups=[self.hs_group]
+            groups=[]
         )
 
-        self.tmp_dir = tempfile.mkdtemp()
+        # create files
+        self.n1 = "test1.txt"
 
-        # Make a text file
-        self.txt_file_name = 'text.txt'
-        self.txt_file_path = os.path.join(self.tmp_dir, self.txt_file_name)
-        txt = open(self.txt_file_path, 'w')
-        txt.write("Hello World\n")
-        txt.close()
+        test_file = open(self.n1, 'w')
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
 
-        self.raster_file_name = 'cea.tif'
-        self.raster_file_path = 'hs_core/tests/data/cea.tif'
+        test_file = open(self.n1, "r")
 
-        self.rtype = 'GenericResource'
-        self.title = 'My Test resource'
-        self.test_res = resource.create_resource(self.rtype,
-                                                 self.user,
-                                                 self.title,
-                                                 unpack_file=False)
+        self.res = create_resource(resource_type='GenericResource',
+                              owner=self.user,
+                              title='Test Resource',
+                              metadata=[], )
 
-        # create a folder 'foo'
-        url = str.format('/hsapi/resource/{}/folders/foo/', self.test_res.short_id)
-        self.client.put(url, {})
+        ResourceFile.create_folder(self.res, 'foo')
 
-        # put a file 'test.txt' into folder 'foo'
-        url2 = str.format('/hsapi/resource/{}/files/foo/', self.test_res.short_id)
-        params = {'file': ('text.txt',
-                           open(self.txt_file_path, 'rb'),
-                           'text/plain')}
-        self.client.post(url2, params)
-
-        # put a file 'cea.tif' into folder 'foo'
-        url3 = str.format('/hsapi/resource/{}/files/foo/', self.test_res.short_id)
-        params = {'file': (self.raster_file_name,
-                           open(self.raster_file_path, 'rb'),
-                           'image/tiff')}
-        self.client.post(url3, params)
+        # add one file to the resource
+        add_resource_files(self.res.short_id, test_file, folder='foo')
 
     def tearDown(self):
         super(TestFolderDownloadZip, self).tearDown()
-        if self.test_res:
-            self.test_res.delete()
+        if self.res:
+            self.res.delete()
         GenericResource.objects.all().delete()
         istorage = IrodsStorage()
         if istorage.exists(self.output_path):
@@ -76,8 +55,9 @@ class TestFolderDownloadZip(TestCase):
     def test_create_temp_zip(self):
         input_path = "/data/contents/foo"
         try:
-            self.assertTrue(create_temp_zip(self.test_res.short_id, input_path,
+            self.assertTrue(create_temp_zip(self.res.short_id, input_path,
                                    self.output_path))
             self.assertTrue(IrodsStorage().exists(self.output_path))
         except Exception as ex:
             self.fail("create_temp_zip() raised exception.{}".format(ex.message))
+
