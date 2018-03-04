@@ -457,6 +457,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
     new_resource_files_to_add = []
 
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
+    ext = ext.lower()
     create_vrt = True
     if ext == '.tif':
         if raster_folder is not None:
@@ -516,7 +517,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
                                   "Multiple tif files are expected.")
                 return error_info, []
 
-        files_ext = [os.path.splitext(path)[1] for path in new_resource_files_to_add]
+        files_ext = [os.path.splitext(path)[1].lower() for path in new_resource_files_to_add]
         if files_ext.count('.vrt') > 1:
             error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
             return error_info, []
