@@ -268,10 +268,16 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             if fl.extension.lower() not in cls.get_allowed_storage_file_types():
                 return ""
 
-        # check that there is only one vrt file
+        # check that there can be only one vrt file
         vrt_files = [f for f in files if f.extension.lower() == ".vrt"]
         if len(vrt_files) > 1:
             return ""
+
+        # check if there are multiple tif files, then there has to be one vrt file
+        tif_files = [f for f in files if f.extension.lower() == ".tif"]
+        if len(tif_files) > 1:
+            if len(vrt_files) != 1:
+                return ""
 
         return cls.__name__
 
