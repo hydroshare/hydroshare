@@ -61,12 +61,18 @@ class CompositeResource(BaseResource):
 
         :return If the specified folder is already represents an aggregation or does
         not contain suitable file(s) then returns "" (empty string). If the specified folder
-        contains files that meet the requirements of a supported aggregation type then return the
+        contains only the files that meet the requirements of a supported aggregation, and
+        does not contain other folders or does not have a parent folder then return the
         class name of that matching aggregation type.
         """
         aggregation_type_to_set = ""
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
+            return aggregation_type_to_set
+
+        # check that target folder specified in dir_path does not have a parent folder
+        if len(dir_path.split("/")) - len(self.file_path.split("/")) > 1:
+            # target folder in dir_path contains parent folder
             return aggregation_type_to_set
 
         istorage = self.get_irods_storage()
@@ -290,13 +296,13 @@ class CompositeResource(BaseResource):
 
     def get_missing_file_type_metadata_info(self):
         # this is used in page pre-processor to build the context
-        # so that the landing page can show what metadata items are missing for each logical file
+        # so that the landing page can show what metadata items are missing for each
+        # logical file/aggregation
         metadata_missing_info = []
         for lfo in self.logical_files:
             if not lfo.metadata.has_all_required_elements():
-                file_path = lfo.files.first().short_path
                 missing_elements = lfo.metadata.get_required_missing_elements()
-                metadata_missing_info.append({'file_path': file_path,
+                metadata_missing_info.append({'file_path': lfo.aggregation_name,
                                               'missing_elements': missing_elements})
         return metadata_missing_info
 

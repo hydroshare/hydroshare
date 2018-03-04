@@ -88,6 +88,7 @@ def data_store_structure(request):
                     folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                     folder_aggregation_id = aggregation_object.id
                 else:
+                    # find if any aggregation type can be created from this folder
                     folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
                         dir_path)
 

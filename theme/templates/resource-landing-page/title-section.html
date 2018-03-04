@@ -92,11 +92,11 @@
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
 
-                <span>The following file level metadata are still required to
-                      make the resource public or discoverable:</span>
+                <span>The following aggregation level metadata are still required to
+                      make this resource public or discoverable:</span>
                 {% for item in file_type_missing_metadata %}
                     <ul>
-                        <li>File path: {{ item.file_path }}
+                        <li>Aggregation name: {{ item.file_path }}
                             <ul>
                                 {% for element in item.missing_elements %}
                                     <li>{{ element }}</li>

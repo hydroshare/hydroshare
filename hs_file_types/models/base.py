@@ -645,7 +645,8 @@ class AbstractLogicalFile(models.Model):
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
         if this is missing then folder_path must be specified
         :param folder_path: (optional) path of the folder which needs to be set to an aggregation
-        type - if this is missing then file_id must be specified
+        type - if this is missing then file_id must be specified. If specified a path relative
+        to the resource.file_path will be returned
         :raise  ValidationError if validation fails
         :return an instance of ResourceFile if validation is successful and the folder_path
         """
@@ -663,13 +664,24 @@ class AbstractLogicalFile(models.Model):
                 folder_path = folder_path[len("data/contents/"):]
             path_to_check = os.path.join(resource.file_path, folder_path)
             if not storage.exists(path_to_check):
-                raise ValidationError("Specified folder path does not exist in irods.")
+                msg = "Specified folder {} path does not exist in irods."
+                msg = msg.format(path_to_check)
+                raise ValidationError(msg)
 
-            # get the shp file from the specified folder location
+            # check if an aggregation can be created from the specified folder
+            aggregation_to_set = resource.get_folder_aggregation_type_to_set(path_to_check)
+            if not aggregation_to_set:
+                msg = "Aggregation can't be created from the specified folder:{}"
+                msg = msg.format(path_to_check)
+                raise ValidationError(msg)
+
+            # get the files from the specified folder location
             res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
                                                  sub_folders=False)
             if not res_files:
-                raise ValidationError("The specified folder does not contain any file.")
+                msg = "The specified folder {} does not contain any file."
+                msg = msg.format(path_to_check)
+                raise ValidationError(msg)
             else:
                 # check if the specified folder is suitable for aggregation
                 if cls.check_files_for_aggregation_type(res_files):
@@ -682,11 +694,11 @@ class AbstractLogicalFile(models.Model):
             raise ValidationError("File not found.")
 
         if res_file.has_logical_file:
-            msg = "Selected {} is already part of a aggregation."
+            msg = "Selected {} {} is already part of an aggregation."
             if folder_path is None:
-                msg = msg.format('file')
+                msg = msg.format('file', res_file.file_name)
             else:
-                msg = msg.format('folder')
+                msg = msg.format('folder', folder_path)
             raise ValidationError(msg)
 
         return res_file, folder_path
