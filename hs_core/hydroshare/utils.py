@@ -253,14 +253,16 @@ def get_fed_zone_files(irods_fnames):
 
 
 # TODO: make the local cache file (and cleanup) part of ResourceFile state?
-def get_file_from_irods(res_file):
+def get_file_from_irods(res_file, temp_dir=None):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
     over to django (temp directory) which is
     necessary for manipulating the file (e.g. metadata extraction).
     Note: The caller is responsible for cleaning the temp directory
 
-    :param res_file: an instance of ResourceFile
+    :param  res_file: an instance of ResourceFile
+    :param  temp_dir: (optional) existing temp directory to which the file will be copied from
+    irods. If temp_dir is None then a new temporary directory will be created.
     :return: location of the copied file
     """
     res = res_file.resource
@@ -268,7 +270,16 @@ def get_file_from_irods(res_file):
     res_file_path = res_file.storage_path
     file_name = os.path.basename(res_file_path)
 
-    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+    if temp_dir is not None:
+        if not temp_dir.startswith(settings.TEMP_FILE_DIR):
+            raise ValueError("Specified temp directory is not valid")
+        elif not os.path.exists(temp_dir):
+            raise ValueError("Specified temp directory doesn't exist")
+
+        tmpdir = temp_dir
+    else:
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+
     tmpfile = os.path.join(tmpdir, file_name)
 
     # TODO: If collisions occur, really bad things happen.
