@@ -3011,7 +3011,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
         else:
-            file_folder_to_match = folder[len(resource.file_path):]
+            file_folder_to_match = folder[len(resource.file_path) + 1:]
 
         if resource.is_federated:
             if sub_folders:
