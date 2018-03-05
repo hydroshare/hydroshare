@@ -2,7 +2,7 @@ import os
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor
+from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 
 from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
     NetCDFLogicalFile, TimeSeriesLogicalFile
@@ -176,27 +176,40 @@ class CompositeResource(BaseResource):
             assert(tgt_full_path.startswith(self.file_path))
 
         istorage = self.get_irods_storage()
-        tgt_file_dir = os.path.dirname(tgt_full_path)
-        src_file_dir = os.path.dirname(src_full_path)
+        folder, file_name = os.path.split(tgt_full_path)
+        basename, ext = os  .path.splitext(file_name)
+        if ext:
+            tgt_file_dir = os.path.dirname(tgt_full_path)
+        else:
+            tgt_file_dir = tgt_full_path
+
+        folder, file_name = os.path.split(src_full_path)
+        basename, ext = os.path.splitext(file_name)
+        if ext:
+            src_file_dir = os.path.dirname(src_full_path)
+        else:
+            src_file_dir = src_full_path
 
         def check_directory():
-            path_to_check = ''
-            if istorage.exists(tgt_file_dir):
-                path_to_check = tgt_file_dir
-            else:
-                if tgt_file_dir.startswith(src_file_dir):
-                    path_to_check = src_file_dir
+            # may need to check both source and target directories
+            dirs_to_check = []
+            if not tgt_file_dir.endswith("data/contents") and istorage.exists(tgt_file_dir):
+                # target dir is not the base directory - it must be a directory under base dir
+                dirs_to_check.append(tgt_file_dir)
+            if not src_file_dir.endswith("data/contents") and istorage.exists(tgt_file_dir):
+                # source dir is not the base directory - it must be a directory under base dir
+                dirs_to_check.append(src_file_dir)
 
-            if path_to_check and not path_to_check.endswith("data/contents"):
-                # it is not the base directory - it must be a directory under base dir
-                res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
-                                 res_file_obj.dir_path == path_to_check]
-
+            for path_to_check in dirs_to_check:
+                # get the resource files in the path_to_check dir
+                res_file_objs = ResourceFile.list_folder(resource=self, folder=path_to_check,
+                                                         sub_folders=False)
                 for res_file_obj in res_file_objs:
                     if res_file_obj.has_logical_file:
                         if not res_file_obj.logical_file.supports_resource_file_rename or \
                                 not res_file_obj.logical_file.supports_resource_file_move:
                             return False
+
             return True
 
         res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
@@ -210,13 +223,13 @@ class CompositeResource(BaseResource):
                         not res_file_obj.logical_file.supports_resource_file_move:
                     return False
 
-            # check if the target directory allows stuff to be moved there
+            # check if the source and target directory allow move
             return check_directory()
         else:
             # src_full_path is a folder path without file name
             # tgt_full_path also must be a folder path without file name
-            # check that if the target folder contains any files and if any of those files
-            # allow moving stuff there
+            # check that if the target folder and source folder contain any files and if any of
+            # those files allow moving
             return check_directory()
 
     def can_add_files(self, target_full_path):
