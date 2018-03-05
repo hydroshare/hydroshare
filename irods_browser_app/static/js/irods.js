@@ -210,7 +210,7 @@ function irods_upload() {
             $('#is_file_reference').val(json.is_file_reference);
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
-            if(json.irods_federated)
+            if(json.irods_federated && json.is_file_reference==='false')
                 $('#irods-copy-move').show();
             else
                 $('#irods-copy-move').hide();
