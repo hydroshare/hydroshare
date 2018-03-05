@@ -297,6 +297,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         upload_folder = ''
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
+        temp_dir = os.path.dirname(temp_file)
         # validate the file
         if folder_path is not None:
             error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file,
@@ -310,7 +311,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             file_type_success = False
             log.info("Geographic raster aggregation validation successful.")
             # extract metadata
-            temp_dir = os.path.dirname(temp_file)
             temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
                                   '.vrt' == os.path.splitext(f)[1]].pop()
             metadata = extract_metadata(temp_vrt_file_path)
@@ -429,6 +429,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 raise ValidationError(msg)
 
         else:
+            # remove temp dir
+            if os.path.isdir(temp_dir):
+                shutil.rmtree(temp_dir)
             err_msg = "Geographic raster aggregation type validation failed. {}".format(
                 ' '.join(error_info))
             log.info(err_msg)
@@ -525,6 +528,9 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
         if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
             vrt_file_path = new_resource_files_to_add[files_ext.index('.vrt')]
             raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
+            if raster_dataset is None:
+                error_info.append('Failed to open the vrt file.')
+                return error_info, []
 
             # check if the vrt file is valid
             try:
@@ -533,6 +539,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
                 raster_dataset.RasterCount
             except AttributeError:
                 error_info.append('Raster size and band information are missing.')
+                return error_info, []
 
             # check if the raster file numbers and names are valid in vrt file
             with open(vrt_file_path, 'r') as vrt_file:
@@ -570,6 +577,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
         elif files_ext.count('.tif') > 1 and files_ext.count('.vrt') == 0:
             msg = "Since multiple tif files are found, a vrt file is required."
             error_info.append(msg)
+            new_resource_files_to_add = []
 
     return error_info, new_resource_files_to_add
 
