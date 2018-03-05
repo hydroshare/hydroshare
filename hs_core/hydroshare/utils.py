@@ -284,14 +284,15 @@ def get_file_from_irods(res_file, temp_dir=None):
 
     # TODO: If collisions occur, really bad things happen.
     # TODO: Directories are never cleaned up when unused. need cache management.
-    try:
-        os.makedirs(tmpdir)
-    except OSError as ex:
-        if ex.errno == errno.EEXIST:
-            shutil.rmtree(tmpdir)
+    if temp_dir is None:
+        try:
             os.makedirs(tmpdir)
-        else:
-            raise Exception(ex.message)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                shutil.rmtree(tmpdir)
+                os.makedirs(tmpdir)
+            else:
+                raise Exception(ex.message)
 
     istorage.getFile(res_file_path, tmpfile)
     copied_file = tmpfile
