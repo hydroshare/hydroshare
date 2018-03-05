@@ -12,6 +12,7 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
 from hs_core.models import ResourceFile
+
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
@@ -73,7 +74,7 @@ def data_store_structure(request):
         for dname in store[0]:  # directories
             d_pk = dname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, d_pk)
-            d_url = istorage.url(os.path.join('zips', name_with_full_path))
+            d_url = to_external_url(istorage.url(os.path.join(name_with_full_path)))
             dirs.append({'name': d_pk, 'url': d_url})
 
         files = []
@@ -92,7 +93,7 @@ def data_store_structure(request):
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if name_with_full_path == f.storage_path:
                     f_pk = f.pk
-                    f_url = get_resource_file_url(f)
+                    f_url = to_external_url(get_resource_file_url(f))
                     if resource.resource_type == "CompositeResource":
                         f_logical = f.get_or_create_logical_file
                         logical_file_type = f.logical_file_type_name
@@ -124,6 +125,14 @@ def data_store_structure(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+def to_external_url(url):
+    """
+    Convert an internal download file/folder url to the external url.  This should eventually be
+    replaced with with a reverse method that gets the correct mapping.
+    """
+    return url.replace("django_irods/download", "resource", 1)
 
 
 def data_store_folder_zip(request, res_id=None):
