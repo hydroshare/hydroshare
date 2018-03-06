@@ -55,7 +55,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
     def test_folder_download_rest(self):
         date_folder = (date.today()).strftime('%Y-%m-%d')
-        zip_download_url = "/resource/{pid}/data/contents/foo".format(pid=self.pid)
+        zip_download_url = "/hsapi/resource/{pid}/data/contents/foo".format(pid=self.pid)
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)
