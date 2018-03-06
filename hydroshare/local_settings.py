@@ -183,4 +183,5 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
 TIME_ZONE = "Etc/UTC"
 
+# fill out pivot/scidas url in your deployment
 PIVOT_URL = ""
