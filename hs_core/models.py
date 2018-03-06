@@ -2618,10 +2618,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
 
-    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size routine
-    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    # This is used to hold the reference path to an external file, e.g., a logical iRODS
+    # path refering to a file stored in an external iRODS zone, a URL that points to an external file
+    reference_file_path = models.CharField(max_length=255, null=True, blank=True)
+    reference_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # CommonsShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2640,7 +2640,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None, move=False):
+    def create(cls, resource, file, folder=None, source=None, source_size=0, is_file_reference=False, move=False):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2651,6 +2651,9 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
+        :param source_size: the size of the referenced source is if_file_reference is True, otherwise, it is set to 0
+               and useless.
+        :param is_file_reference: if True, source will hold the reference path to an external file
         :param move: if True, move the file rather than copying.
 
         There are two main usages to this constructor:
@@ -2697,23 +2700,31 @@ class ResourceFile(ResourceFileIRODSMixin):
             if file is None and source is not None:
                 if __debug__:
                     assert(isinstance(source, basestring))
-                # source is a path to an iRODS file to be copied here.
-                root, newfile = os.path.split(source)  # take file from source path
-                # newfile is where it should be copied to.
-                target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_irods_storage()
-                if not istorage.exists(source):
-                    raise ValidationError("ResourceFile.create: source {} of copy not found"
-                                          .format(source))
-                if not move:
-                    istorage.copyFiles(source, target)
+
+                if is_file_reference:
+                    kwargs['resource_file'] = None
+                    kwargs['fed_resource_file'] = None
+                    kwargs['reference_file_path'] = source
+                    kwargs['reference_file_size'] = str(source_size)
+                    return ResourceFile.objects.create(**kwargs)
                 else:
-                    istorage.moveFile(source, target)
-                if not istorage.exists(target):
-                    raise ValidationError("ResourceFile.create: copy to target {} failed"
-                                          .format(target))
-                if move and istorage.exists(source):
-                    raise ValidationError("ResourceFile.create: move did not work")
+                    # source is a path to an iRODS file to be copied here.
+                    root, newfile = os.path.split(source)  # take file from source path
+                    # newfile is where it should be copied to.
+                    target = get_resource_file_path(resource, newfile, folder=folder)
+                    istorage = resource.get_irods_storage()
+                    if not istorage.exists(source):
+                        raise ValidationError("ResourceFile.create: source {} of copy not found"
+                                              .format(source))
+                    if not move:
+                        istorage.copyFiles(source, target)
+                    else:
+                        istorage.moveFile(source, target)
+                    if not istorage.exists(target):
+                        raise ValidationError("ResourceFile.create: copy to target {} failed"
+                                              .format(target))
+                    if move and istorage.exists(source):
+                        raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
                 # no need to verify whether the file exists in iRODS since the file
@@ -2766,11 +2777,13 @@ class ResourceFile(ResourceFileIRODSMixin):
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
             return self.fed_resource_file.size
-        else:
+        elif not self.reference_file_path:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             return self.resource_file.size
+        else:
+            return 0
 
     # TODO: write unit test
     @property
@@ -2874,6 +2887,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         if self.resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
+        elif self.reference_file_path:
+            return self.reference_file_path
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
         if folder is not None:
@@ -2895,7 +2910,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         if self.resource.is_federated:
             self.resource_file = None
             self.fed_resource_file = get_path(self, base)
-        else:
+        elif not self.reference_file_path:
             self.resource_file = get_path(self, base)
             self.fed_resource_file = None
         self.save()

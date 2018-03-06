@@ -32,13 +32,12 @@ from mezzanine.utils.email import subject_template, send_mail_template
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
-from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict, get_size_and_avu_for_irods_ref_files
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -1100,9 +1099,11 @@ def create_resource(request, *args, **kwargs):
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
+    is_file_reference = request.POST.get("is_file_reference", 'false').lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
-
+    irods_fsizes = []
+    irods_avus = {}
     if irods_fnames:
         if federated:
             source_names = irods_fnames.split(',')
@@ -1112,16 +1113,30 @@ def create_resource(request, *args, **kwargs):
             port = request.POST.get("irods-port")
             host = request.POST.get("irods-host")
             zone = request.POST.get("irods-zone")
-            try:
-                upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
-            except utils.ResourceFileSizeException as ex:
-                ajax_response_data['message'] = ex.message
-                return JsonResponse(ajax_response_data)
+            if is_file_reference:
+                source_names = irods_fnames.split(',')
+                try:
+                    irods_fsizes, irods_avus = get_size_and_avu_for_irods_ref_files(username=user, password=password,
+                                                                                    host=host, port=port, zone=zone,
+                                                                                    irods_fnames=irods_fnames)
+                except utils.ResourceFileSizeException as ex:
+                    ajax_response_data['message'] = ex.message
+                    return JsonResponse(ajax_response_data)
 
-            except SessionException as ex:
-                ajax_response_data['message'] = ex.stderr
-                return JsonResponse(ajax_response_data)
+                except SessionException as ex:
+                    ajax_response_data['message'] = ex.stderr
+                    return JsonResponse(ajax_response_data)
+            else:
+                try:
+                    upload_from_irods(username=user, password=password, host=host, port=port,
+                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+                except utils.ResourceFileSizeException as ex:
+                    ajax_response_data['message'] = ex.message
+                    return JsonResponse(ajax_response_data)
+
+                except SessionException as ex:
+                    ajax_response_data['message'] = ex.stderr
+                    return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
     try:
@@ -1150,11 +1165,14 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             metadata=metadata,
+            extra_metadata=irods_avus,
             files=resource_files,
             source_names=source_names,
+            source_sizes=irods_fsizes,
             # TODO: should probably be resource_federation_path like it is set to.
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=(fed_copy_or_move == 'move'),
+            is_file_reference=is_file_reference,
             content=res_title
     )
 

@@ -896,14 +896,16 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 # TODO: make this part of resource api. resource --> self.
 def resource_file_add_process(resource, files, user, extract_metadata=False,
-                              source_names=[], **kwargs):
+                              source_names=[], source_sizes=[], is_file_reference=False, **kwargs):
 
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               source_names=source_names)
+                                               source_names=source_names,
+                                               source_sizes=source_sizes,
+                                               is_file_reference=is_file_reference)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
@@ -929,8 +931,8 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False):
+def add_file_to_resource(resource, f, folder=None, source_name='', source_size=0,
+                         move=False, is_file_reference=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -943,12 +945,16 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                         disk, or from the federated zone directly where f is empty
                         but source_name has the whole data object
                         iRODS path in the federated zone
+    :param source_size: the size of the reference file in source_name if is_file_reference is True; otherwise, it is
+                        set to 0 and useless.
     :param move: indicate whether the file should be copied or moved from private user
                  account to proxy user account in federated zone; A value of False
                  indicates copy is needed, a value of True indicates no copy, but
                  the file will be moved from private user account to proxy user account.
                  The default value is False.
-
+    :param is_file_reference: indicate whether the file being added is a reference to an external
+                              file stored in an external zone or URL. source_name will hold
+                              the reference file path or url
     :return: The identifier of the ResourceFile added.
     """
 
@@ -966,7 +972,8 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, source_size=source_size,
+                                      is_file_reference=is_file_reference, move=move)
         except SessionException as ex:
             try:
                 ret.delete()

@@ -13,15 +13,20 @@
                         {% csrf_token %}
                         <input type="hidden" name="store" id="root_store" value=""/>
                         <input type="hidden" name="res_id" id="res_id" value="{{ cm.short_id }}"/>
-                        <input type="hidden" id="irods-username" name="irods-username" value="">
-                        <input type="hidden" id="irods-password" name="irods-password" value="">
-                        <input type="hidden" id="irods-host" name="irods-host" value="">
-                        <input type="hidden" id="irods-port" name="irods-port" value="">
-                        <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                        <input type="hidden" id="irods-username" name="irods-username" value=""/>
+                        <input type="hidden" id="irods-password" name="irods-password" value=""/>
+                        <input type="hidden" id="irods-host" name="irods-host" value=""/>
+                        <input type="hidden" id="irods-port" name="irods-port" value=""/>
+                        <input type="hidden" id="irods-zone" name="irods-zone" value=""/>
                         <input type="hidden" name="irods_file_names" id="upload_store" value=""/>
+                        <input type="hidden" name="is_file_reference" id="is_file_reference" value=""/>
                         <div>
                             <div>Viewing : <input type="text" class="form-control" id="irods_view_store" ></div>
                             <div id = "file_struct"></div>
+                            <div>
+                               <input id="file_ref_chk" type="checkbox">
+                               <label for="file_ref_chk">Add selected files as reference?</label>
+                            </div>
                         </div>
                         <div id="file-types-irods">Any file type can be uploaded.</div>
                         <div id="file-multiple-irods">Multiple file upload is allowed.</div>

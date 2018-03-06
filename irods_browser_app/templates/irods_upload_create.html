@@ -14,10 +14,16 @@
               <input type="hidden" name="store" id="root_store" value=""/>
               <input type="hidden" name="res_type" id="res_type" value=""/>
               <input type="hidden" name="upload" id="upload_store" value=""/>
+              <div>
                 <div>
                     <div>Viewing : <input type="text" class="form-control" id="irods_view_store" ></div>
                     <div id = "file_struct"></div>
+                    <div>
+                       <input id="file_ref_chk" type="checkbox">
+                       <label for="file_ref_chk">Add selected files as reference?</label>
+                    </div>
                 </div>
+              </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
