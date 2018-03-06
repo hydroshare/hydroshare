@@ -116,7 +116,7 @@ function updateSelectionMenuContext() {
             $("#fb-download-help").toggleClass("hidden", true);
         }
         var type = selected.children(".fb-file-type").text();
-        if (type == 'reference File') {
+        if (type == 'Reference File') {
             flagDisableDownload = true;
             flagDisableGetLink = true;
         }
