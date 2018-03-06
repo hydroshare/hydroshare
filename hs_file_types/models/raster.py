@@ -657,8 +657,9 @@ def _explode_raster_zip_file(zip_file):
         for dirpath, _, filenames in os.walk(temp_dir):
             for name in filenames:
                 file_path = os.path.abspath(os.path.join(dirpath, name))
-                if os.path.splitext(os.path.basename(file_path))[1] in \
-                        GeoRasterLogicalFile.get_allowed_storage_file_types():
+                file_ext = os.path.splitext(os.path.basename(file_path))[1]
+                file_ext = file_ext.lower()
+                if file_ext in GeoRasterLogicalFile.get_allowed_storage_file_types():
                     shutil.move(file_path, os.path.join(temp_dir, name))
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
