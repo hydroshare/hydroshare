@@ -984,12 +984,11 @@ def push_res_to_geohub(url, user, shortkey):
     res = get_resource_by_shortkey(shortkey)
     istorage = res.get_irods_storage()
     src_path = res.root_path
-    dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username, shortkey)
+    # delete all temporary resources copied to this user's space before pushing this resource
+    dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username)
     if istorage.exists(dest_path):
-        # if resource directory already exists in target, cannot include it in target
-        # path due to mygeohub iRODS server federation permission settings
-        dest_path = os.path.join(settings.GEOHUB_HS_IRODS_PATH, user.username)
-
+        istorage.delete(dest_path)
+    dest_path = os.path.join(dest_path, shortkey)
     istorage.copyFiles(src_path, dest_path, settings.GEOHUB_HS_IRODS_RESC)
     try:
         fname = res.get_res_file_name()
