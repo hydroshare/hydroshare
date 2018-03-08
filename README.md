@@ -1,4 +1,4 @@
-# CommonsShare _(hydroshare)_
+# CommonsShare 
 
 CommonsShare is a website and hydrologic information system for sharing hydrologic data and models aimed at giving users the cyberinfrastructure needed to innovate and collaborate in research to solve water problems.
 
