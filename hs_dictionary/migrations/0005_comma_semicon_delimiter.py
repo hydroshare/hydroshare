@@ -7,7 +7,6 @@ from django.db.models import F, Func, Value
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
 
     ]
