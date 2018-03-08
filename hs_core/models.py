@@ -324,7 +324,7 @@ class Party(AbstractMetaDataElement):
             if as_json:
                 identifiers = json.dumps(identifiers)
 
-        post_data_dict = request.POST.dict()        
+        post_data_dict = request.POST.dict()
         post_data_dict['identifiers'] = identifiers
 
         return post_data_dict
