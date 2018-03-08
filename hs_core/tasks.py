@@ -9,36 +9,44 @@ import zipfile
 import logging
 import json
 
-import requests
-
+from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
-from rest_framework import status
-
-from datetime import datetime, timedelta
+import requests
+from celery import shared_task
+from celery.schedules import crontab
+from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from rest_framework import status
 
-from celery.task import periodic_task
-from celery.schedules import crontab
-from celery import shared_task
-
-from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
-from theme.utils import get_quota_message
 
 from django_irods.icommands import SessionException
+
+from hs_core.models import BaseResource
+from theme.utils import get_quota_message
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
+def nightly_zips_cleanup():
+    # delete 2 days ago
+    date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
+    zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
+    istorage = IrodsStorage()
+    if istorage.exists(zips_daily_date):
+        istorage.delete(zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -264,6 +272,27 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
     finally:
         # Delete upload file
         os.unlink(zip_file_path)
+
+
+@shared_task
+def delete_zip(zip_path):
+    istorage = IrodsStorage()
+    if istorage.exists(zip_path):
+        istorage.delete(zip_path)
+
+
+@shared_task
+def create_temp_zip(resource_id, input_path, output_path):
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = get_resource_by_shortkey(resource_id)
+    full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
+
+    try:
+        IrodsStorage().zipup(full_input_path, output_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return False
+    return True
 
 
 @shared_task

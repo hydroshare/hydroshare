@@ -2,21 +2,19 @@ import json
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
-
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
-from rest_framework.decorators import api_view
-from django.core.exceptions import ValidationError
 
 from django_irods.icommands import SessionException
-
 from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
+from hs_core.models import ResourceFile
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
-from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +69,13 @@ def data_store_structure(request):
     res_coll = os.path.join(resource.root_path, store_path)
     try:
         store = istorage.listdir(res_coll)
+        dirs = []
+        for dname in store[0]:  # directories
+            d_pk = dname.decode('utf-8')
+            name_with_full_path = os.path.join(res_coll, d_pk)
+            d_url = istorage.url(os.path.join('zips', name_with_full_path))
+            dirs.append({'name': d_pk, 'url': d_url})
+
         files = []
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')
@@ -107,7 +112,7 @@ def data_store_structure(request):
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
-                     'folders': store[0],
+                     'folders': dirs,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":

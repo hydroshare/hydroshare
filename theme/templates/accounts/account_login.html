@@ -26,7 +26,14 @@
                 {% if form.non_field_errors %}
                     <div class="form-errors">
                         <div class="alert alert-danger non-field-error">
-                            {{ form.non_field_errors }}
+                            {% for error in form.non_field_errors %}
+                                {% if 'inactive' in error %}
+                                    <p>This account's email has not been verified.<a href="
+                                        {% url 'resend_verification_email' email=form.username.value %}"> Click </a>to resend verification email.</p>
+                                {%  else %}
+                                    {{ error }}
+                                {%  endif %}
+                            {% endfor %}
                         </div>
                     </div>
                 {% endif %}

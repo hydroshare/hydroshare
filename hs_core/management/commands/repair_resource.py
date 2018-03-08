@@ -38,71 +38,136 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        log_errors = options['log']
+        echo_errors = not options['log']
+        logger = logging.getLogger(__name__)
+
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    res = BaseResource.objects.get(short_id=rid)
+                    r = BaseResource.objects.get(short_id=rid)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
-                    print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if echo_errors:
+                        print(msg)
+                    continue  # next resource
 
-                resource = res.get_content_model()
+                try:
+                    resource = r.get_content_model()
+                except Exception as e:
+                    msg = "resource {} has no proxy class: {}"\
+                          .format(r.short_id, e.value)
+                    if log_errors:
+                        logger.error(msg)
+                    if echo_errors:
+                        print(msg)
+                    msg = "... affected resource {} has type {}, title '{}'"\
+                          .format(r.short_id, r.resource_type, r.title)
+                    if log_errors:
+                        logger.info(msg)
+                    if echo_errors:
+                        print(msg)
+                    continue  # next resource
 
                 print("REPAIRING RESOURCE {}".format(rid))
-                resource.check_irods_files(stop_on_error=False,
-                                           echo_errors=True,
-                                           log_errors=False,
-                                           return_errors=False,
-                                           clean_irods=False,
-                                           clean_django=True,
-                                           sync_ispublic=True)
+
+                # ingest any dangling iRODS files that you can
+                # Do this before check because otherwise, errors get printed twice
                 if resource.resource_type == 'CompositeResource' or \
                    resource.resource_type == 'GenericResource' or \
                    resource.resource_type == 'ModelInstanceResource' or \
                    resource.resource_type == 'ModelProgramResource':
-                    logger = logging.getLogger(__name__)
-                    ingest_irods_files(resource,
-                                       logger,
-                                       stop_on_error=False,
-                                       echo_errors=True,
-                                       log_errors=False,
-                                       return_errors=False)
+                    _, count = ingest_irods_files(resource,
+                                                  logger,
+                                                  stop_on_error=False,
+                                                  echo_errors=True,
+                                                  log_errors=False,
+                                                  return_errors=False)
+                    if count:
+                        print("... affected resource {} has type {}, title '{}'"
+                              .format(resource.short_id, resource.resource_type, resource.title))
+                _, count = resource.check_irods_files(stop_on_error=False,
+                                                      echo_errors=True,
+                                                      log_errors=False,
+                                                      return_errors=False,
+                                                      clean_irods=False,
+                                                      clean_django=True,
+                                                      sync_ispublic=True)
+                if count:
+                    print("... affected resource {} has type {}, title '{}'"
+                          .format(resource.short_id, resource.resource_type, resource.title))
 
             if resource.resource_type == 'CompositeResource':
+                count = 0
                 for res_file in resource.files.all():
                     if not res_file.has_logical_file:
-                        print("Logical file missing for file {}".format(res_file.short_path))
+                        count += 1
+                        print("Logical file missing for file {} (CREATING)"
+                              .format(res_file.short_path))
                 resource.set_default_logical_file()
+            if count:
+                print("... affected resource {} has type {}, title '{}'"
+                      .format(resource.short_id, resource.resource_type, resource.title))
 
         else:  # check all resources
             print("REPAIRING ALL RESOURCES")
             for r in BaseResource.objects.all():
-                resource = r.get_content_model()
+                try:
+                    resource = r.get_content_model()
+                except Exception as e:
+                    msg = "resource {} has no proxy class: {}".format(r.short_id, e.value)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    msg = "... affected resource {} has type {}, title '{}'"\
+                          .format(r.short_id, r.resource_type, r.title)
+                    if log_errors:
+                        logger.info(msg)
+                    if echo_errors:
+                        print(msg)
+                    continue  # next resource
 
-                # first clean up Django references to non-existent iRODS files
-                resource.check_irods_files(stop_on_error=False,
-                                           echo_errors=True,
-                                           log_errors=False,
-                                           return_errors=False,
-                                           clean_irods=False,
-                                           clean_django=True,
-                                           sync_ispublic=True)
-
-                # now ingest any dangling iRODS files that you can
+                # ingest any dangling iRODS files that you can
+                # Do this before check because otherwise, errors get printed twice
                 if resource.resource_type == 'CompositeResource' or \
                    resource.resource_type == 'GenericResource' or \
                    resource.resource_type == 'ModelInstanceResource' or \
                    resource.resource_type == 'ModelProgramResource':
-                    logger = logging.getLogger(__name__)
-                    ingest_irods_files(resource,
-                                       logger,
-                                       stop_on_error=False,
-                                       echo_errors=True,
-                                       log_errors=False,
-                                       return_errors=False)
+                    _, count = ingest_irods_files(resource,
+                                                  logger,
+                                                  stop_on_error=False,
+                                                  echo_errors=True,
+                                                  log_errors=False,
+                                                  return_errors=False)
+                    if count:
+                        print("... affected resource {} has type {}, title '{}'"
+                              .format(resource.short_id, resource.resource_type, resource.title))
 
+                # clean up Django references to non-existent iRODS files
+                _, count = resource.check_irods_files(stop_on_error=False,
+                                                      echo_errors=True,
+                                                      log_errors=False,
+                                                      return_errors=False,
+                                                      clean_irods=False,
+                                                      clean_django=True,
+                                                      sync_ispublic=True)
+                if count:
+                    print("... affected resource {} has type {}, title '{}'"
+                          .format(resource.short_id, resource.resource_type, resource.title))
+
+                # create missing logical files
                 if resource.resource_type == 'CompositeResource':
+                    count = 0
                     for res_file in resource.files.all():
                         if not res_file.has_logical_file:
-                            print("Logical file missing for file {}".format(res_file.short_path))
+                            count += 1
+                            print("Resource {}: logical file missing for file {} (CREATING)"
+                                  .format(resource.short_id, res_file.short_path))
                     resource.set_default_logical_file()
+
+                if count:
+                    print("... affected resource {} has type {}, title '{}'"
+                          .format(resource.short_id, resource.resource_type, resource.title))
