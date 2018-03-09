@@ -3,6 +3,7 @@ import json
 import datetime
 import pytz
 import logging
+import os
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -483,7 +484,14 @@ def file_download_url_mapper(request, shortkey):
 
     resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     istorage = resource.get_irods_storage()
-    irods_file_path = '/'.join(request.path.split('/')[2:-1])
+    irods_split = request.path.split('/')[2:-1]
+    irods_file_path = '/'.join(irods_split)
+    # [0:-1] excludes the last item on the list
+    listing = istorage.listdir('/'.join(irods_split[0:-1]))
+    if irods_split[-1] in listing[0]:
+        # it's a folder
+        file_download_url = istorage.url(os.path.join('zips', irods_file_path))
+        return HttpResponseRedirect(file_download_url)
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
