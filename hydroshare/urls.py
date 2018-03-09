@@ -158,6 +158,7 @@ urlpatterns += patterns('',
 
     # Override Mezzanine URLs here, before the Mezzanine URL include
     ("^accounts/signup/", "theme.views.signup"),
+    ("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", "theme.views.signup_verify"),
 
     # MEZZANINE'S URLS
     # ----------------

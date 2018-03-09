@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.contrib.messages import info
+from django.contrib.messages import info, error
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.db import transaction
@@ -218,6 +218,22 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
 
     # This one keeps the css but not able to retained user entered data.
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def signup_verify(request, uidb36=None, token=None):
+    """
+    Signup verify. Overriding mezzanine's view function for signup verify
+    """
+    user = authenticate(uidb36=uidb36, token=token, is_active=False)
+    if user is not None:
+        user.is_active = True
+        user.save()
+        auth_login(request, user)
+        info(request, _("Successfully signed up"))
+        return HttpResponseRedirect('/user/{}/?edit=true'.format(user.id))
+    else:
+        error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")
 
 
 @login_required
