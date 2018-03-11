@@ -78,10 +78,14 @@ var initMap = function(json_results) {
 
     var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
         updateMapView();
+        var map_items_table = $('#map-items').DataTable();
+        map_items_table.clear().draw();
     });
 
     var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
         updateMapView();
+        var map_items_table = $('#map-items').DataTable();
+        map_items_table.clear().draw();
     });
 
 
@@ -526,6 +530,8 @@ var geocodeAddress = function(geocoder, resultsMap, mapDim) {
             resultsMap.setCenter(results[0].geometry.location);
             resultsMap.setZoom(getBoundsZoomLevel(results[0].geometry.bounds, mapDim));
             updateMapView();
+            var map_items_table = $('#map-items').DataTable();
+            map_items_table.clear().draw();
         } else {
             alert('Geocode was not successful for the following reason: ' + status);
         }
@@ -670,19 +676,6 @@ var updateMapFaceting = function (){
             updateMapView();
             var map_items_table = $('#map-items').DataTable();
             map_items_table.clear().draw();
-            
-
-            var num_of_points = 0;
-            var num_of_boxes = 0;
-
-                for (var k = 0; k < raw_results.length; k++) {
-                        if (raw_results[k].coverage_type == 'point') {
-                                num_of_points++;
-                        } else if (raw_results[k].coverage_type == 'box') {
-                                num_of_boxes++;
-                        }
-                    }
-                    console.log("total number of data: " + data.length + " point: " + num_of_points + " box: " + num_of_boxes);
         },
         failure: function(data) {
             console.error("Ajax call for getting map data failed");
@@ -915,7 +908,6 @@ $(document).ready(function () {
                 },
                 dataType: 'json',
                 success: function (data) {
-                    
                     var json_results = [];
                     for (var j = 0; j < data.length; j++) {
                         var item = $.parseJSON(data[j]);
@@ -926,17 +918,6 @@ $(document).ready(function () {
                     setMapItemsList([], null);
                     $("#resource-search").show();
                     $("#discover-map-loading-spinner").hide();
-                    
-                    var num_of_points = 0;
-                    var num_of_boxes = 0;
-                    for (var k = 0; k < raw_results.length; k++) {
-                        if (raw_results[k].coverage_type == 'point') {
-                                num_of_points++;
-                        } else if (raw_results[k].coverage_type == 'box'){
-                                num_of_boxes++;
-                        }
-                    }
-                    console.log("total number of data: " + data.length + " point: " + num_of_points + " box: " + num_of_boxes);
                 },
                 failure: function(data) {
                     $("#discover-map-loading-spinner").hide();
