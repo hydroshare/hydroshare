@@ -1,13 +1,11 @@
 from haystack.generic_views import FacetedSearchView
 from haystack.generic_views import FacetedSearchMixin
-from hs_core.discovery_form import DiscoveryForm
+from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
 from haystack.query import SearchQuerySet
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = ['creators', 'subjects', 'resource_type', 'public',
-                    'owners_names', 'discoverable', 'published', 'variable_names',
-                    'sample_mediums', 'units_names']
+    facet_fields = FACETED_FIELDS  # interpreted by FacetedSearchView; must be attribute
     form_class = DiscoveryForm
 
     def form_valid(self, form):
@@ -32,13 +30,21 @@ class DiscoveryView(FacetedSearchView):
         sortdir = self.request.GET.get('sort_direction')
         # must use exact match or SOLR will use stemmed words with unpredictable results!
         if sortfield is not None and sortdir is not None:
-            self.queryset = self.queryset.order_by(sortdir + sortfield + '_exact')
+            self.queryset = self.queryset.order_by(sortdir + sortfield)
 
-        context = self.get_context_data(**{
-            self.form_name: form,
-            'query': form.cleaned_data.get(self.search_field),
-            'object_list': self.queryset
-        })
+        if form.parse_error is not None:
+            context = self.get_context_data(**{
+                self.form_name: form,
+                'query': form.cleaned_data.get(self.search_field),
+                'object_list': self.queryset,
+                'parse_error': form.parse_error  # if not None, then show error message
+            })
+        else:
+            context = self.get_context_data(**{
+                self.form_name: form,
+                'query': form.cleaned_data.get(self.search_field),
+                'object_list': self.queryset,
+            })
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):

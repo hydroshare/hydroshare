@@ -374,18 +374,6 @@ def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
 
 
-# TODO: This is unnecessary since delete now cascades.
-def delete_fed_zone_file(file_name_with_full_path):
-    '''
-    Args:
-        file_name_with_full_path: the absolute full logical path in a federated iRODS zone
-    Returns:
-        None, but exceptions will be raised if there is an issue with iRODS delete operation
-    '''
-    istorage = IrodsStorage('federated')
-    istorage.delete(file_name_with_full_path)
-
-
 def replicate_resource_bag_to_user_zone(user, res_id):
     """
     Replicate resource bag to iRODS user zone
@@ -708,25 +696,27 @@ def validate_user_quota(user, size):
     """
     if user:
         # validate it is within quota hard limit
-        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        uq = user.quotas.filter(zone='hydroshare').first()
         if uq:
             if not QuotaMessage.objects.exists():
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
-            hard_limit = qmsg.hard_limit_percent
-            used_size = uq.add_to_used_value(size)
-            used_percent = uq.used_percent
-            rounded_percent = round(used_percent, 2)
-            rounded_used_val = round(used_size, 4)
-            if used_percent >= hard_limit or uq.remaining_grace_period == 0:
-                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                     qmsg.content)
-                msg_str = msg_template_str.format(used=rounded_used_val,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=rounded_percent)
-                raise QuotaException(msg_str)
+            enforce_flag = qmsg.enforce_quota
+            if enforce_flag:
+                hard_limit = qmsg.hard_limit_percent
+                used_size = uq.add_to_used_value(size)
+                used_percent = uq.used_percent
+                rounded_percent = round(used_percent, 2)
+                rounded_used_val = round(used_size, 4)
+                if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                         qmsg.content)
+                    msg_str = msg_template_str.format(used=rounded_used_val,
+                                                      unit=uq.unit,
+                                                      allocated=uq.allocated_value,
+                                                      zone=uq.zone,
+                                                      percent=rounded_percent)
+                    raise QuotaException(msg_str)
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
@@ -882,6 +872,7 @@ def get_party_data_from_user(user):
     party_data['description'] = '/user/{uid}/'.format(uid=user.pk)
     party_data['phone'] = user_profile.phone_1
     party_data['organization'] = user_profile.organization
+    party_data['identifiers'] = user_profile.identifiers
     return party_data
 
 
@@ -968,7 +959,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     from hs_file_types.models import GenericLogicalFile
 
     if f:
-
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
 

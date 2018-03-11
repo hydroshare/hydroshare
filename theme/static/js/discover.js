@@ -203,8 +203,8 @@ var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
         var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
         if (resource_bound.contains(latLng)) {
             var author_name = "";
-            if (resource.first_author_description) {
-                author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+            if (resource.first_author_url) {
+                author_name = '<a target="_blank" href="' + resource.first_author_url + '">' + resource.first_author + '</a>';
             } else {
                 author_name = resource.first_author;
             }
@@ -226,8 +226,8 @@ var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) 
         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
         var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
         var author_name = "";
-        if (resource.first_author_description) {
-            author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+        if (resource.first_author_url) {
+            author_name = '<a target="_blank" href="' + resource.first_author_url + '">' + resource.first_author + '</a>';
         } else {
             author_name = resource.first_author;
         }
@@ -565,42 +565,43 @@ var updateMapView = function() {
     setMarkers(filtered_results);
 };
 
-var updateListView = function (data) {
-    var requestURL = "/search/";
+// var updateListView = function (data) {
+//     var requestURL = "/search/";
+// 
+//     if (window.location.search.length == 0) {
+//         requestURL += "?q=";
+//     } else {
+//         var textSearch = $("#id_q").val();
+//         var searchURL = "?q=" + textSearch;
+//         requestURL += searchURL;
+//         requestURL += buildURLOnCheckboxes();
+//     }
+//     $("#discover-list-loading-spinner").show();
+//     $.ajax({
+//         type: "GET",
+//         url: requestURL,
+//         data: data,
+//         dataType: 'html',
+//         success: function (data) {
+//             $('#items-discovered_wrapper').empty();
+//             $("#discover-page-options").empty();
+//             var tableDiv = $("#items-discovered", data);
+//             $("#items-discovered_wrapper").html(tableDiv);
+//             var pageOptionDiv = $("#discover-page-options", data);
+//             $("#discover-page-options").html(pageOptionDiv);
+// 
+//             initializeTable();
+//             $("#discover-list-loading-spinner").hide();
+//         },
+//         failure: function (data) {
+//             console.error("Ajax call for updating list-view data failed");
+//             $("#discover-list-loading-spinner").hide();
+//         }
+//     });
+// };
 
-    if (window.location.search.length == 0) {
-        requestURL += "?q=";
-    } else {
-        var textSearch = $("#id_q").val();
-        var searchURL = "?q=" + textSearch;
-        requestURL += searchURL;
-        requestURL += buildURLOnCheckboxes();
-    }
-    $("#discover-list-loading-spinner").show();
-    $.ajax({
-        type: "GET",
-        url: requestURL,
-        data: data,
-        dataType: 'html',
-        success: function (data) {
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
-            var tableDiv = $("#items-discovered", data);
-            $("#items-discovered_wrapper").html(tableDiv);
-            var pageOptionDiv = $("#discover-page-options", data);
-            $("#discover-page-options").html(pageOptionDiv);
-
-            initializeTable();
-            $("#discover-list-loading-spinner").hide();
-        },
-        failure: function (data) {
-            console.error("Ajax call for updating list-view data failed");
-            $("#discover-list-loading-spinner").hide();
-        }
-    });
-};
-
-var updateFacetingItems = function (request_url) {
+var updateListItems = function (request_url) {
+    // TODO: not sure why we need list spinner when map is visible?
     $("#discover-list-loading-spinner").show();
     if (map != null) {
         $("#discover-map-loading-spinner").show();
@@ -622,11 +623,14 @@ var updateListFaceting = function (request_url) {
         dataType: 'html',
         success: function (data) {
             $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
+            $("#discover-page-options-1").empty();
+            $("#discover-page-options-2").empty();
             var tableDiv = $("#items-discovered", data);
             $("#items-discovered_wrapper").html(tableDiv);
-            var pageOptionDiv = $("#discover-page-options", data);
-            $("#discover-page-options").html(pageOptionDiv);
+            var pageOptionDiv1 = $("#discover-page-options-1", data);
+            $("#discover-page-options-1").html(pageOptionDiv1);
+            var pageOptionDiv2 = $("#discover-page-options-2", data);
+            $("#discover-page-options-2").html(pageOptionDiv2);
             initializeTable();
         },
         failure: function (data) {
@@ -705,8 +709,8 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names',
-        'variable_names', 'sample_mediums', 'units_names', 'availability'];
+    var faceted_fields = ['creator', 'contributor', 'owner', 
+        'resource_type', 'subject', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
         var faceting_div = "faceting-"+field;
@@ -729,7 +733,9 @@ var formGeoParameters = function() {
 var formDateParameters = function() {
     var start_date = $("#id_start_date").val();
     var end_date = $("#id_end_date").val();
+    // if (start_date <= end_date or not start_date or not end_date) {  
     return "&start_date="+start_date+"&end_date="+end_date;
+    // }
 };
 
 var formOrderParameters = function() {
@@ -799,9 +805,7 @@ function initializeTable() {
     var TITLE_COL = 1;
     var OWNER_COL = 2;
     var DATE_CREATED_COL = 3;
-    var DATE_CREATED_SORT_COL = 4;
-    var LAST_MODIFIED_COL = 5;
-    var LAST_MODIF_SORT_COL = 6;
+    var LAST_MODIFIED_COL = 4;
 
     var colDefs = [
         {
@@ -809,21 +813,11 @@ function initializeTable() {
             "width": "110px"
         },
         {
-            "targets": [DATE_CREATED_COL],     // Date created
-            "iDataSort": DATE_CREATED_SORT_COL
+            "targets": [DATE_CREATED_COL]     // Date created
         },
         {
-            "targets": [LAST_MODIFIED_COL],     // Last modified
-            "iDataSort": LAST_MODIF_SORT_COL
+            "targets": [LAST_MODIFIED_COL]     // Last modified
         },
-        {
-            "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
-            "visible": false
-        },
-        {
-            "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
-            "visible": false
-        }
     ];
 
     $('#items-discovered').DataTable({
@@ -874,7 +868,7 @@ $(document).ready(function () {
 
     $("title").text("Discover | HydroShare");   // Set browser tab title
 
-    initializeTable();
+    initializeTable(); 
     popCheckboxes();
 
     $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
@@ -942,6 +936,7 @@ $(document).ready(function () {
         $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
     });
 
+    // This forces a page reload and should only be done when updating queries
     function updateResults () {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
@@ -959,12 +954,28 @@ $(document).ready(function () {
     }
 
     $("#date-search-fields input").change(function () { 
-        updateResults(); 
+        var textSearch = $("#id_q").val();
+        var searchURL = "?q=" + textSearch;
+        var geoSearchParams = formGeoParameters();
+        var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters();
+        var windowPath = window.location.pathname;
+        var requestURL =  windowPath + searchURL;
+        requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
+        updateListItems(requestURL);
     });
 
     $("#search-order-fields select").change(function () {
-        updateResults(); 
-    })
+        var textSearch = $("#id_q").val();
+        var searchURL = "?q=" + textSearch;
+        var geoSearchParams = formGeoParameters();
+        var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters();
+        var windowPath = window.location.pathname;
+        var requestURL =  windowPath + searchURL;
+        requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
+        updateListItems(requestURL);
+    });
 
     $(".faceted-selections").click(function () {
         var textSearch = $("#id_q").val();
@@ -980,7 +991,7 @@ $(document).ready(function () {
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
-            updateFacetingItems(requestURL);
+            updateListItems(requestURL);
         }
         else {
             var checkboxId = $(this).attr("id");
@@ -988,16 +999,17 @@ $(document).ready(function () {
             sessionStorage.removeItem(sessionStorageCheckboxId);
             var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams 
                 + dateSearchParams + sortOrderParams;
-            updateFacetingItems(updateURL);
+            updateListItems(updateURL);
         }
     });
 
-    // $("#solr-help-info").popover({
-    //     html: true,
-    //     container: '#body',
-    //     content: '<p>Search here to find all public and discoverable resources. This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
-    //     trigger: 'click'
-    // });
+    $("#solr-help-info").popover({
+        html: true,
+        container: '#body',
+        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Adding a field name limits search to a specific metadata field, e.g., author:Tarboton, subject:water, resource_type:Composite, and others. <br />For more information, visit our help page <a href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/how-to-use-simple-and-advanced-search-capabilities/" target="_blank">here</a>.</p>',
+
+        trigger: 'click'
+    });
 
     $("#btn-show-all").click(clearAllFaceted);
     $("#clear-dates-options").click(clearDates);

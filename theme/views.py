@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.contrib.messages import info
+from django.contrib.messages import info, error
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.db import transaction
@@ -30,6 +30,7 @@ from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_core.hydroshare.utils import user_from_id
+from hs_core.models import Party
 from hs_access_control.models import GroupMembershipRequest
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.forms import ThreadedCommentForm
@@ -44,17 +45,22 @@ class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
 
     def get_context_data(self, **kwargs):
+        u = User.objects.none()
         if 'user' in kwargs:
             try:
                 u = User.objects.get(pk=int(kwargs['user']))
             except:
                 u = User.objects.get(username=kwargs['user'])
 
-        else:
+        elif self.request.GET.get('user', False):
             try:
                 u = User.objects.get(pk=int(self.request.GET['user']))
             except:
                 u = User.objects.get(username=self.request.GET['user'])
+
+        elif not self.request.user.is_anonymous():
+            # if the user is logged in and no user is specified, show logged in user
+            u = User.objects.get(pk=int(self.request.user.id))
 
         # get all resources the profile user owns
         resources = u.uaccess.owned_resources
@@ -167,7 +173,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         try:
             new_user = form.save()
         except ValidationError as e:
-            messages.error(request, e.message)
+            if e.message == "Email already in use.":
+                messages.error(request, '<p>An account with this email already exists.  Log in '
+                                'or click <a href="' + reverse("mezzanine_password_reset") +
+                               '" >here</a> to reset password',
+                               extra_tags="html")
+            else:
+                messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             if not new_user.is_active:
@@ -208,12 +220,36 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def signup_verify(request, uidb36=None, token=None):
+    """
+    Signup verify. Overriding mezzanine's view function for signup verify
+    """
+    user = authenticate(uidb36=uidb36, token=token, is_active=False)
+    if user is not None:
+        user.is_active = True
+        user.save()
+        auth_login(request, user)
+        info(request, _("Successfully signed up"))
+        return HttpResponseRedirect('/user/{}/?edit=true'.format(user.id))
+    else:
+        error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")
+
+
 @login_required
 def update_user_profile(request):
     user = request.user
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
+
+    # create a dict of identifier names and links for the identifiers field of the  UserProfile
+    try:
+        post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
+        identifiers = post_data_dict.get('identifiers', {})
+    except Exception as ex:
+        messages.error(request, "Update failed. {}".format(ex.message))
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     dict_items = request.POST['organization'].split(",")
     for dict_item in dict_items:
@@ -224,13 +260,14 @@ def update_user_profile(request):
             new_term = UncategorizedTerm(name=dict_item)
             new_term.save()
 
-    profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+    profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
+                profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation
@@ -281,6 +318,20 @@ def update_user_profile(request):
         messages.error(request, ex.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+def resend_verification_email(request, email):
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        user = User.objects.filter(username=email).first()
+    if user is None:
+        messages.error(request, _("Could not find user or email " + email))
+        return redirect(reverse("login"))
+    if user.is_active :
+        messages.error(request, _("User with email " + user.email + " is already active"))
+        return redirect(reverse("login"))
+    send_verification_mail(request, user, "signup_verify")
+    messages.error(request, _("Resent verification email to " + user.email))
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def request_password_reset(request):
@@ -459,7 +510,12 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     User is redirected to password reset page where the user can enter new password.
     """
 
-    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    user = authenticate(uidb36=uidb36, token=token)
+    if not user.is_active:
+        # password reset for user that hasn't hit the verification email, since they're resetting
+        # the password, we know the email is good
+        user.is_active = True
+        user.save()
     if user is not None:
         auth_login(request, user)
         # redirect to user to password reset page

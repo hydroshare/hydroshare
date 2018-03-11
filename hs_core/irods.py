@@ -14,9 +14,27 @@ class ResourceIRODSMixin(models.Model):
     class Meta:
         abstract = True
 
-    def __home_path(self):
-        """ Return the home path for local iRODS resources """
+    @property
+    def irods_home_path(self):
+        """
+        Return the home path for local iRODS resources
+
+        This must be public in order to be accessed from the methods below in a mixin context.
+        """
         return settings.IRODS_CWD
+
+    def irods_full_path(self, path):
+        """
+        Return fully qualified path for local paths
+
+        This leaves fully qualified paths alone, but presumes that unqualified paths
+        are home paths, and adds irods_home_path to these to qualify them.
+
+        """
+        if path.startswith('/'):
+            return path
+        else:
+            return os.path.join(self.irods_home_path, path)
 
     def update_bag(self):
         """
@@ -94,11 +112,12 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot change resource {}"
                                        .format(user.username, self.short_id))
         else:
-            if not user.uaccess.can_view_resource(self):
+            if not self.raccess.public and (not user.is_authenticated() or
+                                            not user.uaccess.can_view_resource(self)):
                 raise PermissionDenied("user {} cannot view resource {}"
                                        .format(user.username, self.short_id))
         if path is None:
@@ -121,13 +140,13 @@ class ResourceIRODSMixin(models.Model):
         istorage = self.get_irods_storage()
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
-            path = os.path.join(self.__home_path(), path)
+            path = os.path.join(self.irods_home_path, path)
         stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
         ticket = stdout.split('\n')[0]
-        ticket = ticket[len('ticket:'):]
-        istorage.session.run('iticket', None, 'mod', ticket,
+        ticket_id = ticket[len('ticket:'):]
+        istorage.session.run('iticket', None, 'mod', ticket_id,
                              'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
@@ -138,14 +157,16 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        istorage.session.run('iticket', None, 'mod', ticket,
-                             'expires', formatted)
-        return ticket
+        istorage.session.run('iticket', None, 'mod', ticket_id,
+                             'expire', formatted)
 
-    def list_ticket(self, ticket):
+        # fully qualify home paths with their iRODS prefix when returning them.
+        return ticket_id, self.irods_full_path(path)
+
+    def list_ticket(self, ticket_id):
         """ List a ticket's attributes """
         istorage = self.get_irods_storage()
-        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket)
+        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket_id)
         if stdout.startswith('id:'):
             stuff = stdout.split('\n')
             output = {}
@@ -156,27 +177,29 @@ class ResourceIRODSMixin(models.Model):
                     value = line[1]
                     if key == 'collection name' or key == 'data collection':
                         output['full_path'] = value
-                        if self.resource_federation_path:
+                        if self.is_federated:
                             if __debug__:
                                 assert(value.startswith(self.resource_federation_path))
                             output['long_path'] = value[len(self.resource_federation_path):]
-                            output['fed_path'] = self.resource_federation_path
+                            output['home_path'] = self.resource_federation_path
                         else:
-                            location = value.search(self.short_id)
+                            location = value.find(self.short_id)
                             if __debug__:
                                 assert(location >= 0)
-                            output['long_path'] = value[location:]
-                            output['home_path'] = value[:(location-1)]
+                            if location == 0:
+                                output['long_path'] = value
+                                output['home_path'] = self.irods_home_path
+                            else:
+                                output['long_path'] = value[location:]
+                                # omit trailing slash
+                                output['home_path'] = value[:(location-1)]
+
                         if __debug__:
                             assert(output['long_path'].startswith(self.short_id))
-                        # data/....
-                        qual_path = output['long_path'][len(self.short_id)+1:]
-                        output['qual_path'] = qual_path
-                        output['folder'] = None
-                        if qual_path.startswith('data/contents/'):
-                            output['folder'] = qual_path[len('data/contents/'):]
 
-                    if key == 'data-object name':
+                    if key == 'string':
+                        output['ticket_id'] = value
+                    elif key == 'data-object name':
                         output['filename'] = value
                     elif key == 'ticket type':
                         output['type'] = value
@@ -190,18 +213,22 @@ class ResourceIRODSMixin(models.Model):
                         output[line[0]] = line[1]
                 except Exception:  # no ':' in line
                     pass
+
+            # put in actual file path including folder and filename
             if 'filename' in output:
                 output['full_path'] = os.path.join(output['full_path'], output['filename'])
-
             return output
-        else:
-            raise ValidationError("ticket {} cannot be listed".format(ticket))
 
-    def delete_ticket(self, user, ticket):
+        elif stdout == '':
+            raise ValidationError("ticket {} not found".format(ticket_id))
+        else:
+            raise ValidationError("ticket {} error: {}".format(ticket_id, stderr))
+
+    def delete_ticket(self, user, ticket_id):
         """
         delete an existing ticket
 
-        :param ticket: ticket string
+        :param ticket_id: ticket string
 
         :raises SessionException: if ticket does not exist.
 
@@ -216,25 +243,26 @@ class ResourceIRODSMixin(models.Model):
         The usual mechanism -- of checking that the user owns the ticket -- is not
         practical, because the ticket owner is always the proxy user.
         """
-        meta = self.list_ticket(ticket)
+        meta = self.list_ticket(ticket_id)
 
         if self.root_path not in meta['full_path']:
-            raise PermissionDenied("user {} cannot delete ticket for a different resource"
-                                   .format(user.username))
+            raise PermissionDenied("user {} cannot delete ticket {} for a different resource"
+                                   .format(user.username, ticket_id))
         # get kind of ticket
         write = meta['type'] == 'write'
 
         # authorize user
         if write:
-            if not user.uaccess.can_change_resource(self):
-                raise PermissionDenied("user {} cannot delete change ticket for {}"
-                                       .format(user.username, self.short_id))
+            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
+                raise PermissionDenied("user {} cannot delete change ticket {} for {}"
+                                       .format(user.username, ticket_id, self.short_id))
         else:
-            if not user.uaccess.can_view_resource(self):
-                raise PermissionDenied("user {} cannot delete view ticket for {}"
-                                       .format(user.username, self.short_id))
+            if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
+                raise PermissionDenied("user {} cannot delete view ticket {} for {}"
+                                       .format(user.username, ticket_id, self.short_id))
         istorage = self.get_irods_storage()
-        istorage.session.run('iticket', None, 'delete', ticket)
+        istorage.session.run('iticket', None, 'delete', ticket_id)
+        return meta
 
 
 class ResourceFileIRODSMixin(models.Model):

@@ -6,6 +6,8 @@ from hs_file_types import views as file_type_views
 
 from rest_framework_swagger.views import get_swagger_view
 
+from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
+
 schema_view = get_swagger_view(title='Hydroshare API')
 
 urlpatterns = patterns(
@@ -82,6 +84,9 @@ urlpatterns = patterns(
         core_views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_resource_map'),
 
+    url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<file_id>[0-9]+)/metadata/$',
+        FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata"),
+
     # Patterns are now checked in the view class.
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
         core_views.resource_rest_api.ResourceFileCRUD.as_view(),
@@ -94,6 +99,21 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$',
         core_views.resource_folder_rest_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
+
+    # iRODS tickets
+    # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
+        core_views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
+        name='create_ticket'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/bag/$',
+        core_views.resource_ticket_rest_api.CreateBagTicket.as_view(),
+        name='create_bag_ticket'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
+        core_views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
+        name='manage_ticket'),
 
     # public unzip endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
@@ -134,4 +154,6 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
+
+
 )

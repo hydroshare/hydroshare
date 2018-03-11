@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.utils.http import int_to_base36
-from django.http import HttpResponse
+from django.http import HttpResponse, QueryDict
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
@@ -334,7 +334,18 @@ class MetadataElementRequest(object):
                 element_data_dict = element_data_dict['value']
                 if cov_type is not None:
                     element_data_dict['type'] = cov_type
-        self.POST = element_data_dict
+
+        # post data must be a QueryDict
+        qdict = QueryDict('', mutable=True)
+        if element_name.lower() in ('creator', 'contributor'):
+            identifiers = element_data_dict.pop('identifiers', None)
+            if identifiers is not None:
+                for key in identifiers:
+                    identifier = {'identifier_name': key, 'identifier_link': identifiers[key]}
+                    qdict.update(identifier)
+        if element_data_dict:
+            self.POST = qdict.update(element_data_dict)
+        self.POST = qdict
 
 
 def create_form(formclass, request):

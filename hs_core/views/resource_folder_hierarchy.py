@@ -2,21 +2,21 @@ import json
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
-from rest_framework.decorators import api_view
-from django.core.exceptions import ValidationError
 
 from django_irods.icommands import SessionException
-
 from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
+from hs_core.models import ResourceFile
+
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
-from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
 
@@ -72,15 +72,18 @@ def data_store_structure(request):
     try:
         store = istorage.listdir(res_coll)
         files = []
-        folders = []
-        for folder in store[0]:     # folders
+        dirs = []
+        for dname in store[0]:     # directories
+            d_pk = dname.decode('utf-8')
+            name_with_full_path = os.path.join(res_coll, d_pk)
+            d_url = to_external_url(istorage.url(name_with_full_path))
             folder_aggregation_type = ''
             folder_aggregation_name = ''
             folder_aggregation_id = ''
             folder_aggregation_type_to_set = ''
-            folder_short_path = os.path.join(store_path, folder)
+            folder_short_path = os.path.join(store_path, d_pk)
             if resource.resource_type == "CompositeResource":
-                dir_path = os.path.join(res_coll, folder)
+                dir_path = name_with_full_path
                 # find if this folder *dir_path* represents (contains) an aggregation object
                 aggregation_object = resource.get_folder_aggregation_object(dir_path)
                 # folder aggregation type is not relevant for single file aggregation types - which
@@ -96,12 +99,13 @@ def data_store_structure(request):
                     folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
                         dir_path)
 
-            folders.append({'folder_name': folder,
-                            'folder_aggregation_type': folder_aggregation_type,
-                            'folder_aggregation_name': folder_aggregation_name,
-                            'folder_aggregation_id': folder_aggregation_id,
-                            'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                            'folder_short_path': folder_short_path})
+            dirs.append({'name': d_pk,
+                         'url': d_url,
+                         'folder_aggregation_type': folder_aggregation_type,
+                         'folder_aggregation_name': folder_aggregation_name,
+                         'folder_aggregation_id': folder_aggregation_id,
+                         'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
+                         'folder_short_path': folder_short_path})
 
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')
@@ -119,7 +123,7 @@ def data_store_structure(request):
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if name_with_full_path == f.storage_path:
                     f_pk = f.pk
-                    f_url = get_resource_file_url(f)
+                    f_url = to_external_url(get_resource_file_url(f))
                     if resource.resource_type == "CompositeResource":
                         if f.has_logical_file:
                             logical_file_type = f.logical_file_type_name
@@ -141,7 +145,7 @@ def data_store_structure(request):
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
-                     'folders': folders,
+                     'folders': dirs,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
@@ -153,6 +157,14 @@ def data_store_structure(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+def to_external_url(url):
+    """
+    Convert an internal download file/folder url to the external url.  This should eventually be
+    replaced with with a reverse method that gets the correct mapping.
+    """
+    return url.replace("django_irods/download", "resource", 1)
 
 
 def data_store_folder_zip(request, res_id=None):

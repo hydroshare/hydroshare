@@ -17,7 +17,7 @@
 {% endifinstalled %}
 
 <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.css" rel="stylesheet">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}" />
 
 {% compress css %}
@@ -168,7 +168,14 @@
             <div class="row">
                 <div class="col-md-12">
                     <button type="button" class="close btn-close-message">&times;</button>  {# TODO: TESTING #}
-                    <p>{{ message }}</p>
+                    <!-- extra tags can be used to pass html -->
+                    {% if 'html' in message.tags %}
+                        {% autoescape off %}
+                        {{ message }}
+                        {% endautoescape %}
+                    {% else %}
+                        <p>{{ message }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

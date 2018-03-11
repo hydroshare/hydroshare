@@ -48,6 +48,7 @@ class ResourceToListItemMixin(object):
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
+                                                          abstract=r.metadata.description,
                                                           creator=r.first_creator.name,
                                                           public=r.raccess.public,
                                                           discoverable=r.raccess.discoverable,
@@ -69,6 +70,7 @@ class ResourceFileToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
+        id = f.id
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -76,6 +78,7 @@ class ResourceFileToListItemMixin(object):
         else:
             ftype = repr(None)
         resource_file_info_item = serializers.ResourceFileItem(url=url,
+                                                               id=id,
                                                                size=fsize,
                                                                content_type=ftype)
         return resource_file_info_item

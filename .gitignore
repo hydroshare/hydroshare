@@ -27,3 +27,6 @@ schema.xml
 .pycharm_helpers
 celerybeat.pid
 .config
+.c9
+/nginx/cert*
+pg.deploy.sql
