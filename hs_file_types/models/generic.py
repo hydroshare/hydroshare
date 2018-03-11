@@ -133,9 +133,9 @@ class GenericLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """Makes any physical file part of a generic  logical file type. The physical file must
-        not be already be a part of any logical file type
-        note: parameter folder_path is ignored here
+        """Makes any physical file part of a generic  aggregation type. The physical file must
+        not already be a part of any aggregation.
+        Note: parameter folder_path is ignored here and a value for file_id is required
         """
 
         log = logging.getLogger()
@@ -144,8 +144,10 @@ class GenericLogicalFile(AbstractLogicalFile):
         # get the resource file
         res_file = utils.get_resource_file_by_id(resource, file_id)
         if res_file.has_logical_file:
-            raise ValidationError("Selected file is already part of a file type")
+            raise ValidationError("Selected file '{}' is already part of an aggregation".format(
+                res_file.file_name))
+
         logical_file = GenericLogicalFile.create()
         res_file.logical_file_content_object = logical_file
         res_file.save()
-        log.info("Generic file type was set for file:{}.".format(res_file.storage_path))
+        log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))

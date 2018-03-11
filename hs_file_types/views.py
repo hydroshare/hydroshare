@@ -20,9 +20,10 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_dat
 from hs_core.hydroshare.utils import resource_modified
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
 
-FILE_TYPE_MAP = {"GeoRasterLogicalFile": GeoRasterLogicalFile,
+FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
+                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
                  "NetCDFLogicalFile": NetCDFLogicalFile,
                  "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
                  "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
@@ -53,7 +54,8 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-    file_type_map = {"GeoRaster": GeoRasterLogicalFile,
+    file_type_map = {"Generic": GenericLogicalFile,
+                     "GeoRaster": GeoRasterLogicalFile,
                      "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile,
@@ -81,8 +83,11 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         logical_file_type_class.set_file_type(resource=res, user=request.user, file_id=file_id,
                                               folder_path=folder_path)
         resource_modified(res, request.user, overwrite_bag=False)
-        msg = "File was successfully set to the selected aggregation type. " \
-              "Metadata extraction was successful."
+        msg = "{} was successfully set to the selected aggregation type."
+        if folder_path is None:
+            msg = msg.format("Selected file")
+        else:
+            msg = msg.format("Selected folder")
         response_data['status'] = 'success'
         response_data['message'] = msg
         spatial_coverage_dict = get_coverage_data_dict(res)

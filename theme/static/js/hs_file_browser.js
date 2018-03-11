@@ -80,6 +80,7 @@ function updateSelectionMenuContext() {
     var flagDisableUnzip = false;
     var flagDisableCut = false;
     var flagDisableDelete = false;
+    var flagDisableSetGenericFileType = false;
     var flagDisableSetGeoRasterFileType = false;
     var flagDisableSetNetCDFFileType = false;
     var flagDisableSetGeoFeatureFileType = false;
@@ -96,6 +97,7 @@ function updateSelectionMenuContext() {
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+        flagDisableSetGenericFileType = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoFeatureFileType = true;
@@ -142,6 +144,7 @@ function updateSelectionMenuContext() {
         flagDisableDelete = true;
         flagDisableDownload = true;
         flagDisableGetLink = true;
+        flagDisableSetGenericFileType = true;
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetGeoFeatureFileType = true;
@@ -164,10 +167,10 @@ function updateSelectionMenuContext() {
             flagDisableRemoveAggregation = true;
         }
         else {
-            var logicalFileType = selected.children('span.fb-logical-file-type').text();
-            // if the selected file is part of the RefTimeseriesLogical file (aggregation) we
-            // want the remove aggregation option to show up
-            if(logicalFileType !== 'RefTimeseriesLogicalFile'){
+            var logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
+            // if the selected file is part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation) we
+            // want the remove aggregation option not to show up
+            if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
                 flagDisableRemoveAggregation = true;
             }
         }
@@ -178,6 +181,7 @@ function updateSelectionMenuContext() {
         flagDisableUnzip = true;
         flagDisableGetLink = true;
         isFolderSelected = true;
+        flagDisableSetGenericFileType = true;
         flagDisableSetRefTimeseriesFileType = true;
         if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
@@ -223,6 +227,9 @@ function updateSelectionMenuContext() {
             var fileName = $(selected[i]).children(".fb-file-name").text();
             var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
             var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
+            if(logicalFileType != "") {
+                flagDisableSetGenericFileType = true;
+            }
             if (fileExt.toUpperCase() != "ZIP") {
                 flagDisableUnzip = true;
             }
@@ -260,12 +267,14 @@ function updateSelectionMenuContext() {
 
 
     var logicalFileType = $("#fb-files-container li.fb-file").children('span.fb-logical-file-type').attr("data-logical-file-type");
+
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableCreateFolder = true;
             flagDisableRename = true;
             flagDisableDelete = true;
             flagDisableCut = true;
+            flagDisableSetGenericFileType = true;
         }
     // set Create folder toolbar option
     $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
@@ -287,6 +296,10 @@ function updateSelectionMenuContext() {
     // Get file URL
     menu.children("li[data-menu-name='get-link']").toggleClass("disabled", flagDisableGetLink);
     $("#fb-get-link").toggleClass("disabled", flagDisableGetLink);
+
+    // set Generic file type
+    menu.children("li[data-menu-name='setgenericfiletype']").toggleClass("disabled", flagDisableSetGenericFileType);
+    $("#fb-generic-file-type").toggleClass("disabled", flagDisableSetGenericFileType);
 
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
@@ -583,9 +596,9 @@ function showFileTypeMetadata(file_type_time_series, url){
         return; 
      }
      if(selectedItem.hasClass("fb-file")){
-         // only in the case Ref TimeSeries file type we need to show
+         // only in the case Ref TimeSeries file type or generic file type we need to show
          // file type metadata when a file is selected
-         if(logical_type !== "RefTimeseriesLogicalFile"){
+         if(logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile"){
              return;
          }
      }
@@ -1468,6 +1481,11 @@ $(document).ready(function () {
         // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
         $("#txtFileURL").val(basePath + URL);
     });
+
+    // set generic file type method
+     $("#btn-set-generic-file-type").click(function () {
+         setFileType("Generic");
+      });
 
     // set geo raster file type method
      $("#btn-set-geo-file-type").click(function () {

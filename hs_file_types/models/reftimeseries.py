@@ -744,13 +744,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """
-            Sets a json resource file to RefTimeseriesFile type
+            Sets a json resource file to RefTimeseriesLogicalFile type
             :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as RefTimeSeriesFile type
+            :param file_id: id of the resource file to be set as RefTimeSeriesLogicalFile type
             :param folder_path: not relevant for this aggregation type
-            :param user: user who is setting the file type
+            :param user: user who is creating the aggregation (file type)
             :return:
-            """
+        """
 
         log = logging.getLogger()
         if file_id is None:
@@ -762,11 +762,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         if res_file is None:
             raise ValidationError("File not found.")
 
-        if res_file.extension != '.refts':
-            raise ValidationError("Not a Ref Time Series file.")
+        if res_file.extension.lower() != '.refts':
+            raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
+                res_file.file_name))
 
         if res_file.has_logical_file:
-            raise ValidationError("Selected file is already part of a logical file")
+            raise ValidationError("Selected file '{}' is already part of an aggregation".format(
+                res_file.file_name))
 
         files_to_add_to_resource = []
 
