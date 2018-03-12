@@ -926,8 +926,7 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
-        if self.get_aggregation_class_name() in ("GenericLogicalFile",
-                                                 "RefTimeseriesLogicalFile"):
+        if self.is_single_file_aggregation:
             # self is a single file aggregation type
             return self.files.first().short_path
         else:
@@ -939,7 +938,7 @@ class AbstractLogicalFile(models.Model):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
         xml_file_name = self.aggregation_name + "_meta.xml"
-        if self.files.first().file_folder is not None:
+        if self.files.first().file_folder is not None and not self.is_single_file_aggregation:
             return os.path.join(self.aggregation_name, xml_file_name)
         else:
             return xml_file_name
@@ -965,6 +964,11 @@ class AbstractLogicalFile(models.Model):
         """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.map_short_file_path)
+
+    @property
+    def is_single_file_aggregation(self):
+        return self.get_aggregation_class_name() in ("GenericLogicalFile",
+                                                     "RefTimeseriesLogicalFile")
 
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
