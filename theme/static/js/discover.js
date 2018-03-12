@@ -172,13 +172,12 @@ var drawShadeRectangles = function(boxes) {
         var eastlimit = parseFloat(box.eastlimit);
         var westlimit = parseFloat(box.westlimit);
 
-        var box_ne = new google.maps.LatLng(northlimit, eastlimit);
-        var box_sw = new google.maps.LatLng(southlimit, westlimit);
-
         var rectCoords = [
           {lat: northlimit, lng: westlimit},
+          {lat: northlimit, lng: (westlimit + eastlimit)/2},
           {lat: northlimit, lng: eastlimit},
           {lat: southlimit, lng: eastlimit},
+          {lat: southlimit, lng: (westlimit + eastlimit)/2},
           {lat: southlimit, lng: westlimit}
         ];
 
@@ -301,6 +300,16 @@ var showBoxMarker = function(box, zoom_on_map) {
     if (zoom_on_map) {
         map.fitBounds(rectBounds);
         updateMapView();
+        var author_name = "";
+        if (box.first_author_url) {
+            author_name = '<a target="_blank" href="' + box.first_author_url + '">' + box.first_author + '</a>';
+        } else {
+            author_name = box.first_author;
+        }
+        var resource_title = '<a target="_blank" href="' + box.get_absolute_url + '">' + box.title + '</a>';
+        var map_resource = [box, box.resource_type, resource_title, author_name];
+        var map_items_table = $('#map-items').DataTable();
+        map_items_table.row.add(map_resource).draw();
     }
     findShadeRect(rectBounds);
 };
@@ -608,6 +617,7 @@ var updateMapView = function() {
 
 var updateListItems = function (request_url) {
     // TODO: not sure why we need list spinner when map is visible?
+    // From Alva: Sometimes this loading can take a while. 
     $("#discover-list-loading-spinner").show();
     if (map != null) {
         $("#discover-map-loading-spinner").show();
