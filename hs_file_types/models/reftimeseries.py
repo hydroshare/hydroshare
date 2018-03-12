@@ -769,6 +769,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "ReferencedTimeSeriesAggregation"
 
+    @property
+    def supports_resource_file_rename(self):
+        """Doesn't allow resource file that is part of this logical file type to be renamed"""
+        return False
+
     @classmethod
     def create(cls):
         # this custom method MUST be used to create an instance of this class
