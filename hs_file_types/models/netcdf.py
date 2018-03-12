@@ -507,6 +507,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     log.info("NetCDF aggregation - metadata was saved in aggregation")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
+                    logical_file.create_aggregation_xml_documents()
                     # delete the original resource file if we did not create agrregation
                     # from a folder
                     if folder_path is None:

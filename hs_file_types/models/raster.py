@@ -428,6 +428,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     log.info("Geographic raster aggregation type - metadata was saved to DB")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
+                    logical_file.create_aggregation_xml_documents()
                     # if file was selected for creating aggregation then delete the original file
                     if folder_path is None:
                         zip_file = res_file.extension.lower() == ".zip"

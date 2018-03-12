@@ -626,6 +626,9 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
+                # set resource to private if logical file is missing required metadata
+                resource.update_public_and_discoverable()
+                logical_file.create_aggregation_xml_documents()
                 log.info("TimeSeries aggregation was created.")
                 # delete the original resource file if we did not create agrregation
                 # from a folder

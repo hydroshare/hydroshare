@@ -343,6 +343,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 log.info("GeoFeature aggregation and resource level metadata updated.")
                 # set resource to private if logical file is missing required metadata
                 resource.update_public_and_discoverable()
+                logical_file.create_aggregation_xml_documents()
 
                 if folder_path is None and res_file.extension.lower() == ".zip":
                     # if zip file was selected for creating aggregation delete it

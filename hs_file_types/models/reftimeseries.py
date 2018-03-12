@@ -855,9 +855,14 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 logical_file.save()
                 # extract metadata
                 _extract_metadata(resource, logical_file)
-                log.info("RefTimeseries file type - json file was added to the resource.")
+                log.info("RefTimeseries aggregation type - json file was added to the resource.")
+                # set resource to private if logical file is missing required metadata
+                resource.update_public_and_discoverable()
+                logical_file.create_aggregation_xml_documents()
+                log.info("RefTimeseries aggregation type was created.")
             except Exception as ex:
-                msg = "RefTimeseries file type. Error when setting file type. Error:{}"
+                msg = "RefTimeseries aggregation type. Error when setting aggregation " \
+                      "type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
                 raise ValidationError(msg)
@@ -866,7 +871,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-            log.info("RefTimeseries file type was created.")
 
     def get_copy(self):
         """Overrides the base class method"""

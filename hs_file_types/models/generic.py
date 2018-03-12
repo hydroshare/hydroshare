@@ -154,4 +154,5 @@ class GenericLogicalFile(AbstractLogicalFile):
         logical_file = GenericLogicalFile.create()
         res_file.logical_file_content_object = logical_file
         res_file.save()
+        logical_file.create_aggregation_xml_documents()
         log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
