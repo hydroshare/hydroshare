@@ -169,6 +169,11 @@ HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
 HS_WWW_IRODS_ZONE = ''
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
+# Info needed for mygeohub MultiSpec tool launch from HydroShare
+GEOHUB_HS_IRODS_PATH = ''
+GEOHUB_HS_IRODS_RESC = ''
+GEOHUB_HOMEPAGE_URL = ''
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''

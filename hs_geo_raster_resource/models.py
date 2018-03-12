@@ -375,7 +375,7 @@ class RasterResource(BaseResource):
     def get_res_file_name(self):
         for res_file in self.files.all():
             _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
-            if f_ext.lower() == '.tif' or f_ext.lower() == '.zip':
+            if f_ext.lower() == '.vrt':
                 return f_fullname
 
         return ''

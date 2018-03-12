@@ -10,8 +10,7 @@ from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
-from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
-    get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
 
 class OriginalCoverage(AbstractMetaDataElement):
