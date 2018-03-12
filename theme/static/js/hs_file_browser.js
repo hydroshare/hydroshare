@@ -10,8 +10,8 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
+function getFolderTemplateInstance(folderName, url) {
+    return "<li class='fb-folder droppable draggable' data-url='" + url + "' title='" + folderName + "&#13;Type: File Folder'>" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
@@ -139,9 +139,9 @@ function updateSelectionMenuContext() {
     }
 
     if (selected.hasClass("fb-folder")) {
-        flagDisableDownload = true;
+        flagDisableDownload = false;
         flagDisableUnzip = true;
-        flagDisableGetLink = true;
+        flagDisableGetLink = false;
     }
 
     if (!sourcePaths.length) {
@@ -742,30 +742,13 @@ function startDownload() {
 
     if (downloadList.length) {
         // Workaround for Firefox and IE
-        if (jQuery.browser.mozilla == true || !!navigator.userAgent.match(/Trident\/7\./)) {
-            for (var i = 0; i < downloadList.length; i++) {
-                var url = $(downloadList[i]).attr("data-url");
-                var frameID = "download-frame-" + i;
-                $("body").append("<iframe class='temp-download-frame' id='"
-                    + frameID + "' style='display:none;' src='" + url + "'></iframe>");
-            }
-        }
-        else {
-            for (var i = 0; i < downloadList.length; i++) {
-                var url = $(downloadList[i]).attr("data-url");
-                var fileName = $(downloadList[i]).children(".fb-file-name").text();
-                downloadURI(url, fileName);
-            }
+        for (var i = 0; i < downloadList.length; i++) {
+            var url = $(downloadList[i]).attr("data-url");
+            var frameID = "download-frame-" + i;
+            $("body").append("<iframe class='temp-download-frame' id='"
+                + frameID + "' style='display:none;' src='" + url + "'></iframe>");
         }
     }
-}
-
-function downloadURI(uri, name) {
-    var link = document.createElement("a");
-    link.download = name;
-    link.href = uri;
-    link.click();
-    link.remove();
 }
 
 function onOpenFolder() {

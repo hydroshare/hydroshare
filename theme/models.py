@@ -300,6 +300,8 @@ class UserProfile(models.Model):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default={}, null=True, blank=True)
 
+    email_opt_out = models.BooleanField(default=False)
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:
@@ -308,10 +310,11 @@ def force_unique_emails(sender, instance, **kwargs):
 
         if not email:
             raise ValidationError("Email required.")
-        else:
-            if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
-                raise ValidationError("Username already in use.")
+        # check for email use first, it's more helpful to know about than username duplication
         if sender.objects.filter(email=email).exclude(pk=instance.id).count():
+            # this string is being checked in base.html to provide reset password link
             raise ValidationError("Email already in use.")
+        if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
+            raise ValidationError("Username already in use.")
 
 pre_save.connect(force_unique_emails, sender=User)
