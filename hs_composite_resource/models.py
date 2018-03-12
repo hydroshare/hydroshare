@@ -142,10 +142,19 @@ class CompositeResource(BaseResource):
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
-    def create_aggregation_xml_documents(self):
-        """Creates aggregation map and metadata xml files for each of the contained aggregations"""
-        for aggregation in self.logical_files:
-            aggregation.create_aggregation_xml_documents()
+    def create_aggregation_xml_documents(self, aggregation_name=None):
+        """Creates aggregation map and metadata xml files for each of the contained aggregations
+        :param  aggregation_name: (optional) name of the the aggregation for which xm documents
+        be created
+        """
+        if aggregation_name is None:
+            for aggregation in self.logical_files:
+                aggregation.create_aggregation_xml_documents()
+        else:
+            for aggregation in self.logical_files:
+                if aggregation.aggregation_name == aggregation_name:
+                    aggregation.create_aggregation_xml_documents()
+                    break
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
