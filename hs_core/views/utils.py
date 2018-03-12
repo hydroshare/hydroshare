@@ -833,6 +833,10 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
+        resource.rename_aggregation(org_aggregation_name, new_aggregation_name)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 

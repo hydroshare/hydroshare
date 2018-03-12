@@ -156,6 +156,22 @@ class CompositeResource(BaseResource):
                     aggregation.create_aggregation_xml_documents()
                     break
 
+    def rename_aggregation(self, orig_aggregation_name, new_aggregation_name):
+        """When a folder or file representing an aggregation is renamed, the associated
+        map and metadata xml documents need to be deleted and then regenerated"""
+
+        for aggregation in self.logical_files:
+            if aggregation.aggregation_name == new_aggregation_name:
+                istorage = self.get_irods_storage()
+                xml_file_name = orig_aggregation_name + "_meta.xml"
+                if aggregation.files.first().file_folder is not None:
+                    xml_file_name = os.path.join(new_aggregation_name, xml_file_name)
+                orig_xml_file_full_path = os.path.join(self.file_path, xml_file_name)
+                if istorage.exists(orig_xml_file_full_path):
+                    istorage.delete(orig_xml_file_full_path)
+                aggregation.create_aggregation_xml_documents()
+                break
+
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
 
@@ -189,7 +205,7 @@ class CompositeResource(BaseResource):
 
         istorage = self.get_irods_storage()
         folder, file_name = os.path.split(tgt_full_path)
-        basename, ext = os  .path.splitext(file_name)
+        basename, ext = os.path.splitext(file_name)
         if ext:
             tgt_file_dir = os.path.dirname(tgt_full_path)
         else:
