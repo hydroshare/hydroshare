@@ -6,6 +6,7 @@ import re
 from functools import partial, wraps
 import netCDF4
 import numpy as np
+from lxml import etree
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -18,7 +19,7 @@ from dominate.tags import div, legend, form, button, p, textarea, strong, input
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import Creator, Contributor, ResourceFile
+from hs_core.models import Creator, Contributor, ResourceFile, CoreMetaData
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -261,6 +262,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    # TODO: delete the following method - not needed anymore
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of all metadata elements associated with this
         logical file type instance"""
@@ -271,6 +273,19 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         for variable in self.variables.all():
             variable.add_to_xml_container(container_to_add_to)
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(NetCDFFileMetaData, self)._get_xml_containers()
+        if self.originalCoverage:
+            self.originalCoverage.add_to_xml_container(container_to_add_to)
+
+        for variable in self.variables.all():
+            variable.add_to_xml_container(container_to_add_to)
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -290,6 +305,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_display_name():
         return 'Multidimensional Aggregation'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "MultidimensionalAggregation"
 
     @classmethod
     def create(cls):

@@ -3,9 +3,9 @@ import logging
 import shutil
 import zipfile
 import xmltodict
+from lxml import etree
 
 from osgeo import ogr, osr
-
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -15,7 +15,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title, ResourceFile
+from hs_core.models import Title, ResourceFile, CoreMetaData
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm
@@ -143,6 +143,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    # TODO: delete the following method - not needed anymore
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of all metadata elements associated with this
         logical file type instance"""
@@ -156,6 +157,22 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container_to_add_to)
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(GeoFeatureFileMetaData, self)._get_xml_containers()
+        if self.geometryinformation:
+            self.geometryinformation.add_to_xml_container(container_to_add_to)
+
+        for fieldinfo in self.fieldinformations.all():
+            fieldinfo.add_to_xml_container(container_to_add_to)
+
+        if self.originalcoverage:
+            self.originalcoverage.add_to_xml_container(container_to_add_to)
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -190,6 +207,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_display_name():
         return 'Geographic Feature Aggregation'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "GeographicFeatureAggregation"
 
     @property
     def supports_resource_file_move(self):

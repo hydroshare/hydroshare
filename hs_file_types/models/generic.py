@@ -129,7 +129,11 @@ class GenericLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Generic Aggregation'
+        return 'Single File Aggregation'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "SingleFileAggregation"
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):

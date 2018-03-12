@@ -5,6 +5,8 @@ import subprocess
 import zipfile
 
 import xml.etree.ElementTree as ET
+from lxml import etree
+
 import gdal
 from gdalconst import GA_ReadOnly
 
@@ -21,7 +23,7 @@ from dominate.tags import div, legend, form, button
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, CoreMetaData
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
@@ -195,6 +197,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    # TODO: delete the following method - not needed anymore
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of all metadata elements associated with this
         logical file type instance"""
@@ -206,6 +209,21 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             self.cellInformation.add_to_xml_container(container_to_add_to)
         for bandinfo in self.bandInformations:
             bandinfo.add_to_xml_container(container_to_add_to)
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(GeoRasterFileMetaData, self)._get_xml_containers()
+
+        if self.originalCoverage:
+            self.originalCoverage.add_to_xml_container(container_to_add_to)
+        if self.cellInformation:
+            self.cellInformation.add_to_xml_container(container_to_add_to)
+        for bandinfo in self.bandInformations:
+            bandinfo.add_to_xml_container(container_to_add_to)
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
@@ -225,6 +243,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_display_name():
         return 'Geographic Raster Aggregation'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "GeographicRasterAggregation"
 
     @classmethod
     def create(cls):

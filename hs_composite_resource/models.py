@@ -133,21 +133,19 @@ class CompositeResource(BaseResource):
 
         # get resource level core metadata as xml string
         # for composite resource we don't want the format elements at the resource level
-        # as they are included at the file level xml node
+        # as they are included at the aggregation map xml document
         xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False,
                                                                      include_format_elements=False)
-        # add file type metadata xml
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.metadata.NAMESPACES)
-
-        for lf in self.logical_files:
-            lf.metadata.add_to_xml_container(container)
-
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def create_aggregation_xml_documents(self):
+        """Creates aggregation map and metadata xml files for each of the contained aggregations"""
+        for aggregation in self.logical_files:
+            aggregation.create_aggregation_xml_documents()
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""

@@ -383,6 +383,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
 
+    # TODO: delete the following method - not needed anymore
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of all metadata elements associated with this
         logical file type instance"""
@@ -399,6 +400,24 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             dcterms_abstract.text = self.abstract
 
         add_to_xml_container_helper(self, container_to_add_to)
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(TimeSeriesFileMetaData, self)._get_xml_containers()
+        NAMESPACES = CoreMetaData.NAMESPACES
+        if self.abstract:
+            dc_description = etree.SubElement(container_to_add_to,
+                                              '{%s}description' % NAMESPACES['dc'])
+            dc_des_rdf_Desciption = etree.SubElement(dc_description,
+                                                     '{%s}Description' % NAMESPACES['rdf'])
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.abstract
+
+        add_to_xml_container_helper(self, container_to_add_to)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -418,6 +437,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_display_name():
         return 'Timeseries Aggregation'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "TimeSeriesAggregation"
 
     @classmethod
     def create(cls):

@@ -1,13 +1,19 @@
 import os
 import copy
+from uuid import uuid4
+import shutil
+import errno
+import random
+import logging
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.forms.models import model_to_dict
-
 from django.contrib.postgres.fields import HStoreField, ArrayField
+
+from mezzanine.conf import settings
 
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, input, ul, li, p
@@ -263,6 +269,7 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
+    # TODO: delete the following method - not needed anymore
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of all the metadata elements associated with this
         logical file type instance. Subclass must override this if it has additional metadata
@@ -306,6 +313,7 @@ class AbstractFileMetaData(models.Model):
             coverage.add_to_xml_container(rdf_Description)
         return rdf_Description
 
+    # TODO: delete the following method - not needed anymore
     def add_extra_metadata_to_xml_container(self, container):
         """Generates xml+rdf representation of the all the key/value metadata associated
         with an instance of the logical file type"""
@@ -322,6 +330,7 @@ class AbstractFileMetaData(models.Model):
                                              '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
+    # TODO: delete the following method - not needed anymore
     def add_keywords_to_xml_container(self, container):
         """Generates xml+rdf representation of the all the keywords associated
         with an instance of the logical file type"""
@@ -329,6 +338,106 @@ class AbstractFileMetaData(models.Model):
         for kw in self.keywords:
             dc_subject = etree.SubElement(container, '{%s}subject' % CoreMetaData.NAMESPACES['dc'])
             dc_subject.text = kw
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
+                                 nsmap=CoreMetaData.NAMESPACES)
+        # create the Description element -this is not exactly a dc element
+        rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
+                                           CoreMetaData.NAMESPACES['rdf'])
+
+        resource = self.logical_file.resource
+
+        aggregation_map_file_path = os.path.join(resource.file_path,
+                                                 self.logical_file.map_file_path)
+        aggregation_map_file_path += "#aggregation"
+        aggregation_map_uri = current_site_url() + "/{}".format(aggregation_map_file_path)
+        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], aggregation_map_uri)
+
+        # add aggregation title
+        if self.logical_file.dataset_name:
+            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' %
+                                            CoreMetaData.NAMESPACES['dc'])
+            dc_datatitle.text = self.logical_file.dataset_name
+
+        # add aggregation type
+        dc_type = etree.SubElement(rdf_Description, '{%s}type' % CoreMetaData.NAMESPACES['dc'])
+        dc_type.text = self.logical_file.get_aggregation_type_name()
+
+        # add lang element
+        dc_lang = etree.SubElement(rdf_Description, '{%s}language' % CoreMetaData.NAMESPACES['dc'])
+        dc_lang.text = resource.metadata.language.code
+
+        # add rights element
+        dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % CoreMetaData.NAMESPACES['dc'])
+        dc_rights_rdf_Description = etree.SubElement(dc_rights,
+                                                     '{%s}Description' %
+                                                     CoreMetaData.NAMESPACES['rdf'])
+        hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
+                                             '{%s}rightsStatement' %
+                                             CoreMetaData.NAMESPACES['hsterms'])
+        hsterms_statement.text = resource.metadata.rights.statement
+        if resource.metadata.rights.url:
+            hsterms_url = etree.SubElement(dc_rights_rdf_Description,
+                                           '{%s}URL' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_url.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'],
+                            resource.metadata.rights.url)
+
+        # add keywords
+        for kw in self.keywords:
+            dc_subject = etree.SubElement(rdf_Description, '{%s}subject' %
+                                          CoreMetaData.NAMESPACES['dc'])
+            dc_subject.text = kw
+
+        # add any key/value metadata items
+        for key, value in self.extra_metadata.iteritems():
+            hsterms_key_value = etree.SubElement(
+                rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(
+                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
+                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
+                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_value.text = value
+
+        # add coverages
+        for coverage in self.coverages.all():
+            coverage.add_to_xml_container(rdf_Description)
+
+        # create the Description element for aggregation type
+        rdf_Description_aggr_type = etree.SubElement(RDF_ROOT, '{%s}Description' %
+                                                     CoreMetaData.NAMESPACES['rdf'])
+
+        aggregation_term_uri = current_site_url() + "/terms/{}"
+        aggregation_term_uri = aggregation_term_uri.format(
+            self.logical_file.get_aggregation_type_name())
+
+        rdf_Description_aggr_type.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'],
+                                      aggregation_term_uri)
+        rdfs_label = etree.SubElement(rdf_Description_aggr_type, '{%s}label' %
+                                      CoreMetaData.NAMESPACES['rdfs1'])
+        rdfs_label.text = self.logical_file.get_aggregation_display_name()
+
+        rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
+                                      CoreMetaData.NAMESPACES['rdfs1'])
+        rdfs_isDefinedBy.text = current_site_url() + "/terms"
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def _get_xml_containers(self):
+        """Helper for the subclasses to get the xml containers element to which the sub classes
+        can then add any additional elements for metadata xml generation"""
+
+        xml_string = super(type(self), self).get_xml(pretty_print=False)
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get root 'Description' element that contains all other elements
+        container_to_add_to = RDF_ROOT.find('rdf:Description', namespaces=CoreMetaData.NAMESPACES)
+        return RDF_ROOT, container_to_add_to
 
     def create_element(self, element_model_name, **kwargs):
         # had to import here to avoid circular import
@@ -706,9 +815,9 @@ class AbstractLogicalFile(models.Model):
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
         """Returns one specific file as the primary file from the list of resource
-        files *resource_files*
-        A file is a primary file which can be used for creating a file type (aggregation).
-        Subclasses must implement this.
+        files *resource_files*. A file is a primary file which can be used for creating a
+        file type (aggregation). Subclasses must implement this.
+
         :param  resource_files: a list of resource files - instances of ResourceFile
         :return a resource file (instance of ResourceFile) if found, otherwise, None
         """
@@ -755,9 +864,16 @@ class AbstractLogicalFile(models.Model):
                                               tgt_file_path, validate_move_rename=False)
             remove_folder(user, resource.short_id, folder_to_remove)
 
-    def get_aggregation_type_name(self):
+    def get_aggregation_class_name(self):
         """Return the class name of the logical type (aggregation type)"""
         return self.__class__.__name__
+
+    @staticmethod
+    def get_aggregation_type_name():
+        """Return the appropriate aggregation name needed for aggregation xml metadata and
+        map document. Subclasses must implement this method.
+        """
+        raise NotImplementedError
 
     @property
     def has_metadata(self):
@@ -810,10 +926,45 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
-        if self.files.count() > 1:
-            return self.files.first().file_folder
-        else:
+        if self.get_aggregation_class_name() in ("GenericLogicalFile",
+                                                 "RefTimeseriesLogicalFile"):
+            # self is a single file aggregation type
             return self.files.first().short_path
+        else:
+            # self is a multi- file aggregation type
+            return self.files.first().file_folder
+
+    @property
+    def metadata_short_file_path(self):
+        """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
+        """
+        xml_file_name = self.aggregation_name + "_meta.xml"
+        if self.files.first().file_folder is not None:
+            return os.path.join(self.aggregation_name, xml_file_name)
+        else:
+            return xml_file_name
+
+    @property
+    def metadata_file_path(self):
+        """Full file path of the aggregation metadata xml file starting with {resource_id}/data/contents/
+        """
+        return os.path.join(self.resource.file_path, self.metadata_short_file_path)
+
+    @property
+    def map_short_file_path(self):
+        """File path of the aggregation map xml file relative to {resource_id}/data/contents/
+        """
+        xml_file_name = self.aggregation_name + "_resmap.xml"
+        if self.files.first().file_folder is not None:
+            return os.path.join(self.aggregation_name, xml_file_name)
+        else:
+            return xml_file_name
+
+    @property
+    def map_file_path(self):
+        """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/
+        """
+        return os.path.join(self.resource.file_path, self.map_short_file_path)
 
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
@@ -933,6 +1084,13 @@ class AbstractLogicalFile(models.Model):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
         object. However, it doesn't delete any resource files that are part of the aggregation."""
 
+        # delete associated metadata and map xml document
+        istorage = self.resource.get_irods_storage()
+        if istorage.exists(self.metadata_file_path):
+            istorage.delete(self.metadata_file_path)
+        if istorage.exists(self.map_file_path):
+            istorage.delete(self.map_file_path)
+
         # first need to set the aggregation for each of the associated resource files to None
         # so that deleting the aggregation (logical file) does not cascade to deleting of
         # resource files associated with the aggregation
@@ -949,3 +1107,33 @@ class AbstractLogicalFile(models.Model):
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
             metadata.delete()
+
+    def create_aggregation_xml_documents(self):
+        """Creates aggregation map xml and aggregation metadata xml files"""
+
+        log = logging.getLogger()
+
+        # create a temp dir where the file will be temporarily saved before copying to iRODS
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
+        istorage = self.resource.get_irods_storage()
+        try:
+            os.makedirs(tmpdir)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                shutil.rmtree(tmpdir)
+                os.makedirs(tmpdir)
+            else:
+                raise Exception(ex.message)
+
+        # create and copy the metadata xml document for the aggregation
+        from_file_name = os.path.join(tmpdir, 'metadata.xml')
+        try:
+            with open(from_file_name, 'w') as out:
+                out.write(self.metadata.get_xml())
+            to_file_name = self.metadata_file_path
+            istorage.saveFile(from_file_name, to_file_name, True)
+            log.info("Aggregation metadata xml file:{} created".format(to_file_name))
+        except Exception as ex:
+            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+        finally:
+            shutil.rmtree(tmpdir)

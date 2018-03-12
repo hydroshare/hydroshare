@@ -89,9 +89,9 @@ def data_store_structure(request):
                 # folder aggregation type is not relevant for single file aggregation types - which
                 # are: GenericLogicalFile, and RefTimeseriesLogicalFile
                 if aggregation_object is not None and \
-                        aggregation_object.get_aggregation_type_name() not \
+                        aggregation_object.get_aggregation_class_name() not \
                         in ("GenericLogicalFile", "RefTimeseriesLogicalFile"):
-                    folder_aggregation_type = aggregation_object.get_aggregation_type_name()
+                    folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                     folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                     folder_aggregation_id = aggregation_object.id
                 else:
