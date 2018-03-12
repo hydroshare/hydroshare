@@ -41,7 +41,7 @@ hydroshare:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
     # pycharm debugging
-    - "/home/hydro/pycharm-debug:/pycharm-debug"
+    # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
     # shared location for gunicorn.sock between containers

@@ -1,7 +1,7 @@
 # DEVELOPMENT - local_settings.py
 #    - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
 #    - The iRODS specific contents of this file contain username and password informaiton
-#      that is used for a CommonsShare proxy user
+#      that is used for a HydroShare proxy user
 
 import redis
 import os
@@ -110,18 +110,18 @@ POSTGIS_VERSION=(2,1,1)
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'hydrotest.renci.org'
+IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'sc17DataResc'
-IRODS_HOME_COLLECTION = '/hydrotestZone/home/sc17DataProxy'
-IRODS_CWD = '/hydrotestZone/home/sc17DataProxy'
-IRODS_ZONE = 'hydrotestZone'
-IRODS_USERNAME = 'sc17DataProxy'
-IRODS_AUTH = 'oomuayieVaechaeJaej3fie4dius4que'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'proxywater1'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
-REMOTE_USE_IRODS = True
+REMOTE_USE_IRODS = False
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
@@ -146,42 +146,38 @@ HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST='usersdev.hydroshare.org'
-HS_USER_ZONE_PROXY_USER='sc17LinuxProxy'
-HS_USER_ZONE_PROXY_USER_PWD='Eimahquaeshae9PiRahngiexeshig7ee'
-HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD='/home/sc17LinuxProxy/create_user.sh'
-HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD='/home/sc17LinuxProxy/delete_user.sh'
-HS_USER_ZONE_PRODUCTION_PATH='/hydroshareuserdevZone/home/sc17UserProxy'
+HS_USER_ZONE_HOST = ''
+HS_USER_ZONE_PROXY_USER = ''
+HS_USER_ZONE_PROXY_USER_PWD = ''
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
+HS_USER_ZONE_PRODUCTION_PATH = '/hydroshareuserZone/home/localHydroProxy'
 
-# the local CommonsShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with CommonsShare Zone
-HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'sc17UserProxy'
+# the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
+HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not
-HS_WWW_IRODS_PROXY_USER = 'sc17DataProxy'
-# credentials for CommonsShare proxy user iRODS account which is set to have own access control
-# to all collections in any federated zone with CommonsShare zone, which is only useful when
-# testing CommonsShare federated zone in local test development environment since in www
+HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
+# credentials for HydroShare proxy user iRODS account which is set to have own access control
+# to all collections in any federated zone with HydroShare zone, which is only useful when
+# testing HydroShare federated zone in local test development environment since in www
 # production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
-HS_WWW_IRODS_PROXY_USER_PWD = 'oomuayieVaechaeJaej3fie4dius4que'
-HS_WWW_IRODS_HOST = 'hydrotest.renci.org'
-HS_IRODS_LOCAL_ZONE_DEF_RES = 'sc17UserResc'
-HS_WWW_IRODS_ZONE = 'hydrotestZone'
-HS_USER_IRODS_ZONE = 'hydroshareuserdevZone'
-
-GEOHUB_HS_IRODS_PATH = '/rcacZone/home/mygeohub/external/hydroshare'
-GEOHUB_HS_IRODS_RESC = 'demoResc'
-GEOHUB_HOMEPAGE_URL = 'mygeohub.org/tools/multispec/invoke?params=file:/srv/irods/external/hydroshare/'
+HS_WWW_IRODS_PROXY_USER_PWD = ''
+HS_WWW_IRODS_HOST = ''
+HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
+HS_WWW_IRODS_ZONE = ''
+HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
-EMAIL_HOST_PASSWORD = '1Rycb8@2'
-EMAIL_HOST = 'mail.hydroshare.org'
-EMAIL_PORT = '587'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'support@hydroshare.org'
-DEFAULT_SUPPORT_EMAIL = 'support@hydroshare.org'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_HOST = ''
+#EMAIL_PORT = ''
+#EMAIL_USE_TLS = True
+#DEFAULT_FROM_EMAIL = ''
+#DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
