@@ -118,8 +118,10 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         src_path = os.path.join(res.root_path, 'data', 'contents', self.file_to_be_deleted)
         dest_path = file_path_name
         istorage.copyFiles(src_path, dest_path, settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+        # assert file did get copied over
         self.assertTrue(self.irods_storage.exists(file_path_name))
         stdout = self.irods_storage.session.run("ils", None, "-l", file_path_name)[0].split()
+        # assert copied file gets written to the iRODS resource being passed into copyFiles() call
         self.assertEqual(stdout[2], settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
 
         # test resource file deletion
