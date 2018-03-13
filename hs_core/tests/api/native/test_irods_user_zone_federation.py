@@ -109,7 +109,18 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(res.resource_federation_path, fed_path)
         # test original file in user test zone is removed after resource creation
         # since True is used for move when creating the resource
-        self.assertFalse(self.irods_storage.exists(user_path + self.file_to_be_deleted))
+        file_path_name = user_path + self.file_to_be_deleted
+        self.assertFalse(self.irods_storage.exists(file_path_name))
+
+        # test django_irods CopyFiles() with an iRODS resource name being passed in
+        # as input parameter to verify the file gets copied to the pass-in iRODS resource
+        istorage = res.get_irods_storage()
+        src_path = os.path.join(res.root_path, 'data', 'contents', self.file_to_be_deleted)
+        dest_path = file_path_name
+        istorage.copyFiles(src_path, dest_path, settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+        self.assertTrue(self.irods_storage.exists(file_path_name))
+        stdout = self.irods_storage.session.run("ils", None, "-l", file_path_name)[0].split()
+        self.assertEqual(stdout[2], settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
 
         # test resource file deletion
         res.files.all().delete()
