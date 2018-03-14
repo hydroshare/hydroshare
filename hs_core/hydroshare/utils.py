@@ -979,8 +979,9 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
 
 
 def push_res_to_geohub(url, user, shortkey):
-    # push resource (with uuid as shortkey input) to geohub iRODS zone for geohub tool launch
-    # and return the new tool launch url
+    # push resource (with uuid as shortkey input) to geohub iRODS zone for geohub tool launch and
+    # return the new tool launch url. If no valid file is included in the resource, an empty url
+    # will be returned so that the calling routine will not redirect to mygeohub for tool launch
     res = get_resource_by_shortkey(shortkey)
     istorage = res.get_irods_storage()
     src_path = res.root_path
@@ -1000,6 +1001,10 @@ def push_res_to_geohub(url, user, shortkey):
         if not url.endswith('/'):
             url += '/'
         url += fname
+    else:
+        # if valid file is not included in the resource, clear the url so the calling routine
+        # will not redirect to mygeohub for tool launch
+        url = ''
     return url
 
 

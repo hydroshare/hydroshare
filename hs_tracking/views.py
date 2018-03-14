@@ -7,6 +7,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 from django.conf import settings
+from django.contrib import messages
 
 from . import models as hs_tracking
 from .models import Session, Variable
@@ -22,6 +23,28 @@ class AppLaunch(TemplateView):
         # we don't need to log this.
         querydict = dict(request.GET)
         url = querydict.pop('url')[0]
+
+        if settings.GEOHUB_HOMEPAGE_URL in url:
+            # for MyGeoHub MultiSpec GABBs tool launch, only authorized users can launch the tool.
+            if request.user.is_authenticated():
+                # for authorized users, the resource files will be pushed to mygeohub iRODS server
+                # ready for the tool to load
+                base_url = settings.GEOHUB_HOMEPAGE_URL + request.user.username + '/'
+                start = url.find(base_url)
+                if start > 0:
+                    start = start + len(base_url)
+                    end = start + url[start:].find('/')
+                    res_id = url[start:end]
+                    url = push_res_to_geohub(url, request.user, res_id)
+                    if not url:
+                        # no valid file is included in the resource, so do not do redirect
+                        messages.warning(request, "No valid file is included in the resource to "
+                                                  "launch the tool - Please include a valid file.")
+                        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+            else:
+                messages.warning(request, "Only authorized users can launch MultiSpec tool - "
+                                          "Please sign in first.")
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
@@ -49,18 +72,6 @@ class AppLaunch(TemplateView):
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
             session.record('app_launch', value=msg)
-
-            if settings.GEOHUB_HOMEPAGE_URL in url:
-                if settings.GEOHUB_HOMEPAGE_URL.endswith('/'):
-                    base_url = settings.GEOHUB_HOMEPAGE_URL + request.user.username + '/'
-                else:
-                    base_url = settings.GEOHUB_HOMEPAGE_URL + '/' + request.user.username + '/'
-                start = url.find(base_url)
-                if start > 0:
-                    start = start + len(base_url)
-                    end = start + url[start:].find('/')
-                    res_id = url[start:end]
-                    url = push_res_to_geohub(url, request.user, res_id)
 
         return HttpResponseRedirect(url)
 

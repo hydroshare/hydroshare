@@ -589,6 +589,9 @@ LOGGING = {
     }
 }
 
+# mygeohub MultSpec tool setting
+GEOHUB_HOMEPAGE_URL = 'mygeohub.org/tools/multispec/invoke?params=file:/srv/irods/external/hydroshare/'
+
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15
 TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]

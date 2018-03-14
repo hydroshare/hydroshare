@@ -14,8 +14,7 @@ from hs_file_types.models import RefTimeseriesLogicalFile, GenericLogicalFile
 class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(RefTimeSeriesFileTypeMetaDataTest, self).setUp()
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -46,15 +45,11 @@ class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTest
 
     def tearDown(self):
         super(RefTimeSeriesFileTypeMetaDataTest, self).tearDown()
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
         super(RefTimeSeriesFileTypeMetaDataTest, self).delete_irods_user_in_user_zone()
 
     def test_refts_set_file_type_to_reftimeseries(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         # here we are using a valid ref time series for setting it
         # to RefTimeseries file type which includes metadata extraction

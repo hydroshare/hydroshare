@@ -23,10 +23,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     """
     def setUp(self):
         super(TestUserZoneIRODSFederation, self).setUp()
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
-            return
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
@@ -74,8 +71,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def tearDown(self):
         super(TestUserZoneIRODSFederation, self).tearDown()
         # no need for further cleanup if federation testing is not setup in the first place
-        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
-            return
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
         # delete irods test user in user zone
         super(TestUserZoneIRODSFederation, self).delete_irods_user_in_user_zone()
@@ -86,10 +82,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         os.remove(self.file_to_be_deleted)
 
     def test_resource_operations_in_user_zone(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
-            return
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
         # test resource creation and "move" option in federated user zone
         fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_to_be_deleted)
@@ -284,10 +277,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
 
     def test_quota_update_in_fed_zones(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
-            return
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
+
         # create a resource in the default HydroShare data iRODS zone for aggregated quota
         # update testing
         res = hydroshare.resource.create_resource(
