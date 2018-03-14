@@ -3347,6 +3347,7 @@ div.description.active {
     text-align: center;
     color: #666;
     line-height:20px;
+    font-size: 12px;
 }
 
 .description-container {
