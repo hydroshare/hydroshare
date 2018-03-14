@@ -251,7 +251,7 @@ def update_user_profile(request):
         messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    dict_items = request.POST['organization'].split(",")
+    dict_items = request.POST['organization'].split(";")
     for dict_item in dict_items:
         # Update Dictionaries
         try:
