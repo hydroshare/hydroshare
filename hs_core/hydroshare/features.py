@@ -244,7 +244,7 @@ class Features(object):
                 if u.username not in groups:
                     groups[u.username] = set([g.name])
                 else:
-                    groups[u.username].add(g)
+                    groups[u.username].add(g.name)
         return groups
 
     @staticmethod
