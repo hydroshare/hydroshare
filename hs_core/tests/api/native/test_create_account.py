@@ -10,6 +10,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from hs_core import hydroshare
+from hs_dictionary.models import UncategorizedTerm
 
 
 class CreateAccountTest(TestCase):
@@ -90,6 +91,25 @@ class CreateAccountTest(TestCase):
         groups = [g0, g1, g2]
 
         self.assertEqual(groups, user_groups)
+
+    def test_with_organizations(self):
+        organizations = ['org with, comma', 'another org', 'single']
+        organization = organizations.join(';')
+
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
+        user = hydroshare.create_account(
+            'shaun@gmail.com',
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            organization=organization
+            )
+
+        self.assertEqual(user.get_profile().organization, 'org with, comma;another org;single')
+
+        self.assertEqual(3, UncategorizedTerm.objects.count())
+        for term in UncategorizedTerm.objects.all():
+            self.assertTrue(term in organizations)
 
     @unittest.skip
     def test_email_function(self):
