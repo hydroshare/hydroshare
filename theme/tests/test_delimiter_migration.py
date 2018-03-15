@@ -4,6 +4,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db import connection
 from hs_core import hydroshare
 from theme.models import User
+from django.contrib.auth.models import Group
 
 
 class TestMigrations(TestCase):
@@ -45,13 +46,15 @@ class TestDelimiterMigration(TestMigrations):
     migrate_to = '0014_comma_semicolon_delimiter'
 
     def setUpBeforeMigration(self, apps):
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',
             first_name='Creator_FirstName',
             last_name='Creator_LastName',
             superuser=False,
-            organization='USU,BYU,U'
+            organization='USU,BYU,U',
+            groups=[]
         )
         user.save()
 
