@@ -34,6 +34,14 @@ To quickly get started developing we offer a preconfigured development environme
 
 For more detailed installation, please see this document: [Getting Started with CommonsShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
+### Local MacOS Installation
+1. Install brew and get the latest version of bash on your mac by running "brew install bash"
+2. Install docker for MacOS.  It now includes Docker Compose in the installation so no need to download that separately.
+3. Get the commonsshare code into a local directory by cloning or branching the current repository.
+4. In the config subdirectory of your commonshare code installation, change the hydroshare-config.yaml file to point to your local file paths.
+4. Run the hsctl script with the rebuild --db option.
+5. Access the image at localhost:8000 with userid of "admin" and password of "default".
+
 ## Usage
 
 For all intents and purposes, CommonsShare is a large Python/Django application with some extra features and technologies added on:
