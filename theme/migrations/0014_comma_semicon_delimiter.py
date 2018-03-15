@@ -28,7 +28,7 @@ def forwards(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('hs_dictionary', '0004_merge'),
+        ('theme', '0013_auto_20180222_1700'),
     ]
 
     operations = [
