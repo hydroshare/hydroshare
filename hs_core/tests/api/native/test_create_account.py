@@ -94,7 +94,7 @@ class CreateAccountTest(TestCase):
 
     def test_with_organizations(self):
         organizations = ['org with, comma', 'another org', 'single']
-        organization = organizations.join(';')
+        organization = ';'.join(organizations)
 
         username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
