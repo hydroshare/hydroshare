@@ -356,6 +356,8 @@ $(document).ready(function () {
 
     if(getUrlVars()["edit"] == 'true'){
         setEditMode();
+        // clear out the edit query params so edit mode isn't reopened on save
+        history.pushState('', document.title, window.location.pathname);
     }
 });
 
