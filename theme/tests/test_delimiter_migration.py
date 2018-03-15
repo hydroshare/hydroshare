@@ -41,8 +41,8 @@ class TestMigrations(TestCase):
 
 
 class TestDelimiterMigration(TestMigrations):
-    migrate_from = '0004_merge'
-    migrate_to = '0005_comma_semicolon_delimiter'
+    migrate_from = '0013_auto_20180222_1700'
+    migrate_to = '0014_comma_semicolon_delimiter'
 
     def setUpBeforeMigration(self, apps):
         user = hydroshare.create_account(
@@ -53,7 +53,8 @@ class TestDelimiterMigration(TestMigrations):
             superuser=False,
             organization='USU,BYU,U'
         )
+        user.save()
 
-    def test_tags_migrated(self):
+    def test_delimiter_migration(self):
         user = User.objects.first()
         self.assertEqual(user.get_profile().organization, 'USU;BYU;U')
