@@ -1,8 +1,11 @@
 import os
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
+
 
 from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
     NetCDFLogicalFile, TimeSeriesLogicalFile
@@ -144,44 +147,135 @@ class CompositeResource(BaseResource):
 
     def create_aggregation_xml_documents(self, aggregation_name=None):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
-        :param  aggregation_name: (optional) name of the the aggregation for which xm documents
-        be created
+
+        :param  aggregation_name: (optional) name of the the specific aggregation for which xml
+        documents need to be created
         """
         if aggregation_name is None:
             for aggregation in self.logical_files:
                 aggregation.create_aggregation_xml_documents()
         else:
+            try:
+                aggregation = self.get_aggregation_by_name(aggregation_name)
+                aggregation.create_aggregation_xml_documents()
+            except ObjectDoesNotExist:
+                # aggregation_name must be a folder path that doesn't represent an aggregation
+                # there may be single file aggregation in that folder for which xml documents
+                # need to be created
+                self._recreate_xml_docs_for_folder(aggregation_name)
+
+    def _recreate_xml_docs_for_folder(self, folder):
+        """Re-creates xml metadata and map documents associated with the specified folder.
+        If the *folder* represents an aggregation then map and metadata xml documents are
+        recreated only for that aggregation. Otherwise, xml documents are created for any single
+        file aggregation that may exist in the specified folder and its sub-folders.
+        :param  folder: folder for which xml documents need to be re-created
+        """
+
+        from hs_core.views.utils import list_folder
+
+        def create_xml_docs_by_folder(folder_to_check):
+            if not folder_to_check.startswith("data/contents/"):
+                folder_to_check = os.path.join("data/contents", folder_to_check)
+            store = list_folder(self.short_id, folder_to_check)
+            file_names = store[1]
+            folders = store[0]
+            for fname in file_names:
+                fname = fname.decode('utf-8')
+                name_with_full_path = os.path.join(self.root_path, folder_to_check, fname)
+                for res_file in self.files.all():
+                    if name_with_full_path == res_file.storage_path:
+                        if res_file.has_logical_file and \
+                                res_file.logical_file.is_single_file_aggregation:
+                            res_file.logical_file.create_aggregation_xml_documents()
+
+            for fld in folders:
+                # recursive call to the inner function
+                fld = os.path.join(folder_to_check, fld)
+                create_xml_docs_by_folder(fld)
+
+        # first check if the the folder represents an aggregation
+        try:
+            aggregation = self.get_aggregation_by_name(folder)
+            aggregation.create_aggregation_xml_documents()
+            # if we found an aggregation by the folder name that means this folder doesn't
+            # have any sub folders as multi-file aggregation folder can't have sub folders
+        except ObjectDoesNotExist:
+            # create xml map and metadata xml documents for *folder* and its sub-folders
+            create_xml_docs_by_folder(folder)
+
+    def get_aggregation_by_name(self, name):
+            """Get an aggregation that matches the aggregation name specified by *name*
+            :param  name: name of the aggregation to find
+            :return an aggregation object if found
+            :raises ObjectDoesNotExist if no matching aggregation is found
+            """
             for aggregation in self.logical_files:
-                if aggregation.aggregation_name == aggregation_name:
-                    aggregation.create_aggregation_xml_documents()
-                    break
+                if aggregation.aggregation_name == name:
+                    return aggregation
 
-    def rename_aggregation(self, orig_aggregation_name, new_aggregation_name):
-        """When a folder or file representing an aggregation is renamed, or a single file
-        aggregation is moved, the associated map and metadata xml documents need to be deleted
-        and then regenerated"""
+            raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
 
-        istorage = self.get_irods_storage()
-        matching_aggregation = None
-        for aggregation in self.logical_files:
-            if aggregation.aggregation_name == new_aggregation_name:
-                xml_file_name = orig_aggregation_name + "_meta.xml"
-                if aggregation.files.first().file_folder is not None:
-                    xml_file_name = os.path.join(new_aggregation_name, xml_file_name)
-                orig_xml_file_full_path = os.path.join(self.file_path, xml_file_name)
-                if istorage.exists(orig_xml_file_full_path):
-                    istorage.delete(orig_xml_file_full_path)
-                matching_aggregation = aggregation
-            elif aggregation.is_single_file_aggregation:
-                xml_file_name = orig_aggregation_name + "_meta.xml"
-                xml_file_full_path = os.path.join(self.file_path, xml_file_name)
-                if istorage.exists(xml_file_full_path):
-                    istorage.delete(xml_file_full_path)
-                    matching_aggregation = aggregation
+    def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
+        """
+        When a folder or file representing an aggregation is renamed, or a single file
+        aggregation is moved, the associated map and metadata xml documents are deleted
+        and then regenerated
+        :param  orig_aggr_name: original aggregation name - used for deleting existing
+        xml documents
+        :param  new_aggr_name: new aggregation name - used for finding a matching
+        aggregation so that new xml documents can be recreated
 
-            if matching_aggregation is not None:
-                matching_aggregation.create_aggregation_xml_documents()
-                break
+        """
+        # User action case: file name renaming (folder1/test.txt -> folder1/test_1.txt)
+        # orig_aggr_name = folder1/test.txt
+        # orig meta xml file: folder1/test.txt_meta.xml
+        # new_aggr_name = folder1/test_1.txt
+        # new meta xml file: folder1/test_1.txt_meta.xml
+
+        # User action case: folder renaming (folder1/test.txt -> folder2/test.txt)
+        # orig_aggr_name = folder1/test.txt
+        # orig meta xml file: folder1/test.txt_meta.xml
+        # new_aggr_name = folder2/test.txt
+        # new meta xml file: folder2/test.txt_meta.xml
+
+        # User action case: folder renaming (folder1/folder2 -> folder1/folder3)
+        # orig_aggr_name = folder1/folder2
+        # orig meta xml file: folder1/folder2_meta.xml
+        # new_aggr_name = folder1/folder3
+        # new meta xml file: folder1/folder3_meta.xml
+
+        # User action case: folder moving (folder1/folder2 -> folder2)
+        # orig_aggr_name = folder1/folder2
+        # orig meta xml file: folder1/folder2_meta.xml
+        # new_aggr_name = folder2
+        # new meta xml file: folder2_meta.xml
+
+        # first check if the new_aggr_name is a folder path or file path
+        name, ext = os.path.splitext(new_aggr_name)
+        is_new_folder = ext == ''
+        if is_new_folder:
+            self._recreate_xml_docs_for_folder(new_aggr_name)
+        else:
+            # check if there is a matching single file aggregation
+            try:
+                aggregation = self.get_aggregation_by_name(new_aggr_name)
+                aggregation.create_aggregation_xml_documents()
+            except ObjectDoesNotExist:
+                # the file path *new_aggr_name* is not a single file aggregation - no more
+                # action is needed
+                pass
+
+        # first check if the orig_aggr_name is a folder path or file path
+        name, ext = os.path.splitext(orig_aggr_name)
+        is_orig_folder = ext == ''
+        if not is_orig_folder:
+            istorage = self.get_irods_storage()
+            # we have to delete old _meta.xml file if exits
+            meta_xml_file_name = orig_aggr_name + "_meta.xml"
+            meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
+            if istorage.exists(meta_xml_file_full_path):
+                istorage.delete(meta_xml_file_full_path)
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
@@ -208,7 +302,11 @@ class CompositeResource(BaseResource):
         return True
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
-        """checks if file/folder rename/move is allowed"""
+        """checks if file/folder rename/move is allowed
+        :param  src_full_path: name of the file/folder path to be renamed
+        :param  tgt_full_path: new name for file/folder path
+        :return True or False
+        """
 
         if __debug__:
             assert(src_full_path.startswith(self.file_path))

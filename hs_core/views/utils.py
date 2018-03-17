@@ -798,7 +798,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if resource.resource_type == "CompositeResource":
         org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
         new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.rename_aggregation(org_aggregation_name, new_aggregation_name)
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -841,7 +841,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.resource_type == "CompositeResource":
         org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
         new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.rename_aggregation(org_aggregation_name, new_aggregation_name)
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -891,8 +891,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
             org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-            new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-            resource.rename_aggregation(org_aggregation_name, new_aggregation_name)
+            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
 
     # TODO: should check can_be_public_or_discoverable here
 
