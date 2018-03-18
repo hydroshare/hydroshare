@@ -156,6 +156,14 @@ function updateSelectionMenuContext() {
         if(resourceType === 'Composite Resource' && foldersSelected.length == 1) {
             flagDisableDelete = false;
         }
+        if(resourceType === 'Composite Resource') {
+             var logicalFileType = $("#fb-files-container").find('span.fb-logical-file-type').attr("data-logical-file-type");
+             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+                logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
+                 flagDisableCreateFolder = true;
+             }
+        }
+
         $("#fb-download-help").toggleClass("hidden", true);
     }
 
@@ -261,6 +269,7 @@ function updateSelectionMenuContext() {
                 }
                 flagDisableCut = true;
                 flagDisablePaste = true;
+                flagDisableCreateFolder = true;
             }
         }
     }
