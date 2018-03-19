@@ -300,6 +300,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         if len(tif_files) > 1:
             if len(vrt_files) != 1:
                 return ""
+        elif not tif_files:
+            # there has to be at least one tif file
+            return ""
 
         return cls.__name__
 
