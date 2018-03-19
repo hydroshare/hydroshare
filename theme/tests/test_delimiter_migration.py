@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connection
 from hs_core import hydroshare
-from theme.models import User
+from theme.models import UserProfile
 from django.contrib.auth.models import Group
 
 
@@ -59,5 +59,5 @@ class TestDelimiterMigration(TestMigrations):
         user.save()
 
     def test_delimiter_migration(self):
-        user = User.objects.first()
-        self.assertEqual(user.get_profile().organization, 'USU;BYU;U')
+        user = UserProfile.objects.filter(user__username='user1')
+        self.assertEqual(user.organization, 'USU;BYU;U')
