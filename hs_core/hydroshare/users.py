@@ -79,7 +79,7 @@ def create_account(
         user_profile.organization = organization
         user_profile.save()
 
-        dict_items = organization.split(",")
+        dict_items = organization.split(";")
 
         for dict_item in dict_items:
             # Update Dictionaries
