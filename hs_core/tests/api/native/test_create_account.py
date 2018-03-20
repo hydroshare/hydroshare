@@ -8,6 +8,7 @@ import unittest
 
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
+from theme.models import UserProfile
 
 from hs_core import hydroshare
 from hs_dictionary.models import UncategorizedTerm
@@ -97,7 +98,7 @@ class CreateAccountTest(TestCase):
         organization = ';'.join(organizations)
 
         username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
-        user = hydroshare.create_account(
+        hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
             first_name=first_name,
@@ -105,11 +106,13 @@ class CreateAccountTest(TestCase):
             organization=organization
             )
 
-        self.assertEqual(user.get_profile().organization, 'org with, comma;another org;single')
+        user = UserProfile.objects.filter(user__username='shaunjl').first()
+        self.assertEqual(user.organization, 'org with, comma;another org;single')
 
-        self.assertEqual(3, UncategorizedTerm.objects.count())
-        for term in UncategorizedTerm.objects.all():
-            self.assertTrue(term in organizations)
+        terms = UncategorizedTerm.objects.all()
+        self.assertEqual(3, terms.count())
+        for term in terms:
+            self.assertTrue(term.name in organizations)
 
     @unittest.skip
     def test_email_function(self):

@@ -59,5 +59,5 @@ class TestDelimiterMigration(TestMigrations):
         user.save()
 
     def test_delimiter_migration(self):
-        user = UserProfile.objects.filter(user__username='user1')
+        user = UserProfile.objects.filter(user__username='user1').first()
         self.assertEqual(user.organization, 'USU;BYU;U')
