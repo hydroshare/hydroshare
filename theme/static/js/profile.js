@@ -332,6 +332,7 @@ $(document).ready(function () {
     $('.tagsinput').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
+      delimiter: [";"],
       autocomplete: {
         source: "/hsapi/dictionary/universities/",
         minLength: 3,
