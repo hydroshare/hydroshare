@@ -266,16 +266,21 @@ class CompositeResource(BaseResource):
                 # action is needed
                 pass
 
+        # we have to delete old _meta.xml file if it exits
         # first check if the orig_aggr_name is a folder path or file path
         name, ext = os.path.splitext(orig_aggr_name)
         is_orig_folder = ext == ''
+        meta_xml_file_full_path = ''
+        istorage = self.get_irods_storage()
+        meta_xml_file_name = orig_aggr_name + "_meta.xml"
         if not is_orig_folder:
-            istorage = self.get_irods_storage()
-            # we have to delete old _meta.xml file if exits
-            meta_xml_file_name = orig_aggr_name + "_meta.xml"
             meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
-            if istorage.exists(meta_xml_file_full_path):
-                istorage.delete(meta_xml_file_full_path)
+        elif is_new_folder:
+            meta_xml_file_full_path = os.path.join(self.file_path, new_aggr_name,
+                                                   meta_xml_file_name)
+
+        if istorage.exists(meta_xml_file_full_path):
+            istorage.delete(meta_xml_file_full_path)
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
