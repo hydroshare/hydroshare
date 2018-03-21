@@ -6,6 +6,9 @@ import errno
 import random
 import logging
 
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from rdflib import Namespace, URIRef
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -1125,7 +1128,7 @@ class AbstractLogicalFile(models.Model):
 
         log = logging.getLogger()
 
-        # create a temp dir where the file will be temporarily saved before copying to iRODS
+        # create a temp dir where the xml files will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
         istorage = self.resource.get_irods_storage()
         try:
@@ -1137,15 +1140,93 @@ class AbstractLogicalFile(models.Model):
             else:
                 raise Exception(ex.message)
 
-        # create and copy the metadata xml document for the aggregation
-        from_file_name = os.path.join(tmpdir, 'metadata.xml')
+        # create and copy the map and metadata xml documents for the aggregation
+        meta_from_file_name = os.path.join(tmpdir, 'metadata.xml')
+        map_from_file_name = os.path.join(tmpdir, 'map.xml')
         try:
-            with open(from_file_name, 'w') as out:
+            with open(meta_from_file_name, 'w') as out:
                 out.write(self.metadata.get_xml())
             to_file_name = self.metadata_file_path
-            istorage.saveFile(from_file_name, to_file_name, True)
+            istorage.saveFile(meta_from_file_name, to_file_name, True)
             log.info("Aggregation metadata xml file:{} created".format(to_file_name))
+
+            with open(map_from_file_name, 'w') as out:
+                out.write(self._generate_map_xml())
+            to_file_name = self.map_file_path
+            istorage.saveFile(map_from_file_name, to_file_name, True)
+            log.info("Aggregation map xml file:{} created".format(to_file_name))
         except Exception as ex:
             log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+            raise ex
         finally:
             shutil.rmtree(tmpdir)
+
+    def _generate_map_xml(self):
+        """Generates the xml needed to write to the aggregation map xml document"""
+
+        from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
+
+        current_site_url = current_site_url()
+        # This is the qualified resource url.
+        hs_res_url = os.path.join(current_site_url, 'resource', self.resource.file_path)
+        # this is the path to the resourcemedata file for download
+        aggr_metadata_file_path = self.aggregation_name + "_meta.xml"
+        metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
+        # this is the path to the aggregation resourcemap file for download
+        aggr_map_file_path = self.aggregation_name + "_resmap.xml"
+        res_map_url = os.path.join(hs_res_url, aggr_map_file_path)
+
+        # make the resource map:
+        utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
+        utils.namespaceSearchOrder.append('citoterms')
+
+        ag_url = res_map_url + '#aggregation'
+        a = Aggregation(ag_url)
+
+        # Set properties of the aggregation
+        a._dc.title = self.dataset_name
+        agg_type_url = "{site}/terms/{aggr_type}".format(site=current_site_url,
+                                                         aggr_type=self.get_aggregation_type_name())
+        a._dcterms.type = URIRef(agg_type_url)
+        a._citoterms.isDocumentedBy = metadata_url
+        a._ore.isDescribedBy = res_map_url
+
+        res_type_aggregation = AggregatedResource(agg_type_url)
+        res_type_aggregation._rdfs.label = self.get_aggregation_display_name()
+        res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
+
+        a.add_resource(res_type_aggregation)
+
+        # Create a description of the metadata document that describes the whole resource and add it
+        # to the aggregation
+        resMetaFile = AggregatedResource(metadata_url)
+        resMetaFile._citoterms.documents = ag_url
+        resMetaFile._ore.isAggregatedBy = ag_url
+        resMetaFile._dc.format = "application/rdf+xml"
+
+        # Create a description of the content file and add it to the aggregation
+        files = self.files.all()
+        resFiles = []
+        for n, f in enumerate(files):
+            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                file_name=f.short_path)
+            resFiles.append(AggregatedResource(res_uri))
+            resFiles[n]._ore.isAggregatedBy = ag_url
+            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+
+        # Add the resource files to the aggregation
+        a.add_resource(resMetaFile)
+        for f in resFiles:
+            a.add_resource(f)
+
+        # Register a serializer with the aggregation, which creates a new ResourceMap that
+        # needs a URI
+        serializer = RdfLibSerializer('xml')
+        # resMap = a.register_serialization(serializer, res_map_url)
+        a.register_serialization(serializer, res_map_url)
+
+        # Fetch the serialization
+        remdoc = a.get_serialization()
+        return remdoc.data
