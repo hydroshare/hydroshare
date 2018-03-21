@@ -12,18 +12,107 @@
 {% block main %}
     <div style="margin-left: 10px;">
     <h2>Description of HydroShare Resource Types and Metadata Terms</h2>
-    <h3>Generic Resource Type Description</h3>
-    <p>A generic resource is an arbitrary collection of files that are logically grouped together as a resource.
-        There may be any number of files, and files may be of any type.
-        The generic resource type should be used for creating resources for which a formal content data model has not been specified in HydroShare.
-        Generic resources are treated the same way as other resource types in terms of sharing and access control;
-        however, no value added tools are provided given that HydroShare cannot anticipate what the contents of generic resources will be.
-    </p>
-    <a name="name"></a>
-    <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
-        Each of these elements consists of sub metadata elements:
+    <h3>HydroShare Resource Types</h3>
+    <p>A "resource" is the discrete unit of digital content within HydroShare. Resources are social objects that can be created, modified, versioned, shared, annotated, discovered, and accessed. A resource is the granular unit used for management and access control within HydroShare. Persistent identifiers, access control, versioning, sharing, and discovery are all managed at the resource level. The following terms define the types of resources that can be created in HydroShare:
     </p>
         <br/>
+        <a name="compositeResource"></a>
+        <ul>
+            <li><strong>Term: </strong>CompositeResource</li>
+            <li><strong>URI: </strong><a href="#compositeResource">http://www.hydroshare.org/terms/CompositeResource</a></li>
+            <li><strong>Label: </strong>Composite Resource</li>
+            <li><strong>Description: </strong>Composite is the default resource type in HydroShare. A composite resource is a resource that can include multiple files without file format limitations. This resource type is intended to support metadata and data functions at both resource level and at the level of individual files and groupings of files (referred to formally as aggregations). A composite resource should be used when it is desirable to create a single resource (e.g., one resource to manage, share, or discover) that may have content of mixed types (e.g., geographic feature, raster, time series, etc.).</li>
+        </ul>
+        <a name="collectionResource"></a>
+        <ul>
+            <li><strong>Term: </strong>CollectionResource</li>
+            <li><strong>URI: </strong><a href="#collectionResource">http://www.hydroshare.org/terms/CollectionResource</a></li>
+            <li><strong>Label: </strong>Collection Resource</li>
+            <li><strong>Description: </strong>A collection resource is a resource that holds a list of other resources in HydroShare. Collections are intended to be a flexible and logical way to combine resources associated with a specific purpose (e.g., a specific study, site, or experiment). HydroShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types, publication status, or permissions settings associated with resources in a collection. A collection resource should be used when it is desirable for each of the component parts to be separately shareable, discoverable, and publishable resources.</li>
+        </ul>
+        <a name="genericResource"></a>
+        <ul>
+            <li><strong>Term: </strong>GenericResource</li>
+            <li><strong>URI: </strong><a href="#genericResource">http://www.hydroshare.org/terms/GenericResource</a></li>
+            <li><strong>Label: </strong>Generic Resource</li>
+            <li><strong>Description: </strong>A generic resource is an arbitrary file or collection of files that are logically grouped together as a resource. Generic resources have been superseded by composite resources.</li>
+        </ul>
+        <a name="geographicFeatureResource"></a>
+        <ul>
+            <li><strong>Term: </strong>GeographicFeatureResource</li>
+            <li><strong>URI: </strong><a href="#geographicFeatureResource">http://www.hydroshare.org/terms/GeographicFeatureResource</a></li>
+            <li><strong>Label: </strong>Geographic Feature Resource</li>
+            <li><strong>Description: </strong>A geographic feature resource is a set of point, line, or polygon features stored in ESRI Shapefile format. The Shapefile format is comprised of multiple files including files with .shp, .shx, .dbf, and .prj extensions. The minmum required files are the following:  .shp, .shx, .dbf, and .prj, but can also include, .sbx, .sbn, .cpg, .xml, .fbn, .fbx, .ain, .aih, .atx, .ixs, and .mxs files. Each of these files stores a different type of data such as the vectors, projection information, attribute data, and metadata. Geographic feature resources have been superseded by the geographic feature aggregation type in composite resources. A single composite resource with a geographic feature aggregation is equivalent to a geographic feature resource.</li>
+        </ul>
+        <a name="geographicRasterResource"></a>
+        <ul>
+            <li><strong>Term: </strong>GeographicRasterResource</li>
+            <li><strong>URI: </strong><a href="#geographicRasterResource">http://www.hydroshare.org/terms/GeographicRasterResource</a></li>
+            <li><strong>Label: </strong>Geographic Raster Resource</li>
+            <li><strong>Description: </strong>A geographic raster is a gridded representation of geographic data saved using the GDAL Virtual Raster Dataset (VRT) format. A Virtual Raster dataset (VRT) is an assembly of “.tif” files with a “.vrt” text (XML) file that contains a list of the member “.tif” files that make up the virtual geographic raster. Each of the “.tif” files can have different file names.  Geographic raster resources have been superseded by the geographic raster aggregation type in composite resources. A single composite resource with a geographic raster aggregation is equivalent to a geographic raster resource.</li>
+        </ul>
+        <a name="modelProgramResource"></a>
+        <ul>
+            <li><strong>Term: </strong>ModelProgramResource</li>
+            <li><strong>URI: </strong><a href="#modelProgramResource">http://www.hydroshare.org/terms/ModelProgramResource</a></li>
+            <li><strong>Label: </strong>Model Program Resource</li>
+            <li><strong>Description: </strong>A model program resource describes the software component of a generic model within the water domain. It aims to fully describe the software-related metadata of a given model program to enable scientists to seamlessly retrieve all the content and information required to get a model up-and-running on their local or server-side machine. This resource consists of uploaded content such as source code, compiled binaries, and documentation, as well as metadata describing the model's software. The model program resource can be related to many model instance resources to completely describe a simulation and the exact software version used for a particular study to make data replication possible.</li>
+        </ul>
+        <a name="modelInstanceResource"></a>
+        <ul>
+            <li><strong>Term: </strong>ModelInstanceResource</li>
+            <li><strong>URI: </strong><a href="#modelInstanceResource">http://www.hydroshare.org/terms/ModelInstanceResource</a></li>
+            <li><strong>Label: </strong>Model Instance Resource</li>
+            <li><strong>Description: </strong>A model instance resource defines the input and output data for a generic hydrological model for a specific time and place. A model instance resource consists of specific metadata to describe the model content as well as a reference to the model program resource that is used to execute a simulation.</li>
+        </ul>
+        <a name="mODFLOWModelInstanceResource"></a>
+        <ul>
+            <li><strong>Term: </strong>MODFLOWModelInstanceResource</li>
+            <li><strong>URI: </strong><a href="#mODFLOWModelInstanceResource">http://www.hydroshare.org/terms/MODFLOWModelInstanceResource</a></li>
+            <li><strong>Label: </strong>MODFLOW Model Instance Resource</li>
+            <li><strong>Description: </strong>A MODFLOW model instance resource is a model instance resource that has been enhanced to hold data for the MODFLOW groundwater flow model.</li>
+        </ul>
+        <a name="sWATModelInstanceResource"></a>
+        <ul>
+            <li><strong>Term: </strong>SWATModelInstanceResource</li>
+            <li><strong>URI: </strong><a href="#sWATModelInstanceResource">http://www.hydroshare.org/terms/SWATModelInstanceResource</a></li>
+            <li><strong>Label: </strong>SWAT Model Instance Resource</li>
+            <li><strong>Description: </strong>A SWAT model instance resource is a model instance resource that has been enhanced to hold data for the Soil and Water Assessment (SWAT) model.</li>
+        </ul>
+        <a name="multidimensionalResource"></a>
+        <ul>
+            <li><strong>Term: </strong>MultidimensionalResource</li>
+            <li><strong>URI: </strong><a href="#multidimensionalResource">http://www.hydroshare.org/terms/MultidimensionalResource</a></li>
+            <li><strong>Label: </strong>Multidimensional Resource</li>
+            <li><strong>Description: </strong>A multidimensional (NetCDF) resource is designed to support multidimensional space-time data using the NetCDF file format. NetCDF contains self-describing metadata and supports the creation of an array-oriented dataset, which may include three spatial dimensions, a time dimension and other user defined dimensions. NetCDF files are binary files, but a readable header file is produced in a “common data language” (CDL) format by the ncdump function. In HydroShare, both this text file and the binary file are saved.  Multidimensional resources have been superseded by the multidimensional aggregation type in composite resources.  A single composite resource with a multidimensional aggregation is equivalent to a multidimensional resource.</li>
+        </ul>
+        <a name="referencedTimeSeriesResource"></a>
+        <ul>
+            <li><strong>Term: </strong>ReferencedTimeSeriesResource</li>
+            <li><strong>URI: </strong><a href="#referencedTimeSeriesResource">http://www.hydroshare.org/terms/ReferencedTimeSeriesResource</a></li>
+            <li><strong>Label: </strong>Referenced Time Series Resource</li>
+            <li><strong>Description: </strong>The referenced time series resource was designed to point to, or hold the reference to a time series available in WaterML format on a CUAHSI HydroServer, catalogued in CUAHSI HIS Central, and accessible through data.cuahsi.org.  This resource type has been deprecated and has been replaced by the referenced time series aggregation type in a composite resource.</li>
+        </ul>
+        <a name="timeSeriesResource"></a>
+        <ul>
+            <li><strong>Term: </strong>TimeSeriesResource</li>
+            <li><strong>URI: </strong><a href="#timeSeriesResource">http://www.hydroshare.org/terms/TimeSeriesResource</a></li>
+            <li><strong>Label: </strong>Time Series Resource</li>
+            <li><strong>Description: </strong>A time series resource holds time series data stored using Version 2 of the Observations Data Model (ODM2) in a SQLite database file. A time series resource can be created from an ODM2 SQLite file or from a .csv file that becomes part of the resource. Time series resources have been superseded by the time series aggregation type in composite resources. A single composite resource with a time series aggregation is equivalent to a time series resource.</li>
+        </ul>
+        <a name="webAppResource"></a>
+        <ul>
+            <li><strong>Term: </strong>WebAppResource</li>
+            <li><strong>URI: </strong><a href="#webAppResource">http://www.hydroshare.org/terms/WebAppResource</a></li>
+            <li><strong>Label: </strong>Web App Resource</li>
+            <li><strong>Description: </strong>A Web App resource is a shortcut (or reference) to an external web application that functions with HydroShare data resources. A Web App can be a simple webpage, a resource viewer, a data editor, or a complex scientific model. Third-party web applications can access HydroShare data resources using the HydroShare representational state transfer (REST) web service application programming interface (API), link to specific HydroShare resource types, and be made discoverable within HydroShare by registration as a Web App resource.</li>
+        </ul>
+    <h3>Metadata terms for the Generic Resource Type</h3>
+    <a name="name"></a>
+    <p>To describe the entities of a Generic resource in HydroShare, we choose the standard Dublin Core metadata elements as the resource science
+        metadata. Each of these elements are defined below. All resource types in HydroShare use the standard Dublin Core metadata elements, but some
+        resource types use additional, resource type-specific metadata terms as defined in the following sections.
+    </p>
         <a name="createrOrder"></a>
         <ul>
             <li><strong>Term: </strong>name</li>
@@ -181,22 +270,7 @@
             <li><strong>Label: </strong>GoogleScholarID</li>
             <li><strong>Description: </strong>Personal <a href="https://scholar.google.com/" target="_blank">Google Scholar</a> profile page URL.</li>
         </ul>
-    <h3> Time Series Resource Type Description</h3>
-    <p>The time series is a sequence of individual data values that are ordered in time to record the
-        changing trend of a certain phenomenon. As time series are widely used for hydrologic research
-        and because they are also the primary granule of data sharing within the CUAHSI HIS,
-        the time series will be an important resource type in the HydroShare system. Currently,
-        we define a time series resource such that it can contain only one time series.
-        To define the entities and attributes of a time series, we adopt the definition of a time series as
-        specified by Version 2.0 of the Observations Data Model (ODM2) – see description of a time series result in
-        ODM2 <a href="https://github.com/UCHIC/ODM2/blob/master/doc/ODM2Docs/ext_results_timeseries.md">here</a>
-    </p>
-    <a name="site"></a>
-    <p> ODM2 does not limit the types of time series that can be supported.  Any time series supported by the
-        ODM2 information model will be valid for input as a time series resource in HydroShare. The specific
-        implementation of ODM2 that will be used for storing time series in HydroShare is described in more detail
-        in a subsequent section, but, in general, ODM2 describes a time series via the following entities:
-    </p>
+    <h3>Metadata terms for the Time Series Resource Type</h3>
         <br/>
         <a name="SiteCode"></a>
         <ul>
@@ -426,10 +500,7 @@
         </ul>
 
 
-    <h3>Reference Time Series Resource Type Description</h3>
-    <p>
-        A Reference Time Series (RefTS) resource references a specific time series dataset hosted on an external web service. As time series datasets can grow (e.g. continuous daily observations), the advantage of using RefTS resource is that users can always retrieve the most recent data. The current RefTS implementation only supports CUAHSI HydroServer data sources. All HydroServer instances registered in the CAUSHI Water Data Services Catalog (http://hiscentral.cuahsi.org/) can be referenced using a RefTS resource.
-    </p>
+    <h3>Metadata terms for the Reference Time Series Resource Type</h3>
 
      <a name="ReferenceURL"></a>
         <ul >
@@ -538,21 +609,7 @@
         </ul>
 
     <a name="netcdf_res"></a>
-    <h3>Multidimensional (NetCDF) Resource Type Description</h3>
-    <p>Multidimensional space-time data is one of the major data types used for hydrological modeling. For example, the
-        precipitation or surface air temperature data that have two dimensions in space and one dimension in time.
-        As <a href='http://www.unidata.ucar.edu/software/netcdf/' >Network Common Data Form</a> (NetCDF)
-        is widely used in hydrological and other geoscience modeling because it contains self-describing metadata and
-        supports the creation of array-oriented datasets which may include three spatial dimensions, a time dimension
-        and other user defined dimensions , we choose NetCDF as the file format to support the sharing of
-        the multidimensional space-time data in HydroShare.
-    </p>
-    <a name="nc_spatialReference"></a>
-    <p> Currently, we define the multidimensional (NetCDF) resource such that it includes only one NetCDF file with
-        ".nc" extension. Any multidimensional space-time data supported by the NetCDF format will be valid for input as
-        a multidimensional (NetCDF) resource in HydroShare. To describe the multidimensional space-time data in NetCDF format,
-        we will use the following entities:
-    </p>
+    <h3>Metadata terms for the Multidimensional (NetCDF) Resource Type</h3>
         <br/>
         <a name="crsName"></a>
         <ul >
@@ -653,20 +710,7 @@
         </ul>
 
     <a name="geo_raster_res"></a>
-    <h3>Geographic Raster Resource Type Description</h3>
-    <p> Geographic raster data are commonly used for representing and managing imagry, digital elevation, and other phenomena
-        which is widely used in hydrological research. The raster can have a single or multiple bands (or layers) of data.
-        A band is represented by a single matrix of cell organized into rows and columns where each contains a value
-        representing information. We choose the <a href="http://trac.osgeo.org/geotiff/">GeoTIFF</a> file format to represent the
-        geographic raster data in HydroShare. The GeoTIFF refers to TIFF files which have geographic data embeded as
-        tags within the TIFF file. The geographic data can then be used to position the image in the correct location and
-        geometry on the screen of a geographic information display.
-    </p>
-    <a name="rt_spatialReference"></a>
-    <p> Currently, we define the geographic raster resource such that it includes only one geographic raster in GeoTIFF format which includes a
-        single or multiple bands. Any raster data in GeoTIFF format will be valid for input as
-        a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
-    </p>
+    <h3>Metadata terms for the Geographic Raster Resource Type</h3>
         <br/>
         <a name="box"></a>
         <ul >
@@ -786,14 +830,7 @@
         </ul>
 
 
-    <h3>Model Program Resource Type Description</h3>
-    <p> A Model Program resource describes the software component of a generic model within the water domain.  It aims to fully describe
-        the software-related metadata of a given model program  to enables scientists to seamlessly retrieve all the content and information
-        required to get a model up-and-running on their local or server-side machine.   This resource consists of uploaded content such as
-        source code, compiled binaries, and documentation, as well as metadata describing the model's software. The Model Program resource
-        can be related to many Model Instance resources (below) to completely describe a simulation and the exact software version used for
-        a particular study, to make data replication possible. The specific metadata elements are as follows:
-    </p>
+    <h3>Metadata terms for the Model Program Resource Type</h3>
     <br/>
     <a name="modelVersion"></a>
         <ul >
@@ -876,11 +913,7 @@
             <li><strong>Description: </strong>Uploaded archive containing the model computational engine (e.g., source code, binary, executable, etc.)</li>
         </ul>
 
-    <h3>Model Instance Resource Type Description</h3>
-    <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.
-        This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used
-        to execute a simulation. These specific metadata elements are as follows:
-    </p>
+    <h3>Metadata terms for the Model Instance Resource Type</h3>
     <br/>
     <a name="ModelOutput"></a>
         <ul >
@@ -919,11 +952,7 @@
             <li><strong>Description: </strong>The HydroShare identifier of the Model Program resource that executes the current resource</li>
         </ul>
 
-    <h3>SWAT Model Instance Resource Type Description</h3>
-    <p> This SWAT Model Instance resource is a specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool.
-        This resource extends the more generic Model Instance metadata terms to accommodate additional SWAT specific terms which have been derived
-        from simulation input files. These specific metadata elements are as follows:
-    </p>
+    <h3>Metadata terms for the SWAT Model Instance Resource Type</h3>
     <br/>
     <a name="modelObjective"></a>
         <ul >
@@ -1112,11 +1141,7 @@
             <li><strong>Description: </strong>The parameters used in the model</li>
         </ul>
 
-    <h3>MODFLOW Model Instance Resource Type Description</h3>
-    <p> This MODFLOW Model Instance resource is a specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions.
-        This resource extends the more generic Model Instance metadata terms to accommodate additional MODFLOW specific terms which have been derived
-        from simulation input files. These specific metadata elements are as follows:
-    </p>
+    <h3>Metadata terms for the MODFLOW Model Instance Resource Type</h3>
     <br/>
     <a name="StudyArea"></a>
         <ul >
@@ -1383,10 +1408,7 @@
             <li><strong>Description: </strong>Subsidence package used in the simulation</li>
         </ul>
 
-    <h3>Web App Resource Type Description</h3>
-    <p>
-        A Web App resource is a shortcut (or reference) to an external web application that can work with HydroShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access HydroShare data resources using the HydroShare REST API, and can be linked to specific HydroShare resource types and made discoverable within HydroShare by registering them as a Web App resource.
-    </p>
+    <h3>Metadata terms for the Web App Resource Type</h3>
     <a name="AppURLPattern"></a>
         <ul >
             <li><strong>Term: </strong>AppURLPattern</li>
@@ -1465,51 +1487,61 @@
             <li><strong>Label: </strong>Script Repository</li>
             <li><strong>Description: </strong>The URL to a respository where the script is also stored.</li>
         </ul>
-    <h3>Collection Resource Type Description</h3>
-    <p>
-        A collection resource is a resource that holds a list of other resources in HydroShare that the creator has logically assembled into a collection.
-        Collections are intended to be a flexible way to combine resources associated with a specific purpose, such as a specific study, site, or experiment.
-        HydroShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types,
-        publication status or permissions settings associated with resources in a collection.
-    </p>
 
-    <h3>Composite Resource Type Description</h3>
+    <h3>Metadata terms for the Composite Resource Type</h3>
     <a name="Dataset"></a>
-    <p>
-        A Composite resource is a resource which can include multiple files without file format
-        limitations. This resource is designed to support metadata and data functions at both file
-        level and resource level to better support data management in HydroShare. Each file may be
-        annotated with general file type metadata. If a file, or group of files representing
-        one logical object (e.g. multiple files for a shapefile) is in the format which represents
-        a specific file type supported in HydroShare, the file will be supported with specific file
-        type metadata and additional data functions established for that type
-        (e.g. metadata extraction from TIFF or NetCDF file). The resource level metadata will be the
-        same as metadata of the generic resource type. Each file within the resource will be associated
-        with the following additional metadata terms:
-    </p>
 
-     <a name="dataType"></a>
+     <a name="singleFileAggregation"></a>
         <ul >
-            <li><strong>Term: </strong>Dataset</li>
-            <li><strong>URI: </strong><a href="#Dataset">http://www.hydroshare.org/terms/Dataset</a></li>
-            <li><strong>Label: </strong>Dataset</li>
-            <li><strong>Description: </strong>One or multiple files that represent one logical object as a hydrologic dataset.</li>
+            <li><strong>Term: </strong>SingleFileAggregation</li>
+            <li><strong>URI: </strong><a href="#singleFileAggregation">http://www.hydroshare.org/terms/SingleFileAggregation</a></li>
+            <li><strong>Label: </strong>Single File Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a single content file to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a name="geographicFeatureAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>GeographicFeatureAggregation</li>
+            <li><strong>URI: </strong><a href="#geographicFeatureAggregation">http://www.hydroshare.org/terms/GeographicFeatureAggregation</a></li>
+            <li><strong>Label: </strong>Geographic Feature Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up an ESRI shapefile containing a geographic feature dataset and to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a name="geographicRasterAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>GeographicRasterAggregation</li>
+            <li><strong>URI: </strong><a href="#geographicRasterAggregation">http://www.hydroshare.org/terms/GeographicRasterAggregation</a></li>
+            <li><strong>Label: </strong>Geographic Raster Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up a geographic raster dataset to which aggregation-level metadata have been added. Rasters may have multiple files and multiple bands and are stored in HydroShare as GeoTIFF files.</li>
+        </ul>
+     <a name="multidimensionalAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>MultidimensionalAggregation</li>
+            <li><strong>URI: </strong><a href="#multidimensionalAggregation">http://www.hydroshare.org/terms/MultidimensionalAggregation</a></li>
+            <li><strong>Label: </strong>Multidimensional Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a Network Common Data Form (NetCDF) file that makes up a multidimensional space-time dataset to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a name="timeSeriesAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>TimeSeriesAggregation</li>
+            <li><strong>URI: </strong><a href="#timeSeriesAggregation">http://www.hydroshare.org/terms/TimeSeriesAggregation</a></li>
+            <li><strong>Label: </strong>TimeSeriesAggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of one or more time series datasets to which aggregation-level metadata have been added. Time series datasets in HydroShare consist of sequences of individual data values that are ordered in time to record the changing trend of a certain phenomenon. They are stored in HydroShare using ODM2 SQLite database files.</li>
+        </ul>
+     <a name="referencedTimeSeriesAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>ReferencedTimeSeriesAggregation</li>
+            <li><strong>URI: </strong><a href="#referencedTimeSeriesAggregation">http://www.hydroshare.org/terms/ReferencedTimeSeriesAggregation</a></li>
+            <li><strong>Label: </strong>Referenced Time Series Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of references to specific time series datasets hosted on an external web service to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a name="fileSetAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>FileSetAggregation</li>
+            <li><strong>URI: </strong><a href="#fileSetAggregation">http://www.hydroshare.org/terms/FileSetAggregation</a></li>
+            <li><strong>Label: </strong>File Set Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of an arbitrary collection of files that are logically grouped together as an aggregation and to which aggregation-level metadata have been added. There may be any number of files in the aggregation, and files may be of any type.</li>
         </ul>
 
-     <a name="dataTitle"></a>
-        <ul >
-            <li><strong>Term: </strong>dataType</li>
-            <li><strong>URI: </strong><a href="#dataType">http://www.hydroshare.org/terms/dataType</a></li>
-            <li><strong>Label: </strong>Data Type</li>
-            <li><strong>Description: </strong>The data type (or file type) of the dataset.</li>
-        </ul>
-
-        <ul >
-            <li><strong>Term: </strong>dataTitle</li>
-            <li><strong>URI: </strong><a href="#dataTitle">http://www.hydroshare.org/terms/dataTitle</a></li>
-            <li><strong>Label: </strong>Data Title</li>
-            <li><strong>Description: </strong>The title of the dataset.</li>
-        </ul>
+        <p>Metadata terms specific to the aggregation type are the same as those used to describe the corresponding resource type listed above.</p>
 
         <p>
             All file types include additional terms that can be referred to
