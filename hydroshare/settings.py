@@ -312,6 +312,7 @@ INSTALLED_APPS = (
     "hs_collection_resource",
     "hs_modflow_modelinstance",
     "hs_tracking",
+    "hs_gabbs_web_app",
     "hs_file_types",
     "hs_composite_resource",
     "hs_rest_api",
