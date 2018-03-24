@@ -957,7 +957,7 @@ class AbstractLogicalFile(models.Model):
         """File path of the aggregation map xml file relative to {resource_id}/data/contents/
         """
         xml_file_name = self.aggregation_name + "_resmap.xml"
-        if self.files.first().file_folder is not None:
+        if self.files.first().file_folder is not None and not self.is_single_file_aggregation:
             return os.path.join(self.aggregation_name, xml_file_name)
         else:
             return xml_file_name
@@ -1123,8 +1123,10 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
-    def create_aggregation_xml_documents(self):
-        """Creates aggregation map xml and aggregation metadata xml files"""
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        """Creates aggregation map xml and aggregation metadata xml files
+        :param  create_map_xml: if true, aggregation map xml file will be created
+        """
 
         log = logging.getLogger()
 
@@ -1142,7 +1144,7 @@ class AbstractLogicalFile(models.Model):
 
         # create and copy the map and metadata xml documents for the aggregation
         meta_from_file_name = os.path.join(tmpdir, 'metadata.xml')
-        # map_from_file_name = os.path.join(tmpdir, 'map.xml')
+        map_from_file_name = os.path.join(tmpdir, 'map.xml')
         try:
             with open(meta_from_file_name, 'w') as out:
                 out.write(self.metadata.get_xml())
@@ -1150,11 +1152,12 @@ class AbstractLogicalFile(models.Model):
             istorage.saveFile(meta_from_file_name, to_file_name, True)
             log.info("Aggregation metadata xml file:{} created".format(to_file_name))
 
-            # with open(map_from_file_name, 'w') as out:
-            #     out.write(self._generate_map_xml())
-            # to_file_name = self.map_file_path
-            # istorage.saveFile(map_from_file_name, to_file_name, True)
-            # log.info("Aggregation map xml file:{} created".format(to_file_name))
+            if create_map_xml:
+                with open(map_from_file_name, 'w') as out:
+                    out.write(self._generate_map_xml())
+                to_file_name = self.map_file_path
+                istorage.saveFile(map_from_file_name, to_file_name, True)
+                log.info("Aggregation map xml file:{} created".format(to_file_name))
         except Exception as ex:
             log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
             raise ex

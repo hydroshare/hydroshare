@@ -169,6 +169,7 @@ class CompositeResource(BaseResource):
         If the *folder* represents an aggregation then map and metadata xml documents are
         recreated only for that aggregation. Otherwise, xml documents are created for any single
         file aggregation that may exist in the specified folder and its sub-folders.
+
         :param  folder: folder for which xml documents need to be re-created
         """
 
@@ -187,7 +188,8 @@ class CompositeResource(BaseResource):
                     if name_with_full_path == res_file.storage_path:
                         if res_file.has_logical_file and \
                                 res_file.logical_file.is_single_file_aggregation:
-                            res_file.logical_file.create_aggregation_xml_documents()
+                            res_file.logical_file.create_aggregation_xml_documents(
+                                create_map_xml=False)
 
             for fld in folders:
                 # recursive call to the inner function
@@ -197,7 +199,7 @@ class CompositeResource(BaseResource):
         # first check if the the folder represents an aggregation
         try:
             aggregation = self.get_aggregation_by_name(folder)
-            aggregation.create_aggregation_xml_documents()
+            aggregation.create_aggregation_xml_documents(create_map_xml=False)
             # if we found an aggregation by the folder name that means this folder doesn't
             # have any sub folders as multi-file aggregation folder can't have sub folders
         except ObjectDoesNotExist:
@@ -227,34 +229,11 @@ class CompositeResource(BaseResource):
         aggregation so that new xml documents can be recreated
 
         """
-        # User action case: file name renaming (folder1/test.txt -> folder1/test_1.txt)
-        # orig_aggr_name = folder1/test.txt
-        # orig meta xml file: folder1/test.txt_meta.xml
-        # new_aggr_name = folder1/test_1.txt
-        # new meta xml file: folder1/test_1.txt_meta.xml
-
-        # User action case: folder renaming (folder1/test.txt -> folder2/test.txt)
-        # orig_aggr_name = folder1/test.txt
-        # orig meta xml file: folder1/test.txt_meta.xml
-        # new_aggr_name = folder2/test.txt
-        # new meta xml file: folder2/test.txt_meta.xml
-
-        # User action case: folder renaming (folder1/folder2 -> folder1/folder3)
-        # orig_aggr_name = folder1/folder2
-        # orig meta xml file: folder1/folder2_meta.xml
-        # new_aggr_name = folder1/folder3
-        # new meta xml file: folder1/folder3_meta.xml
-
-        # User action case: folder moving (folder1/folder2 -> folder2)
-        # orig_aggr_name = folder1/folder2
-        # orig meta xml file: folder1/folder2_meta.xml
-        # new_aggr_name = folder2
-        # new meta xml file: folder2_meta.xml
 
         # first check if the new_aggr_name is a folder path or file path
         name, ext = os.path.splitext(new_aggr_name)
-        is_new_folder = ext == ''
-        if is_new_folder:
+        is_new_aggr_a_folder = ext == ''
+        if is_new_aggr_a_folder:
             self._recreate_xml_docs_for_folder(new_aggr_name)
         else:
             # check if there is a matching single file aggregation
@@ -266,21 +245,28 @@ class CompositeResource(BaseResource):
                 # action is needed
                 pass
 
-        # we have to delete old _meta.xml file if it exits
+        # we have to delete old _meta.xml file and _resmap.xml file if they exist
         # first check if the orig_aggr_name is a folder path or file path
         name, ext = os.path.splitext(orig_aggr_name)
-        is_orig_folder = ext == ''
+        is_orig_aggr_a_folder = ext == ''
         meta_xml_file_full_path = ''
+        map_xml_file_full_path = ''
         istorage = self.get_irods_storage()
         meta_xml_file_name = orig_aggr_name + "_meta.xml"
-        if not is_orig_folder:
+        map_xml_file_name = orig_aggr_name + "_resmap.xml"
+        if not is_orig_aggr_a_folder:
             meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
-        elif is_new_folder:
+            map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
+        elif is_new_aggr_a_folder:
             meta_xml_file_full_path = os.path.join(self.file_path, new_aggr_name,
                                                    meta_xml_file_name)
+            map_xml_file_full_path = os.path.join(self.file_path, new_aggr_name, map_xml_file_name)
 
         if istorage.exists(meta_xml_file_full_path):
             istorage.delete(meta_xml_file_full_path)
+
+        if istorage.exists(map_xml_file_full_path):
+            istorage.delete(map_xml_file_full_path)
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
