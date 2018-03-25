@@ -1823,6 +1823,8 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
                                                      user)
                 metadata = instance.metadata
+                if is_file_type:
+                    instance.create_aggregation_xml_documents(create_map_xml=False)
                 metadata.is_dirty = False
                 metadata.save()
                 log.info("SQLite file update was successful.")
