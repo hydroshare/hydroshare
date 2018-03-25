@@ -1037,6 +1037,8 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                                          user)
 
     metadata = instance.metadata
+    if file_type:
+        instance.create_aggregation_xml_documents(create_map_xml=False)
     metadata.is_dirty = False
     metadata.save()
 
