@@ -16,6 +16,11 @@ class GenericFileMetaData(AbstractFileMetaData):
     # the metadata element models are from the hs_core type app
     model_app_label = 'hs_core'
 
+    def create_element(self, element_model_name, **kwargs):
+        element = super(GenericFileMetaData, self).create_element(element_model_name, **kwargs)
+        self.is_dirty = True
+        return element
+
     def get_html(self):
         """overrides the base class function"""
 
