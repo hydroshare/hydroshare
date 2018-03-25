@@ -151,26 +151,43 @@ class CompositeResource(BaseResource):
         :param  aggregation_name: (optional) name of the the specific aggregation for which xml
         documents need to be created
         """
+
+        def reset_metadata_is_dirty(aggregation):
+            # resets the metadata.is_dirty to False if the
+            # aggregation is not a NetCDF or Time series aggregation.
+            # NetCDF and Time series aggregations reset metadata.is_dirty
+            # as part of updating the content file
+            if aggregation.get_aggregation_class_name() not in \
+                    ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+                aggregation.metadata.is_dirty = False
+                aggregation.metadata.save()
+
         if aggregation_name is None:
             for aggregation in self.logical_files:
-                aggregation.create_aggregation_xml_documents()
+                if aggregation.metadata.is_dirty:
+                    aggregation.create_aggregation_xml_documents()
+                    reset_metadata_is_dirty(aggregation)
         else:
             try:
                 aggregation = self.get_aggregation_by_name(aggregation_name)
-                aggregation.create_aggregation_xml_documents()
+                if aggregation.metadata.is_dirty:
+                    aggregation.create_aggregation_xml_documents()
+                    reset_metadata_is_dirty(aggregation)
             except ObjectDoesNotExist:
                 # aggregation_name must be a folder path that doesn't represent an aggregation
                 # there may be single file aggregation in that folder for which xml documents
                 # need to be created
-                self._recreate_xml_docs_for_folder(aggregation_name)
+                self._recreate_xml_docs_for_folder(aggregation_name, check_metadata_dirty=True)
 
-    def _recreate_xml_docs_for_folder(self, folder):
+    def _recreate_xml_docs_for_folder(self, folder, check_metadata_dirty=False):
         """Re-creates xml metadata and map documents associated with the specified folder.
         If the *folder* represents an aggregation then map and metadata xml documents are
         recreated only for that aggregation. Otherwise, xml documents are created for any single
         file aggregation that may exist in the specified folder and its sub-folders.
 
         :param  folder: folder for which xml documents need to be re-created
+        :param  check_metadata_dirty: if true, then xml files will be created only if the
+        aggregation metadata is dirty
         """
 
         from hs_core.views.utils import list_folder
@@ -188,9 +205,11 @@ class CompositeResource(BaseResource):
                     if name_with_full_path == res_file.storage_path:
                         if res_file.has_logical_file and \
                                 res_file.logical_file.is_single_file_aggregation:
-                            res_file.logical_file.create_aggregation_xml_documents(
-                                create_map_xml=False)
-
+                            if check_metadata_dirty:
+                                if res_file.logical_file.metadata.is_dirty:
+                                    res_file.logical_file.create_aggregation_xml_documents()
+                            else:
+                                res_file.logical_file.create_aggregation_xml_documents()
             for fld in folders:
                 # recursive call to the inner function
                 fld = os.path.join(folder_to_check, fld)
@@ -199,7 +218,12 @@ class CompositeResource(BaseResource):
         # first check if the the folder represents an aggregation
         try:
             aggregation = self.get_aggregation_by_name(folder)
-            aggregation.create_aggregation_xml_documents(create_map_xml=False)
+            if check_metadata_dirty:
+                if aggregation.metadata.is_dirty:
+                    aggregation.create_aggregation_xml_documents()
+            else:
+                aggregation.create_aggregation_xml_documents()
+
             # if we found an aggregation by the folder name that means this folder doesn't
             # have any sub folders as multi-file aggregation folder can't have sub folders
         except ObjectDoesNotExist:
@@ -227,7 +251,6 @@ class CompositeResource(BaseResource):
         xml documents
         :param  new_aggr_name: new aggregation name - used for finding a matching
         aggregation so that new xml documents can be recreated
-
         """
 
         # first check if the new_aggr_name is a folder path or file path
