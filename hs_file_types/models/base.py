@@ -1173,10 +1173,10 @@ class AbstractLogicalFile(models.Model):
         # This is the qualified resource url.
         hs_res_url = os.path.join(current_site_url, 'resource', self.resource.file_path)
         # this is the path to the resourcemedata file for download
-        aggr_metadata_file_path = self.aggregation_name + "_meta.xml"
+        aggr_metadata_file_path = self.metadata_short_file_path
         metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
         # this is the path to the aggregation resourcemap file for download
-        aggr_map_file_path = self.aggregation_name + "_resmap.xml"
+        aggr_map_file_path = self.map_short_file_path
         res_map_url = os.path.join(hs_res_url, aggr_map_file_path)
 
         # make the resource map:
