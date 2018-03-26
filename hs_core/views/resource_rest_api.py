@@ -45,7 +45,7 @@ class ResourceToListItemMixin(object):
         resource_url = site_url + r.get_absolute_url()
         coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
                      for v in r.metadata.coverages.values()]
-        doi=None
+        doi = None
         if r.raccess.published:
             doi = "10.4211/hs.{}".format(r.short_id)
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
