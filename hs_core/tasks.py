@@ -69,7 +69,7 @@ def sync_mailchimp(active_subscribed, list_id):
     total_items = json.loads(response.content)["total_items"]
     # get list of all member ids
     response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
-                                                                        total_items=total_items),
+                                                                          total_items=total_items),
                            auth=requests.auth.HTTPBasicAuth('hs-celery',
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
