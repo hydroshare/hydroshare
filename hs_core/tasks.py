@@ -208,13 +208,19 @@ def manage_task_nightly():
             user = uq.user
             uemail = user.email
             msg_str = 'Dear ' + u.username + ':\n\n'
-            msg_str += get_quota_message(user)
+
+            ori_qm = get_quota_message(user)
+            replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
+                settings.DEFAULT_SUPPORT_EMAIL)
+            new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
+            msg_str += new_qm
 
             msg_str += '\n\nHydroShare Support'
             subject = 'Quota warning'
             # send email for people monitoring and follow-up as needed
-            send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
-                      [uemail])
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [uemail, settings.DEFAULT_SUPPORT_EMAIL],
+                      html_message=msg_str)
         else:
             if uq.remaining_grace_period >= 0:
                 # turn grace period off now that the user is below quota soft limit
