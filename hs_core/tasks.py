@@ -68,8 +68,8 @@ def sync_mailchimp(active_subscribed, list_id):
         'hs-celery', settings.MAILCHIMP_PASSWORD))
     total_items = json.loads(response.content)["total_items"]
     # get list of all member ids
-    response = session.get(url + "?offset=0&count={total_items}".format(list_id=list_id,
-                                                                        total_items=total_items),
+    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
+                                                                          total_items=total_items),
                            auth=requests.auth.HTTPBasicAuth('hs-celery',
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
@@ -77,7 +77,7 @@ def sync_mailchimp(active_subscribed, list_id):
     for member in json.loads(response.content)["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
-                url + "/{id}".format(list_id=list_id, id=member["id"]),
+                (url + "/{id}").format(list_id=list_id, id=member["id"]),
                 auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
             if session_response.status_code != 204:
                 logger.info("Expected 204 status code, got " + str(session_response.status_code))
