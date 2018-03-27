@@ -1,4 +1,6 @@
 {% load static %}
+{% load theme_tags %}
+{% get_recaptcha_site_key as sitekey %}
 
 {% block extra_css %}
   <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
@@ -45,7 +47,7 @@
     </div>
     <div class="row">
       <script src='https://www.google.com/recaptcha/api.js'></script>
-      <div class="g-recaptcha" data-sitekey="SITE_KEY"></div>
+      <div class="g-recaptcha" data-sitekey={{ sitekey }}></div>
 
       <div id="missing-data-div"></div>
 
