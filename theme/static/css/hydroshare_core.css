@@ -23,6 +23,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     text-transform: none;
 }
 
+
 /* ===== Navbar ===== */
 
 .navbar-brand {
@@ -4612,6 +4613,7 @@ div#resource-content {
 	border: 1px solid #535353;
 	font-size: 14px;
 	text-align: left;
+	max-width: 450px;
 }
 
 /* Tooltip on top */

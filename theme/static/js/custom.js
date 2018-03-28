@@ -159,7 +159,7 @@ $(document).ready(function () {
 	});
 
 	// Initialize tooltips
-	$('[data-toggle="tooltip"]').tooltip();
+	$('[data-toggle="tooltip"]').tooltip({ html: true });
 
     // Format the dates before displaying them
     $(".format-date").each(function () {
