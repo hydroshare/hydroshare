@@ -205,11 +205,12 @@ def manage_task_nightly():
                 # set grace period to 0 when user quota exceeds hard limit
                 uq.remaining_grace_period = 0
             uq.save()
-            user = uq.user
-            uemail = user.email
+
+            uemail = u.email
             msg_str = 'Dear ' + u.username + ':\n\n'
 
-            ori_qm = get_quota_message(user)
+            ori_qm = get_quota_message(u)
+            # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
             replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
                 settings.DEFAULT_SUPPORT_EMAIL)
             new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
