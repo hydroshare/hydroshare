@@ -18,19 +18,39 @@ This README file is for developers interested in working on the Hydroshare code 
 
 If you want to install and run the source code of application locally and/or contribute to development, read on.
 
-### [VirtualBox](https://www.virtualbox.org/wiki/Downloads) development environment
+### [DOCKER](https://www.docker.com) development environment
 
-To quickly get started developing we offer a preconfigured development environment encapsulated within a virtual box Virtual Machine (VM). This includes the appropriate version of Ubuntu, Python, Docker, and other key dependencies and development tools.
+We use docker to simplify the development process
 
-### Simplified Installation Instructions 
-1. Download the [latest OVA file here](http://distribution.hydroshare.org/public_html/)
-2. Open the .OVA file with VirtualBox, this will create a guest VM
-3. Follow the instructions here to share a local hydroshare folder with your guest VM
-4. Start the guest VM
-5. Log into the guest VM with either ssh or the GUI. The default username/password is hydro:hydro
-6. From the root directory `/home/hydro`, clone this repository into the hydroshare folder
-7. `cd` into the hydroshare folder and run `./hsctl rebuild --db` to build the application and run it
-8. If all goes well, your local version of Hydroshare should be running at http://192.168.56.101:8000
+### Install docker
+#####Linux/Mac
+[Installation Instructions](https://docs.docker.com/compose/install/)
+#####Windows
+[Install Docker for Windows and WSL](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly)
+######Windows Installation Summary
+1. [Install Docker For Windows](https://docs.docker.com/docker-for-windows/install/)
+    * Enable `Expose daemon on tcp://localhost:2375 without TLS` within Docker General Settings
+2. [Install WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+3. [Install Docker within WSL](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+4. [Install Docker-Compose within WSL](https://docs.docker.com/compose/install/)
+5. Set DOCKER_HOST within .bashrc
+    * `echo "export DOCKER_HOST=tcp://0.0.0.0:2375" >> ~/.bashrc && source ~/.bashrc`
+6. Bind /mnt/c to /c (Assuming your drive is c)
+    * `sudo mkdir /c`
+    * `sudo mount --bind /mnt/c /c`
+7. bind mount within .bashrc
+    * `echo "sudo mount --bind /mnt/c /c" >> ~/.bashrc && source ~/.bashrc`
+### Configuration
+1. Clone this repository
+2. `cd` into the cloned repo folder
+3. Edit config/hydroshare-config.yaml.  Replace `/home/hydro/hydroshare` with the path to your cloned repo for the following keys:
+- HS_PATH
+- HOST_SSL_DIR
+- HS_LOG_FILES
+- NGINX_DIR
+- SSL_CERT_DIR
+4. Within the base directory of the cloned repo folder run `./hsctl rebuild --db` to build the application and run it
+8. If all goes well, your local version of Hydroshare should be running at http://localhost:8000
 
 For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
