@@ -11,11 +11,13 @@ from hs_publication.models import PublicationQueue
 class PublicationQueueSerializer(serializers.ModelSerializer):
     class Meta:
         model = PublicationQueue
-        fields = ('resource', 'created_at', 'updated_at', 'status', 'note')
+        fields = ('resource', 'created_at', 'updated_at', 'status', 'note',)
 
 
 class PublicationQueueCreate(generics.CreateAPIView):
+    serializer_class = PublicationQueueSerializer
     permission_classes = (CanEditResourceMetadata,)
+    allowed_methods = ("POST",)
 
     def post(self, request, pk):
         try:

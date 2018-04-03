@@ -21,6 +21,7 @@ class PublicationQueue(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             send_mail(
+                'Your resource publication',
                 'Your resource publication status has changed to: {}\n\n' +
                 'Explanation:\n{}'.format(self.status, self.note),
                 'publication@cuahsi.org',
@@ -30,7 +31,7 @@ class PublicationQueue(models.Model):
         super(PublicationQueue, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.resource.short_id
+        return self.resource.metadata.title.value
 
     class Meta:
         verbose_name = "Publication Queue Item"
