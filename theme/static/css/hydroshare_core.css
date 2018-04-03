@@ -31,7 +31,12 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 #img-brand-logo {
-	width: 145px;
+	width: 195px;
+}
+
+.sub-brand {
+	color: black;
+	font-size: 13px;
 }
 
 .container>.navbar-header, .container>.navbar-collapse {
