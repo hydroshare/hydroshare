@@ -135,6 +135,8 @@ def create_bag_files(resource):
     files = ResourceFile.objects.filter(object_id=resource.id)
 
     for f in files:
+        # only the files that are not part of file type aggregation (logical file)
+        # should be added to the resource level map xml file
         if f.logical_file is None:
             res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,

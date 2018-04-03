@@ -24,7 +24,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url, \
-    get_resource_file_by_id
+    get_resource_file_by_id, set_dirty_bag_flag
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 
 
@@ -1158,6 +1158,9 @@ class AbstractLogicalFile(models.Model):
                 to_file_name = self.map_file_path
                 istorage.saveFile(map_from_file_name, to_file_name, True)
                 log.info("Aggregation map xml file:{} created".format(to_file_name))
+            # setting bag flag to dirty - as resource map document needs to be re-generated as
+            # resource map xml file has references to aggregation map xml file paths
+            set_dirty_bag_flag(self.resource)
         except Exception as ex:
             log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
             raise ex
