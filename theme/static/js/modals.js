@@ -68,15 +68,21 @@ $(document).ready(function() {
 
     $("input#id_user-autocomplete").addClass("form-control");
 
-    $("#publish-btn-2").click(function(e) {
+    $("#publish-btn").click(function(e) {
         e.preventDefault();
 
         $.ajax({
             url: "/hsapi/resource/" + resID + "/publish/",
             type: "POST",
-            data: {},
-            success: console.log,
-            error: console.log
+            data: {
+
+            },
+            complete: function(e) {
+                $("#submit-for-publication-dialog").modal('hide');
+                setTimeout(function() {
+                    $("#submit-for-publication-dialog-2").modal('show');
+                }, 650); // Just a nicety to make it feel like the system sufficiently processed the request, which it did.
+            }
         });
 
         return false

@@ -18,19 +18,29 @@
         {% else %}
             <a id="publish" class="btn pull-right" data-toggle="modal">
                 <span data-toggle="tooltip" data-placement="bottom"
-                    title='<p>The following metadata are still required to publish the<br />resource or make the resource public or discoverable:</p><ul><li>Abstract</li><li>Keywords</li></ul><p>You must also add content files to your resource before it<br />can be published, public or discoverable.</p>'>
+                    title='<p>The following metadata are still required to publish the<br />resource or make the resource public or discoverable:</p><ul><li>Abstract</li><li>Keywords</li></ul><p>You must also add content files to your resource and set to publich before it can be published.</p>'>
                     Publish
                 </span>
             </a>
         {% endif %}
 
-        {% if not cm.raccess.published %}
-            <a id="doi-info" href="#" class="btn btn-info pull-right">
-                <span data-html="true" data-toggle="tooltip" data-placement="bottom"
-                      title="<p>Your resource is published under the following DOI:</p><p><code>10.4211/hs.{{ cm.short_id }}</code></p><p>Click to copy to clipboard.</p>">
-                    DOI
-                </span>
-            </a>
+        {% if is_owner_user %}
+            {% if cm.raccess.published %}
+                <a id="doi-info" href="#" class="btn btn-info pull-right">
+                    <span data-html="true" data-toggle="tooltip" data-placement="bottom"
+                          title="<p>Your resource is published under the following DOI:</p><p><code>10.4211/hs.{{ cm.short_id }}</code></p><p>Click to copy to clipboard.</p>">
+                        DOI
+                    </span>
+                </a>
+            {% else %}
+                <a id="doi-info" href="#" class="btn btn-info pull-right">
+                    <span data-html="true" data-toggle="tooltip" data-placement="bottom"
+                          title="<p>Your resource will be published under the following DOI:</p><p><code>10.4211/hs.{{ cm.short_id }}</code></p><p>Click to copy to clipboard.</p>">
+                        DOI
+                    </span>
+                </a>
+            {% endif %}
+
             <textarea id="hiddenDOIForCopy" style="display: none;">10.4211/hs.{{ cm.short_id }}</textarea>
             <script>
                 $("#doi-info").on("click", function(e) {

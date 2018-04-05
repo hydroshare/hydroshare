@@ -1167,7 +1167,7 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['message'] = ex.message
         ajax_response_data['status'] = 'success'
         ajax_response_data['file_upload_status'] = 'error'
-        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        ajax_response_data['resource_url'] = resource.get_absolute_url() + "?resource-mode=edit"
         return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
@@ -1175,7 +1175,7 @@ def create_resource(request, *args, **kwargs):
         if resource.files.all():
             ajax_response_data['file_upload_status'] = 'success'
         ajax_response_data['status'] = 'success'
-        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        ajax_response_data['resource_url'] = resource.get_absolute_url() + "?resource-mode=edit"
 
     return JsonResponse(ajax_response_data)
 
