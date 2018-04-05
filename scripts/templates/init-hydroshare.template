@@ -13,5 +13,9 @@ chown -R hydro-service:storage-hydro /hs_tmp
 chown -R hydro-service:storage-hydro /shared_tmp
 sed -i "/\<UsePrivilegeSeparation\>/c\UsePrivilegeSeparation no" /etc/ssh/sshd_config
 sed -i "/\<Port 22\>/c\Port 2022" /etc/ssh/sshd_config
+#mkdir -p /irods/{hydroshare_vault,hydroshare}
+#mount -t nfs -o nolock 172.25.8.100:/hydroshare /irods/hydroshare
+#mount -t nfs -o nolock 172.25.11.103:/hydroshare_vault /irods/hydroshare_vault
+nginx
 HS_SSH_SERVER
 HS_DJANGO_SERVER
