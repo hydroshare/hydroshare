@@ -955,9 +955,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     :return: The identifier of the ResourceFile added.
     """
 
-    # importing here to avoid circular import
-    from hs_file_types.models import GenericLogicalFile
-
     if f:
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)

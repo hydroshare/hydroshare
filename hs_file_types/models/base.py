@@ -896,6 +896,11 @@ class AbstractLogicalFile(models.Model):
             return None
 
     @property
+    def can_contain_folders(self):
+        """By default an aggregation can't have folders"""
+        return False
+
+    @property
     def supports_resource_file_move(self):
         """allows a resource file that is part of this logical file type to be moved"""
         return True
@@ -940,11 +945,15 @@ class AbstractLogicalFile(models.Model):
     def metadata_short_file_path(self):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
-        xml_file_name = self.aggregation_name + "_meta.xml"
-        if self.files.first().file_folder is not None and not self.is_single_file_aggregation:
-            return os.path.join(self.aggregation_name, xml_file_name)
-        else:
-            return xml_file_name
+
+        xml_file_name = self.aggregation_name
+        if "/" in xml_file_name:
+            _, xml_file_name = os.path.split(xml_file_name)
+        xml_file_name += "_meta.xml"
+        file_folder = self.files.first().file_folder
+        if file_folder is not None:
+            xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
 
     @property
     def metadata_file_path(self):
@@ -956,11 +965,14 @@ class AbstractLogicalFile(models.Model):
     def map_short_file_path(self):
         """File path of the aggregation map xml file relative to {resource_id}/data/contents/
         """
-        xml_file_name = self.aggregation_name + "_resmap.xml"
-        if self.files.first().file_folder is not None and not self.is_single_file_aggregation:
-            return os.path.join(self.aggregation_name, xml_file_name)
-        else:
-            return xml_file_name
+        xml_file_name = self.aggregation_name
+        if "/" in xml_file_name:
+            _, xml_file_name = os.path.split(xml_file_name)
+        xml_file_name += "_resmap.xml"
+        file_folder = self.files.first().file_folder
+        if file_folder is not None:
+            xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
 
     @property
     def map_file_path(self):
