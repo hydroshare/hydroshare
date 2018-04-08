@@ -982,8 +982,13 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def is_single_file_aggregation(self):
-        return self.get_aggregation_class_name() in ("GenericLogicalFile",
-                                                     "RefTimeseriesLogicalFile")
+        """
+        Returns True if the aggregation consists of only one file, otherwise, False.
+        Subclasses that support only single file must override this property
+
+        :return: True or False
+        """
+        return False
 
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file

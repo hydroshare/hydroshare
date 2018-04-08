@@ -769,6 +769,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "ReferencedTimeSeriesAggregation"
 
+    @property
+    def is_single_file_aggregation(self):
+        """This aggregation supports only one file"""
+        return True
+
     @classmethod
     def create(cls):
         # this custom method MUST be used to create an instance of this class

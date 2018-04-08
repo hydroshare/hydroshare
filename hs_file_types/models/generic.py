@@ -140,6 +140,11 @@ class GenericLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "SingleFileAggregation"
 
+    @property
+    def is_single_file_aggregation(self):
+        """This aggregation supports only one file"""
+        return True
+
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """Makes any physical file part of a generic  aggregation type. The physical file must
