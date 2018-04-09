@@ -11,7 +11,7 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 from hs_core.testing import TestCaseCommonUtilities
 
-from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
 
 
 class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
@@ -430,8 +430,6 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
 
-        # test that when we create composite resource with an uploaded file, then the uploaded file
-        # is automatically set to genericlogicalfile type
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
 
@@ -462,8 +460,6 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
 
-        # test that when we create composite resource with an uploaded file, then the uploaded file
-        # is automatically set to genericlogicalfile type
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
 
@@ -487,6 +483,320 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertFalse(istorage.exists(meta_xml_file_path))
         # test that the aggregation map xml file got deleted
         self.assertFalse(istorage.exists(map_xml_file_path))
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_creation_1(self):
+        """Test that aggregation metadata and map xml files are created on raster aggregation
+        creation - raster folder at the root"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_creation_2(self):
+        """Test that aggregation metadata and map xml files are created on raster aggregation
+        creation - raster folder not at the root"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'folder/raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/folder/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/folder/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/folder/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_re_creation_on_folder_rename_1(self):
+        """Test that aggregation metadata and map xml files are re-created on raster aggregation
+        folder rename - raster folder at the root"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        # hold on to the original xml file paths to test that they get deleted
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+        # now change the folder name 'raster' to 'raster_1'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/raster',
+                                      'data/contents/raster_1')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/raster_1/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster_1')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/raster_1/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster_1')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_re_creation_on_folder_rename_2(self):
+        """Test that aggregation metadata and map xml files are re-created on raster aggregation
+        folder rename - raster folder not at the root"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'folder/raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/folder/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/folder/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/folder/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        # hold on to the original xml file paths to test that they get deleted
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+        # now change the folder name 'raster' to 'raster_1'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/folder/raster',
+                                      'data/contents/folder/raster_1')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/folder/raster_1/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster_1')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/folder/raster_1/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster_1')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_re_creation_on_folder_move_1(self):
+        """Test that aggregation metadata and map xml files are re-created on raster aggregation
+        folder move - raster folder at the root before move"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        # create a folder and move the raster folder there
+        ResourceFile.create_folder(self.composite_resource, 'raster_parent')
+
+        # now move the 'raster' folder to 'raster_parent'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/raster',
+                                      'data/contents/raster_parent/raster')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/raster_parent/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/raster_parent/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        self.composite_resource.delete()
+
+    def test_raster_aggregation_xml_files_re_creation_on_folder_move_2(self):
+        """Test that aggregation metadata and map xml files are re-created on raster aggregation
+        parent folder move - raster folder not at the root before move"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # create a folder and move the raster file there
+        ResourceFile.create_folder(self.composite_resource, 'raster_parent/raster')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/raster_parent/raster/' + res_file.file_name)
+        # create a raster aggregation (logical file)
+        self._create_raster_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        expected_aggr_meta_file_path = "{root}/raster_parent/raster/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        expected_aggr_map_file_path = "{root}/raster_parent/raster/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        # create a folder and move the raster parent folder there
+        ResourceFile.create_folder(self.composite_resource, 'raster_super_parent')
+
+        # now move the 'raster_parent' folder to 'raster_super_parent'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/raster_parent',
+                                      'data/contents/raster_super_parent/raster_parent')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/raster_super_parent/raster_parent/" \
+                                       "raster/{fn}_meta.xml".format(
+                                        root=self.composite_resource.file_path, fn='raster')
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/raster_super_parent/raster_parent/" \
+                                      "raster/{fn}_resmap.xml".format(
+                                        root=self.composite_resource.file_path, fn='raster')
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
         self.composite_resource.delete()
 
     def test_file_add_to_composite_resource(self):
@@ -613,3 +923,17 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         res_file = self.composite_resource.files.first()
         # create the generic aggregation (logical file)
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+    def _create_raster_aggregation(self):
+        # make sure composite_resource is created in federated user zone
+        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
+                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        self.assertEqual(self.composite_resource.resource_federation_path, fed_path)
+        res_file = self.composite_resource.files.first()
+        # create the raster aggregation (logical file)
+        if res_file.file_folder is None:
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user,
+                                               file_id=res_file.id)
+        else:
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user,
+                                               folder_path=res_file.file_folder)
