@@ -5,10 +5,9 @@ from django.contrib.auth.models import Group
 from django.conf import settings
 
 from hs_core import hydroshare
-from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions, \
-    resource_file_add_pre_process
-from hs_core.views.utils import create_folder
+from hs_core.models import BaseResource, ResourceFile
+from hs_core.hydroshare.utils import resource_file_add_process, resource_file_add_pre_process
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 from hs_core.testing import TestCaseCommonUtilities
 
@@ -73,23 +72,421 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         # Deprecated: there should not be any GenericLogicalFile object at this point
         # Issue 2456 Create composite with uploaded file now part of logical file
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
-
-        # set the logical file - which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
+        # create the generic aggregation (logical file)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # check that the resource file is associated with GenericLogicalFile
+        res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_creation(self):
+        """Test that aggregation metadata and map xml files are created on aggregation
+        creation"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        # test that when we create composite resource with an uploaded file, then the uploaded file
+        # is automatically set to genericlogicalfile type
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_re_creation_on_file_rename_1(self):
+        """Test that aggregation metadata and map xml files are recreated on aggregation
+        name change - single file aggregation file rename where the aggregation is at the root
+        of the storage folder hierarchy"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        meta_xml_file_path = logical_file.metadata_file_path
+        map_xml_file_path = logical_file.map_file_path
+
+        # rename the aggregation resource file -> causes aggregation rename
+        # test the aggregation name after renaming the file
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/' + 'logan_small.tif')
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was re-created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was re-created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, map_xml_file_path)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_re_creation_on_file_rename_2(self):
+        """Test that aggregation metadata and map xml files are recreated on aggregation
+        name change - single file aggregation file rename where the aggregation is NOT at the root
+        of the storage folder hierarchy"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        res_file = self.composite_resource.files.first()
+        # create a folder to move this file
+        ResourceFile.create_folder(self.composite_resource, 'generic')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/generic/' + res_file.file_name)
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+
+        # rename the aggregation resource file -> causes aggregation rename
+        # test the aggregation name after renaming the file
+        new_file_name = 'logan_small.tif'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/generic/' + res_file.file_name,
+                                      'data/contents/generic/' + new_file_name)
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was re-created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=new_file_name)
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was re-created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=new_file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_re_creation_on_file_move(self):
+        """Test that aggregation metadata and map xml files are recreated when a resource file
+        that is part of the generic aggregation is moved """
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+        # hold on to original xml file paths to test that they get deleted
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+
+        # create a folder to move this file
+        ResourceFile.create_folder(self.composite_resource, 'generic')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/generic/' + res_file.file_name)
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_re_creation_on_folder_rename(self):
+        """Test that aggregation metadata and map xml files are recreated when a folder containing
+        a resource file that is part of the generic aggregation is renamed """
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        res_file = self.composite_resource.files.first()
+        # create a folder to move this file
+        ResourceFile.create_folder(self.composite_resource, 'generic')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/generic/' + res_file.file_name)
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # hold on to the original xml file paths to test that they get deleted
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+
+        # now change the folder name 'generic' to 'generic_1'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/generic',
+                                      'data/contents/generic_1')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic_1/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic_1/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_re_creation_on_folder_move(self):
+        """Test that aggregation metadata and map xml files are recreated when a folder containing
+        a resource file that is part of the generic aggregation is moved """
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        res_file = self.composite_resource.files.first()
+        # create a folder to contain the aggregation file
+        ResourceFile.create_folder(self.composite_resource, 'generic_2')
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + res_file.file_name,
+                                      'data/contents/generic_2/' + res_file.file_name)
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic_2/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic_2/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # hold on to the original xml file paths to test that they get deleted
+        orig_meta_xml_file_path = logical_file.metadata_file_path
+        orig_map_xml_file_path = logical_file.map_file_path
+
+        # create a folder where we will move the 'generic_2' folder that contains the
+        # aggregation file
+        ResourceFile.create_folder(self.composite_resource, 'generic_1')
+        # now move 'generic_2' to folder 'generic_1'
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/generic_2',
+                                      'data/contents/generic_1/generic_2')
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        expected_aggr_meta_file_path = "{root}/generic_1/generic_2/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+
+        self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+        expected_aggr_map_file_path = "{root}/generic_1/generic_2/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, fn=res_file.file_name)
+        self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
+
+        # test that the old aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(orig_meta_xml_file_path))
+        # test that the old aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(orig_map_xml_file_path))
+
+        # test that the original meta xml file path and the current meta xml file path are different
+        self.assertNotEqual(logical_file.metadata_file_path, orig_meta_xml_file_path)
+        # test that the original map xml file path and the current map xml file path are different
+        self.assertNotEqual(logical_file.map_file_path, orig_map_xml_file_path)
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_delete_1(self):
+        """Test that aggregation metadata and map xml files are deleted on aggregation
+        delete"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        # test that when we create composite resource with an uploaded file, then the uploaded file
+        # is automatically set to genericlogicalfile type
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        meta_xml_file_path = logical_file.metadata_file_path
+        map_xml_file_path = logical_file.map_file_path
+        # remove aggregation
+        logical_file.remove_aggregation()
+        # test that the aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(meta_xml_file_path))
+        # test that the aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(map_xml_file_path))
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_xml_files_delete_2(self):
+        """Test that aggregation metadata and map xml files are deleted on deleting res file
+        that is part of a generic aggregation"""
+
+        if not super(CompositeResourceTest, self).is_federated_irods_available():
+            return
+
+        # test that when we create composite resource with an uploaded file, then the uploaded file
+        # is automatically set to genericlogicalfile type
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self._create_composite_resource()
+
+        # create a generic aggregation (logical file)
+        self._create_generic_aggregation()
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        istorage = self.composite_resource.get_irods_storage()
+        # test that the aggregation metadata xml file was created
+        self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+        # test that the aggregation map xml file was created
+        self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        meta_xml_file_path = logical_file.metadata_file_path
+        map_xml_file_path = logical_file.map_file_path
+        # delete res file
+        hydroshare.delete_resource_file(self.composite_resource.short_id, res_file.id,
+                                        self.user)
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+        # test that the aggregation metadata xml file got deleted
+        self.assertFalse(istorage.exists(meta_xml_file_path))
+        # test that the aggregation map xml file got deleted
+        self.assertFalse(istorage.exists(map_xml_file_path))
         self.composite_resource.delete()
 
     def test_file_add_to_composite_resource(self):
@@ -127,8 +524,10 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-
+        # create the generic aggregation (logical file)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # check that the resource file is associated with GenericLogicalFile
+        res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
@@ -158,10 +557,9 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             return
 
         self._create_composite_resource()
-        # set the logical file - which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
-
+        res_file = self.composite_resource.files.first()
+        # create the generic aggregation (logical file)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # there should be one GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -181,13 +579,14 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
-        # set the logical file - which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
-
+        res_file = self.composite_resource.files.first()
+        # create the generic aggregation (logical file)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
         self.assertEqual(BaseResource.objects.count(), 1)
         self.composite_resource.delete()
         self.assertEqual(BaseResource.objects.count(), 0)
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
     def _create_composite_resource(self):
         fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
@@ -205,3 +604,12 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             move=False,
             metadata=[]
         )
+
+    def _create_generic_aggregation(self):
+        # make sure composite_resource is created in federated user zone
+        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
+                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        self.assertEqual(self.composite_resource.resource_federation_path, fed_path)
+        res_file = self.composite_resource.files.first()
+        # create the generic aggregation (logical file)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
