@@ -286,50 +286,50 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             # name of the file selected to set file type
             logical_file.dataset_name = base_file_name
             logical_file.save()
-            files_to_add_to_resource = []
             try:
                 if folder_path is None:
                     # we are here means aggregation is being created by selecting a file
 
                     # create a folder for the geofeature file type using the base file
-                    # name as the name for the new folder
-                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                   base_file_name)
-                    create_folder(resource.short_id, new_folder_path)
-                    log.info("Folder created:{}".format(new_folder_path))
-
-                    new_folder_name = new_folder_path.split('/')[-1]
+                    # name as the name for the new folder only if the selected file is not in a
+                    # folder already
                     if file_folder is None:
+                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                       base_file_name)
+                        create_folder(resource.short_id, new_folder_path)
+                        log.info("Folder created:{}".format(new_folder_path))
+
+                        new_folder_name = new_folder_path.split('/')[-1]
                         upload_folder = new_folder_name
+                        if res_file.extension.lower() == ".shp":
+                            # selected file is a shp file - that means we didn't create any new
+                            # files - we just need to copy all the existing files to a new folder
+                            tgt_folder = new_folder_path[len('data/contents/'):]
+                            for shp_res_file in shp_res_files:
+                                source_path = shp_res_file.storage_path
+                                copied_res_file = ResourceFile.create(resource=resource,
+                                                                      file=None,
+                                                                      folder=tgt_folder,
+                                                                      source=source_path)
+                                # make the copied file as part of the aggregation/file type
+                                logical_file.add_resource_file(copied_res_file)
                     else:
-                        upload_folder = os.path.join(file_folder, new_folder_name)
+                        upload_folder = file_folder
+
                     # we need to upload files to the resource only if the selected file is a zip
                     # file - since we created new files by unzipping
                     if res_file.extension.lower() == ".zip":
-                        files_to_add_to_resource = shape_files
-                    else:
-                        # selected file must be a shp file - that means we didn't create any new
-                        # files - we just need to copy all the existing files to a new folder
-                        tgt_folder = new_folder_path[len('data/contents/'):]
-                        for shp_res_file in shp_res_files:
-                            copied_res_file = ResourceFile.create(resource=resource,
-                                                                  file=None,
-                                                                  folder=tgt_folder,
-                                                                  source=shp_res_file.storage_path)
-                            # make the copied file as part of the aggregation/file type
-                            logical_file.add_resource_file(copied_res_file)
+                        for fl in shape_files:
+                            # we are here means the user selected a zip file to create aggregation
+                            # need to upload all the extracted files to the resource
+                            uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                                         name=os.path.basename(fl))
+                            new_res_file = utils.add_file_to_resource(
+                                resource, uploaded_file, folder=upload_folder
+                            )
 
-                    for fl in files_to_add_to_resource:
-                        # we are here means the user selected a zip file to create aggregation
-                        # need to upload all the extracted files to the resource
-                        uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                                     name=os.path.basename(fl))
-                        new_res_file = utils.add_file_to_resource(
-                            resource, uploaded_file, folder=upload_folder
-                        )
-
-                        # make each resource file we added part of the logical file
-                        logical_file.add_resource_file(new_res_file)
+                            # make each resource file we added part of the logical file
+                            logical_file.add_resource_file(new_res_file)
                 else:
                     # user selected a folder to create aggregation
                     # make all the files in the selected folder as part of the aggregation
@@ -350,7 +350,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     delete_resource_file(resource.short_id, res_file.id, user)
                     log.info("Deleted the original zip file as part of creating an aggregation "
                              "from this zip file.")
-                elif folder_path is None:
+                elif folder_path is None and file_folder is None:
                     # .shp file was selected for aggregation creation - so deleted all
                     # original files as they have been copied to the new aggregation folder
                     for shp_res_file in shp_res_files:
