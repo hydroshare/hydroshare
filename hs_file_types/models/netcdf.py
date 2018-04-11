@@ -437,25 +437,27 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # we are here means aggregation is being created by selecting a file
 
                         # create a folder for the netcdf file type using the base file
-                        # name as the name for the new folder
-                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                       nc_file_name)
+                        # name as the name for the new folder if the file is not already in a folder
+                        if file_folder is None:
+                            new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                           nc_file_name)
 
-                        create_folder(resource.short_id, new_folder_path)
-                        log.info("NetCDF Aggregation creation - folder created:{}".format(
-                            new_folder_path))
-
-                        # copy the selected file to the new aggregation folder location
-                        tgt_folder = new_folder_path[len('data/contents/'):]
-                        copied_res_file = ResourceFile.create(resource=resource,
-                                                              file=None,
-                                                              folder=tgt_folder,
-                                                              source=res_file.storage_path)
-                        # make the copied file as part of the aggregation/file type
-                        logical_file.add_resource_file(copied_res_file)
-
-                        new_folder_name = new_folder_path.split('/')[-1]
-                        upload_folder = new_folder_name
+                            create_folder(resource.short_id, new_folder_path)
+                            log.info("NetCDF Aggregation creation - folder created:{}".format(
+                                new_folder_path))
+                            new_folder_name = new_folder_path.split('/')[-1]
+                            upload_folder = new_folder_name
+                            # copy the selected file to the new aggregation folder location
+                            tgt_folder = new_folder_path[len('data/contents/'):]
+                            copied_res_file = ResourceFile.create(resource=resource,
+                                                                  file=None,
+                                                                  folder=tgt_folder,
+                                                                  source=res_file.storage_path)
+                            # make the copied file as part of the aggregation/file type
+                            logical_file.add_resource_file(copied_res_file)
+                        else:
+                            # selected nc file is already in a folder
+                            upload_folder = file_folder
                     else:
                         # folder has been selected to create aggregation
                         upload_folder = folder_path
@@ -508,9 +510,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
                     logical_file.create_aggregation_xml_documents()
-                    # delete the original resource file if we did not create agrregation
-                    # from a folder
-                    if folder_path is None:
+                    # delete the original nc resource file if we created new folder for this
+                    # new aggregation
+                    if folder_path is None and file_folder is None:
                         delete_resource_file(resource.short_id, res_file.id, user)
                     file_type_success = True
                 except Exception as ex:
