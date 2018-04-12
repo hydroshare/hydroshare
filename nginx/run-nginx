@@ -77,6 +77,7 @@ start_nginx() {
             --link ${HYDROSHARE_CID}:hydroshare \
             -p 80:80 -p 443:443 \
             --volume ${HOST_SSL_DIR}:/hs-certs \
+            --volume /irods:/irods \
             --volume ${HS_LOG_FILES}:/var/log/nginx \
             --volumes-from ${HYDROSHARE_CID} \
             -ti ${NGINX_DOCKER_IMG};

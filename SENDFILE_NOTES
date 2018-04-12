@@ -1,0 +1,58 @@
+The new hydroshare_hydroshare container has been created on cuahsi-dev-2. nginx is run with irods account (uid = 20022) and has access to:
+-	/irods/hydroshare/vaults/cuahsi/irods1/home/cuahsi2DataProxy/bags 
+	this is /projects/hydroshare/vaults/cuahsi/irods1/home/cuahsi2DataProxy/bags
+-	/irods/hydroshare/vaults/cuahsi/irods2/home/cuahsi2UserProxy/bags 
+	this is /projects/hydroshare/vaults/cuahsi/irods2/home/cuahsi2UserProxy/bags
+-	/irods/hydroshare_vault/nginx_tmp/cuahsi-dev-2 
+	this is /projects/hydroshare_vault/nginx_tmp/cuahsi-dev-2
+
+
+In hydroshare container: 
+-       nginx is listening on port 15001
+-       it has three virtual directories:
+
+        location /data/ {
+                internal;
+                root   /irods/hydroshare/vaults/cuahsi/irods1/home/cuahsi2DataProxy/bags;
+        }
+
+        location /user/ {
+                internal;
+                root   /irods/hydroshare/vaults/cuahsi/irods2/home/cuahsi2UserProxy/bags;
+        }
+
+        location /public/ {
+                internal;
+                root   /irods/hydroshare_vault/nginx_tmp/cuahsi-dev-2;
+        }
+
+============================
+Thu Apr  5 10:56:33 EDT 2018
+============================
+
+Changes to be made: 
+a) expose files in subdirectories for single-file download by removing "bags" from exposure path. 
+
+b) debug why files are "not found" in the current configuration, perhaps because the source 
+   directory squashes root privileges and the nginx master process/redirector runs as root. 
+   Try running the redirector as irods. 
+
+c) arrange for logfiles from nginx_sendfile to appear in hydroshare/logs rather than being 
+   lost on the local server. This will likely require different logfile names. 
+
+d) use settings in hydroshare/local_settings.py to drive all configuration: 
+
+SENDFILE_ON = True
+SENDFILE_USER_ROOT = "/irods/hydroshare/vaults/cuahsi/irods2/home/cuahsi2UserProxy"
+SENDFILE_DATA_ROOT = "/irods/hydroshare/vaults/cuahsi/irods1/home/cuahsi2DataProxy"
+SENDFILE_CACHE_ROOT = "/irods/hydroshare_vault/nginx_tmp/cuahsi-dev-2/cache"
+
+   These should be read into the default configuration via a template. 
+
+e) move settings for the django nginx instance to a subdirectory nginx_sendfile of hydroshare, 
+   and decouple from the nginx subdirectory, which is for the standalone nginx static content 
+   server. 
+
+f) Document how to turn this nginx instance on and off, ideally via 
+   hydroshare/nginx_sendfile/run-nginx, in parallel with management of standalone instance. 
+
