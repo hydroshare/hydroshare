@@ -237,15 +237,6 @@ function updateSelectionMenuContext() {
             var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
             var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-            if (currentPath !== "data/contents") {
-                // multi-file aggregation can only be created by selecting a file
-                // if the file is located at the root
-                flagDisableSetNetCDFFileType = true;
-                flagDisableSetGeoRasterFileType = true;
-                flagDisableSetGeoFeatureFileType = true;
-                flagDisableSetTimeseriesFileType = true;
-            }
-
             if(logicalFileType != "") {
                 flagDisableSetGenericFileType = true;
             }
