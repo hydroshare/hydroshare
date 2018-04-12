@@ -389,9 +389,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
 
     def test_metadata_xml(self):
-        """test that the call to resource.get_metadata_xml() doesn't raise exception
-        for composite resource type get_metadata_xml() includes both resource
-        level metadata and file type metadata for each logical file objects within the resource
+        """Test that the call to resource.get_metadata_xml() doesn't raise exception
+        for composite resource type get_metadata_xml()
         """
 
         # 1. create core metadata elements
@@ -793,12 +792,14 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         composite resource class"""
 
         self._create_composite_resource()
-        # add a file to the resource which will be part of  a GenericLogicalFile object
+        # add a file to the resource
         self._add_generic_file_to_resource()
 
         self.assertEqual(self.composite_resource.files.count(), 1)
         # test that we can rename the resource file that's part of the GenericLogical File
         gen_res_file = self.composite_resource.files.first()
+        # crate a generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
         gen_res_file_basename = hydroshare.utils.get_resource_file_name_and_extension(
             gen_res_file)[1]
         self.assertEqual(self.generic_file_name, gen_res_file_basename)
@@ -872,8 +873,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # of GeoRasterLogicalFile object
         src_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
             self.generic_file_name
-        tgt_full_path = self.composite_resource.short_id + '/data/contents/small_logan/' + \
-            self.generic_file_name
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/small_logan'
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
@@ -885,7 +885,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that a folder containing a resource file that's part of the GenericLogicalFile
         # can be zipped
-        # add a file to the resource which will be part of  a GenericLogicalFile object
+        # add a file to the resource which will be part of  a GenericLogicalFile object later
         self._add_generic_file_to_resource()
         self.assertEqual(self.composite_resource.files.count(), 1)
         new_folder_path = "data/contents/my-new-folder"
@@ -896,11 +896,17 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                       'data/contents/' + self.generic_file_name,
                                       new_folder_path + "/" + self.generic_file_name)
         folder_to_zip = self.composite_resource.short_id + '/data/contents/my-new-folder'
-        # test that we can zip the folder my_new_folder
+
+        # test that we can zip the folder my_new_folder as this folder has no aggregation
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
+        gen_res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
+        # test that we can't zip the folder my_new_folder as this folder has aggregation
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+
         # test that a folder containing resource files that are part of the GeorasterLogicalFile
-        # can be zipped
+        # can't be zipped
         self._add_raster_file_to_resource()
         self.assertEqual(self.composite_resource.files.count(), 2)
         # make the tif as part of the GeoRasterLogicalFile
@@ -913,8 +919,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(tif_res_file.resource_file.name.endswith(
             "/data/contents/small_logan/small_logan.tif"))
         folder_to_zip = self.composite_resource.short_id + '/data/contents/small_logan'
-        # test that we can zip the folder small_logan
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+        # test that we can't zip the folder small_logan
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
         self.composite_resource.delete()
 
     def test_supports_delete_original_folder_on_zip(self):
@@ -958,8 +964,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(tif_res_file.resource_file.name.endswith(
             "/data/contents/small_logan/small_logan.tif"))
         folder_to_zip = self.composite_resource.short_id + '/data/contents/small_logan'
-        # test that we can zip the folder my_new_folder
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+        # test that we can't zip the folder my_new_folder
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
         # this is the function we are testing - small_logan folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
