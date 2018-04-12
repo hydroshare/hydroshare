@@ -581,31 +581,32 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             try:
                 if folder_path is None:
                     # we are here means aggregation is being created by selecting a file
-
                     # create a folder for the timeseries file type using the base file
-                    # name as the name for the new folder
-                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                   base_file_name)
-                    create_folder(resource.short_id, new_folder_path)
-                    log.info("Folder created:{}".format(new_folder_path))
-
-                    # copy the selected file to the new aggregation folder location
-                    tgt_folder = new_folder_path[len('data/contents/'):]
-                    copied_res_file = ResourceFile.create(resource=resource,
-                                                          file=None,
-                                                          folder=tgt_folder,
-                                                          source=res_file.storage_path)
-                    # make the copied file as part of the aggregation/file type
-                    logical_file.add_resource_file(copied_res_file)
-
-                    new_folder_name = new_folder_path.split('/')[-1]
+                    # name as the name for the new folder if the file is not in a folder already
                     if file_folder is None:
-                        upload_folder = new_folder_name
+                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                       base_file_name)
+                        create_folder(resource.short_id, new_folder_path)
+                        log.info("Folder created:{}".format(new_folder_path))
+
+                        # copy the selected file to the new aggregation folder location
+                        tgt_folder = new_folder_path[len('data/contents/'):]
+                        copied_res_file = ResourceFile.create(resource=resource,
+                                                              file=None,
+                                                              folder=tgt_folder,
+                                                              source=res_file.storage_path)
+                        # make the copied file as part of the aggregation/file type
+                        logical_file.add_resource_file(copied_res_file)
+                        upload_folder = tgt_folder
                     else:
-                        upload_folder = os.path.join(file_folder, new_folder_name)
+                        # selected nc file is already in a folder
+                        upload_folder = file_folder
+                        # make the selected file part of the aggregation
+                        logical_file.add_resource_file(res_file)
                 else:
                     # folder has been selected for creating the aggregation
                     upload_folder = folder_path
+                    # make the selected file part of the aggregation
                     logical_file.add_resource_file(res_file)
 
                 # add a blank ODM2 sqlite file to the resource and make it part of the aggregation
@@ -630,9 +631,9 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 resource.update_public_and_discoverable()
                 logical_file.create_aggregation_xml_documents()
                 log.info("TimeSeries aggregation was created.")
-                # delete the original resource file if we did not create agrregation
-                # from a folder
-                if folder_path is None:
+                # delete the original selected resource file if we created new folder for this
+                # new aggregation
+                if folder_path is None and file_folder is None:
                     delete_resource_file(resource.short_id, res_file.id, user)
                 file_type_success = True
             except Exception as ex:
