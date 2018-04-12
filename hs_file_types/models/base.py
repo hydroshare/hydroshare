@@ -917,9 +917,9 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def supports_zip(self):
-        """allows a folder containing resource file(s) that are part of this logical file type
-        to be zipped"""
-        return True
+        """a folder containing resource file(s) that are part of this logical file type
+        is not allowed to be zipped"""
+        return False
 
     @property
     def supports_delete_folder_on_zip(self):
