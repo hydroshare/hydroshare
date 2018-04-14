@@ -3145,12 +3145,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         return os.path.basename(self.storage_path)
 
     @property
-    def can_set_file_type(self):
-        """Check if file type can be set for this resource file instance."""
-        return self.extension in ('.tif', '.zip', '.nc', '.shp', '.refts') and \
-            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
-
-    @property
     def url(self):
         """Return the URL of the file contained in this ResourceFile.
 
