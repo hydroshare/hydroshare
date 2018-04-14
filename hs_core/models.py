@@ -2163,7 +2163,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return generic_logical_files_list
 
     def get_logical_files(self, logical_file_class_name):
-        """Get list of logical files for a specified class name."""
+        """Get a list of logical files (aggregations) for a specified logical file class name."""
+
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
