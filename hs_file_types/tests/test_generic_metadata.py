@@ -48,27 +48,43 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def test_generic_logical_file(self):
-        # test that when any file is uploaded to Composite Resource
-        # the file is not assigned to GenericLogicalFile type
-        # test that generic logical file type can have the following metadata (all optional:
-        #   coverage (spatial and temporal)
-        #   key/value metadata
-        #   title (dataset_name)
-        #   keywords
+    def test_generic_aggregation_create(self):
+        """Test that we can create a generic aggregation from a resource file """
+
         self.generic_file_obj = open(self.generic_file, 'r')
         self._create_composite_resource()
 
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        # check that the resource file is associated with GenericLogicalFile
+        # check that the resource file is not part of a aggregation
         self.assertEqual(res_file.has_logical_file, False)
-        # set file to generic logical file type
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # set file to generic logical file type (aggregation)
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
+        self.composite_resource.delete()
+
+    def test_generic_aggregation_metadata(self):
+        """Test that we can create the following metadata for a generic aggregation
+           coverage (spatial and temporal)
+           key/value metadata
+           title (dataset_name)
+           keywords
+        """
+
+        self.generic_file_obj = open(self.generic_file, 'r')
+        self._create_composite_resource()
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the generic logical file has no value for the datataset_name
         self.assertEqual(logical_file.dataset_name, None)
@@ -287,13 +303,16 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
 
     def test_file_rename_or_move(self):
-        # test that resource file that belongs to GenericLogicalFile object
+        # test that a resource file that is part of a GenericLogicalFile object
         # can be moved or renamed
 
         self.generic_file_obj = open(self.generic_file, 'r')
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file.txt')
+        # create generic aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
         # test rename of file is allowed
         src_path = 'data/contents/generic_file.txt'
         tgt_path = "data/contents/generic_file_1.txt"
@@ -301,6 +320,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                       tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file_1.txt')
+
         # test moving the file to a new folder is allowed
         src_path = 'data/contents/generic_file_1.txt'
         tgt_path = "data/contents/test_folder/generic_file_1.txt"
@@ -308,6 +328,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                       tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertTrue(res_file.resource_file.name.endswith(tgt_path))
+        self.composite_resource.delete()
 
     def test_file_type_metadata_on_file_delete(self):
         # test that when a file that's part of the GenericLogicalFile object
@@ -360,7 +381,3 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test Generic File Type Metadata',
             files=(uploaded_file,)
         )
-
-        # set the logical file
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
