@@ -402,7 +402,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self._add_generic_file_to_resource()
 
         # add a raster file to the resource to auto create format element
-        # as well as be able to add raster file type metadata
         self._add_raster_file_to_resource()
 
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -432,49 +431,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                            "Hydrologic Science, Inc. (CUAHSI)"
         url_CUAHSI = 'https://www.cuahsi.org'
         metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
-
-        # create generic logical file
-        # add generic logical file type metadata
-        res_file = [f for f in self.composite_resource.files.all()
-                    if f.extension == ".txt"][0]
-
-        # crate a generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        res_file = [f for f in self.composite_resource.files.all()
-                    if f.logical_file_type_name == "GenericLogicalFile"][0]
-        gen_logical_file = res_file.logical_file
-        # add dataset name
-        self.assertEqual(gen_logical_file.dataset_name, None)
-        gen_logical_file.dataset_name = "This is a generic dataset"
-        gen_logical_file.save()
-        # add key/value metadata
-        gen_logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
-        gen_logical_file.metadata.save()
-        # add temporal coverage
-        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
-        gen_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
-        # add spatial coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
-        gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
-
-        # create a multi-file aggregation (e.g., raster aggregation)
-        tif_res_file = [f for f in self.composite_resource.files.all()
-                        if f.extension == ".tif"][0]
-
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
-        # add file type metadata to multi-file aggregation
-        res_file = [f for f in self.composite_resource.files.all()
-                    if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
-
-        raster_logical_file = res_file.logical_file
-        # check we have dataset name
-        self.assertEqual(raster_logical_file.dataset_name, "small_logan")
-        # add key/value metadata
-        raster_logical_file.metadata.extra_metadata = {'keyA': 'value A', 'keyB': 'value B'}
-        raster_logical_file.metadata.save()
-        # add temporal coverage
-        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2010', 'end': '12/12/2016'}
-        raster_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
 
         # test no exception raised when generating the metadata xml for this resource type
         try:
@@ -1219,6 +1175,49 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_supports_zip_single_file_aggregation_parent_folder(self):
+        """Here we are testing the function supports_zip()
+        Test that zipping a parent folder of a folder that contains a single file aggregation
+        (e.g., generic aggregation) is not allowed
+        """
+
+        self._create_composite_resource()
+
+        # add a file to the resource which will be part of  a GenericLogicalFile object later
+        self._add_generic_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        new_folder_path = "data/contents/generic-folder"
+
+        # create a folder
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the file to this new folder
+        src_path = os.path.join('data', 'contents', self.generic_file_name)
+        tgt_path = os.path.join(new_folder_path, self.generic_file_name)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      src_path, tgt_path)
+
+        gen_res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
+
+        # create a folder
+        new_folder_path = "data/contents/parent-folder"
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the generic-folder to this new folder
+        gen_res_file = self.composite_resource.files.first()
+        src_path = os.path.join('data', 'contents', gen_res_file.file_folder)
+        tgt_path = os.path.join(new_folder_path, gen_res_file.file_folder)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      src_path, tgt_path)
+
+        gen_res_file = self.composite_resource.files.first()
+        self.assertEqual(gen_res_file.file_folder, 'parent-folder/generic-folder')
+        # test that we can't zip the folder parent_folder as this folder contains a
+        # folder (generic-folder) that has an aggregation
+        folder_to_zip = os.path.join(self.composite_resource.file_path, 'parent-folder')
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+
+        self.composite_resource.delete()
+
     def test_supports_zip_multi_file_aggregation_folder(self):
         """Here we are testing the function supports_zip()
         Test that zipping a folder that represents a multi-file aggregation
@@ -1239,6 +1238,43 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that we can't zip the folder small_logan
         folder_to_zip = os.path.join(self.composite_resource.file_path, tif_res_file.file_folder)
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+
+        self.composite_resource.delete()
+
+    def test_supports_zip_multi_file_aggregation_parent_folder(self):
+        """Here we are testing the function supports_zip()
+        Test that zipping a parent folder of a folder that contains a multi file aggregation
+        (e.g., raster aggregation) is not allowed
+        """
+
+        self._create_composite_resource()
+
+        # add a file to the resource which will be part of  a raster aggregation later
+        self._add_raster_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 1)
+
+        tif_res_file = self.composite_resource.files.first()
+        self.assertEqual(tif_res_file.file_folder, None)
+        # create the raster aggregation
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
+        tif_res_file = self.composite_resource.files.first()
+        self.assertEqual(tif_res_file.file_folder, 'small_logan')
+
+        # create a folder
+        new_folder_path = "data/contents/parent-folder"
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the small_logan folder to this new folder
+        src_path = os.path.join('data', 'contents', tif_res_file.file_folder)
+        tgt_path = os.path.join(new_folder_path, tif_res_file.file_folder)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      src_path, tgt_path)
+
+        tif_res_file = self.composite_resource.files.first()
+        self.assertEqual(tif_res_file.file_folder, 'parent-folder/small_logan')
+        # test that we can't zip the folder parent_folder as this folder contains a
+        # folder (small_logan) that represents an aggregation
+        folder_to_zip = os.path.join(self.composite_resource.file_path, 'parent-folder')
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
 
         self.composite_resource.delete()
