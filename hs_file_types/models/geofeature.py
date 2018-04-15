@@ -253,6 +253,19 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder
 
+        def upload_files_in_zip_file(extracted_files):
+            for fl in extracted_files:
+                # we are here means the user selected a zip file to create aggregation
+                # need to upload all the extracted files to the resource
+                uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                             name=os.path.basename(fl))
+                new_res_file = utils.add_file_to_resource(
+                    resource, uploaded_file, folder=upload_folder
+                )
+
+                # make each resource file we added part of the logical file
+                logical_file.add_resource_file(new_res_file)
+
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
@@ -313,23 +326,26 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                                       source=source_path)
                                 # make the copied file as part of the aggregation/file type
                                 logical_file.add_resource_file(copied_res_file)
+                        else:
+                            # selected file must be a zip file - add the extracted files to
+                            # the resource
+                            upload_files_in_zip_file(shape_files)
                     else:
                         upload_folder = file_folder
 
-                    # we need to upload files to the resource only if the selected file is a zip
-                    # file - since we created new files by unzipping
-                    if res_file.extension.lower() == ".zip":
-                        for fl in shape_files:
-                            # we are here means the user selected a zip file to create aggregation
-                            # need to upload all the extracted files to the resource
-                            uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                                         name=os.path.basename(fl))
-                            new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder
-                            )
-
-                            # make each resource file we added part of the logical file
-                            logical_file.add_resource_file(new_res_file)
+                        # we need to upload files to the resource only if the selected file is a zip
+                        # file - since we created new files by unzipping
+                        if res_file.extension.lower() == ".zip":
+                            # selected file must be a zip file- add the extracted files to the
+                            # resource
+                            upload_files_in_zip_file(shape_files)
+                        else:
+                            # selected file must be a shp file
+                            res_files = ResourceFile.list_folder(resource=resource,
+                                                                 folder=file_folder,
+                                                                 sub_folders=False)
+                            for shp_res_file in res_files:
+                                logical_file.add_resource_file(shp_res_file)
                 else:
                     # user selected a folder to create aggregation
                     # make all the files in the selected folder as part of the aggregation
@@ -358,7 +374,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
                 file_type_success = True
             except Exception as ex:
-                msg = "NetCDF aggregation type. Error when creating aggregation type. Error:{}"
+                msg = "GeoFeature aggregation type. Error when creating aggregation type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
             finally:
