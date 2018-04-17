@@ -492,8 +492,9 @@ def file_download_url_mapper(request, shortkey):
         # it's a folder
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))
         return HttpResponseRedirect(file_download_url)
-    file_download_url = istorage.url(irods_file_path)
-    return HttpResponseRedirect(file_download_url)
+    else: 
+        file_download_url = istorage.url(irods_file_path)
+        return HttpResponseRedirect(file_download_url)
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
