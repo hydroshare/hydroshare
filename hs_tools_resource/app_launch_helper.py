@@ -37,7 +37,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
                                 _check_app_supports_resource_sharing_status(resource_obj,
                                                                             tool_res_obj):
                             is_open_with_app, tl = _get_app_tool_info(request_obj, resource_obj,
-                                                                      tool_res_obj)
+                                                                      tool_res_obj, open_with=True)
                             if tl:
                                 tool_list.append(tl)
                                 tool_res_id_list.append(tl['res_id'])
@@ -65,7 +65,20 @@ def resource_level_tool_urls(resource_obj, request_obj):
         return None
 
 
-def _get_app_tool_info(request_obj, resource_obj, tool_res_obj):
+def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False):
+    """
+    get app tool info.
+    :param request_obj: request object
+    :param resource_obj: resource object
+    :param tool_res_obj: web tool app resource object
+    :param open_with: Default is False, meaning check has to be done to see whether
+                      the web app resource should show on the resource's open with list;
+                      if open_with is True, e.g., appkey extended metadata name-value pair
+                      exists that associated this resource with the web app resource, no check
+                      is needed, and this web app tool resource will show on this resource's
+                      open with list
+    :return: an info dict of web tool resource
+    """
     tool_url = tool_res_obj.metadata.url_base.value \
         if tool_res_obj.metadata.url_base else None
     tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
@@ -76,7 +89,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj):
         else "anonymous"
     tool_url_new = parse_app_url_template(
         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
-    is_open_with_app = _check_open_with_app(tool_res_obj, request_obj)
+    is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
