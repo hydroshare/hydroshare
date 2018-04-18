@@ -1,17 +1,14 @@
 import json
 from django.http import HttpResponse
 from haystack.generic_views import FacetedSearchView
-from hs_core.discovery_form import DiscoveryForm
+from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
 
 
 # View class for generating JSON data format from Haystack
 # returned JSON objects array is used for building the map view
 class DiscoveryJsonView(FacetedSearchView):
-    # set facet fields
-    facet_fields = ['creators', 'subjects', 'resource_type', 'public',
-                    'owners_names', 'discoverable', 'published', 'variable_names',
-                    'sample_mediums', 'units_names']
     # declare form class to use in this view
+    facet_fields = FACETED_FIELDS
     form_class = DiscoveryForm
 
     # overwrite Haystack generic_view.py form_valid() function to generate JSON response
@@ -40,13 +37,13 @@ class DiscoveryJsonView(FacetedSearchView):
 
                 json_obj['get_absolute_url'] = solr['absolute_url']
                 json_obj['first_author'] = solr['author']
-                # TODO: this is redundant. The value always exists but oft has value 'none'.
-                if solr['author_description']:
-                    json_obj['first_author_description'] = solr['author_description']
+                # TODO: would be better for this to be derived than stored.
+                if solr['author_url']:
+                    json_obj['first_author_url'] = solr['author_url']
 
                 # iterate over all the coverage values
-                if solr['coverages'] is not None:
-                    for coverage in solr['coverages']:
+                if solr['coverage'] is not None:
+                    for coverage in solr['coverage']:
                         json_coverage = json.loads(coverage)
                         if 'east' in json_coverage:
                             json_obj['coverage_type'] = 'point'

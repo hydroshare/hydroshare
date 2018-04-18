@@ -585,6 +585,16 @@ input[type="button"].hl-btn-block {
 	border-radius: 0; /* */
 }
 
+textarea.form-control {
+  resize: vertical;
+}
+
+@supports (-webkit-appearance:none) {
+  textarea.form-control {
+    width: calc(100% + 1px); /* Work around for recent chrome update that adds unnecessary horizontal scrollbar*/
+  }
+}
+
 /* ===== Navs ===== */
 
 /* 1. Nav tabs */

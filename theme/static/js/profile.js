@@ -24,6 +24,8 @@ function validateForm() {
     var flagRequiredElements = validateRequiredElements();
     var flagEmail = validateEmail();
 
+    cleanIdentifiers();
+
     return  flagRequiredElements && flagEmail;
 }
 
@@ -61,7 +63,6 @@ function validateEmail() {
 function errorLabel(message) {
     return "<div class='error-label'><div class='label label-danger'>" + message + "</div></div>";
 }
-
 
 function setEditMode() {
     $("[data-page-mode='view']").hide();
@@ -192,20 +193,31 @@ function delete_irods_account() {
     });
 }
 
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
 $(document).ready(function () {
     // Change country first empty option to 'Unspecified'
     var option = $("select[name='country'] option:first-child");
     option.val("Unspecified");
     option.text("Unspecified");
 
-    // TODO: TESTING
     $("#btn-create-irods-account").click(create_irods_account);
-    // TODO: TESTING
     $("#btn-delete-irods-account").click(delete_irods_account);
 
     // Only enable Confirm button when input password is longer than 8 characters
     $("#id_irods_password").keyup(function () {
-        pwdlen = $("input#id_irods_password").val().length;
+        var pwdlen = $("input#id_irods_password").val().length;
         if (pwdlen >= 8)
             $('#btn-create-irods-account').removeAttr('disabled');
         else
@@ -245,11 +257,12 @@ $(document).ready(function () {
     });
 
     $("[data-page-mode='edit']").hide();
+
     $("#btn-edit-profile").click(function () {
         setEditMode();
     });
 
-    $("#btn-cancel-profile-edit").click(function () {
+    $(".btn-cancel-profile-edit").click(function () {
         setViewMode();
     });
 
@@ -308,7 +321,6 @@ $(document).ready(function () {
 
     $("tr[data-type='all']").find(".badge").text(collection["total"]);
 
-
     // Unspecified goes away as soon as a user clicks.
     $("input[name='state']").click(function () {
             if ($(this).val() == "Unspecified") {
@@ -320,6 +332,7 @@ $(document).ready(function () {
     $('.tagsinput').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
+      delimiter: [";"],
       autocomplete: {
         source: "/hsapi/dictionary/universities/",
         minLength: 3,
@@ -341,5 +354,11 @@ $(document).ready(function () {
         $(this).trigger(jQuery.Event('keypress', { which: 13 }));
       }
     });
+
+    if(getUrlVars()["edit"] == 'true'){
+        setEditMode();
+        // clear out the edit query params so edit mode isn't reopened on save
+        history.pushState('', document.title, window.location.pathname);
+    }
 });
 

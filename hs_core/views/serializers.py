@@ -93,7 +93,9 @@ class ResourceListItemSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100)
     resource_title = serializers.CharField(max_length=200)
     resource_id = serializers.CharField(max_length=100)
+    abstract = serializers.CharField()
     creator = serializers.CharField(max_length=100)
+    doi = serializers.CharField(max_length=200)
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
     date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
     public = serializers.BooleanField()
@@ -109,6 +111,7 @@ class ResourceListItemSerializer(serializers.Serializer):
 
 
 class ResourceFileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     url = serializers.URLField()
     size = serializers.IntegerField()
     content_type = serializers.CharField(max_length=255)
@@ -123,7 +126,9 @@ ResourceListItem = namedtuple('ResourceListItem',
                               ['resource_type',
                                'resource_id',
                                'resource_title',
+                               'abstract',
                                'creator',
+                               'doi',
                                'public',
                                'discoverable',
                                'shareable',
@@ -139,6 +144,7 @@ ResourceListItem = namedtuple('ResourceListItem',
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
+                               'id',
                                'size',
                                'content_type'])
 

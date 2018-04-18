@@ -183,14 +183,23 @@ function onRemoveKeywordFileType(event) {
     $("#id-keywords-filetype-msg").hide();
 }
 
-function customAlert(msg, duration) {
+// Alert Types: "error", "success", "info"
+function customAlert(alertTitle, alertMessage, alertType, duration) {
+    alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
     var left = ($(window).width() / 2) - 150;
     var style = "top:" + top + "px;left:" + left + "px";
+    var alertTypes = {
+        success: {class: "alert alert-success", icon: "fa fa-check"},
+        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
+        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
+    };
     el.setAttribute("style", style);
-    el.setAttribute("class", "custom-alert");
-    el.innerHTML = msg;
+    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
+    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + alertMessage;
+    el.innerHTML = alertMessage;
     setTimeout(function () {
         $(el).fadeOut(300, function () {
             $(this).remove();
@@ -205,6 +214,11 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $("#old_extra_meta_name").val('');
     $("#extra_meta_name_input").val('');
     $("#extra_meta_value_input").val('');
+
+    // Restore validation UI state
+    $("#extra_meta_msg").hide();
+    $("#extra_meta_name_input").removeClass("form-invalid");
+
     if (edit) {
         var t = $('#extraMetaTable').DataTable();
         var row_to_edit = t.row("#" + row_id_str);
@@ -222,22 +236,26 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $('#extraMetaDialog').modal('show');
 }
 
-
 function addEditExtraMeta2Table() {
+    // Restore validation UI state
     $("#extra_meta_msg").hide();
+    $("#extra_meta_name_input").removeClass("form-invalid");
     var t = $('#extraMetaTable').DataTable();
     var extra_meta_name = $("#extra_meta_name_input").val().trim();
     var extra_meta_value = $("#extra_meta_value_input").val().trim();
     var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
 
-    if(extra_meta_name.length==0 || extra_meta_value.length==0) {
-        $("#extra_meta_msg").html("<font color='red'>Both name and value are required fields that cannot be left blank.</font>");
+    if (foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
+        $("#extra_meta_name_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The name already exists. Please input a different name.</div>");
         $("#extra_meta_msg").show();
         return;
     }
 
-    if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
-        $("#extra_meta_msg").html("<font color='red'>The name already exists. Please input a different name.</font>");
+    if (extra_meta_name.length == 0 || extra_meta_value.length == 0) {
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "Both name and value are required fields that cannot be left blank.</div>");
         $("#extra_meta_msg").show();
         return;
     }
@@ -245,11 +263,11 @@ function addEditExtraMeta2Table() {
     if (edit_extra_meta_row_id == "") {
         // Add new
         var new_row_id_0_base = findMaxRowID(t) + 1;
-        var edit_icon_str = '<span data-arg="' + new_row_id_0_base +
-            '" class="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon"' +
+        var edit_icon_str = '<span data-loop-counter="' + new_row_id_0_base +
+            '" class="btn-edit-icon btn-edit-extra-metadata glyphicon glyphicon-pencil icon-blue table-icon" ' +
             'data-toggle="tooltip" data-placement="top" title="Edit"></span>';
-        var remove_icon_str = '<span data-arg="' + new_row_id_0_base +
-            '" class="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon"' +
+        var remove_icon_str = '<span data-loop-counter="' + new_row_id_0_base +
+            '" class="btn-remove-icon btn-remove-extra-metadata glyphicon glyphicon-trash btn-remove table-icon" ' +
             'data-toggle="tooltip" data-placement="top" title="Remove"></span>';
         var row_ele = t.row.add([extra_meta_name, extra_meta_value, edit_icon_str +
             " " + remove_icon_str]).node();
@@ -263,42 +281,29 @@ function addEditExtraMeta2Table() {
         updated_data_array[1] = extra_meta_value;
         row_to_edit.data(updated_data_array);
     }
+
     t.rows().invalidate().draw();
     $("#extraMetaTable").find("td:nth-child(2)").each(function() {
         $(this).urlClickable();
     });
 
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
-
-    $('#extraMetaDialog').modal('hide');
-    $('#save-extra-meta-btn').show();
-
-    // Bind click events
-    $(".btn-edit-icon").click(function() {
-        var arg = $(this).attr("data-arg");
-        showAddEditExtraMetaPopup(true, arg);
-    });
-
-    $(".btn-remove-icon").click(function() {
-        var arg = $(this).attr("data-arg");
-        removeExtraMetadataFromTable(arg);
-    });
+    $("#extraMetaDialog").modal('hide');
+    saveExtraMetadata();
 }
 
-function findMaxRowID(table)
-{
+function findMaxRowID(table) {
     var max_id = -1;
     table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-        if(parseInt(this.node().id) > max_id)
-        {
+        if(parseInt(this.node().id) > max_id) {
            max_id = parseInt(this.node().id);
         }
     });
+
     return max_id;
 }
 
-function foundDuplicatedName(table, newName, except_row_id)
-{
+function foundDuplicatedName(table, newName, except_row_id) {
     var found_first_duplicated = false;
     var first_duplicated_row_id = -1;
 
@@ -310,13 +315,13 @@ function foundDuplicatedName(table, newName, except_row_id)
             }
         }
     });
+
     return found_first_duplicated;
 }
 
-function saveExtraMetadata()
-{
-    $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
-    $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
+function saveExtraMetadata() {
+    var successMsg = "Extended metadata updated.";
+    var errorMsg = "Extended metadata failed to update.";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -330,6 +335,7 @@ function saveExtraMetadata()
     json_obj = JSON.parse(json_str);
     var shortID = $("#short-id").val();
     var update_key_value_metadata_url = "/hsapi/_internal/" + shortID + "/update-key-value-metadata/";
+
     $.ajax({
         type: "POST",
         url: update_key_value_metadata_url,
@@ -337,29 +343,26 @@ function saveExtraMetadata()
         data: json_obj,
 
         success: function(result) {
-            json_response = result;
+            var json_response = result;
             if (json_response.status === 'success') {
-                 $('#save-extra-meta-btn').hide();
-                 customAlert($alert_success_extra_meta, 3000);
-                if(json_response.is_dirty) {
+                customAlert("Success!", successMsg, "success", 3000);
+                if (json_response.is_dirty) {
                     $('#netcdf-file-update').show();
                 }
             }
             else {
-                 customAlert($alert_error_extra_meta, 3000);
+                customAlert("Error!", errorMsg, "error", 3000);
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            customAlert($alert_error_extra_meta, 3000);
+            customAlert("Error!", errorMsg, "error", 3000);
         }
     });
 } // function saveExtraMetadata()
 
-function removeExtraMetadataFromTable(row_id)
-{
+function removeExtraMetadataFromTable(row_id) {
     var removed_row = $('#extraMetaTable').DataTable().row('#' + row_id);
     removed_row.remove().draw(false);
-    $('#save-extra-meta-btn').show();
 }
 
 function update_download_status(task_id, download_path) {
@@ -467,6 +470,7 @@ $(document).ready(function () {
         else
             $('#download-bag-btn').attr('disabled', 'disabled');
     });
+
     $("#agree-chk-download-file").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked)
@@ -504,6 +508,7 @@ $(document).ready(function () {
         $("div[data-hs-user-type]").hide();
         $("div[data-hs-user-type='" + type + "']").show();
     }
+
     $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
     $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
 
@@ -513,6 +518,7 @@ $(document).ready(function () {
         $("div[data-hs-org-type]").hide();
         $("div[data-hs-org-type='" + type + "']").show();
     }
+
     $("input[name='choose_org_type']").click(onOrgTypeChange);
 
     // Display toggle for author type radio buttons ('person' or 'organization')
@@ -521,8 +527,8 @@ $(document).ready(function () {
         $("div[data-hs-person-type]").hide();
         $("div[data-hs-person-type='" + type + "']").show();
     }
-    $("input[name='add_author_person']").click(onPersonTypeChange);
 
+    $("input[name='add_author_person']").click(onPersonTypeChange);
 
     $("#citation-text").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
@@ -545,17 +551,11 @@ $(document).ready(function () {
     $("#btn-shareable").on("change", shareable_ajax_submit);
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
-
     $("#btnOpenWithApp").click(label_ajax_submit);
 
     // Apply theme to comment's submit button
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
-
-    $(".list-separator").parent().hover(function(){
-        $(this).css("text-decoration", "none");
-        $(this).css("pointer-events", "none");
-    });
 
     var keywordString = $("#keywords-string").val();
     $("#id-subject").find("#id_value").val(keywordString);
@@ -563,6 +563,7 @@ $(document).ready(function () {
     // Populate keywords field
     var keywords = keywordString.split(",");
     $("#lst-tags").empty();
+
     for (var i = 0; i < keywords.length; i++) {
         if (keywords[i] != "") {
             var li = $("<li class='tag'><span></span></li>");
@@ -573,6 +574,7 @@ $(document).ready(function () {
     }
 
     $(".icon-remove").click(onRemoveKeyword);
+
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {
         e.which = e.which || e.keyCode;
@@ -619,7 +621,7 @@ $(document).ready(function () {
     }
     // disable all save changes button on load
     $("form").each(function () {
-        $save_button = $(this).find("button").first();
+        var $save_button = $(this).find("button").first();
         if ($save_button.text() === "Save changes") {
             $save_button.hide();
         }
@@ -745,7 +747,6 @@ $(document).ready(function () {
             $("#invite-flag button[data-value='users']").disabled = true;
             $("#invite-flag button[data-value='groups']").disabled = false;
 
-
             $("#invite-flag button[data-value='users']").removeClass("btn-primary");
             $("#invite-flag button[data-value='users']").addClass("btn-default");
             $("#invite-flag button[data-value='groups']").removeClass("btn-default");
@@ -757,17 +758,16 @@ $(document).ready(function () {
         showAddEditExtraMetaPopup(false, '');
     });
 
-    $(".btn-edit-extra-metadata").click(function () {
-        var loopCounter = $(this).attr("data-loop-counter");
-        showAddEditExtraMetaPopup(true, loopCounter);
-    });
-
-    $(".btn-remove-extra-metadata").click(function () {
+    $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
         removeExtraMetadataFromTable(loopCounter);
+        saveExtraMetadata();
     });
 
-    $("#save-extra-meta-btn").click(saveExtraMetadata);
+    $("#extraMetaTable").on("click", ".btn-edit-extra-metadata", function () {
+        var index = $(this).attr("data-loop-counter");
+        showAddEditExtraMetaPopup(true, index);
+    });
 
     $("#btn-confirm-edit-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");

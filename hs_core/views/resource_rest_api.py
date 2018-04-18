@@ -45,10 +45,15 @@ class ResourceToListItemMixin(object):
         resource_url = site_url + r.get_absolute_url()
         coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
                      for v in r.metadata.coverages.values()]
+        doi = None
+        if r.raccess.published:
+            doi = "10.4211/hs.{}".format(r.short_id)
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
+                                                          abstract=r.metadata.description,
                                                           creator=r.first_creator.name,
+                                                          doi=doi,
                                                           public=r.raccess.public,
                                                           discoverable=r.raccess.discoverable,
                                                           shareable=r.raccess.shareable,
@@ -69,6 +74,7 @@ class ResourceFileToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
+        id = f.id
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -76,6 +82,7 @@ class ResourceFileToListItemMixin(object):
         else:
             ftype = repr(None)
         resource_file_info_item = serializers.ResourceFileItem(url=url,
+                                                               id=id,
                                                                size=fsize,
                                                                content_type=ftype)
         return resource_file_info_item

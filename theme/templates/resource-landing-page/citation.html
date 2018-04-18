@@ -14,7 +14,20 @@
                 </button>
             </div>
 
-            <br>
+            {% if is_owner_user and not cm.raccess.published %}
+            <br />
+
+            <div>
+                <em>
+                    When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
+                    accessible at the following URL: http://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
+                    ready to permanently publish, click the Publish button at the top of the page to request your DOI.
+                    Reminder: You may no longer edit your resource, once you have permanently published it.
+                </em>
+            </div>
+            {% endif %}
+
+            <br />
 
             {# ======= Sharing ======= #}
             {% if not metadata_form %}

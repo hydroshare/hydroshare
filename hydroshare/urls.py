@@ -45,6 +45,8 @@ urlpatterns = i18n_patterns("",
     url(r'^rating/$', theme.rating),
     url(r'^profile/$', theme.update_user_profile, name='update_profile'),
     url(r'^update_password/$', theme.update_user_password, name='update_password'),
+    url(r'^resend_verification_email/(?P<email>.*)/', theme.resend_verification_email,
+        name='resend_verification_email'),
     url(r'^reset_password_request/$', theme.request_password_reset,
         name='reset_password_request'),
     url(r'^new_password_for_reset/(?P<token>[-\w]+)/', theme.UserPasswordResetView.as_view(),
@@ -156,6 +158,7 @@ urlpatterns += patterns('',
 
     # Override Mezzanine URLs here, before the Mezzanine URL include
     ("^accounts/signup/", "theme.views.signup"),
+    ("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", "theme.views.signup_verify"),
 
     # MEZZANINE'S URLS
     # ----------------

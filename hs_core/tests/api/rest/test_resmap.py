@@ -132,15 +132,21 @@ class TestResourceMap(ResMapTestCase):
 
         # check that MIME types are correctly defined
         fmtlen = 0
+        txt_count = 0
+        xml_count = 0
         for s, p, o in formats:
             fmtlen += 1
             subject = s.split('/')
             subject = subject[len(subject)-1]
             self.assertTrue(isinstance(o, term.Literal))
             if (subject == 'test.txt'):
+                txt_count += 1
                 self.assertEqual(str(o), u'text/plain')
             else:
+                xml_count += 1
                 self.assertEqual(str(o), u'application/rdf+xml')
 
+        self.assertEqual(1, txt_count)
+        self.assertEqual(2, xml_count)
         # pidgeonhole principle: if there are three, then one is the file in question
         self.assertEqual(fmtlen, 3)

@@ -20,6 +20,7 @@ from mezzanine.conf import settings
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
+from hs_core.models import Party
 
 from hydroshare import settings as hydroshare_settings
 
@@ -301,6 +302,10 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        self.fields['identifiers'].required = False
+
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account']
@@ -322,3 +327,7 @@ class UserProfileForm(forms.ModelForm):
         if len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
+
+    def clean_identifiers(self):
+        data = self.cleaned_data['identifiers']
+        return Party.validate_identifiers(data)

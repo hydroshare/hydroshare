@@ -38,6 +38,11 @@ class CompositeResource(BaseResource):
                 res_file.save()
 
     @property
+    def supports_folders(self):
+        """ allow folders for CompositeResources """
+        return True
+
+    @property
     def supports_logical_file(self):
         """ if this resource allows associating resource file objects with logical file"""
         return True

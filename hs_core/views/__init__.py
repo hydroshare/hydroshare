@@ -3,6 +3,7 @@ import json
 import datetime
 import pytz
 import logging
+import os
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -50,6 +51,7 @@ from . import resource_folder_hierarchy
 from . import resource_access_api
 from . import resource_folder_rest_api
 from . import debug_resource_view
+from . import resource_ticket_rest_api
 from . import apps
 
 from hs_core.hydroshare import utils
@@ -212,7 +214,13 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     post_data = request.POST.copy()
     resource_mode = post_data.pop('resource-mode', None)
-    res.extra_metadata = post_data.dict()
+    extra_metadata = post_data.dict()
+    extra_metadata_copy = extra_metadata.copy()
+    for key in extra_metadata_copy:
+        if not key:
+            extra_metadata.pop(key)
+
+    res.extra_metadata = extra_metadata
     is_update_success = True
     err_message = ""
     try:
@@ -476,7 +484,14 @@ def file_download_url_mapper(request, shortkey):
 
     resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     istorage = resource.get_irods_storage()
-    irods_file_path = '/'.join(request.path.split('/')[2:-1])
+    irods_split = request.path.split('/')[2:-1]
+    irods_file_path = '/'.join(irods_split)
+    # [0:-1] excludes the last item on the list
+    listing = istorage.listdir('/'.join(irods_split[0:-1]))
+    if irods_split[-1] in listing[0]:
+        # it's a folder
+        file_download_url = istorage.url(os.path.join('zips', irods_file_path))
+        return HttpResponseRedirect(file_download_url)
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
@@ -1145,18 +1160,25 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['message'] = ex.message
         return JsonResponse(ajax_response_data)
 
-    resource = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
-            owner=request.user,
-            title=res_title,
-            metadata=metadata,
-            files=resource_files,
-            source_names=source_names,
-            # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-            move=(fed_copy_or_move == 'move'),
-            content=res_title
-    )
+    try:
+        resource = hydroshare.create_resource(
+                resource_type=request.POST['resource-type'],
+                owner=request.user,
+                title=res_title,
+                metadata=metadata,
+                files=resource_files,
+                source_names=source_names,
+                # TODO: should probably be resource_federation_path like it is set to.
+                fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
+                move=(fed_copy_or_move == 'move'),
+                content=res_title
+        )
+    except SessionException as ex:
+        ajax_response_data['message'] = ex.stderr
+        return JsonResponse(ajax_response_data)
+    except Exception as ex:
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     try:
         utils.resource_post_create_actions(request=request, resource=resource,
@@ -1388,7 +1410,8 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
                 # redirect to group profile page
                 return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
             else:
-                messages.error(request, "The link you clicked is no longer valid.")
+                messages.error(request, "The link you clicked is no longer valid. Please ask to "
+                                        "join the group again.")
                 return redirect("/")
         else:
             messages.error(request, "The group is no longer active.")
@@ -1496,6 +1519,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data['address'] = address
         user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+        user_data['identifiers'] = user.userprofile.identifiers
     else:
         group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name

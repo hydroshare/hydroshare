@@ -508,8 +508,8 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
 
 
-# customized value for password reset token and email verification link token to expire in 1 day
-PASSWORD_RESET_TIMEOUT_DAYS = 1
+# customized value for password reset token, email verification and group invitation link token to expire in 7 days
+PASSWORD_RESET_TIMEOUT_DAYS = 7
 
 #
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
