@@ -313,6 +313,17 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder
 
+        def add_files_to_resource(files_to_add):
+            for f in files_to_add:
+                uploaded_file = UploadedFile(file=open(f, 'rb'),
+                                             name=os.path.basename(f))
+
+                new_res_file = utils.add_file_to_resource(
+                    resource, uploaded_file, folder=upload_folder)
+
+                # make each resource file we added as part of the logical file
+                logical_file.add_resource_file(new_res_file)
+
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
         file_name = res_file.file_name
@@ -375,6 +386,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                 # remove the tif file from the list of files
                                 files_to_add_to_resource = [f for f in files_to_add_to_resource
                                                             if not f.endswith(res_file.file_name)]
+                                add_files_to_resource(files_to_add_to_resource)
                         else:
                             upload_folder = file_folder
                             if res_file.extension.lower() == ".tif":
@@ -384,16 +396,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                 # remove the tif file from the list of files
                                 files_to_add_to_resource = [f for f in files_to_add_to_resource
                                                             if not f.endswith(res_file.file_name)]
-                        # add all new files to the resource
-                        for f in files_to_add_to_resource:
-                            uploaded_file = UploadedFile(file=open(f, 'rb'),
-                                                         name=os.path.basename(f))
+                                add_files_to_resource(files_to_add_to_resource)
 
-                            new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder)
-
-                            # make each resource file we added as part of the logical file
-                            logical_file.add_resource_file(new_res_file)
                     else:
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
@@ -439,12 +443,15 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     logical_file.create_aggregation_xml_documents()
                     # if a file was selected at the root for creating aggregation then
                     # delete this original selected file
-                    if folder_path is None and file_folder is None:
-                        zip_file = res_file.extension.lower() == ".zip"
+                    if folder_path is None and res_file.extension.lower() == ".zip":
                         delete_resource_file(resource.short_id, res_file.id, user)
-                        if zip_file:
-                            log.info("Deleted the original zip file as part of creating an "
-                                     "aggregation from this zip file.")
+                        log.info("Deleted the original zip file as part of creating an "
+                                 "aggregation from this zip file.")
+                    elif folder_path is None and file_folder is None:
+                        # tif file was selected for aggregation creation
+                        # need to deleted this file as we have made a copy of it to a new folder
+                        delete_resource_file(resource.short_id, res_file.id, user)
+
                     file_type_success = True
                 except Exception as ex:
                     msg = msg.format(ex.message)
