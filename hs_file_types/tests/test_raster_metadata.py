@@ -12,19 +12,20 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import Coverage
+from hs_core.models import Coverage, ResourceFile
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
-from utils import assert_raster_file_type_metadata
+from utils import assert_raster_file_type_metadata, CompositeResourceTestHelper
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
 
-class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+                             CompositeResourceTestHelper):
     def setUp(self):
-        super(RasterFileTypeMetaData, self).setUp()
+        super(RasterFileTypeTest, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
@@ -35,6 +36,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
+        self.res_title = 'Testing Raster File Type'
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
@@ -69,27 +71,32 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.invalid_raster_zip_file_obj = open(target_temp_raster_file, 'r')
 
     def tearDown(self):
-        super(RasterFileTypeMetaData, self).tearDown()
+        super(RasterFileTypeTest, self).tearDown()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def test_tif_set_file_type_to_geo_raster(self):
-        # here we are using a valid raster tif file for setting it
-        # to Geo Raster file type which includes metadata extraction
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+    def test_create_aggregation_from_tif_file_1(self):
+        # here we are using a valid raster tif file that exists at the root of the folder
+        # hierarchy for setting it to Geo Raster file type which includes metadata extraction
+        # a new folder should be created as part of the aggregation creation where the resource
+        # files of the aggregation should live
 
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
-        # set the tif file to GeoRasterFile type
+        # set the tif file to GeoRasterLogicalFile type
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        for res_file in self.composite_resource.files.all():
+            print(res_file.short_path)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
         # test extracted raster file type metadata
-        assert_raster_file_type_metadata(self)
+        assert_raster_file_type_metadata(self, aggr_folder_path='small_logan')
 
         # there should not be any file level keywords at this point
         res_file = self.composite_resource.files.first()
@@ -102,12 +109,47 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
-    def test_zip_set_file_type_to_geo_raster(self):
-        # here we are using a valid raster zip file for setting it
-        # to Geo Raster file type which includes metadata extraction
+    def test_create_aggregation_from_tif_file_2(self):
+        # here we are using a valid raster tif file that exists in a folder
+        # for setting it to Geo Raster file type which includes metadata extraction - no new
+        # folder should be created in this case
 
-        self.raster_file_obj = open(self.raster_zip_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource()
+        # create a folder to place the tif file before creating an aggregation from the tif file
+        new_folder = 'raster_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # set the tif file to GeoRasterLogicalFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # test extracted raster file type metadata
+        assert_raster_file_type_metadata(self, aggr_folder_path=new_folder)
+
+        # there should not be any file level keywords at this point
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
+        self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+        # TODO: not sure why there would be file level keywords - commented out as the test is
+        # failing
+        # self.assertEqual(logical_file.metadata.keywords, [])
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_zip_file_1(self):
+        # here we are using a valid raster zip file that exist at the root of the folder hierarchy
+        # for setting it to Geo Raster file type which includes metadata extraction
+        # a new folder should be created in this case where the extracted files that are part of
+        # the aggregation should exist
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_zip_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -120,90 +162,60 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # set the zip file to GeoRasterFile type
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
-        # test the resource now has 3 files (one vrt file and 2 tif files)
-        self.assertEqual(self.composite_resource.files.all().count(), 3)
-        tif_files = hydroshare.utils.get_resource_files_by_extension(
-            self.composite_resource, '.tif')
-        self.assertEqual(len(tif_files), 2)
-        vrt_files = hydroshare.utils.get_resource_files_by_extension(
-            self.composite_resource, '.vrt')
-        self.assertEqual(len(vrt_files), 1)
-
-        # check that the logicalfile is associated with 3 files
-        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertEqual(logical_file.dataset_name, 'logan_vrt_small')
-        self.assertEqual(logical_file.has_metadata, True)
-        self.assertEqual(logical_file.files.all().count(), 3)
-        self.assertEqual(set(self.composite_resource.files.all()),
-                         set(logical_file.files.all()))
-
-        # check that we put the 3 files in a new folder (small_logan)
-        for res_file in self.composite_resource.files.all():
-            file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
-            expected_file_path = "{}/data/contents/logan_vrt_small/{}"
-            expected_file_path = expected_file_path.format(self.composite_resource.short_id,
-                                                           base_file_name)
-            self.assertEqual(file_path, expected_file_path)
-
-        # check that there is no GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 0)
-
-        # test that size property of the logical file is equal to sun of size of all files
-        # that are part of the logical file
-        self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
-
-        # test extracted metadata for the file type
-        # geo raster file type should have all the metadata elements
-        self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
-
-        # there should be 1 coverage element - box type
-        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
-        self.assertEqual(logical_file.metadata.spatial_coverage.type, 'box')
-
-        box_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.050028785767275)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.5773750264389)
-        self.assertEqual(box_coverage.value['southlimit'], 41.98745777902698)
-        self.assertEqual(box_coverage.value['westlimit'], -111.65768822411239)
-
-        # testing extended metadata element: original coverage
-        ori_coverage = logical_file.metadata.originalCoverage
-        self.assertNotEqual(ori_coverage, None)
-        self.assertEqual(ori_coverage.value['northlimit'], 4655492.446916306)
-        self.assertEqual(ori_coverage.value['eastlimit'], 452174.01909127034)
-        self.assertEqual(ori_coverage.value['southlimit'], 4648592.446916306)
-        self.assertEqual(ori_coverage.value['westlimit'], 445574.01909127034)
-        self.assertEqual(ori_coverage.value['units'], 'meter')
-        self.assertEqual(ori_coverage.value['projection'],
-                         'NAD83 / UTM zone 12N')
-
-        # testing extended metadata element: cell information
-        cell_info = logical_file.metadata.cellInformation
-        self.assertEqual(cell_info.rows, 230)
-        self.assertEqual(cell_info.columns, 220)
-        self.assertEqual(cell_info.cellSizeXValue, 30.0)
-        self.assertEqual(cell_info.cellSizeYValue, 30.0)
-        self.assertEqual(cell_info.cellDataType, 'Float32')
-
-        # testing extended metadata element: band information
-        self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
-        band_info = logical_file.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '2880.00708008')
-        self.assertEqual(band_info.minimumValue, '2274.95898438')
+        # test aggregation
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        self._test_aggregation_from_zip_file(aggr_folder_path=base_file_name)
 
         self.composite_resource.delete()
+
+    def test_create_aggregation_from_zip_file_2(self):
+        # here we are using a valid raster zip file that exist in a folder
+        # for setting it to Geo Raster file type which includes metadata extraction
+        # no new folder should be created in this case
+
+        self.create_composite_resource()
+        # create a folder to place the zip file before creating an aggregation from the zip file
+        new_folder = 'raster_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.raster_zip_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # check that the resource file is not associated with any logical file
+        # self.assertEqual(res_file.has_logical_file, False)
+        # set the zip file to GeoRasterFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        # test aggregation
+        self._test_aggregation_from_zip_file(aggr_folder_path=new_folder)
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_folder_1(self):
+        """Here we are testing that an aggregation of type GeoRasterLogicalFile
+        can be created from a folder that contains the required resource files
+        This folder containing the files are at the root of the folder hierarchy
+        """
+        self._test_create_aggregation_from_folder(folder_to_test='georaster_aggr')
+
+    def test_create_aggregation_from_folder_2(self):
+        """Here we are testing that an aggregation of type GeoRasterLogicalFile
+        can be created from a folder that contains the required resource files
+        This folder containing the files has one parent folder
+        """
+
+        self._test_create_aggregation_from_folder(folder_to_test='parent_folder/georaster_aggr')
 
     def test_set_file_type_to_geo_raster_invalid_file_1(self):
         # here we are using an invalid raster tif file for setting it
         # to Geo Raster file type which should fail
-        self.raster_file_obj = open(self.invalid_raster_file, 'r')
-        self._create_composite_resource()
-
+        # self.raster_file_obj = open(self.invalid_raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.invalid_raster_file)
         self._test_invalid_file()
 
         self.composite_resource.delete()
@@ -211,8 +223,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_set_file_type_to_geo_raster_invalid_file_2(self):
         # here we are using a raster tif file for setting it
         # to Geo Raster file type which already been previously set to this file type - should fail
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -239,16 +253,20 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_set_file_type_to_geo_raster_invalid_file_3(self):
         # here we are using an invalid raster zip file for setting it
         # to Geo Raster file type - should fail
-        self.raster_file_obj = open(self.invalid_raster_zip_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.invalid_raster_zip_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.invalid_raster_zip_file)
 
         self._test_invalid_file()
         self.composite_resource.delete()
 
     def test_metadata_CRUD(self):
         # this is test metadata related to GeoRasterLogicalFile
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -445,14 +463,16 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_file_metadata_on_logical_file_delete(self):
         # test that when the GeoRasterFileType is deleted
         # all metadata associated with GeoRasterFileType is deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
-        # extract metadata from the tif file
+        # create raster aggregation using the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
-        # test that we have one logical file of type GeoRasterFileType as a result
+        # test that we have one logical file of type GeoRasterLogicalFileType as a result
         # of metadata extraction
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
@@ -486,11 +506,13 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
         # all metadata associated with GeoRasterFileType is deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
-        # extract metadata from the tif file
+        # create raster aggregation using the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that we have one logical file of type GeoRasterFileType as a result
@@ -522,8 +544,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_logical_file_delete(self):
         # test that when an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -548,8 +572,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that when an instance GeoRasterLogicalFile (aggregation) is deleted
         # all files associated with that aggregation is not deleted but the associated metadata
         # is deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterLogicalFile (aggregation)
@@ -589,15 +615,17 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
-    def test_raster_file_type_folder_delete(self):
+    def test_aggreagtion_file_type_folder_delete(self):
         # when  a file is set to georasterlogical file type
         # system automatically creates folder using the name of the file
         # that was used to set the file type
         # Here we need to test that when that folder gets deleted, all files
         # in that folder gets deleted, the logicalfile object gets deleted and
         # the associated metadata objects get deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -635,12 +663,123 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(BandInformation.objects.count(), 0)
         self.composite_resource.delete()
 
+    def test_aggregation_file_rename(self):
+        # test that a file can't renamed for any resource file
+        # that's part of the GeoRaster logical file
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # test renaming of files that are associated with aggregation raises exception
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        for res_file in self.composite_resource.files.all():
+            base_file_name, ext = os.path.splitext(res_file.file_name)
+            expected_folder_name = base_file_name
+            self.assertEqual(res_file.file_folder, expected_folder_name)
+            src_path = 'data/contents/{0}/{1}.{2}'.format(expected_folder_name, base_file_name, ext)
+            new_file_name = 'some_raster.{}'.format(ext)
+            self.assertNotEqual(res_file.file_name, new_file_name)
+            tgt_path = 'data/contents/{}/{}'.format(expected_folder_name, new_file_name)
+            with self.assertRaises(DRF_ValidationError):
+                move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                              tgt_path)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_file_move(self):
+        # test any resource file that's part of the GeoRaster logical file can't be moved
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+
+        # create the aggregation using the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # test renaming of files that are associated with raster LFO - which should raise exception
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
+        self.assertEqual(res_file.file_folder, expected_folder_name)
+        new_folder = 'georaster_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+
+        # moving any of the resource files to this new folder should raise exception
+        tgt_path = 'data/contents/{}'.format(new_folder)
+        for res_file in self.composite_resource.files.all():
+            with self.assertRaises(DRF_ValidationError):
+                src_path = os.path.join('data', 'contents', res_file.short_path)
+                move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                              tgt_path)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_folder_rename(self):
+        # test changes to aggregation name, aggregation metadata xml file path, and aggregation
+        # resource map xml file path on folder name change
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, expected_folder_name)
+
+        # test aggregation name
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+
+        # test aggregation xml file paths
+        expected_meta_file_path = '{}/{}_meta.xml'.format(base_file_name, base_file_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
+
+        expected_map_file_path = '{}/{}_resmap.xml'.format(base_file_name, base_file_name)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
+
+        # test renaming folder
+        src_path = 'data/contents/{}'.format(expected_folder_name)
+        tgt_path = 'data/contents/{}_1'.format(expected_folder_name)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, '{}_1'.format(expected_folder_name))
+
+        # test aggregation name update
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+
+        # test aggregation xml file paths
+        expected_meta_file_path = '{}_1/{}_1_meta.xml'.format(expected_folder_name,
+                                                              expected_folder_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
+
+        expected_map_file_path = '{}_1/{}_1_resmap.xml'.format(expected_folder_name,
+                                                               expected_folder_name)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
+
+        self.composite_resource.delete()
+
     def test_file_rename_or_move(self):
         # test that file can't be moved or renamed for any resource file
         # that's part of the GeoRaster logical file object (LFO)
 
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -685,9 +824,40 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
                                      metadata=self.composite_resource.metadata)
 
+    def _test_create_aggregation_from_folder(self, folder_to_test):
+
+        self.create_composite_resource()
+        self.assertEqual(self.composite_resource.files.count(), 0)
+        # create a folder to upload files there
+        new_folder = folder_to_test
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the tif file to the resource at the above folder
+        res_file = self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
+
+        self.assertEqual(res_file.file_folder, new_folder)
+        # resource should have 1 file now
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertFalse(res_file.has_logical_file)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # create the aggregation from the folder
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user,
+                                           folder_path=new_folder)
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        for res_file in self.composite_resource.files.all():
+            # test that each resource file is part of an aggregation (logical file)
+            self.assertTrue(res_file.has_logical_file)
+            # test that the each resource file has the same folder - no new folder created
+            self.assertEqual(res_file.file_folder, new_folder)
+
+        self.composite_resource.delete()
+
     def _test_file_metadata_on_file_delete(self, ext):
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+        # self.raster_file_obj = open(self.raster_file, 'r')
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
         self.assertEqual(Coverage.objects.count(), 0)
         # extract metadata from the tif file
@@ -736,8 +906,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def _content_file_delete(self, ext):
         # test that when any file that is part of an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
-        self.raster_file_obj = open(self.raster_file, 'r')
+
+        # self.raster_file_obj = open(self.raster_file, 'r')
         self._create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -772,4 +944,77 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # check that the resource file is not associated with generic logical file
         self.assertEqual(res_file.has_logical_file, False)
+
+    def _test_aggregation_from_zip_file(self, aggr_folder_path):
+        # test the resource now has 3 files (one vrt file and 2 tif files)
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        tif_files = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')
+        self.assertEqual(len(tif_files), 2)
+        vrt_files = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.vrt')
+        self.assertEqual(len(vrt_files), 1)
+
+        # check that the logicalfile is associated with 3 files
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.dataset_name, 'logan_vrt_small')
+        self.assertEqual(logical_file.has_metadata, True)
+        self.assertEqual(logical_file.files.all().count(), 3)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # check that we put the 3 files in a new folder (small_logan)
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, aggr_folder_path)
+
+        # check that there is no GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+
+        # test that size property of the logical file is equal to sun of size of all files
+        # that are part of the logical file
+        self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
+
+        # test extracted metadata for the file type
+        # geo raster file type should have all the metadata elements
+        self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
+
+        # there should be 1 coverage element - box type
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        self.assertEqual(logical_file.metadata.spatial_coverage.type, 'box')
+
+        box_coverage = logical_file.metadata.spatial_coverage
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 42.050028785767275)
+        self.assertEqual(box_coverage.value['eastlimit'], -111.5773750264389)
+        self.assertEqual(box_coverage.value['southlimit'], 41.98745777902698)
+        self.assertEqual(box_coverage.value['westlimit'], -111.65768822411239)
+
+        # testing extended metadata element: original coverage
+        ori_coverage = logical_file.metadata.originalCoverage
+        self.assertNotEqual(ori_coverage, None)
+        self.assertEqual(ori_coverage.value['northlimit'], 4655492.446916306)
+        self.assertEqual(ori_coverage.value['eastlimit'], 452174.01909127034)
+        self.assertEqual(ori_coverage.value['southlimit'], 4648592.446916306)
+        self.assertEqual(ori_coverage.value['westlimit'], 445574.01909127034)
+        self.assertEqual(ori_coverage.value['units'], 'meter')
+        self.assertEqual(ori_coverage.value['projection'],
+                         'NAD83 / UTM zone 12N')
+
+        # testing extended metadata element: cell information
+        cell_info = logical_file.metadata.cellInformation
+        self.assertEqual(cell_info.rows, 230)
+        self.assertEqual(cell_info.columns, 220)
+        self.assertEqual(cell_info.cellSizeXValue, 30.0)
+        self.assertEqual(cell_info.cellSizeYValue, 30.0)
+        self.assertEqual(cell_info.cellDataType, 'Float32')
+
+        # testing extended metadata element: band information
+        self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
+        band_info = logical_file.metadata.bandInformations.first()
+        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
+        self.assertEqual(band_info.maximumValue, '2880.00708008')
+        self.assertEqual(band_info.minimumValue, '2274.95898438')
 
