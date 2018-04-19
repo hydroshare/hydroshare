@@ -14,6 +14,7 @@ from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
 from hs_tools_resource.utils import parse_app_url_template
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
+
 class TestWebAppFeature(TransactionTestCase):
 
     def setUp(self):
