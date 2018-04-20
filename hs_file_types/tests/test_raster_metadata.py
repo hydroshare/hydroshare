@@ -1,11 +1,8 @@
 import os
-import tempfile
-import shutil
 
 from django.test import TransactionTestCase
 from django.db import IntegrityError
 from django.contrib.auth.models import Group
-from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
@@ -13,17 +10,15 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.hydroshare.utils import resource_post_create_actions, \
-    get_resource_file_name_and_extension
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
-from utils import assert_raster_file_type_metadata, CompositeResourceTestHelper
+from utils import assert_raster_file_type_metadata, CompositeResourceTestMixin
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
 
 class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
-                             CompositeResourceTestHelper):
+                         CompositeResourceTestMixin):
     def setUp(self):
         super(RasterFileTypeTest, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -37,13 +32,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         )
 
         self.res_title = 'Testing Raster File Type'
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Raster File Metadata'
-        )
 
-        self.temp_dir = tempfile.mkdtemp()
+        # data files to use for testing
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.invalid_raster_file_name = 'raster_tif_invalid.tif'
@@ -53,27 +43,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.invalid_raster_file = 'hs_file_types/tests/{}'.format(self.invalid_raster_file_name)
         self.invalid_raster_zip_file = 'hs_file_types/tests/{}'.format(
             self.invalid_raster_zip_file_name)
-
-        target_temp_raster_file = os.path.join(self.temp_dir, self.raster_file_name)
-        shutil.copy(self.raster_file, target_temp_raster_file)
-        self.raster_file_obj = open(target_temp_raster_file, 'r')
-
-        target_temp_raster_file = os.path.join(self.temp_dir, self.raster_zip_file_name)
-        shutil.copy(self.raster_zip_file, target_temp_raster_file)
-        self.raster_zip_file_obj = open(target_temp_raster_file, 'r')
-
-        target_temp_raster_file = os.path.join(self.temp_dir, self.invalid_raster_file_name)
-        shutil.copy(self.invalid_raster_file, target_temp_raster_file)
-        self.invalid_raster_file_obj = open(target_temp_raster_file, 'r')
-
-        target_temp_raster_file = os.path.join(self.temp_dir, self.invalid_raster_zip_file_name)
-        shutil.copy(self.invalid_raster_zip_file, target_temp_raster_file)
-        self.invalid_raster_zip_file_obj = open(target_temp_raster_file, 'r')
-
-    def tearDown(self):
-        super(RasterFileTypeTest, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
 
     def test_create_aggregation_from_tif_file_1(self):
         # here we are using a valid raster tif file that exists at the root of the folder
@@ -98,14 +67,12 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test extracted raster file type metadata
         assert_raster_file_type_metadata(self, aggr_folder_path='small_logan')
 
-        # there should not be any file level keywords at this point
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
-        # TODO: not sure why there would be file level keywords - commented out as the test is
-        # failing
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        # there should not be any file level keywords at this point
+        self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()
 
@@ -131,14 +98,12 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test extracted raster file type metadata
         assert_raster_file_type_metadata(self, aggr_folder_path=new_folder)
 
-        # there should not be any file level keywords at this point
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
-        # TODO: not sure why there would be file level keywords - commented out as the test is
-        # failing
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        # there should not be any file level keywords at this point
+        self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()
 
@@ -213,7 +178,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def test_set_file_type_to_geo_raster_invalid_file_1(self):
         # here we are using an invalid raster tif file for setting it
         # to Geo Raster file type which should fail
-        # self.raster_file_obj = open(self.invalid_raster_file, 'r')
+
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.invalid_raster_file)
         self._test_invalid_file()
@@ -224,7 +189,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a raster tif file for setting it
         # to Geo Raster file type which already been previously set to this file type - should fail
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
 
@@ -254,7 +218,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using an invalid raster zip file for setting it
         # to Geo Raster file type - should fail
 
-        # self.raster_file_obj = open(self.invalid_raster_zip_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.invalid_raster_zip_file)
 
@@ -264,7 +227,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def test_metadata_CRUD(self):
         # this is test metadata related to GeoRasterLogicalFile
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
 
@@ -464,7 +426,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that when the GeoRasterFileType is deleted
         # all metadata associated with GeoRasterFileType is deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -507,7 +468,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that when the composite resource is deleted
         # all metadata associated with GeoRasterFileType is deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -545,7 +505,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that when an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -573,7 +532,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # all files associated with that aggregation is not deleted but the associated metadata
         # is deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -623,7 +581,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # in that folder gets deleted, the logicalfile object gets deleted and
         # the associated metadata objects get deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -986,20 +943,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       upload_folder=res_file.file_folder)
         self.composite_resource.delete()
 
-    def _create_composite_resource(self):
-        uploaded_file = UploadedFile(file=self.raster_file_obj,
-                                     name=os.path.basename(self.raster_file_obj.name))
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Raster File Type Metadata',
-            files=(uploaded_file,)
-        )
-
-        # set the logical file
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
-
     def _test_create_aggregation_from_folder(self, folder_to_test):
 
         self.create_composite_resource()
@@ -1031,7 +974,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def _test_file_metadata_on_file_delete(self, ext):
-        # self.raster_file_obj = open(self.raster_file, 'r')
+
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
@@ -1083,7 +1026,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that when any file that is part of an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
