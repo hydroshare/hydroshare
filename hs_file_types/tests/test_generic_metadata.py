@@ -1,24 +1,21 @@
 # coding=utf-8
 import os
-import tempfile
-import shutil
 
-from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import Coverage
-from hs_core.hydroshare.utils import resource_post_create_actions
+from hs_core.models import Coverage, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-
+from utils import CompositeResourceTestMixin
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 
 
-class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
+class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+                          CompositeResourceTestMixin):
     def setUp(self):
-        super(GenericFileTypeMetaDataTest, self).setUp()
+        super(GenericFileTypeTest, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
@@ -29,46 +26,62 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Generic File Metadata'
-        )
+        self.res_title = "Test Generic File Type"
+        self.logical_file_type_name = "GenericLogicalFile"
 
-        self.temp_dir = tempfile.mkdtemp()
         self.generic_file_name = 'generic_file.txt'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.generic_file = 'hs_file_types/tests/{}'.format(self.generic_file_name)
-        target_temp_generic_file = os.path.join(self.temp_dir, self.generic_file_name)
-        shutil.copy(self.generic_file, target_temp_generic_file)
-        self.generic_file_obj = open(target_temp_generic_file, 'r')
 
-    def tearDown(self):
-        super(GenericFileTypeMetaDataTest, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
+    def test_create_aggregation_1(self):
+        """Test that we can create a generic aggregation from a resource file that
+        exists at the root of the folder hierarchy """
 
-    def test_generic_aggregation_create(self):
-        """Test that we can create a generic aggregation from a resource file """
-
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
-
+        self.create_composite_resource(self.generic_file)
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        # check that the resource file is not part of a aggregation
+        # check that the resource file is not part of an aggregation
         self.assertEqual(res_file.has_logical_file, False)
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # set file to generic logical file type (aggregation)
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # file has no folder
+        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
         self.composite_resource.delete()
 
-    def test_generic_aggregation_metadata(self):
+    def test_create_aggregation_2(self):
+        """Test that we can create a generic aggregation from a resource file that
+        exists in a folder """
+
+        self.create_composite_resource()
+        new_folder = 'generic_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # file has a folder
+        self.assertEqual(res_file.file_folder, new_folder)
+        # check that the resource file is not part of an aggregation
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # set file to generic logical file type (aggregation)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        # file has the same folder
+        self.assertEqual(res_file.file_folder, new_folder)
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_metadata(self):
         """Test that we can create the following metadata for a generic aggregation
            coverage (spatial and temporal)
            key/value metadata
@@ -76,8 +89,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
            keywords
         """
 
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource(self.generic_file)
 
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -88,10 +100,11 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file = res_file.logical_file
         # test that the generic logical file has no value for the datataset_name
         self.assertEqual(logical_file.dataset_name, None)
-        logical_file.dataset_name = "This is a generic dataset"
+        dataset_name = "This is a generic dataset"
+        logical_file.dataset_name = dataset_name
         logical_file.save()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.dataset_name, "This is a generic dataset")
+        self.assertEqual(logical_file.dataset_name, dataset_name)
 
         # check that the logical file has metadata object
         self.assertNotEqual(logical_file.metadata, None)
@@ -134,7 +147,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test coverage element CRUD
         res_file = [f for f in self.composite_resource.files.all()
-                    if f.logical_file_type_name == "GenericLogicalFile"][0]
+                    if f.logical_file_type_name == self.logical_file_type_name][0]
 
         gen_logical_file = res_file.logical_file
         value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
@@ -175,108 +188,129 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be no GenericFileMetaData object at this point
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
 
-    def test_generic_aggregation_name(self):
+    def test_aggregation_name(self):
         # test the aggregation_name property for the generic aggregation (logical file)
 
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource(self.generic_file)
 
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
         # check that the resource file is associated with GenericLogicalFile
         self.assertEqual(res_file.has_logical_file, False)
         # set file to generic logical file type
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, 'generic_file.txt')
+        self.assertEqual(logical_file.aggregation_name, res_file.file_name)
 
         # test the aggregation name after moving the file into a folder
-        create_folder(self.composite_resource.short_id, 'data/contents/test_folder')
+        new_folder = 'generic_folder'
+        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/test_folder/' + res_file.file_name)
+                                      src_path, tgt_path)
 
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, 'test_folder/generic_file.txt')
+        expected_aggregation_name = '{0}/{1}'.format(new_folder, res_file.file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
 
         # test the aggregation name after renaming the file
+        src_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/test_folder/' + res_file.file_name,
-                                      'data/contents/test_folder/' + 'file_generic.txt')
+                                      src_path, tgt_path)
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, 'test_folder/file_generic.txt')
+        expected_aggregation_name = '{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
+        self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
 
         # test the aggregation name after renaming the folder
+        folder_rename = '{}_1'.format(new_folder)
+        src_path = 'data/contents/{}'.format(new_folder)
+        tgt_path = 'data/contents/{}'.format(folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/test_folder',
-                                      'data/contents/folder_test')
+                                      src_path, tgt_path)
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, 'folder_test/file_generic.txt')
+        expected_aggregation_name = '{0}/{1}'.format(folder_rename, res_file.file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
         self.composite_resource.delete()
 
-    def test_generic_aggregation_xml_file_paths(self):
-        # test the aggregation meta and map xml file paths
+    def test_aggregation_xml_file_paths(self):
+        # test the aggregation meta and map xml file paths with file name and folder name
+        # changes
 
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource(self.generic_file)
 
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
         # check that the resource file is associated with GenericLogicalFile
         self.assertEqual(res_file.has_logical_file, False)
         # set file to generic logical file type
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata_short_file_path, 'generic_file.txt_meta.xml')
-        self.assertEqual(logical_file.map_short_file_path, 'generic_file.txt_resmap.xml')
+        expected_meta_path = '{}_meta.xml'.format(res_file.file_name)
+        expected_map_path = '{}_resmap.xml'.format(res_file.file_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test xml file paths after moving the file into a folder
-        create_folder(self.composite_resource.short_id, 'data/contents/test_folder')
+        new_folder = 'test_folder'
+        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/test_folder/' + res_file.file_name)
+                                      src_path, tgt_path)
 
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata_short_file_path,
-                         'test_folder/generic_file.txt_meta.xml')
-        self.assertEqual(logical_file.map_short_file_path,
-                         'test_folder/generic_file.txt_resmap.xml')
+        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test xml file paths after renaming the file
+        src_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/test_folder/' + res_file.file_name,
-                                      'data/contents/test_folder/' + 'file_generic.txt')
+                                      src_path, tgt_path)
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata_short_file_path,
-                         'test_folder/file_generic.txt_meta.xml')
-        self.assertEqual(logical_file.map_short_file_path,
-                         'test_folder/file_generic.txt_resmap.xml')
+        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test the xml file path after renaming the folder
+        folder_rename = '{}_1'.format(new_folder)
+        src_path = 'data/contents/{}'.format(new_folder)
+        tgt_path = 'data/contents/{}'.format(folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/test_folder',
-                                      'data/contents/folder_test')
+                                      src_path, tgt_path)
+        res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata_short_file_path,
-                         'folder_test/file_generic.txt_meta.xml')
-        self.assertEqual(logical_file.map_short_file_path,
-                         'folder_test/file_generic.txt_resmap.xml')
+        expected_meta_path = '{0}/{1}_meta.xml'.format(folder_rename, res_file.file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(folder_rename, res_file.file_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
         # test that when an instance GenericLogicalFile Type (aggregation) is deleted
         # all resource files associated with that aggregation is not deleted but the associated
         # metadata is deleted
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+
+        self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
 
         # create generic aggregation
@@ -302,39 +336,59 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         self.composite_resource.delete()
 
-    def test_file_rename_or_move(self):
+    def test_file_rename(self):
         # test that a resource file that is part of a GenericLogicalFile object
-        # can be moved or renamed
+        # can be renamed
 
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file.txt')
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        self.assertEqual(res_file.file_name, 'generic_file.txt')
         # create generic aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-
+        # file should not be in a folder
+        self.assertEqual(res_file.file_folder, None)
         # test rename of file is allowed
-        src_path = 'data/contents/generic_file.txt'
-        tgt_path = "data/contents/generic_file_1.txt"
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file_1.txt')
+        self.assertEqual(res_file.file_name, '{0}_1{1}'.format(base_file_name, ext))
+
+        self.composite_resource.delete()
+
+    def test_file_move(self):
+        # test that a resource file that is part of a GenericLogicalFile object
+        # can be moved
+
+        self.create_composite_resource(self.generic_file)
+        res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        self.assertEqual(res_file.file_name, 'generic_file.txt')
+        # create generic aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # file should not be in a folder
+        self.assertEqual(res_file.file_folder, None)
 
         # test moving the file to a new folder is allowed
-        src_path = 'data/contents/generic_file_1.txt'
-        tgt_path = "data/contents/test_folder/generic_file_1.txt"
+        new_folder = 'test_folder'
+        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
         res_file = self.composite_resource.files.first()
+        # file should in a folder
+        self.assertEqual(res_file.file_folder, new_folder)
         self.assertTrue(res_file.resource_file.name.endswith(tgt_path))
         self.composite_resource.delete()
 
-    def test_file_type_metadata_on_file_delete(self):
+    def test_aggregation_metadata_on_file_delete(self):
         # test that when a file that's part of the GenericLogicalFile object
         # is deleted all metadata associated with the file type also get deleted
-        self.generic_file_obj = open(self.generic_file, 'r')
-        self._create_composite_resource()
+
+        self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
         # set the file to generic logical file
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -371,13 +425,3 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
         # test that resource level coverage element exist - not got deleted
         self.assertEqual(Coverage.objects.count(), 2)
-
-    def _create_composite_resource(self):
-        uploaded_file = UploadedFile(file=self.generic_file_obj,
-                                     name=os.path.basename(self.generic_file_obj.name))
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Generic File Type Metadata',
-            files=(uploaded_file,)
-        )
