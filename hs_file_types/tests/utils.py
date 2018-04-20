@@ -1,12 +1,42 @@
+import os
+
 from dateutil import parser
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from django.core.files.uploadedfile import UploadedFile
+
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
+from hs_core.hydroshare import create_resource
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
     NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
     TimeSeriesLogicalFile, TimeSeriesFileMetaData
 
 
-def assert_raster_file_type_metadata(self):
+class CompositeResourceTestMixin(object):
+
+    def add_file_to_resource(self, file_to_add, upload_folder=None):
+        file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
+                                      name=os.path.basename(file_to_add))
+
+        new_res_file = add_file_to_resource(
+            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+        )
+        return new_res_file
+
+    def create_composite_resource(self, file_to_upload=None):
+        files = []
+        if file_to_upload is not None:
+            file_obj = open(file_to_upload, 'r')
+            uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
+            files.append(uploaded_file)
+        self.composite_resource = create_resource(
+            resource_type='CompositeResource',
+            owner=self.user,
+            title=self.res_title,
+            files=files
+        )
+
+
+def assert_raster_file_type_metadata(self, aggr_folder_path):
     # test the resource now has 2 files (vrt file added as part of metadata extraction)
     self.assertEqual(self.composite_resource.files.all().count(), 2)
 
@@ -16,13 +46,9 @@ def assert_raster_file_type_metadata(self):
         self.assertEqual(res_file.has_logical_file, True)
         self.assertTrue(isinstance(res_file.logical_file, GeoRasterLogicalFile))
 
-    # check that we put the 2 files in a new folder (small_logan)
+    # check that the 2 files are in the aggr_folder_path
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
-        expected_file_path = "{}/data/contents/small_logan/{}"
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, aggr_folder_path)
 
     # check that there is no GenericLogicalFile object
     self.assertEqual(GenericLogicalFile.objects.count(), 0)
