@@ -458,6 +458,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         else:
                             # selected nc file is already in a folder
                             upload_folder = file_folder
+                            # make the .nc file part of the aggregation
+                            logical_file.add_resource_file(res_file)
                     else:
                         # folder has been selected to create aggregation
                         upload_folder = folder_path
