@@ -925,7 +925,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_upload_file_to_aggregation_not_allowed(self):
-        # test no file can be moved into a folder that represents a GeoFeature aggregation
+        # test no file can be uploaded into a folder that represents a GeoFeature aggregation
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)

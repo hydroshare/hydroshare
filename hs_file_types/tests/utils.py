@@ -126,7 +126,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(band_info.minimumValue, '1870.63659668')
 
 
-def assert_netcdf_file_type_metadata(self, title):
+def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # check that there is one NetCDFLogicalFile object
     self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
     # check that there is no GenericLogicalFile object
@@ -134,13 +134,12 @@ def assert_netcdf_file_type_metadata(self, title):
 
     # There should be now 2 files
     self.assertEqual(self.composite_resource.files.count(), 2)
-    # check that we put the 2 files in a new folder (netcdf_valid)
+    # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name = res_file.full_path, res_file.file_name
-        expected_file_path = u"{}/data/contents/netcdf_valid/{}"
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path, aggr_folder,
+                                                  res_file.file_name)
+        self.assertEqual(res_file.full_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, aggr_folder)
 
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file

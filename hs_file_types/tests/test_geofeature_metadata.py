@@ -757,7 +757,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_upload_file_to_aggregation_not_allowed(self):
-        # test no file can be moved into a folder that represents a GeoFeature aggregation
+        # test no file can be uploaded into a folder that represents a GeoFeature aggregation
 
         self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()

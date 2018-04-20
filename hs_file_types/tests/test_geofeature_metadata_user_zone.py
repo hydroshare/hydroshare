@@ -77,10 +77,6 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
 
         # test resource is created on federated zone
         self.assertNotEqual(self.composite_resource.resource_federation_path, '')
-
-        # set the logical file -which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
