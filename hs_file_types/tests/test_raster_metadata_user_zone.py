@@ -1,3 +1,5 @@
+import os
+
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.conf import settings
@@ -80,16 +82,16 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
                                      metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
-        fed_file_path = "{}/data/contents/{}".format(self.composite_resource.root_path,
-                                                     self.raster_file_name)
+        fed_file_path = "{}/{}".format(self.composite_resource.file_path, self.raster_file_name)
         self.assertEqual(res_file.storage_path, fed_file_path)
 
-        # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # set the tif file to GeoRasterLogicalFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test extracted raster file type metadata
-        assert_raster_file_type_metadata(self)
+        assert_raster_file_type_metadata(self, aggr_folder_path=expected_folder_name)
