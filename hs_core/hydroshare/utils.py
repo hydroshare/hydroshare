@@ -933,12 +933,13 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False):
+                         move=False, check_target_folder=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
-    :param resource: Resource to which file should be added
-    :param f: File-like object to add to a resource
-    :param source_name: the logical file name of the resource content file for
+    :param  resource: Resource to which file should be added
+    :param  f: File-like object to add to a resource
+    :param  folder: folder at which the file will live
+    :param  source_name: the logical file name of the resource content file for
                         federated iRODS resource or the federated zone name;
                         By default, it is empty. A non-empty value indicates
                         the file needs to be added into the federated zone, either
@@ -946,16 +947,24 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                         disk, or from the federated zone directly where f is empty
                         but source_name has the whole data object
                         iRODS path in the federated zone
-    :param move: indicate whether the file should be copied or moved from private user
+    :param  move: indicate whether the file should be copied or moved from private user
                  account to proxy user account in federated zone; A value of False
                  indicates copy is needed, a value of True indicates no copy, but
                  the file will be moved from private user account to proxy user account.
                  The default value is False.
 
+    :param  check_target_folder: if true and the resource is a composite resource then uploading
+    a file to the specified folder will be validated before adding the file to the resource
     :return: The identifier of the ResourceFile added.
     """
 
     if f:
+        if check_target_folder and folder is not None and \
+                resource.resource_type == 'CompositeResource':
+                tgt_full_upload_path = os.path.join(resource.file_path, folder)
+                if not resource.can_add_files(target_full_path=tgt_full_upload_path):
+                    err_msg = "File can't be added to this folder which represents an aggregation"
+                    raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
 
