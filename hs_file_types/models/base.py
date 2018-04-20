@@ -10,6 +10,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 from django.db import models
+from django.core.files.uploadedfile import UploadedFile
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -24,7 +25,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url, \
-    get_resource_file_by_id, set_dirty_bag_flag
+    get_resource_file_by_id, set_dirty_bag_flag, add_file_to_resource
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 
 
@@ -1005,6 +1006,18 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+
+    def add_files_to_resource(self, resource, files_to_add, upload_folder):
+        """a helper for adding any new files to resource as part of creating an aggregation"""
+        for fl in files_to_add:
+            uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                         name=os.path.basename(fl))
+            new_res_file = add_file_to_resource(
+                resource, uploaded_file, folder=upload_folder
+            )
+
+            # make each resource file we added part of the logical file
+            self.add_resource_file(new_res_file)
 
     # TODO: unit test this
     def reset_to_generic(self, user):
