@@ -8,7 +8,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import TestCaseCommonUtilities
 from utils import assert_netcdf_file_type_metadata
-from hs_file_types.models import NetCDFLogicalFile, GenericLogicalFile
+from hs_file_types.models import NetCDFLogicalFile
 
 
 class NetCDFFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
@@ -78,20 +78,18 @@ class NetCDFFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
         # test resource is created on federated zone
         self.assertNotEqual(self.composite_resource.resource_federation_path, '')
 
-        # set the logical file -which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
-        fed_file_path = "data/contents/{}".format(self.netcdf_file_name)
-        self.assertEqual(os.path.join('data', 'contents', res_file.short_path), fed_file_path)
+        fed_file_path = "{}/{}".format(self.composite_resource.file_path, self.netcdf_file_name)
+        self.assertEqual(res_file.storage_path, fed_file_path)
 
-        # set the tif file to NetCDF file type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # set the nc file to NetCDF file type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test extracted netcdf file type metadata
-        assert_netcdf_file_type_metadata(self, res_title)
+        assert_netcdf_file_type_metadata(self, res_title, aggr_folder=expected_folder_name)
