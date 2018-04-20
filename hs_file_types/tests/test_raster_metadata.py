@@ -773,41 +773,217 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_file_rename_or_move(self):
-        # test that file can't be moved or renamed for any resource file
-        # that's part of the GeoRaster logical file object (LFO)
+    def test_aggregation_parent_folder_rename(self):
+        # test changes to aggregation name, aggregation metadata xml file path, and aggregation
+        # resource map xml file path on aggregation folder parent folder name change
 
-        # self.raster_file_obj = open(self.raster_file, 'r')
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        aggregation_folder_name = base_file_name
 
-        # extract metadata from the tif file
+        # create aggregation from the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # test renaming of files that are associated with raster LFO - which should raise exception
+        # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 2)
-        src_path = 'data/contents/small_logan/small_logan.tif'
-        tgt_path = "data/contents/small_logan/small_logan_1.tif"
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        src_path = 'data/contents/small_logan/small_logan.vrt'
-        tgt_path = "data/contents/small_logan/small_logan_1.vrt"
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        # test moving the files associated with geo raster LFO
-        src_path = 'data/contents/small_logan/small_logan.tif'
-        tgt_path = "data/contents/big_logan/small_logan.tif"
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        src_path = 'data/contents/small_logan/small_logan.vrt'
-        tgt_path = "data/contents/big_logan/small_logan.vrt"
+
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, aggregation_folder_name)
+
+        # test aggregation name
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+
+        # test aggregation xml file paths
+        # test aggregation xml file paths
+        expected_meta_file_path = '{}/{}_meta.xml'.format(aggregation_folder_name,
+                                                          aggregation_folder_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
+
+        expected_map_file_path = '{}/{}_resmap.xml'.format(aggregation_folder_name,
+                                                           aggregation_folder_name)
+        self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
+
+        # create a folder to be the parent folder of the aggregation folder
+        parent_folder = 'parent_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        # move the aggregation folder to the parent folder
+        src_path = 'data/contents/{}'.format(aggregation_folder_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        file_folder = '{}/{}'.format(parent_folder, aggregation_folder_name)
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, file_folder)
+
+        # renaming parent folder
+        parent_folder_rename = 'parent_folder_1'
+        src_path = 'data/contents/{}'.format(parent_folder)
+        tgt_path = 'data/contents/{}'.format(parent_folder_rename)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        file_folder = '{}/{}'.format(parent_folder_rename, aggregation_folder_name)
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, file_folder)
+
+        # test aggregation name after folder rename
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+
+        # test aggregation xml file paths after folder rename
+        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder_rename,
+                                                                aggregation_folder_name,
+                                                                aggregation_folder_name)
+
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
+        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder_rename,
+                                                                 aggregation_folder_name,
+                                                                 aggregation_folder_name)
+
+        self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_folder_move(self):
+        # test changes to aggregation name, aggregation metadata xml file path, and aggregation
+        # resource map xml file path on aggregation folder move
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        aggregation_folder_name = base_file_name
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, aggregation_folder_name)
+
+        # create a folder to move the aggregation folder there
+        parent_folder = 'parent_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        # move the aggregation folder to the parent folder
+        src_path = 'data/contents/{}'.format(aggregation_folder_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        file_folder = '{0}/{1}'.format(parent_folder, aggregation_folder_name)
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.file_folder, file_folder)
+
+        # test aggregation name update
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+
+        # test aggregation xml file paths
+        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder,
+                                                                aggregation_folder_name,
+                                                                aggregation_folder_name)
+        self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
+
+        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder,
+                                                                 aggregation_folder_name,
+                                                                 aggregation_folder_name)
+
+        self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_folder_move_not_allowed(self):
+        # test a folder is not allowed to be moved into a folder that represents an aggregation
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        aggregation_folder_name = base_file_name
+
+        # create aggregation from the zip file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # create a folder to move the aggregation folder there
+        new_folder = 'folder_to_move'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # move the new folder into the aggregation folder
+        src_path = 'data/contents/{}'.format(new_folder)
+        tgt_path = 'data/contents/{}'.format(aggregation_folder_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
+        self.composite_resource.delete()
+
+    def test_aggregation_folder_sub_folder_not_allowed(self):
+        # test a folder can't be created inside a folder that represents an aggregation
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, None)
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        self.assertNotEqual(res_file.file_folder, None)
+        # create a folder inside the aggregation folder
+        new_folder = '{}/sub_folder'.format(res_file.file_folder)
+        with self.assertRaises(DRF_ValidationError):
+            ResourceFile.create_folder(self.composite_resource, new_folder)
+
+        self.composite_resource.delete()
+
+    def test_file_move_to_aggregation_not_allowed(self):
+        # test no file can be moved into a folder that represents a GeoFeature aggregation
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, None)
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        self.assertNotEqual(res_file.file_folder, None)
+
+        # add a file to the resource which will try to move into the aggregation folder
+        res_file_to_move = self.add_file_to_resource(file_to_add=self.raster_zip_file)
+        src_path = os.path.join('data', 'contents', res_file_to_move.short_path)
+        tgt_path = 'data/contents/{}'.format(res_file.file_folder)
+
+        # move file to aggregation folder
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        self.composite_resource.delete()
+
+    def test_upload_file_to_aggregation_not_allowed(self):
+        # test no file can be moved into a folder that represents a GeoFeature aggregation
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, None)
+
+        # create aggregation from the tif file
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        self.assertNotEqual(res_file.file_folder, None)
+
+        # add a file to the resource at the aggregation folder
+        with self.assertRaises(ValidationError):
+            self.add_file_to_resource(file_to_add=self.raster_zip_file,
+                                      upload_folder=res_file.file_folder)
         self.composite_resource.delete()
 
     def _create_composite_resource(self):
@@ -908,7 +1084,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # all files associated with GeoRasterFileType is deleted
 
         # self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
+        self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
         res_file = self.composite_resource.files.first()
 
