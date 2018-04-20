@@ -2,7 +2,6 @@ import os
 
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
-from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
@@ -10,17 +9,18 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
     OriginalCoverage
-from utils import assert_geofeature_file_type_metadata
+from utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin
 from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
     GeoFeatureFileMetaData
 
 
-class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
+class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+                             CompositeResourceTestMixin):
     def setUp(self):
         super(GeoFeatureFileTypeTest, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -33,12 +33,9 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Goe Feature File Metadata'
-        )
+        self.res_title = 'Testing Geo Feature File Type'
 
+        # data files to use for testing
         self.states_required_zip_file_name = 'states_required_files.zip'
         self.states_prj_file_name = 'states.prj'
         self.states_xml_file_name = 'states.shp.xml'
@@ -65,11 +62,12 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # the zip file that we are using to create an aggregation here is at the root of the
         # folder hierarchy
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        expected_folder_name = res_file.file_name[:-4]
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file type
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -90,7 +88,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
-        # there should be no GenericFileMetaData object at this point
+        # there should be no GeoFeatureFileMetaData object at this point
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
 
     def test_create_aggregation_from_zip_file_required_2(self):
@@ -100,17 +98,18 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # folder hierarchy but in a folder - no new folder should be created as part of creating
         # this aggregation
 
-        self._create_composite_resource()
+        self.create_composite_resource()
 
         new_folder = 'geofeature_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the the zip file to the resource at the above folder
-        res_file = self._add_file_to_resource(file_to_add=self.states_required_zip_file,
-                                              upload_folder=new_folder)
+        self.add_file_to_resource(file_to_add=self.states_required_zip_file,
+                                  upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
-        self.assertEqual(res_file.file_folder, new_folder)
         res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, new_folder)
+
         # check that the resource file is not associated with any logical file type
         self.assertEqual(res_file.has_logical_file, False)
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -127,7 +126,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         for res_file in self.composite_resource.files.all():
             # test that each resource file is part of an aggregation (logical file)
             self.assertTrue(res_file.has_logical_file)
-            # test that the each resource file has the same folder - no new folder created
+            # test that the each resource file has the same folder - no new folder was created
             self.assertEqual(res_file.file_folder, new_folder)
 
         # there should not be any file level keywords
@@ -138,7 +137,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
-        # there should be no GenericFileMetaData object at this point
+        # there should be no GeoFeatureFileMetaData object at this point
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
 
     def test_create_aggregation_from_zip_file_all(self):
@@ -146,15 +145,16 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # to Geo Feature file type which includes metadata extraction
         # this zip file for creating aggregation is at the root of the folder hierarchy
 
-        self._create_composite_resource(self.osm_all_files_zip_file)
+        self.create_composite_resource(self.osm_all_files_zip_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        expected_folder_name = res_file.file_name[:-4]
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file type
         self.assertEqual(res_file.has_logical_file, False)
 
-        # set the zip file to GeoFeatureFile type
+        # set the zip file to GeoFeatureLogicalFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test files in the file type
@@ -214,19 +214,20 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # here we are using a shp file that exists at the root of the folder hierarchy
         # for setting it to Geo Feature file type which includes metadata extraction
 
-        self._create_composite_resource()
+        self.create_composite_resource()
 
         # add the 3 required files to the resource at the above folder
-        res_file = self._add_file_to_resource(file_to_add=self.states_shp_file)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shp_file)
         self.assertEqual(res_file.file_folder, None)
-        res_file = self._add_file_to_resource(file_to_add=self.states_shx_file)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shx_file)
         self.assertEqual(res_file.file_folder, None)
-        res_file = self._add_file_to_resource(file_to_add=self.states_dbf_file)
+        res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file)
         self.assertEqual(res_file.file_folder, None)
 
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         res_file = self.composite_resource.files.first()
-        expected_folder_name = res_file.file_name[:-4]
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -289,19 +290,19 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # for setting it to Geo Feature file type which includes metadata extraction
         # no new folder should be created as part o creating this aggregation
 
-        self._create_composite_resource()
+        self.create_composite_resource()
 
         new_folder = 'geofeature_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the 3 required files to the resource at the above folder
-        res_file = self._add_file_to_resource(file_to_add=self.states_shp_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shp_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
-        res_file = self._add_file_to_resource(file_to_add=self.states_shx_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shx_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
-        res_file = self._add_file_to_resource(file_to_add=self.states_dbf_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 3)
@@ -337,12 +338,12 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         """
 
         self._test_create_aggregation_from_folder(foldet_to_test='parent_folder/geofeature_aggr')
-        
+
     def test_zip_invalid_set_file_type_to_geo_feature(self):
         # here we are using a invalid zip file that is missing the shx file
         # to set Geo Feature file type which should fail
 
-        self._create_composite_resource(self.states_zip_invalid_file)
+        self.create_composite_resource(self.states_zip_invalid_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -368,7 +369,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that when an instance GeoFeatureLogicalFile Type is deleted
         # all files associated with GeoFeatureLogicalFile is deleted
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -393,8 +394,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that when an instance GeoFeatureLogicalFile (aggregation) is deleted
         # all resource files associated with that aggregation is not deleted but the associated
         # metadata is deleted
-        self._create_composite_resource(self.states_required_zip_file)
+
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(res_file.file_name)
 
         # set the zip file to GeoFeatureLogicalFile (aggregation) type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -418,7 +421,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         # check the file folder is not deleted
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, 'states_required_files')
+            self.assertEqual(f.file_folder, base_file_name)
         self.composite_resource.delete()
 
     def test_content_file_delete(self):
@@ -437,8 +440,9 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # in that folder gets deleted, the logicalfile object gets deleted and
         # the associated metadata objects get deleted
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(res_file.file_name)
 
         # extract metadata from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -451,7 +455,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 3 content files
         self.assertEqual(self.composite_resource.files.count(), 3)
         # delete the folder for the logical file
-        folder_path = "data/contents/states_required_files"
+        folder_path = "data/contents/{}".format(base_file_name)
         remove_folder(self.user, self.composite_resource.short_id, folder_path)
         # there should be no content files
         self.assertEqual(self.composite_resource.files.count(), 0)
@@ -465,28 +469,29 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that a file can't renamed for any resource file
         # that's part of the GeoFeature logical file
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(res_file.file_name)
 
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 3)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, 'states_required_files')
-        src_path = 'data/contents/states_required_files/states.shp'
-        tgt_path = 'data/contents/states_required_files/states-1.shp'
+        self.assertEqual(res_file.file_folder, base_file_name)
+        src_path = 'data/contents/{}/states.shp'.format(base_file_name)
+        tgt_path = 'data/contents/{}/states-1.shp'.format(base_file_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
-        src_path = 'data/contents/states_required_files/states.dbf'
-        tgt_path = 'data/contents/states_required_files/states-1.dbf'
+        src_path = 'data/contents/{}/states.dbf'.format(base_file_name)
+        tgt_path = 'data/contents/{}/states-1.dbf'.format(base_file_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
-        src_path = 'data/contents/states_required_files/states.shx'
-        tgt_path = 'data/contents/states_required_files/states-1.shx'
+        src_path = 'data/contents/{}/states.shx'.format(base_file_name)
+        tgt_path = 'data/contents/{}/states-1.shx'.format(base_file_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
@@ -496,16 +501,16 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_aggregation_file_move(self):
         # test any resource file that's part of the GeoFeature logical file can't be moved
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         # extract metadata from the tif file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with geo feature LFO - which should
         # raise exception
         self.assertEqual(self.composite_resource.files.count(), 3)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, 'states_required_files')
+        self.assertEqual(res_file.file_folder, base_file_name)
         new_folder = 'geofeature_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
 
@@ -523,16 +528,16 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test changes to aggregation name, aggregation metadata xml file path, and aggregation
         # resource map xml file path on folder name change
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
 
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         self.assertEqual(self.composite_resource.files.count(), 3)
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, 'states_required_files')
+            self.assertEqual(res_file.file_folder, base_file_name)
 
         # test aggregation name
         res_file = self.composite_resource.files.first()
@@ -540,20 +545,20 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths
-        expected_meta_file_path = 'states_required_files/states_required_files_meta.xml'
+        expected_meta_file_path = '{0}/{1}_meta.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = 'states_required_files/states_required_files_resmap.xml'
+        expected_map_file_path = '{0}/{1}_resmap.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
-        src_path = 'data/contents/states_required_files'
-        tgt_path = 'data/contents/states_required_files_1'
+        src_path = 'data/contents/{}'.format(base_file_name)
+        tgt_path = 'data/contents/{}_1'.format(base_file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, 'states_required_files_1')
+            self.assertEqual(res_file.file_folder, '{}_1'.format(base_file_name))
 
         # test aggregation name update
         res_file = self.composite_resource.files.first()
@@ -561,10 +566,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths
-        expected_meta_file_path = 'states_required_files_1/states_required_files_1_meta.xml'
+        expected_meta_file_path = '{0}_1/{1}_1_meta.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = 'states_required_files_1/states_required_files_1_resmap.xml'
+        expected_map_file_path = '{0}_1/{1}_1_resmap.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -573,16 +578,16 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test changes to aggregation name, aggregation metadata xml file path, and aggregation
         # resource map xml file path on aggregation folder parent folder name change
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
 
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 3)
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, 'states_required_files')
+            self.assertEqual(res_file.file_folder, base_file_name)
 
         # test aggregation name
         res_file = self.composite_resource.files.first()
@@ -590,34 +595,34 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths
-        expected_meta_file_path = 'states_required_files/states_required_files_meta.xml'
+        expected_meta_file_path = '{0}/{1}_meta.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = 'states_required_files/states_required_files_resmap.xml'
+        expected_map_file_path = '{0}/{1}_resmap.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
-        new_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        parent_folder = 'parent_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
         # move the aggregation folder to the parent folder
-        src_path = 'data/contents/states_required_files'
-        tgt_path = 'data/contents/{}/states_required_files'.format(new_folder)
+        src_path = 'data/contents/{}'.format(base_file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, base_file_name)
 
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
-        file_folder = '{}/states_required_files'.format(new_folder)
+        file_folder = '{0}/{1}'.format(parent_folder, base_file_name)
         for res_file in self.composite_resource.files.all():
             self.assertEqual(res_file.file_folder, file_folder)
 
         # renaming parent folder
-        new_folder = 'parent_folder_1'
-        src_path = 'data/contents/parent_folder'
-        tgt_path = 'data/contents/{}'.format(new_folder)
+        parent_folder_rename = 'parent_folder_1'
+        src_path = 'data/contents/{}'.format(parent_folder)
+        tgt_path = 'data/contents/{}'.format(parent_folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
-        file_folder = '{}/states_required_files'.format(new_folder)
+        file_folder = '{}/{}'.format(parent_folder_rename, base_file_name)
         for res_file in self.composite_resource.files.all():
             self.assertEqual(res_file.file_folder, file_folder)
 
@@ -627,12 +632,12 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths after folder rename
-        expected_meta_file_path = '{}/states_required_files/states_required_files_meta.xml'
-        expected_meta_file_path = expected_meta_file_path.format(new_folder)
+        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder_rename,
+                                                                base_file_name, base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/states_required_files/states_required_files_resmap.xml'
-        expected_map_file_path = expected_map_file_path.format(new_folder)
+        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder_rename,
+                                                                 base_file_name, base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -641,16 +646,15 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test changes to aggregation name, aggregation metadata xml file path, and aggregation
         # resource map xml file path on aggregation folder move
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
 
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 3)
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, 'states_required_files')
+            self.assertEqual(res_file.file_folder, base_file_name)
 
         # test aggregation name
         res_file = self.composite_resource.files.first()
@@ -658,23 +662,23 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths
-        expected_meta_file_path = 'states_required_files/states_required_files_meta.xml'
+        expected_meta_file_path = '{0}/{1}_meta.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = 'states_required_files/states_required_files_resmap.xml'
+        expected_map_file_path = '{0}/{1}_resmap.xml'.format(base_file_name, base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to move the aggregation folder there
-        new_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        parent_folder = 'parent_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
         # move the aggregation folder to the parent folder
-        src_path = 'data/contents/states_required_files'
-        tgt_path = 'data/contents/{}/states_required_files'.format(new_folder)
+        src_path = 'data/contents/{}'.format(base_file_name)
+        tgt_path = 'data/contents/{}/{}'.format(parent_folder, base_file_name)
 
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
-        file_folder = '{}/states_required_files'.format(new_folder)
+        file_folder = '{}/{}'.format(parent_folder, base_file_name)
         for res_file in self.composite_resource.files.all():
             self.assertEqual(res_file.file_folder, file_folder)
 
@@ -684,12 +688,12 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}/states_required_files/states_required_files_meta.xml'
-        expected_meta_file_path = expected_meta_file_path.format(new_folder)
+        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder, base_file_name,
+                                                                base_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/states_required_files/states_required_files_resmap.xml'
-        expected_map_file_path = expected_map_file_path.format(new_folder)
+        expected_map_file_path = '{}/{}/{}_resmap.xml'.format(parent_folder, base_file_name,
+                                                              base_file_name)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -697,9 +701,9 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_aggregation_folder_move_not_allowed(self):
         # test a folder is not allowed to be moved into a folder that represents an aggregation
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # create a folder to move the aggregation folder there
@@ -707,7 +711,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # move the new folder into the aggregation folder
         src_path = 'data/contents/{}'.format(new_folder)
-        tgt_path = 'data/contents/states_required_files'
+        tgt_path = 'data/contents/{}'.format(base_file_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
@@ -717,13 +721,13 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_aggregation_folder_sub_folder_not_allowed(self):
         # test a folder can't be created inside a folder that represents an aggregation
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, 'states_required_files')
+        self.assertEqual(res_file.file_folder, base_file_name)
         # create a folder inside the aggregation folder
         new_folder = '{}/sub_folder'.format(res_file.file_folder)
         with self.assertRaises(DRF_ValidationError):
@@ -734,15 +738,15 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_file_move_to_aggregation_not_allowed(self):
         # test no file can be moved into a folder that represents a GeoFeature aggregation
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, 'states_required_files')
+        self.assertEqual(res_file.file_folder, base_file_name)
         # add a file to the resource which will try to move into the aggregation folder
-        res_file_to_move = self._add_file_to_resource(file_to_add=self.states_zip_invalid_file)
+        res_file_to_move = self.add_file_to_resource(file_to_add=self.states_zip_invalid_file)
         src_path = os.path.join('data', 'contents', res_file_to_move.short_path)
         tgt_path = 'data/contents/{}'.format(res_file.file_folder)
 
@@ -755,25 +759,25 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_upload_file_to_aggregation_not_allowed(self):
         # test no file can be moved into a folder that represents a GeoFeature aggregation
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
-
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         # create aggregation from the zip file
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, 'states_required_files')
+        self.assertEqual(res_file.file_folder, base_file_name)
 
         # add a file to the resource at the aggregation folder
         with self.assertRaises(ValidationError):
-            self._add_file_to_resource(file_to_add=self.states_zip_invalid_file,
-                                       upload_folder=res_file.file_folder)
+            self.add_file_to_resource(file_to_add=self.states_zip_invalid_file,
+                                      upload_folder=res_file.file_folder)
         self.composite_resource.delete()
 
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
         # all metadata associated with GeoFeatureLogicalFile Type is deleted
 
-        self._create_composite_resource(self.states_required_zip_file)
+        self.create_composite_resource(self.states_required_zip_file)
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
@@ -806,20 +810,20 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def _test_create_aggregation_from_folder(self, foldet_to_test):
 
-        self._create_composite_resource()
+        self.create_composite_resource()
         self.assertEqual(self.composite_resource.files.count(), 0)
         # create a folder to upload files there
         new_folder = foldet_to_test
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the 3 required files to the resource at the above folder
-        res_file = self._add_file_to_resource(file_to_add=self.states_shp_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shp_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
-        res_file = self._add_file_to_resource(file_to_add=self.states_shx_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shx_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
-        res_file = self._add_file_to_resource(file_to_add=self.states_dbf_file,
-                                              upload_folder=new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file,
+                                             upload_folder=new_folder)
         self.assertEqual(res_file.file_folder, new_folder)
         # resource should have 3 files now
         self.assertEqual(self.composite_resource.files.count(), 3)
@@ -839,7 +843,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
 
     def _test_file_metadata_on_file_delete(self, ext):
-        self._create_composite_resource(self.osm_all_files_zip_file)
+        self.create_composite_resource(self.osm_all_files_zip_file)
         res_file = self.composite_resource.files.first()
         # set the zip file to GeoFeatureFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -886,26 +890,3 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should not be any files left
         self.assertEqual(self.composite_resource.files.count(), 0)
         self.composite_resource.delete()
-
-    def _create_composite_resource(self, file_to_upload=None):
-        files = []
-        if file_to_upload is not None:
-            file_obj = open(file_to_upload, 'r')
-            uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
-            files.append(uploaded_file)
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test GeoFeature File Type',
-            files=files
-        )
-
-    def _add_file_to_resource(self, file_to_add, upload_folder=None):
-        file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
-                                      name=os.path.basename(file_to_add))
-
-        new_res_file = add_file_to_resource(
-            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
-        )
-        return new_res_file
-
