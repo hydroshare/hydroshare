@@ -1,4 +1,4 @@
-from hs_core.models import get_user
+from hs_core.models import get_user, BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_tools_resource.models import SupportedResTypeChoices, ToolResource
 from hs_tools_resource.utils import parse_app_url_template
@@ -14,35 +14,24 @@ def resource_level_tool_urls(resource_obj, request_obj):
 
     # associate resources with app tools using extended metadata name-value pair with 'appkey' key
     tool_app_key = 'appkey'
-    tool_kv_dict = {}
-    for tool_res_obj in ToolResource.objects.all():
-        for k, v in tool_res_obj.extra_metadata.items():
-            if k == tool_app_key:
-                dkey = '{}-{}'.format(k, v)
-                if dkey in tool_kv_dict:
-                    tool_kv_dict[dkey].append(tool_res_obj)
-                else:
-                    tool_kv_dict[dkey] = [tool_res_obj]
-
-    if tool_kv_dict:
-        for k, v in resource_obj.extra_metadata.items():
-            if k == tool_app_key:
-                dkey = '{}-{}'.format(k, v)
-                if dkey in tool_kv_dict:
-                    # the list of tools with the same appkey-value pair needs to be associated with
-                    # the resource
-                    for tool_res_obj in tool_kv_dict[dkey]:
-                        if _check_user_can_view_resource(request_obj, resource_obj) and \
-                                _check_user_can_view_app(request_obj, tool_res_obj) and \
-                                _check_app_supports_resource_sharing_status(resource_obj,
-                                                                            tool_res_obj):
-                            is_open_with_app, tl = _get_app_tool_info(request_obj, resource_obj,
-                                                                      tool_res_obj, open_with=True)
-                            if tl:
-                                tool_list.append(tl)
-                                tool_res_id_list.append(tl['res_id'])
-                                if is_open_with_app:
-                                    open_with_app_counter += 1
+    filterd_res_obj = BaseResource.objects.filter(short_id=resource_obj.short_id,
+                                                  extra_metadata__has_key=tool_app_key).first()
+    if filterd_res_obj:
+        # check appkey matching with web app tool resources
+        appkey_dict = {tool_app_key: filterd_res_obj.extra_metadata[tool_app_key]}
+        for tool_res_obj in ToolResource.objects.filter(extra_metadata__contains=appkey_dict):
+            # tool_res_obj has the same appkey-value pair so needs to associate with the resource
+            if _check_user_can_view_resource(request_obj, resource_obj) and \
+                    _check_user_can_view_app(request_obj, tool_res_obj) and \
+                    _check_app_supports_resource_sharing_status(resource_obj,
+                                                                tool_res_obj):
+                is_open_with_app, tl = _get_app_tool_info(request_obj, resource_obj,
+                                                          tool_res_obj, open_with=True)
+                if tl:
+                    tool_list.append(tl)
+                    tool_res_id_list.append(tl['res_id'])
+                    if is_open_with_app:
+                        open_with_app_counter += 1
 
     for choice_obj in SupportedResTypeChoices.objects.filter(description__iexact=res_type_str):
         for supported_res_types_obj in choice_obj.associated_with.all():
