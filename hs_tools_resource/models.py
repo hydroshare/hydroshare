@@ -191,7 +191,8 @@ class SupportedResTypes(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedResTypeChoices.objects.filter(id=res_type)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Resource type ' + res_type + ' does not exist')
+                    raise ObjectDoesNotExist('Resource type object {0} is not supported').format(
+                        res_type)
                 meta_instance.supported_res_types.add(qs[0])
 
             elif isinstance(res_type, basestring):
@@ -274,7 +275,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedSharingStatusChoices.objects.filter(id=sharing_status)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Sharing status ' + sharing_status + ' does not exist')
+                    raise ObjectDoesNotExist('Sharing status {0} is not supported').format(
+                        sharing_status)
                 meta_instance.sharing_status.add(qs[0])
             elif isinstance(sharing_status, basestring):
                 # create or update res

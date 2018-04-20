@@ -1,7 +1,7 @@
 from json import dumps
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
@@ -251,7 +251,7 @@ def update_user_profile(request):
         messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    dict_items = request.POST['organization'].split(",")
+    dict_items = request.POST['organization'].split(";")
     for dict_item in dict_items:
         # Update Dictionaries
         try:
@@ -259,6 +259,8 @@ def update_user_profile(request):
         except ObjectDoesNotExist:
             new_term = UncategorizedTerm(name=dict_item)
             new_term.save()
+        except MultipleObjectsReturned:
+            pass
 
     profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
