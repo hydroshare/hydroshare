@@ -253,19 +253,6 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder
 
-        def upload_files_in_zip_file(extracted_files):
-            for fl in extracted_files:
-                # we are here means the user selected a zip file to create aggregation
-                # need to upload all the extracted files to the resource
-                uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                             name=os.path.basename(fl))
-                new_res_file = utils.add_file_to_resource(
-                    resource, uploaded_file, folder=upload_folder
-                )
-
-                # make each resource file we added part of the logical file
-                logical_file.add_resource_file(new_res_file)
-
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
@@ -329,7 +316,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                         else:
                             # selected file must be a zip file - add the extracted files to
                             # the resource
-                            upload_files_in_zip_file(shape_files)
+                            logical_file.add_files_to_resource(
+                                resource=resource, files_to_add=shape_files,
+                                upload_folder=upload_folder)
                     else:
                         upload_folder = file_folder
 
@@ -338,7 +327,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                         if res_file.extension.lower() == ".zip":
                             # selected file must be a zip file- add the extracted files to the
                             # resource
-                            upload_files_in_zip_file(shape_files)
+                            logical_file.add_files_to_resource(
+                                resource=resource, files_to_add=shape_files,
+                                upload_folder=upload_folder)
                         else:
                             # selected file must be a shp file
                             res_files = ResourceFile.list_folder(resource=resource,
@@ -388,8 +379,6 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
-        if not file_type_success:
-            raise ValidationError(msg)
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
