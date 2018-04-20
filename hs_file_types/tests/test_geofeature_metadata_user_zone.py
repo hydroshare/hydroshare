@@ -1,3 +1,5 @@
+import os
+
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.conf import settings
@@ -81,15 +83,15 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
                                      metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        expected_folder_name = res_file.file_name[:-4]
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
         # check that the resource file is not associated with logical file
         self.assertEqual(res_file.has_logical_file, False)
-        fed_file_path = "{}/data/contents/{}".format(self.composite_resource.root_path,
-                                                     self.zip_file_name)
+        fed_file_path = "{}/{}".format(self.composite_resource.file_path, self.zip_file_name)
         self.assertEqual(res_file.storage_path, fed_file_path)
 
         # set the zip file to GeoFeatureFile type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test file type and file type extracted metadata
         assert_geofeature_file_type_metadata(self, expected_folder_name)
         self.composite_resource.delete()
