@@ -68,8 +68,8 @@ def sync_mailchimp(active_subscribed, list_id):
         'hs-celery', settings.MAILCHIMP_PASSWORD))
     total_items = json.loads(response.content)["total_items"]
     # get list of all member ids
-    response = session.get(url + "?offset=0&count={total_items}".format(list_id=list_id,
-                                                                        total_items=total_items),
+    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
+                                                                          total_items=total_items),
                            auth=requests.auth.HTTPBasicAuth('hs-celery',
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
@@ -77,7 +77,7 @@ def sync_mailchimp(active_subscribed, list_id):
     for member in json.loads(response.content)["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
-                url + "/{id}".format(list_id=list_id, id=member["id"]),
+                (url + "/{id}").format(list_id=list_id, id=member["id"]),
                 auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
             if session_response.status_code != 204:
                 logger.info("Expected 204 status code, got " + str(session_response.status_code))
@@ -205,16 +205,23 @@ def manage_task_nightly():
                 # set grace period to 0 when user quota exceeds hard limit
                 uq.remaining_grace_period = 0
             uq.save()
-            user = uq.user
-            uemail = user.email
+
+            uemail = u.email
             msg_str = 'Dear ' + u.username + ':\n\n'
-            msg_str += get_quota_message(user)
+
+            ori_qm = get_quota_message(u)
+            # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
+            replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
+                settings.DEFAULT_SUPPORT_EMAIL)
+            new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
+            msg_str += new_qm
 
             msg_str += '\n\nHydroShare Support'
             subject = 'Quota warning'
             # send email for people monitoring and follow-up as needed
-            send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
-                      [uemail])
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [uemail, settings.DEFAULT_SUPPORT_EMAIL],
+                      html_message=msg_str)
         else:
             if uq.remaining_grace_period >= 0:
                 # turn grace period off now that the user is below quota soft limit
