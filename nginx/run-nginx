@@ -41,6 +41,26 @@ preflight_nginx() {
         sed -i 's!\<AUTH_BASIC\>!# auth_basic "Restricted Content"!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's!\<AUTH_BASIC_USER_FILE\>!# auth_basic_user_file /etc/nginx/.htpasswd!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     fi
+
+    cp -rf ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
+    cp -fr Dockerfile.template Dockerfile
+
+    sed -i 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's!IRODS_CACHE_URI!'${IRODS_CACHE_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+
+    sed -i 's!IRODS_DATA_ROOT!'${IRODS_DATA_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's!IRODS_CACHE_ROOT!'${IRODS_CACHE_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+
+    sed -i 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
+    sed -i 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
+
+    sed -i 's!SENDFILE_IRODS_USER_ID!'${SENDFILE_IRODS_USER_ID}'!g' Dockerfile
+    sed -i 's!SENDFILE_IRODS_GROUP_ID!'${SENDFILE_IRODS_GROUP_ID}'!g' Dockerfile
+    sed -i 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' Dockerfile
+    sed -i 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' Dockerfile
+
 }
 
 stop_nginx() {
@@ -77,7 +97,7 @@ start_nginx() {
             --link ${HYDROSHARE_CID}:hydroshare \
             -p 80:80 -p 443:443 \
             --volume ${HOST_SSL_DIR}:/hs-certs \
-            --volume /irods:/irods \
+            --volume ${IRODS_LOCAL_MOUNT}:${IRODS_DOCKER_MAP} \
             --volume ${HS_LOG_FILES}:/var/log/nginx \
             --volumes-from ${HYDROSHARE_CID} \
             -ti ${NGINX_DOCKER_IMG};
