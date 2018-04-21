@@ -20,12 +20,12 @@ display_usage() {
 preflight_nginx() {
     echo "PREFLIGHT NGINX:"
     if [ "${USE_SSL,,}" = true ]; then
-        yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-ssl-nginx.conf ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+        yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-ssl-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/SSL_CERT_FILE/'${SSL_CERT_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/SSL_KEY_FILE/'${SSL_KEY_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
     else
-        yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-nginx.conf ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+        yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
     fi
     # Configure access based on USE_HTTP_AUTH
