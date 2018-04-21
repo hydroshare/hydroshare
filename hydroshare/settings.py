@@ -7,6 +7,7 @@ import os
 import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
+sendfile_settings_module = os.environ.get('SENDFILE_SETTINGS', 'hydroshare.sendfile_settings')
 
 ######################
 # MEZZANINE SETTINGS #

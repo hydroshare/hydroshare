@@ -15,6 +15,8 @@
 /nginx/config-files/hs-nginx.conf
 /nginx/.htpasswd
 /nginx/htpasswd
+/nginx/Dockerfile
+/nginx/config-files/nginx.conf-default
 /static
 celeryd.pid
 docker-compose.yml
