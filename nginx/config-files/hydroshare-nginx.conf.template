@@ -37,21 +37,6 @@ server {
         alias IRODS_CACHE_ROOT;
     }
 
-#   location /irods-data/ {
-#       internal; 
-#       alias /irods/hydroshare/vaults/cuahsi/irods1/home/cuahsi2DataProxy/;
-#   }
-# 
-#   location /irods-user/ {
-#       internal; 
-#       alias /irods/hydroshare/vaults/cuahsi/irods2/home/cuahsi2UserProxy/;
-#   }
-# 
-#   location /irods-cache/ {
-#       internal; 
-#       alias /irods/hydroshare_vault/nginx_tmp/cuahsi-dev-2/cache/;
-#   }
-
     location / {
         if (-f $document_root/maintenance_on.html) {
             return 503;
@@ -85,20 +70,3 @@ server {
         rewrite ^(.*)$ /maintenance_on.html break;
     }
 }
-
-
-    location /IRODS_DATA_URI/ {
-        internal; 
-        alias IRODS_DATA_ROOT;
-    }
-
-    location /IRODS_USER_URI/ {
-        internal; 
-        alias IRODS_USER_ROOT;
-    }
-
-    location /IRODS_CACHE_URI/ {
-        internal; 
-        alias IRODS_CACHE_ROOT;
-    }
-
