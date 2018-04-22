@@ -33,11 +33,12 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 
 @login_required
 def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
-    """Set a file (*file_id*) to a specific file type (*hs_file_type*)
+    """Set a file (*file_id*) to a specific file type - aggregation (*hs_file_type*)
     :param  request: an instance of HttpRequest
     :param  resource_id: id of the resource in which this file type needs to be set
-    :param  file_id: id of the file which needs to be set to a file type
-    :param  folder_path: path of the folder which needs to be set to a file type
+    :param  file_id: id of the file which needs to be set to a file type. If file_id is not provided
+    then the request must have a file_folder key. In that case the specified folder will be used
+    for creating the logical file (aggregation)
     :param  hs_file_type: file type to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
     :return an instance of JsonResponse type
     """

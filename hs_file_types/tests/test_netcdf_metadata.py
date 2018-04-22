@@ -859,7 +859,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
 
         # test that all metadata deleted - there should be still 2 resource level coverages
-        self.assertEqual (self.composite_resource.metadata.coverages.all().count(), 2)
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)

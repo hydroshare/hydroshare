@@ -427,7 +427,7 @@ class AbstractFileMetaData(models.Model):
         rdfs_label.text = self.logical_file.get_aggregation_display_name()
 
         rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
-                                      CoreMetaData.NAMESPACES['rdfs1'])
+                                            CoreMetaData.NAMESPACES['rdfs1'])
         rdfs_isDefinedBy.text = current_site_url() + "/terms"
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)

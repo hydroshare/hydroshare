@@ -1135,4 +1135,3 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '2880.00708008')
         self.assertEqual(band_info.minimumValue, '2274.95898438')
-

@@ -8,7 +8,6 @@ from lxml import etree
 from osgeo import ogr, osr
 
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
@@ -378,7 +377,6 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             cls.cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
-
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):

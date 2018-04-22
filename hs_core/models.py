@@ -3063,7 +3063,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
-
     @property
     def has_logical_file(self):
         """Check existence of logical file."""

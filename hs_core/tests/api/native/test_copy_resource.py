@@ -13,7 +13,7 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
     BandInformation
-from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile
+from hs_file_types.models import GeoRasterLogicalFile
 
 
 class TestCopyResource(TestCase):

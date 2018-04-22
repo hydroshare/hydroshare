@@ -1144,4 +1144,3 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def _get_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
         return invalid_csv_file
-

@@ -5,10 +5,9 @@ from django.contrib.auth.models import Group
 from django.conf import settings
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import TestCaseCommonUtilities
 from utils import assert_raster_file_type_metadata
-from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile
+from hs_file_types.models import GeoRasterLogicalFile
 
 
 class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
