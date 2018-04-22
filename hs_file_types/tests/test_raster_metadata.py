@@ -867,7 +867,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         base_file_name, ext = os.path.splitext(res_file.file_name)
         aggregation_folder_name = base_file_name
 
-        # create aggregation from the zip file
+        # create aggregation from the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # create a folder to move the aggregation folder there
         new_folder = 'folder_to_move'

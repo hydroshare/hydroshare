@@ -431,8 +431,8 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertIn("WaterML 1.1", web_return_types)
 
 
-def assert_time_series_file_type_metadata(self):
-    """Test timeseries file type metadata extraction.  """
+def assert_time_series_file_type_metadata(self, expected_file_folder):
+    """Test timeseries file type metadata extraction."""
 
     # check that there is one TimeSeriesLogicalFile object
     self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
@@ -500,17 +500,14 @@ def assert_time_series_file_type_metadata(self):
 
     # test that we put the sqlite file into a new directory
     res_file = self.composite_resource.files.first()
-    file_path, base_file_name = res_file.full_path, res_file.file_name
-    expected_file_path = u"{}/data/contents/ODM2_Multi_Site_One_Variable/{}"
-    expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                   base_file_name)
-    self.assertEqual(file_path, expected_file_path)
+    self.assertEqual(res_file.file_folder, expected_file_folder)
+
     logical_file = res_file.logical_file
 
     # logical file should be associated with 1 file
     self.assertEqual(logical_file.files.all().count(), 1)
     res_file = logical_file.files.first()
-    self.assertIn('.sqlite', res_file.extension)
+    self.assertEqual('.sqlite', res_file.extension.lower())
 
     # test file level metadata extraction
 
