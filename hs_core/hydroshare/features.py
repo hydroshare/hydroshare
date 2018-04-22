@@ -3,6 +3,7 @@ from hs_access_control.models import PrivilegeCodes, GroupAccess
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
+# from pprint import pprint
 
 # from hs_labels.models import UserResourceLabels, UserResourceFlags
 # from hs_core.hydroshare.utils import user_from_id
@@ -250,7 +251,7 @@ class Features(object):
     @staticmethod
     def resources_editable_via_group(g):
         output = set([])
-        if GroupAccess.objects.filter(group=g).exists(): 
+        if GroupAccess.objects.filter(group=g).exists():
             for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE):
                 output.add(r.short_id)
         return output
@@ -258,7 +259,7 @@ class Features(object):
     @staticmethod
     def resources_viewable_via_group(g):
         output = set([])
-        if GroupAccess.objects.filter(group=g).exists(): 
+        if GroupAccess.objects.filter(group=g).exists():
             for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW):
                 output.add(r.short_id)
         return output
@@ -266,12 +267,12 @@ class Features(object):
     @staticmethod
     def explain_group(gname):
         g = Group.objects.get(name=gname)
-        if GroupAccess.objects.filter(group=g).exists(): 
+        if GroupAccess.objects.filter(group=g).exists():
             return {'name': g.name,
                     'description': g.gaccess.description,
                     'purpose': g.gaccess.purpose}
-        else: 
-            return {'name': g.name} 
+        else:
+            return {'name': g.name}
 
     @staticmethod
     def resource_features(obj):
@@ -332,4 +333,101 @@ class Features(object):
         output['aggregation_statistics'] = ind.prepare_aggregation_statistics(obj)
         output['absolute_url'] = ind.prepare_absolute_url(obj)
         output['extra'] = ind.prepare_extra(obj)
+        return output
+
+    @staticmethod
+    def render_abstract_phrase(field, value):
+        output = ""
+        # print("{} is".format(field))
+        # pprint(value)
+        if value is None:
+            value = []
+        if not isinstance(value, (tuple, list)):
+            value = [value]
+        for v in value:
+            if v is not None and v != "" and isinstance(v, basestring) \
+                    and field is not None and field != "":
+                output = output + "{} is {}. ".format(field.encode('ascii', 'ignore'),
+                                                      v.encode('ascii', 'ignore'))
+        return output
+
+    @staticmethod
+    def resource_extended_abstract(obj):
+        ind = BaseResourceIndex()
+        output = ind.prepare_abstract(obj)
+        if output is None:
+            output = ""
+        output = output + Features.render_abstract_phrase('sample_medium',
+                                                          ind.prepare_sample_medium(obj))
+        output = output + Features.render_abstract_phrase('title',
+                                                          ind.prepare_title(obj))
+        output = output + Features.render_abstract_phrase('creator',
+                                                          ind.prepare_creator(obj))
+        output = output + Features.render_abstract_phrase('author',
+                                                          ind.prepare_author(obj))
+        output = output + Features.render_abstract_phrase('creator',
+                                                          ind.prepare_creator(obj))
+        output = output + Features.render_abstract_phrase('contributor',
+                                                          ind.prepare_contributor(obj))
+        output = output + Features.render_abstract_phrase('subject',
+                                                          ind.prepare_subject(obj))
+        output = output + Features.render_abstract_phrase('organization',
+                                                          ind.prepare_organization(obj))
+        output = output + Features.render_abstract_phrase('publisher',
+                                                          ind.prepare_publisher(obj))
+        output = output + Features.render_abstract_phrase('availability',
+                                                          ind.prepare_availability(obj))
+        output = output + Features.render_abstract_phrase('replaced',
+                                                          ind.prepare_replaced(obj))
+        output = output + Features.render_abstract_phrase('coverage_type',
+                                                          ind.prepare_coverage_type(obj))
+        output = output + Features.render_abstract_phrase('format',
+                                                          ind.prepare_format(obj))
+        output = output + Features.render_abstract_phrase('identifier',
+                                                          ind.prepare_identifier(obj))
+        output = output + Features.render_abstract_phrase('language',
+                                                          ind.prepare_language(obj))
+        output = output + Features.render_abstract_phrase('source',
+                                                          ind.prepare_source(obj))
+        output = output + Features.render_abstract_phrase('relation',
+                                                          ind.prepare_relation(obj))
+        output = output + Features.render_abstract_phrase('resource_type',
+                                                          ind.prepare_resource_type(obj))
+        output = output + Features.render_abstract_phrase('owner',
+                                                          ind.prepare_owner(obj))
+        output = output + Features.render_abstract_phrase('geometry_type',
+                                                          ind.prepare_geometry_type(obj))
+        output = output + Features.render_abstract_phrase('field_name',
+                                                          ind.prepare_field_name(obj))
+        output = output + Features.render_abstract_phrase('field_type',
+                                                          ind.prepare_field_type(obj))
+        output = output + Features.render_abstract_phrase('field_type_code',
+                                                          ind.prepare_field_type_code(obj))
+        output = output + Features.render_abstract_phrase('variable',
+                                                          ind.prepare_variable(obj))
+        output = output + Features.render_abstract_phrase('variable_type',
+                                                          ind.prepare_variable_type(obj))
+        output = output + Features.render_abstract_phrase('variable_shape',
+                                                          ind.prepare_variable_shape(obj))
+        output = output + Features.render_abstract_phrase('variable_descriptive_name',
+                                                          ind.
+                                                          prepare_variable_descriptive_name(obj))
+        output = output + Features.render_abstract_phrase('variable_speciation',
+                                                          ind.prepare_variable_speciation(obj))
+        output = output + Features.render_abstract_phrase('site',
+                                                          ind.prepare_site(obj))
+        output = output + Features.render_abstract_phrase('method',
+                                                          ind.prepare_method(obj))
+        output = output + Features.render_abstract_phrase('quality_level',
+                                                          ind.prepare_quality_level(obj))
+        output = output + Features.render_abstract_phrase('data_source',
+                                                          ind.prepare_data_source(obj))
+        output = output + Features.render_abstract_phrase('sample_medium',
+                                                          ind.prepare_sample_medium(obj))
+        output = output + Features.render_abstract_phrase('units',
+                                                          ind.prepare_units(obj))
+        output = output + Features.render_abstract_phrase('units_type',
+                                                          ind.prepare_units_type(obj))
+        output = output + Features.render_abstract_phrase('extra',
+                                                          ind.prepare_extra(obj))
         return output
