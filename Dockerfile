@@ -12,7 +12,7 @@ RUN pip install \
   nameparser \
   probablepeople \
   geopy \
-  numpy \
+  numpy==1.14.0 \
   pandas \
   sklearn \
   scipy

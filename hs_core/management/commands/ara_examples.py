@@ -6,6 +6,8 @@ from hs_explore.utils import Utils
 from hs_explore.topic_modeling import TopicModeling
 from datetime import datetime
 from pprint import pprint
+import pickle
+import sys
 
 
 class Command(BaseCommand):
@@ -44,15 +46,27 @@ class Command(BaseCommand):
 
 
         # print the feature vector for all resources.
-        all_resource_features = []
-        print "len(BaseResource.objects.all())", len(BaseResource.objects.all())
-        for r in BaseResource.objects.all():
-            # pprint(Features.resource_features(r))
-            # Utils.write_dict("ALL_RESOURCES_ALL_FEATURES.OUT", Features.resource_features(r))
-            # Utils.write_dict("resource_features.txt", Features.resource_features(r))
-            print ".",
-            all_resource_features.append(Features.resource_features(r))
+        PICKLE_FILE = "resource_features.pkl"
+        USE_PICKLE = 0
 
+        if USE_PICKLE:
+            input = open(PICKLE_FILE, 'rb')
+            all_resource_features = pickle.load(input)
+            input.close()
+        else:
+            all_resource_features = []
+            len_objects_all = len(BaseResource.objects.all())
+            print "len(BaseResource.objects.all())", len_objects_all
+            for index,r in enumerate(BaseResource.objects.all()):
+                # pprint(Features.resource_features(r))
+                # Utils.write_dict("ALL_RESOURCES_ALL_FEATURES.OUT", Features.resource_features(r))
+                # Utils.write_dict("resource_features.txt", Features.resource_features(r))
+                # print ".",
+                print 1.0*index / len_objects_all, "%"
+                sys.stdout.flush()
+                all_resource_features.append(Features.resource_features(r))
+            output = open(PICKLE_FILE, 'wb')
+            pickle.dump(all_resource_features, output)
 
         user_resource_other = []
         x = Features.user_my_resources()

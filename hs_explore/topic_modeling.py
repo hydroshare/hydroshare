@@ -170,7 +170,7 @@ class TopicModeling(object):
         count = 0
         for some_dict in arr:
             s = self.dict_arr_to_string_format(some_dict)
-            print s
+            # print s
             target.write(str(s) + "\n")
             count += 1
 
@@ -199,7 +199,7 @@ class TopicModeling(object):
                             sims_series = similarity_matrix.loc[resource].nlargest(top_n)
                             for resource_id, similarity in sims_series.iteritems():
                                 recommended_resources.append((resource_id, similarity))
-                                Recommend.recommend(user, resource_id, similarity)
+                                Recommend.recommend_ids(user, resource_id, similarity)
                                 print (user, resource_id, similarity)
 
                     except KeyError:
