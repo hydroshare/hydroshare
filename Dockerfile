@@ -12,7 +12,10 @@ RUN pip install \
   nameparser \
   probablepeople \
   geopy \
-  scikit-surprise
+  numpy \
+  pandas \
+  sklearn \
+  scipy
 ### End - HydroShare Development Image Additions ###
 
 USER root
