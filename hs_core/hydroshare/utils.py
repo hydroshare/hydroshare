@@ -516,6 +516,9 @@ def copy_and_create_metadata(src_res, dest_res):
     # create the key/value metadata
     dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
     dest_res.save()
+    # generate metadata and map xml files for logical files in the target resource
+    for logical_file in dest_res.logical_files:
+        logical_file.create_aggregation_xml_documents()
 
 
 # TODO: should be BaseResource.mark_as_modified.
