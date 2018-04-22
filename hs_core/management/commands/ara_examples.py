@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
         # print the feature vector for all resources.
         PICKLE_FILE = "resource_features.pkl"
-        USE_PICKLE = 0
+        USE_PICKLE = 1
 
         if USE_PICKLE:
             input = open(PICKLE_FILE, 'rb')

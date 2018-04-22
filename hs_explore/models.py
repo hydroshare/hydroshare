@@ -28,13 +28,13 @@ class Recommend(models.Model):
     class Meta:
         unique_together = ('user', 'resource')
 
-    @classmethod
+    @staticmethod
     def recommend(u, r, relevance=0.0):
         with transaction.atomic:
             Recommend.objects.get_or_create(user=u, resource=r,
                                             default={'relevance': relevance})
 
-    @classmethod
+    @staticmethod
     def recommend_ids(uid, rid, relevance=0.0):
         """ use string ids rather than User and Resource objects """
         u = user_from_id(uid, raise404=False)

@@ -18,6 +18,11 @@ __author__ = 'ara@cs.tufts.edu'
 
 ######################################
 # Explore / Predictions for users
+# Working User-Item recommendation (using surprise library import SVD, Dataset, Reader)
+# https://gist.github.com/aramatev/be359ac68fe502a961404027abfc3b72
+#
+# Working Item-Item cos similarity (using libraries pandas, sklearn.metrics.pairwise.cosine_similarity, scipy.sparse)
+# https://gist.github.com/aramatev/161461d666ab7176068c8c3255159245
 ######################################
 
 
