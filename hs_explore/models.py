@@ -49,7 +49,7 @@ class Recommend(models.Model):
                     object.save()
 
     @staticmethod
-    def recommend_ids(uid, rid, relevance=0.0, state=Status.STATUS_NEW):
+    def recommend_ids(uid, rid, relevance=None, state=None):
         """ use string ids rather than User and Resource objects """
         u = user_from_id(uid, raise404=False)
         r = get_resource_by_shortkey(rid, or_404=False)
