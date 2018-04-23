@@ -29,17 +29,31 @@ class Recommend(models.Model):
         unique_together = ('user', 'resource')
 
     @staticmethod
-    def recommend(u, r, relevance=0.0):
-        with transaction.atomic:
-            Recommend.objects.get_or_create(user=u, resource=r,
-                                            default={'relevance': relevance})
+    def recommend(u, r, relevance=None, state=None):
+
+        defaults = {}
+        if relevance is not None:
+            defaults['relevance'] = relevance
+        if state is not None:
+            defaults['state'] = state
+
+        with transaction.atomic():
+            object, created = Recommend.objects.get_or_create(user=u, resource=r,
+                                                              defaults=defaults)
+            if not created:
+                if relevance is not None:
+                    object.relevance = relevance
+                if state is not None:
+                    object.state = state
+                if relevance is not None or state is not None:
+                    object.save()
 
     @staticmethod
-    def recommend_ids(uid, rid, relevance=0.0):
+    def recommend_ids(uid, rid, relevance=0.0, state=Status.STATUS_NEW):
         """ use string ids rather than User and Resource objects """
         u = user_from_id(uid, raise404=False)
         r = get_resource_by_shortkey(rid, or_404=False)
-        Recommend.recommend(u, r, relevance)
+        Recommend.recommend(u, r, relevance=relevance, state=state)
 
     def viewed(self):
         self.state = Status.STATUS_VIEWED
