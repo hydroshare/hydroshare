@@ -267,18 +267,18 @@ class CompositeResource(BaseResource):
                 new_aggr: folder_2/text.txt
                 Note: needs deleting old xml files
 
-        case-5 (moving a folder: folder_1 containing a single aggregation file to a folder: 
+        case-5 (moving a folder: folder_1 containing a single aggregation file to a folder:
         folder_2):
                 orgi_aggr: /folder_1/text.txt
                 new_aggr: folder_2/folder_1/text.txt
                 Note: no need for deleting old xml files
-        
+
         case-6 (renaming a folder that contains a multi-file aggregation):
                 orgi_aggr: folder_1 [folder_1/logan.nc]
                 new_aggr: folder_2 [folder_2/logan.nc]
                 Note: needs deleting old xml files
 
-        case-7 (moving a folder:folder_1 that conatins a multi-file aggregation to another folder: 
+        case-7 (moving a folder:folder_1 that conatins a multi-file aggregation to another folder:
         folder_2):
                 orgi_aggr: folder_1 [folder_1/logan.nc]
                 new_aggr: folder_2/folder_1 [folder_2/folder_1/logan.nc]
@@ -288,11 +288,11 @@ class CompositeResource(BaseResource):
                 orgi_aggr: text.txt
                 new_aggr: text_rename.txt
                 Note: no need for deleting old xml files or generating xml files
-                
+
         case-9 (renaming a non-aggregation file inside a folder):
                 orgi_aggr: folder_1/text.txt
                 new_aggr: folder_1/text_rename.txt
-                Note: no need for deleting old xml files or generating xml files    
+                Note: no need for deleting old xml files or generating xml files
 
         case-10 (renaming a folder that contains a non-aggregation files):
                 orgi_aggr: folder_1
@@ -301,28 +301,28 @@ class CompositeResource(BaseResource):
 
         case-11 (moving a single non-aggregation file to a folder: folder_1):
                 orgi_aggr: text.txt
-                new_aggr: folder_1/text.txt    
+                new_aggr: folder_1/text.txt
                 Note: no need for deleting old xml files or generating xml files
 
         case-12 (moving a folder: folder_1 containing a non-aggregation file to a folder: folder_2):
                 orgi_aggr: folder_1
-                new_aggr: folder_2/folder_1    
+                new_aggr: folder_2/folder_1
                 Note: no need for deleting old xml files or generating xml files
 
-        case-13 (moving a folder:folder_1 that contains multile multi-file aggregation to 
+        case-13 (moving a folder:folder_1 that contains multile multi-file aggregation to
         another folder: folder_2):
                 orgi_aggr: folder_1 [folder_1/netcdf/logan.nc, folder_1/raster/logan.tif]
                 new_aggr: folder_2/folder_1 [folder_2/folder_1/netcdf/logan.nc,
                 folder_2/folder_1/raster/logan.tif]
                 Note: no need for deleting old xml files
 
-        case-14 (moving a folder:folder_1 that conatins multile multi-file aggregation and 
+        case-14 (moving a folder:folder_1 that conatins multile multi-file aggregation and
         single file aggregations to another folder: folder_2):
                 orgi_aggr: folder_1 [folder_1/netcdf/logan.nc,
                 folder_1/rasetr/logan.tif, folder_1/text.txt]
                 new_aggr: folder_2/folder_1 [folder_2/folder_1/netcdf/logan.nc,
                 folder_2/folder_1/rasetr/logan.tif, folder_2/folder_1/text.txt]
-                Note: no need for deleting old xml files                
+                Note: no need for deleting old xml files
         """
 
         def delete_old_xml_files(folder=''):

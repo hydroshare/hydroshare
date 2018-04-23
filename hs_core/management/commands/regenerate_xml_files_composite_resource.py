@@ -71,4 +71,3 @@ class Command(BaseCommand):
 
         print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
         print(">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(resource_counter_success))
-
