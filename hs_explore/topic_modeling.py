@@ -186,7 +186,7 @@ class TopicModeling(object):
         """
         data_sparse = sparse.csr_matrix(Z)
         similarities = cosine_similarity(data_sparse)
-        sim = pd.DataFrame(data=similarities, index=resource_ids.values, columns=resource_ids.values)
+        sim = pd.DataFrame(data=similarities, index=resource_ids, columns=resource_ids)
         return sim
 
     @staticmethod
@@ -200,13 +200,11 @@ class TopicModeling(object):
                         # print (user, resource)
                         series = data.loc[data['resource_id'] == resource, 'abstract']
                         if series.size > 0 and len(series.iloc[0]) > 0:
-
                             sims_series = similarity_matrix.loc[resource].nlargest(top_n)
                             for resource_id, similarity in sims_series.iteritems():
                                 recommended_resources.append((resource_id, similarity))
                                 Recommend.recommend_ids(user, resource_id, similarity)
-                                print (user, resource_id, similarity)
-
+                                # print (user, resource_id, similarity)
                     except KeyError:
                         # do some exception handling here (or just pass)
                         pass
@@ -217,8 +215,10 @@ class TopicModeling(object):
                     # call to store Recommend.db(user, document_id, similarity
                     # print (user, document_id, similarity)
 
-    def start(self, all_resource_features, user_resource_downloads, user_resource_other):
+    def start(self, all_resource_features, all_resource_abstracts, user_resource_downloads, user_resource_other):
+        # not using all_resource_features now, only all_resource_extended/abstracts
         print "len(all_resource_features)", len(all_resource_features)
+        print "len(all_resource_abstracts)", len(all_resource_abstracts)
         print "len(user_resource_downloads)", len(user_resource_downloads)
         print "len(user_resource_other)", len(user_resource_other)
 
@@ -244,33 +244,42 @@ class TopicModeling(object):
         users, resources, user_resource_dict = self.make_user_resource_dict(ratings)
 
         ###########################
-        # read item-item resource_features
+        # read all resources' features
+        # open(self.RESOURCES_FEATURES_PATH, 'w').close()
+        # self.write_resource_features(self.RESOURCES_FEATURES_PATH, all_resource_features)
+        #
+        # # Important! invalid_raise=False, otherwise we crash and burn here
+        # R = np.genfromtxt(self.RESOURCES_FEATURES_PATH, dtype='str', delimiter=self.SEPARATOR, encoding='utf-8', invalid_raise=False,
+        #                   filling_values='')
+        #
+        # # blank out the file and rewrite "R" down to file w/o invalid
+        # open(self.RESOURCES_FEATURES_PATH, 'w').close()
+        # np.savetxt(self.RESOURCES_FEATURES_PATH, R, fmt="%s", delimiter=self.SEPARATOR, encoding='utf-8')
+        # print "All resource features: formatted & invalid cols removed ...\t DONE!"
+        #
+        # # ------------------
+        # # LOAD THE DATASET
+        # data = pd.read_csv(self.RESOURCES_FEATURES_PATH, sep=self.SEPARATOR, encoding='utf-8')
+        # data = data.replace(np.nan, '', regex=True)
+        # data = data.replace('None', '', regex=True)
+        # resource_ids = data['resource_id']
 
-        open(self.RESOURCES_FEATURES_PATH, 'w').close()
-        self.write_resource_features(self.RESOURCES_FEATURES_PATH, all_resource_features)
-
-        # Important! invalid_raise=False, otherwise we crash and burn here
-        R = np.genfromtxt(self.RESOURCES_FEATURES_PATH, dtype='str', delimiter=self.SEPARATOR, encoding='utf-8', invalid_raise=False,
-                          filling_values='')
-
-        # blank out the file and rewrite "R" down to file w/o invalid
-        open(self.RESOURCES_FEATURES_PATH, 'w').close()
-        np.savetxt(self.RESOURCES_FEATURES_PATH, R, fmt="%s", delimiter=self.SEPARATOR, encoding='utf-8')
-        print "All resource features: formatted & invalid cols removed ...\t DONE!"
-
-        # ------------------
-        # LOAD THE DATASET
-        data = pd.read_csv(self.RESOURCES_FEATURES_PATH, sep=self.SEPARATOR, encoding='utf-8')
+        ###########################
+        # read resource 'extended' abstracts
+        np_arr = np.array(all_resource_abstracts)
+        resource_ids = np_arr[:, 0]
+        abstracts = np_arr[:, 1]
+        data = pd.DataFrame({'resource_id': resource_ids, 'abstract': abstracts})
         data = data.replace(np.nan, '', regex=True)
         data = data.replace('None', '', regex=True)
-        resource_ids = data['resource_id']
 
+        # contents_ravel = data['title'] + " " + data['abstract']
+        contents_ravel = abstracts
         vectorizer = CountVectorizer(min_df=5, max_df=0.9,
                                      stop_words='english', lowercase=True,
                                      token_pattern='[a-zA-Z\-][a-zA-Z\-]{2,}')
-
-        contents_ravel = data['title'] + " " + data['abstract']
         data_vectorized = vectorizer.fit_transform(contents_ravel)
+        print "CountVectorizer: fit_transform ...\t DONE!"
 
         # Build a Latent Dirichlet Allocation Model
         lda_model = LatentDirichletAllocation(n_components=self.NUM_TOPICS, max_iter=10,

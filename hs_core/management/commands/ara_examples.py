@@ -68,6 +68,26 @@ class Command(BaseCommand):
             output = open(PICKLE_FILE, 'wb')
             pickle.dump(all_resource_features, output)
 
+        PICKLE_FILE = "resource_abstracts_only.pkl"
+        USE_PICKLE = 1
+        resource_uri = '/resource/'
+        if USE_PICKLE:
+            input = open(PICKLE_FILE, 'rb')
+            all_resource_abstracts = pickle.load(input)
+            input.close()
+        else:
+            all_resource_abstracts = []
+            len_objects_all = len(BaseResource.objects.all())
+            print "len(BaseResource.objects.all())", len_objects_all
+            for index,r in enumerate(BaseResource.objects.all()):
+                print 1.0*index / len_objects_all * 100, "%"
+                sys.stdout.flush()
+                absolute_uri, x = Features.resource_extended_abstract(r)
+                resource_id = absolute_uri[len(resource_uri):-1]
+                all_resource_abstracts.append([resource_id, x])
+            output = open(PICKLE_FILE, 'wb')
+            pickle.dump(all_resource_abstracts, output)
+
         user_resource_other = []
         x = Features.user_my_resources()
         # Utils.write_dict("CF_user_my_resources.out", x)
@@ -79,7 +99,7 @@ class Command(BaseCommand):
         user_resource_other.append(x)
 
         tm = TopicModeling()
-        tm.start(all_resource_features, user_resource_downloads, user_resource_other)
+        tm.start(all_resource_features, all_resource_abstracts, user_resource_downloads, user_resource_other)
 
 
         # x = Features.user_owned_groups()

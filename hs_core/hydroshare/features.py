@@ -430,4 +430,5 @@ class Features(object):
                                                           ind.prepare_units_type(obj))
         output = output + Features.render_abstract_phrase('extra',
                                                           ind.prepare_extra(obj))
-        return output
+        absolute_url = ind.prepare_absolute_url(obj)
+        return absolute_url, output

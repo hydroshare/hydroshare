@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = "Print abstract for a resource."
 
     def handle(self, *args, **options):
-        Recommend.objects.all().delete() # clear recommendation system
+        #Recommend.objects.all().delete() # clear recommendation system
         couch = user_from_id('alvacouch')
         sauk = get_resource_by_shortkey('636878cd2380443b907d25aa51a7043a')
         Recommend.recommend(couch, sauk, relevance=1.0) 

@@ -67,7 +67,7 @@ class Recommend(models.Model):
         self.state = Status.STATUS_DISMISSED
         self.save()
 
-    @classmethod
+    @staticmethod
     def delete(u, r):
         try:
             record = Recommend.objects.get(user=u, resource=r)
@@ -75,7 +75,7 @@ class Recommend(models.Model):
         except Exception:
             pass
 
-    @classmethod
+    @staticmethod
     def clear():
         for r in Recommend.objects.all():
             r.delete()
