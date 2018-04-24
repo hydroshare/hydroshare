@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
         # print the feature vector for all resources.
         PICKLE_FILE = "resource_features.pkl"
-        USE_PICKLE = 1
+        USE_PICKLE = 0
 
         if USE_PICKLE:
             input = open(PICKLE_FILE, 'rb')
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             pickle.dump(all_resource_features, output)
 
         PICKLE_FILE = "resource_abstracts_only.pkl"
-        USE_PICKLE = 1
+        USE_PICKLE = 0
         resource_uri = '/resource/'
         if USE_PICKLE:
             input = open(PICKLE_FILE, 'rb')
