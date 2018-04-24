@@ -135,12 +135,14 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(istorage.exists(logical_file.map_file_path))
         meta_xml_file_path = logical_file.metadata_file_path
         map_xml_file_path = logical_file.map_file_path
-
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        new_file_name = '{0}_1{1}'.format(base_file_name, ext)
         # rename the aggregation resource file -> causes aggregation rename
         # test the aggregation name after renaming the file
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{}'.format(new_file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/' + 'logan_small.tif')
+                                      src_path, tgt_path)
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was re-created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
@@ -170,10 +172,12 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         # create a folder to move this file
-        ResourceFile.create_folder(self.composite_resource, 'generic')
+        folder_name = 'generic'
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
+        ResourceFile.create_folder(self.composite_resource, folder_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/generic/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a generic aggregation (logical file)
         self._create_generic_aggregation()
         res_file = self.composite_resource.files.first()
@@ -181,36 +185,38 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         orig_meta_xml_file_path = logical_file.metadata_file_path
         orig_map_xml_file_path = logical_file.map_file_path
 
         # rename the aggregation resource file -> causes aggregation rename
         # test the aggregation name after renaming the file
-        new_file_name = 'logan_small.tif'
+        base_file_name, ext = os.path.splitext(res_file.file_name)
+        new_file_name = '{0}_1{1}'.format(base_file_name, ext)
+        src_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, new_file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/generic/' + res_file.file_name,
-                                      'data/contents/generic/' + new_file_name)
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was re-created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=new_file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=new_file_name)
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was re-created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=new_file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=new_file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -255,24 +261,26 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         orig_map_xml_file_path = logical_file.map_file_path
 
         # create a folder to move this file
-        ResourceFile.create_folder(self.composite_resource, 'generic')
+        folder_name = 'generic'
+        ResourceFile.create_folder(self.composite_resource, folder_name)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/generic/' + res_file.file_name)
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -298,10 +306,12 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         # create a folder to move this file
-        ResourceFile.create_folder(self.composite_resource, 'generic')
+        folder_name = 'generic'
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
+        ResourceFile.create_folder(self.composite_resource, folder_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/generic/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a generic aggregation (logical file)
         self._create_generic_aggregation()
         res_file = self.composite_resource.files.first()
@@ -309,14 +319,14 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # hold on to the original xml file paths to test that they get deleted
@@ -324,22 +334,24 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         orig_map_xml_file_path = logical_file.map_file_path
 
         # now change the folder name 'generic' to 'generic_1'
+        folder_rename = '{}_1'.format(folder_name)
+        src_path = 'data/contents/{}'.format(folder_name)
+        tgt_path = 'data/contents/{}'.format(folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/generic',
-                                      'data/contents/generic_1')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic_1/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_rename, fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic_1/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_rename, fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -365,10 +377,12 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         # create a folder to contain the aggregation file
-        ResourceFile.create_folder(self.composite_resource, 'generic_2')
+        folder_name = 'generic_2'
+        ResourceFile.create_folder(self.composite_resource, folder_name)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/generic_2/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a generic aggregation (logical file)
         self._create_generic_aggregation()
         res_file = self.composite_resource.files.first()
@@ -376,14 +390,14 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic_2/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic_2/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # hold on to the original xml file paths to test that they get deleted
@@ -392,24 +406,28 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
         # create a folder where we will move the 'generic_2' folder that contains the
         # aggregation file
-        ResourceFile.create_folder(self.composite_resource, 'generic_1')
+        parent_folder = 'generic_1'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
         # now move 'generic_2' to folder 'generic_1'
+        src_path = 'data/contents/{}'.format(folder_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, folder_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/generic_2',
-                                      'data/contents/generic_1/generic_2')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/generic_1/generic_2/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_meta_file_path = "{root}/{folder_1}/{folder_2}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder_1=parent_folder, folder_2=folder_name,
+            fn=res_file.file_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/generic_1/generic_2/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn=res_file.file_name)
+        expected_aggr_map_file_path = "{root}/{folder_1}/{folder_2}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder_1=parent_folder, folder_2=folder_name,
+            fn=res_file.file_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -485,9 +503,10 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertFalse(istorage.exists(map_xml_file_path))
         self.composite_resource.delete()
 
-    def test_raster_aggregation_xml_files_creation_1(self):
-        """Test that aggregation metadata and map xml files are created on raster aggregation
-        creation - raster folder at the root"""
+    def test_multi_file_aggregation_xml_files_creation_1(self):
+        """Test that aggregation metadata and map xml files are created when a multi file
+        aggregation (using raster here) is created - aggregation folder at the root of the folder
+        hierarchy"""
 
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
@@ -496,32 +515,35 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'raster')
+        folder_name = 'raster'
+        ResourceFile.create_folder(self.composite_resource, folder_name)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
         self.composite_resource.delete()
 
-    def test_raster_aggregation_xml_files_creation_2(self):
-        """Test that aggregation metadata and map xml files are created on raster aggregation
-        creation - raster folder not at the root"""
+    def test_multi_file_aggregation_xml_files_creation_2(self):
+        """Test that aggregation metadata and map xml files are created when a multi file
+        aggregation (using raster here) is created - aggregation folder NOT at the root of
+        the folder hierarchy - aggregation folder has a parent folder"""
 
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
@@ -530,32 +552,39 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'folder/raster')
+        parent_folder = 'my_folder'
+        child_folder = 'raster'
+        folder_path = '{0}/{1}'.format(parent_folder, child_folder)
+        ResourceFile.create_folder(self.composite_resource, folder_path)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_path, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/folder/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/folder/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{p_folder}/{c_folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=child_folder,
+            fn=child_folder)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/folder/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{p_folder}/{c_folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=child_folder,
+            fn=child_folder)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
         self.composite_resource.delete()
 
-    def test_raster_aggregation_xml_files_re_creation_on_folder_rename_1(self):
-        """Test that aggregation metadata and map xml files are re-created on raster aggregation
-        folder rename - raster folder at the root"""
+    def test_multi_file_aggregation_xml_files_re_creation_on_folder_rename_1(self):
+        """Test that aggregation metadata and map xml files are re-created on multi-file
+        aggregation (using raster here) folder name change - aggregation folder at the root of
+        the folder hierarchy"""
 
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
@@ -564,24 +593,26 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'raster')
+        folder_name = 'raster'
+        ResourceFile.create_folder(self.composite_resource, folder_name)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
@@ -589,22 +620,24 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         orig_meta_xml_file_path = logical_file.metadata_file_path
         orig_map_xml_file_path = logical_file.map_file_path
         # now change the folder name 'raster' to 'raster_1'
+        folder_rename = '{}_1'.format(folder_name)
+        src_path = 'data/contents/{}'.format(folder_name)
+        tgt_path = 'data/contents/{}'.format(folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/raster',
-                                      'data/contents/raster_1')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/raster_1/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster_1')
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_rename, fn=folder_rename)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/raster_1/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster_1')
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_rename, fn=folder_rename)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -620,8 +653,9 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.composite_resource.delete()
 
     def test_raster_aggregation_xml_files_re_creation_on_folder_rename_2(self):
-        """Test that aggregation metadata and map xml files are re-created on raster aggregation
-        folder rename - raster folder not at the root"""
+        """Test that aggregation metadata and map xml files are re-created on multi-file
+        aggregation (using raster here) folder name change - aggregation folder NOT at the root of
+        the folder hierarchy - aggregation folder has a parent folder"""
 
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
@@ -630,24 +664,30 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'folder/raster')
+        parent_folder = 'my_folder'
+        child_folder = 'raster'
+        folder_path = '{0}/{1}'.format(parent_folder, child_folder)
+        ResourceFile.create_folder(self.composite_resource, folder_path)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_path, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/folder/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/folder/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{p_folder}/{c_folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=child_folder,
+            fn=child_folder)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/folder/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{p_folder}/{c_folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=child_folder,
+            fn=child_folder)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
@@ -655,22 +695,26 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         orig_meta_xml_file_path = logical_file.metadata_file_path
         orig_map_xml_file_path = logical_file.map_file_path
         # now change the folder name 'raster' to 'raster_1'
+        src_path = 'data/contents/{0}/{1}'.format(parent_folder, child_folder)
+        child_folder_rename = '{}_1'.format(child_folder)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, child_folder_rename)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/folder/raster',
-                                      'data/contents/folder/raster_1')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/folder/raster_1/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster_1')
+        expected_aggr_meta_file_path = "{root}/{p_folder}/{c_folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder,
+            c_folder=child_folder_rename, fn=child_folder_rename)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/folder/raster_1/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster_1')
+        expected_aggr_map_file_path = "{root}/{p_folder}/{c_folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder,
+            c_folder=child_folder_rename, fn=child_folder_rename)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         # test that the old aggregation metadata xml file got deleted
@@ -696,47 +740,53 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'raster')
+        folder_name = 'raster'
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_name, res_file.file_name)
+        ResourceFile.create_folder(self.composite_resource, folder_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, folder=folder_name, fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
         # create a folder and move the raster folder there
-        ResourceFile.create_folder(self.composite_resource, 'raster_parent')
+        parent_folder = 'raster_parent'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
 
         # now move the 'raster' folder to 'raster_parent'
+        src_path = 'data/contents/{}'.format(folder_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, folder_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/raster',
-                                      'data/contents/raster_parent/raster')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/raster_parent/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{p_folder}/{c_folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=folder_name,
+            fn=folder_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/raster_parent/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{p_folder}/{c_folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=folder_name,
+            fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         self.composite_resource.delete()
@@ -752,49 +802,60 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
         # create a folder and move the raster file there
-        ResourceFile.create_folder(self.composite_resource, 'raster_parent/raster')
+        parent_folder = 'raster_parent'
+        folder_name = 'raster'
+        folder_path = '{0}/{1}'.format(parent_folder, folder_name)
+        ResourceFile.create_folder(self.composite_resource, folder_path)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(folder_path, res_file.file_name)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + res_file.file_name,
-                                      'data/contents/raster_parent/raster/' + res_file.file_name)
+                                      src_path, tgt_path)
         # create a raster aggregation (logical file)
         self._create_raster_aggregation()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         istorage = self.composite_resource.get_irods_storage()
         # test that the aggregation metadata xml file was created
-        expected_aggr_meta_file_path = "{root}/raster_parent/raster/{fn}_meta.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_meta_file_path = "{root}/{p_folder}/{c_folder}/{fn}_meta.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=folder_name,
+            fn=folder_name)
 
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
         # test that the aggregation map xml file was created
-        expected_aggr_map_file_path = "{root}/raster_parent/raster/{fn}_resmap.xml".format(
-            root=self.composite_resource.file_path, fn='raster')
+        expected_aggr_map_file_path = "{root}/{p_folder}/{c_folder}/{fn}_resmap.xml".format(
+            root=self.composite_resource.file_path, p_folder=parent_folder, c_folder=folder_name,
+            fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
         self.assertTrue(istorage.exists(logical_file.map_file_path))
 
         # create a folder and move the raster parent folder there
-        ResourceFile.create_folder(self.composite_resource, 'raster_super_parent')
+        root_folder = 'raster_super_parent'
+        ResourceFile.create_folder(self.composite_resource, root_folder)
 
         # now move the 'raster_parent' folder to 'raster_super_parent'
+        src_path = 'data/contents/{}'.format(parent_folder)
+        tgt_path = 'data/contents/{0}/{1}'.format(root_folder, parent_folder)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/raster_parent',
-                                      'data/contents/raster_super_parent/raster_parent')
+                                      src_path, tgt_path)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # test that the aggregation metadata xml file was created
         self.assertTrue(istorage.exists(logical_file.metadata_file_path))
-        expected_aggr_meta_file_path = "{root}/raster_super_parent/raster_parent/" \
-                                       "raster/{fn}_meta.xml".format(
-                                        root=self.composite_resource.file_path, fn='raster')
 
+        expected_aggr_meta_file_path = "{root}/{r_folder}/{p_folder}/{c_folder}/{fn}_meta.xml"
+        expected_aggr_meta_file_path = expected_aggr_meta_file_path.format(
+            root=self.composite_resource.file_path,
+            r_folder=root_folder, p_folder=parent_folder, c_folder=folder_name, fn=folder_name)
         self.assertEqual(logical_file.metadata_file_path, expected_aggr_meta_file_path)
         # test that the aggregation map xml file was created
         self.assertTrue(istorage.exists(logical_file.map_file_path))
-        expected_aggr_map_file_path = "{root}/raster_super_parent/raster_parent/" \
-                                      "raster/{fn}_resmap.xml".format(
-                                        root=self.composite_resource.file_path, fn='raster')
+
+        expected_aggr_map_file_path = "{root}/{r_folder}/{p_folder}/{c_folder}/{fn}_resmap.xml"
+        expected_aggr_map_file_path = expected_aggr_map_file_path.format(
+            root=self.composite_resource.file_path,
+            r_folder=root_folder, p_folder=parent_folder, c_folder=folder_name, fn=folder_name)
         self.assertEqual(logical_file.map_file_path, expected_aggr_map_file_path)
 
         self.composite_resource.delete()
@@ -847,14 +908,15 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         # to a specific folder)
 
         # create the folder
-        new_folder_path = os.path.join("data", "contents", "my-new-folder")
+        new_folder = "my-new-folder"
+        new_folder_path = os.path.join("data", "contents", new_folder)
         create_folder(self.composite_resource.short_id, new_folder_path)
         resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
                                       source_names=[fed_test_file_full_path], user=self.user,
-                                      folder="my-new-folder")
+                                      folder=new_folder)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
                                   source_names=[fed_test_file_full_path], user=self.user,
-                                  folder="my-new-folder")
+                                  folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
