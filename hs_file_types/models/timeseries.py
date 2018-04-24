@@ -383,24 +383,6 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
 
-    # TODO: delete the following method - not needed anymore
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        container_to_add_to = super(TimeSeriesFileMetaData, self).add_to_xml_container(container)
-        if self.abstract:
-            dc_description = etree.SubElement(container_to_add_to,
-                                              '{%s}description' % NAMESPACES['dc'])
-            dc_des_rdf_Desciption = etree.SubElement(dc_description,
-                                                     '{%s}Description' % NAMESPACES['rdf'])
-            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
-                                                '{%s}abstract' % NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.abstract
-
-        add_to_xml_container_helper(self, container_to_add_to)
-
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 

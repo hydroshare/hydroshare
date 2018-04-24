@@ -262,18 +262,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    # TODO: delete the following method - not needed anymore
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
-
-        container_to_add_to = super(NetCDFFileMetaData, self).add_to_xml_container(container)
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container_to_add_to)
-
-        for variable in self.variables.all():
-            variable.add_to_xml_container(container_to_add_to)
-
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 

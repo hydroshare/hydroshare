@@ -273,82 +273,12 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
-    # TODO: delete the following method - not needed anymore
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all the metadata elements associated with this
-        logical file type instance. Subclass must override this if it has additional metadata
-        elements."""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        dataset_container = etree.SubElement(
-            container, '{%s}Dataset' % NAMESPACES['hsterms'])
-        rdf_Description = etree.SubElement(dataset_container, '{%s}Description' % NAMESPACES['rdf'])
-        dc_datatype = etree.SubElement(rdf_Description, '{%s}type' % NAMESPACES['dc'])
-        data_type = current_site_url() + "/terms/" + self.logical_file.data_type
-        dc_datatype.set('{%s}resource' % NAMESPACES['rdf'], data_type)
-
-        if self.logical_file.dataset_name:
-            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' % NAMESPACES['dc'])
-            dc_datatitle.text = self.logical_file.dataset_name
-
-        # add fileType node
-        for res_file in self.logical_file.files.all():
-            hsterms_datafile = etree.SubElement(rdf_Description,
-                                                '{%s}dataFile' % NAMESPACES['hsterms'])
-            rdf_dataFile_Description = etree.SubElement(hsterms_datafile,
-                                                        '{%s}Description' % NAMESPACES['rdf'])
-            file_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                hs_url=current_site_url(),
-                res_id=self.logical_file.resource.short_id,
-                file_name=res_file.short_path)
-            rdf_dataFile_Description.set('{%s}about' % NAMESPACES['rdf'], file_uri)
-            dc_title = etree.SubElement(rdf_dataFile_Description,
-                                        '{%s}title' % NAMESPACES['dc'])
-
-            file_name = get_resource_file_name_and_extension(res_file)[1]
-            dc_title.text = file_name
-
-            dc_format = etree.SubElement(rdf_dataFile_Description, '{%s}format' % NAMESPACES['dc'])
-            dc_format.text = res_file.mime_type
-
-        self.add_keywords_to_xml_container(rdf_Description)
-        self.add_extra_metadata_to_xml_container(rdf_Description)
-        for coverage in self.coverages.all():
-            coverage.add_to_xml_container(rdf_Description)
-        return rdf_Description
-
-    # TODO: delete the following method - not needed anymore
-    def add_extra_metadata_to_xml_container(self, container):
-        """Generates xml+rdf representation of the all the key/value metadata associated
-        with an instance of the logical file type"""
-
-        for key, value in self.extra_metadata.iteritems():
-            hsterms_key_value = etree.SubElement(
-                container, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(
-                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
-                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
-                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_value.text = value
-
-    # TODO: delete the following method - not needed anymore
-    def add_keywords_to_xml_container(self, container):
-        """Generates xml+rdf representation of the all the keywords associated
-        with an instance of the logical file type"""
-
-        for kw in self.keywords:
-            dc_subject = etree.SubElement(container, '{%s}subject' % CoreMetaData.NAMESPACES['dc'])
-            dc_subject.text = kw
-
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
                                  nsmap=CoreMetaData.NAMESPACES)
-        # create the Description element -this is not exactly a dc element
+        # create the Description element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
                                            CoreMetaData.NAMESPACES['rdf'])
 
@@ -861,7 +791,6 @@ class AbstractLogicalFile(models.Model):
                 original_folder = ''
             original_folder_path = os.path.join('data', 'contents', original_folder)
             for f in res_files:
-                # TODO: user ResourceFile.create() to do this file move
                 tgt_file_path = os.path.join(original_folder_path, f.file_name)
                 src_file_path = os.path.join('data', 'contents', f.short_path)
                 move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
@@ -1018,23 +947,6 @@ class AbstractLogicalFile(models.Model):
 
             # make each resource file we added part of the logical file
             self.add_resource_file(new_res_file)
-
-    # TODO: unit test this
-    def reset_to_generic(self, user):
-        """
-        This sets all files in this logical file group to GenericLogicalFile type
-
-        :param  user: user who is re-setting to generic file type
-        :return:
-        """
-        from .generic import GenericLogicalFile
-
-        for res_file in self.files.all():
-            if res_file.has_logical_file:
-                res_file.logical_file.logical_delete(user=user, delete_res_files=False)
-            logical_file = GenericLogicalFile.create()
-            res_file.logical_file_content_object = logical_file
-            res_file.save()
 
     def get_copy(self):
         """creates a copy of this logical file object with associated metadata needed to support

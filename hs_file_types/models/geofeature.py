@@ -142,21 +142,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    # TODO: delete the following method - not needed anymore
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
-
-        container_to_add_to = super(GeoFeatureFileMetaData, self).add_to_xml_container(container)
-        if self.geometryinformation:
-            self.geometryinformation.add_to_xml_container(container_to_add_to)
-
-        for fieldinfo in self.fieldinformations.all():
-            fieldinfo.add_to_xml_container(container_to_add_to)
-
-        if self.originalcoverage:
-            self.originalcoverage.add_to_xml_container(container_to_add_to)
-
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
@@ -660,7 +645,6 @@ def extract_metadata(shp_file_full_path):
     :return: returns a dict of collected metadata
     """
 
-    # TODO: Pabitra - try to simplify the logic in this function
     try:
         metadata_dict = {}
 
@@ -726,7 +710,7 @@ def extract_metadata(shp_file_full_path):
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
     except:
-        raise ValidationError("Parse Shapefiles Failed!")
+        raise ValidationError("Parsing of shapefiles failed!")
 
 
 def parse_shp(shp_file_path):
