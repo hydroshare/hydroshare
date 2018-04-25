@@ -11,6 +11,8 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 from hs_core.testing import TestCaseCommonUtilities
 
+from hs_composite_resource.models import CompositeResource
+
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
 
 
@@ -960,6 +962,33 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(BaseResource.objects.count(), 0)
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
+    def test_copy_composite_resource_with_single_file_aggregation(self):
+        # test that we can create a copy of a composite resource that has a single file
+        # aggregation
+
+        self._test_copy_or_version_of_composite_resource(aggr_type=GenericLogicalFile,
+                                                         action='copy')
+
+    def test_copy_composite_resource_with_multi_file_aggregation(self):
+        # test that we can create a copy of a composite resource that has one multi-file aggregation
+
+        self._test_copy_or_version_of_composite_resource(aggr_type=GeoRasterLogicalFile,
+                                                         action='copy')
+
+    def test_version_composite_resource_with_single_file_aggregation(self):
+        # test that we can create a new version of a composite resource that has a single file
+        # aggregation
+
+        self._test_copy_or_version_of_composite_resource(aggr_type=GenericLogicalFile,
+                                                         action='version')
+
+    def test_version_composite_resource_with_multi_file_aggregation(self):
+        # test that we can create a new version of a composite resource that has one
+        # multi-file aggregation
+
+        self._test_copy_or_version_of_composite_resource(aggr_type=GeoRasterLogicalFile,
+                                                         action='version')
+
     def _create_composite_resource(self):
         fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
@@ -999,3 +1028,32 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         else:
             GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user,
                                                folder_path=res_file.file_folder)
+
+    def _test_copy_or_version_of_composite_resource(self, aggr_type,  action):
+        self._create_composite_resource()
+        self.assertEqual(CompositeResource.objects.all().count(), 1)
+        # create the specified aggregation (logical file)
+        if aggr_type == GenericLogicalFile:
+            self._create_generic_aggregation()
+        else:
+            self._create_raster_aggregation()
+
+        self.assertEqual(aggr_type.objects.all().count(), 1)
+        new_res_composite = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                             self.user,
+                                                             action=action)
+        new_res_composite = hydroshare.copy_resource(self.composite_resource, new_res_composite)
+        self.assertEqual(CompositeResource.objects.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.count(), new_res_composite.files.count())
+        self.assertEqual(len(self.composite_resource.logical_files),
+                         len(new_res_composite.logical_files))
+        self.assertEqual(aggr_type.objects.all().count(), 2)
+        istorage = new_res_composite.get_irods_storage()
+        for logical_file in new_res_composite.logical_files:
+            # test that the aggregation metadata xml file was created
+            self.assertTrue(istorage.exists(logical_file.metadata_file_path))
+            # test that the aggregation map xml file was created
+            self.assertTrue(istorage.exists(logical_file.map_file_path))
+
+        new_res_composite.delete()
+        self.composite_resource.delete()
