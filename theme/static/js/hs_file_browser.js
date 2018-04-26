@@ -12,6 +12,12 @@ const MAX_FILE_SIZE = 1024; // MB
 
 function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath) {
     if(folderAgrregationType.length >0){
+        var folderIcons = getFolderIcons();
+        iconTemplate = folderIcons.DEFAULT;
+
+        if (folderIcons[folderAgrregationType]) {
+            iconTemplate = folderIcons[logical_type];
+        }
         return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
                 "<span class='fb-file-name'>" + folderName + "</span>" +

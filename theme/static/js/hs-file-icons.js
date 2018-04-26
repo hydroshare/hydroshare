@@ -1,6 +1,16 @@
 /**
 * Created by Mauriel on 3/18/2017.
 */
+function getFolderIcons() {
+    var folderIcons = {};
+    //TODO setup folder icons
+    folderIcons.GeoRasterLogicalFile =
+        "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
+
+    folderIcons.DEFAULT =
+        "<span class='fb-file-icon fa fa-file-o'></span>";
+    return folderIcons;
+}
 
 function getFileIcons() {
     var fileIcons = {};
