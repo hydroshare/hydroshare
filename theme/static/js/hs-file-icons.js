@@ -5,10 +5,22 @@ function getFolderIcons() {
     var folderIcons = {};
     //TODO setup folder icons
     folderIcons.GeoRasterLogicalFile =
-        "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
+        "<span class='fb-file-icon fa " + "fa-folder-open" + "'></span>";
+
+    folderIcons.NetCDFLogicalFile =
+        "<span class='fb-file-icon fa " + "fa-folder-open" + "'></span>";
+
+    folderIcons.GeoFeatureLogicalFile =
+        "<span class='fb-file-icon fa " + "fa-folder-open" + "'></span>";
+
+    folderIcons.RefTimeseriesLogicalFile =
+        "<span class='fb-file-icon fa " + "fa-folder-open" + "'></span>";
+
+    folderIcons.TimeSeriesLogicalFile =
+        "<span class='fb-file-icon fa " + "fa-folder-open" + "'></span>";
 
     folderIcons.DEFAULT =
-        "<span class='fb-file-icon fa fa-file-o'></span>";
+        "<span class='fb-file-icon fa fa-folder'></span>";
     return folderIcons;
 }
 
