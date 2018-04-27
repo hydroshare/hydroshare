@@ -6,6 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import sparse
+from random import randint
 from hs_explore.models import Recommend
 
 
@@ -180,6 +181,60 @@ class TopicModeling(object):
             count += 1
 
     @staticmethod
+    def split_user_resource_training_test(user_resource_dict):
+        test_data = defaultdict(lambda: defaultdict(int))
+        train_data = defaultdict(lambda: defaultdict(int))
+        for user in user_resource_dict.keys():
+            resources = user_resource_dict[user].keys()
+            len_resources = len(resources)
+            if len_resources > 1:
+                test_index = randint(0, len_resources - 1)
+                test_resource = resources[test_index]
+                test_data[user][test_resource] = user_resource_dict[user][test_resource]
+                for index, resource in enumerate(resources):
+                    if index != test_index:
+                        train_data[user][resource] = user_resource_dict[user][test_resource]
+
+        return train_data, test_data
+
+    @staticmethod
+    def test_accuracy(data, similarity_matrix, top_n, train_user_resources, test_user_resources):
+        mean_average = 0
+        for user in train_user_resources.keys():
+            test_resource = test_user_resources[user].keys()[0]
+            resources = train_user_resources[user].keys()
+            similarities = []
+            for resource in resources:
+                try:
+                    # print (user, resource)
+                    series = data.loc[data['resource_id'] == resource, 'abstract']
+                    if series.size > 0 and len(series.iloc[0]) > 0:
+                        sims_series = similarity_matrix.loc[resource].nlargest(top_n)
+                        for resource_id, similarity in sims_series.iteritems():
+                            similarities.append((resource_id, similarity))
+
+                except KeyError:
+                    # do some exception handling here (or just pass)
+                    pass
+            match = 0
+            total = 0
+            precision = 0
+            top_n_similarities = sorted(similarities, key=lambda item: item[1])[:top_n]
+            # top_n_similarities = similarities
+            # print "len(top_n_similarities)", len(similarities)
+            for resource_id, similarity in top_n_similarities:
+                total += 1
+                if resource_id == test_resource:
+                    # print (user, resource_id, similarity)
+                    match += 1
+                    precision += 1.0 * match / total
+            if total != 0:
+                mean_average += 1.0 * precision / total
+
+        total_users = len(train_user_resources.keys())
+        print top_n, "\t", 1.0 * mean_average / total_users * 100
+
+    @staticmethod
     def calculate_similarity(Z, resource_ids):
         """Calculate the column-wise cosine similarity for a sparse
         matrix. Return a new dataframe matrix with similarities.
@@ -285,6 +340,7 @@ class TopicModeling(object):
         lda_model = LatentDirichletAllocation(n_components=self.NUM_TOPICS, max_iter=10,
                                               learning_method='online')
         lda_Z = lda_model.fit_transform(data_vectorized)
+        print "LatentDirichletAllocation: fit_transform ...\t DONE!"
 
         # Build the similarity matrix
         # magnitude = sqrt(x2 + y2 + z2 + ...)
@@ -295,5 +351,12 @@ class TopicModeling(object):
         lda_Z_pd = lda_Z_pd.divide(magnitude, axis='index')
 
         similarity_matrix = self.calculate_similarity(lda_Z_pd, resource_ids)
+        print "calculate similarity_matrix ...\t DONE!"
+
+        # test accuracy using Mean Average Precision
+        # train_user_resources, test_user_resources = self.split_user_resource_training_test(user_resource_dict)
+        # print "topN, Mean Average Precision (MAP) %"
+        # for top_n in [10, 5, 3, 2, 1]:
+        #     self.test_accuracy(data, similarity_matrix, top_n, train_user_resources, test_user_resources)
 
         self.populate_user_resource_db(data, similarity_matrix, self.TOP_N_SIMILARITIES, user_resource_dict)
