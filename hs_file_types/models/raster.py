@@ -20,7 +20,6 @@ from django.template import Template, Context
 from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import ResourceFile, CoreMetaData
 
@@ -296,19 +295,23 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """ Sets a tif or zip resource file, or a folder to GeoRasterLogicalFile type """
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
-
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
         file_name = res_file.file_name
         # get file name without the extension - needed for naming the aggregation folder
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
+        aggregation_folder_created = False
+        # determine if we need to create a new folder for the aggregation
+        create_new_folder = cls._check_create_aggregation_folder(
+            selected_res_file=res_file, selected_folder=folder_path,
+            aggregation_file_count=1)
+
         upload_folder = ''
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         temp_dir = os.path.dirname(temp_file)
+        res_files_to_delete = []
         # validate the file
         if folder_path is not None:
             error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file,
@@ -329,79 +332,56 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
             with transaction.atomic():
                 # create a geo raster logical file object to be associated with resource files
-                logical_file = cls.create()
-                # by default set the dataset_name attribute of the logical file to the
-                # name of the file selected to set file type
-                logical_file.dataset_name = base_file_name
-                logical_file.save()
+                logical_file = cls.initialize(base_file_name)
 
                 try:
                     if folder_path is None:
                         # we are here means aggregation is being created by selecting a file
-                        # create a folder for the raster file type using the base file name as the
-                        # name for the new folder if the file is not in a folder already
-                        if file_folder is None:
-                            new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                        if create_new_folder:
+                            # create a folder for the raster file type using the base file name
+                            # as the name for the new folder
+                            upload_folder = cls._create_aggregation_folder(resource, file_folder,
                                                                            base_file_name)
 
-                            log.info("Folder created:{}".format(new_folder_path))
-                            create_folder(resource.short_id, new_folder_path)
-                            new_folder_name = new_folder_path.split('/')[-1]
-                            upload_folder = new_folder_name
-                            if res_file.extension.lower() == ".tif":
-                                # copy the tif file to the new aggregation folder location
-                                tgt_folder = new_folder_path[len('data/contents/'):]
-                                copied_res_file = ResourceFile.create(resource=resource,
-                                                                      file=None,
-                                                                      folder=tgt_folder,
-                                                                      source=res_file.storage_path)
-
-                                # make the copied tif file as part of the aggregation/file type
-                                logical_file.add_resource_file(copied_res_file)
-                                # remove the tif file from the list of files
-                                files_to_add_to_resource = [f for f in files_to_add_to_resource
-                                                            if not f.endswith(res_file.file_name)]
-                                logical_file.add_files_to_resource(
-                                    resource=resource, files_to_add=files_to_add_to_resource,
-                                    upload_folder=upload_folder)
-                            else:
-                                # selected file must be a zip file - add the extracted files to
-                                # the resource
-                                logical_file.add_files_to_resource(
-                                    resource=resource, files_to_add=files_to_add_to_resource,
-                                    upload_folder=upload_folder)
+                            log.info("Folder created:{}".format(upload_folder))
+                            aggregation_folder_created = True
                         else:
                             upload_folder = file_folder
-                            if res_file.extension.lower() == ".tif":
+
+                        if res_file.extension.lower() == ".tif":
+                            if aggregation_folder_created:
+                                # copy the tif file to the new aggregation folder and make it part
+                                # of the logical file
+                                tgt_folder = upload_folder
+                                files_to_copy = [res_file]
+                                logical_file.copy_resource_files(resource, files_to_copy,
+                                                                 tgt_folder)
+                                res_files_to_delete.append(res_file)
+                            else:
                                 # make the selected tif file as part of the aggregation/file type
                                 logical_file.add_resource_file(res_file)
 
-                                # remove the tif file from the list of files
-                                files_to_add_to_resource = [f for f in files_to_add_to_resource
-                                                            if not f.endswith(res_file.file_name)]
+                            # remove the tif file from the list of files to get the list of all new
+                            # files that needs to be part of the aggregation
+                            files_to_add_to_resource = [f for f in files_to_add_to_resource
+                                                        if not f.endswith(res_file.file_name)]
+                        else:
+                            # selected file must be a zip file
+                            res_files_to_delete.append(res_file)
 
-                                logical_file.add_files_to_resource(
-                                    resource=resource, files_to_add=files_to_add_to_resource,
-                                    upload_folder=upload_folder)
-                            else:
-                                # selected file must be a zip file - add the extracted files to
-                                # the resource
-                                logical_file.add_files_to_resource(
-                                    resource=resource, files_to_add=files_to_add_to_resource,
-                                    upload_folder=upload_folder)
+                        # add all new files to resource and make those part of the logical file
+                        logical_file.add_files_to_resource(
+                            resource=resource, files_to_add=files_to_add_to_resource,
+                            upload_folder=upload_folder)
                     else:
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
 
                         # make all the files in the selected folder as part of the aggregation
-                        res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                             sub_folders=False)
-                        for f in res_files:
-                            logical_file.add_resource_file(f)
+                        res_files = logical_file.add_resource_files_in_folder(resource, folder_path)
 
                         # any new files must be uploaded to the resource and be made part of the
                         # aggregation
-
                         # filter out all the files that already exist in the selected folder
                         new_files_to_add = []
                         for f in files_to_add_to_resource:
@@ -422,19 +402,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         k, v = element.items()[0]
                         logical_file.metadata.create_element(k, **v)
                     log.info("Geographic raster aggregation type - metadata was saved to DB")
-                    # set resource to private if logical file is missing required metadata
-                    resource.update_public_and_discoverable()
-                    logical_file.create_aggregation_xml_documents()
-                    # if a file was selected at the root for creating aggregation then
-                    # delete this original selected file
-                    if folder_path is None and res_file.extension.lower() == ".zip":
-                        delete_resource_file(resource.short_id, res_file.id, user)
-                        log.info("Deleted the original zip file as part of creating an "
-                                 "aggregation from this zip file.")
-                    elif folder_path is None and file_folder is None:
-                        # tif file was selected for aggregation creation
-                        # need to deleted this file as we have made a copy of it to a new folder
-                        delete_resource_file(resource.short_id, res_file.id, user)
+                    logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                                           res_files_to_delete=res_files_to_delete)
 
                     file_type_success = True
                 except Exception as ex:
@@ -447,8 +416,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
             if not file_type_success:
                 aggregation_from_folder = folder_path is not None
-                cls.cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                          file_folder, aggregation_from_folder)
+                cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
+                                                           file_folder, aggregation_from_folder)
                 raise ValidationError(msg)
 
         else:
@@ -457,7 +426,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 shutil.rmtree(temp_dir)
             err_msg = "Geographic raster aggregation type validation failed. {}".format(
                 ' '.join(error_info))
-            log.info(err_msg)
+            log.error(err_msg)
             raise ValidationError(err_msg)
 
     @classmethod
