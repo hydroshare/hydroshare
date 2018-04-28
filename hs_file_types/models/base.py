@@ -24,9 +24,10 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 
 from lxml import etree
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url, \
-    get_resource_file_by_id, set_dirty_bag_flag, add_file_to_resource
+from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
+    set_dirty_bag_flag, add_file_to_resource
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
+from hs_core.hydroshare.resource import delete_resource_file
 
 
 class AbstractFileMetaData(models.Model):
@@ -643,6 +644,58 @@ class AbstractLogicalFile(models.Model):
         abstract = True
 
     @classmethod
+    def initialize(cls, dataset_name):
+        """
+        A helper for creating aggregation. Creates a new aggregation/logical_file type
+        instance and sets it's dataset field
+        :param  dataset_name: a name/title for the aggregation/logical file
+        """
+        logical_file = cls.create()
+        logical_file.dataset_name = dataset_name
+        logical_file.save()
+        return logical_file
+
+    def _finalize(self, user, resource, folder_created, res_files_to_delete):
+        """
+        A helper for creating aggregation. As a final step in creation of aggregation/logical file,
+        sets resource access control and generates aggregation xml files and if necessary delete
+        original resource files
+        :param  user: user who is creating a new aggregation
+        :param  resource: an instance of CompositeResource
+        :param  folder_created: a bool to indicate if a new folder has been created represent this
+        aggregation
+        :param  res_files_to_delete: a list of resource files to delete
+        """
+
+        # set resource to private if logical file is missing required metadata
+        resource.update_public_and_discoverable()
+        self.create_aggregation_xml_documents()
+        # check if we need to delete any files
+        if len(res_files_to_delete) == 1:
+            res_file = res_files_to_delete[0]
+            if res_file.extension.lower() == '.zip' or folder_created:
+                delete_resource_file(resource.short_id, res_file.id, user)
+        elif folder_created:
+            for res_file in res_files_to_delete:
+                delete_resource_file(resource.short_id, res_file.id, user)
+
+    @classmethod
+    def _create_aggregation_folder(cls, resource, file_folder, base_file_name):
+        """
+        A helper for creating aggregation. Creates a folder for a new multi-file aggregation
+        :param  resource: an instance of CompositeResource for which aggregation being created
+        :param  file_folder: folder path of the file from which aggregation being created
+        :param  base_file_name: name of file without the extension - the file used for crating
+        aggregation
+        """
+        from hs_core.views.utils import create_folder
+
+        new_folder_path = cls.compute_file_type_folder(resource, file_folder, base_file_name)
+        create_folder(resource.short_id, new_folder_path)
+        relative_aggregation_path = new_folder_path[len('data/contents/'):]
+        return relative_aggregation_path
+
+    @classmethod
     def get_allowed_uploaded_file_types(cls):
         # any file can be part of this logical file group - subclass needs to override this
         return [".*"]
@@ -765,8 +818,8 @@ class AbstractLogicalFile(models.Model):
         raise NotImplementedError()
 
     @staticmethod
-    def cleanup_on_fail_to_create_aggregation(user, resource, folder_to_delete, original_folder,
-                                              aggregation_from_folder):
+    def _cleanup_on_fail_to_create_aggregation(user, resource, folder_to_delete, original_folder,
+                                               aggregation_from_folder):
         """Deletes folder if a new aggregation folder *folder_to_delete*  was created
         :param  user: user hwo was trying to create the aggregation
         :param  resource: an instance of CompositeResource for which the aggregation was created
@@ -937,7 +990,11 @@ class AbstractLogicalFile(models.Model):
         res_file.save()
 
     def add_files_to_resource(self, resource, files_to_add, upload_folder):
-        """a helper for adding any new files to resource as part of creating an aggregation"""
+        """A helper for adding any new files to resource as part of creating an aggregation
+        :param  resource: an instance of CompositeResource
+        :param  files_to_add: a list of file paths for files that need to be added to the resource
+        and made part of this aggregation
+        """
         for fl in files_to_add:
             uploaded_file = UploadedFile(file=open(fl, 'rb'),
                                          name=os.path.basename(fl))
@@ -947,6 +1004,41 @@ class AbstractLogicalFile(models.Model):
 
             # make each resource file we added part of the logical file
             self.add_resource_file(new_res_file)
+
+    def add_resource_files_in_folder(self, resource, folder):
+        """
+        A helper for creating aggregation. Makes all resource files in a given folder as part of
+        the aggregation/logical file type
+        :param  resource:  an instance of CompositeResource
+        :param  folder: folder from which all files need to be made part of this aggregation
+        """
+
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder,
+                                             sub_folders=False)
+
+        for res_file in res_files:
+            self.add_resource_file(res_file)
+
+        return res_files
+
+    def copy_resource_files(self, resource, files_to_copy, tgt_folder):
+        """
+        A helper for creating aggregation. Copies the given list of resource files to the the
+        specified folder path and then makes those copied files as part of the aggregation
+        :param  resource: an instance of CompositeResource for which aggregation being created
+        :param  files_to_copy: a list of resource file paths in irods that need to be copied
+        to a specified directory *tgt_folder* and made part of this aggregation
+        """
+
+        for res_file in files_to_copy:
+            source_path = res_file.storage_path
+            copied_res_file = ResourceFile.create(resource=resource,
+                                                  file=None,
+                                                  folder=tgt_folder,
+                                                  source=source_path)
+
+            # make the copied file as part of the aggregation/file type
+            self.add_resource_file(copied_res_file)
 
     def get_copy(self):
         """creates a copy of this logical file object with associated metadata needed to support
@@ -1108,6 +1200,38 @@ class AbstractLogicalFile(models.Model):
             raise ex
         finally:
             shutil.rmtree(tmpdir)
+
+    @staticmethod
+    def _check_create_aggregation_folder(selected_res_file, selected_folder,
+                                         aggregation_file_count):
+        """
+        A helper that checks if a new folder needs to be created for the aggregation
+        :param: selected_res_file: the file that has been selected by the user to set aggregation
+        :param: aggregation_file_count: number of files that are going to be part of the
+        aggregation to be created
+        """
+        create_new_folder = False
+        file_folder = selected_res_file.file_folder
+        if file_folder is not None and selected_folder is None:
+            resource = selected_res_file.resource
+            istorage = resource.get_irods_storage()
+            store = istorage.listdir(selected_res_file.dir_path)
+
+            folders = store[0]
+            files = store[1]
+            if folders:
+                # since there are folders under dir_path - need to create a new folder for
+                # the new aggregation
+                create_new_folder = True
+
+            elif len(files) > aggregation_file_count:
+                # there are additional files at selected_res_file.dir_path - need to create a new
+                # folder new aggregation
+                create_new_folder = True
+        else:
+            create_new_folder = True
+
+        return create_new_folder
 
     def _generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
