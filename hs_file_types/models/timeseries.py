@@ -16,8 +16,7 @@ from dominate.tags import div, legend, strong, form, select, option, hr, button,
     textarea, span
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.models import CoreMetaData, ResourceFile
+from hs_core.models import CoreMetaData
 
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
 from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, \
@@ -522,9 +521,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         :return:
         """
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
-
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
@@ -549,39 +545,39 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         # file name without the extension - used for naming the new aggregation folder
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
+        aggregation_folder_created = False
+        res_files_to_delete = []
+        # determine if we need to create a new folder for the aggregation
+        create_new_folder = cls._check_create_aggregation_folder(
+            selected_res_file=res_file, selected_folder=folder_path,
+            aggregation_file_count=1)
         file_type_success = False
         upload_folder = ''
         msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
-            logical_file = cls.create()
+            logical_file = cls.initialize(base_file_name)
 
-            # by default set the dataset_name attribute of the logical file to the
-            # name of the file selected to set file type
-            logical_file.dataset_name = base_file_name
-            logical_file.save()
             try:
                 if folder_path is None:
                     # we are here means aggregation is being created by selecting a file
                     # create a folder for the timeseries file type using the base file
                     # name as the name for the new folder if the file is not in a folder already
-                    if file_folder is None:
-                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                    if create_new_folder:
+                        # create a folder for the raster file type using the base file name
+                        # as the name for the new folder
+                        upload_folder = cls._create_aggregation_folder(resource, file_folder,
                                                                        base_file_name)
-                        create_folder(resource.short_id, new_folder_path)
-                        log.info("Folder created:{}".format(new_folder_path))
 
-                        # copy the selected file to the new aggregation folder location
-                        tgt_folder = new_folder_path[len('data/contents/'):]
-                        copied_res_file = ResourceFile.create(resource=resource,
-                                                              file=None,
-                                                              folder=tgt_folder,
-                                                              source=res_file.storage_path)
-                        # make the copied file as part of the aggregation/file type
-                        logical_file.add_resource_file(copied_res_file)
-                        upload_folder = tgt_folder
+                        log.info("Folder created:{}".format(upload_folder))
+                        aggregation_folder_created = True
+                        tgt_folder = upload_folder
+                        files_to_copy = [res_file]
+                        logical_file.copy_resource_files(resource, files_to_copy,
+                                                         tgt_folder)
+                        res_files_to_delete.append(res_file)
                     else:
-                        # selected nc file is already in a folder
+                        # selected file is already in a folder
                         upload_folder = file_folder
                         # make the selected file part of the aggregation
                         logical_file.add_resource_file(res_file)
@@ -605,18 +601,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
                     if extract_err_message:
                         raise ValidationError(extract_err_message)
+                    log.info("Metadata was extracted from sqlite file.")
                 else:
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
-                # set resource to private if logical file is missing required metadata
-                resource.update_public_and_discoverable()
-                logical_file.create_aggregation_xml_documents()
-                log.info("TimeSeries aggregation was created.")
-                # delete the original selected resource file if we created new folder for this
-                # new aggregation
-                if folder_path is None and file_folder is None:
-                    delete_resource_file(resource.short_id, res_file.id, user)
+                logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                                       res_files_to_delete=res_files_to_delete)
+
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -628,8 +620,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
         if not file_type_success:
             aggregation_from_folder = folder_path is not None
-            cls.cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                      file_folder, aggregation_from_folder)
+            cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
+                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
     def get_copy(self):
