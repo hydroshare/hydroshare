@@ -488,7 +488,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         else:
                             logical_file.metadata.create_element(k, **v)
                     log.info("NetCDF aggregation - metadata was saved in aggregation")
-                    logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                    logical_file._finalize(user, resource,
+                                           folder_created=aggregation_folder_created,
                                            res_files_to_delete=res_files_to_delete)
                     file_type_success = True
                 except Exception as ex:

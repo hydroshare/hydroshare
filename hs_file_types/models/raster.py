@@ -402,7 +402,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         k, v = element.items()[0]
                         logical_file.metadata.create_element(k, **v)
                     log.info("Geographic raster aggregation type - metadata was saved to DB")
-                    logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                    logical_file._finalize(user, resource,
+                                           folder_created=aggregation_folder_created,
                                            res_files_to_delete=res_files_to_delete)
 
                     file_type_success = True

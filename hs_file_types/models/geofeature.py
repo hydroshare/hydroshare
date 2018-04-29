@@ -335,7 +335,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         if not file_type_success:
             aggregation_from_folder = folder_path is not None
             cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                      file_folder, aggregation_from_folder)
+                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
     @classmethod
