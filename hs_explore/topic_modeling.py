@@ -291,7 +291,7 @@ class TopicModeling(object):
             user_resource, users, resources = self.clean_user_resource(user_resource_dict)
 
             self.write_user_resource(self.USER_RESOURCES_PATH, user_resource)
-            print "User resource fave/app launches: clean & write ...\t DONE!"
+            print "User resource fave/my_resources: clean & write ...\t DONE!"
 
         # ------------------
         # TRANSFORM THE DATASET
