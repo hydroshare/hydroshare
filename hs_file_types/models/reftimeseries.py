@@ -10,7 +10,6 @@ from lxml import etree
 from django.utils import timezone
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
@@ -779,8 +778,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
             raise ValidationError("Selected file '{}' is already part of an aggregation".format(
                 res_file.file_name))
 
-        files_to_add_to_resource = []
-
         try:
             json_file_content = _validate_json_file(res_file)
         except Exception as ex:
@@ -789,46 +786,25 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         temp_dir = os.path.dirname(temp_file)
-        files_to_add_to_resource.append(temp_file)
-        file_folder = res_file.file_folder
-        with transaction.atomic():
-            # first delete the json file that we retrieved from irods
-            # for setting it to reftimeseries file type
-            delete_resource_file(resource.short_id, res_file.id, user)
 
+        with transaction.atomic():
             # create a reftiemseries logical file object to be associated with
             # resource files
             logical_file = cls.create()
-
             logical_file.metadata.json_file_content = json_file_content
             logical_file.metadata.save()
 
             try:
-                # add the json file back to the resource
-                uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
-                                             name=os.path.basename(temp_file))
-                # the added resource file will be part of a new generic logical file by default
-                new_res_file = utils.add_file_to_resource(
-                    resource, uploaded_file, folder=file_folder
-                )
-
-                # delete the generic logical file object
-                if new_res_file.logical_file is not None:
-                    # deleting the file level metadata object will delete the associated
-                    # logical file object
-                    new_res_file.logical_file.metadata.delete()
-
-                # make the resource file we added as part of the logical file
-                logical_file.add_resource_file(new_res_file)
-                logical_file.metadata.save()
+                # make the json file part of the aggregation
+                logical_file.add_resource_file(res_file)
                 logical_file.dataset_name = logical_file.metadata.get_title_from_json()
                 logical_file.save()
                 # extract metadata
                 _extract_metadata(resource, logical_file)
                 log.info("RefTimeseries aggregation type - json file was added to the resource.")
-                # set resource to private if logical file is missing required metadata
-                resource.update_public_and_discoverable()
-                logical_file.create_aggregation_xml_documents()
+                logical_file._finalize(user, resource, folder_created=False,
+                                       res_files_to_delete=[])
+
                 log.info("RefTimeseries aggregation type was created.")
             except Exception as ex:
                 msg = "RefTimeseries aggregation type. Error when setting aggregation " \
