@@ -323,6 +323,105 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_create_aggregation_from_shp_file_required_3(self):
+        # here we are using a shp file that exists in a folder
+        # for setting it to Geo Feature file type which includes metadata extraction
+        # The same folder contains another file that is not going to be part of the
+        # geofeature aggregation a new folder should be created in this case to represent the
+        # geofeature aggregation
+        # location shp file before aggregation is created: my_folder/states.shp
+        # location of another file before aggregation is created: my_folder/states_invalid.zip
+        # location of shp file after aggregation is created: my_folder/states/states.shp
+        # location of another file after aggregation is created: my_folder/states_invalid.zip
+
+        self.create_composite_resource()
+
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the 3 required files to the resource at the above folder
+        res_file = self.add_file_to_resource(file_to_add=self.states_shp_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shx_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+
+        # add a file that is not related to aggregation
+        res_file = self.add_file_to_resource(file_to_add=self.states_zip_invalid_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        # set the shp file to GeoFeatureLogicalFile type
+        shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, shp_res_file.id)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        base_shp_file_base_name, _ = os.path.splitext(shp_res_file.file_name)
+        expected_file_folder = '{0}/{1}'.format(new_folder, base_shp_file_base_name)
+        shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
+        logical_file = shp_res_file.logical_file
+        self.assertEqual(logical_file.files.count(), 3)
+        for res_file in logical_file.files.all():
+            # test that the each resource file has the same folder - no new folder created
+            self.assertEqual(res_file.file_folder, expected_file_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_shp_file_required_4(self):
+        # here we are using a shp file that exists in a folder
+        # for setting it to Geo Feature file type which includes metadata extraction
+        # The same folder contains another folder
+        # a new folder should be created in this case to represent the
+        # geofeature aggregation
+        # location shp file before aggregation is created: my_folder/states.shp
+        # location of another folder before aggregation is created: my_folder/another_folder
+        # location of shp file after aggregation is created: my_folder/states/states.shp
+
+        self.create_composite_resource()
+
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the 3 required files to the resource at the above folder
+        res_file = self.add_file_to_resource(file_to_add=self.states_shp_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_shx_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+        res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file,
+                                             upload_folder=new_folder)
+        self.assertEqual(res_file.file_folder, new_folder)
+
+        another_folder = '{}/another_folder'.format(new_folder)
+        ResourceFile.create_folder(self.composite_resource, another_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        # set the shp file to GeoFeatureLogicalFile type
+        shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, shp_res_file.id)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        base_shp_file_base_name, _ = os.path.splitext(shp_res_file.file_name)
+        expected_file_folder = '{0}/{1}'.format(new_folder, base_shp_file_base_name)
+        shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
+        logical_file = shp_res_file.logical_file
+        self.assertEqual(logical_file.files.count(), 3)
+        for res_file in logical_file.files.all():
+            # test that the each resource file has the same folder - no new folder created
+            self.assertEqual(res_file.file_folder, expected_file_folder)
+        self.composite_resource.delete()
+
+
     def test_create_aggregation_from_folder_1(self):
         """Here we are testing that an aggregation of type GeoFeatureLogicalFile
         can be created from a folder that contains the required resource files

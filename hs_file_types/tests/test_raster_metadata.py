@@ -49,6 +49,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # hierarchy for setting it to Geo Raster file type which includes metadata extraction
         # a new folder should be created as part of the aggregation creation where the resource
         # files of the aggregation should live
+        # location of raster file before aggregation: small_logan.tif
+        # location of raster file after aggregation: samll_logan/small_logan.tif
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
@@ -78,8 +80,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_create_aggregation_from_tif_file_2(self):
         # here we are using a valid raster tif file that exists in a folder
-        # for setting it to Geo Raster file type which includes metadata extraction - no new
+        # for setting it to Geo Raster file type - no new
         # folder should be created in this case
+        # raster file location before aggregation is created: /raster_aggr/small_logan.tif
+        # raster file location after aggregation is created: /raster_aggr/small_logan.tif
 
         self.create_composite_resource()
         # create a folder to place the tif file before creating an aggregation from the tif file
@@ -107,11 +111,105 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_create_aggregation_from_tif_file_3(self):
+        # here we are using a valid raster tif file that exists in a folder
+        # for setting it to Geo Raster file type. The same folder contains another file
+        # that is not going to be part of the raster aggregation
+        # a new folder should be created in this case to represent the raster aggregation
+        # location raster file before aggregation is created: /my_folder/small_logan.tif
+        # location of another file before aggregation is created: /my_folder/raster_tif_invalid.tif
+        # location of raster file after aggregation is created:
+        # /my_folder/small_logan/small_logan.tif
+        # location of another file after aggregation is created: /my_folder/raster_tif_invalid.tif
+
+        self.create_composite_resource()
+        # create a folder to place the tif file before creating an aggregation from the tif file
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # add another file to the same folder
+        self.add_file_to_resource(file_to_add=self.invalid_raster_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # set the tif file to GeoRasterLogicalFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+
+        # test logical file/aggregation
+        self.assertEqual(len(self.composite_resource.logical_files), 1)
+        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(logical_file.files.count(), 2)
+        base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
+        expected_file_folder = '{0}/{1}'.format(new_folder, base_tif_file_name)
+        for res_file in logical_file.files.all():
+            self.assertEqual(res_file.file_folder, expected_file_folder)
+        self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
+        self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+
+        # test the location of the file that's not part of the raster aggregation
+        other_res_file = None
+        for res_file in self.composite_resource.files.all():
+            if not res_file.has_logical_file:
+                other_res_file = res_file
+                break
+        self.assertEqual(other_res_file.file_folder, new_folder)
+
+        self.composite_resource.delete()
+
+
+    def test_create_aggregation_from_tif_file_4(self):
+        # here we are using a valid raster tif file that exists in a folder
+        # for setting it to Geo Raster file type. The same folder contains another folder
+        # a new folder should be created in this case to represent the raster aggregation
+        # location raster file before aggregation is created: /my_folder/small_logan.tif
+        # location of another file before aggregation is created: /my_folder/another_folder
+        # location of raster file after aggregation is created:
+        # /my_folder/small_logan/small_logan.tif
+
+        self.create_composite_resource()
+        # create a folder to place the tif file before creating an aggregation from the tif file
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        another_folder = '{}/another_folder'.format(new_folder)
+        ResourceFile.create_folder(self.composite_resource, another_folder)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # set the tif file to GeoRasterLogicalFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # test logical file/aggregation
+        self.assertEqual(len(self.composite_resource.logical_files), 1)
+        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(logical_file.files.count(), 2)
+        base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
+        expected_file_folder = '{0}/{1}'.format(new_folder, base_tif_file_name)
+        for res_file in logical_file.files.all():
+            self.assertEqual(res_file.file_folder, expected_file_folder)
+        self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
+        self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+
+        self.composite_resource.delete()
+
     def test_create_aggregation_from_zip_file_1(self):
         # here we are using a valid raster zip file that exist at the root of the folder hierarchy
         # for setting it to Geo Raster file type which includes metadata extraction
         # a new folder should be created in this case where the extracted files that are part of
         # the aggregation should exist
+        # location of the zip file before aggregation: logan_vrt_small.zip
+        # location of the tif file after aggregation: logan_vrt_small/small_logan.tif
+        # location of the zip file after after aggregation: zip file should not exist
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_zip_file)
@@ -137,6 +235,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a valid raster zip file that exist in a folder
         # for setting it to Geo Raster file type which includes metadata extraction
         # no new folder should be created in this case
+        # location of the raster file before aggregation: raster-aggr/small_logan.tif
+        # location of the raster file after aggregation: raster-aggr/small_logan.tif
 
         self.create_composite_resource()
         # create a folder to place the zip file before creating an aggregation from the zip file
@@ -164,6 +264,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """Here we are testing that an aggregation of type GeoRasterLogicalFile
         can be created from a folder that contains the required resource files
         This folder containing the files are at the root of the folder hierarchy
+        location of raster file before aggregation: georaster_aggr/small_logan.tif
+        location of raster file after aggregation: georaster_aggr/small_logan.tif
         """
         self._test_create_aggregation_from_folder(folder_to_test='georaster_aggr')
 
@@ -171,6 +273,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """Here we are testing that an aggregation of type GeoRasterLogicalFile
         can be created from a folder that contains the required resource files
         This folder containing the files has one parent folder
+        location of raster file before aggregation: parent_folder/georaster_aggr/small_logan.tif
+        location of raster file after aggregation: parent_folder/georaster_aggr/small_logan.tif
         """
 
         self._test_create_aggregation_from_folder(folder_to_test='parent_folder/georaster_aggr')
