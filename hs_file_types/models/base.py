@@ -298,8 +298,12 @@ class AbstractFileMetaData(models.Model):
             dc_datatitle.text = self.logical_file.dataset_name
 
         # add aggregation type
+        aggregation_term_uri = current_site_url() + "/terms/{}"
+        aggregation_term_uri = aggregation_term_uri.format(
+            self.logical_file.get_aggregation_type_name())
+
         dc_type = etree.SubElement(rdf_Description, '{%s}type' % CoreMetaData.NAMESPACES['dc'])
-        dc_type.text = self.logical_file.get_aggregation_type_name()
+        dc_type.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'], aggregation_term_uri)
 
         # add lang element
         dc_lang = etree.SubElement(rdf_Description, '{%s}language' % CoreMetaData.NAMESPACES['dc'])
@@ -346,10 +350,6 @@ class AbstractFileMetaData(models.Model):
         # create the Description element for aggregation type
         rdf_Description_aggr_type = etree.SubElement(RDF_ROOT, '{%s}Description' %
                                                      CoreMetaData.NAMESPACES['rdf'])
-
-        aggregation_term_uri = current_site_url() + "/terms/{}"
-        aggregation_term_uri = aggregation_term_uri.format(
-            self.logical_file.get_aggregation_type_name())
 
         rdf_Description_aggr_type.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'],
                                       aggregation_term_uri)
@@ -1301,4 +1301,8 @@ class AbstractLogicalFile(models.Model):
 
         # Fetch the serialization
         remdoc = a.get_serialization()
-        return remdoc.data
+        # remove this additional xml element - not sure why it gets added
+        # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
+        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        xml_string = remdoc.data.replace(xml_element_to_replace, '')
+        return xml_string

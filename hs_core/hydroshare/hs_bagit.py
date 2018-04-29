@@ -163,7 +163,8 @@ def create_bag_files(resource):
     elif resource.resource_type == "CompositeResource":
         # add file type aggregations to resource aggregation
         for logical_file in resource.logical_files:
-            aggr_uri = u'{hs_url}/resource/{res_id}/data/contents/{map_file_path}'.format(
+            aggr_uri = u'{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
+            aggr_uri = aggr_uri.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 map_file_path=logical_file.map_short_file_path)
