@@ -15,7 +15,6 @@ from django.template import Template, Context
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 

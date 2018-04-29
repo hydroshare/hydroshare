@@ -162,7 +162,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-
     def test_create_aggregation_from_tif_file_4(self):
         # here we are using a valid raster tif file that exists in a folder
         # for setting it to Geo Raster file type. The same folder contains another folder

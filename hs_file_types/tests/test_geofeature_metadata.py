@@ -421,7 +421,6 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.composite_resource.delete()
 
-
     def test_create_aggregation_from_folder_1(self):
         """Here we are testing that an aggregation of type GeoFeatureLogicalFile
         can be created from a folder that contains the required resource files
