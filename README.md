@@ -49,8 +49,10 @@ We use docker to simplify the development process
 - HS_LOG_FILES
 - NGINX_DIR
 - SSL_CERT_DIR
-4. Within the base directory of the cloned repo folder run `./hsctl rebuild --db` to build the application and run it
-8. If all goes well, your local version of Hydroshare should be running at http://localhost:8000
+4. Ensure CLRF line endings aren't in `hsctl` and `config/hydroshare-config.yaml` by running `sed -i 's/\r$//' hsctl` and `sed -i 's/\r$//' config/hydroshare-config.yaml`
+5. Within the base directory of the cloned repo folder run `./hsctl rebuild --db` to build the application and run it
+6. If all goes well, your local version of Hydroshare should be running at http://localhost:8000
+7. You can connect to the python interpreter via sftp (`ssh://hydro-service@localhost:1338` with path `/usr/bin/python`)
 
 For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
