@@ -41,7 +41,7 @@ We use docker to simplify the development process
 7. bind mount within .bashrc
     * `echo "sudo mount --bind /mnt/c /c" >> ~/.bashrc && source ~/.bashrc`
 ### Configuration
-1. Clone this repository
+1. Clone this repository (the scripts won't work with CLRF line endings so make sure to turn off `core.autocrlf false` 
 2. `cd` into the cloned repo folder
 3. Edit config/hydroshare-config.yaml.  Replace `/home/hydro/hydroshare` with the path to your cloned repo for the following keys:
 - HS_PATH
@@ -49,10 +49,9 @@ We use docker to simplify the development process
 - HS_LOG_FILES
 - NGINX_DIR
 - SSL_CERT_DIR
-4. Ensure CLRF line endings aren't in `hsctl` and `config/hydroshare-config.yaml` by running `sed -i 's/\r$//' hsctl` and `sed -i 's/\r$//' config/hydroshare-config.yaml`
-5. Within the base directory of the cloned repo folder run `./hsctl rebuild --db` to build the application and run it
-6. If all goes well, your local version of Hydroshare should be running at http://localhost:8000
-7. You can connect to the python interpreter via sftp (`ssh://hydro-service@localhost:1338` with path `/usr/bin/python`)
+4. Within the base directory of the cloned repo folder run `./hsctl rebuild --db` to build the application and run it
+5. If all goes well, your local version of Hydroshare should be running at http://localhost:8000
+6. You can connect to the python interpreter via sftp (`ssh://hydro-service@localhost:1338` with path `/usr/bin/python`)
 
 For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
