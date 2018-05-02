@@ -1611,7 +1611,7 @@ function setFileType(fileType){
        $("#fileTypeMetaDataTab").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
-           refreshResourceLandingPage("edit");
+           refreshResourceEditPage();
            refreshFileBrowser();
        }
     });
@@ -1633,7 +1633,7 @@ function removeAggregation(){
        $("#fileTypeMetaDataTab").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
-           refreshResourceLandingPage("edit");
+           refreshResourceEditPage();
            refreshFileBrowser();
        }
     });

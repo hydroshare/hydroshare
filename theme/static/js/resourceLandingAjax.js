@@ -1285,21 +1285,9 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
     });
 }
 
-function refreshResourceLandingPage(mode) {
-    var resourceID = $("#short-id").val();
-    var url = "/resource/" + resourceID + "/";
-    $.ajax({
-        type: "POST",
-        url: url,
-        data: {
-            "resource-mode": mode
-        },
-        success: function (result) {
-
-        },
-        error: function(xhr, errmsg, err){
-        }
-    });
+function refreshResourceEditPage() {
+    var form = $("#frm_refresh_page_edit_mode");
+    form.submit();
 }
 
 function addFileTypeExtraMetadata(){
