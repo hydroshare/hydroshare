@@ -2,6 +2,8 @@ import json
 from dateutil import parser
 from operator import lt, gt
 
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
 
 def update_resource_coverage_element(resource):
     """Update resource spatial and temporal coverage based on the corresponding coverages
@@ -150,3 +152,19 @@ def update_resource_temporal_coverage(resource):
         # delete the temporal coverage for the resource since the content files don't have
         # temporal coverage
         temp_cov.delete()
+
+
+def set_logical_file_type(hs_file_type, res, user, file_id, folder_path=None):
+    file_type_map = {"Generic": GenericLogicalFile,
+                     "GeoRaster": GeoRasterLogicalFile,
+                     "NetCDF": NetCDFLogicalFile,
+                     'GeoFeature': GeoFeatureLogicalFile,
+                     'RefTimeseries': RefTimeseriesLogicalFile,
+                     'TimeSeries': TimeSeriesLogicalFile}
+    if hs_file_type not in file_type_map:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(file_type_map.keys())
+        return err_msg
+    logical_file_type_class = file_type_map[hs_file_type]
+    logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                          folder_path=folder_path)

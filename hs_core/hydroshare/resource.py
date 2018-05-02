@@ -19,6 +19,7 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+import hs_file_types
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -309,7 +310,8 @@ def create_resource(
         keywords=(), metadata=None, extra_metadata=None,
         files=(), source_names=[], fed_res_path='', move=False,
         create_metadata=True,
-        create_bag=True, unpack_file=False, **kwargs):
+        create_bag=True, unpack_file=False,
+        auto_aggregations=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -362,6 +364,8 @@ def create_resource(
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
         the unpacked contents of the zip file will be added to the resource instead of the zip file.
+    :param auto_aggregations: boolean.  Convert all compatible files to aggregations on resource
+        creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -441,6 +445,7 @@ def create_resource(
         # quota micro-services to work
         resource.set_quota_holder(owner, owner)
 
+        resource_files = []
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -452,8 +457,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, source_names=source_names,
-                               move=move)
+            resource_files = add_resource_files(resource.short_id, *files,
+                                                source_names=source_names, move=move)
 
         if create_metadata:
             # prepare default metadata
@@ -471,6 +476,19 @@ def create_resource(
 
             resource.title = resource.metadata.title.value
             resource.save()
+
+        if auto_aggregations and len(resource_files) > 0:
+
+            ext_to_type = {".tif": "GeoRaster", ".nc": "NetCDF", ".shp": "GeoFeature", ".refts":
+                "RefTimeseries", ".sqlite": "TimeSeries", ".csv": "TimeSeries"}
+            for res_file in resource_files:
+                file_name = str(res_file)
+                root, ext = os.path.splitext(file_name)
+                ext = ext.lower()
+                if ext in ext_to_type:
+                    hs_file_types.utils.set_logical_file_type(hs_file_type=ext_to_type[ext],
+                                                              res=resource, user=None,
+                                          file_id=res_file.pk)
 
         if create_bag:
             hs_bagit.create_bag(resource)

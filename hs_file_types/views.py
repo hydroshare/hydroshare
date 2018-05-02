@@ -22,6 +22,8 @@ from hs_core.hydroshare.utils import resource_modified
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
 
+from .utils import set_logical_file_type
+
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "GeoRasterLogicalFile": GeoRasterLogicalFile,
                  "NetCDFLogicalFile": NetCDFLogicalFile,
@@ -55,13 +57,6 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-    file_type_map = {"Generic": GenericLogicalFile,
-                     "GeoRaster": GeoRasterLogicalFile,
-                     "NetCDF": NetCDFLogicalFile,
-                     'GeoFeature': GeoFeatureLogicalFile,
-                     'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile
-                     }
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
@@ -73,22 +68,20 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    if hs_file_type not in file_type_map:
-        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(file_type_map.keys())
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
     try:
-        logical_file_type_class = file_type_map[hs_file_type]
-        logical_file_type_class.set_file_type(resource=res, user=request.user, file_id=file_id,
-                                              folder_path=folder_path)
+        err_msg = set_logical_file_type(hs_file_type, res, request.user, file_id, folder_path)
+        #TODO we should probably be using exception handling here instead of strings
+        if err_msg:
+            response_data['message'] = err_msg
+            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
         resource_modified(res, request.user, overwrite_bag=False)
+
         msg = "{} was successfully set to the selected aggregation type."
         if folder_path is None:
             msg = msg.format("Selected file")
         else:
             msg = msg.format("Selected folder")
+
         response_data['status'] = 'success'
         response_data['message'] = msg
         spatial_coverage_dict = get_coverage_data_dict(res)
