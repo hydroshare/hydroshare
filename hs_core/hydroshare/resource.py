@@ -478,17 +478,9 @@ def create_resource(
             resource.save()
 
         if auto_aggregations and len(resource_files) > 0:
-
-            ext_to_type = {".tif": "GeoRaster", ".nc": "NetCDF", ".shp": "GeoFeature", ".refts":
-                "RefTimeseries", ".sqlite": "TimeSeries", ".csv": "TimeSeries"}
             for res_file in resource_files:
-                file_name = str(res_file)
-                root, ext = os.path.splitext(file_name)
-                ext = ext.lower()
-                if ext in ext_to_type:
-                    hs_file_types.utils.set_logical_file_type(hs_file_type=ext_to_type[ext],
-                                                              res=resource, user=None,
-                                          file_id=res_file.pk)
+                    hs_file_types.utils.set_logical_file_type(res=resource, user=owner,
+                                                              file_id=res_file.pk)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -680,6 +672,8 @@ def add_resource_files(pk, *files, **kwargs):
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
+        for res_file in ret:
+            hs_file_types.utils.set_logical_file_type(res=resource, user=None, file_id=res_file.pk)
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
     return ret

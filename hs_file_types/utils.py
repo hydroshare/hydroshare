@@ -1,6 +1,8 @@
 import json
+import os
 from dateutil import parser
 from operator import lt, gt
+from hs_core.hydroshare import utils
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
@@ -154,7 +156,19 @@ def update_resource_temporal_coverage(resource):
         temp_cov.delete()
 
 
-def set_logical_file_type(hs_file_type, res, user, file_id, folder_path=None):
+def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None):
+    if hs_file_type is None:
+        res_file = utils.get_resource_file_by_id(res, file_id)
+        ext_to_type = {".tif": "GeoRaster", ".nc": "NetCDF", ".shp": "GeoFeature", ".refts":
+            "RefTimeseries", ".sqlite": "TimeSeries", ".csv": "TimeSeries"}
+        file_name = str(res_file)
+        root, ext = os.path.splitext(file_name)
+        ext = ext.lower()
+        if ext in ext_to_type:
+            hs_file_type=ext_to_type[ext]
+        else:
+            return
+
     file_type_map = {"Generic": GenericLogicalFile,
                      "GeoRaster": GeoRasterLogicalFile,
                      "NetCDF": NetCDFLogicalFile,
