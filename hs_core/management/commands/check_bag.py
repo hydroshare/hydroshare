@@ -18,131 +18,139 @@ def check_bag(rid, options):
         resource = BaseResource.objects.get(short_id=rid)
         istorage = resource.get_irods_storage()
 
-        scimeta_path = os.path.join(resource.root_path, 'data',
-                                    'resourcemetadata.xml')
-        scimeta_exists = istorage.exists(scimeta_path)
-        if scimeta_exists:
-            print("{} found".format(scimeta_path))
-        else:
-            print("{} NOT FOUND".format(scimeta_path))
+        root_exists = istorage.exists(resource.root_path)
 
-        resmap_path = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
-        resmap_exists = istorage.exists(resmap_path)
-        if resmap_exists:
-            print("{} found".format(resmap_path))
-        else:
-            print("{} NOT FOUND".format(resmap_path))
+        if root_exists:
+            scimeta_path = os.path.join(resource.root_path, 'data',
+                                        'resourcemetadata.xml')
+            scimeta_exists = istorage.exists(scimeta_path)
+            if scimeta_exists:
+                print("{} found".format(scimeta_path))
+            else:
+                print("{} NOT FOUND".format(scimeta_path))
 
-        bag_exists = istorage.exists(resource.bag_path)
-        if bag_exists:
-            print("bag {} found".format(resource.bag_path))
-        else:
-            print("bag {} NOT FOUND".format(resource.bag_path))
+            resmap_path = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
+            resmap_exists = istorage.exists(resmap_path)
+            if resmap_exists:
+                print("{} found".format(resmap_path))
+            else:
+                print("{} NOT FOUND".format(resmap_path))
 
-        dirty = resource.getAVU('metadata_dirty')
-        print("metadata_dirty is {}".format(str(dirty)))
+            bag_exists = istorage.exists(resource.bag_path)
+            if bag_exists:
+                print("{} bag found".format(resource.bag_path))
+            else:
+                print("{} BAG NOT FOUND".format(resource.bag_path))
 
-        modified = resource.getAVU('bag_modified')
-        print("bag_modified is {}".format(str(modified)))
+            dirty = resource.getAVU('metadata_dirty')
+            print("{}.metadata_dirty is {}".format(rid, str(dirty)))
 
-        if options['generate']:  # generate usable bag
+            modified = resource.getAVU('bag_modified')
+            print("{}.bag_modified is {}".format(rid, str(modified)))
 
-            if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+            if options['generate']:  # generate usable bag
+
+                if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+                    try:
+                        create_bag_files(resource)
+                    except ValueError as e:
+                        print("{}: value error encountered: {}".format(rid, e.message))
+                        return
+
+                    print("{} metadata generated from Django".format(rid))
+                    resource.setAVU('metadata_dirty', 'false')
+                    resource.setAVU('bag_modified', 'true')
+                    print("{}.metadata_dirty set to false".format(rid))
+
+                if not options['if_needed'] or modified or not bag_exists:
+                    create_bag_by_irods(rid)
+                    print("{} bag generated from iRODs".format(rid))
+                    resource.setAVU('bag_modified', 'false')
+                    print("{}.bag_modified set to false".format(rid))
+
+            elif options['generate_metadata']:
+
+                if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+                    try:
+                        create_bag_files(resource)
+                    except ValueError as e:
+                        print("{}: value error encountered: {}".format(rid, e.message))
+                        return
+                    print("{}: metadata generated from Django".format(rid))
+                    resource.setAVU('metadata_dirty', 'false')
+                    print("{}.metadata_dirty set to false".format(rid))
+                    resource.setAVU('bag_modified', 'true')
+                    print("{}.bag_modified set to false".format(rid))
+
+            elif options['generate_bag']:
+
+                if not options['if_needed'] or modified or not bag_exists:
+                    create_bag_by_irods(rid)
+                    print("{}: bag generated from iRODs".format(rid))
+                    resource.setAVU('bag_modified', 'false')
+                    print("{}.bag_modified set to false".format(rid))
+
+            elif options['reset']:  # reset all data to pristine
+
+                resource.setAVU('metadata_dirty', 'true')
+                print("{}.metadata_dirty set to true".format(rid))
                 try:
-                    create_bag_files(resource)
-                except ValueError as e:
-                    print("value error encountered for {}: {}".format(rid, e.message))
-                    return
-
-                print("metadata generated for {} from Django".format(rid))
-                resource.setAVU('metadata_dirty', 'false')
-                print("metadata_dirty set to false for {}".format(rid))
-
-            if not options['if_needed'] or modified or not bag_exists:
-                create_bag_by_irods(rid)
-                print("bag generated for {} from iRODs".format(rid))
-                resource.setAVU('bag_modified', 'false')
-                print("bag_modified set to false for {}".format(rid))
-
-        elif options['generate_metadata']:
-
-            if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+                    istorage.delete(resource.scimeta_path)
+                    print("{} deleted".format(resource.scimeta_path))
+                except SessionException as ex:
+                    print("{} delete failed: {}"
+                          .format(resource.scimeta_path,
+                                  ex.stderr))
                 try:
-                    create_bag_files(resource)
-                except ValueError as e:
-                    print("value error encountered for {}: {}".format(rid, e.message))
-                    return
-                print("metadata generated for {} from Django".format(rid))
-                resource.setAVU('metadata_dirty', 'false')
-                print("metadata_dirty set to false for {}".format(rid))
+                    istorage.delete(resource.resmap_path)
+                    print("{} deleted".format(resource.resmap_path))
+                except SessionException as ex:
+                    print("{} delete failed: {}"
+                          .format(resource.resmap_path,
+                                  ex.stderr))
 
-        elif options['generate_bag']:
+                resource.setAVU('bag_modified', 'true')
+                print("{}.bag_modified set to true".format(rid))
+                try:
+                    istorage.delete(resource.bag_path)
+                    print("{} deleted".format(resource.bag_path))
+                except SessionException as ex:
+                    print("{} delete failed: {}"
+                          .format(resource.bag_path,
+                                  ex.stderr))
 
-            if not options['if_needed'] or modified or not bag_exists:
-                create_bag_by_irods(rid)
-                print("bag generated for {} from iRODs".format(rid))
-                resource.setAVU('bag_modified', 'false')
-                print("bag_modified set to false for {}".format(rid))
+            elif options['reset_metadata']:
 
-        elif options['reset']:  # reset all data to pristine
+                resource.setAVU('metadata_dirty', 'true')
+                print("{}.metadata_dirty set to true".format(rid))
+                try:
+                    istorage.delete(resource.scimeta_path)
+                    print("{} deleted".format(resource.scimeta_path))
+                except SessionException as ex:
+                    print("delete of {} failed: {}"
+                          .format(resource.scimeta_path,
+                                  ex.stderr))
+                try:
+                    istorage.delete(resource.resmap_path)
+                    print("{} deleted".format(resource.resmap_path))
+                except SessionException as ex:
+                    print("{} delete failed: {}"
+                          .format(resource.resmap_path,
+                                  ex.stderr))
 
-            resource.setAVU('metadata_dirty', 'true')
-            print("metadata_dirty set to true for {}".format(rid))
-            try:
-                istorage.delete(resource.scimeta_path)
-                print("metadata {} deleted".format(resource.scimeta_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.scimeta_path,
-                              ex.stderr))
-            try:
-                istorage.delete(resource.resmap_path)
-                print("map {} deleted".format(resource.resmap_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.resmap_path,
-                              ex.stderr))
+            elif options['reset_bag']:
+                resource.setAVU('bag_modified', 'true')
+                print("{}.bag_modified set to true".format(rid))
+                try:
+                    istorage.delete(resource.bag_path)
+                    print("{} deleted".format(resource.bag_path))
+                except SessionException as ex:
+                    print("{} delete failed: {}"
+                          .format(resource.bag_path,
+                                  ex.stderr))
 
-            resource.setAVU('bag_modified', 'true')
-            print("bag_modified set to true for {}".format(rid))
-            try:
-                istorage.delete(resource.bag_path)
-                print("bag {} deleted".format(resource.bag_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.bag_path,
-                              ex.stderr))
-
-        elif options['reset_metadata']:
-
-            resource.setAVU('metadata_dirty', 'true')
-            print("metadata_dirty set to true for {}".format(rid))
-            try:
-                istorage.delete(resource.scimeta_path)
-                print("metadata {} deleted".format(resource.scimeta_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.scimeta_path,
-                              ex.stderr))
-            try:
-                istorage.delete(resource.resmap_path)
-                print("map {} deleted".format(resource.resmap_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.resmap_path,
-                              ex.stderr))
-
-        elif options['reset_bag']:
-            resource.setAVU('bag_modified', 'true')
-            print("bag_modified set to true for {}".format(rid))
-            try:
-                istorage.delete(resource.bag_path)
-                print("bag {} deleted".format(resource.bag_path))
-            except SessionException as ex:
-                print("delete of {} failed: {}"
-                      .format(resource.bag_path,
-                              ex.stderr))
-
+        else:
+            print("Resource with id {} does not exist in iRODS".format(rid))
     except BaseResource.DoesNotExist:
         print("Resource with id {} NOT FOUND in Django".format(rid))
 
