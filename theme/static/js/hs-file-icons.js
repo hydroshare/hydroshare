@@ -1,6 +1,33 @@
 /**
 * Created by Mauriel on 3/18/2017.
 */
+function getFolderIcons() {
+    var folderIcons = {};
+    folderIcons.GeoRasterLogicalFile =
+        "<img src='/static/img/resource-icons/geographicraster48x48.png' " +
+        "alt='Geographic Raster Aggregation Icon' class='fb-file-icon'/>";
+
+    folderIcons.NetCDFLogicalFile =
+        "<img src='/static/img/resource-icons/multidimensional48x48.png' " +
+        "alt='MultiDimensional (NetCDF) Aggregation Icon' class='fb-file-icon'/>";
+
+    folderIcons.TimeSeriesLogicalFile =
+        "<img src='/static/img/resource-icons/timeseries48x48.png' " +
+        "alt='Time Series Aggregation Icon' class='fb-file-icon'/>";
+
+    folderIcons.RefTimeseriesLogicalFile =
+        "<img src='/static/img/resource-icons/his48x48.png' " +
+        "alt='HIS Referenced Time Series Aggregation Icon' class='fb-file-icon'/>";
+
+    folderIcons.GeoFeatureLogicalFile =
+        "<img src='/static/img/resource-icons/geographicfeature48x48.png' " +
+        "alt='Geographic Feature Aggregation Icon' class='fb-file-icon'/>";
+
+    folderIcons.DEFAULT =
+        "<img src='/static/img/resource-icons/composite48x48.png' " +
+        "alt='Default Aggregation Icon' class='fb-file-icon'/>";
+    return folderIcons;
+}
 
 function getFileIcons() {
     var fileIcons = {};
