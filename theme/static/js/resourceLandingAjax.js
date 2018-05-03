@@ -618,17 +618,18 @@ function metadata_update_ajax_submit(form_id){
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
-                if ((json_response.element_name.toLowerCase() === 'site' && (resourceType === 'Time Series' ||
-                        json_response.logical_file_type === "TimeSeriesLogicalFile" )) ||
+                if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     (json_response.element_name.toLowerCase() === 'coverage' && resourceType === 'Composite Resource')){
-                    if (json_response.hasOwnProperty('temporal_coverage') && resourceType === 'Composite Resource'){
+                    if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
+                        $("#btn-update-resource-temporal-coverage").show();
                     }
 
                     if (json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
+                        $("#btn-update-resource-spatial-coverage").show();
                     }
                 }
                 if ($form.attr("id") == "id-site" || $form.attr("id") == "id-site-file-type"){

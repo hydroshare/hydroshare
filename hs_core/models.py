@@ -2165,13 +2165,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
 
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file_type_name == logical_file_class_name:
-                    if res_file.logical_file not in logical_files_list:
-                        logical_files_list.append(res_file.logical_file)
+        logical_files_list = [lf for lf in self.logical_files if
+                              lf.type_name() == logical_file_class_name]
+
         return logical_files_list
+
+    @property
+    def has_logical_spatial_coverage(self):
+        """Checks if any of the logical files has spatial coverage"""
+
+        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+
+    @property
+    def has_logical_temporal_coverage(self):
+        """Checks if any of the logical files has temporal coverage"""
+        
+        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
     def supports_logical_file(self):
