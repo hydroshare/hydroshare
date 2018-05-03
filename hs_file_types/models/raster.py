@@ -348,7 +348,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         else:
                             upload_folder = file_folder
 
-                        if res_file.extension.lower() == ".tif":
+                        if res_file.extension.lower() in [".tiff", ".tif"]:
                             if aggregation_folder_created:
                                 # copy the tif file to the new aggregation folder and make it part
                                 # of the logical file

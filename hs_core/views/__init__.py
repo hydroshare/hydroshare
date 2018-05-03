@@ -149,6 +149,12 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         elif file_folder.startswith("data/contents/"):
             file_folder = file_folder[len("data/contents/"):]
 
+    full_paths = {}
+    for f in res_files:
+        full_path = request.POST.get(f.name, None)
+        if full_path:
+            full_paths[f] = full_path
+
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata,
@@ -166,7 +172,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   folder=file_folder)
+                                                   folder=file_folder, full_paths=full_paths)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message

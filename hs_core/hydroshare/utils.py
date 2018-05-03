@@ -908,8 +908,9 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     if __debug__:
         assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
+    full_paths = kwargs.pop('full_paths', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               source_names=source_names)
+                                               source_names=source_names, full_paths=full_paths)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file

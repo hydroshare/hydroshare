@@ -647,6 +647,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
     source_names = kwargs.pop('source_names', [])
+    full_paths = kwargs.pop('full_paths', {})
 
     if __debug__:
         assert(isinstance(source_names, list))
@@ -660,7 +661,15 @@ def add_resource_files(pk, *files, **kwargs):
         assert len(kwargs) == 0
 
     for f in files:
-        ret.append(utils.add_file_to_resource(resource, f, folder=folder))
+        full_dir = folder
+        if f in full_paths:
+            #TODO, put this in it's own method?
+            full_path = full_paths[f]
+            dir_name = os.path.dirname(full_path)
+            base_dir = full_dir if full_dir is not None else ''
+            dir_name = dir_name if dir_name is not None else ''
+            full_dir = base_dir + dir_name
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
     if len(source_names) > 0:
         for ifname in source_names:

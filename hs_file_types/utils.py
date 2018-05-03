@@ -159,9 +159,9 @@ def update_resource_temporal_coverage(resource):
 def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None):
     if hs_file_type is None:
         res_file = utils.get_resource_file_by_id(res, file_id)
-        ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".nc": "NetCDF",
-                       ".shp": "GeoFeature", ".refts": "RefTimeseries", ".sqlite": "TimeSeries",
-                       ".csv": "TimeSeries"}
+        ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".vrt": "GeoRaster",
+                       ".nc": "NetCDF", ".shp": "GeoFeature", ".refts": "RefTimeseries",
+                       ".sqlite": "TimeSeries", ".csv": "TimeSeries"}
         file_name = str(res_file)
         root, ext = os.path.splitext(file_name)
         ext = ext.lower()
