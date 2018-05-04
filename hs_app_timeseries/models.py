@@ -2069,7 +2069,8 @@ def _update_resource_coverage_element(site_element):
         bbox_value = compute_bounding_box(site_element.metadata.sites.all())
 
     spatial_cov = site_element.metadata.coverages.all().exclude(type='period').first()
-    if spatial_cov:
+    # coverage update/create for Time Series Resource
+    if spatial_cov and isinstance(site_element.metadata, TimeSeriesMetaData):
         spatial_cov.type = cov_type
         if cov_type == 'point':
             point_value['projection'] = spatial_cov.value['projection']
@@ -2078,14 +2079,15 @@ def _update_resource_coverage_element(site_element):
             bbox_value['projection'] = spatial_cov.value['projection']
             spatial_cov._value = json.dumps(bbox_value)
         spatial_cov.save()
-    else:
+    elif isinstance(site_element.metadata, TimeSeriesMetaData):
         if cov_type == 'point':
             value_dict = point_value
         else:
             value_dict = bbox_value
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
-    if not isinstance(site_element.metadata, TimeSeriesMetaData):
+    else:
+        # create coverage for Composite Resource
         # metadata must be an instance of TimeSeriesFileMetaData
         # which means the above update was for file level coverage update
         # and we have to do another update at the resource level
@@ -2101,16 +2103,7 @@ def _update_resource_coverage_element(site_element):
             bbox_value = compute_bounding_box(sites)
 
         spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            if cov_type == 'point':
-                point_value['projection'] = spatial_cov.value['projection']
-                spatial_cov._value = json.dumps(point_value)
-            else:
-                bbox_value['projection'] = spatial_cov.value['projection']
-                spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
+        if not spatial_cov:
             if cov_type == 'point':
                 value_dict = point_value
             else:
