@@ -689,7 +689,6 @@ def add_resource_files(pk, *files, **kwargs):
             agg_type = resource.get_folder_aggregation_type_to_set(folder)
             if agg_type is not None and agg_type is not '':
                 agg_type = agg_type.replace('LogicalFile', '')
-                logger.error("found agg type " + agg_type)
                 ##TODO cleanup, look into refactoring some of these methods
                 err_msg = hs_file_types.utils.set_logical_file_type(res=resource, user=None,
                                                           file_id=None, hs_file_type=agg_type,

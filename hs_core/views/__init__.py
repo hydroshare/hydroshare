@@ -139,7 +139,14 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.values()
+    res_files = []
+    full_paths = {}
+    for key in request.FILES.keys():
+        full_path = request.POST.get(key, None)
+        f = request.FILES[key]
+        res_files.append(f)
+        if full_path:
+            full_paths[f] = full_path
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
@@ -149,11 +156,6 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         elif file_folder.startswith("data/contents/"):
             file_folder = file_folder[len("data/contents/"):]
 
-    full_paths = {}
-    for f in res_files:
-        full_path = request.POST.get(f.name, None)
-        if full_path:
-            full_paths[f] = full_path
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,

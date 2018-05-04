@@ -1108,8 +1108,6 @@ $(document).ready(function () {
 
                 this.on('sending', function (file, xhr, formData) {
                     formData.append('file_folder', $("#upload-folder-path").text());
-                    formData.append(file.name, file.fullPath);
-                    console.log(file.fullPath);
                 });
 
                 // Applies allowing upload of multiple files to OS upload dialog
