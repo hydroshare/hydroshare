@@ -660,6 +660,7 @@ def add_resource_files(pk, *files, **kwargs):
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
+    new_folders = set()
     for f in files:
         full_dir = folder
         if f in full_paths:
@@ -669,6 +670,7 @@ def add_resource_files(pk, *files, **kwargs):
             base_dir = full_dir if full_dir is not None else ''
             dir_name = dir_name if dir_name is not None else ''
             full_dir = base_dir + dir_name
+        new_folders.add(full_dir)
         ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
     if len(source_names) > 0:
@@ -681,8 +683,24 @@ def add_resource_files(pk, *files, **kwargs):
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
+        # check folders for aggregations
+        for fol in new_folders:
+            folder = resource.short_id + "/data/contents/" + fol
+            agg_type = resource.get_folder_aggregation_type_to_set(folder)
+            if agg_type is not None and agg_type is not '':
+                agg_type = agg_type.replace('LogicalFile', '')
+                logger.error("found agg type " + agg_type)
+                ##TODO cleanup, look into refactoring some of these methods
+                err_msg = hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                          file_id=None, hs_file_type=agg_type,
+                                                          folder_path=fol)
+        # check files for aggregation
         for res_file in ret:
-            hs_file_types.utils.set_logical_file_type(res=resource, user=None, file_id=res_file.pk)
+            try:
+                hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                          file_id=res_file.pk)
+            except:
+                pass
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
     return ret
