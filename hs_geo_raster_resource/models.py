@@ -371,15 +371,18 @@ class RasterResource(BaseResource):
         # can have only 1 file
         return False
 
-    # return single file name included in the resource
-    def get_res_file_name(self):
+    # add resource-specific HS terms
+    def get_hs_term_dict(self):
+        # get existing hs_term_dict from base class
+        hs_term_dict = super(RasterResource, self).get_hs_term_dict()
+        # add new terms for Raster res
+        hs_term_dict["HS_FILE_NAME"] = ""
         for res_file in self.files.all():
             _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
             if f_ext.lower() == '.vrt':
-                return f_fullname
-
-        return ''
-
+                hs_term_dict["HS_FILE_NAME"] = f_fullname
+                break
+        return hs_term_dict
 
 # this would allow us to pick up additional form elements for the template
 # before the template is displayed via Mezzanine page processor

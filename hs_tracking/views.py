@@ -11,8 +11,7 @@ from django.contrib import messages
 from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import get_std_log_fields
-from .signals import post_tracking_web_app_launch_url
-
+from hs_tools_resource.utils import do_work_when_launching_app_as_needed
 
 class AppLaunch(TemplateView):
 
@@ -25,6 +24,12 @@ class AppLaunch(TemplateView):
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
+            res_id = querydict.pop('res_id')[0]
+            tool_res_id = querydict.pop('tool_res_id')[0]
+            ret_exception = do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
+            if ret_exception:
+                messages.warning(request, ret_exception)
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
@@ -49,18 +54,6 @@ class AppLaunch(TemplateView):
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
             session.record('app_launch', value=msg)
-
-        # send this signal after logging the request so that specific web app such as GABBs app
-        # can add its own processing as needed
-        post_tracking_web_app_launch_url.send(sender=AppLaunch, request=request, url=url)
-
-        # check 'web_app_warning_message' and 'web_app_url' from request.session which could be
-        # set by the web app signal receivers.
-        if 'web_app_warning_message' in request.session:
-            messages.warning(request, request.session['web_app_warning_message'])
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-        if 'web_app_url' in request.session:
-            return HttpResponseRedirect(request.session['web_app_url'])
 
         return HttpResponseRedirect(url)
 

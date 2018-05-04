@@ -80,6 +80,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
+
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
               'res_id': tool_res_obj.short_id,
@@ -88,6 +89,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
               'openwithlist': is_open_with_app,
               'approved': is_approved_app
               }
+
         return is_open_with_app, tl
     else:
         return False, {}

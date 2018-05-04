@@ -312,7 +312,6 @@ INSTALLED_APPS = (
     "hs_collection_resource",
     "hs_modflow_modelinstance",
     "hs_tracking",
-    "hs_gabbs_web_app",
     "hs_file_types",
     "hs_composite_resource",
     "hs_rest_api",
@@ -590,8 +589,8 @@ LOGGING = {
     }
 }
 
-# mygeohub MultSpec tool setting
-GEOHUB_HOMEPAGE_URL = 'mygeohub.org/tools/multispec/invoke?params=file:/srv/irods/external/hydroshare/'
+APP_TOOL_IRODS_PATH_KEY = 'irods_federation_target_path'
+APP_TOOL_IRODS_RESC_KEY = 'irods_federation_target_resource'
 
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15

@@ -1,6 +1,10 @@
+import os
 from string import Template
 import logging
-from hs_core.hydroshare.utils import get_resource_types
+from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_types, get_resource_by_shortkey
+from django_irods.icommands import SessionException
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,3 +62,46 @@ def get_SupportedSharingStatus_choices():
             ['Discoverable', 'Discoverable'],
             ['Private', 'Private'],
             ]
+
+def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
+    """
+    check whether there are extra work needed to be done when the app is launched.
+    :param app_shortkey: shortkey of the app tool resource to be launched
+    :param res_shortkey: shortkey of the resource launching the app tool resource
+    :param user: requesting user
+    :return: error message if an exception is raised; otherwise, return None
+    """
+
+    # When app resource has iRODS federation target path and target resource defined as
+    # extended metadata, the resource needs to be pushed to the specified iRODS federation path
+    # in the specified iRODS storage resource.
+    try:
+        res = get_resource_by_shortkey(res_shortkey)
+        app_res = get_resource_by_shortkey(app_shortkey)
+
+        # check whether irods_path_key and irods_resc_key are added as extended metadata of the
+        # app tool resource, and if they are, pass them out as context variables for app launcher
+        # to push resource to federated iRODS path accordingly
+        irods_path_key = 'irods_federation_target_path'
+        irods_resc_key = 'irods_federation_target_resource'
+        filterd_app_obj = BaseResource.objects.filter(short_id=app_shortkey).filter(
+            extra_metadata__has_key=irods_path_key).filter(
+            extra_metadata__has_key=irods_resc_key).first()
+        if filterd_app_obj:
+            if not user.is_authenticated():
+                return "Only authorized users can launch the web app tool - Please sign in first."
+            irods_path = app_res.extra_metadata[irods_path_key]
+            irods_resc = app_res.extra_metadata[irods_resc_key]
+            istorage = res.get_irods_storage()
+            src_path = res.root_path
+            # delete all temporary resources copied to this user's space before pushing this resource
+            dest_path = os.path.join(irods_path, user.username)
+            if istorage.exists(dest_path):
+                istorage.delete(dest_path)
+            dest_path = os.path.join(dest_path, res_shortkey)
+            istorage.copyFiles(src_path, dest_path, irods_resc)
+            return None
+    except SessionException as ex:
+        return ex.stderr
+    except Exception as ex:
+        return ex.message

@@ -333,22 +333,13 @@ class NetcdfResource(BaseResource):
         # get existing hs_term_dict from base class
         hs_term_dict = super(NetcdfResource, self).get_hs_term_dict()
         # add new terms for NetCDF res
-        hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
+        hs_term_dict["HS_FILE_NAME"] = ""
         for res_file in self.files.all():
             _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
             if f_ext.lower() == '.nc':
-                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_fullname
+                hs_term_dict["HS_FILE_NAME"] = f_fullname
                 break
         return hs_term_dict
-
-    # return single file name included in the resource
-    def get_res_file_name(self):
-        for res_file in self.files.all():
-            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
-            if f_ext.lower() == '.nc':
-                return f_fullname
-
-        return ''
 
     def update_netcdf_file(self, user):
         if not self.metadata.is_dirty:
