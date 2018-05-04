@@ -311,7 +311,7 @@ def create_resource(
         files=(), source_names=[], fed_res_path='', move=False,
         create_metadata=True,
         create_bag=True, unpack_file=False,
-        auto_aggregations=True, **kwargs):
+        auto_aggregations=True, full_paths={}, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -445,21 +445,6 @@ def create_resource(
         # quota micro-services to work
         resource.set_quota_holder(owner, owner)
 
-        resource_files = []
-        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
-            # Add contents of zipfile as resource files asynchronously
-            # Note: this is done asynchronously as unzipping may take
-            # a long time (~15 seconds to many minutes).
-            add_zip_file_contents_to_resource_async(resource, files[0])
-        else:
-            # Add resource file(s) now
-            # Note: this is done synchronously as it should only take a
-            # few seconds.  We may want to add the option to do this
-            # asynchronously if the file size is large and would take
-            # more than ~15 seconds to complete.
-            resource_files = add_resource_files(resource.short_id, *files,
-                                                source_names=source_names, move=move)
-
         if create_metadata:
             # prepare default metadata
             utils.prepare_resource_default_metadata(resource=resource, metadata=metadata,
@@ -477,10 +462,21 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
 
-        if auto_aggregations and len(resource_files) > 0:
-            for res_file in resource_files:
-                    hs_file_types.utils.set_logical_file_type(res=resource, user=owner,
-                                                              file_id=res_file.pk)
+        resource_files = []
+        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile as resource files asynchronously
+            # Note: this is done asynchronously as unzipping may take
+            # a long time (~15 seconds to many minutes).
+            add_zip_file_contents_to_resource_async(resource, files[0])
+        else:
+            # Add resource file(s) now
+            # Note: this is done synchronously as it should only take a
+            # few seconds.  We may want to add the option to do this
+            # asynchronously if the file size is large and would take
+            # more than ~15 seconds to complete.
+            resource_files = add_resource_files(resource.short_id, *files,
+                                                source_names=source_names, move=move,
+                                                full_paths=full_paths)
 
         if create_bag:
             hs_bagit.create_bag(resource)

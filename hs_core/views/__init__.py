@@ -128,6 +128,18 @@ def change_quota_holder(request, shortkey):
     return HttpResponseRedirect(res.get_absolute_url())
 
 
+def extract_files_with_paths(request):
+    res_files = []
+    full_paths = {}
+    for key in request.FILES.keys():
+        full_path = request.POST.get(key, None)
+        f = request.FILES[key]
+        res_files.append(f)
+        if full_path:
+            full_paths[f] = full_path
+    return res_files, full_paths
+
+
 def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     This view function is called by AJAX in the folder implementation
@@ -139,14 +151,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = []
-    full_paths = {}
-    for key in request.FILES.keys():
-        full_path = request.POST.get(key, None)
-        f = request.FILES[key]
-        res_files.append(f)
-        if full_path:
-            full_paths[f] = full_path
+    res_files, full_paths = extract_files_with_paths(request)
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
@@ -1119,7 +1124,7 @@ def create_resource(request, *args, **kwargs):
     ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-    resource_files = request.FILES.values()
+    resource_files, full_paths = extract_files_with_paths(request)
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
@@ -1179,7 +1184,7 @@ def create_resource(request, *args, **kwargs):
                 # TODO: should probably be resource_federation_path like it is set to.
                 fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
                 move=(fed_copy_or_move == 'move'),
-                content=res_title
+                content=res_title, full_paths=full_paths
         )
     except SessionException as ex:
         ajax_response_data['message'] = ex.stderr
