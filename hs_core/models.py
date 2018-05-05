@@ -2179,7 +2179,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def has_logical_temporal_coverage(self):
         """Checks if any of the logical files has temporal coverage"""
-        
+
         return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
