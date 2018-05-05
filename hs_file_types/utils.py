@@ -26,6 +26,11 @@ def update_resource_spatial_coverage(resource):
     spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
                          if lf.metadata.spatial_coverage is not None]
 
+    if not spatial_coverages:
+        # no aggregation level spatial coverage data exist - no need to update resource
+        # spatial coverage
+        return
+
     bbox_limits = {'box': {'northlimit': 'northlimit', 'southlimit': 'southlimit',
                            'eastlimit': 'eastlimit', 'westlimit': 'westlimit'},
                    'point': {'northlimit': 'north', 'southlimit': 'north',
@@ -93,21 +98,15 @@ def update_resource_spatial_coverage(resource):
             bbox_value['east'] = sp_cov.value['east']
 
     spatial_cov = resource.metadata.spatial_coverage
-    if len(spatial_coverages) > 0:
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            place_name = spatial_cov.value.get('name', None)
-            if place_name is not None:
-                bbox_value['name'] = place_name
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+    if spatial_cov:
+        spatial_cov.type = cov_type
+        place_name = spatial_cov.value.get('name', None)
+        if place_name is not None:
+            bbox_value['name'] = place_name
+        spatial_cov._value = json.dumps(bbox_value)
+        spatial_cov.save()
     else:
-        # delete spatial coverage element for the resource since the content files don't
-        # have any spatial coverage
-        if spatial_cov:
-            spatial_cov.delete()
+        resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
 
 
 def update_resource_temporal_coverage(resource):
@@ -119,6 +118,10 @@ def update_resource_temporal_coverage(resource):
 
     temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
                           if lf.metadata.temporal_coverage is not None]
+
+    if not temporal_coverages:
+        # no aggregation level temporal coverage data - no update at resource level is needed
+        return
 
     date_data = {'start': None, 'end': None}
 
@@ -146,7 +149,3 @@ def update_resource_temporal_coverage(resource):
             temp_cov.save()
         else:
             resource.metadata.create_element("coverage", type='period', value=date_data)
-    elif temp_cov:
-        # delete the temporal coverage for the resource since the content files don't have
-        # temporal coverage
-        temp_cov.delete()
