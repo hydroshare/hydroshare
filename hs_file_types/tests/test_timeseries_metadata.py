@@ -340,7 +340,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(site.site_name, site_name)
         self.assertTrue(logical_file.metadata.is_dirty)
 
-        # updating site lat/long should update the resource coverage as well as file level coverage
+        # updating site lat/long should update only the file level (aggregation) coverage
         box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
@@ -362,14 +362,13 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         site = logical_file.metadata.sites.filter(site_code='USU-LBR-Paradise').first()
         self.assertEqual(site.latitude, 40.7896)
 
-        # test that resource level coverage got updated
+        # test that resource level coverage did not get updated
         box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 41.718473)
         self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-        # this is the changed value for the southlimit as a result of changing the sit latitude
-        self.assertEqual(box_coverage.value['southlimit'], 40.7896)
+        self.assertEqual(box_coverage.value['southlimit'], 41.495409)
         self.assertEqual(box_coverage.value['westlimit'], -111.946402)
 
         # test that file level coverage got updated
@@ -378,7 +377,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 41.718473)
         self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-        # this is the changed value for the southlimit as a result of changing the sit latitude
+        # this is the changed value for the southlimit as a result of changing the site latitude
         self.assertEqual(box_coverage.value['southlimit'], 40.7896)
         self.assertEqual(box_coverage.value['westlimit'], -111.946402)
 
