@@ -1618,7 +1618,6 @@ function setFileType(fileType){
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
            refreshResourceEditPage();
-           refreshFileBrowser();
        }
     });
 }
@@ -1640,7 +1639,6 @@ function removeAggregation(){
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
            refreshResourceEditPage();
-           refreshFileBrowser();
        }
     });
 }
