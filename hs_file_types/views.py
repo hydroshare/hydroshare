@@ -83,7 +83,6 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         logical_file_type_class = file_type_map[hs_file_type]
         logical_file_type_class.set_file_type(resource=res, user=request.user, file_id=file_id,
                                               folder_path=folder_path)
-        resource_modified(res, request.user, overwrite_bag=False)
         msg = "{} was successfully set to the selected aggregation type."
         if folder_path is None:
             msg = msg.format("Selected file")

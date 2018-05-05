@@ -25,7 +25,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource
+    set_dirty_bag_flag, add_file_to_resource, resource_modified
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 
@@ -667,6 +667,15 @@ class AbstractLogicalFile(models.Model):
         :param  res_files_to_delete: a list of resource files to delete
         """
 
+        # for multi-file aggregation set the aggregation dataset_name field to the containing
+        # folder name
+        if not self.is_single_file_aggregation:
+            if '/' in self.aggregation_name:
+                folder = os.path.basename(self.aggregation_name)
+            else:
+                folder = self.aggregation_name
+            self.dataset_name = folder
+            self.save()
         # set resource to private if logical file is missing required metadata
         resource.update_public_and_discoverable()
         self.create_aggregation_xml_documents()
@@ -678,6 +687,8 @@ class AbstractLogicalFile(models.Model):
         elif folder_created:
             for res_file in res_files_to_delete:
                 delete_resource_file(resource.short_id, res_file.id, user)
+
+        resource_modified(resource, user, overwrite_bag=False)
 
     @classmethod
     def _create_aggregation_folder(cls, resource, file_folder, base_file_name):
