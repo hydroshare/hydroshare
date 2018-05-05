@@ -275,6 +275,12 @@
                              type="button" class="btn btn-primary btn-form-submit">
                          Set spatial coverage from content files
                      </button>
+                {% else %}
+                    {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                    <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit" style="display: none">
+                         Set spatial coverage from content files
+                     </button>
                 {% endif %}
             </div>
 
@@ -367,6 +373,12 @@
     {% if cm.resource_type == "CompositeResource" and cm.has_logical_temporal_coverage %}
          <button id="btn-update-resource-temporal-coverage"
                  type="button" class="btn btn-primary btn-form-submit">
+             Set temporal coverage from content files
+         </button>
+    {% else %}
+        {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+        <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit" style="display: none">
              Set temporal coverage from content files
          </button>
     {% endif %}

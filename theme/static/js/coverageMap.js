@@ -350,6 +350,7 @@ function processDrawing (coordinates, shape) {
     }
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").show();
+    $("#btn-update-resource-spatial-coverage").hide();
     if (shape == "rectangle"){
         document.getElementById("id_type_1").checked = true;
         $("#div_id_north").hide();
