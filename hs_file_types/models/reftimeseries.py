@@ -750,13 +750,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """
-            Sets a json resource file to RefTimeseriesLogicalFile type
-            :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as RefTimeSeriesLogicalFile type
-            :param folder_path: not relevant for this aggregation type
-            :param user: user who is creating the aggregation (file type)
-            :return:
+        """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.json.refts)
         """
 
         log = logging.getLogger()

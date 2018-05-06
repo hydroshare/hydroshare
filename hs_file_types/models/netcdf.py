@@ -368,7 +368,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Sets a netcdf file (.nc) resource file or a folder to NetCDFLogicalFile type """
+        """ Creates a NetCDFLogicalFile (aggregation) from a netcdf file (.nc) resource file
+        or a folder """
 
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)

@@ -231,7 +231,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Sets a .shp or .zip resource file, or a folder to GeoFeatureLogicalFile type """
+        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file,
+        or a folder """
 
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)

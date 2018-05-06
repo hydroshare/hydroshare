@@ -512,13 +512,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """
-        Sets a .sqlite or .csv resource file to TimeSeries file type
-        :param resource: an instance of resource type CompositeResource
-        :param file_id: (optional) id of the resource file to be set as TimeSeriesLogicalFile type
-        :param folder_path: (optional) path of the folder to be set as TimeSeriesLogicalFile type
-        :param user: user who is setting the file type
-        :return:
+        """ Creates a TimeSeriesLogicalFile (aggregation) from a sqlite or a csv resource file, or
+        a folder
         """
 
         log = logging.getLogger()

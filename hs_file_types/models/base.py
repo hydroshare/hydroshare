@@ -662,8 +662,8 @@ class AbstractLogicalFile(models.Model):
         original resource files
         :param  user: user who is creating a new aggregation
         :param  resource: an instance of CompositeResource
-        :param  folder_created: True/False to indicate if a new folder has been created represent this
-        aggregation
+        :param  folder_created: True/False to indicate if a new folder has been created represent
+        this aggregation
         :param  res_files_to_delete: a list of resource files to delete
         :param  reset_title: True/False to indicate if aggregation dataset_name attribute needs
         to be modified
