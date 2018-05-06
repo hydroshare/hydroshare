@@ -1031,7 +1031,6 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = csv_res_file.logical_file
 
         # test that both csv and sqlite files of the logical file are in a folder
-        csv_file_name = self.odm2_csv_file_name[:-4]
         for res_file in logical_file.files.all():
             self.assertEqual(res_file.file_folder, expected_aggr_folder)
 
@@ -1049,8 +1048,9 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Mendon'], '20')
         self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Paradise'], '20')
 
-        # the dataset name (title) must be set the name of the CSV file
-        self.assertEqual(logical_file.dataset_name, csv_file_name)
+        # the dataset name (title) must be set the name of the folder in which the CSV file exist
+        expected_dataset_name = os.path.basename(csv_res_file.file_folder)
+        self.assertEqual(logical_file.dataset_name, expected_dataset_name)
 
         # there should not be any file level abstract
         self.assertEqual(logical_file.metadata.abstract, None)
