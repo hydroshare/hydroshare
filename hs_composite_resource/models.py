@@ -656,11 +656,11 @@ class CompositeResource(BaseResource):
 
         # update resource spatial coverage only if it is empty
         if self.metadata.spatial_coverage is None:
-            self.update_resource_spatial_coverage()
+            self.update_spatial_coverage()
 
         # update resource temporal coverage only if it empty
         if self.metadata.temporal_coverage is None:
-            self.update_resource_temporal_coverage()
+            self.update_temporal_coverage()
 
     def update_spatial_coverage(self):
         """Updates resource spatial coverage based on the contained spatial coverages of
