@@ -375,8 +375,6 @@ class AbstractFileMetaData(models.Model):
         return RDF_ROOT, container_to_add_to
 
     def create_element(self, element_model_name, **kwargs):
-        # had to import here to avoid circular import
-        from hs_file_types.utils import update_resource_coverage_element
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
@@ -386,12 +384,10 @@ class AbstractFileMetaData(models.Model):
             # created as part of copying a resource that supports logical file
             # types
             if resource is not None:
-                update_resource_coverage_element(resource)
+                resource.update_coverage()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
-        # had to import here to avoid circular import
-        from hs_file_types.utils import update_resource_coverage_element
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
@@ -400,7 +396,7 @@ class AbstractFileMetaData(models.Model):
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
-            update_resource_coverage_element(resource)
+            resource.update_coverage()
 
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)

@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from rest_framework import status
 
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
-from hs_file_types.utils import update_resource_spatial_coverage, update_resource_temporal_coverage
 
 
 @login_required
@@ -37,9 +36,9 @@ def update_resource_coverage(request, resource_id, coverage_type, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if coverage_type.lower() == 'spatial':
-        update_resource_spatial_coverage(res)
+        res.update_spatial_coverage()
     else:
-        update_resource_temporal_coverage(res)
+        res.update_temporal_coverage()
 
     msg = "Resource {} coverage was updated successfully.".format(coverage_type.lower())
     response_data['status'] = 'success'
