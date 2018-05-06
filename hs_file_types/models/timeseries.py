@@ -606,8 +606,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
+                reset_title = logical_file.dataset_name == base_file_name
                 logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete)
+                                       res_files_to_delete=res_files_to_delete,
+                                       reset_title=reset_title)
 
                 file_type_success = True
             except Exception as ex:
