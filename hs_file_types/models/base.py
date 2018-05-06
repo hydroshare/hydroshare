@@ -25,7 +25,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_resource_by_shortkey
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 
@@ -384,6 +384,8 @@ class AbstractFileMetaData(models.Model):
             # created as part of copying a resource that supports logical file
             # types
             if resource is not None:
+                # get the typed resource - CompositeResource
+                resource = get_resource_by_shortkey(resource.short_id)
                 resource.update_coverage()
         return element
 
@@ -396,6 +398,8 @@ class AbstractFileMetaData(models.Model):
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
+            # get the typed resource - CompositeResource
+            resource = get_resource_by_shortkey(resource.short_id)
             resource.update_coverage()
 
     def delete_element(self, element_model_name, element_id):
