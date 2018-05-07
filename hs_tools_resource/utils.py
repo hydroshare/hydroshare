@@ -63,6 +63,7 @@ def get_SupportedSharingStatus_choices():
             ['Private', 'Private'],
             ]
 
+
 def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
     """
     check whether there are extra work needed to be done when the app is launched.
@@ -94,7 +95,7 @@ def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
             irods_resc = app_res.extra_metadata[irods_resc_key]
             istorage = res.get_irods_storage()
             src_path = res.root_path
-            # delete all temporary resources copied to this user's space before pushing this resource
+            # delete all temporary resources copied to this user's space before pushing resource
             dest_path = os.path.join(irods_path, user.username)
             if istorage.exists(dest_path):
                 istorage.delete(dest_path)

@@ -13,6 +13,7 @@ from .models import Session, Variable
 from .utils import get_std_log_fields
 from hs_tools_resource.utils import do_work_when_launching_app_as_needed
 
+
 class AppLaunch(TemplateView):
 
     def get(self, request, **kwargs):
@@ -24,12 +25,14 @@ class AppLaunch(TemplateView):
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
-            res_id = querydict.pop('res_id')[0]
-            tool_res_id = querydict.pop('tool_res_id')[0]
-            ret_exception = do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
-            if ret_exception:
-                messages.warning(request, ret_exception)
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+            res_id = querydict.pop('res_id', '')[0]
+            tool_res_id = querydict.pop('tool_res_id', '')[0]
+            if res_id and tool_res_id:
+                ret_exception = do_work_when_launching_app_as_needed(tool_res_id, res_id,
+                                                                     request.user)
+                if ret_exception:
+                    messages.warning(request, ret_exception)
+                    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
