@@ -10,15 +10,22 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 * Optional argument --log instead logs output to system log.
 """
 
+import json
 import os
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
+from requests import post
+
 from hs_core.models import BaseResource
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.views.utils import link_irods_file_to_django
 
+from hydroshare import local_settings as settings
 
 import logging
 
@@ -159,6 +166,30 @@ def check_for_dangling_irods(echo_errors=True, log_errors=False, return_errors=F
             if return_errors:
                 errors.append(msg)
     return errors
+
+
+class CheckJSONLD(object):
+    def __init__(self, short_id):
+        self.short_id = short_id
+
+    def test(self):
+        default_site = Site.objects.first()
+        validator_url = "https://search.google.com/structured-data/testing-tool/validate"
+        url = "https://" + default_site.domain + "/resource/" + self.short_id
+        cookies = { "NID": settings.GOOGLE_COOKIE_HASH }
+
+        response = post(validator_url, { "url": url }, cookies=cookies)
+
+        response_json = json.loads(response.text[4:])
+        if response_json.get("totalNumErrors") > 0:
+            for error in response_json.get("errors"):
+                if "includedInDataCatalog" not in error.get('args'):
+                    print("Error found on resource {}: {}".format(self.short_id, response_json.get("errors")))
+                    return
+
+        if response_json.get("totalNumWarnings") > 0:
+            print("Warnings found on resource {}: {}".format(self.short_id, response_json.get("errors")))
+            return
 
 
 class CheckResource(object):

@@ -299,6 +299,7 @@
                 "url": "{{ cr.description }}/"
             }
         }
+        {%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
     "provider": {
