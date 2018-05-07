@@ -25,8 +25,8 @@ class AppLaunch(TemplateView):
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
-            res_id = querydict.pop('res_id', '')[0]
-            tool_res_id = querydict.pop('tool_res_id', '')[0]
+            res_id = querydict.pop('res_id', [''])[0]
+            tool_res_id = querydict.pop('tool_res_id', [''])[0]
             if res_id and tool_res_id:
                 ret_exception = do_work_when_launching_app_as_needed(tool_res_id, res_id,
                                                                      request.user)
