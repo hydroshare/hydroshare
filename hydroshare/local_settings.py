@@ -169,10 +169,6 @@ HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
 HS_WWW_IRODS_ZONE = ''
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
-# Info needed for mygeohub MultiSpec tool launch from HydroShare
-GEOHUB_HS_IRODS_PATH = ''
-GEOHUB_HS_IRODS_RESC = ''
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''
@@ -190,3 +186,6 @@ TIME_ZONE = "Etc/UTC"
 #used by the mailchimp subscription job in hs_core/tasks.py
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
+RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
