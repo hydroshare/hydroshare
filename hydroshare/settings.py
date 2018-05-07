@@ -589,9 +589,6 @@ LOGGING = {
     }
 }
 
-APP_TOOL_IRODS_PATH_KEY = 'irods_federation_target_path'
-APP_TOOL_IRODS_RESC_KEY = 'irods_federation_target_resource'
-
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15
 TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
