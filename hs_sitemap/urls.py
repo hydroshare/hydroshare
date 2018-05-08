@@ -9,10 +9,10 @@ sitemaps = {
     "resources": DisplayableSitemap,
     "pages": PagesSitemap
 }
+sitemap_view = 'django.contrib.sitemaps.views.sitemap'
 
 
 urlpatterns = patterns('',
     url(r'^\.xml$', views.index, {'sitemaps': sitemaps}),
-    url(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps},
-        name='django.contrib.sitemaps.views.sitemap'),
+    url(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps}, name=sitemap_view),
 )
