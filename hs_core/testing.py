@@ -109,6 +109,24 @@ class TestCaseCommonUtilities(object):
         for file_name, target_name in file_name_to_target_name_dict.iteritems():
             self.irods_storage.saveFile(file_name, target_name)
 
+    def check_file_exist(self, irods_path):
+        """Check whether the input irods_path exist in iRODS using IrodsStorage() object.
+
+        :param irods_path: the iRODS path to check whether it exists or not
+        :return: True if exist, False otherwise.
+        """
+        self.irods_storage = IrodsStorage('federated')
+        return self.irods_storage.exists(irods_path)
+
+    def delete_directory(self, irods_path):
+        """delete the input irods_path in iRODS using IrodsStorage() object.
+
+        :param irods_path: the iRODS path to be deleted
+        :return:
+        """
+        self.irods_storage = IrodsStorage('federated')
+        self.irods_storage.delete(irods_path)
+
     def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
         '''
         Have to use HS_USER_ZONE_PROXY_USER with rodsadmin role to get user type AVU in user zone

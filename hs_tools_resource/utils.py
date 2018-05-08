@@ -101,7 +101,8 @@ def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
                 istorage.delete(dest_path)
             dest_path = os.path.join(dest_path, res_shortkey)
             istorage.copyFiles(src_path, dest_path, irods_resc)
-            return None
+
+        return None
     except SessionException as ex:
         return ex.stderr
     except Exception as ex:
