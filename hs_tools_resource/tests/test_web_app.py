@@ -416,7 +416,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         # target path and resource keys exist
         ret_status = do_work_when_launching_app_as_needed(tool_res_id, res_id, self.user)
         self.assertIsNone(ret_status, msg='do_work_when_launching_app_as_needed() did not return '
-                                        'None')
+                                          'None')
         self.assertTrue(super(TestWebAppFeature, self).check_file_exist(target_res_path))
 
         # delete all extra metadata and copied resource
