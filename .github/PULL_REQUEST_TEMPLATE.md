@@ -13,9 +13,14 @@ For more information, see https://docs.google.com/document/d/1dzxqlZW5fKNEyQSeKi
 
 <!-- Enter steps that a QA engineer, stakeholder, or user documentation writer would follow to test the positive or "successful" case of the functionality your code provides or fixes -->
 
-- [ ] Automated Testing
+- [ ] Automated Unit Testing (Jenkins)
 
 <!-- Our Jenkins Instance is set up to automatically test every commit from a pull request. Code coverage must not decrease so new functionality or code paths added during a bug fix must have appropriate tests written. Every test must pass, including PEP8 code formatting tests. -->
+
+- [ ] Automated Functional Testing (Selenium Grid)
+
+<!-- Our Selenium Grid instance runs functional tests. Please email Neal D to get instructions on how to write tests for the system. -->
+
 
 - [ ] Sufficient User and Developer Documentation
 
