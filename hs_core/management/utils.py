@@ -25,7 +25,7 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.views.utils import link_irods_file_to_django
 
-from hydroshare import local_settings as settings
+from hydroshare import local_settings
 
 import logging
 
@@ -176,19 +176,21 @@ class CheckJSONLD(object):
         default_site = Site.objects.first()
         validator_url = "https://search.google.com/structured-data/testing-tool/validate"
         url = "https://" + default_site.domain + "/resource/" + self.short_id
-        cookies = { "NID": settings.GOOGLE_COOKIE_HASH }
+        cookies = {"NID": local_settings.GOOGLE_COOKIE_HASH}
 
-        response = post(validator_url, { "url": url }, cookies=cookies)
+        response = post(validator_url, {"url": url}, cookies=cookies)
 
         response_json = json.loads(response.text[4:])
         if response_json.get("totalNumErrors") > 0:
             for error in response_json.get("errors"):
                 if "includedInDataCatalog" not in error.get('args'):
-                    print("Error found on resource {}: {}".format(self.short_id, response_json.get("errors")))
+                    errors = response_json.get("errors")
+                    print("Error found on resource {}: {}".format(self.short_id, errors))
                     return
 
         if response_json.get("totalNumWarnings") > 0:
-            print("Warnings found on resource {}: {}".format(self.short_id, response_json.get("errors")))
+            warnings = response_json.get("warnings")
+            print("Warnings found on resource {}: {}".format(self.short_id, warnings))
             return
 
 
