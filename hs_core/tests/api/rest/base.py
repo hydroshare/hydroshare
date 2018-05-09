@@ -33,7 +33,6 @@ class HSRESTTestCase(APITestCase):
 
         self.resources_to_delete = []
         self.groups_to_delete = []
-        self.users_to_delete = []
 
     def tearDown(self):
         for r in self.resources_to_delete:
@@ -41,9 +40,6 @@ class HSRESTTestCase(APITestCase):
 
         for g in self.groups_to_delete:
             g.delete()
-
-        for u in self.users_to_delete:
-            u.delete()
 
         self.user.delete()
 

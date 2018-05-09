@@ -364,34 +364,14 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_by_user(self):
-        user_1 = users.create_account(
-            'user_1@email.com',
-            username='user1',
-            first_name='one_first_name',
-            last_name='twp_last_name',
-            superuser=False)
-        user_2 = users.create_account(
-            'user_2@email.com',
-            username='user2',
-            first_name='two_first_name',
-            last_name='two_last_name',
-            superuser=False)
+        # HSRESTTestCase is forcing authentication of user, so we'll just test that user
+        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
 
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
-                                               edit_users=[user_1, user_2], view_users=None)
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
-                                               edit_users=None, view_users=[user_1, user_2])
-        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3',
-                                                 edit_users=None, view_users=[user_1])
-        gen_res_four = resource.create_resource('GenericResource', user_1, 'Resource 4',
-                                                edit_users=None, view_users=None)
-
-        self.users_to_delete.append(user_1)
-        self.users_to_delete.append(user_2)
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
         self.resources_to_delete.append(gen_res_three.short_id)
-        self.resources_to_delete.append(gen_res_four.short_id)
 
         # resources by owner username
         response = self.client.get('/hsapi/resource/', {'owner': self.user.username}, format='json')
@@ -399,31 +379,11 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
 
-        response = self.client.get('/hsapi/resource/', {'owner': user_1.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 4)
-
-        response = self.client.get('/hsapi/resource/', {'owner': user_2.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 2)
-
         # resources by owner email
         response = self.client.get('/hsapi/resource/', {'owner': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-
-        response = self.client.get('/hsapi/resource/', {'owner': user_1.email}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 4)
-
-        response = self.client.get('/hsapi/resource/', {'owner': user_2.email}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 2)
 
         # resources by creator username
         response = self.client.get('/hsapi/resource/', {'creator': self.user.username},
@@ -432,31 +392,11 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
 
-        response = self.client.get('/hsapi/resource/', {'creator': user_1.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
-
-        response = self.client.get('/hsapi/resource/', {'creator': user_2.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 0)
-
         # resources by creator email
         response = self.client.get('/hsapi/resource/', {'creator': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-
-        response = self.client.get('/hsapi/resource/', {'creator': user_1.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
-
-        response = self.client.get('/hsapi/resource/', {'creator': user_2.username}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 0)
 
         # resources by user username
         response = self.client.get('/hsapi/resource/', {'user': self.user.username},
@@ -465,30 +405,8 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
 
-        response = self.client.get('/hsapi/resource/', {'user': user_1.username},
-                                   format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
-
-        response = self.client.get('/hsapi/resource/', {'user': user_2.username},
-                                   format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 0)
-
         # resources by user email
         response = self.client.get('/hsapi/resource/', {'user': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-
-        response = self.client.get('/hsapi/resource/', {'user': user_1.email}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
-
-        response = self.client.get('/hsapi/resource/', {'user': user_2.email}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 0)
