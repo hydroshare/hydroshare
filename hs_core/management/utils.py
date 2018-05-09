@@ -25,8 +25,6 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.views.utils import link_irods_file_to_django
 
-from hydroshare import local_settings
-
 import logging
 
 
@@ -176,7 +174,7 @@ class CheckJSONLD(object):
         default_site = Site.objects.first()
         validator_url = "https://search.google.com/structured-data/testing-tool/validate"
         url = "https://" + default_site.domain + "/resource/" + self.short_id
-        cookies = {"NID": local_settings.GOOGLE_COOKIE_HASH}
+        cookies = {"NID": settings.GOOGLE_COOKIE_HASH}
 
         response = post(validator_url, {"url": url}, cookies=cookies)
 

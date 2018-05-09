@@ -1,13 +1,10 @@
-"""This does a comprehensive test of a resource.
+"""This does a comprehensive test of the json-ld of a resource
 
-This checks:
-* IRODS files
-* IRODS AVU values
-* Existence of Logical files
+This loops through a list of resources and checks the ld+json
+metadata against the official Google Structured testing tool.
 
-Notes:
-* By default, this script prints errors on stdout.
-* Optional argument --log: logs output to system log.
+Please note this requires setting the GOOGLE_COOKIE_HASH
+directive inside local_settings.py
 """
 
 from django.core.management.base import BaseCommand
