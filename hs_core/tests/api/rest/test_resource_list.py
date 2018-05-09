@@ -328,9 +328,9 @@ class TestResourceList(HSRESTTestCase):
         gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
                                                edit_groups=None, view_groups=[group_one, group_two])
         gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3',
-                                               edit_groups=[group_one], view_groups=None)
+                                                 edit_groups=[group_one], view_groups=None)
         gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 4',
-                                               edit_groups=None, view_groups=None)
+                                                edit_groups=None, view_groups=None)
 
         self.groups_to_delete.append(group_one)
         self.groups_to_delete.append(group_two)
@@ -339,7 +339,7 @@ class TestResourceList(HSRESTTestCase):
         self.resources_to_delete.append(gen_res_three.short_id)
         self.resources_to_delete.append(gen_res_four.short_id)
 
-        #resources by group id
+        # resources by group id
         response = self.client.get('/hsapi/resource/', {'group': str(group_one.pk)}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -363,7 +363,6 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
 
-
     def test_resource_list_by_user(self):
         user_1 = users.create_account(
             'user_1@email.com',
@@ -381,7 +380,7 @@ class TestResourceList(HSRESTTestCase):
         gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
                                                edit_users=[user_1, user_2], view_users=None)
         gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
-                                               edit_users=[self.user], view_users=[user_1, user_2])
+                                               edit_users=None, view_users=[user_1, user_2])
         gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3',
                                                  edit_users=None, view_users=[user_1])
         gen_res_four = resource.create_resource('GenericResource', user_1, 'Resource 4',
