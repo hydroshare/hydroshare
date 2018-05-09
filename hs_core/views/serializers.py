@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from hs_core.hydroshare import utils
 from hs_core import hydroshare
-from .utils import validate_json, validate_user_name,  validate_group_name
+from .utils import validate_json, validate_user,  validate_group
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 
@@ -67,10 +67,10 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 
 class ResourceListRequestValidator(serializers.Serializer):
-    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
-    group = serializers.CharField(min_length=1, required=False, validators=[validate_group_name])
-    user = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
-    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
+    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user])
+    group = serializers.CharField(min_length=1, required=False, validators=[validate_group])
+    user = serializers.CharField(min_length=1, required=False, validators=[validate_user])
+    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user])
     from_date = serializers.DateField(required=False, default=None)
     to_date = serializers.DateField(required=False, default=None)
     start = serializers.IntegerField(required=False, default=None)
