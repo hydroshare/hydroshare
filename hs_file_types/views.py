@@ -69,11 +69,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        err_msg = set_logical_file_type(res, request.user, file_id, hs_file_type, folder_path)
-        #TODO we should probably be using exception handling here instead of strings
-        if err_msg:
-            response_data['message'] = err_msg
-            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+        set_logical_file_type(res, request.user, file_id, hs_file_type, folder_path)
         resource_modified(res, request.user, overwrite_bag=False)
 
         msg = "{} was successfully set to the selected aggregation type."

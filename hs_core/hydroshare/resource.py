@@ -470,9 +470,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            resource_files = add_resource_files(resource.short_id, *files,
-                                                source_names=source_names, move=move,
-                                                full_paths=full_paths)
+            add_resource_files(resource.short_id, *files, source_names=source_names, move=move,
+                               full_paths=full_paths)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -656,7 +655,7 @@ def add_resource_files(pk, *files, **kwargs):
     for f in files:
         full_dir = folder
         if f in full_paths:
-            #TODO, put this in it's own method?
+            # TODO, put this in it's own method?
             full_path = full_paths[f]
             dir_name = os.path.dirname(full_path)
             base_dir = full_dir if full_dir is not None else ''
@@ -682,17 +681,15 @@ def add_resource_files(pk, *files, **kwargs):
                 agg_type = resource.get_folder_aggregation_type_to_set(folder)
                 if agg_type is not None and agg_type is not '':
                     agg_type = agg_type.replace('LogicalFile', '')
-                    ##TODO cleanup, look into refactoring some of these methods
-                    err_msg = hs_file_types.utils.set_logical_file_type(res=resource, user=None,
-                                                              file_id=None, hs_file_type=agg_type,
-                                                              folder_path=fol)
+                    hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                              file_id=None,
+                                                              hs_file_type=agg_type,
+                                                              folder_path=fol,
+                                                              fail_feedback=False)
             # check files for aggregation
             for res_file in ret:
-                try:
-                    hs_file_types.utils.set_logical_file_type(res=resource, user=None,
-                                                              file_id=res_file.pk)
-                except:
-                    pass
+                hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                          file_id=res_file.pk, fail_feedback=False)
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
     return ret
