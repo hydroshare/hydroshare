@@ -218,3 +218,100 @@
         <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp resource has been approved by HydroShare admin.</i></div>
     </div>
 {% endif %}
+
+{# ======= JSON-LD Structure ======= #}
+<script type="application/ld+json">
+{
+    "@context": {
+        "@vocab": "http://schema.org/",
+        "geolink": "http://schema.geolink.org/1.0/base/main#"
+    },
+    "@type": "Dataset",
+    "additionalType": ["http://schema.geolink.org/1.0/base/main#Dataset", "http://vivoweb.org/ontology/core#Dataset"],
+    "name": "{{ title }}",
+    "description": "{{ cm.metadata.description }}",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
+    "version": "2017-06-04",
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    "keywords": "{{ keywords }}",
+    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+        "license": "http://creativecommons.org/licenses/by/4.0/",
+    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+        "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+        "license": "http://creativecommons.org/licenses/by-nd/4.0/",
+    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+        "license": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+        "license": "http://creativecommons.org/licenses/by-nc/4.0/",
+    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+    "license": "http://creativecommons.org/licenses/by-nc-nd/4.0/",
+    {% endif %}
+    {% if cm.raccess.published %}
+    "identifier": {
+        "@type": "PropertyValue",
+        "additionalType": ["http://schema.geolink.org/1.0/base/main#Identifier", "http://purl.org/spar/datacite/Identifier"],
+        "propertyID": "http://purl.org/spar/datacite/doi",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "10.4211/hs.{{ cm.short_id }}"
+    },
+    {% endif %}
+    "citation": "{{ citation }}",
+    "includedInDataCatalog": {
+        "@id": "https://www.hydroshare.org"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "encodingFormat": "application/zip"
+    },
+    {% if temporal_coverage %}
+    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% endif %}
+    {% if spatial_coverage %}
+    "spatialCoverage": {
+        "@type": "Place",
+        "geo": {
+            {% if spatial_coverage.type == 'point' %}
+            "@type": "GeoCoordinates",
+            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
+            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
+            {% else %}
+            "@type": "GeoShape",
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            {% endif %}
+        }
+    },
+    {% endif %}
+    "creator": [
+        {% for cr in creators %}
+        {
+            "@id": "{{ cr.description }}",
+            "@type": "Role",
+            "additionalType": "http://schema.geolink.org/1.0/base/main#Participant",
+            "roleName": "Author",
+            "url": "{{ cr.description }}",
+            "creator": {
+                "@id": "{{ cr.description }}",
+                "@type": "Person",
+                "additionalType": "http://schema.geolink.org/1.0/base/main#Person", // Is this necessary?
+                "name": "{{ cr.name }}",
+                "url": "{{ cr.description }}/"
+            }
+        }
+        {%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    "provider": {
+        "@id": "https://www.hydroshare.org",
+        "@type": "Organization",
+        "additionalType": "http://schema.geolink.org/1.0/base/main#Organization",
+        "legalName": "HydroShare",
+        "name": "HydroShare",
+        "url": "https://www.hydroshare.org"
+    },
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    }
+}
+</script>
