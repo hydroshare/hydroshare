@@ -706,13 +706,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        """only .refts file can be set to this logical file group"""
-        return [".refts"]
+        """only .json file can be set to this logical file group"""
+        return [".json"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        """file type allowed in this logical file group is: .refts"""
-        return [".refts"]
+        """file type allowed in this logical file group is: .json"""
+        return [".json"]
 
     @classmethod
     def get_allowed_ref_types(cls):
@@ -769,7 +769,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         if res_file is None:
             raise ValidationError("File not found.")
 
-        if res_file.extension.lower() != '.refts':
+        if not res_file.file_name.lower().endswith('.refts.json'):
             raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
                 res_file.file_name))
 

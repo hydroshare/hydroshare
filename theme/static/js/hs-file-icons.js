@@ -139,7 +139,8 @@ function getFileIcons() {
         "<i class='fa fa-th-large fa-stack-1x'></i>" +
         "</span>";
 
-    fileIcons.REFTS =
+    // note this is for .refts.json files
+    fileIcons.JSON =
         "<span class='fa-stack fb-stack fb-stack-refts'>" +
         "<i class='fa fa-file-o fa-stack-2x '></i>" +
         "<i class='fa fa-line-chart fa-stack-1x'></i>" +
