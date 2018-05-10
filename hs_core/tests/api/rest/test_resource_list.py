@@ -3,7 +3,7 @@ import os
 
 from rest_framework import status
 
-from hs_core.hydroshare import resource, users
+from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
 
 
