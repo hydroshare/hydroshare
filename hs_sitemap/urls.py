@@ -12,7 +12,8 @@ sitemaps = {
 sitemap_view = 'django.contrib.sitemaps.views.sitemap'
 
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r'^\.xml$', views.index, {'sitemaps': sitemaps}),
     url(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps}, name=sitemap_view),
 )
