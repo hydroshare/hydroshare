@@ -618,17 +618,29 @@ function metadata_update_ajax_submit(form_id){
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
-                if ((json_response.element_name.toLowerCase() === 'site' && (resourceType === 'Time Series' ||
-                        json_response.logical_file_type === "TimeSeriesLogicalFile" )) ||
-                    (json_response.element_name.toLowerCase() === 'coverage' && resourceType === 'Composite Resource')){
-                    if (json_response.hasOwnProperty('temporal_coverage') && resourceType === 'Composite Resource'){
+                if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
+                    ((json_response.element_name.toLowerCase() === 'coverage' ||
+                        json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
+                        if(resourceType === 'Composite Resource' && json_response.has_logical_temporal_coverage) {
+                             $("#btn-update-resource-temporal-coverage").show();
+                        }
+                        else {
+                           $("#btn-update-resource-temporal-coverage").hide();
+                        }
                     }
 
                     if (json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
+                        if(resourceType === 'Composite Resource' && json_response.has_logical_spatial_coverage) {
+                            $("#btn-update-resource-spatial-coverage").show();
+                        }
+                        else {
+                           $("#btn-update-resource-spatial-coverage").hide();
+                        }
                     }
                 }
                 if ($form.attr("id") == "id-site" || $form.attr("id") == "id-site-file-type"){

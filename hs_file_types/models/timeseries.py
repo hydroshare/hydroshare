@@ -512,13 +512,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """
-        Sets a .sqlite or .csv resource file to TimeSeries file type
-        :param resource: an instance of resource type CompositeResource
-        :param file_id: (optional) id of the resource file to be set as TimeSeriesLogicalFile type
-        :param folder_path: (optional) path of the folder to be set as TimeSeriesLogicalFile type
-        :param user: user who is setting the file type
-        :return:
+        """ Creates a TimeSeriesLogicalFile (aggregation) from a sqlite or a csv resource file, or
+        a folder
         """
 
         log = logging.getLogger()
@@ -606,8 +601,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
+                reset_title = logical_file.dataset_name == base_file_name
                 logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete)
+                                       res_files_to_delete=res_files_to_delete,
+                                       reset_title=reset_title)
 
                 file_type_success = True
             except Exception as ex:

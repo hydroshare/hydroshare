@@ -231,7 +231,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Sets a .shp or .zip resource file, or a folder to GeoFeatureLogicalFile type """
+        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file,
+        or a folder """
 
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
@@ -319,8 +320,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 log.info("GeoFeature aggregation - files were added to the aggregation.")
                 add_metadata(resource, meta_dict, xml_file, logical_file)
                 log.info("GeoFeature aggregation and resource level metadata updated.")
+                reset_title = logical_file.dataset_name == base_file_name
                 logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete)
+                                       res_files_to_delete=res_files_to_delete,
+                                       reset_title=reset_title)
 
                 file_type_success = True
             except Exception as ex:

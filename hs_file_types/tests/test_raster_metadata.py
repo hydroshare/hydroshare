@@ -1179,8 +1179,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that the logicalfile is associated with 3 files
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         res_file = self.composite_resource.files.first()
+        expected_dataset_name = os.path.basename(res_file.file_folder)
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.dataset_name, 'logan_vrt_small')
+        self.assertEqual(logical_file.dataset_name, expected_dataset_name)
         self.assertEqual(logical_file.has_metadata, True)
         self.assertEqual(logical_file.files.all().count(), 3)
         self.assertEqual(set(self.composite_resource.files.all()),

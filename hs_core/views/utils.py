@@ -618,7 +618,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
-        raise ValidationError("Folder zipping is not supported.")
+        raise ValidationError("Folder zipping is not supported. "
+                              "Folder seems to contain aggregation(s).")
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
@@ -701,7 +702,8 @@ def create_folder(res_id, folder_path):
     coll_path = os.path.join(resource.root_path, folder_path)
 
     if not resource.supports_folder_creation(coll_path):
-        raise ValidationError("Folder creation is not allowed here.")
+        raise ValidationError("Folder creation is not allowed here. "
+                              "The target folder seems to contain aggregation(s)")
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -834,7 +836,8 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if validate_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
+            raise ValidationError("File rename is not allowed. "
+                                  "File seems to be part of an aggregation")
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
@@ -878,7 +881,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         for src_path in src_paths:
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
-                raise ValidationError("File/folder move/rename is not allowed.")
+                raise ValidationError("File/folder move is not allowed. "
+                                      "Target folder seems to contain aggregation(s).")
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)

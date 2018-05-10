@@ -1,3 +1,4 @@
+import os
 import logging
 
 from django.db import models
@@ -162,6 +163,9 @@ class GenericLogicalFile(AbstractLogicalFile):
                 res_file.file_name))
 
         logical_file = GenericLogicalFile.create()
+        dataset_name, _ = os.path.splitext(res_file.file_name)
+        logical_file.dataset_name = dataset_name
+        logical_file.save()
         res_file.logical_file_content_object = logical_file
         res_file.save()
         logical_file.create_aggregation_xml_documents()

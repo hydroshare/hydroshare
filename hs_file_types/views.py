@@ -267,11 +267,16 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                 spatial_coverage_dict = get_coverage_data_dict(resource)
                 ajax_response_data['spatial_coverage'] = spatial_coverage_dict
 
-        if element_name.lower() == 'coverage':
+        elif element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
             temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
             ajax_response_data['spatial_coverage'] = spatial_coverage_dict
             ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
+        ajax_response_data['has_logical_spatial_coverage'] = \
+            resource.has_logical_spatial_coverage
+        ajax_response_data['has_logical_temporal_coverage'] = \
+            resource.has_logical_temporal_coverage
 
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
@@ -340,12 +345,14 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
                 ajax_response_data['spatial_coverage'] = spatial_coverage_dict
-
-        if element_name.lower() == 'coverage':
+        elif element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
             temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
             ajax_response_data['spatial_coverage'] = spatial_coverage_dict
             ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
+        ajax_response_data['has_logical_spatial_coverage'] = resource.has_logical_spatial_coverage
+        ajax_response_data['has_logical_temporal_coverage'] = resource.has_logical_temporal_coverage
 
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:

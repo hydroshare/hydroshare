@@ -7,9 +7,8 @@ from django.contrib.auth.models import Group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import resource_file_add_process
+from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
-from hs_file_types.utils import update_resource_temporal_coverage, update_resource_spatial_coverage
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData
 from hs_file_types.tests.utils import CompositeResourceTestMixin
@@ -420,6 +419,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a composite resource with no content file
         self.create_composite_resource()
+        typed_resource = get_resource_by_shortkey(self.composite_resource.short_id)
         # at this point the there should not be any resource level coverage metadata
         self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
         # now add the raster tif file to the resource
@@ -500,7 +500,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test updating the resource coverage by user action - which should update the resource
         # coverage as a superset of all coverages of all the contained aggregations/logical files
-        update_resource_temporal_coverage(self.composite_resource)
+        typed_resource.update_temporal_coverage()
         res_coverage = self.composite_resource.metadata.coverages.all().filter(
             type='period').first()
         raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
@@ -538,8 +538,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test updating the resource coverage by user action - which should update the resource
         # coverage as a superset of all coverages of all the contained aggregations/logical files
-        update_resource_temporal_coverage(self.composite_resource)
-        update_resource_spatial_coverage(self.composite_resource)
+        typed_resource.update_temporal_coverage()
+        typed_resource.update_spatial_coverage()
         # resource temporal coverage is now super set of the 2 temporal coverages
         # in 2 LFOs
         res_coverage = self.composite_resource.metadata.coverages.all().filter(
@@ -559,7 +559,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         generic_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
 
         # update resource spatial coverage from aggregations spatial coverages
-        update_resource_spatial_coverage(self.composite_resource)
+        typed_resource.update_spatial_coverage()
         res_coverage = self.composite_resource.metadata.coverages.all().filter(
             type='box').first()
         self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
@@ -577,7 +577,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                      type='box', value=value_dict)
 
         # update resource spatial coverage from aggregations spatial coverages
-        update_resource_spatial_coverage(self.composite_resource)
+        typed_resource.update_spatial_coverage()
 
         res_coverage = self.composite_resource.metadata.coverages.all().filter(
             type='box').first()

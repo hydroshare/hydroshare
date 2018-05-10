@@ -293,7 +293,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Sets a tif or zip resource file, or a folder to GeoRasterLogicalFile type """
+        """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file, or a
+        folder """
 
         log = logging.getLogger()
         res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
@@ -404,7 +405,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     log.info("Geographic raster aggregation type - metadata was saved to DB")
                     logical_file._finalize(user, resource,
                                            folder_created=aggregation_folder_created,
-                                           res_files_to_delete=res_files_to_delete)
+                                           res_files_to_delete=res_files_to_delete,
+                                           reset_title=True)
 
                     file_type_success = True
                 except Exception as ex:

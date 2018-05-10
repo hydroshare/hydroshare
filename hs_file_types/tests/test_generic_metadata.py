@@ -97,9 +97,11 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # set file to generic logical file type
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(res_file.file_name)
         logical_file = res_file.logical_file
-        # test that the generic logical file has no value for the datataset_name
-        self.assertEqual(logical_file.dataset_name, None)
+        # test that the generic logical file datataset_name attribute has the value of the
+        # the content file name
+        self.assertEqual(logical_file.dataset_name, base_file_name)
         dataset_name = "This is a generic dataset"
         logical_file.dataset_name = dataset_name
         logical_file.save()
