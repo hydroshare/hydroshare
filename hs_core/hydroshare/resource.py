@@ -309,9 +309,7 @@ def create_resource(
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
         files=(), source_names=[], fed_res_path='', move=False,
-        create_metadata=True,
-        create_bag=True, unpack_file=False,
-        auto_aggregations=True, full_paths={}, **kwargs):
+        create_metadata=True, create_bag=True, unpack_file=False, full_paths={}, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -364,8 +362,6 @@ def create_resource(
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
         the unpacked contents of the zip file will be added to the resource instead of the zip file.
-    :param auto_aggregations: boolean.  Convert all compatible files to aggregations on resource
-        creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -679,23 +675,24 @@ def add_resource_files(pk, *files, **kwargs):
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        # check folders for aggregations
-        for fol in new_folders:
-            folder = resource.short_id + "/data/contents/" + fol
-            agg_type = resource.get_folder_aggregation_type_to_set(folder)
-            if agg_type is not None and agg_type is not '':
-                agg_type = agg_type.replace('LogicalFile', '')
-                ##TODO cleanup, look into refactoring some of these methods
-                err_msg = hs_file_types.utils.set_logical_file_type(res=resource, user=None,
-                                                          file_id=None, hs_file_type=agg_type,
-                                                          folder_path=fol)
-        # check files for aggregation
-        for res_file in ret:
-            try:
-                hs_file_types.utils.set_logical_file_type(res=resource, user=None,
-                                                          file_id=res_file.pk)
-            except:
-                pass
+        if resource.resource_type == "CompositeResource":
+            # check folders for aggregations
+            for fol in new_folders:
+                folder = resource.short_id + "/data/contents/" + fol
+                agg_type = resource.get_folder_aggregation_type_to_set(folder)
+                if agg_type is not None and agg_type is not '':
+                    agg_type = agg_type.replace('LogicalFile', '')
+                    ##TODO cleanup, look into refactoring some of these methods
+                    err_msg = hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                              file_id=None, hs_file_type=agg_type,
+                                                              folder_path=fol)
+            # check files for aggregation
+            for res_file in ret:
+                try:
+                    hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                                                              file_id=res_file.pk)
+                except:
+                    pass
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
     return ret
