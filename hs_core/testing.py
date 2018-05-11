@@ -48,13 +48,14 @@ class MockIRODSTestCaseMixin(object):
 
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
-
     def assert_federated_irods_available(self):
         """assert federated iRODS is available before proceeding with federation-related tests."""
         self.assertTrue(settings.REMOTE_USE_IRODS and
                         settings.HS_USER_ZONE_HOST == 'users.local.org' and
                         settings.IRODS_HOST == 'data.local.org',
                         "irods docker containers are not set up properly for federation testing")
+        self.irods_fed_storage = IrodsStorage('federated')
+        self.irods_storage = IrodsStorage()
 
     def create_irods_user_in_user_zone(self):
         """Create corresponding irods account in user zone."""
@@ -98,34 +99,30 @@ class TestCaseCommonUtilities(object):
             self.assertRaises(SessionException(-1, ex.message, ex.message))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
-        """Save a list of files to iRODS user zone using the same IrodsStorage() object.
+        """Save a list of files to iRODS user zone.
 
         :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
         where ori_file is the file to be save to, and the target_file is the full path file name
         in iRODS user zone to save ori_file to
         :return:
         """
-        self.irods_storage = IrodsStorage('federated')
         for file_name, target_name in file_name_to_target_name_dict.iteritems():
-            self.irods_storage.saveFile(file_name, target_name)
+            self.irods_fed_storage.saveFile(file_name, target_name)
 
     def check_file_exist(self, irods_path):
-        """Check whether the input irods_path exist in iRODS using IrodsStorage() object.
+        """Check whether the input irods_path exist in iRODS.
 
         :param irods_path: the iRODS path to check whether it exists or not
         :return: True if exist, False otherwise.
         """
-        self.irods_storage = IrodsStorage('federated')
         return self.irods_storage.exists(irods_path)
 
     def delete_directory(self, irods_path):
-        """delete the input irods_path in iRODS using IrodsStorage() object.
-
+        """delete the input irods_path.
         :param irods_path: the iRODS path to be deleted
         :return:
         """
-        self.irods_storage = IrodsStorage('federated')
-        self.irods_storage.delete(irods_path)
+        self.irods_fed_storage.delete(irods_path)
 
     def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
         '''

@@ -4,9 +4,14 @@ import logging
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_types, get_resource_by_shortkey
 from django_irods.icommands import SessionException
+from hs_tools_resource.app_keys import irods_path_key, irods_resc_key, user_auth_flag_key
 
 
 logger = logging.getLogger(__name__)
+
+
+class WebAppLaunchException(Exception):
+    pass
 
 
 def parse_app_url_template(url_template_string, term_dict_list=()):
@@ -64,33 +69,35 @@ def get_SupportedSharingStatus_choices():
             ]
 
 
-def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
+def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_shortkey, user):
     """
-    check whether there are extra work needed to be done when the app is launched.
+    When app resource has iRODS federation target path and target resource defined as
+    extended metadata, the resource needs to be pushed to the specified iRODS federation path
+    in the specified iRODS storage resource.
     :param app_shortkey: shortkey of the app tool resource to be launched
     :param res_shortkey: shortkey of the resource launching the app tool resource
     :param user: requesting user
-    :return: error message if an exception is raised; otherwise, return None
+    :return:
     """
+    # check whether irods_path_key and irods_resc_key are added as extended metadata of the
+    # app tool resource, and if they are, push resource to specified iRODS target accordingly
+    filterd_app_obj = BaseResource.objects.filter(short_id=app_shortkey).filter(
+        extra_metadata__has_key=irods_path_key).filter(
+        extra_metadata__has_key=irods_resc_key).first()
+    if filterd_app_obj:
+        try:
+            res = get_resource_by_shortkey(res_shortkey)
+            app_res = get_resource_by_shortkey(app_shortkey)
+            user_auth_key_exist = BaseResource.objects.filter(short_id=app_shortkey).filter(
+                extra_metadata_has_key=user_auth_flag_key).first()
+            if user_auth_key_exist:
+                req_user_auth = True if app_res.extra_metadata[user_auth_flag_key].lower() == 'true' \
+                    else False
+                if req_user_auth and not user.is_authenticated():
+                    err_msg = "Only authorized users can launch the web app tool - " \
+                              "Please sign in first."
+                    raise WebAppLaunchException(err_msg)
 
-    # When app resource has iRODS federation target path and target resource defined as
-    # extended metadata, the resource needs to be pushed to the specified iRODS federation path
-    # in the specified iRODS storage resource.
-    try:
-        res = get_resource_by_shortkey(res_shortkey)
-        app_res = get_resource_by_shortkey(app_shortkey)
-
-        # check whether irods_path_key and irods_resc_key are added as extended metadata of the
-        # app tool resource, and if they are, pass them out as context variables for app launcher
-        # to push resource to federated iRODS path accordingly
-        irods_path_key = 'irods_federation_target_path'
-        irods_resc_key = 'irods_federation_target_resource'
-        filterd_app_obj = BaseResource.objects.filter(short_id=app_shortkey).filter(
-            extra_metadata__has_key=irods_path_key).filter(
-            extra_metadata__has_key=irods_resc_key).first()
-        if filterd_app_obj:
-            if not user.is_authenticated():
-                return "Only authorized users can launch the web app tool - Please sign in first."
             irods_path = app_res.extra_metadata[irods_path_key]
             irods_resc = app_res.extra_metadata[irods_resc_key]
             istorage = res.get_irods_storage()
@@ -101,9 +108,17 @@ def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
                 istorage.delete(dest_path)
             dest_path = os.path.join(dest_path, res_shortkey)
             istorage.copyFiles(src_path, dest_path, irods_resc)
+        except SessionException as ex:
+            raise WebAppLaunchException(ex.stderr)
+        except Exception as ex:
+            raise WebAppLaunchException(ex.message)
 
-        return None
-    except SessionException as ex:
-        return ex.stderr
-    except Exception as ex:
-        return ex.message
+def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
+    """
+    check whether there are extra work needed to be done when the app is launched.
+    :param app_shortkey: shortkey of the app tool resource to be launched
+    :param res_shortkey: shortkey of the resource launching the app tool resource
+    :param user: requesting user
+    :return:
+    """
+    copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_shortkey, user)

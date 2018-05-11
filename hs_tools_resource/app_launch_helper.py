@@ -2,6 +2,7 @@ from hs_core.models import get_user, BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_tools_resource.models import SupportedResTypeChoices, ToolResource
 from hs_tools_resource.utils import parse_app_url_template
+from hs_tools_resource.app_keys import tool_app_key
 
 
 def resource_level_tool_urls(resource_obj, request_obj):
@@ -13,7 +14,6 @@ def resource_level_tool_urls(resource_obj, request_obj):
     open_with_app_counter = 0
 
     # associate resources with app tools using extended metadata name-value pair with 'appkey' key
-    tool_app_key = 'appkey'
     filterd_res_obj = BaseResource.objects.filter(short_id=resource_obj.short_id,
                                                   extra_metadata__has_key=tool_app_key).first()
     if filterd_res_obj:

@@ -11,7 +11,7 @@ from django.contrib import messages
 from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import get_std_log_fields
-from hs_tools_resource.utils import do_work_when_launching_app_as_needed
+from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException
 
 
 class AppLaunch(TemplateView):
@@ -23,17 +23,18 @@ class AppLaunch(TemplateView):
         querydict = dict(request.GET)
         url = querydict.pop('url')[0]
 
+        # do work as needed when launching web app
+        res_id = querydict.pop('res_id', [''])[0]
+        tool_res_id = querydict.pop('tool_res_id', [''])[0]
+        if res_id and tool_res_id:
+            try:
+                do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
+            except WebAppLaunchException as ex:
+                messages.warning(request, ex.message)
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
         # log app launch details if user is logged in
         if request.user.is_authenticated():
-            res_id = querydict.pop('res_id', [''])[0]
-            tool_res_id = querydict.pop('tool_res_id', [''])[0]
-            if res_id and tool_res_id:
-                ret_exception = do_work_when_launching_app_as_needed(tool_res_id, res_id,
-                                                                     request.user)
-                if ret_exception:
-                    messages.warning(request, ret_exception)
-                    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
             fields = get_std_log_fields(request, session)

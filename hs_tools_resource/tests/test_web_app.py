@@ -15,6 +15,7 @@ from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
 from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_core.testing import TestCaseCommonUtilities
+from hs_tools_resource.app_keys import tool_app_key, irods_path_key, irods_resc_key
 
 
 class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
@@ -325,18 +326,18 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         self.assertEqual(self.resWebApp.extra_metadata, {})
-        self.resWebApp.extra_metadata = {'appkey': 'test-app-value'}
+        self.resWebApp.extra_metadata = {tool_app_key: 'test-app-value'}
         self.resWebApp.save()
 
         self.assertNotEqual(self.resWebApp.extra_metadata, {})
-        self.assertEqual(self.resWebApp.extra_metadata['appkey'], 'test-app-value')
+        self.assertEqual(self.resWebApp.extra_metadata[tool_app_key], 'test-app-value')
 
         self.assertEqual(self.resGeneric.extra_metadata, {})
-        self.resGeneric.extra_metadata = {'appkey': 'test-app-value'}
+        self.resGeneric.extra_metadata = {tool_app_key: 'test-app-value'}
         self.resGeneric.save()
 
         self.assertNotEqual(self.resGeneric.extra_metadata, {})
-        self.assertEqual(self.resGeneric.extra_metadata['appkey'], 'test-app-value')
+        self.assertEqual(self.resGeneric.extra_metadata[tool_app_key], 'test-app-value')
 
         url = '/resource/' + self.resGeneric.short_id + '/'
         request = self.factory.get(url)
@@ -402,14 +403,14 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertFalse(super(TestWebAppFeature, self).check_file_exist(target_res_path))
 
         self.resWebApp.extra_metadata = {
-            'irods_federation_target_path': ipath,
-            'irods_federation_target_resource': settings.HS_IRODS_LOCAL_ZONE_DEF_RES
+            irods_path_key: ipath,
+            irods_resc_key: settings.HS_IRODS_LOCAL_ZONE_DEF_RES
         }
         self.resWebApp.save()
 
         self.assertNotEqual(self.resWebApp.extra_metadata, {})
-        self.assertEqual(self.resWebApp.extra_metadata['irods_federation_target_path'], ipath)
-        self.assertEqual(self.resWebApp.extra_metadata['irods_federation_target_resource'],
+        self.assertEqual(self.resWebApp.extra_metadata[irods_path_key], ipath)
+        self.assertEqual(self.resWebApp.extra_metadata[irods_resc_key],
                          settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
 
         # assert resource copying will take place now that extra_metadata keys for irods federation
