@@ -458,7 +458,6 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
 
-        resource_files = []
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take

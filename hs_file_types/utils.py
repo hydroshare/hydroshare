@@ -174,7 +174,7 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                     if fail_feedback:
                         raise ValueError("Unsupported aggregation extension. Supported aggregation "
                                          "extensions are: {}".format(ext_to_type.keys()))
-            hs_file_type=ext_to_type[ext]
+            hs_file_type = ext_to_type[ext]
         else:
             if fail_feedback:
                 raise ValueError("Unsupported aggregation extension. Supported aggregation "
