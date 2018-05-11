@@ -17,4 +17,3 @@ irods_resc_key = 'irods_federation_target_resource'
 # to be authenticated in HydroShare before using the web app. If this optional key is not specified,
 # the default action is to assume no user authentication is required by the web app.
 user_auth_flag_key = 'require_user_authentication'
-
