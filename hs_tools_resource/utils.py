@@ -89,7 +89,7 @@ def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_sho
             res = get_resource_by_shortkey(res_shortkey)
             app_res = get_resource_by_shortkey(app_shortkey)
             user_auth_key_exist = BaseResource.objects.filter(short_id=app_shortkey).filter(
-                extra_metadata_has_key=user_auth_flag_key).first()
+                extra_metadata__has_key=user_auth_flag_key).first()
             if user_auth_key_exist:
                 req_user_auth = True if app_res.extra_metadata[user_auth_flag_key].lower() == 'true' \
                     else False
