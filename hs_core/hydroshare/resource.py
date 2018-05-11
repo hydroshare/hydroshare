@@ -643,7 +643,7 @@ def add_resource_files(pk, *files, **kwargs):
         assert(isinstance(source_names, list))
 
     move = kwargs.pop('move', False)
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
