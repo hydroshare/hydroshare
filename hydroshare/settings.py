@@ -111,7 +111,7 @@ ALLOWED_HOSTS = []
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = None
+TIME_ZONE = "Etc/UTC"
 
 # If you set this to True, Django will use timezone-aware datetimes.
 USE_TZ = True
@@ -706,3 +706,5 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 SWAGGER_SETTINGS = {
     "VALIDATOR_URL": False
 }
+
+SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W01", "mezzanine.core.W02"]
