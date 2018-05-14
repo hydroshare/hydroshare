@@ -336,7 +336,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 logical_file = cls.initialize(base_file_name)
 
                 try:
-                    if folder_path is None:
+                    if not folder_path:
                         # we are here means aggregation is being created by selecting a file
                         if create_new_folder:
                             # create a folder for the raster file type using the base file name
