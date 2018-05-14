@@ -152,6 +152,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files, full_paths = extract_files_with_paths(request)
+    auto_aggregate = request.POST.get("auto_aggregate").lower() == 'false'
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
@@ -179,7 +180,8 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   folder=file_folder, full_paths=full_paths)
+                                                   folder=file_folder, full_paths=full_paths,
+                                                   auto_aggregate=auto_aggregate)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
@@ -1128,6 +1130,7 @@ def create_resource(request, *args, **kwargs):
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
+    auto_aggregate = request.POST.get("auto_aggregate").lower() == 'false'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
@@ -1184,7 +1187,7 @@ def create_resource(request, *args, **kwargs):
                 # TODO: should probably be resource_federation_path like it is set to.
                 fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
                 move=(fed_copy_or_move == 'move'),
-                content=res_title, full_paths=full_paths
+                content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
         ajax_response_data['message'] = ex.stderr

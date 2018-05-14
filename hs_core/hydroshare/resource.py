@@ -309,7 +309,8 @@ def create_resource(
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
         files=(), source_names=[], fed_res_path='', move=False,
-        create_metadata=True, create_bag=True, unpack_file=False, full_paths={}, **kwargs):
+        create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
+        auto_aggregate=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -362,6 +363,10 @@ def create_resource(
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
         the unpacked contents of the zip file will be added to the resource instead of the zip file.
+    :param full_paths: Optional.  A map of paths keyed by the correlating resource file.  When
+        this parameter is provided, a file will be placed at the path specified in the map.
+    :param auto_aggregate: boolean, defaults to True.  Find and create aggregations during
+        resource creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -470,7 +475,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, source_names=source_names, move=move,
-                               full_paths=full_paths)
+                               full_paths=full_paths, auto_aggregate=auto_aggregate)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -638,6 +643,9 @@ def add_resource_files(pk, *files, **kwargs):
     ret = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
+    auto_aggregate = kwargs.pop('auto_aggregate', True)
+    #TODO remove after testing
+    auto_aggregate = False
 
     if __debug__:
         assert(isinstance(source_names, list))
@@ -673,7 +681,7 @@ def add_resource_files(pk, *files, **kwargs):
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource":
+        if resource.resource_type == "CompositeResource" and auto_aggregate:
             # check folders for aggregations
             for fol in new_folders:
                 folder = resource.short_id + "/data/contents/" + fol
