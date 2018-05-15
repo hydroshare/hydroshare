@@ -40,6 +40,12 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from unicodedata import category
+
+
+def clean_for_xml(s): 
+    """ Remove all control characters from a unicode string in preparation for XML inclusion """
+    return "".join(ch for ch in s if category(ch)[0] != "C")
 
 
 class GroupOwnership(models.Model):
@@ -3932,7 +3938,7 @@ class CoreMetaData(models.Model):
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
                                                 '{%s}abstract' % self.NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.description.abstract
+            dcterms_abstract.text = clean_for_xml(self.description.abstract)
 
         for agency in self.funding_agencies.all():
             hsterms_agency = etree.SubElement(rdf_Description,
@@ -3941,18 +3947,18 @@ class CoreMetaData(models.Model):
                                                               self.NAMESPACES['rdf'])
             hsterms_name = etree.SubElement(hsterms_agency_rdf_Description,
                                             '{%s}fundingAgencyName' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = agency.agency_name
+            hsterms_name.text = clean_for_xml(agency.agency_name)
             if agency.agency_url:
                 hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                                    agency.agency_url)
             if agency.award_title:
                 hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
                                                  self.NAMESPACES['hsterms'])
-                hsterms_title.text = agency.award_title
+                hsterms_title.text = clean_for_xml(agency.award_title)
             if agency.award_number:
                 hsterms_number = etree.SubElement(hsterms_agency_rdf_Description,
                                                   '{%s}awardNumber' % self.NAMESPACES['hsterms'])
-                hsterms_number.text = agency.award_number
+                hsterms_number.text = clean_for_xml(agency.award_number)
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -4046,7 +4052,7 @@ class CoreMetaData(models.Model):
                                                          '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
                                                  '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
-            hsterms_statement.text = self.rights.statement
+            hsterms_statement.text = clean_for_xml(self.rights.statement)
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description,
                                                '{%s}URL' % self.NAMESPACES['hsterms'])

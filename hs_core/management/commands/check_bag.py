@@ -51,11 +51,11 @@ def check_bag(rid, options):
             if options['generate']:  # generate usable bag
 
                 if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
-                    try:
-                        create_bag_files(resource)
-                    except ValueError as e:
-                        print("{}: value error encountered: {}".format(rid, e.message))
-                        return
+                    # try:
+                    create_bag_files(resource)
+                    # except ValueError as e:
+                    #     print("{}: value error encountered: {}".format(rid, e.message))
+                    #     return
 
                     print("{} metadata generated from Django".format(rid))
                     resource.setAVU('metadata_dirty', 'false')
