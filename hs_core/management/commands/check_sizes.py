@@ -20,9 +20,9 @@ def measure_resource(short_id):
     assert resource, (res, res.content_model)
 
     istorage = resource.get_irods_storage()
-    if istorage.exists(resource.file_path): 
+    if istorage.exists(resource.file_path):
         print("{} {}".format(resource.size, short_id))
-    else: 
+    else:
         print("{} {} no file path".format(0, short_id))
 
 
@@ -52,5 +52,5 @@ class Command(BaseCommand):
                 storage = r.get_irods_storage()
                 if storage.exists(r.root_path):
                     measure_resource(r.short_id)
-                else: 
+                else:
                     print("{} does not exist in iRODS".format(r.short_id))
