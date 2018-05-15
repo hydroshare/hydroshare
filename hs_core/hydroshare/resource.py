@@ -19,7 +19,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-import hs_file_types
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -644,8 +643,6 @@ def add_resource_files(pk, *files, **kwargs):
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
-    # TODO remove after testing
-    auto_aggregate = False
 
     if __debug__:
         assert(isinstance(source_names, list))
@@ -685,20 +682,21 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
+            from hs_file_types.utils import set_logical_file_type
             # check folders for aggregations
             for fol in new_folders:
                 folder = resource.short_id + "/data/contents/" + fol
                 agg_type = resource.get_folder_aggregation_type_to_set(folder)
                 if agg_type is not None and agg_type is not '':
                     agg_type = agg_type.replace('LogicalFile', '')
-                    hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                    set_logical_file_type(res=resource, user=None,
                                                               file_id=None,
                                                               hs_file_type=agg_type,
                                                               folder_path=fol,
                                                               fail_feedback=False)
             # check files for aggregation
             for res_file in ret:
-                hs_file_types.utils.set_logical_file_type(res=resource, user=None,
+                set_logical_file_type(res=resource, user=None,
                                                           file_id=res_file.pk, fail_feedback=False)
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
