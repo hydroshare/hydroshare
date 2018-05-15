@@ -1130,7 +1130,7 @@ def create_resource(request, *args, **kwargs):
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
-    auto_aggregate = request.POST.get("auto_aggregate").lower() == 'false'
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'false'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
