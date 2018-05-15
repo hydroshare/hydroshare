@@ -750,7 +750,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.json.refts)
+        """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)
         """
 
         log = logging.getLogger()
