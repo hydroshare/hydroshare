@@ -644,7 +644,7 @@ def add_resource_files(pk, *files, **kwargs):
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
-    #TODO remove after testing
+    # TODO remove after testing
     auto_aggregate = False
 
     if __debug__:
@@ -668,8 +668,11 @@ def add_resource_files(pk, *files, **kwargs):
             base_dir = full_dir if full_dir is not None else ''
             dir_name = dir_name if dir_name is not None else ''
             full_dir = base_dir + dir_name
-        new_folders.add(full_dir)
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        if full_dir:
+            new_folders.add(full_dir)
+            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        else:
+            ret.append(utils.add_file_to_resource(resource, f, folder=None))
 
     if len(source_names) > 0:
         for ifname in source_names:

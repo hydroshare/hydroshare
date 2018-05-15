@@ -152,7 +152,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files, full_paths = extract_files_with_paths(request)
-    auto_aggregate = request.POST.get("auto_aggregate").lower() == 'false'
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'false'
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
