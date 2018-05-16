@@ -43,9 +43,33 @@ from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 from unicodedata import category
 
 
-def clean_for_xml(s): 
-    """ Remove all control characters from a unicode string in preparation for XML inclusion """
-    return "".join(ch for ch in s if category(ch)[0] != "C")
+def clean_for_xml(s):
+    """
+    Remove all control characters from a unicode string in preparation for XML inclusion
+
+    * Convert \n to paragraph
+    * Convert control characters to spaces.
+
+    unless the previous character is paragraph or space. In this case, don't repeat paragraphs
+    or spaces.
+    """
+    output = ''
+    last = ''
+    for ch in s:
+        if ord(ch) == 10:  # linux '\n'
+            if last != ' ' and last != unichr(0xB6):
+                output = output + ' ' + unichr(0xB6) + ' '
+                last = unichr(0xB6)
+            elif last == ' ':
+                output = output + unichr(0xB6) + ' '
+                last = unichr(0xB6)
+        elif category(ch)[0] != 'C':
+            output = output + ch
+            last = ch
+        elif last != ' ' and last != unichr(0xB6):
+            output = output + ' '
+            last = ' '
+    return output
 
 
 class GroupOwnership(models.Model):
