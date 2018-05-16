@@ -152,7 +152,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files, full_paths = extract_files_with_paths(request)
-    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'false'
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
@@ -1130,7 +1130,7 @@ def create_resource(request, *args, **kwargs):
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
-    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'false'
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
