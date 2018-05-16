@@ -875,7 +875,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Test Composite Resource Federated'
+            title='Test Composite Resource Federated',
+            auto_aggregate=False
         )
 
         # there should not be any GenericLogicalFile object at this point
@@ -1003,7 +1004,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
             move=False,
-            metadata=[]
+            metadata=[],
+            auto_aggregate=False
         )
 
     def _create_generic_aggregation(self):

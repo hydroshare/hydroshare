@@ -32,7 +32,8 @@ class CompositeResourceTestMixin(object):
             resource_type='CompositeResource',
             owner=self.user,
             title=self.res_title,
-            files=files
+            files=files,
+            auto_aggregate=False
         )
 
 
