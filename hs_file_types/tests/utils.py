@@ -22,7 +22,7 @@ class CompositeResourceTestMixin(object):
         )
         return new_res_file
 
-    def create_composite_resource(self, file_to_upload=None):
+    def create_composite_resource(self, file_to_upload=None, auto_aggregate=False):
         files = []
         if file_to_upload is not None:
             file_obj = open(file_to_upload, 'r')
@@ -33,7 +33,7 @@ class CompositeResourceTestMixin(object):
             owner=self.user,
             title=self.res_title,
             files=files,
-            auto_aggregate=False
+            auto_aggregate=auto_aggregate
         )
 
 
