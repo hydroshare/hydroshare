@@ -444,15 +444,6 @@ def update_quota_usage_task(username):
 
     # get quota size for the user in iRODS user zone
     try:
-        # cannot use FedStorage() since the proxy iRODS account in data zone cannot access
-        # user type metadata for the proxy iRODS user in the user zone. Have to create an iRODS
-        # environment session using HS_USER_ZONE_PROXY_USER with an rodsadmin role
-        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
-                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                                  host=settings.HS_USER_ZONE_HOST,
-                                  port=settings.IRODS_PORT,
-                                  zone=settings.HS_USER_IRODS_ZONE,
-                                  sess_id='user_proxy_session')
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                      settings.IRODS_BAGIT_PATH)
