@@ -4255,6 +4255,11 @@ div.fb-upload-caption a {
 	display: block;
 }
 
+.fb-view-grid .fb-aggregation-icon > img {
+	width: 30px;
+	height: 30px;
+}
+
 .fb-view-grid .fb-file-name {
 	display: block;
 	text-overflow: ellipsis;
@@ -4265,6 +4270,17 @@ div.fb-upload-caption a {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon {
+	margin-right: 10px;
+	margin-left: 10px;
+	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon > img {
+	width: 20px;
+	height: 20px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {

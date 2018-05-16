@@ -4,32 +4,32 @@
 function getFolderIcons() {
     var folderIcons = {};
     folderIcons.GeoRasterLogicalFile =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/geographicraster48x48.png' " +
         "alt='Geographic Raster Aggregation Icon'/></span>";
 
     folderIcons.NetCDFLogicalFile =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/multidimensional48x48.png' " +
         "alt='MultiDimensional (NetCDF) Aggregation Icon'/></span>";
 
     folderIcons.TimeSeriesLogicalFile =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/timeseries48x48.png' " +
         "alt='Time Series Aggregation Icon'/></span>";
 
     folderIcons.RefTimeseriesLogicalFile =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/his48x48.png' " +
         "alt='HIS Referenced Time Series Aggregation Icon'/></span>";
 
     folderIcons.GeoFeatureLogicalFile =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/geographicfeature48x48.png' " +
         "alt='Geographic Feature Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
-        "<span class='fb-file-icon'>" +
+        "<span class='fb-aggregation-icon'>" +
         "<img src='/static/img/resource-icons/composite48x48.png' " +
         "alt='Default Aggregation Icon'/></span>";
     return folderIcons;
