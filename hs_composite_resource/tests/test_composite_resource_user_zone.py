@@ -891,7 +891,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
                                       source_names=[fed_test_file_full_path], user=self.user,
                                       folder=None)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  source_names=[fed_test_file_full_path], user=self.user)
+                                  source_names=[fed_test_file_full_path], user=self.user,
+                                  auto_aggregate=False)
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)

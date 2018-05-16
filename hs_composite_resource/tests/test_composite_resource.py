@@ -193,7 +193,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a file to the resource to auto create format element
         self.raster_file_obj = open(self.raster_file, 'r')
         resource_file_add_process(resource=self.composite_resource,
-                                  files=(self.raster_file_obj,), user=self.user)
+                                  files=(self.raster_file_obj,), user=self.user,
+                                  auto_aggregate=False)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         # now there should be 1 format element
         self.assertEqual(self.composite_resource.metadata.formats.count(), 1)
