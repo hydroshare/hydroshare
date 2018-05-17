@@ -47,28 +47,39 @@ def clean_for_xml(s):
     """
     Remove all control characters from a unicode string in preparation for XML inclusion
 
-    * Convert \n to paragraph
+    * Convert \n\n+ to unicode paragraph
+    * Convert \n alone to unicode NL (newline)
     * Convert control characters to spaces.
+    * Space-pad paragraph and NL symbols as necessary
 
-    unless the previous character is paragraph or space. In this case, don't repeat paragraphs
-    or spaces.
     """
+    CR = unichr(0x23CE)
+    PARA = unichr(0xB6)
     output = ''
-    last = ''
+    next = None
+    last = None
     for ch in s:
-        if ord(ch) == 10:  # linux '\n'
-            if last != ' ' and last != unichr(0xB6):
-                output = output + ' ' + unichr(0xB6) + ' '
-                last = unichr(0xB6)
-            elif last == ' ':
-                output = output + unichr(0xB6) + ' '
-                last = unichr(0xB6)
-        elif category(ch)[0] != 'C':
+        ISCONTROL = category(ch)[0] == 'C'
+        ISSPACE = category(ch)[0] == 'S'
+        ISNEWLINE = (ord(ch) == 10)
+        if ISNEWLINE:  # linux '\n'
+            if next and next == CR:
+                next = PARA  # upgrade to two returns
+            else:
+                next = CR
+            last = ch
+        elif ISSPACE or ISCONTROL:
+            if next is not None:
+                pass
+            elif last != ' ':
+                output = output + ' '
+                last = ' '
+        else:
+            if next is not None:
+                output = output + ' ' + next + ' '
+                next = None
             output = output + ch
             last = ch
-        elif last != ' ' and last != unichr(0xB6):
-            output = output + ' '
-            last = ' '
     return output
 
 
