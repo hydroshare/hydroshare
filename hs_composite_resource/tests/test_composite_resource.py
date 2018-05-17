@@ -363,7 +363,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         self.assertEqual(self.composite_resource.metadata.formats.count(), 2)
 
-
     def test_auto_aggregate_file_add(self):
         """test that auto-aggregate works on file add"""
 
