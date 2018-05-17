@@ -920,7 +920,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
                                       folder=new_folder)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
                                   source_names=[fed_test_file_full_path], user=self.user,
-                                  folder=new_folder)
+                                  folder=new_folder, auto_aggregate=False)
 
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
