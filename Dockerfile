@@ -9,7 +9,9 @@ RUN pip install \
   django-test-without-migrations \
   django-rest-swagger \
   jsonschema \
-  nameparser
+  nameparser \
+  minid \
+  bdbag
 ### End - HydroShare Development Image Additions ###
 
 USER root

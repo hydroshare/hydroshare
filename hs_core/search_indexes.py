@@ -16,7 +16,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True)
+    minid = indexes.CharField(model_attr='minid', null=True)
     author = indexes.CharField(faceted=True)
     author_normalized = indexes.CharField(faceted=True)
     author_description = indexes.CharField(indexed=False)

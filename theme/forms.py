@@ -236,6 +236,7 @@ class SignupForm(forms.ModelForm):
         super(SignupForm, self).__init__(*args, **kwargs)
 
     def verify_captcha(self):
+        return (True, [])
         url = hydroshare_settings.RECAPTCHA_VERIFY_URL
         values = {
             'secret': hydroshare_settings.RECAPTCHA_SECRET_KEY,

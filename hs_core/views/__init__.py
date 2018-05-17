@@ -558,46 +558,6 @@ def delete_resource(request, shortkey, *args, **kwargs):
     else:
         return HttpResponseRedirect('/my-resources/')
 
-
-def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
-    '''
-    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
-    which is federated with hydroshare zone under the iRODS user account corresponding to a CommonsShare user. This function
-    should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
-    user Zone exists. The purpose of this function is to allow CommonsShare resource bag that a CommonsShare user has access
-    to be copied to CommonsShare user's iRODS space in CommonsShare user zone so that users can do analysis or computations on
-    the resource
-    Args:
-        request: an AJAX request
-        shortkey: UUID of the resource to be copied to the login user's iRODS user space
-
-    Returns:
-        JSON list that indicates status of resource replication, i.e., success or error
-    '''
-    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
-    if not authorized:
-        return HttpResponse(
-        json.dumps({"error": "You are not authorized to replicate this resource."}),
-        content_type="application/json"
-        )
-
-    try:
-        utils.replicate_resource_bag_to_user_zone(user, shortkey)
-        return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
-            content_type = "application/json"
-        )
-    except SessionException as ex:
-        return HttpResponse(
-        json.dumps({"error": ex.stderr}),
-        content_type="application/json"
-        )
-    except utils.QuotaException as ex:
-        return HttpResponse(
-            json.dumps({"error": ex.message}),
-            content_type="application/json"
-        )
-
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -676,6 +636,7 @@ def create_new_version_resource_public(request, pk):
 
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
+
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
     try:
@@ -685,7 +646,6 @@ def publish(request, shortkey, *args, **kwargs):
     else:
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
@@ -1053,7 +1013,10 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
+    import sys
+    sys.path.append("/pycharm-debug")
+    import pydevd
+    pydevd.settrace('152.54.6.254', port=21000, suspend=False)
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
 

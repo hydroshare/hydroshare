@@ -37,7 +37,6 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
             self.user,
             'test resource',
         )
-        self.res.doi = 'doi1000100010001'
         self.res.save()
 
     def test_get_resource_types(self):
@@ -56,12 +55,6 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
     def test_get_resource_by_shortkey(self):
         self.assertEqual(
             utils.get_resource_by_shortkey(self.res.short_id),
-            self.res
-        )
-
-    def test_get_resource_by_doi(self):
-        self.assertEqual(
-            utils.get_resource_by_doi('doi1000100010001'),
             self.res
         )
 

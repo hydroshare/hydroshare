@@ -835,10 +835,10 @@ class Identifier(AbstractMetaDataElement):
                                             content_type=metadata_type).first()
             if idf:
                 raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
-            if kwargs['name'].lower() == 'doi':
-                if not resource.doi:
-                    raise ValidationError("Identifier of 'DOI' type can't be created for a "
-                                          "resource that has not been assigned a DOI yet.")
+            if kwargs['name'].lower() == 'minid':
+                if not resource.minid:
+                    raise ValidationError("Identifier of 'MINID' type can't be created for a "
+                                          "resource that has not been assigned a MINID yet.")
 
             return super(Identifier, cls).create(**kwargs)
 
@@ -857,8 +857,8 @@ class Identifier(AbstractMetaDataElement):
                         raise ValidationError("Identifier name 'hydroshareIdentifier' can't "
                                               "be changed.")
 
-                if idf.name.lower() == 'doi':
-                    raise ValidationError("Identifier name 'DOI' can't be changed.")
+                if idf.name.lower() == 'minid':
+                    raise ValidationError("Identifier name 'MINID' can't be changed.")
 
                 # check this new identifier name not already exists
                 if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
@@ -890,10 +890,10 @@ class Identifier(AbstractMetaDataElement):
         if idf.name.lower() == 'hydroshareidentifier':
             raise ValidationError("CommonsShare identifier:%s can't be deleted." % idf.name)
 
-        if idf.name.lower() == 'doi':
-            if resource.doi:
+        if idf.name.lower() == 'minid':
+            if resource.minid:
                 raise ValidationError("CommonsShare identifier:%s can't be deleted for a resource "
-                                      "that has been assigned a DOI." % idf.name)
+                                      "that has been assigned a MINID." % idf.name)
         idf.delete()
 
 
@@ -926,26 +926,28 @@ class Publisher(AbstractMetaDataElement):
         publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic " \
                            "Science, Inc. (CUAHSI)"
 
+        publisher_CS = "CommonsShare"
+
         if resource.files.all():
             # if the resource has content files, set CUAHSI as the publisher
             if 'name' in kwargs:
-                if kwargs['name'].lower() != publisher_CUAHSI.lower():
+                if kwargs['name'].lower() != publisher_CS.lower():
                     raise ValidationError("Invalid publisher name")
 
-            kwargs['name'] = publisher_CUAHSI
+            kwargs['name'] = publisher_CS
             if 'url' in kwargs:
-                if kwargs['url'].lower() != 'https://www.cuahsi.org':
+                if kwargs['url'].lower() != 'https://www.commonsshare.org':
                     raise ValidationError("Invalid publisher URL")
 
-            kwargs['url'] = 'https://www.cuahsi.org'
+            kwargs['url'] = 'https://www.commonsshare.org'
         else:
             # make sure we are not setting CUAHSI as publisher for a resource
             # that has no content files
             if 'name' in kwargs:
-                if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                if kwargs['name'].lower() == publisher_CS.lower():
                     raise ValidationError("Invalid publisher name")
             if 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                if kwargs['url'].lower() == 'https://www.commonsshare.org':
                     raise ValidationError("Invalid publisher URL")
 
         return super(Publisher, cls).create(**kwargs)
@@ -1597,8 +1599,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
-                           help_text='Permanent identifier. Never changes once it\'s been set.')
+
+    minid = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
+                           help_text='MINID created for this resource.')
     comments = CommentsField()
     rating = RatingField()
 
@@ -2037,11 +2040,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
-        isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
-                isPendingActivation = True
+        if self.metadata.identifiers.all().filter(name="minid"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="minid")[0]
         elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         else:
@@ -2063,8 +2063,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             citation_str_lst.append(", CommonsShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation:
-            citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
 
@@ -3349,62 +3347,6 @@ class BaseResource(Page, AbstractResource):
     # @property
     # def file_uri(self):
     #     return os.path.join(self.root_uri, 'files')
-
-    # create crossref deposit xml for resource publication
-    def get_crossref_deposit_xml(self, pretty_print=True):
-        """Return XML structure describing crossref deposit."""
-        # importing here to avoid circular import problem
-        from hydroshare.resource import get_activated_doi
-
-        xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
-                         'http://www.crossref.org/schemas/crossref4.3.6.xsd'
-        ns = "http://www.crossref.org/schema/4.3.6"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None: ns},
-                             attrib={"{%s}schemaLocation" % xsi: schemaLocation})
-
-        # get the resource object associated with this metadata container object - needed
-        # to get the verbose_name
-
-        # create the head sub element
-        head = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
-            .format("YYYYMMDDHHmmss")
-        depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'CommonsShare'
-        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
-        # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the ' \
-                                                    'Advancement of Hydrologic Science, Inc. ' \
-                                                    '(CUAHSI)'
-
-        # create the body sub element
-        body = etree.SubElement(ROOT, 'body')
-        # create the database sub element
-        db = etree.SubElement(body, 'database')
-        # create the database_metadata sub element
-        db_md = etree.SubElement(db, 'database_metadata', language="en")
-        # titles is required element for database_metadata
-        titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "CommonsShare Resources"
-        # create the dataset sub element, dataset_type can be record or collection, set it to
-        # collection for CommonsShare resources
-        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
-        ds_titles = etree.SubElement(dataset, 'titles')
-        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
-        # doi_data is required element for dataset
-        doi_data = etree.SubElement(dataset, 'doi_data')
-        res_doi = get_activated_doi(self.doi)
-        idx = res_doi.find('10.4211')
-        if idx >= 0:
-            res_doi = res_doi[idx:]
-        etree.SubElement(doi_data, 'doi').text = res_doi
-        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(
-            name='hydroShareIdentifier')[0].url
-
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, pretty_print=pretty_print)
 
     @property
     def size(self):

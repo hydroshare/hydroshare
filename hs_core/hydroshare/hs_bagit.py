@@ -4,6 +4,7 @@ import errno
 import tempfile
 import mimetypes
 import zipfile
+import hashlib
 
 from uuid import uuid4
 
@@ -14,6 +15,14 @@ import bagit
 from mezzanine.conf import settings
 from hs_core.models import Bags, ResourceFile
 
+from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, VERSION
+from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
+
+from django.conf import settings
+
+from minid_client import minid_client_api as mca
+
+import json
 
 class HsBagitException(Exception):
     pass
@@ -189,27 +198,44 @@ def create_bag_files(resource):
     shutil.rmtree(temp_path)
     return istorage
 
-
 def create_bag(resource):
-    """
-    Modified to implement the new bagit workflow. The previous workflow was to create a bag from
-    the current filesystem of the resource, then zip it up and add it to the resource. The new
-    workflow is to delegate bagit and zip-up operations to iRODS, specifically, by executing an
-    iRODS bagit rule to create bagit file hierarchy, followed by execution of an ibun command to
-    zip up the bagit file hierarchy which is done asychronously as a celery task. This function
-    only creates all bag files under resource collection in iRODS and set bag_modified iRODS AVU
-    metadata to true so that the bag will be created or recreated on demand when it is being
-    downloaded asychronously by a celery task.
-
-    Parameters:
-    :param resource: (subclass of AbstractResource) A resource to create a bag for.
-    :return: the hs_core.models.Bags instance associated with the new bag.
-    """
+    
     create_bag_files(resource)
-
-    # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
-    # created when user clicks on download button
     resource.setAVU("bag_modified", True)
+
+    checksums = ['md5', 'sha256']
+
+    # generate remote-file-mainfest for fetch.txt
+    # generate metatdata json for bag-info.txt
+
+    remote_file_manifest_json = get_remote_file_manifest(resource)
+    metadata_json = get_metadata_json(resource)
+
+    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex, resource.short_id)
+    os.makedirs(tmpdir)
+
+    remote_manifest_file = os.path.join(tmpdir, 'remote-file-manifest.json')
+    with open(remote_manifest_file, 'w') as out:
+        out.write(remote_file_manifest_json)
+
+    metadata_file = os.path.join(tmpdir, 'metadata.json')
+    with open(metadata_file, 'w') as out:
+        out.write(metadata_json)
+
+    bagdir = os.path.join(tmpdir, "bag")
+    os.makedirs(bagdir)
+
+    bdb.make_bag(bagdir, checksums, False, False, False, None, metadata_file, remote_manifest_file, 'config/bdbag.json')
+
+    istorage = resource.get_irods_storage()
+
+    zipfile = bdb.archive_bag(bagdir, "zip")
+
+    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource.short_id)
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    destbagfile = os.path.join(irods_dest_prefix, bag_full_name)
+
+    istorage.saveFile(zipfile, destbagfile, True)
 
     # delete if there exists any bags for the resource
     resource.bags.all().delete()
@@ -222,36 +248,38 @@ def create_bag(resource):
     return b
 
 
-def read_bag(bag_path):
-    """
-    :param bag_path:
-    :return:
-    """
+def get_remote_file_manifest(resource):
+    json_data = ''
+    for f in ResourceFile.objects.filter(object_id=resource.id):
+        data = {}
+        irods_file_name = resource.short_id + "/data/contents/" + f.file_name
+        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+        irods_server_prefix = settings.IRODS_HOST + ':' + settings.IRODS_PORT
+        irods_file_url = 'irods://' + irods_server_prefix +  irods_dest_prefix + "/" + irods_file_name
+        istorage = resource.get_irods_storage()
 
-    tmpdir = None
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+        tmpfile = os.path.join(tmpdir, f.file_name)
 
-    try:
-        if not os.path.exists(bag_path):
-            raise HsBagitException('Bag does not exist')
-        if os.path.isdir(bag_path):
-            unpacked_bag_path = bag_path
-        else:
-            mtype = mimetypes.guess_type(bag_path)
-            if mtype[0] != 'application/zip':
-                msg = "Expected bag to have MIME type application/zip, " \
-                      "but it has {0} instead.".format(mtype[0])
-                raise HsBagitException(msg)
-            tmpdir = tempfile.mkdtemp()
-            zfile = zipfile.ZipFile(bag_path)
-            zroot = zfile.namelist()[0].split(os.sep)[0]
-            zfile.extractall(tmpdir)
-            unpacked_bag_path = os.path.join(tmpdir, zroot)
+        os.makedirs(tmpdir)
 
-        bag = bagit.Bag(unpacked_bag_path)
-        if not bag.is_valid():
-            msg = "Bag is not valid"
-            raise HsBagitException(msg)
+        srcfile = os.path.join(irods_dest_prefix, irods_file_name)
+        istorage.getFile(srcfile, tmpfile)
+        checksum_md5 = mca.compute_checksum(tmpfile, hashlib.md5())
+        checksum_sha256 = mca.compute_checksum(tmpfile, hashlib.sha256())
+        data['url'] = irods_file_url
+        data['length'] = f.size
+        data['filename'] = f.file_name
+        data['md5'] = checksum_md5
+        data['sha256'] = checksum_sha256
+        json_data += json.dumps(data)
 
-    finally:
-        if tmpdir:
-            shutil.rmtree(tmpdir)
+    return json_data
+
+def get_metadata_json(resource):
+    data = {}
+    data['BagIt-Profile-Identifier'] = "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json"
+    data['External-Description'] = "CommonsShare BDBag for resource " + resource.short_id
+    data['Arbitrary-Metadata-Field'] = "TBD Arbitrary metadata field"
+
+    return json.dumps(data)

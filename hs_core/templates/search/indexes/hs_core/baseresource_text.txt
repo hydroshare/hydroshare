@@ -1,8 +1,8 @@
 {% if object.short_id %} 
     {{ object.short_id }}
 {% endif %} 
-{% if object.doi %} 
-    {{ object.doi }}
+{% if object.minid %}
+    {{ object.minid }}
 {% endif %} 
 {% if object.metadata.title.value %}
     {{ object.metadata.title.value }}

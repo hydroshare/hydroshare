@@ -78,12 +78,12 @@ def get_resource_by_shortkey(shortkey, or_404=True):
     return content
 
 
-def get_resource_by_doi(doi, or_404=True):
+def get_resource_by_minid(minid, or_404=True):
     try:
-        res = BaseResource.objects.get(doi=doi)
+        res = BaseResource.objects.get(minid=minid)
     except BaseResource.DoesNotExist:
         if or_404:
-            raise Http404(doi)
+            raise Http404(minid)
         else:
             raise
     content = res.get_content_model()
@@ -396,9 +396,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
         if bag_modified.lower() == "true":
-            # import here to avoid circular import issue
-            from hs_core.tasks import create_bag_by_irods
-            create_bag_by_irods(res_id)
+            hs_bagit.create_bag(res)
 
         # do replication of the resource bag to irods user zone
         if not res.resource_federation_path:

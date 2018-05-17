@@ -81,20 +81,11 @@
              data-toggle="tooltip" data-placement="right"
              alt="Private Resource" title="Private"/>
     {% endif %}
-
-    {% if resource.raccess.published %}
-        {% if "pending" in cm.doi or "failure" in cm.doi %}
-            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
-                 data-toggle="tooltip" data-placement="right"
-                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-        {% endif %}
+    {% if resource.raccess.shareable %}
+        <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+             data-toggle="tooltip" data-placement="right" title="Shareable"/>
     {% else %}
-        {% if resource.raccess.shareable %}
-            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                 data-toggle="tooltip" data-placement="right" title="Shareable"/>
-        {% else %}
-            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                 data-toggle="tooltip" data-placement="right" title="Not Shareable"/>
-        {% endif %}
+        <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+             data-toggle="tooltip" data-placement="right" title="Not Shareable"/>
     {% endif %}
 </div>

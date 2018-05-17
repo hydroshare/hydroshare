@@ -920,40 +920,40 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               hs_idf.id,
                                                                               url='http://resources.org/001'))
 
-        # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
-        self.res.doi = None
+        # test adding an identifier with name 'MINID' when the resource does not have a MINID - should raise an exception
+        self.res.minid = None
         self.res.save()
-        url_doi = "http://dx.doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
+        url_minid = "http://minid.bd2k.org/minid/landingpage/ark:/57799/b9th7b"
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
-                                                                              name='DOI',  url=url_doi))
+                                                                              name='MINID',  url=url_minid))
 
         # test adding identifier 'DOI' when the resource has a DOI and that should work
-        self.res.doi = 'doi1000100010001'
+        self.res.minid = 'ark:/57799/b9th7b'
         self.res.save()
-        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url=url_doi)
+        resource.create_metadata_element(self.res.short_id,'identifier', name='MINID', url=url_minid)
 
-        # test that Identifier name 'DOI' can't be changed - should raise exception
-        doi_idf = self.res.metadata.identifiers.all().filter(name='DOI').first()
+        # test that Identifier name 'MINID' can't be changed - should raise exception
+        minid_idf = self.res.metadata.identifiers.all().filter(name='MINID').first()
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'identifier',
-                                                                              doi_idf.id, name='DOI-1'))
+                                                                              minid_idf.id, name='MINID-1'))
 
-        # test that 'DOI' identifier url can be changed
-        resource.update_metadata_element(self.res.short_id, 'identifier', doi_idf.id, url='http://doi.org/001')
+        # test that 'MINID' identifier url can be changed
+        resource.update_metadata_element(self.res.short_id, 'identifier', minid_idf.id, url='http://minid.bd2k.org/minid/landingpage/ark:/57799/b9th7c')
 
         # test that hydroshareidentifier can't be deleted - raise exception
         hs_idf = self.res.metadata.identifiers.all().filter(name='hydroShareIdentifier').first()
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'identifier',
                                                                               hs_idf.id))
 
-        # test that the DOI identifier can't be deleted when the resource has a DOI - should cause exception
-        doi_idf = self.res.metadata.identifiers.all().filter(name='DOI').first()
+        # test that the DOI identifier can't be deleted when the resource has a MINID - should cause exception
+        minid_idf = self.res.metadata.identifiers.all().filter(name='MINID').first()
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'identifier',
-                                                                              doi_idf.id))
+                                                                              minid_idf.id))
 
-        # test that identifier DOI can be deleted when the resource does not have a DOI.
-        self.res.doi = None
+        # test that identifier MINID can be deleted when the resource does not have a MINID.
+        self.res.minid = None
         self.res.save()
-        resource.delete_metadata_element(self.res.short_id, 'identifier', doi_idf.id)
+        resource.delete_metadata_element(self.res.short_id, 'identifier', minid_idf.id)
 
     def test_language(self):
         # when the resource is created by default the language element should be created
@@ -1456,10 +1456,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         format_csv = 'text/csv'
         self.res.metadata.create_element('format', value=format_csv)
 
-        # add 'DOI' identifier
-        self.res.doi='doi1000100010001'
+        # add 'MINID' identifier
+        self.res.minid='ark:/57799/b9th7b'
         self.res.save()
-        self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
+        self.res.metadata.create_element('identifier', name='MINID', url="http://minid.bd2k.org/minid/landingpage/ark:/57799/b9th7b")
 
         # no need to add a language element - language element is created at the time of resource creation
 
@@ -1473,11 +1473,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
 
-        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
-        url_CUAHSI = 'https://www.cuahsi.org'
+        publisher_CS = "CommonsShare"
+        url_CS = 'https://www.commonsshare.org'
         self.res.raccess.published=True
         self.res.raccess.save()
-        self.res.metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
+        self.res.metadata.create_element('publisher', name=publisher_CS, url=url_CS)
 
         # add a relation element of uri type
         self.res.metadata.create_element('relation', type='isPartOf',

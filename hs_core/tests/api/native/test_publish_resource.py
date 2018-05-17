@@ -45,8 +45,8 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.assertIsNone(
-            self.res.doi,
-            msg='doi is assigned'
+            self.res.minid,
+            msg='minid is assigned'
         )
 
         # there should not be published date type metadata element
@@ -70,8 +70,8 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         # test if doi is assigned
         self.assertIsNotNone(
-            self.pub_res.doi,
-            msg='No doi is assigned with the published resource.'
+            self.pub_res.minid,
+            msg='No minid is assigned with the published resource.'
         )
 
         # there should now published date type metadata element

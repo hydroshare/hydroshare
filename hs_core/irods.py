@@ -8,7 +8,6 @@ from mezzanine.conf import settings
 
 from hs_core.signals import pre_check_bag_flag
 
-
 class ResourceIRODSMixin(models.Model):
     """ This contains iRODS methods to be included as options for resources """
     class Meta:
@@ -28,39 +27,21 @@ class ResourceIRODSMixin(models.Model):
 
         This is a synchronous update. The call waits until the update is finished.
         """
-        from hs_core.tasks import create_bag_by_irods
         from hs_core.hydroshare.resource import check_resource_type
         from hs_core.hydroshare.hs_bagit import create_bag_files
+        from hs_core.hydroshare.hs_bagit import create_bag
 
         # send signal for pre_check_bag_flag
         resource_cls = check_resource_type(self.resource_type)
         pre_check_bag_flag.send(sender=resource_cls, resource=self)
 
-        metadata_dirty = self.getAVU('metadata_dirty')
         bag_modified = self.getAVU('bag_modified')
-
-        if metadata_dirty:  # automatically cast to Bool
-            create_bag_files(self)
-            self.setAVU('metadata_dirty', False)
 
         # the ticket system does synchronous bag creation.
         # async bag creation isn't supported.
         if bag_modified:  # automatically cast to Bool
-            create_bag_by_irods(self.short_id)
+            create_bag(self)
             self.setAVU('bag_modified', False)
-
-    def update_metadata_files(self):
-        """
-        Make the metadata files resourcemetadata.xml and resourcemap.xml up to date.
-
-        This checks the "metadata dirty" AVU before updating files if necessary.
-        """
-        from hs_core.hydroshare.hs_bagit import create_bag_files
-
-        metadata_dirty = self.getAVU('metadata_dirty')
-        if metadata_dirty:
-            create_bag_files(self)
-            self.setAVU('metadata_dirty', False)
 
     def create_ticket(self, user, path=None, write=False, allowed_uses=1):
         """

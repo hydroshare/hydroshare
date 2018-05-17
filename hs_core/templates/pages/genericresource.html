@@ -1026,16 +1026,10 @@
                                                         {% else %}
                                                             <strong class="label-private">&nbsp;Private</strong>
                                                         {% endif %}
-                                                        {% if res.raccess.published %}
-                                                            {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                                &#8210; Note that the DOI will not be available
-                                                                until
-                                                                it has been registered and activated.{% endif %}
-                                                        {% else %}
-                                                            &{% if res.raccess.shareable %}
+                                                        {% if res.raccess.shareable %}
                                                             <strong style="color:#5cb85c">&nbsp;Shareable</strong>
                                                         {% else %}<strong style="color:#d9534f">&nbsp;Not
-                                                                Shareable</strong>{% endif %}
+                                                                Shareable</strong>
                                                         {% endif %}
                                                     </td>
                                                     <td>

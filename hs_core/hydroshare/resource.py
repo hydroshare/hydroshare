@@ -21,6 +21,11 @@ from hs_access_control.models import ResourceAccess, UserResourcePrivilege, Priv
 from hs_labels.models import ResourceLabels
 
 
+from uuid import uuid4
+from minid_client import minid_client_api as mca
+
+
+
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
@@ -901,95 +906,13 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
                                         resource.short_id, filename_or_id))
 
-
-def get_resource_doi(res_id, flag=''):
-    doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
-    if flag:
-        return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
-    else:
-        return doi_str
-
-
-def get_activated_doi(doi):
-    """
-    Get activated DOI with flags removed. The following two flags are appended
-    to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
-     pending activation with CrossRef for DOI to take effect.
-    'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef
-
-    Args:
-        doi: the DOI string with possible status flags appended
-
-    Returns:
-        the activated DOI with all flags removed if any
-    """
-    idx1 = doi.find('pending')
-    idx2 = doi.find('failure')
-    if idx1 >= 0:
-        return doi[:idx1]
-    elif idx2 >= 0:
-        return doi[:idx2]
-    else:
-        return doi
-
-
-def get_crossref_url():
-    main_url = 'https://test.crossref.org/'
-    if not settings.USE_CROSSREF_TEST:
-        main_url = 'https://doi.crossref.org/'
-    return main_url
-
-
-def deposit_res_metadata_with_crossref(res):
-    """
-    Deposit resource metadata with CrossRef DOI registration agency.
-    Args:
-        res: the resource object with its metadata to be deposited for publication
-
-    Returns:
-        response returned for the metadata deposition request from CrossRef
-
-    """
-    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
-    # using HTTP to POST deposit xml file to crossref
-    post_data = {
-        'operation': 'doMDUpload',
-        'login_id': settings.CROSSREF_LOGIN_ID,
-        'login_passwd': settings.CROSSREF_LOGIN_PWD
-    }
-    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
-    # exceptions will be raised if POST request fails
-    main_url = get_crossref_url()
-    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    response = requests.post(post_url, data=post_data, files=files)
-    return response
-
-
 def publish_resource(user, pk):
-    """
-    Formally publishes a resource in CommonsShare. Triggers the creation of a DOI for the resource,
-    and triggers the exposure of the resource to the CommonsShare DataONE Member Node. The user must
-    be an owner of a resource or an administrator to perform this action.
+    # TODO: replace with publishing via minid
 
-    Parameters:
-        user - requesting user to publish the resource who must be one of the owners of the resource
-        pk - Unique CommonsShare identifier for the resource to be formally published.
-
-    Returns:    The id of the resource that was published
-
-    Return Type:    string
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The resource identified by pid does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    and other general exceptions
-
-    Note:  This is different than just giving public access to a resource via access control rule
-    """
+    resource_id = pk
     resource = utils.get_resource_by_shortkey(pk)
+    res_coll = resource.root_path
+    istorage = resource.get_irods_storage()
 
     # TODO: whether a resource can be published is not considered in can_be_published
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
@@ -998,17 +921,34 @@ def publish_resource(user, pk):
                               "metadata or content files or this resource type is not allowed "
                               "for publication.")
 
-    # append pending to the doi field to indicate DOI is not activated yet. Upon successful
-    # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, 'pending')
-    resource.save()
+    if istorage.exists(res_coll):
+        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
+        if bag_modified.lower() == "true":
+            hs_bagit.create_bag(resource)
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(resource.short_id))
 
-    response = deposit_res_metadata_with_crossref(resource)
-    if not response.status_code == status.HTTP_200_OK:
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        resource.doi = get_resource_doi(pk, 'failure')
-        resource.save()
+    # create minid for the bag, using the checksum of the zip
+    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+    tmpfile = os.path.join(tmpdir, 'bag.zip')
+    os.makedirs(tmpdir)
+
+    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    srcfile = os.path.join(irods_dest_prefix, bag_full_name)
+    istorage.getFile(srcfile, tmpfile)
+    checksum = mca.compute_checksum(tmpfile)
+    resource_url = '{0}/resource/{1}'.format(utils.current_site_url(), resource.short_id)
+    download_bag_url = '{0}/django_irods/download/bags/{1}.zip'.format(utils.current_site_url(), resource.short_id)
+    locations = [resource_url, download_bag_url]
+    config= mca.parse_config('config/minid-config.cfg')
+    minid = mca.register_entity(config['minid_server'],
+                                checksum,
+                                config['email'],
+                                config['code'],
+                                locations, 'MINID for ' + resource.title, True)
+    resource.minid = minid
+    resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
     resource.raccess.immutable = True
@@ -1016,36 +956,32 @@ def publish_resource(user, pk):
     resource.raccess.published = True
     resource.raccess.save()
 
-    # change "Publisher" element of science metadata to CUAHSI
-    md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
-                       'Inc. (CUAHSI)',
-               'url': 'https://www.cuahsi.org'}
+    # change "Publisher" element of science metadata to CommonsShare
+    md_args = {'name': 'CommonsShare',
+               'url': 'https://www.commonsshare.org'}
     resource.metadata.create_element('Publisher', **md_args)
 
     # create published date
     resource.metadata.create_element('date', type='published', start_date=resource.updated)
 
     # add doi to "Identifier" element of science metadata
-    md_args = {'name': 'doi',
-               'url': get_activated_doi(resource.doi)}
+    md_args = {'name': 'minid',
+               'url': 'http://minid.bd2k.org/minid/landingpage/' + resource.minid}
     resource.metadata.create_element('Identifier', **md_args)
 
     utils.resource_modified(resource, user, overwrite_bag=False)
 
-    return pk
-
-
-def resolve_doi(doi):
+def resolve_minid(minid):
     """
-    Takes as input a DOI and returns the internal CommonsShare identifier (pid) for a resource.
+    Takes as input a MINID and returns the internal CommonsShare identifier (pid) for a resource.
     This method will be used to get the CommonsShare pid for a resource identified by a doi for
     further operations using the web service API.
 
-    REST URL:  GET /resolveDOI/{doi}
+    REST URL:  GET /resolveMINID/{minid}
 
-    Parameters:    doi - A doi assigned to a resource in CommonsShare.
+    Parameters:    minid - A minid assigned to a resource in CommonsShare.
 
-    Returns:    The pid of the resource that was published
+    Returns:    The minid of the resource that was published
 
     Return Type:    pid
 
@@ -1057,7 +993,7 @@ def resolve_doi(doi):
     Note:  All CommonsShare methods (except this one) will use CommonsShare internal identifiers
     (pids). This method exists so that a program can resolve the pid for a DOI.
     """
-    return utils.get_resource_by_doi(doi).short_id
+    return utils.get_resource_by_minid(minid).short_id
 
 
 def create_metadata_element(resource_short_id, element_model_name, **kwargs):

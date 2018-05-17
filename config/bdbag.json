@@ -1,0 +1,13 @@
+{
+    "bag_config": {
+        "bag_algorithms": [
+            "md5",
+            "sha256"
+        ],
+        "bag_metadata": {
+            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
+            "Contact-Name": "Isma Gilani"
+        },
+        "bag_processes": 1
+    }
+}
