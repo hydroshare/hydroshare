@@ -46,11 +46,6 @@ class TestBagIt(TestCase):
         self.assertEquals(new_bag, self.test_res.bags.all().first())
         self.assertNotEquals(old_bag, new_bag)
 
-    def test_create_bag_files(self):
-        # this is the api call we are testing
-        irods_storage_obj = hs_bagit.create_bag_files(self.test_res)
-        self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
-
     def test_delete_files_and_bag(self):
         # check we have one bag at this point
         self.assertEquals(self.test_res.bags.count(), 1)

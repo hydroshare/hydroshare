@@ -117,10 +117,6 @@ urlpatterns = patterns(
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='DEPRECATED_get_resource_file_list'),
 
-    url(r'^taskstatus/(?P<task_id>[A-z0-9\-]+)/$',
-        core_views.resource_rest_api.CheckTaskStatus.as_view(),
-        name='get_task_status'),
-
     url(r'^user/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 

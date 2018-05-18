@@ -29,7 +29,6 @@ from hs_core.views import pagination
 from hs_core.hydroshare.utils import get_file_storage, resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
     HsDeserializationException
-from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
 logger = logging.getLogger(__name__)
@@ -740,7 +739,6 @@ class ScienceMetadataRetrieveUpdate(APIView):
                                                                          hydroshare_host=domain)
                 # Update resource metadata
                 rm.write_metadata_to_resource(resource, update_title=True, update_keywords=True)
-                create_bag_files(resource)
             except HsDeserializationDependencyException as e:
                 msg = ("HsDeserializationDependencyException encountered when updating "
                        "science metadata for resource {pk}; depedent resource was {dep}.")

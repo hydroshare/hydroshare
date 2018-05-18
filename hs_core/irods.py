@@ -28,7 +28,6 @@ class ResourceIRODSMixin(models.Model):
         This is a synchronous update. The call waits until the update is finished.
         """
         from hs_core.hydroshare.resource import check_resource_type
-        from hs_core.hydroshare.hs_bagit import create_bag_files
         from hs_core.hydroshare.hs_bagit import create_bag
 
         # send signal for pre_check_bag_flag
