@@ -101,6 +101,7 @@ def create_bag(resource):
 
 def get_remote_file_manifest(resource):
     json_data = ''
+    data_list = []
     for f in ResourceFile.objects.filter(object_id=resource.id):
         data = {}
         irods_file_name = resource.short_id + "/data/contents/" + f.file_name
@@ -123,9 +124,9 @@ def get_remote_file_manifest(resource):
         data['filename'] = f.file_name
         data['md5'] = checksum_md5
         data['sha256'] = checksum_sha256
-        json_data += json.dumps(data)
+        data_list.append(data)
 
-    return json_data
+    return json.dumps(data_list)
 
 def get_metadata_json(resource):
     data = {}

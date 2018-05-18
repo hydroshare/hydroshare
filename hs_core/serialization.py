@@ -20,7 +20,6 @@ from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
 from hs_core.models import BaseResource, validate_user_url
-from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
 logger = logging.getLogger(__name__)
@@ -174,8 +173,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                       update_contributors=True,
                                       update_creation_date=True,
                                       update_modification_date=True)
-        # Force bag files to be re-written
-        create_bag_files(resource)
+
     except HsDeserializationDependencyException as e:
         return e.dependency_resource_id, rm, resource
 
