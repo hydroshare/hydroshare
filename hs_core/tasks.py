@@ -289,13 +289,23 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path):
+def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
     full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
+    istorage = IrodsStorage()
 
     try:
-        IrodsStorage().zipup(full_input_path, output_path)
+        if sf_aggregation:
+            name, ext = os.path.splitext(output_path)
+            head, tail = os.path.split(name)
+            out_with_folder = os.path.join(name, tail)
+            istorage.copyFiles(full_input_path, out_with_folder)
+            istorage.copyFiles(full_input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+            istorage.copyFiles(full_input_path + '_meta.xml', out_with_folder + '_meta.xml')
+            istorage.zipup(name, output_path)
+        else:
+            istorage.zipup(full_input_path, output_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return False
