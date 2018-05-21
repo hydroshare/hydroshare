@@ -1,0 +1,632 @@
+    abstract=True
+./django_irods/tasks.py
+        abstract = True
+        abstract = True
+        For a group, metadata includes the group description and abstract, but not the
+./hs_access_control/models.py
+                'abstract': False,
+./hs_app_netCDF/migrations/0001_initial.py
+        abstract = True
+./hs_app_netCDF/models.py
+                                               abstract=res_dublin_core_meta.get('description'))
+./hs_app_netCDF/receivers.py
+        element = res_metadata.create_element('description', abstract='new abstract')
+        res_metadata.update_element('description', element.id, abstract='update abstract')
+        res_metadata.update_element('source', element.id, abstract='update source')
+./hs_app_netCDF/tests/test_netcdf_file_update.py
+        # there shouldn't any abstract element
+        # there should be abstract element
+./hs_app_netCDF/tests/test_netcdf_metadata.py
+        # there should be abstract element
+./hs_app_netCDF/tests/test_netcdf_metadata_user_zone.py
+                'abstract': False,
+./hs_app_timeseries/migrations/0001_auto_20160829_2156.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_app_timeseries/migrations/0005_auto_20160713_1905.py
+        abstract = True
+        abstract = True
+        abstract = True
+        # we need to grab title and abstract differently depending on whether self is
+            ds_abstract = self.description.abstract
+            ds_abstract = self.abstract if self.abstract is not None else ''
+        cur.execute(update_sql, (ds_title, ds_abstract), )
+            ds_abstract = self.description.abstract
+            ds_abstract = self.abstract if self.abstract is not None else ''
+                                 ds_abstract), )
+./hs_app_timeseries/models.py
+        # there shouldn't any abstract element
+        # there should be an abstract element
+                                                   value="New abstract")
+        self.resTimeSeries.metadata.create_element('description', abstract='Testing CSV File')
+        # there shouldn't any abstract element
+./hs_app_timeseries/tests/test_timeseries_metadata.py
+        # there should be an abstract element
+./hs_app_timeseries/tests/test_timeseries_metadata_user_zone.py
+                      {"description": {"abstract": "myabstract"}}
+./hs_collection_resource/tests/test_collection.py
+        # there shouldn't be abstract element
+        # create abstract
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # there should be abstract element
+        # test update abstract
+                                abstract='Updated composite resource')
+        self.assertEqual(self.composite_resource.metadata.description.abstract,
+        # create abstract
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # create abstract
+        metadata.create_element('description', abstract='new abstract for the resource')
+./hs_composite_resource/tests/test_composite_resource.py
+        'abstract',
+./hs_core/discovery_parser.py
+            {'description': {'abstract': 'Updated Resource Abstract'}},
+./hs_core/hydroshare/resource.py
+        A user can view owners and abstract for a discoverable group.
+                # abstract = g.abstract
+                # abstract = g.abstract
+            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            # Full text search must match within the title or abstract
+                # No matches on title or abstract, so treat as no results of search
+./hs_core/hydroshare/users.py
+        output['abstract'] = ind.prepare_abstract(obj)
+    def render_abstract_phrase(field, value):
+    def resource_extended_abstract(obj):
+        output = ind.prepare_abstract(obj)
+        output = output + Features.render_abstract_phrase('sample_medium',
+        output = output + Features.render_abstract_phrase('title',
+        output = output + Features.render_abstract_phrase('creator',
+        output = output + Features.render_abstract_phrase('author',
+        output = output + Features.render_abstract_phrase('creator',
+        output = output + Features.render_abstract_phrase('contributor',
+        output = output + Features.render_abstract_phrase('subject',
+        output = output + Features.render_abstract_phrase('organization',
+        output = output + Features.render_abstract_phrase('publisher',
+        output = output + Features.render_abstract_phrase('availability',
+        output = output + Features.render_abstract_phrase('replaced',
+        output = output + Features.render_abstract_phrase('coverage_type',
+        output = output + Features.render_abstract_phrase('format',
+        output = output + Features.render_abstract_phrase('identifier',
+        output = output + Features.render_abstract_phrase('language',
+        output = output + Features.render_abstract_phrase('source',
+        output = output + Features.render_abstract_phrase('relation',
+        output = output + Features.render_abstract_phrase('resource_type',
+        output = output + Features.render_abstract_phrase('owner',
+        output = output + Features.render_abstract_phrase('geometry_type',
+        output = output + Features.render_abstract_phrase('field_name',
+        output = output + Features.render_abstract_phrase('field_type',
+        output = output + Features.render_abstract_phrase('field_type_code',
+        output = output + Features.render_abstract_phrase('variable',
+        output = output + Features.render_abstract_phrase('variable_type',
+        output = output + Features.render_abstract_phrase('variable_shape',
+        output = output + Features.render_abstract_phrase('variable_descriptive_name',
+        output = output + Features.render_abstract_phrase('variable_speciation',
+        output = output + Features.render_abstract_phrase('site',
+        output = output + Features.render_abstract_phrase('method',
+        output = output + Features.render_abstract_phrase('quality_level',
+        output = output + Features.render_abstract_phrase('data_source',
+        output = output + Features.render_abstract_phrase('sample_medium',
+        output = output + Features.render_abstract_phrase('units',
+        output = output + Features.render_abstract_phrase('units_type',
+        output = output + Features.render_abstract_phrase('extra',
+./hs_core/hydroshare/features.py
+        abstract = True
+        abstract = True
+./hs_core/irods.py
+        print('abstract')
+        pprint(ind.prepare_abstract(obj))
+./hs_core/management/commands/solr_prepare.py
+        PICKLE_FILE = "resource_abstracts_only.pkl"
+            all_resource_abstracts = pickle.load(input)
+            all_resource_abstracts = []
+                absolute_uri, x = Features.resource_extended_abstract(r)
+                all_resource_abstracts.append([resource_id, x])
+            pickle.dump(all_resource_abstracts, output)
+        tm.start(all_resource_features, all_resource_abstracts, user_resource_downloads, user_resource_other)
+./hs_core/management/commands/ara_examples.py
+    help = "Print abstract for a resource."
+            x = Features.resource_extended_abstract(res)
+./hs_core/management/commands/ara_abstract.py
+    help = "Print abstract for a resource."
+./hs_core/management/commands/ara_recommend.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                ('abstract', models.TextField()),
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_core/migrations/0001_initial.py
+                'abstract': False,
+./hs_core/migrations/0021_fundingagency.py
+        abstract = content_model.metadata.description.abstract if \
+                   'abstract': abstract,
+    abstract_form = AbstractForm(instance=content_model.metadata.description,
+               'abstract_form': abstract_form,
+./hs_core/page_processors.py
+    elif element_name == "description":   # abstract
+    elif element_name == "description":   # abstract
+./hs_core/receivers.py
+    abstract = indexes.CharField()
+    def prepare_abstract(self, obj):
+        """Return metadata abstract if exists, otherwise return None."""
+                obj.metadata.description.abstract is not None:
+            return obj.metadata.description.abstract.lstrip()
+./hs_core/search_indexes.py
+        self.abstract = None
+        # Get abstract
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
+            self.abstract = o
+        if self.abstract:
+            logger.debug("\t\tAbstract: {0}".format(self.abstract))
+        if self.abstract:
+                                                 abstract=self.abstract)
+                resource.metadata.create_element('description', abstract=self.abstract)
+./hs_core/serialization.py
+        # there should be an abstract element
+        extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
+        self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
+        # there should be an abstract element
+        extracted_abstract = "This dataset contains time series of observations of water " \
+        self.assertEqual(self.resTimeSeries.metadata.description.abstract.strip(),
+                         extracted_abstract)
+./hs_core/testing.py
+            "abstract>foo": InequalityNotAllowedError,
+            "(abstract:something": MatchingBracketsNotFoundError
+./hs_core/tests/api/native/test_discovery_parser.py
+        # test that the resource metadata does not contain abstract
+        # create a abstract for the resource
+        resource.create_metadata_element(self.res.short_id,'description', abstract='new abstract for the resource')
+        # update the abstract
+                                         abstract='Updated generic resource')
+        self.assertEqual(self.res.metadata.description.abstract, 'Updated generic resource')
+                                                                              abstract='new abstract for the resource'))
+        # delete the abstract - should raise exception
+        #abstract_sub_element = RDF_ROOT.find('.//dcterms:abstract', namespaces=self.res.metadata.NAMESPACES)
+        # self.assertEqual(abstract_sub_element.text, self.res.metadata.description.abstract,
+        #                  msg="'Description element abstract attribute value did not match.")
+        #print (abstract_sub_element.text)
+        #print(self.res.metadata.description.abstract)
+        # create a abstract for the resource
+        resource.create_metadata_element(self.res.short_id, 'description', abstract='new abstract for the resource')
+./hs_core/tests/api/native/test_core_metadata.py
+            {'description': {'abstract': 'My test abstract'}},
+        self.assertEqual(res.metadata.description.abstract, 'My test abstract')
+./hs_core/tests/api/native/test_create_resource.py
+            {'description': {'abstract': 'Updated Resource Abstract'}},
+        # check that description element (abstract) got updated
+        self.assertEqual(self.res.metadata.description.abstract, 'Updated Resource Abstract',
+                         msg='Resource abstract did not match')
+./hs_core/tests/api/native/test_update_metadata.py
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        """ Get abstract from parsed ElementTree representation of science metadata.
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        :return: String representing abstract text, if should_exist == True, else None.
+        abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+            self.assertEqual(len(abstract), 1)
+            return abstract[0].text
+            self.assertEqual(len(abstract), 0)
+./hs_core/tests/api/rest/base.py
+            {'description': {'abstract': 'My test abstract'}},
+./hs_core/tests/api/rest/test_resource_flags.py
+        abstract_text = "This is an abstract"
+            abstract = etree.SubElement(abs_rdf_desc, "{%s}abstract" % self.NS['dcterms'])
+            abstract.text = abstract_text
+            abstract = self.getAbstract(scimeta)
+            self.assertEqual(abstract, abstract_text)
+./hs_core/tests/api/rest/test_scimeta.py
+        abstract_text_1 = 'This model is created for Flat River.'
+        abstract_text_2 = ('This is a test to the SWAT Model Instance resource. '
+            abstract = self.getAbstract(scimeta)
+            self.assertEqual(abstract, abstract_text_1)
+            abstract = self.getAbstract(scimeta)
+            self.assertEqual(abstract, abstract_text_1)
+            abstract = self.getAbstract(scimeta)
+            self.assertEqual(abstract, abstract_text_2)
+./hs_core/tests/api/rest/test_scimeta_swat.py
+        abstract = 'This is a resource used for testing /hsapi/accessRules'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res.metadata.create_element('description', abstract=abstract)
+./hs_core/tests/api/rest/test_set_access_rules.py
+        description (abstract)
+        metadata.append({'description': {'abstract': "This is a great resource"}})
+./hs_core/tests/api/rest/test_create_resource.py
+            {'description': {'abstract': 'My test abstract'}},
+./hs_core/tests/api/views/test_set_resource_flag.py
+    [{'description':{'abstract': 'This is a great resource'}},
+    # TODO: folder is an abstract concept... utilize short_path for whole API
+./hs_core/views/utils.py
+                                                          abstract=r.metadata.description,
+    Title, Description (abstract), Subject (keyword), Date, Publisher, Type, Format
+        abstract = validated_request_data.get('abstract', None)
+            if abstract:
+                resource.metadata.create_element('description', abstract=abstract)
+    description (abstract)- (endpoint has a abstract parameter which should be used for specifying
+    resource abstract)
+./hs_core/views/resource_rest_api.py
+    abstract = serializers.CharField(required=False)
+    abstract = serializers.CharField()
+                               'abstract',
+./hs_core/views/serializers.py
+                        Field('abstract', css_class=field_width),
+            self.fields['abstract'].widget.attrs['disabled'] = True
+            self.fields['abstract'].widget.attrs['style'] = "background-color:white;"
+        fields = ['abstract']
+        labels = {'abstract': ''}
+    """Validate Abstract form with abstract field."""
+    abstract = forms.CharField(max_length=5000)
+./hs_core/forms.py
+        """Define meta properties for ResourcePermissionsMixin, make abstract."""
+        abstract = True
+    """Define abstract class for all metadata elements."""
+    # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
+        abstract = True
+        abstract = True
+    abstract = models.TextField()
+        """Return abstract field for unicode representation."""
+        return self.abstract
+        abstract = True
+        """Pass through to abstract resource can_add function."""
+        """Pass through to abstract resource can_add function."""
+        """Pass through to abstract resource can_delete function."""
+        """Pass through to abstract resource can_view function."""
+    # TODO: utilize "reverse" abstraction to tie this to urls.py for robustness
+    _description = GenericRelation(Description)    # resource abstract
+            parsed_metadata.append({"description": {"abstract": metadata.pop('description')}})
+        elif len(self.description.abstract.strip()) == 0:
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % self.NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.description.abstract
+./hs_core/models.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_file_types/migrations/0001_initial.py
+                'abstract': False,
+                'abstract': False,
+./hs_file_types/migrations/0002_auto_20170216_1904.py
+                'abstract': False,
+                'abstract': False,
+./hs_file_types/migrations/0004_geofeaturefilemetadata_geofeaturelogicalfile.py
+                'abstract': False,
+                'abstract': False,
+./hs_file_types/migrations/0005_reftimeseriesfilemetadata_reftimeserieslogicalfile.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_file_types/migrations/0006_auto_20170812_1621.py
+            name='abstract',
+./hs_file_types/migrations/0006_reftimeseriesfilemetadata_abstract.py
+        ('hs_file_types', '0006_reftimeseriesfilemetadata_abstract'),
+            name='abstract',
+./hs_file_types/migrations/0007_timeseriesfilemetadata_abstract.py
+        abstract = True
+        abstract = True
+./hs_file_types/models/base.py
+                    abstract = shp_xml_metadata['description']['abstract']
+                                                     abstract=abstract)
+        abstract
+                    description = {'description': {'abstract': description_value}}
+./hs_file_types/models/geofeature.py
+    # add abstract (Description element)
+            add_abstract_metadata(res_meta_list, extracted_core_meta)
+        add_abstract_metadata(res_meta_list, extracted_core_meta)
+def add_abstract_metadata(metadata_list, extracted_metadata):
+    Adds data for the abstract (Description) element to the *metadata_list*
+    :param metadata_list: list to  which abstract data needs to be added
+        description = {'description': {'abstract': extracted_metadata['description']}}
+                nc_dataset.summary = instance.metadata.description.abstract
+./hs_file_types/models/netcdf.py
+    # this is to store abstract
+    abstract = models.TextField(null=True, blank=True)
+    def has_abstract_in_json(self):
+        """checks if abstract is in the uploaded json file"""
+        return 'abstract' in json_data_dict['timeSeriesReferenceFile']
+    def get_abstract_from_json(self):
+        """get the abstract associated with this ref time series from the json file"""
+        if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['abstract']
+            if self.abstract:
+                abstract_div = div(cls="col-xs-12 content-block")
+                with abstract_div:
+                    p(self.abstract)
+                html_string += abstract_div.render()
+            abstract_div = div(cls="col-xs-12 content-block")
+            with abstract_div:
+                if self.has_abstract_in_json:
+                    p(self.abstract)
+                    self.get_abstract_form()
+    def get_abstract_form(self):
+        form_action = "/hsapi/_internal/{}/update-reftimeseries-abstract/"
+        # if json file contains abstract then we don't need this form since abstract can't be
+        if self.has_abstract_in_json:
+            with form(action=form_action, id="filetype-abstract",
+                            textarea(self.abstract,
+                                     id="file_abstract", cols=40, rows=5,
+                                     name="abstract")
+        # create the abstract element
+        if self.abstract:
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.abstract
+    # add resource level abstract if necessary
+    logical_file_abstract = logical_file.metadata.get_abstract_from_json()
+    if resource.metadata.description is None and logical_file.metadata.has_abstract_in_json:
+                                         abstract=logical_file_abstract)
+    logical_file.metadata.abstract = logical_file_abstract
+                "abstract": {"type": "string"},
+./hs_file_types/models/reftimeseries.py
+    # this is to store abstract
+    abstract = models.TextField(null=True, blank=True)
+        if self.abstract:
+            abstract_div = div(cls="col-xs-12 content-block")
+            with abstract_div:
+                p(self.abstract)
+            html_string += abstract_div.render()
+            self.get_abstract_form()
+    def get_abstract_form(self):
+        form_action = "/hsapi/_internal/{}/update-timeseries-abstract/"
+        if self.abstract:
+            abstract = self.abstract
+            abstract = ''
+            with form(action=form_action, id="filetype-abstract",
+                            textarea(abstract,
+                                     id="file_abstract", cols=40, rows=5,
+                                     name="abstract")
+        if self.abstract:
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.abstract
+        copy_of_logical_file.metadata.abstract = self.metadata.abstract
+            # extract abstract and title
+            # create abstract/description element
+                                                     abstract=dataset["DataSetAbstract"])
+                    logical_file.metadata.abstract = dataset["DataSetAbstract"].strip()
+                # update dataset table for changes in title and abstract
+./hs_file_types/models/timeseries.py
+        # set resource abstract
+        self.composite_resource.metadata.create_element('description', abstract="Some abstract")
+        # test that the abstract has not changed
+        self.assertEqual(self.composite_resource.metadata.description.abstract, "Some abstract")
+    def test_set_file_type_to_file_with_missing_abstract(self):
+        # to RefTimeseries file type which should be successful even though it is missing abstract
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_abstract_file_name)
+        tgt_temp_refts_missing_abstract_file = os.path.join(
+            self.temp_dir, self.refts_missing_abstract_file_name)
+        shutil.copy(self.refts_missing_abstract_file, tgt_temp_refts_missing_abstract_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_abstract_file, 'r')
+./hs_file_types/tests/test_reftimeseries_metadata.py
+        # there should not be any file level abstract
+        self.assertEqual(logical_file.metadata.abstract, None)
+./hs_file_types/tests/test_timeseries_metadata.py
+    delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
+    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata
+    def test_update_abstract_refts_failure(self):
+        # we should not be able to update abstract since the json file
+        # has the abstract element
+        # test that the abstract key is in json file
+        self.assertTrue(logical_file.metadata.has_abstract_in_json)
+        # check abstract before updating via the view function
+        orig_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), " \
+        self.assertEqual(logical_file.metadata.abstract, orig_abstract)
+        url = reverse('update_reftimeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        response = update_refts_abstract(request, file_type_id=logical_file.id)
+        # check abstract after updating via the view function
+        # abstract should not have changed
+        self.assertNotEqual(logical_file.metadata.abstract, new_abstract)
+        self.assertEqual(logical_file.metadata.abstract, orig_abstract)
+    def test_update_abstract_refts_success(self):
+        # we should be able to update abstract since the json file
+        # does't have the abstract element
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_abstract_file_name)
+        tgt_temp_refts_abstract_file = os.path.join(
+            self.temp_dir, self.refts_missing_abstract_file_name)
+        shutil.copy(self.refts_missing_abstract_file, tgt_temp_refts_abstract_file)
+        self.refts_file_obj = open(self.refts_missing_abstract_file, 'r')
+        # test that the abstract key is not in json file
+        self.assertFalse(logical_file.metadata.has_abstract_in_json)
+        self.assertEqual(logical_file.metadata.abstract, "")
+        url = reverse('update_reftimeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        response = update_refts_abstract(request, file_type_id=logical_file.id)
+        # check abstract after updating via the view function
+        # abstract should have changed
+        self.assertEqual(logical_file.metadata.abstract, new_abstract)
+    def test_update_abstract_timeseries(self):
+        # we should be able to update abstract for time series file type
+        # does't have the abstract element
+        url = reverse('update_timeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        response = update_timeseries_abstract(request, file_type_id=logical_file.id)
+        # check abstract after updating via the view function
+        # abstract should have changed
+        self.assertEqual(logical_file.metadata.abstract, new_abstract)
+        # we should be able to update abstract for time series file type
+        # does't have the abstract element
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        logical_file.metadata.abstract = "new abstract for time series file type"
+./hs_file_types/tests/test_view_functions.py
+    # there should be an abstract element
+    extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
+    self.assertEqual(self.composite_resource.metadata.description.abstract, extracted_abstract)
+    # resource abstract should have been updated from the abstract value in json file
+    abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), " \
+    self.assertEqual(self.composite_resource.metadata.description.abstract, abstract)
+    # file level abstract
+    self.assertEqual(logical_file.metadata.abstract, abstract)
+    # there should be an abstract element
+    extracted_abstract = "This dataset contains time series of observations of water " \
+    self.assertEqual(self.composite_resource.metadata.description.abstract.strip(),
+                     extracted_abstract)
+    # test abstract
+    self.assertEqual(logical_file.metadata.abstract, extracted_abstract)
+./hs_file_types/tests/utils.py
+        r'update-reftimeseries-abstract/$',
+        views.update_refts_abstract,
+        name="update_reftimeseries_abstract"),
+        r'update-timeseries-abstract/$',
+        views.update_timeseries_abstract,
+        name="update_timeseries_abstract"),
+./hs_file_types/urls.py
+def update_refts_abstract(request, file_type_id, **kwargs):
+    """updates the abstract for ref time series specified logical file object
+                              'element_name': 'abstract', 'message': "Permission denied"}
+    if logical_file.metadata.has_abstract_in_json:
+        # if json file has abstract, we can't update abstract
+                              'element_name': 'abstract', 'message': "Permission denied"}
+    abstract = request.POST['abstract']
+    if abstract.strip():
+        logical_file.metadata.abstract = abstract
+                              'element_name': 'abstract', 'message': "Update was successful"}
+                              'element_name': 'abstract', 'message': "Data is missing for abstract"}
+def update_timeseries_abstract(request, file_type_id, **kwargs):
+    """updates the abstract for time series specified logical file object
+                              'element_name': 'abstract', 'message': "Permission denied"}
+    abstract = request.POST['abstract']
+    if abstract.strip():
+        metadata.abstract = abstract
+                              'element_name': 'abstract', "is_dirty": metadata.is_dirty,
+                              'element_name': 'abstract', 'message': "Data is missing for abstract"}
+./hs_file_types/views.py
+                'abstract': False,
+./hs_geo_raster_resource/migrations/0001_initial.py
+        abstract = True
+./hs_geo_raster_resource/models.py
+        # there shouldn't any abstract element
+        # there should be no abstract element
+        self.resRaster.metadata.create_element('description', abstract='example abstract')
+./hs_geo_raster_resource/tests/test_raster_metadata.py
+        # there should be no abstract element
+./hs_geo_raster_resource/tests/test_raster_metadata_user_zone.py
+                'abstract': False,
+./hs_geographic_feature_resource/migrations/0001_initial.py
+        abstract = True
+./hs_geographic_feature_resource/models.py
+        # test that if a .xml file gets added then the resource abstract and keywords get
+        # updated. Abstract gets updated only if the there is no abstract already
+        # there should not be any abstract
+        # there should be abstract now (abstract came from the xml file)
+        # test that if a .xml file gets added then the resource title and abstract gets
+        # updated. Abstract gets updated only if the there is no abstract already. Title
+        # there should not be any abstract
+        # there should be abstract now (abstract came from the xml file)
+        # test abstract
+                      resGeoFeature2.metadata.description.abstract)
+./hs_geographic_feature_resource/tests/test_geo_feature.py
+                'abstract': False,
+./hs_model_program/migrations/0001_initial.py
+        # there shouldn't any abstract element
+        self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
+        self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
+        self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
+        # there should be an abstract element
+        self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
+./hs_model_program/tests/test_model_program_metadata.py
+                'abstract': False,
+                'abstract': False,
+./hs_modelinstance/migrations/0001_initial.py
+        # there shouldn't any abstract element
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
+        # there should be an abstract element
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
+./hs_modelinstance/tests/test_modelinstance_metadata.py
+                'abstract': False,
+./hs_modflow_modelinstance/migrations/0001_initial.py
+        abstract = True
+./hs_modflow_modelinstance/models.py
+        # there shouldn't any abstract element
+        self.res.metadata.create_element('Description', abstract="test abstract")
+        self.res.metadata.create_element('Description', abstract="test abstract")
+        self.res.metadata.create_element('Description', abstract="test abstract")
+        # there should be an abstract element
+        self.res.metadata.create_element('Description', abstract="test abstract")
+./hs_modflow_modelinstance/tests/test_modflow_modelinstance_metadata.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_swat_modelinstance/migrations/0001_initial.py
+        # there shouldn't any abstract element
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        # there should be an abstract element
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+./hs_swat_modelinstance/tests/test_swat_modelinstance_metadata.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./hs_tools_resource/migrations/0001_initial.py
+                'abstract': False,
+./hs_tools_resource/migrations/0004_auto_20151204_2301.py
+                'abstract': False,
+./hs_tools_resource/migrations/0008_auto_20160729_1811.py
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+                'abstract': False,
+./ref_ts/migrations/0001_initial.py
+                'abstract': False,
+./ref_ts/migrations/0004_auto_20160114_0252.py
+                    series = data.loc[data['resource_id'] == resource, 'abstract']
+                        series = data.loc[data['resource_id'] == resource, 'abstract']
+    def start(self, all_resource_features, all_resource_abstracts, user_resource_downloads, user_resource_other):
+        # not using all_resource_features now, only all_resource_extended/abstracts
+        print "len(all_resource_abstracts)", len(all_resource_abstracts)
+        # read resource 'extended' abstracts
+        np_arr = np.array(all_resource_abstracts)
+        abstracts = np_arr[:, 1]
+        data = pd.DataFrame({'resource_id': resource_ids, 'abstract': abstracts})
+        # contents_ravel = data['title'] + " " + data['abstract']
+        contents_ravel = abstracts
+./hs_explore/topic_modeling.py
+    help = "Print abstract for a resource."
+       #     x = Features.resource_extended_abstract(res)
+./hs_explore/management/commands/recommend.py
