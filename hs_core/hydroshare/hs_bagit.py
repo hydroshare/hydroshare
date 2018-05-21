@@ -52,7 +52,7 @@ def delete_files_and_bag(resource):
 
 def create_bag(resource):
 
-    resource.setAVU("bag_modified", True)
+    # resource.setAVU("bag_modified", True)
 
     checksums = ['md5', 'sha256']
 

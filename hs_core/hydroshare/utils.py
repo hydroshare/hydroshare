@@ -998,6 +998,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='', source_size=0
         ret.logical_file_content_object = logical_file
         ret.save()
 
+
     return ret
 
 
