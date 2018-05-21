@@ -498,11 +498,11 @@ class CompositeResource(BaseResource):
         from all the contained aggregations (logical file) only if the resource coverage is not
         already set"""
 
-        # update resource spatial coverage only if it is empty
+        # update resource spatial coverage only if there is no spatial coverage already
         if self.metadata.spatial_coverage is None:
             self.update_spatial_coverage()
 
-        # update resource temporal coverage only if it empty
+        # update resource temporal coverage only if there is no temporal coverage already
         if self.metadata.temporal_coverage is None:
             self.update_temporal_coverage()
 
