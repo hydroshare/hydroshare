@@ -218,12 +218,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def get_allowed_uploaded_file_types(cls):
         """only .zip and .tif file can be set to this logical file group"""
-        return [".zip", ".tif"]
+        return [".zip", ".tif", ".tiff"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are: .tif and .vrt"""
-        return [".tif", ".vrt"]
+        return [".tiff", ".tif", ".vrt"]
 
     @staticmethod
     def get_aggregation_display_name():
@@ -281,7 +281,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             return ""
 
         # check if there are multiple tif files, then there has to be one vrt file
-        tif_files = [f for f in files if f.extension.lower() == ".tif"]
+        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower() ==
+                     ".tiff"]
         if len(tif_files) > 1:
             if len(vrt_files) != 1:
                 return ""
@@ -436,7 +437,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def get_primary_resouce_file(cls, resource_files):
         """Gets a resource file that has extension .tif from the list of files *resource_files* """
 
-        res_files = [f for f in resource_files if f.extension.lower() == '.tif']
+        res_files = [f for f in resource_files if f.extension.lower() == '.tif' or
+                     f.extension.lower() == '.tiff']
         return res_files[0] if res_files else None
 
 
@@ -457,14 +459,15 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     ext = ext.lower()
     create_vrt = True
-    if ext == '.tif':
+    if ext == '.tif' or ext == '.tiff':
         if raster_folder is not None:
             res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                                  sub_folders=False)
 
             # check if there is already a vrt file in that folder
             vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
-            tif_files = [f for f in res_files if f.extension.lower() == ".tif"]
+            tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
+                         f.extension.lower() == ".tiff"]
             if vrt_files:
                 if len(vrt_files) > 1:
                     error_info.append("More than one vrt file was found.")
@@ -520,7 +523,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
             error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
             return error_info, []
 
-        if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
+        if set(files_ext) == {'.vrt', '.tif', '.tiff'} and files_ext.count('.vrt') == 1:
             vrt_file_path = new_resource_files_to_add[files_ext.index('.vrt')]
             raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
             if raster_dataset is None:
@@ -569,7 +572,8 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
                         error_info.append(msg)
                         break
 
-        elif files_ext.count('.tif') > 1 and files_ext.count('.vrt') == 0:
+        elif (files_ext.count('.tif') + files_ext.count('.tiff')) > 1\
+                and files_ext.count('.vrt') == 0:
             msg = "Since multiple tif files are found, a vrt file is required."
             error_info.append(msg)
             new_resource_files_to_add = []

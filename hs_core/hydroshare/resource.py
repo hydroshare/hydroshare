@@ -685,17 +685,18 @@ def add_resource_files(pk, *files, **kwargs):
             from hs_file_types.utils import set_logical_file_type
             # check folders for aggregations
             for fol in new_folders:
-                folder = resource.short_id + "/data/contents/" + fol
+                folder = os.path.join(resource.file_path, fol)
                 agg_type = resource.get_folder_aggregation_type_to_set(folder)
-                if agg_type is not None and agg_type is not '':
+                if agg_type:
                     agg_type = agg_type.replace('LogicalFile', '')
                     set_logical_file_type(res=resource, user=None, file_id=None,
                                           hs_file_type=agg_type, folder_path=fol,
                                           fail_feedback=False)
             # check files for aggregation
             for res_file in ret:
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      fail_feedback=False)
+                if not res_file.has_logical_file:
+                    set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                          fail_feedback=False)
         # some file(s) added, need to update quota usage
         update_quota_usage(resource)
     return ret
