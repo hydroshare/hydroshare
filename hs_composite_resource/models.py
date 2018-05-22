@@ -74,20 +74,20 @@ class CompositeResource(BaseResource):
         aggregation_type_to_set = ""
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
-            return aggregation_type_to_set
+            return None
 
         istorage = self.get_irods_storage()
         store = istorage.listdir(dir_path)
         if store[0]:
             # seems there are folders under dir_path - no aggregation type can be set if the target
             # folder contains other folders
-            return aggregation_type_to_set
+            return None
 
         files_in_folder = [res_file for res_file in self.files.all()
                            if res_file.dir_path == dir_path]
         if not files_in_folder:
             # folder is empty
-            return aggregation_type_to_set
+            return None
         if len(files_in_folder) > 1:
             # check for geo feature
             aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
@@ -117,7 +117,7 @@ class CompositeResource(BaseResource):
             if aggregation_type_to_set:
                 return aggregation_type_to_set
 
-        return aggregation_type_to_set
+        return None
 
     @property
     def supports_folders(self):
@@ -217,7 +217,7 @@ class CompositeResource(BaseResource):
 
     def get_aggregation_by_name(self, name):
             """Get an aggregation that matches the aggregation name specified by *name*
-            :param  name: name of the aggregation to find
+            :param  name: name (aggregation path) of the aggregation to find
             :return an aggregation object if found
             :raises ObjectDoesNotExist if no matching aggregation is found
             """
@@ -238,97 +238,8 @@ class CompositeResource(BaseResource):
         aggregation so that new xml documents can be recreated
         """
 
-        """
-        check if the following logic meets the use cases of file/folder rename/move
-        case-1 (renaming a single aggregation at the root):
-                orgi_aggr: text.txt
-                new_aggr: text_rename.txt
-                Note: needs deleting old xml files
-
-        case-2 (renaming a single aggregation inside a folder):
-                orgi_aggr: folder_1/text.txt
-                new_aggr: folder_1/text_rename.txt
-                Note: needs deleting old xml files
-
-        case-3 (renaming a folder that contains a single aggregation):
-                orgi_aggr: folder_1/text.txt
-                new_aggr: folder_2/text.txt
-                Note: no need for deleting old xml files
-
-        case-3.1 (renaming a folder that contains a single aggregation):
-                orgi_aggr: folder_1/folder_A/text.txt
-                new_aggr: folder_2/folder_A/text.txt
-                Note: no need for deleting old xml files
-
-        case-4 (moving a single aggregation file to a folder: folder_1):
-                orgi_aggr: text.txt
-                new_aggr: folder_1/text.txt
-                Note: needs deleting old xml files
-
-        case-4.1 (moving a single aggregation file to a folder: folder_2):
-                orgi_aggr: /folder_1/text.txt
-                new_aggr: folder_2/text.txt
-                Note: needs deleting old xml files
-
-        case-5 (moving a folder: folder_1 containing a single aggregation file to a folder:
-        folder_2):
-                orgi_aggr: /folder_1/text.txt
-                new_aggr: folder_2/folder_1/text.txt
-                Note: no need for deleting old xml files
-
-        case-6 (renaming a folder that contains a multi-file aggregation):
-                orgi_aggr: folder_1 [folder_1/logan.nc]
-                new_aggr: folder_2 [folder_2/logan.nc]
-                Note: needs deleting old xml files
-
-        case-7 (moving a folder:folder_1 that conatins a multi-file aggregation to another folder:
-        folder_2):
-                orgi_aggr: folder_1 [folder_1/logan.nc]
-                new_aggr: folder_2/folder_1 [folder_2/folder_1/logan.nc]
-                Note: no need for deleting old xml files
-
-        case-8 (renaming a non-aggregation file at the root):
-                orgi_aggr: text.txt
-                new_aggr: text_rename.txt
-                Note: no need for deleting old xml files or generating xml files
-
-        case-9 (renaming a non-aggregation file inside a folder):
-                orgi_aggr: folder_1/text.txt
-                new_aggr: folder_1/text_rename.txt
-                Note: no need for deleting old xml files or generating xml files
-
-        case-10 (renaming a folder that contains a non-aggregation files):
-                orgi_aggr: folder_1
-                new_aggr: folder_2
-                Note: no need for deleting old xml files or generating xml files
-
-        case-11 (moving a single non-aggregation file to a folder: folder_1):
-                orgi_aggr: text.txt
-                new_aggr: folder_1/text.txt
-                Note: no need for deleting old xml files or generating xml files
-
-        case-12 (moving a folder: folder_1 containing a non-aggregation file to a folder: folder_2):
-                orgi_aggr: folder_1
-                new_aggr: folder_2/folder_1
-                Note: no need for deleting old xml files or generating xml files
-
-        case-13 (moving a folder:folder_1 that contains multile multi-file aggregation to
-        another folder: folder_2):
-                orgi_aggr: folder_1 [folder_1/netcdf/logan.nc, folder_1/raster/logan.tif]
-                new_aggr: folder_2/folder_1 [folder_2/folder_1/netcdf/logan.nc,
-                folder_2/folder_1/raster/logan.tif]
-                Note: no need for deleting old xml files
-
-        case-14 (moving a folder:folder_1 that conatins multile multi-file aggregation and
-        single file aggregations to another folder: folder_2):
-                orgi_aggr: folder_1 [folder_1/netcdf/logan.nc,
-                folder_1/rasetr/logan.tif, folder_1/text.txt]
-                new_aggr: folder_2/folder_1 [folder_2/folder_1/netcdf/logan.nc,
-                folder_2/folder_1/rasetr/logan.tif, folder_2/folder_1/text.txt]
-                Note: no need for deleting old xml files
-        """
-
         def delete_old_xml_files(folder=''):
+            istorage = self.get_irods_storage()
             meta_xml_file_name = orig_aggr_name + "_meta.xml"
             map_xml_file_name = orig_aggr_name + "_resmap.xml"
             if not folder:
@@ -353,72 +264,17 @@ class CompositeResource(BaseResource):
         is_new_aggr_a_folder = ext == ''
 
         if is_new_aggr_a_folder:
-            # case-3, case-5, case-6, case-7, case-10, case-12, case-13, case-14
+            delete_old_xml_files(folder=new_aggr_name)
             self._recreate_xml_docs_for_folder(new_aggr_name)
         else:
             # check if there is a matching single file aggregation
             try:
-                # case-1, case-2, case-4 & 4.1
                 aggregation = self.get_aggregation_by_name(new_aggr_name)
+                delete_old_xml_files()
                 aggregation.create_aggregation_xml_documents()
             except ObjectDoesNotExist:
-                # case-8, case-9, case-11
                 # the file path *new_aggr_name* is not a single file aggregation - no more
                 # action is needed
-                return
-
-        # we have to delete old _meta.xml file and _resmap.xml file if they exist
-        # first check if the orig_aggr_name is a folder path or file path
-        istorage = self.get_irods_storage()
-        is_folder_renamed = False
-        is_file_moved = False
-        is_file_renamed = False
-
-        if not is_new_aggr_a_folder:
-            # case of single file aggregation possible file rename or move
-            # find if this a case of file renaming
-            if '/' in new_aggr_name:
-                # new aggregation name contains folder path
-                new_folder, new_file_name = os.path.split(new_aggr_name)
-                old_folder, old_file_name = os.path.split(orig_aggr_name)
-                if new_file_name != old_file_name:
-                    # case-2
-                    is_file_renamed = True
-                else:
-                    # case-4
-                    is_file_moved = True
-            else:
-                # case-1
-                is_file_renamed = True
-        else:
-            # case of multi-file aggregation possible folder re-naming or folder move
-            # find if this is a case of folder renaming
-            if '/' in orig_aggr_name:
-                _, moved_folder = os.path.split(orig_aggr_name)
-            else:
-                moved_folder = orig_aggr_name
-            if not new_aggr_name.endswith(moved_folder):
-                # case of folder renaming - handles case-6
-                is_folder_renamed = True
-
-        # case-3 & 3.1, 5, 13, 14 - there is no need to delete xml files as it is case of folder
-        # renaming or folder moving
-
-        if is_file_renamed or is_file_moved:
-            # case of single file aggregation
-            # case-1, case-2, case-4 & 4.1
-            delete_old_xml_files()
-        elif is_folder_renamed:
-            # case of multi-file aggregation
-            # folder move (case-7) does not require deleting old xml files in case of
-            # multi-aggregation only folder rename requires deleting old xml files
-            # case-6
-            # old xml files need to be deleted only if the new folder represents an aggregation
-            try:
-                self.get_aggregation_by_name(new_aggr_name)
-                delete_old_xml_files(folder=new_aggr_name)
-            except ObjectDoesNotExist:
-                # target folder is not an aggregation
                 pass
 
     def supports_folder_creation(self, folder_full_path):
@@ -496,7 +352,7 @@ class CompositeResource(BaseResource):
         else:
             is_moving_folder = True
 
-        if is_renaming_file:
+        def check_file_rename_or_move():
             # see if the folder containing the file represents an aggregation
             if src_file_dir != self.file_path:
                 aggregation_path = src_file_dir[len(self.file_path) + 1:]
@@ -506,48 +362,36 @@ class CompositeResource(BaseResource):
                 except ObjectDoesNotExist:
                     # check if the source file represents an aggregation
                     aggregation_path = os.path.join(aggregation_path, src_file_name)
-                    try:
-                        aggregation = self.get_aggregation_by_name(aggregation_path)
+                    aggregation = self.get_aggregation_by_name(aggregation_path)
+                    if is_renaming_file:
                         return aggregation.supports_resource_file_rename
-                    except ObjectDoesNotExist:
-                        # source is not an aggregation - no restriction
-                        return True
+                    else:
+                        return aggregation.supports_resource_file_move
             else:
                 # check if the source file represents an aggregation
                 aggregation_path = src_file_name
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
+                aggregation = self.get_aggregation_by_name(aggregation_path)
+                if is_renaming_file:
                     return aggregation.supports_resource_file_rename
-                except ObjectDoesNotExist:
-                    # source is not an aggregation - no restriction
-                    return True
+                else:
+                    return aggregation.supports_resource_file_move
+
+        if is_renaming_file:
+            # see if the folder containing the file represents an aggregation
+            try:
+                can_rename = check_file_rename_or_move()
+                return can_rename
+            except ObjectDoesNotExist:
+                return True
+
         elif is_moving_file:
             # check source - see if the folder containing the file represents an aggregation
-            if src_file_dir != self.file_path:
-                aggregation_path = src_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.supports_resource_file_move
-                except ObjectDoesNotExist:
-                    # check if the source file represents an aggregation
-                    aggregation_path = os.path.join(aggregation_path, src_file_name)
-                    try:
-                        aggregation = self.get_aggregation_by_name(aggregation_path)
-                        if not aggregation.supports_resource_file_move:
-                            return False
-                    except ObjectDoesNotExist:
-                        # source is not an aggregation
-                        pass
-            else:
-                # check if the source file represents an aggregation
-                aggregation_path = src_file_name
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    if not aggregation.supports_resource_file_move:
-                        return False
-                except ObjectDoesNotExist:
-                    # source file is not an aggregation
-                    pass
+            try:
+                can_move = check_file_rename_or_move()
+                if not can_move:
+                    return can_move
+            except ObjectDoesNotExist:
+                pass
 
             # check target folder only if it is not the root
             if tgt_file_dir != self.file_path:
@@ -654,11 +498,11 @@ class CompositeResource(BaseResource):
         from all the contained aggregations (logical file) only if the resource coverage is not
         already set"""
 
-        # update resource spatial coverage only if it is empty
+        # update resource spatial coverage only if there is no spatial coverage already
         if self.metadata.spatial_coverage is None:
             self.update_spatial_coverage()
 
-        # update resource temporal coverage only if it empty
+        # update resource temporal coverage only if there is no temporal coverage already
         if self.metadata.temporal_coverage is None:
             self.update_temporal_coverage()
 

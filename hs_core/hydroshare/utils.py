@@ -279,21 +279,11 @@ def get_file_from_irods(res_file, temp_dir=None):
         tmpdir = temp_dir
     else:
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
+        os.makedirs(tmpdir)
 
     tmpfile = os.path.join(tmpdir, file_name)
-
-    # TODO: If collisions occur, really bad things happen.
-    # TODO: Directories are never cleaned up when unused. need cache management.
-    if temp_dir is None:
-        try:
-            os.makedirs(tmpdir)
-        except OSError as ex:
-            if ex.errno == errno.EEXIST:
-                shutil.rmtree(tmpdir)
-                os.makedirs(tmpdir)
-            else:
-                raise Exception(ex.message)
-
     istorage.getFile(res_file_path, tmpfile)
     copied_file = tmpfile
     return copied_file
@@ -964,9 +954,12 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     :return: The identifier of the ResourceFile added.
     """
 
+    # validate parameters
+    if check_target_folder and resource.resource_type != 'CompositeResource':
+        raise ValidationError("Resource must be a CompositeResource for validating target folder")
+
     if f:
-        if check_target_folder and folder is not None and \
-                resource.resource_type == 'CompositeResource':
+        if check_target_folder and folder is not None:
                 tgt_full_upload_path = os.path.join(resource.file_path, folder)
                 if not resource.can_add_files(target_full_path=tgt_full_upload_path):
                     err_msg = "File can't be added to this folder which represents an aggregation"

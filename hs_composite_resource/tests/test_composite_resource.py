@@ -35,6 +35,11 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.generic_file_name = 'generic_file.txt'
         self.generic_file = 'hs_composite_resource/tests/data/{}'.format(self.generic_file_name)
 
+    def tearDown(self):
+        super(CompositeResourceTest, self).tearDown()
+        if self.composite_resource:
+            self.composite_resource.delete()
+
     def test_create_composite_resource(self):
         # test that we can create a composite resource
 
@@ -45,7 +50,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
-        self.composite_resource.delete()
 
     def test_create_composite_resource_with_file_upload(self):
         # test that when we create composite resource with an uploaded file, then the uploaded file
@@ -76,6 +80,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should be no GenericFileMetaData object at this point
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
+        # setting resource to None to avoid deleting resource again in tearDown() since we have
+        # deleted the resource already
+        self.composite_resource = None
 
     def test_add_file_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file
@@ -96,7 +103,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.has_logical_file, False)
         # there should be 0 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
-        self.composite_resource.delete()
 
     def test_aggregation_folder_delete(self):
         # here we are testing that when a folder is deleted containing
@@ -138,7 +144,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # there should be 1 GenericLogicalFile objects
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        self.composite_resource.delete()
 
     def test_core_metadata_CRUD(self):
         """test that all core metadata elements work for this resource type"""
@@ -352,7 +357,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.update_element('contributor', contributor.id, email='LSmith@gmail.com')
         contributor = self.composite_resource.metadata.contributors.first()
         self.assertEqual(contributor.email, 'LSmith@gmail.com')
-        self.composite_resource.delete()
 
     def test_metadata_xml(self):
         """Test that the call to resource.get_metadata_xml() doesn't raise exception
@@ -403,8 +407,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.composite_resource.get_metadata_xml()
         except Exception as ex:
             self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
-
-        self.composite_resource.delete()
 
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage
@@ -622,7 +624,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         hydroshare.delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
         self.assertEqual(self.composite_resource.files.count(), 0)
         self.assertEqual(self.composite_resource.metadata.coverages.count(), 2)
-        self.composite_resource.delete()
 
     def test_get_aggregations(self):
         """Here wre are testing the function 'get_logical_files()'
@@ -663,8 +664,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(len(self.composite_resource.get_logical_files('GenericLogicalFile')), 1)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
-        self.composite_resource.delete()
-
     def test_can_be_public_or_discoverable_with_no_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
         This function should return False unless we have the required metadata at the resource level
@@ -698,7 +697,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
-        self.composite_resource.delete()
 
     def test_can_be_public_or_discoverable_with_single_file_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
@@ -737,7 +735,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
-        self.composite_resource.delete()
 
     def test_can_be_public_or_discoverable_with_multi_file_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
@@ -775,7 +772,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
-        self.composite_resource.delete()
 
     def test_supports_folder_creation_non_aggregation_folder(self):
         """Here we are testing the function supports_folder_creation()
@@ -809,8 +805,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_full_path = os.path.join(new_folder_full_path, "another-folder")
         self.assertTrue(self.composite_resource.supports_folder_creation(new_folder_full_path))
 
-        self.composite_resource.delete()
-
     def test_supports_folder_creation_single_file_aggregation_folder(self):
         """Here we are testing the function supports_folder_creation()
         Test that this function returns True when we check for creating a folder inside a folder
@@ -843,8 +837,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_full_path = os.path.join(new_folder_full_path, "another-folder")
         self.assertTrue(self.composite_resource.supports_folder_creation(new_folder_full_path))
 
-        self.composite_resource.delete()
-
     def test_supports_folder_creation_multi_file_aggregation_folder(self):
         """Here we are testing the function supports_folder_creation()
         Test that this function returns False when we check for creating a folder inside a folder
@@ -871,7 +863,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_path = os.path.join(self.composite_resource.file_path,
                                        tif_res_file.file_folder, 'my-new-folder')
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
-        self.composite_resource.delete()
 
     def test_supports_rename_single_file_aggregation_file(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -898,8 +889,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
-
-        self.composite_resource.delete()
 
     def test_supports_rename_multi_file_aggregation_file(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -929,8 +918,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
-
-        self.composite_resource.delete()
 
     def test_supports_move_single_file_aggregation_file(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -962,8 +949,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
-
-        self.composite_resource.delete()
 
     def test_supports_rename_single_file_aggregation_folder(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -1003,8 +988,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
 
-        self.composite_resource.delete()
-
     def test_supports_rename_multi_file_aggregation_folder(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
         composite resource class
@@ -1031,8 +1014,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
-
-        self.composite_resource.delete()
 
     def test_supports_move_multi_file_aggregation_file(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -1063,7 +1044,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
-        self.composite_resource.delete()
 
     def test_supports_move_multi_file_aggregation_folder(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -1097,8 +1077,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
 
-        self.composite_resource.delete()
-
     def test_supports_zip_non_aggregation_folder(self):
         """Here we are testing the function supports_zip()
         Test that zipping a folder that contains file(s) that is not part of any aggregation
@@ -1124,8 +1102,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that we can zip the folder my_new_folder as this folder has no aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, new_folder)
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
-
-        self.composite_resource.delete()
 
     def test_supports_zip_single_file_aggregation_folder(self):
         """Here we are testing the function supports_zip()
@@ -1154,8 +1130,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that we can't zip the folder my_new_folder as this folder has aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, new_folder)
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
-
-        self.composite_resource.delete()
 
     def test_supports_zip_single_file_aggregation_parent_folder(self):
         """Here we are testing the function supports_zip()
@@ -1200,8 +1174,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         folder_to_zip = os.path.join(self.composite_resource.file_path, parent_folder)
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
 
-        self.composite_resource.delete()
-
     def test_supports_zip_multi_file_aggregation_folder(self):
         """Here we are testing the function supports_zip()
         Test that zipping a folder that represents a multi-file aggregation
@@ -1225,8 +1197,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that we can't zip the folder that represents the aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, res_file.file_folder)
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
-
-        self.composite_resource.delete()
 
     def test_supports_zip_multi_file_aggregation_parent_folder(self):
         """Here we are testing the function supports_zip()
@@ -1266,8 +1236,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # the folder that represents an aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, parent_folder)
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
-
-        self.composite_resource.delete()
 
     def test_supports_delete_original_folder_on_zip(self):
         """Here we are testing the function supports_delete_original_folder_on_zip() of the
@@ -1321,4 +1289,4 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing - aggregation folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
-        self.composite_resource.delete()
+

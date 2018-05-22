@@ -779,7 +779,7 @@ class AbstractLogicalFile(models.Model):
 
             # check if an aggregation can be created from the specified folder
             aggregation_to_set = resource.get_folder_aggregation_type_to_set(path_to_check)
-            if not aggregation_to_set:
+            if aggregation_to_set is None:
                 msg = "Aggregation can't be created from the specified folder:{}"
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)

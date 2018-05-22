@@ -97,7 +97,8 @@ def data_store_structure(request):
                     # find if any aggregation type can be created from this folder
                     folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
                         dir_path)
-
+                    if folder_aggregation_type_to_set is None:
+                        folder_aggregation_type_to_set = ""
             dirs.append({'name': d_pk,
                          'url': d_url,
                          'folder_aggregation_type': folder_aggregation_type,

@@ -100,9 +100,6 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
 
-        # test that when we create composite resource with an uploaded file, then the uploaded file
-        # is automatically set to genericlogicalfile type
-        self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
         # create a generic aggregation (logical file)
         self._create_generic_aggregation()
