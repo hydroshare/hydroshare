@@ -120,11 +120,10 @@ $(document).ready(function () {
                     icontemplate = fileIcons[fileTypeExt];
                     if (icontemplate === fileIcons.JSON){
                         // json is really for refts.json icon
-                        if (!fileName.uppercase().endsWith(".REFTS.JSON")){
+                        if (!fileName.toUpperCase().endsWith(".REFTS.JSON")){
                             iconTemplate = fileIcons.DEFAULT;
                         }
                     }
-                    iconTemplate = fileIcons[fileTypeExt];
                 }
                 else {
                     iconTemplate = fileIcons.DEFAULT;

@@ -354,28 +354,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(contributor.email, 'LSmith@gmail.com')
         self.composite_resource.delete()
 
-    def test_auto_aggregate_on_create(self):
-        """test that auto-aggregate works on resource create"""
-
-        self.create_composite_resource(file_to_upload=self.raster_file, auto_aggregate=True)
-
-        # because of auto aggregation, there should be 2 files
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
-        self.assertEqual(self.composite_resource.metadata.formats.count(), 2)
-
-    def test_auto_aggregate_file_add(self):
-        """test that auto-aggregate works on file add"""
-
-        self.create_composite_resource()
-
-        # test add a file that auto-aggregates
-        self.raster_file_obj = open(self.raster_file, 'r')
-        resource_file_add_process(resource=self.composite_resource,
-                                  files=(self.raster_file_obj,), user=self.user)
-        # because of auto aggregation, there should be 2 files
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
-        self.assertEqual(self.composite_resource.metadata.formats.count(), 2)
-
     def test_metadata_xml(self):
         """Test that the call to resource.get_metadata_xml() doesn't raise exception
         for composite resource type get_metadata_xml()

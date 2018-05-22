@@ -49,7 +49,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
         iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
     }
     else if (fileName.toUpperCase().endsWith(".REFTS.JSON")){
-        iconTemplate = fileIcons[".REFTS.JSON"];
+        iconTemplate = fileIcons["JSON"];
     }
     else {
         iconTemplate = fileIcons.DEFAULT;
