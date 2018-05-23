@@ -12,8 +12,8 @@ from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTestCase,
-                            CompositeResourceTestMixin):
+class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTestCase, 
+                                         CompositeResourceTestMixin):
     def setUp(self):
         super(CompositeResourceTestAutoAggregate, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
