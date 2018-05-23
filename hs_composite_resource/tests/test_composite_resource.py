@@ -1289,4 +1289,3 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing - aggregation folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
-

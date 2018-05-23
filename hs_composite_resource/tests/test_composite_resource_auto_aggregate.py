@@ -1,14 +1,11 @@
 # coding=utf-8
-import os
 
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
+from hs_core.hydroshare.utils import resource_file_add_process
 
 from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
     RefTimeseriesLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile
@@ -141,7 +138,6 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
 
         self.assertEqual(1, TimeSeriesLogicalFile.objects.count())
 
-
     def test_auto_aggregate_file_add_refts(self):
         """test that auto-aggregate works on refts file add"""
 
@@ -156,7 +152,6 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
 
         self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
 
-
     def test_auto_aggregate_file_add_nc(self):
         """test that auto-aggregate works on nc file add"""
 
@@ -170,7 +165,6 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         # because of auto aggregation, there should be 2 files
 
         self.assertEqual(1, NetCDFLogicalFile.objects.count())
-
 
     def test_auto_aggregate_file_add_geo_feature(self):
         """test that auto-aggregate works on geo feature file add"""

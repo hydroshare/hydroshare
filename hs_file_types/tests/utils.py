@@ -24,7 +24,7 @@ class CompositeResourceTestMixin(object):
 
     def create_composite_resource(self, file_to_upload=[], auto_aggregate=False):
         if isinstance(file_to_upload, str):
-           file_to_upload = [file_to_upload]
+            file_to_upload = [file_to_upload]
         files = []
         for file_name in file_to_upload:
             file_obj = open(file_name, 'r')
