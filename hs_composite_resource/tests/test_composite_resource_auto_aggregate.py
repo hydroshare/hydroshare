@@ -12,7 +12,7 @@ from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTestCase, 
+class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTestCase,
                                          CompositeResourceTestMixin):
     def setUp(self):
         super(CompositeResourceTestAutoAggregate, self).setUp()
