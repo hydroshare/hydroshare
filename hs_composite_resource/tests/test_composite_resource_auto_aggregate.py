@@ -181,3 +181,56 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
                                   files=(dbf_file, shp_file, shx_file), user=self.user)
 
         self.assertEqual(1, GeoFeatureLogicalFile.objects.count())
+
+    def test_auto_aggregate_on_create_files_with_folder(self):
+        """test that auto-aggregate works on resource create with folders"""
+
+        self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
+
+        self.create_composite_resource(file_to_upload=[
+            self.test_file_path.format("watersheds.dbf"),
+            self.test_file_path.format("watersheds.shp"),
+            self.test_file_path.format("watersheds.shx")], auto_aggregate=True, folder="folder")
+
+        self.assertEqual(1, GeoFeatureLogicalFile.objects.count())
+
+        storage_paths = ["folder/watersheds.dbf", "folder/watersheds.shp", "folder/watersheds.shx"]
+        for res_file in self.composite_resource.files.all():
+            index = -1
+            for i, name in enumerate(storage_paths):
+                if name == res_file.storage_path:
+                    index = i
+                    break
+            del storage_paths[index]
+
+        self.assertEquals(0, len(storage_paths))
+
+    def test_auto_aggregate_files_add_with_folder(self):
+        """test that auto-aggregate works on file add with folders"""
+
+        self.create_composite_resource()
+
+        self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
+
+        # test add a file that auto-aggregates
+        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'r')
+        shp_file = open(self.test_file_path.format("watersheds.shp"), 'r')
+        shx_file = open(self.test_file_path.format("watersheds.shx"), 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(dbf_file, shp_file, shx_file), user=self.user,
+                                  full_paths= {dbf_file: "folder/watersheds.dbf",
+                                               shp_file: "folder/watersheds.shp",
+                                               shx_file: "folder/watersheds.shx"})
+
+        self.assertEqual(1, GeoFeatureLogicalFile.objects.count())
+
+        storage_paths = ["folder/watersheds.dbf", "folder/watersheds.shp", "folder/watersheds.shx"]
+        for res_file in self.composite_resource.files.all():
+            index = -1
+            for i, name in enumerate(storage_paths):
+                if name == res_file.storage_path:
+                    index = i
+                    break
+            del storage_paths[index]
+
+        self.assertEquals(0, len(storage_paths))
