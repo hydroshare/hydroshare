@@ -40,7 +40,7 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from unicodedata import category
+import unicodedata
 
 
 def clean_for_xml(s):
@@ -48,38 +48,46 @@ def clean_for_xml(s):
     Remove all control characters from a unicode string in preparation for XML inclusion
 
     * Convert \n\n+ to unicode paragraph
-    * Convert \n alone to unicode NL (newline)
-    * Convert control characters to spaces.
+    * Convert \n alone to unicode RETURN (return SYMBOL)
+    * Convert control characters to spaces if last character is not space.
     * Space-pad paragraph and NL symbols as necessary
 
     """
-    CR = unichr(0x23CE)
-    PARA = unichr(0xB6)
+    CR = unichr(0x23CE)  # carriage return unicode SYMBOL
+    PARA = unichr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
     next = None
     last = None
     for ch in s:
-        ISCONTROL = category(ch)[0] == 'C'
-        ISSPACE = category(ch)[0] == 'S'
+        cat = unicodedata.category(ch)
+        ISCONTROL = cat[0] == 'C'
+        ISSPACE = cat[0] == 'Z'
         ISNEWLINE = (ord(ch) == 10)
-        if ISNEWLINE:  # linux '\n'
-            if next and next == CR:
-                next = PARA  # upgrade to two returns
+        if next:
+            if ISNEWLINE:  # linux '\n'
+                next = PARA  # upgrade to two+ returns
+            elif ISSPACE or ISCONTROL:
+                pass  # ignore spaces in newline sequence
             else:
-                next = CR
-            last = ch
-        elif ISSPACE or ISCONTROL:
-            if next is not None:
-                pass
-            elif last != ' ':
-                output = output + ' '
-                last = ' '
-        else:
-            if next is not None:
-                output = output + ' ' + next + ' '
+                if last != ' ':
+                    output += ' '
+                output += next + ' ' + ch
                 next = None
-            output = output + ch
-            last = ch
+                last = ch
+        else:
+            if ISNEWLINE:
+                next = CR
+            elif ISSPACE:
+                if last != ' ':
+                    output += ch
+                    last = ch
+            elif ISCONTROL:
+                if last != ' ':
+                    output += ' '
+                    last = ' '
+            else:
+                output += ch
+                last = ch
     return output
 
 

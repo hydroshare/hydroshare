@@ -804,7 +804,7 @@ class GenericResourceMeta(object):
                                                  abstract=clean_for_xml(self.abstract))
         if self.rights:
             resource.metadata.update_element('rights', resource.metadata.rights.id,
-                                             statement=clean_for_xml(self.rights.statement))
+                                             statement=self.rights.statement)
         if self.language:
             resource.metadata.update_element('language', resource.metadata.language.id,
                                              code=self.language)
