@@ -503,13 +503,7 @@ class ToolMetaData(CoreMetaData):
            and (not self.app_home_page_url or not self.app_home_page_url.value):
                 missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
         else:
-            # If one between App-launching URL Pattern and Supported Res Type presents,
-            # the other must present as well
-            if self.url_base and self.url_base.value:
-                if not self.supported_resource_types \
-                   or not self.supported_resource_types.supported_res_types.count() > 0:
-                    missing_required_elements.append('Supported Resource Types')
-
+            # If Supported Res Type is selected, app-launching URL pattern must be present
             if self.supported_resource_types \
                and self.supported_resource_types.supported_res_types.count() > 0:
                 if not self.url_base or not self.url_base.value:

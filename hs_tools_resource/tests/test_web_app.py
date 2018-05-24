@@ -1,7 +1,6 @@
-
 from urlparse import urlparse, parse_qs
 
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.http import HttpRequest
 
@@ -13,6 +12,7 @@ from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTy
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
                                         metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 
 class TestWebAppFeature(TransactionTestCase):
@@ -40,6 +40,8 @@ class TestWebAppFeature(TransactionTestCase):
                 owner=self.user,
                 title='Test Generic Resource',
                 keywords=['kw1', 'kw2'])
+
+        self.factory = RequestFactory()
 
     def test_web_app_res_specific_metadata(self):
 
@@ -310,6 +312,56 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
         self.assertEqual(AppHomePageUrl.objects.first().value, 'https://mywebapp.com')
         self.resWebApp.delete()
+
+    def test_web_app_extended_metadata_appkey_association(self):
+        # testing a resource can be associated with a web app tool resource via
+        # appkey name-value extended metadata matching
+        self.assertEqual(ToolResource.objects.count(), 1)
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+        self.resWebApp.extra_metadata = {'appkey': 'test-app-value'}
+        self.resWebApp.save()
+
+        self.assertNotEqual(self.resWebApp.extra_metadata, {})
+        self.assertEqual(self.resWebApp.extra_metadata['appkey'], 'test-app-value')
+
+        self.assertEqual(self.resGeneric.extra_metadata, {})
+        self.resGeneric.extra_metadata = {'appkey': 'test-app-value'}
+        self.resGeneric.save()
+
+        self.assertNotEqual(self.resGeneric.extra_metadata, {})
+        self.assertEqual(self.resGeneric.extra_metadata['appkey'], 'test-app-value')
+
+        url = '/resource/' + self.resGeneric.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
+                                                 'matching')
+        tc = relevant_tools['open_with_app_counter']
+        self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['res_id'], self.resWebApp.short_id)
+        self.assertFalse(tl['approved'])
+        self.assertTrue(tl['openwithlist'])
+
+        # delete all extra metadata
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+
+        self.resGeneric.extra_metadata = {}
+        self.resGeneric.save()
+        self.assertEqual(self.resGeneric.extra_metadata, {})
+
+        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no appkey '
+                                              'matching')
 
     def test_utils(self):
         url_template_string = "http://www.google.com/?" \

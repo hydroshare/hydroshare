@@ -125,6 +125,8 @@ def group_from_id(grp):
     except ObjectDoesNotExist:
         try:
             tgt = Group.objects.get(pk=int(grp))
+        except ValueError:
+            raise Http404('Group not found')
         except TypeError:
             raise Http404('Group not found')
         except ObjectDoesNotExist:

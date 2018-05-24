@@ -376,7 +376,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if edit_permission:
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.edit_resources))
+            q.append(Q(short_id__in=group.gaccess.edit_resources.values_list('short_id',
+                                                                             flat=True)))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
 
@@ -387,7 +388,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.view_resources))
+            q.append(Q(short_id__in=group.gaccess.view_resources.values_list('short_id',
+                                                                             flat=True)))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
@@ -408,7 +410,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if not include_obsolete:
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
-
     for q in q:
         flt = flt.filter(q)
 
