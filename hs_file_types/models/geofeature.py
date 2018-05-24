@@ -358,6 +358,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         res_files = [f for f in resource_files if f.extension.lower() == '.shp']
         return res_files[0] if res_files else None
 
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(GeoFeatureLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
 
 def extract_metadata_and_files(resource, res_file, file_type=True):
     """

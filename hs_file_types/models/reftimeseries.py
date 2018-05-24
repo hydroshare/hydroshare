@@ -819,6 +819,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         copy_of_logical_file.save()
         return copy_of_logical_file
 
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(RefTimeseriesLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
+
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary

@@ -170,3 +170,8 @@ class GenericLogicalFile(AbstractLogicalFile):
         res_file.save()
         logical_file.create_aggregation_xml_documents()
         log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()

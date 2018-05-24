@@ -439,6 +439,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         res_files = [f for f in resource_files if f.extension.lower() == '.tif']
         return res_files[0] if res_files else None
 
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(GeoRasterLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
+
 
 def raster_file_validation(raster_file, raster_folder=None, resource=None):
     """ Validates if the relevant files are valid for raster aggregation or raster resource type

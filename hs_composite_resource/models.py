@@ -150,27 +150,15 @@ class CompositeResource(BaseResource):
         documents need to be created
         """
 
-        def reset_metadata_is_dirty(aggregation):
-            # resets the metadata.is_dirty to False if the
-            # aggregation is not a NetCDF or Time series aggregation.
-            # NetCDF and Time series aggregations reset metadata.is_dirty
-            # as part of updating the content file
-            if aggregation.get_aggregation_class_name() not in \
-                    ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
-                aggregation.metadata.is_dirty = False
-                aggregation.metadata.save()
-
         if aggregation_name is None:
             for aggregation in self.logical_files:
                 if aggregation.metadata.is_dirty:
                     aggregation.create_aggregation_xml_documents()
-                    reset_metadata_is_dirty(aggregation)
         else:
             try:
                 aggregation = self.get_aggregation_by_name(aggregation_name)
                 if aggregation.metadata.is_dirty:
                     aggregation.create_aggregation_xml_documents()
-                    reset_metadata_is_dirty(aggregation)
             except ObjectDoesNotExist:
                 # aggregation_name must be a folder path that doesn't represent an aggregation
                 # there may be single file aggregation in that folder for which xml documents
