@@ -3033,24 +3033,19 @@ class ResourceFile(ResourceFileIRODSMixin):
         else:
             file_folder_to_match = folder[len(resource.file_path) + 1:]
 
-        if resource.is_federated:
-            if sub_folders:
+        if sub_folders:
+            if resource.is_federated:
                 return ResourceFile.objects.filter(
                     object_id=resource.id,
                     fed_resource_file__startswith=folder)
             else:
                 return ResourceFile.objects.filter(
                     object_id=resource.id,
-                    file_folder=file_folder_to_match)
-        else:
-            if sub_folders:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
                     resource_file__startswith=folder)
-            else:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    file_folder=file_folder_to_match)
+        else:
+            return ResourceFile.objects.filter(
+                object_id=resource.id,
+                file_folder=file_folder_to_match)
 
     # TODO: move to BaseResource as instance method
     @classmethod
