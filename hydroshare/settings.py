@@ -7,7 +7,6 @@ import os
 import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
-sendfile_settings_module = os.environ.get('SENDFILE_SETTINGS', 'hydroshare.sendfile_settings')
 
 ######################
 # MEZZANINE SETTINGS #
@@ -463,10 +462,6 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
-
-sendfile_settings = __import__(sendfile_settings_module, globals(), locals(), ['*'])
-for k in dir(sendfile_settings):
-    locals()[k] = getattr(sendfile_settings, k)
 
 ####################
 # DYNAMIC SETTINGS #
