@@ -2,7 +2,6 @@ import os
 import copy
 from uuid import uuid4
 import shutil
-import errno
 import random
 import logging
 
@@ -1184,7 +1183,7 @@ class AbstractLogicalFile(models.Model):
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
         os.makedirs(tmpdir)
-       
+
         # create and copy the map and metadata xml documents for the aggregation
         meta_from_file_name = os.path.join(tmpdir, 'metadata.xml')
         map_from_file_name = os.path.join(tmpdir, 'map.xml')

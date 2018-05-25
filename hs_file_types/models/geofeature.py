@@ -363,6 +363,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         self.metadata.is_dirty = False
         self.metadata.save()
 
+
 def extract_metadata_and_files(resource, res_file, file_type=True):
     """
     validates shape files and extracts metadata
