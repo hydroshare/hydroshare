@@ -9,7 +9,7 @@
 /celery
 /config/hydroshare-config.sh
 /config/hydroshare-config.yaml
-/hydroshare/local_settings.py
+# /hydroshare/local_settings.py
 /hydroshare/static
 /log
 /nginx/config-files/hs-nginx.conf
