@@ -186,3 +186,10 @@ TIME_ZONE = "Etc/UTC"
 #used by the mailchimp subscription job in hs_core/tasks.py
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
+
+# sendfile support for large files
+# These must match settings in nginx
+SENDFILE_ON = False
+IRODS_USER_URI = "/irods-user"
+IRODS_DATA_URI = "/irods-data"
+LOCAL_CACHE_URI = "/local-cache"
