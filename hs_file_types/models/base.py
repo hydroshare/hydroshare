@@ -724,8 +724,8 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def check_files_for_aggregation_type(cls, files):
-        """Checks if the specified files can be used to set this aggregation type. Sub classes may
-        need to override this.
+        """Checks if the specified files can be used to set this aggregation type. Sub classes that
+        support aggregation creation from a folder must override this.
         :param  files: a list of ResourceFile objects
 
         :return If the files meet the requirements of this aggregation type, then returns this
@@ -944,7 +944,7 @@ class AbstractLogicalFile(models.Model):
 
         xml_file_name = self.aggregation_name
         if "/" in xml_file_name:
-            _, xml_file_name = os.path.split(xml_file_name)
+            xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_meta.xml"
         file_folder = self.files.first().file_folder
         if file_folder is not None:
@@ -963,7 +963,7 @@ class AbstractLogicalFile(models.Model):
         """
         xml_file_name = self.aggregation_name
         if "/" in xml_file_name:
-            _, xml_file_name = os.path.split(xml_file_name)
+            xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_resmap.xml"
         file_folder = self.files.first().file_folder
         if file_folder is not None:
@@ -1180,15 +1180,11 @@ class AbstractLogicalFile(models.Model):
         # create a temp dir where the xml files will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
         istorage = self.resource.get_irods_storage()
-        try:
-            os.makedirs(tmpdir)
-        except OSError as ex:
-            if ex.errno == errno.EEXIST:
-                shutil.rmtree(tmpdir)
-                os.makedirs(tmpdir)
-            else:
-                raise Exception(ex.message)
 
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
+        os.makedirs(tmpdir)
+       
         # create and copy the map and metadata xml documents for the aggregation
         meta_from_file_name = os.path.join(tmpdir, 'metadata.xml')
         map_from_file_name = os.path.join(tmpdir, 'map.xml')
@@ -1197,14 +1193,14 @@ class AbstractLogicalFile(models.Model):
                 out.write(self.metadata.get_xml())
             to_file_name = self.metadata_file_path
             istorage.saveFile(meta_from_file_name, to_file_name, True)
-            log.info("Aggregation metadata xml file:{} created".format(to_file_name))
+            log.debug("Aggregation metadata xml file:{} created".format(to_file_name))
 
             if create_map_xml:
                 with open(map_from_file_name, 'w') as out:
                     out.write(self._generate_map_xml())
                 to_file_name = self.map_file_path
                 istorage.saveFile(map_from_file_name, to_file_name, True)
-                log.info("Aggregation map xml file:{} created".format(to_file_name))
+                log.debug("Aggregation map xml file:{} created".format(to_file_name))
             # setting bag flag to dirty - as resource map document needs to be re-generated as
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
