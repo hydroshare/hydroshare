@@ -9,8 +9,7 @@ from hs_core.testing import TestCaseCommonUtilities
 class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestGeoFeature, self).setUp()
-        if not super(TestGeoFeature, self).is_federated_irods_available():
-            return
+        super(TestGeoFeature, self).assert_federated_irods_available()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'zhiyu.li@byu.edu',
@@ -45,15 +44,11 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def tearDown(self):
         super(TestGeoFeature, self).tearDown()
-        if not super(TestGeoFeature, self).is_federated_irods_available():
-            return
+        super(TestGeoFeature, self).assert_federated_irods_available()
         super(TestGeoFeature, self).delete_irods_user_in_user_zone()
 
     def test_metadata_in_user_zone(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(TestGeoFeature, self).is_federated_irods_available():
-            return
+        super(TestGeoFeature, self).assert_federated_irods_available()
         # test metadata extraction with resource creation with file coming from user zone space
         resource_type = "GeographicFeatureResource"
         fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(

@@ -193,3 +193,7 @@ SENDFILE_ON = False
 IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
+
+RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
