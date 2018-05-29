@@ -205,8 +205,8 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
 
         self.assertEquals(0, len(storage_paths))
 
-    def test_auto_aggregate_files_add_with_folder(self):
-        """test that auto-aggregate works on file add with folders"""
+    def test_auto_aggregate_files_add_with_different_folder(self):
+        """test adding files in different folders"""
 
         self.create_composite_resource()
 
@@ -218,13 +218,16 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         shx_file = open(self.test_file_path.format("watersheds.shx"), 'r')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(dbf_file, shp_file, shx_file), user=self.user,
-                                  full_paths= {dbf_file: "folder/watersheds.dbf",
-                                               shp_file: "folder/watersheds.shp",
-                                               shx_file: "folder/watersheds.shx"})
+                                  full_paths={dbf_file: "folder1/watersheds.dbf",
+                                              shp_file: "folder2/watersheds.shp",
+                                              shx_file: "folder2/watersheds.shx"})
 
-        self.assertEqual(1, GeoFeatureLogicalFile.objects.count())
+        # because the files are in different folders, auto aggreate won't work
 
-        storage_paths = ["folder/watersheds.dbf", "folder/watersheds.shp", "folder/watersheds.shx"]
+        self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
+
+        storage_paths = ["folder1/watersheds.dbf", "folder2/watersheds.shp",
+                         "folder2/watersheds.shx"]
         for res_file in self.composite_resource.files.all():
             index = -1
             for i, name in enumerate(storage_paths):
