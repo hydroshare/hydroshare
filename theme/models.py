@@ -300,6 +300,8 @@ class UserProfile(models.Model):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default={}, null=True, blank=True)
 
+    email_opt_out = models.BooleanField(default=False)
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:

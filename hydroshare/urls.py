@@ -67,6 +67,7 @@ urlpatterns = i18n_patterns("",
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
+    url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
@@ -158,6 +159,7 @@ urlpatterns += patterns('',
 
     # Override Mezzanine URLs here, before the Mezzanine URL include
     ("^accounts/signup/", "theme.views.signup"),
+    ("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", "theme.views.signup_verify"),
 
     # MEZZANINE'S URLS
     # ----------------

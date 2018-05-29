@@ -32,10 +32,14 @@ class HSRESTTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
 
         self.resources_to_delete = []
+        self.groups_to_delete = []
 
     def tearDown(self):
         for r in self.resources_to_delete:
             resource.delete_resource(r)
+
+        for g in self.groups_to_delete:
+            g.delete()
 
         self.user.delete()
 

@@ -31,7 +31,7 @@ class FileMetaDataSerializer(serializers.Serializer):
 
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
-    allowed_methods = ('GET', 'PUT')
+    allowed_methods = ('GET', 'PUT',)
     permission_classes = (CanViewOrEditResourceMetadata,)
 
     def get(self, request, pk, file_id):
