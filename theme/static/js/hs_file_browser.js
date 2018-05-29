@@ -48,6 +48,9 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
     if (fileIcons[fileTypeExt.toUpperCase()]) {
         iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
     }
+    else if (fileName.toUpperCase().endsWith(".REFTS.JSON")){
+        iconTemplate = fileIcons["JSON"];
+    }
     else {
         iconTemplate = fileIcons.DEFAULT;
     }
@@ -239,31 +242,30 @@ function updateSelectionMenuContext() {
     if(!isFolderSelected){
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
-            var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
             var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
             var currentPath = $("#hs-file-browser").attr("data-current-path");
 
             if(logicalFileType != "") {
                 flagDisableSetGenericFileType = true;
             }
-            if (fileExt.toUpperCase() != "ZIP") {
+            if (!fileName.toUpperCase().endsWith("ZIP")) {
                 flagDisableUnzip = true;
             }
-            if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith("TIF") && !fileName.toUpperCase().endsWith("ZIP")) || logicalFileType != "") {
                 flagDisableSetGeoRasterFileType = true;
             }
 
-            if (fileExt.toUpperCase() != "NC"  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith("NC")  || logicalFileType != "") {
                 flagDisableSetNetCDFFileType = true;
             }
 
-            if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith("SHP") && !fileName.toUpperCase().endsWith("ZIP")) || logicalFileType != "") {
                 flagDisableSetGeoFeatureFileType = true;
             }
-            if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith("REFTS.JSON")  || logicalFileType != "") {
                 flagDisableSetRefTimeseriesFileType = true;
             }
-            if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith("SQLITE") && !fileName.toUpperCase().endsWith("CSV")) || logicalFileType != "") {
                 flagDisableSetTimeseriesFileType = true;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -1053,7 +1055,6 @@ $(document).ready(function () {
                 // When a file is added to the list
                 this.on("addedfile", function (file) {
                     $(".fb-drag-flag").hide();
-                    // console.log(file);
                 });
 
                 // When a file gets processed

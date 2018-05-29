@@ -45,10 +45,10 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
 
-        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
-        missing_title_refts_json_file = 'refts_valid_title_missing.json.refts'
+        missing_title_refts_json_file = 'refts_valid_title_missing.refts.json'
         self.refts_missing_title_file_name = missing_title_refts_json_file
         self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_title_file_name)
@@ -651,7 +651,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # we should be able to update abstract since the json file
         # does't have the abstract element
 
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.refts.json'
         self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_abstract_file_name)
 
@@ -809,7 +809,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # we should be able to add/delete keywords since the json file
         # does not have the keywords element
 
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.json.refts'
+        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
         self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_keywords_file_name)
 

@@ -115,12 +115,22 @@ $(document).ready(function () {
                 // Set file type icon
                 var fileName = template.find(".dz-filename").text();
                 var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
+                var iconTemplate
                 if (fileIcons[fileTypeExt]) {
-                    template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
+                    icontemplate = fileIcons[fileTypeExt];
+                    if (icontemplate === fileIcons.JSON){
+                        // json is really for refts.json icon
+                        if (!fileName.toUpperCase().endsWith(".REFTS.JSON")){
+                            iconTemplate = fileIcons.DEFAULT;
+                        }
+                    }
                 }
                 else {
-                    template.find(".file-type-icon").append(fileIcons.DEFAULT);
+                    iconTemplate = fileIcons.DEFAULT;
                 }
+                // display folder structure of file
+                template.find(".dz-filename").text(file.fullPath);
+                template.find(".file-type-icon").append(iconTemplate);
 
                 template.find("[data-toggle='tooltip']").tooltip();
 

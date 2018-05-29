@@ -314,7 +314,8 @@ class TestCopyResource(TestCase):
             resource_type='CompositeResource',
             owner=self.owner,
             title='Test Composite Resource',
-            files=files
+            files=files,
+            auto_aggregate=False
         )
 
         # run the resource post creation signal

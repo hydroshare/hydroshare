@@ -29,7 +29,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.logical_file_type_name = "RefTimeseriesLogicalFile"
         self.res_title = "Test Ref Timeseries File Type"
-        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
     def test_create_aggregation_1(self):
@@ -324,7 +324,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def test_create_aggregation_with_invalid_urls(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
-        self.refts_invalid_url_file_name = 'refts_invalid_urls.json.refts'
+        self.refts_invalid_url_file_name = 'refts_invalid_urls.refts.json'
         self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
             self.refts_invalid_url_file_name)
 
@@ -336,7 +336,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail as it as has an invalid method link
 
-        self.refts_invalid_mlink_file_name = 'refts_invalid_method_link.json.refts'
+        self.refts_invalid_mlink_file_name = 'refts_invalid_method_link.refts.json'
         self.refts_invalid_mlink_file = 'hs_file_types/tests/{}'.format(
             self.refts_invalid_mlink_file_name)
 
@@ -349,7 +349,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # to RefTimeseries file type which should fail
         # beginDate has an invalid date value
 
-        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.json.refts'
+        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.refts.json'
         self.refts_invalid_dates_1_file = 'hs_file_types/tests/{}'.format(
             self.refts_invalid_dates_1_file_name)
 
@@ -362,7 +362,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # to RefTimeseries file type which should fail
         # beginDate > endDate
 
-        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.json.refts'
+        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.refts.json'
         self.refts_invalid_dates_2_file = 'hs_file_types/tests/{}'.format(
             self.refts_invalid_dates_2_file_name)
 
@@ -377,7 +377,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.refts_missing_key_file_name = 'refts_missing_key.json.refts'
+        self.refts_missing_key_file_name = 'refts_missing_key.refts.json'
         self.refts_missing_key_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_key_file_name)
 
@@ -389,7 +389,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a valid time series json file for setting it
         # to RefTimeseries file type which should be successful even though it is missing title
 
-        self.refts_missing_title_file_name = 'refts_valid_title_missing.json.refts'
+        self.refts_missing_title_file_name = 'refts_valid_title_missing.refts.json'
         self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_title_file_name)
 
@@ -402,7 +402,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a valid time series json file for setting it
         # to RefTimeseries file type which should be successful even though it is missing abstract
 
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.refts.json'
         self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_abstract_file_name)
 
@@ -415,7 +415,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a valid time series json file for setting it
         # to RefTimeseries file type which should be successful even though it is missing keywords
 
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.json.refts'
+        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
         self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_keywords_file_name)
 
@@ -431,7 +431,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_duplicate_keywords_file_name = 'invalid_duplicate_keywords.json.refts'
+        self.invalid_duplicate_keywords_file_name = 'invalid_duplicate_keywords.refts.json'
         self.invalid_duplicate_keywords_file = 'hs_file_types/tests/{}'.format(
             self.invalid_duplicate_keywords_file_name)
 
@@ -446,7 +446,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_service_type_file_name = 'invalid_service_type.json.refts'
+        self.invalid_service_type_file_name = 'invalid_service_type.refts.json'
         self.invalid_service_type_file = 'hs_file_types/tests/{}'.format(
             self.invalid_service_type_file_name)
 
@@ -461,7 +461,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_return_type_file_name = 'invalid_return_type.json.refts'
+        self.invalid_return_type_file_name = 'invalid_return_type.refts.json'
         self.invalid_return_type_file = 'hs_file_types/tests/{}'.format(
             self.invalid_return_type_file_name)
 
@@ -476,7 +476,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_ref_type_file_name = 'invalid_ref_type.json.refts'
+        self.invalid_ref_type_file_name = 'invalid_ref_type.refts.json'
         self.invalid_ref_type_file = 'hs_file_types/tests/{}'.format(
             self.invalid_ref_type_file_name)
 
@@ -488,7 +488,6 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that when an instance RefTimeseriesLogicalFile (aggregation) is deleted
         # all files associated with that aggregation is not deleted but the associated metadata
         # is deleted
-
         self.create_composite_resource(self.refts_file)
         res_file = self.composite_resource.files.first()
 

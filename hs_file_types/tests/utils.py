@@ -22,17 +22,24 @@ class CompositeResourceTestMixin(object):
         )
         return new_res_file
 
-    def create_composite_resource(self, file_to_upload=None):
+    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=None):
+        if isinstance(file_to_upload, str):
+            file_to_upload = [file_to_upload]
         files = []
-        if file_to_upload is not None:
-            file_obj = open(file_to_upload, 'r')
+        full_paths = {}
+        for file_name in file_to_upload:
+            file_obj = open(file_name, 'r')
+            if folder:
+                full_paths[file_obj] = os.path.join(folder, file_name)
             uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
             files.append(uploaded_file)
         self.composite_resource = create_resource(
             resource_type='CompositeResource',
             owner=self.user,
             title=self.res_title,
-            files=files
+            files=files,
+            auto_aggregate=auto_aggregate,
+            full_paths=full_paths
         )
 
 

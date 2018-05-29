@@ -1220,7 +1220,7 @@ class AbstractLogicalFile(models.Model):
         """
         create_new_folder = False
         file_folder = selected_res_file.file_folder
-        if file_folder is not None and selected_folder is None:
+        if file_folder and not selected_folder:
             resource = selected_res_file.resource
             istorage = resource.get_irods_storage()
             store = istorage.listdir(selected_res_file.dir_path)

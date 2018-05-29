@@ -71,7 +71,8 @@ class NetCDFFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
             source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
             move=False,
-            metadata=[]
+            metadata=[],
+            auto_aggregate=False
         )
 
         # test resource is created on federated zone

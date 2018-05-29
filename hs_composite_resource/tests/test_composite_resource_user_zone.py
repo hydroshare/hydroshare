@@ -872,7 +872,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Test Composite Resource Federated'
+            title='Test Composite Resource Federated',
+            auto_aggregate=False
         )
 
         # there should not be any GenericLogicalFile object at this point
@@ -887,7 +888,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
                                       source_names=[fed_test_file_full_path], user=self.user,
                                       folder=None)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  source_names=[fed_test_file_full_path], user=self.user)
+                                  source_names=[fed_test_file_full_path], user=self.user,
+                                  auto_aggregate=False)
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
@@ -915,7 +917,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
                                       folder=new_folder)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
                                   source_names=[fed_test_file_full_path], user=self.user,
-                                  folder=new_folder)
+                                  folder=new_folder, auto_aggregate=False)
 
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
@@ -1000,7 +1002,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
             move=False,
-            metadata=[]
+            metadata=[],
+            auto_aggregate=False
         )
 
     def _create_generic_aggregation(self):
