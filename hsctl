@@ -56,6 +56,11 @@ stop_nginx() {
     cd -
 }
 
+get_nginx_ip() {
+    NGINX_IP=`docker network inspect bridge | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+    echo $NGINX_IP > tmp/nginx_ip
+}
+
 restart_hs() {
     echo "RESTART HYDROSHARE:"
     stop_nginx
@@ -66,6 +71,7 @@ restart_hs() {
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
+    get_nginx_ip
 }
 
 maint_on_hs() {
@@ -120,6 +126,7 @@ start_hs() {
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
+    get_nginx_ip
 }
 
 stop_hs() {

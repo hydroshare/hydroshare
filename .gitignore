@@ -9,7 +9,7 @@
 /celery
 /config/hydroshare-config.sh
 /config/hydroshare-config.yaml
-# /hydroshare/local_settings.py
+/hydroshare/local_settings.py
 /hydroshare/static
 /log
 /nginx/config-files/hs-nginx.conf
@@ -17,7 +17,9 @@
 /nginx/htpasswd
 /nginx/Dockerfile
 /nginx/config-files/nginx.conf-default
+/hydroshare/nginx_ip
 /static
+/tmp
 celeryd.pid
 docker-compose.yml
 init-defaultworker
