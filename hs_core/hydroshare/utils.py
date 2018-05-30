@@ -384,7 +384,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
             if bag_modified.lower() == "false":
                 bag_file_name = res_id + '.zip'
                 if res.resource_federation_path:
-                    bag_full_path = os.path.join(res.resource_federation_path, 'bags', bag_file_name)
+                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
+                                                 bag_file_name)
                 else:
                     bag_full_path = os.path.join('bags', bag_file_name)
 
