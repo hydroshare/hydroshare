@@ -895,6 +895,10 @@ function startDownload() {
     }
 }
 
+function onOpenWith() {
+
+}
+
 function onOpenFolder() {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var currentPath = $("#hs-file-browser").attr("data-current-path");
@@ -1330,6 +1334,8 @@ $(document).ready(function () {
 
     $("#btn-open").click(onOpenFolder);
 
+    $("#btn-open-with").click(onOpenWith(this));
+
     $("#btn-cut, #fb-cut").click(onCut);
 
     function onCut() {
@@ -1481,6 +1487,14 @@ $(document).ready(function () {
         var basePath = window.location.protocol + "//" + window.location.host;
         // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
         $("#txtFileURL").val(basePath + URL);
+    });
+
+    // Open with method
+    $("#btn-open-with").click(function () {
+        var file = $("#fb-files-container li.ui-selected");
+        var URL = file.attr("data-url");
+        var fullURL = $(this).attr("url").replace("HS_JS_DATA_URL_KEY", URL);
+        window.open(fullURL);
     });
 
     // set generic file type method

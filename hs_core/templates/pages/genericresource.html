@@ -83,12 +83,12 @@
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
                     {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
-                    <li id="btn-open" data-menu-name="open">
-                        <span class="fa fa-folder-open icon-blue"></span>
-                        <span>Open</span>
-                    </li>
+                        <li id="btn-open" data-menu-name="open">
+                            <span class="fa fa-folder-open icon-blue"></span>
+                            <span>Open</span>
+                        </li>
 
-                    <li id="open-separator" role="separator" class="divider"></li>
+                        <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
                         {% if page.perms.change and metadata_form %}
@@ -181,6 +181,20 @@
                             <span>Remove Aggregation</span>
                         </li>
                     {%  endif %}
+                    {% if relevant_tools %}
+                        {% for tool in relevant_tools.tool_list %}
+                            {% if tool.filelevel %}
+                                <li id="btn-open-with" data-menu-name="web-app" url="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}">
+                                    <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                     {% if tool.title|length > 20 %}
+                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                    {% else %}
+                                        <span>{{ tool.title }}</span>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </ul>
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
@@ -1130,6 +1144,7 @@
                                     {% if not metadata_form %}
                                         <div class="row">
                                             {% for tool in relevant_tools.tool_list %}
+                                                {% if not tool.filelevel %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
                                                     <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
@@ -1148,6 +1163,7 @@
                                                     </a>
                                                 </div>
                                                 </div>
+                                                {% endif %}
                                             {% endfor %}
                                         </div>
                                     {% else %}

@@ -10,6 +10,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
     res_type_str = resource_obj.resource_type
 
     tool_list = []
+    file_tool_list = []
     tool_res_id_list = []
     open_with_app_counter = 0
 
@@ -49,6 +50,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
 
     if len(tool_list) > 0:
         return {"tool_list": tool_list,
+                "file_tool_list": file_tool_list,
                 "open_with_app_counter": open_with_app_counter}
     else:
         return None
@@ -76,10 +78,14 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     hs_term_dict_user["HS_USR_NAME"] = request_obj.user.username if \
         request_obj.user.is_authenticated() \
         else "anonymous"
+    hs_term_dict_file = {}
+    # HS_JS_DATA_URL_KEY is overwritten by jquery to launch the url specific to each file
+    hs_term_dict_file["HS_DATA_URL"] = "HS_JS_DATA_URL_KEY"
     tool_url_new = parse_app_url_template(
-        tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
+        tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file])
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
+    is_file_level = tool_url_new and "HS_JS_DATA_URL_KEY" in tool_url_new
 
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
@@ -87,7 +93,8 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
               'icon_url': tool_icon_url,
               'url': tool_url_new,
               'openwithlist': is_open_with_app,
-              'approved': is_approved_app
+              'approved': is_approved_app,
+              'filelevel': is_file_level
               }
 
         return is_open_with_app, tl
