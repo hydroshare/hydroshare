@@ -1138,7 +1138,7 @@
                                                              <img class="app-approved-icon-img" src="/static/img/approved_app.png">
                                                          </a>
                                                      {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
                                                         {% if tool.title|length > 20 %}
                                                             <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                         {% else %}

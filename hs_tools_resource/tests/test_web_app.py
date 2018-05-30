@@ -1,9 +1,9 @@
-
 from urlparse import urlparse, parse_qs
 
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.http import HttpRequest
+from django.conf import settings
 
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
@@ -12,10 +12,13 @@ from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTy
                                      ToolIcon, AppHomePageUrl, SupportedSharingStatus
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
                                         metadata_element_pre_update_handler
-from hs_tools_resource.utils import parse_app_url_template
+from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+from hs_core.testing import TestCaseCommonUtilities
+from hs_tools_resource.app_keys import tool_app_key, irods_path_key, irods_resc_key
 
 
-class TestWebAppFeature(TransactionTestCase):
+class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -40,6 +43,8 @@ class TestWebAppFeature(TransactionTestCase):
                 owner=self.user,
                 title='Test Generic Resource',
                 keywords=['kw1', 'kw2'])
+
+        self.factory = RequestFactory()
 
     def test_web_app_res_specific_metadata(self):
 
@@ -310,6 +315,116 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
         self.assertEqual(AppHomePageUrl.objects.first().value, 'https://mywebapp.com')
         self.resWebApp.delete()
+
+    def test_web_app_extended_metadata_appkey_association(self):
+        # testing a resource can be associated with a web app tool resource via
+        # appkey name-value extended metadata matching
+        self.assertEqual(ToolResource.objects.count(), 1)
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+        self.resWebApp.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resWebApp.save()
+
+        self.assertNotEqual(self.resWebApp.extra_metadata, {})
+        self.assertEqual(self.resWebApp.extra_metadata[tool_app_key], 'test-app-value')
+
+        self.assertEqual(self.resGeneric.extra_metadata, {})
+        self.resGeneric.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resGeneric.save()
+
+        self.assertNotEqual(self.resGeneric.extra_metadata, {})
+        self.assertEqual(self.resGeneric.extra_metadata[tool_app_key], 'test-app-value')
+
+        url = '/resource/' + self.resGeneric.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
+                                                 'matching')
+        tc = relevant_tools['open_with_app_counter']
+        self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['res_id'], self.resWebApp.short_id)
+        self.assertFalse(tl['approved'])
+        self.assertTrue(tl['openwithlist'])
+
+        # delete all extra metadata
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+
+        self.resGeneric.extra_metadata = {}
+        self.resGeneric.save()
+        self.assertEqual(self.resGeneric.extra_metadata, {})
+
+        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no appkey '
+                                              'matching')
+
+    def test_web_app_do_needed_work_when_being_launched(self):
+        # testing a web app does needed work when being launched. Currently, the needed work when
+        # launching a web app includes checking 'irods_federation_target_path' and
+        # 'irods_federation_target_resource' keys in web app tool resource extended metadata and
+        # if they exist, the web app tool will push the resource to the specified iRODS path and
+        # iRODS resource for the app being launched to consume in the federated iRODS server that
+        # is used as backend data storage and management server for the app being launched.
+        # This is the only use case we support for launching mygeohub GABBs tool from HydroShare.
+        # When other use cases we need to support in the future requires additional work when
+        # launching the app, more functionalities can be added following similar design and
+        # implementation for this mygeohub GABBs web app tool launch from HydroShare.
+
+        super(TestWebAppFeature, self).assert_federated_irods_available()
+
+        self.assertEqual(ToolResource.objects.count(), 1)
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+
+        res_id = self.resGeneric.short_id
+        tool_res_id = self.resWebApp.short_id
+        ipath = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + \
+                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE
+        target_res_path = ipath + '/' + self.user.username + '/' + res_id
+        if super(TestWebAppFeature, self).check_file_exist(target_res_path):
+            super(TestWebAppFeature, self).delete_directory(target_res_path)
+
+        # assert no resource copying will take place without required iRODS extra_metadata keys
+        ret_status = do_work_when_launching_app_as_needed(tool_res_id, res_id, self.user)
+        self.assertIsNone(ret_status, msg='do_work_when_launching_app_as_needed() did not return '
+                                          'None')
+        self.assertFalse(super(TestWebAppFeature, self).check_file_exist(target_res_path))
+
+        self.resWebApp.extra_metadata = {
+            irods_path_key: ipath,
+            irods_resc_key: settings.HS_IRODS_LOCAL_ZONE_DEF_RES
+        }
+        self.resWebApp.save()
+
+        self.assertNotEqual(self.resWebApp.extra_metadata, {})
+        self.assertEqual(self.resWebApp.extra_metadata[irods_path_key], ipath)
+        self.assertEqual(self.resWebApp.extra_metadata[irods_resc_key],
+                         settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+
+        # assert resource copying will take place now that extra_metadata keys for irods federation
+        # target path and resource keys exist
+        ret_status = do_work_when_launching_app_as_needed(tool_res_id, res_id, self.user)
+        self.assertIsNone(ret_status, msg='do_work_when_launching_app_as_needed() did not return '
+                                          'None')
+        self.assertTrue(super(TestWebAppFeature, self).check_file_exist(target_res_path))
+
+        # delete all extra metadata and copied resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+        super(TestWebAppFeature, self).delete_directory(target_res_path)
 
     def test_utils(self):
         url_template_string = "http://www.google.com/?" \

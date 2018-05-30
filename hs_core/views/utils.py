@@ -232,14 +232,22 @@ def validate_json(js):
         raise ValidationError(detail='Invalid JSON')
 
 
-def validate_user_name(user_name):
-    if not User.objects.filter(username=user_name).exists():
-        raise ValidationError(detail='No user found for user name:%s' % user_name)
+def validate_user(user_identifier):
+    if not User.objects.filter(username=user_identifier).exists():
+        if not User.objects.filter(email=user_identifier).exists():
+            raise ValidationError(detail='No user found for user identifier:%s' % user_identifier)
 
 
-def validate_group_name(group_name):
-    if not Group.objects.filter(name=group_name).exists():
-        raise ValidationError(detail='No group found for group name:%s' % group_name)
+def validate_group(group_identifier):
+    if not Group.objects.filter(name=group_identifier).exists():
+        try:
+            g_id = int(group_identifier)
+            if not Group.objects.filter(pk=g_id).exists():
+                raise ValidationError(
+                    detail='No group found for group identifier:%s' % group_identifier)
+        except ValueError:
+            raise ValidationError(
+                detail='No group found for group identifier:%s' % group_identifier)
 
 
 def validate_metadata(metadata, resource_type):

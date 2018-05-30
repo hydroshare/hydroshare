@@ -14,8 +14,7 @@ from hs_core.testing import TestCaseCommonUtilities
 class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
     def setUp(self):
         super(TestReplicateBagToUserZone, self).setUp()
-        if not super(TestReplicateBagToUserZone, self).is_federated_irods_available():
-            return
+        super(TestReplicateBagToUserZone, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.username = 'john'
@@ -43,9 +42,7 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
 
     def test_replicate_bag(self):
         # here we are testing rep_res_bag_to_irods_user_zone view function
-
-        if not super(TestReplicateBagToUserZone, self).is_federated_irods_available():
-            return
+        super(TestReplicateBagToUserZone, self).assert_federated_irods_available()
 
         url_params = {'shortkey': self.gen_res.short_id}
         url = reverse('replicate_bag_user_zone', kwargs=url_params)

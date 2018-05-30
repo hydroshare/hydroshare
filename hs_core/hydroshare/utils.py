@@ -125,6 +125,8 @@ def group_from_id(grp):
     except ObjectDoesNotExist:
         try:
             tgt = Group.objects.get(pk=int(grp))
+        except ValueError:
+            raise Http404('Group not found')
         except TypeError:
             raise Http404('Group not found')
         except ObjectDoesNotExist:
@@ -134,29 +136,21 @@ def group_from_id(grp):
 
 def get_user_zone_status_info(user):
     """
-    This function should be called to determine whether the site is in production and whether user
-    zone functionality should be enabled or not on the web site front end
+    This function should be called to determine whether user zone functionality should be
+    enabled or not on the web site front end
     Args:
         user: the requesting user
     Returns:
-        in_production, enable_user_zone where both are boolean indicating whether the site is
-        in production and whether user zone functionality should be enabled or not on the web site
-        front end
+        enable_user_zone boolean indicating whether user zone functionality should be enabled or
+        not on the web site front end
     """
     if user is None:
-        return None, None
+        return None
     if not hasattr(user, 'userprofile') or user.userprofile is None:
-        return None, None
+        return None
 
-    in_production = True if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER else False
-    enable_user_zone = user.userprofile.create_irods_user_account
-    if not in_production and enable_user_zone:
-        # if these settings are not empty, for example, in users' local
-        # development environment for testing, user_zone selection is shown
-        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or
-                not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
-            enable_user_zone = False
-    return in_production, enable_user_zone
+    enable_user_zone = user.userprofile.create_irods_user_account and settings.REMOTE_USE_IRODS
+    return enable_user_zone
 
 
 def is_federated(homepath):

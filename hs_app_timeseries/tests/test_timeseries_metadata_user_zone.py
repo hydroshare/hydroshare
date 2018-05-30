@@ -11,8 +11,7 @@ from hs_core.testing import TestCaseCommonUtilities
 class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestTimeSeriesMetaData, self).setUp()
-        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
-            return
+        super(TestTimeSeriesMetaData, self).assert_federated_irods_available()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
@@ -44,15 +43,13 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
 
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
-        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
-            return
+        super(TestTimeSeriesMetaData, self).assert_federated_irods_available()
         super(TestTimeSeriesMetaData, self).delete_irods_user_in_user_zone()
 
     def test_metadata_in_user_zone(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
-            return
+        super(TestTimeSeriesMetaData, self).assert_federated_irods_available()
 
         # test metadata extraction with resource creation with file coming from user zone space
         fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(

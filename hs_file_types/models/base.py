@@ -220,9 +220,9 @@ class AbstractFileMetaData(models.Model):
                                          data_target="#delete-keyvalue-filetype-modal"
                                                      "-{}".format(counter))
 
-                    self._get_add_key_value_modal_form()
-                    self._get_edit_key_value_modal_forms()
-                    self._get_delete_key_value_modal_forms()
+                self._get_add_key_value_modal_form()
+                self._get_edit_key_value_modal_forms()
+                self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
             root_div_extra = div(id="filetype-extra-metadata", cls="col-xs-12 content-block")
