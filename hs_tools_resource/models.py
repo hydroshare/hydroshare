@@ -13,6 +13,8 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
+from hs_file_types.utils import get_SupportedAggTypes_choices
+
 
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
@@ -245,6 +247,92 @@ class SupportedResTypes(AbstractMetaDataElement):
         raise ValidationError("SupportedResTypes element can't be deleted.")
 
 
+class SupportedAggTypeChoices(models.Model):
+    description = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return self.description
+
+
+class SupportedAggTypes(AbstractMetaDataElement):
+    term = 'SupportedAggTypes'
+    supported_agg_types = models.ManyToManyField(SupportedAggTypeChoices,
+                                                 blank=True,
+                                                 related_name="associated_with")
+
+    class Meta:
+        # SupportedAggTypes element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    def get_supported_agg_types_str(self):
+        return ','.join([parameter.description for parameter in self.supported_agg_types.all()])
+
+    @classmethod
+    def _add_supported_agg_type(cls, meta_instance, supported_agg_types):
+
+        for agg_type in supported_agg_types:
+            # there are two possibilities for agg_type_str values:
+            # list of string (during normal create or update) or
+            # integer (during creating new version of the aggregation)
+            # TODO come back to this, probably only need one
+            if isinstance(agg_type, int):
+                # "copy agg" or "create a new version"
+                qs = SupportedAggTypeChoices.objects.filter(id=agg_type)
+                if not qs.exists():
+                    raise ObjectDoesNotExist('Aggregation type object {0} is not supported').format(
+                        agg_type)
+                meta_instance.supported_agg_types.add(qs[0])
+
+            elif isinstance(agg_type, basestring):
+                # create or update agg
+                qs = SupportedAggTypeChoices.objects.filter(description__iexact=agg_type)
+                if qs.exists():
+                    meta_instance.supported_agg_types.add(qs[0])
+                else:
+                    meta_instance.supported_agg_types.create(description=agg_type)
+            else:
+                raise ValidationError("No supported_agg_types parameter "
+                                      "was found in the **kwargs list")
+
+    @classmethod
+    def _validate_supported_agg_types(cls, supported_agg_types):
+        for agg_type in supported_agg_types:
+            if isinstance(agg_type, basestring) \
+                    and agg_type not in [agg_type_choice[0]
+                                         for agg_type_choice in get_SupportedAggTypes_choices()]:
+                raise ValidationError('Invalid supported_agg_types:%s' % agg_type)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'supported_agg_types' in kwargs:
+            cls._validate_supported_agg_types(kwargs['supported_agg_types'])
+
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedAggTypes.objects.create(content_object=metadata_obj)
+
+            cls._add_supported_agg_type(new_meta_instance, kwargs['supported_agg_types'])
+            return new_meta_instance
+        else:
+            raise ValidationError("No supported_agg_types parameter was found in the **kwargs list")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = SupportedAggTypes.objects.get(id=element_id)
+
+        if 'supported_agg_types' in kwargs:
+            cls._validate_supported_agg_types(kwargs['supported_agg_types'])
+
+            meta_instance.supported_agg_types.clear()
+            cls._add_supported_agg_type(meta_instance, kwargs['supported_agg_types'])
+            meta_instance.save()
+        else:
+            raise ValidationError("No supported_agg_types parameter was found in the **kwargs list")
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("SupportedAggTypes element can't be deleted.")
+
+
 class SupportedSharingStatusChoices(models.Model):
     description = models.CharField(max_length=128)
 
@@ -400,6 +488,7 @@ class ToolMetaData(CoreMetaData):
     _url_base = GenericRelation(RequestUrlBase)
     _version = GenericRelation(ToolVersion)
     _supported_res_types = GenericRelation(SupportedResTypes)
+    _supported_agg_types = GenericRelation(SupportedAggTypes)
     _tool_icon = GenericRelation(ToolIcon)
     _supported_sharing_status = GenericRelation(SupportedSharingStatus)
     _homepage_url = GenericRelation(AppHomePageUrl)
@@ -428,6 +517,10 @@ class ToolMetaData(CoreMetaData):
     @property
     def supported_resource_types(self):
         return self._supported_res_types.first()
+
+    @property
+    def supported_aggregation_types(self):
+        return self._supported_agg_types.first()
 
     @property
     def supported_sharing_status(self):
@@ -468,6 +561,9 @@ class ToolMetaData(CoreMetaData):
         if 'supportedrestypes' in keys_to_update:
             parsed_metadata.append({"supportedrestypes": metadata.pop('supportedrestypes')})
 
+        if 'supportedaggtypes' in keys_to_update:
+            parsed_metadata.append({"supportedaggtypes": metadata.pop('supportedaggtypes')})
+
         if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append({"supportedsharingstatus":
                                     metadata.pop('supportedsharingstatus')})
@@ -478,6 +574,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('RequestUrlBase')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
+        elements.append('SupportedAggTypes')
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
         elements.append('AppHomePageUrl')
@@ -504,6 +601,7 @@ class ToolMetaData(CoreMetaData):
                 missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
+            # TODO should I add a check for aggregation types as well, or is this enough?
             if self.supported_resource_types \
                and self.supported_resource_types.supported_res_types.count() > 0:
                 if not self.url_base or not self.url_base.value:
@@ -523,6 +621,7 @@ class ToolMetaData(CoreMetaData):
         self._url_base.all().delete()
         self._version.all().delete()
         self._supported_res_types.all().delete()
+        self._supported_agg_types.all().delete()
         self._tool_icon.all().delete()
         self._supported_sharing_status.all().delete()
         self._homepage_url.all().delete()
@@ -539,7 +638,8 @@ class ToolMetaData(CoreMetaData):
         # overriding the base class update method for bulk update of metadata
 
         from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
-            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
+            SupportedAggTypesValidationForm
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
@@ -558,6 +658,11 @@ class ToolMetaData(CoreMetaData):
                         dict_item['supportedrestypes'])
                     validate_form(validation_form)
                     self.create_element('supportedrestypes', **dict_item['supportedrestypes'])
+                elif 'supportedaggtypes' in dict_item:
+                    validation_form = SupportedAggTypesValidationForm(
+                        dict_item['supportedaggtypes'])
+                    validate_form(validation_form)
+                    self.create_element('supportedaggtypes', **dict_item['supportedaggtypes'])
                 elif 'supportedsharingstatus' in dict_item:
                     validation_form = SupportedSharingStatusValidationForm(
                         dict_item['supportedsharingstatus'])

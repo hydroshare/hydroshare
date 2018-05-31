@@ -5,10 +5,13 @@ from crispy_forms.layout import Layout, Field, HTML
 
 from models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
     HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
-    ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus
+    ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus, \
+    SupportedAggTypes
 
 from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
+
+from hs_file_types.utils import get_SupportedAggTypes_choices
 
 
 # TODO: reference hs_core.forms
@@ -438,6 +441,56 @@ class SupportedResTypesForm(ModelForm):
 
 class SupportedResTypesValidationForm(forms.Form):
     supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
+                                                    required=False)
+
+
+class SupportedAggTypeFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True,
+                 res_short_id=None,
+                 element_id=None,
+                 element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('supported_agg_types'))
+        kwargs['element_name_label'] = 'Supported Aggregation Types'
+        super(SupportedAggTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                         element_name, layout,  *args, **kwargs)
+
+
+class SupportedAggTypesForm(ModelForm):
+    supported_agg_types = forms.\
+        MultipleChoiceField(choices=get_SupportedAggTypes_choices(),
+                            widget=forms.CheckboxSelectMultiple(
+                                    attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
+        super(SupportedAggTypesForm, self).__init__(*args, **kwargs)
+        self.fields['supported_agg_types'].label = "Choose Aggregation Types:"
+        self.helper = SupportedAggTypeFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='SupportedAggTypes')
+
+        if model_instance:
+            supported_agg_types = model_instance.supported_agg_types.all()
+            if len(supported_agg_types) > 0:
+                # NOTE: The following code works for SWAT res type but does not work here!!!
+                # self.fields['supported_res_types'].initial =
+                #   [parameter.description for parameter in supported_res_types]
+
+                self.initial['supported_agg_types'] = \
+                    [parameter.description for parameter in supported_agg_types]
+            else:
+                self.initial['supported_agg_types'] = []
+
+    class Meta:
+        model = SupportedAggTypes
+        fields = ('supported_agg_types',)
+
+
+class SupportedAggTypesValidationForm(forms.Form):
+    supported_agg_types = forms.MultipleChoiceField(choices=get_SupportedAggTypes_choices(),
                                                     required=False)
 
 

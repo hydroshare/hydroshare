@@ -6,10 +6,11 @@ from hs_core.views import add_generic_context
 
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
-    VersionForm, SupportedResTypesForm, \
+    VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
+from hs_file_types.utils import get_SupportedAggTypes_choices
 
 
 @processor_for(ToolResource)
@@ -40,6 +41,20 @@ def landing_page(request, page):
                         break
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
+
+        new_supported_agg_types_array = []
+        if content_model.metadata.supported_aggregation_types:
+            extended_metadata_exists = True
+            supported_agg_types_str = content_model.metadata.\
+                supported_aggregation_types.get_supported_agg_types_str()
+            supported_agg_types_array = supported_agg_types_str.split(',')
+            for type_name in supported_agg_types_array:
+                for class_verbose_list in get_SupportedAggTypes_choices():
+                    if type_name.lower() == class_verbose_list[0].lower():
+                        new_supported_agg_types_array += [class_verbose_list[1]]
+                        break
+
+            context['supported_agg_types'] = ", ".join(new_supported_agg_types_array)
 
         if content_model.metadata.supported_sharing_status is not None:
             extended_metadata_exists = True
@@ -131,6 +146,12 @@ def landing_page(request, page):
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
+        supported_agg_types_obj = content_model.metadata.supported_aggregation_types
+        supported_agg_types_form = SupportedAggTypesForm(instance=supported_agg_types_obj,
+                                                         res_short_id=content_model.short_id,
+                                                         element_id=supported_agg_types_obj.id
+                                                         if supported_agg_types_obj else None)
+
         sharing_status_obj = content_model.metadata.supported_sharing_status
         sharing_status_obj_form = \
             SupportedSharingStatusForm(instance=sharing_status_obj,
@@ -148,6 +169,10 @@ def landing_page(request, page):
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy supported_res_types_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedAggTypes"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy supported_agg_types_form %} '
                      '</div> '),
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
                      '{% load crispy_forms_tags %} '
@@ -208,6 +233,7 @@ def landing_page(request, page):
         context['homepage_url_form'] = homepage_url_form
         context['version_form'] = version_form
         context['supported_res_types_form'] = supported_res_types_form
+        context['supported_agg_types_form'] = supported_agg_types_form
         context['tool_icon_form'] = tool_icon_form
         context['sharing_status_obj_form'] = sharing_status_obj_form
         context['testing_protocol_url_form'] = testing_protocol_url_form
