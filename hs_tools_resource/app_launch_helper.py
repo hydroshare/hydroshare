@@ -85,7 +85,11 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file])
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
-    is_file_level = tool_url_new and "HS_JS_DATA_URL_KEY" in tool_url_new
+    agg_types = ""
+    if tool_url_new and "HS_JS_DATA_URL_KEY" in tool_url_new:
+        if tool_res_obj.metadata._supported_agg_types:
+            agg_types = tool_res_obj.metadata._supported_agg_types.first()\
+                .get_supported_agg_types_str()
 
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
@@ -94,7 +98,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
               'url': tool_url_new,
               'openwithlist': is_open_with_app,
               'approved': is_approved_app,
-              'filelevel': is_file_level
+              'agg_types': agg_types
               }
 
         return is_open_with_app, tl

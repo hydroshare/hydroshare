@@ -577,6 +577,13 @@ function bindFileBrowserItemEvents() {
                 $(event.target).closest("li").addClass("ui-last-selected");
             }
             menu = $("#right-click-menu");
+
+            var file_agg_type = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+
+            // toggle apps by file_agg_type
+            menu.find("li.btn-open-with").each(function() {
+                $(this).toggle($.inArray(file_agg_type, $(this).attr("agg-types").split(",")) !== -1);
+            });
         }
         else {
             menu = $("#right-click-container-menu");    // empty space was clicked
@@ -1334,8 +1341,6 @@ $(document).ready(function () {
 
     $("#btn-open").click(onOpenFolder);
 
-    $("#btn-open-with").click(onOpenWith(this));
-
     $("#btn-cut, #fb-cut").click(onCut);
 
     function onCut() {
@@ -1490,7 +1495,7 @@ $(document).ready(function () {
     });
 
     // Open with method
-    $("#btn-open-with").click(function () {
+    $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
         var URL = file.attr("data-url");
         var fullURL = $(this).attr("url").replace("HS_JS_DATA_URL_KEY", URL);
