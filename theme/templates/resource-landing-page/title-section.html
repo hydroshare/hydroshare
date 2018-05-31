@@ -160,7 +160,7 @@
                 <span class="caret"></span></button>
             <ul class="dropdown-menu">
                 {% for tool in relevant_tools.tool_list %}
-                    {% if tool.openwithlist  %}
+                    {% if tool.openwithlist and not tool.agg_types  %}
                         <li title="{{ tool.title }}">
                                 <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{ tool.title }};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank">
                                 <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
