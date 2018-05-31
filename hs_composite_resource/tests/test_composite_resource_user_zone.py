@@ -94,8 +94,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are created on aggregation
         creation"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self._create_composite_resource()
         # create a generic aggregation (logical file)
@@ -115,8 +114,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         name change - single file aggregation file rename where the aggregation is at the root
         of the storage folder hierarchy"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -160,8 +158,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         name change - single file aggregation file rename where the aggregation is NOT at the root
         of the storage folder hierarchy"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -230,8 +227,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are recreated when a resource file
         that is part of the generic aggregation is moved """
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -294,8 +290,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are recreated when a folder containing
         a resource file that is part of the generic aggregation is renamed """
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -365,8 +360,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are recreated when a folder containing
         a resource file that is part of the generic aggregation is moved """
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -441,8 +435,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are deleted on aggregation
         delete"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -471,8 +464,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are deleted on deleting res file
         that is part of a generic aggregation"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -504,8 +496,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         aggregation (using raster here) is created - aggregation folder at the root of the folder
         hierarchy"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -541,8 +532,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         aggregation (using raster here) is created - aggregation folder NOT at the root of
         the folder hierarchy - aggregation folder has a parent folder"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -582,8 +572,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         aggregation (using raster here) folder name change - aggregation folder at the root of
         the folder hierarchy"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -653,8 +642,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         aggregation (using raster here) folder name change - aggregation folder NOT at the root of
         the folder hierarchy - aggregation folder has a parent folder"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -729,8 +717,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are re-created on raster aggregation
         folder move - raster folder at the root before move"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
@@ -791,8 +778,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         """Test that aggregation metadata and map xml files are re-created on raster aggregation
         parent folder move - raster folder not at the root before move"""
 
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()

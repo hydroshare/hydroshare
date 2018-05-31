@@ -13,8 +13,7 @@ from hs_file_types.models import TimeSeriesLogicalFile
 class TimeSeriesFileTypeTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TimeSeriesFileTypeTest, self).setUp()
-        if not super(TimeSeriesFileTypeTest, self).is_federated_irods_available():
-            return
+        super(TimeSeriesFileTypeTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -45,15 +44,14 @@ class TimeSeriesFileTypeTest(TestCaseCommonUtilities, TransactionTestCase):
 
     def tearDown(self):
         super(TimeSeriesFileTypeTest, self).tearDown()
-        if not super(TimeSeriesFileTypeTest, self).is_federated_irods_available():
-            return
+        super(TimeSeriesFileTypeTest, self).assert_federated_irods_available()
+
         super(TimeSeriesFileTypeTest, self).delete_irods_user_in_user_zone()
 
     def test_nc_set_file_type_to_netcdf(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(TimeSeriesFileTypeTest, self).is_federated_irods_available():
-            return
+        super(TimeSeriesFileTypeTest, self).assert_federated_irods_available()
 
         # here we are using a valid netcdf file for setting it
         # to NetCDF file type which includes metadata extraction
