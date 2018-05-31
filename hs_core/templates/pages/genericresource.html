@@ -185,7 +185,7 @@
                         {% for tool in relevant_tools.tool_list %}
                             {% if tool.agg_types and tool.openwithlist %}
                                 <li class="btn-open-with" data-menu-name="web-app" url="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}">
-                                    <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
                                      {% if tool.title|length > 20 %}
                                         <span>{{ tool.title|slice:":21"|add:"..." }}</span>
                                     {% else %}
