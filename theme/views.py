@@ -1,14 +1,14 @@
 from json import dumps
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.contrib.messages import info
+from django.contrib.messages import info, error
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.db import transaction
@@ -220,6 +220,22 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def signup_verify(request, uidb36=None, token=None):
+    """
+    Signup verify. Overriding mezzanine's view function for signup verify
+    """
+    user = authenticate(uidb36=uidb36, token=token, is_active=False)
+    if user is not None:
+        user.is_active = True
+        user.save()
+        auth_login(request, user)
+        info(request, _("Successfully signed up"))
+        return HttpResponseRedirect('/user/{}/?edit=true'.format(user.id))
+    else:
+        error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")
+
+
 @login_required
 def update_user_profile(request):
     user = request.user
@@ -235,7 +251,7 @@ def update_user_profile(request):
         messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    dict_items = request.POST['organization'].split(",")
+    dict_items = request.POST['organization'].split(";")
     for dict_item in dict_items:
         # Update Dictionaries
         try:
@@ -243,6 +259,8 @@ def update_user_profile(request):
         except ObjectDoesNotExist:
             new_term = UncategorizedTerm(name=dict_item)
             new_term.save()
+        except MultipleObjectsReturned:
+            pass
 
     profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:

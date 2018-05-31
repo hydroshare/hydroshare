@@ -313,3 +313,100 @@ class TestResourceList(HSRESTTestCase):
                                                         'nonsensical': '90',
                                                         'params': '140'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_resource_list_by_group(self):
+        group_one = self.user.uaccess.create_group(title='Group One',
+                                                   description='This is a great group',
+                                                   purpose='To have fun',
+                                                   auto_approve=True)
+        group_two = self.user.uaccess.create_group(title='Group Two',
+                                                   description='This is another great group',
+                                                   purpose='To have fun',
+                                                   auto_approve=True)
+        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
+                                               edit_groups=[group_one, group_two], view_groups=None)
+        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
+                                               edit_groups=None, view_groups=[group_one, group_two])
+        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3',
+                                                 edit_groups=[group_one], view_groups=None)
+        gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 4',
+                                                edit_groups=None, view_groups=None)
+
+        self.groups_to_delete.append(group_one)
+        self.groups_to_delete.append(group_two)
+        self.resources_to_delete.append(gen_res_one.short_id)
+        self.resources_to_delete.append(gen_res_two.short_id)
+        self.resources_to_delete.append(gen_res_three.short_id)
+        self.resources_to_delete.append(gen_res_four.short_id)
+
+        # resources by group id
+        response = self.client.get('/hsapi/resource/', {'group': str(group_one.pk)}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        response = self.client.get('/hsapi/resource/', {'group': str(group_two.pk)}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+
+        # resources by group name
+        response = self.client.get('/hsapi/resource/', {'group': str(group_one.name)},
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        response = self.client.get('/hsapi/resource/', {'group': str(group_two.name)},
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+
+    def test_resource_list_by_user(self):
+        # HSRESTTestCase is forcing authentication of user, so we'll just test that user
+        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
+
+        self.resources_to_delete.append(gen_res_one.short_id)
+        self.resources_to_delete.append(gen_res_two.short_id)
+        self.resources_to_delete.append(gen_res_three.short_id)
+
+        # resources by owner username
+        response = self.client.get('/hsapi/resource/', {'owner': self.user.username}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by owner email
+        response = self.client.get('/hsapi/resource/', {'owner': self.user.email}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by creator username
+        response = self.client.get('/hsapi/resource/', {'creator': self.user.username},
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by creator email
+        response = self.client.get('/hsapi/resource/', {'creator': self.user.email}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by user username
+        response = self.client.get('/hsapi/resource/', {'user': self.user.username},
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by user email
+        response = self.client.get('/hsapi/resource/', {'user': self.user.email}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)

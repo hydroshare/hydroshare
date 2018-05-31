@@ -125,6 +125,8 @@ def group_from_id(grp):
     except ObjectDoesNotExist:
         try:
             tgt = Group.objects.get(pk=int(grp))
+        except ValueError:
+            raise Http404('Group not found')
         except TypeError:
             raise Http404('Group not found')
         except ObjectDoesNotExist:
@@ -134,29 +136,21 @@ def group_from_id(grp):
 
 def get_user_zone_status_info(user):
     """
-    This function should be called to determine whether the site is in production and whether user
-    zone functionality should be enabled or not on the web site front end
+    This function should be called to determine whether user zone functionality should be
+    enabled or not on the web site front end
     Args:
         user: the requesting user
     Returns:
-        in_production, enable_user_zone where both are boolean indicating whether the site is
-        in production and whether user zone functionality should be enabled or not on the web site
-        front end
+        enable_user_zone boolean indicating whether user zone functionality should be enabled or
+        not on the web site front end
     """
     if user is None:
-        return None, None
+        return None
     if not hasattr(user, 'userprofile') or user.userprofile is None:
-        return None, None
+        return None
 
-    in_production = True if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER else False
-    enable_user_zone = user.userprofile.create_irods_user_account
-    if not in_production and enable_user_zone:
-        # if these settings are not empty, for example, in users' local
-        # development environment for testing, user_zone selection is shown
-        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or
-                not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
-            enable_user_zone = False
-    return in_production, enable_user_zone
+    enable_user_zone = user.userprofile.create_irods_user_account and settings.REMOTE_USE_IRODS
+    return enable_user_zone
 
 
 def is_federated(homepath):
@@ -376,23 +370,41 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     res = get_resource_by_shortkey(res_id)
     res_coll = res.root_path
     istorage = res.get_irods_storage()
-    bag_modified = "false"
+    bag_modified_flag = True
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when
     # it is getting downloaded
-    # TODO: why would we want to do anything at all if the resource does not exist???
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-        if bag_modified.lower() == "true":
+
+        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
+        # is False; otherwise, bag_modified_flag will take the default True value so that the
+        # bag will be created or recreated
+        if bag_modified:
+            if bag_modified.lower() == "false":
+                bag_file_name = res_id + '.zip'
+                if res.resource_federation_path:
+                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
+                                                 bag_file_name)
+                else:
+                    bag_full_path = os.path.join('bags', bag_file_name)
+
+                if istorage.exists(bag_full_path):
+                    bag_modified_flag = False
+
+        if bag_modified_flag:
             # import here to avoid circular import issue
             from hs_core.tasks import create_bag_by_irods
-            create_bag_by_irods(res_id)
+            status = create_bag_by_irods(res_id)
+            if not status:
+                # bag fails to be created successfully
+                raise SessionException(-1, '', 'The resource bag fails to be created '
+                                               'before bag replication')
 
         # do replication of the resource bag to irods user zone
         if not res.resource_federation_path:
             istorage.set_fed_zone_session()
         src_file = res.bag_path
-        # TODO: allow setting destination path
         tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
             userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
         fsize = istorage.size(src_file)

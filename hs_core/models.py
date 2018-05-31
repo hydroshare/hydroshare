@@ -32,6 +32,7 @@ from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
 
 from mezzanine.pages.models import Page
+from mezzanine.core.managers import PublishedManager
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
@@ -313,7 +314,7 @@ class Party(AbstractMetaDataElement):
     def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
         identifier_links = request.POST.getlist('identifier_link')
-        identifiers = None
+        identifiers = {}
         if identifier_links and identifier_names:
             if len(identifier_names) != len(identifier_links):
                 raise Exception("Invalid data for identifiers")
@@ -325,8 +326,7 @@ class Party(AbstractMetaDataElement):
                 identifiers = json.dumps(identifiers)
 
         post_data_dict = request.POST.dict()
-        if identifiers is not None:
-            post_data_dict['identifiers'] = identifiers
+        post_data_dict['identifiers'] = identifiers
 
         return post_data_dict
 
@@ -3220,7 +3220,7 @@ class BaseResource(Page, AbstractResource):
     # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
 
-    objects = models.Manager()
+    objects = PublishedManager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
 

@@ -127,7 +127,7 @@ function click_folder_opr() {
     }
     else {
         var store = $(this).attr('name');
-        var parent = $(this)
+        var parent = $(this);
         get_store(store, parent, margin_left);
         $(this).addClass('isOpen');
         set_datastore($(this).attr('name'), true);

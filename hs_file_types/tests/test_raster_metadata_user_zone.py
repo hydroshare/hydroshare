@@ -12,8 +12,7 @@ from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile
 class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(RasterFileTypeMetaDataTest, self).setUp()
-        if not super(RasterFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RasterFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -44,15 +43,11 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
 
     def tearDown(self):
         super(RasterFileTypeMetaDataTest, self).tearDown()
-        if not super(RasterFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RasterFileTypeMetaDataTest, self).assert_federated_irods_available()
         super(RasterFileTypeMetaDataTest, self).delete_irods_user_in_user_zone()
 
     def test_tif_set_file_type_to_geo_raster(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(RasterFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RasterFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         # here we are using a valid raster tif file for setting it
         # to Geo Raster file type which includes metadata extraction

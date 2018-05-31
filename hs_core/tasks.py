@@ -2,12 +2,14 @@
 
 from __future__ import absolute_import
 
-import logging
 import os
 import sys
 import traceback
 import zipfile
-from datetime import timedelta, date
+import logging
+import json
+
+from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
 import requests
@@ -15,18 +17,19 @@ from celery import shared_task
 from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from rest_framework import status
 
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from django_irods.storage import IrodsStorage
+from theme.models import UserQuota, QuotaMessage, UserProfile, User
+
+from django_irods.icommands import SessionException
+
 from hs_core.models import BaseResource
-from theme.models import UserQuota, QuotaMessage
 from theme.utils import get_quota_message
 
 # Pass 'django' into getLogger instead of __name__
@@ -44,6 +47,69 @@ def nightly_zips_cleanup():
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+def sync_email_subscriptions():
+    sixty_days = datetime.today() - timedelta(days=60)
+    active_subscribed = UserProfile.objects.filter(email_opt_out=False,
+                                                   user__last_login__gte=sixty_days,
+                                                   user__is_active=True)
+    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
+    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
+    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
+
+
+def sync_mailchimp(active_subscribed, list_id):
+    session = requests.Session()
+    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
+    # get total members
+    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
+        'hs-celery', settings.MAILCHIMP_PASSWORD))
+    total_items = json.loads(response.content)["total_items"]
+    # get list of all member ids
+    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
+                                                                          total_items=total_items),
+                           auth=requests.auth.HTTPBasicAuth('hs-celery',
+                                                            settings.MAILCHIMP_PASSWORD))
+    # clear the email list
+    delete_count = 0
+    for member in json.loads(response.content)["members"]:
+        if member["status"] == "subscribed":
+            session_response = session.delete(
+                (url + "/{id}").format(list_id=list_id, id=member["id"]),
+                auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+            if session_response.status_code != 204:
+                logger.info("Expected 204 status code, got " + str(session_response.status_code))
+                logger.debug(session_response.content)
+            else:
+                delete_count += 1
+    # add active subscribed users to mailchimp
+    add_count = 0
+    for subscriber in active_subscribed:
+        json_data = {"email_address": subscriber.user.email, "status": "subscribed",
+                     "merge_fields": {"FNAME": subscriber.user.first_name,
+                                      "LNAME": subscriber.user.last_name}}
+        session_response = session.post(
+            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
+                'hs-celery', settings.MAILCHIMP_PASSWORD))
+        if session_response.status_code != 200:
+            logger.info("Expected 200 status code, got " + str(session_response.status_code))
+            logger.debug(session_response.content)
+        else:
+            add_count += 1
+    if delete_count == active_subscribed.count():
+        logger.info("successfully cleared mailchimp for list id " + list_id)
+    else:
+        logger.info(
+            "cleared " + str(delete_count) + " out of " + str(
+                active_subscribed.count()) + " for list id " + list_id)
+
+    if active_subscribed.count() == add_count:
+        logger.info("successfully synced all subscriptions for list id " + list_id)
+    else:
+        logger.info("added " + str(add_count) + " out of " + str(
+            active_subscribed.count()) + " for list id " + list_id)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -139,16 +205,23 @@ def manage_task_nightly():
                 # set grace period to 0 when user quota exceeds hard limit
                 uq.remaining_grace_period = 0
             uq.save()
-            user = uq.user
-            uemail = user.email
+
+            uemail = u.email
             msg_str = 'Dear ' + u.username + ':\n\n'
-            msg_str += get_quota_message(user)
+
+            ori_qm = get_quota_message(u)
+            # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
+            replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
+                settings.DEFAULT_SUPPORT_EMAIL)
+            new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
+            msg_str += new_qm
 
             msg_str += '\n\nHydroShare Support'
             subject = 'Quota warning'
             # send email for people monitoring and follow-up as needed
-            send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
-                      [uemail])
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [uemail, settings.DEFAULT_SUPPORT_EMAIL],
+                      html_message=msg_str)
         else:
             if uq.remaining_grace_period >= 0:
                 # turn grace period off now that the user is below quota soft limit

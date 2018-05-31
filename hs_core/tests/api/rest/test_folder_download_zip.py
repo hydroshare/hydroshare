@@ -55,8 +55,12 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
     def test_folder_download_rest(self):
         date_folder = (date.today()).strftime('%Y-%m-%d')
+        zip_download_url = "/resource/{pid}/data/contents/foo".format(pid=self.pid)
+        response = self.client.get(zip_download_url, format="json")
+        # becasue of the redirect to the internal url, the status code is 301
+        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
         zip_download_url = "/django_irods/rest_download/zips/{pid}/data/contents/foo".format(
-             pid=self.pid)
+            pid=self.pid)
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)

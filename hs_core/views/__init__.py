@@ -3,6 +3,7 @@ import json
 import datetime
 import pytz
 import logging
+import os
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -32,7 +33,6 @@ from mezzanine.utils.email import subject_template, send_mail_template
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
-from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
@@ -483,7 +483,14 @@ def file_download_url_mapper(request, shortkey):
 
     resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     istorage = resource.get_irods_storage()
-    irods_file_path = '/'.join(request.path.split('/')[2:-1])
+    irods_split = request.path.split('/')[2:-1]
+    irods_file_path = '/'.join(irods_split)
+    # [0:-1] excludes the last item on the list
+    listing = istorage.listdir('/'.join(irods_split[0:-1]))
+    if irods_split[-1] in listing[0]:
+        # it's a folder
+        file_download_url = istorage.url(os.path.join('zips', irods_file_path))
+        return HttpResponseRedirect(file_download_url)
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
@@ -605,6 +612,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": ex.message}),
             content_type="application/json"
         )
+    except ValidationError as ex:
+        return HttpResponse(
+            json.dumps({"error": ex.message}),
+            content_type="application/json"
+        )
+
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
@@ -1058,7 +1071,7 @@ def my_resources(request, page):
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
-    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
+    user_zone_account_exist = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
