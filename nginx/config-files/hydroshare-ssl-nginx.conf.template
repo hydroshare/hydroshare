@@ -1,5 +1,13 @@
 # hydroshare-ssl-nginx.conf
 
+geo $external {
+  default 1;
+  192.168.0.0/24 0;
+  172.17.0.0/24 0;
+  127.0.0.0/8 0;
+  10.0.0.0/8 0;
+}
+
 server {
     listen          80;
     server_name     FQDN_OR_IP;
@@ -10,9 +18,21 @@ server {
     listen          443 ssl;
     server_name     FQDN_OR_IP;
     root            /hydroshare/hydroshare/static/;
+
+    set $need_rewrite 0;
+
     if ($http_host != "FQDN_OR_IP") {
+        set $need_rewrite 1;
+    }
+
+    if ($external) {
+        set $need_rewrite "${need_rewrite}1";
+    }
+
+    if ($need_rewrite = 11) {
         rewrite ^ https://FQDN_OR_IP$request_uri permanent;
     }
+
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
     error_log       /var/log/nginx/system.log notice;

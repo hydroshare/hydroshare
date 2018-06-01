@@ -58,6 +58,7 @@ stop_nginx() {
 
 get_nginx_ip() {
     NGINX_IP=`docker network inspect bridge | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+    mkdir -p tmp
     echo $NGINX_IP > tmp/nginx_ip
 }
 
