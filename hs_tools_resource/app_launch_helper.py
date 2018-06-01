@@ -87,9 +87,13 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     agg_types = ""
     if tool_url_new and "HS_JS_DATA_URL_KEY" in tool_url_new:
-        if tool_res_obj.metadata._supported_agg_types:
+        if tool_res_obj.metadata._supported_agg_types.first():
             agg_types = tool_res_obj.metadata._supported_agg_types.first()\
                 .get_supported_agg_types_str()
+    file_extensions = ""
+    if tool_url_new and "HS_JS_DATA_URL_KEY" in tool_url_new:
+        if tool_res_obj.metadata.supported_file_extensions:
+            file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
@@ -98,7 +102,8 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
               'url': tool_url_new,
               'openwithlist': is_open_with_app,
               'approved': is_approved_app,
-              'agg_types': agg_types
+              'agg_types': agg_types,
+              'file_extensions': file_extensions
               }
 
         return is_open_with_app, tl

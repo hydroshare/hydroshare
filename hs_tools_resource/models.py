@@ -62,6 +62,15 @@ class ToolResource(BaseResource):
 processor_for(ToolResource)(resource_processor)
 
 
+class SupportedFileExtensions(AbstractMetaDataElement):
+    term = 'SupportedFileExtensions'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # SupportedFileExtensions element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class AppHomePageUrl(AbstractMetaDataElement):
     term = 'AppHomePageUrl'
     value = models.CharField(max_length=1024, blank=True, default="")
@@ -491,6 +500,7 @@ class ToolMetaData(CoreMetaData):
     _supported_agg_types = GenericRelation(SupportedAggTypes)
     _tool_icon = GenericRelation(ToolIcon)
     _supported_sharing_status = GenericRelation(SupportedSharingStatus)
+    _supported_file_extensions = GenericRelation(SupportedFileExtensions)
     _homepage_url = GenericRelation(AppHomePageUrl)
 
     approved = models.BooleanField(default=False)
@@ -527,6 +537,10 @@ class ToolMetaData(CoreMetaData):
         return self._supported_sharing_status.first()
 
     @property
+    def supported_file_extensions(self):
+        return self._supported_file_extensions.first()
+
+    @property
     def app_home_page_url(self):
         return self._homepage_url.first()
 
@@ -555,6 +569,10 @@ class ToolMetaData(CoreMetaData):
         if 'toolicon' in keys_to_update:
             parsed_metadata.append({"toolicon": metadata.pop('toolicon')})
 
+        if 'supportedfileextensions' in keys_to_update:
+            parsed_metadata.append({"supportedfileextensions": metadata.pop(
+                'supportedfileextensions')})
+
         if 'apphomepageurl' in keys_to_update:
             parsed_metadata.append({"apphomepageurl": metadata.pop('apphomepageurl')})
 
@@ -577,6 +595,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('SupportedAggTypes')
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
+        elements.append('SupportedFileExtensions')
         elements.append('AppHomePageUrl')
         elements.append('TestingProtocolUrl')
         elements.append('SourceCodeUrl')
@@ -624,6 +643,7 @@ class ToolMetaData(CoreMetaData):
         self._supported_agg_types.all().delete()
         self._tool_icon.all().delete()
         self._supported_sharing_status.all().delete()
+        self._supported_file_extensions.all().delete()
         self._homepage_url.all().delete()
 
         self.testing_protocol_url.all().delete()
@@ -639,7 +659,7 @@ class ToolMetaData(CoreMetaData):
 
         from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
             UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
-            SupportedAggTypesValidationForm
+            SupportedAggTypesValidationForm, SupportedFileExtensionsValidationForm
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
@@ -695,6 +715,15 @@ class ToolMetaData(CoreMetaData):
                         self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
                     else:
                         self.create_element('toolicon', **dict_item['toolicon'])
+                elif 'supportedfileextensions' in dict_item:
+                    validation_form = SupportedFileExtensionsValidationForm(dict_item['supportedfileextensions'])
+                    validate_form(validation_form)
+                    app_url = self.supported_file_extensions
+                    if app_url is not None:
+                        self.update_element('supportedfileextensions', app_url.id,
+                                            **dict_item['supportedfileextensions'])
+                    else:
+                        self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
                 elif 'apphomepageurl' in dict_item:
                     validation_form = UrlValidationForm(dict_item['apphomepageurl'])
                     validate_form(validation_form)

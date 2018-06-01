@@ -7,7 +7,8 @@ from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
                                     SupportedSharingStatusValidationForm, RoadmapForm, \
-                                    ShowOnOpenWithListForm, SupportedAggTypesValidationForm
+                                    ShowOnOpenWithListForm, SupportedAggTypesValidationForm, \
+                                    SupportedFileExtensionsValidationForm
 
 from default_icon import default_icon_data_url
 
@@ -51,6 +52,8 @@ def validate_form(request, element_name):
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
+    elif element_name == 'supportedfileextensions':
+        element_form = SupportedFileExtensionsValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'testingprotocolurl':

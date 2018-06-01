@@ -3,7 +3,7 @@ from rest_framework import serializers
 from hs_core.views.resource_metadata_rest_api import CoreMetaDataSerializer
 from models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResTypeChoices, \
     SupportedResTypes, SupportedSharingStatusChoices, SupportedSharingStatus, ToolIcon, \
-    ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices
+    ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions
 
 
 class SupportedResTypeChoicesMetaDataSerializer(serializers.ModelSerializer):
@@ -22,6 +22,12 @@ class SupportedSharingStatusChoicesMetaDataSerializer(serializers.ModelSerialize
     class Meta:
         model = SupportedSharingStatusChoices
         fields = ('description',)
+
+
+class SupportedFileExtensionsMetaDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupportedFileExtensions
+        fields = ('value',)
 
 
 class AppHomePageUrlMetaDataSerializer(serializers.ModelSerializer):
@@ -79,6 +85,8 @@ class ToolMetaDataSerializer(CoreMetaDataSerializer):
     supported_aggregation_types = SupportedAggTypesMetaDataSerializer(required=False, many=False)
     app_icon = ToolIconMetaDataSerializer(required=False, many=False)
     supported_sharing_statuses = SupportedSharingStatusMetaDataSerializer(required=False,
+                                                                          many=False)
+    supported_file_extensions = SupportedFileExtensionsMetaDataSerializer(required=False,
                                                                           many=False)
     app_home_page_url = AppHomePageUrlMetaDataSerializer(required=False, many=False)
 

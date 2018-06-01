@@ -578,11 +578,21 @@ function bindFileBrowserItemEvents() {
             }
             menu = $("#right-click-menu");
 
-            var file_agg_type = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            var fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
+            var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
 
-            // toggle apps by file_agg_type
+            // toggle apps by file extension and aggregations
             menu.find("li.btn-open-with").each(function() {
-                $(this).toggle($.inArray(file_agg_type, $(this).attr("agg-types").split(",")) !== -1);
+                var agg_app = false;
+                if ($(this).attr("agg-types").trim() !== ""){
+                    agg_app = $.inArray(fileAggType, $(this).attr("agg-types").split(",")) !== -1;
+                }
+                var extension_app = false;
+                if ($(this).attr("file-extensions").trim() !== ""){
+                    extension_app = $.inArray(fileExtension, $(this).attr("file-extensions").split(" ")) !== -1;
+                }
+                $(this).toggle(agg_app || extension_app);
             });
         }
         else {
@@ -900,10 +910,6 @@ function startDownload() {
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");
         }
     }
-}
-
-function onOpenWith() {
-
 }
 
 function onOpenFolder() {

@@ -52,6 +52,40 @@ class UrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
 
 
+class SupportedFileExtensionsValidationForm(forms.Form):
+    # TODO, probably should write a validator enforcing format
+    value = forms.CharField(max_length=1024, required=False)
+
+
+class SupportedFileExtensionsFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Supported File Extensions"
+
+        super(SupportedFileExtensionsFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class SupportedFileExtensionsForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SupportedFileExtensionsForm, self).__init__(*args, **kwargs)
+        self.helper = SupportedFileExtensionsFormHelper(allow_edit, res_short_id, element_id,
+                                                        element_name='SupportedFileExtensions')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = AppHomePageUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
 class AppHomePageUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
                  element_id=None, element_name=None,  *args, **kwargs):

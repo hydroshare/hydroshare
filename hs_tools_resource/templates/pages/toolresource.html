@@ -30,8 +30,18 @@
                     {%  endif %}
                 </div>
                 <div>
+                    {% if supported_file_extensions %}
+                        <h4><strong>Supported File Extensions:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_file_extensions.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
                     {% if supported_res_types %}
-                        <h4><strong>Supported boo Resource Types:</strong></h4>
+                        <h4><strong>Supported Resource Types:</strong></h4>
                         <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>

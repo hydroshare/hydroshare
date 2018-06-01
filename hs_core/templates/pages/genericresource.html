@@ -183,8 +183,8 @@
                     {%  endif %}
                     {% if relevant_tools %}
                         {% for tool in relevant_tools.tool_list %}
-                            {% if tool.agg_types and tool.openwithlist %}
-                                <li class="btn-open-with" data-menu-name="web-app" url="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}">
+                            {% if tool.agg_types or tool.file_extensions and tool.openwithlist %}
+                                <li class="btn-open-with" data-menu-name="web-app" url="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
                                     <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
                                      {% if tool.title|length > 20 %}
                                         <span>{{ tool.title|slice:":21"|add:"..." }}</span>
@@ -1144,7 +1144,7 @@
                                     {% if not metadata_form %}
                                         <div class="row">
                                             {% for tool in relevant_tools.tool_list %}
-                                                {% if not tool.agg_types %}
+                                                {% if not tool.agg_types or tool.file_extensions %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
                                                     <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
