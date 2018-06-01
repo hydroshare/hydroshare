@@ -1,4 +1,5 @@
-"""This prints the state of a logical file.
+"""This lists all the large resources and their statuses.
+   This helps in checking that they download properly.
 
 * By default, prints errors on stdout.
 * Optional argument --log: logs output to system log.
@@ -9,7 +10,7 @@ from hs_core.models import BaseResource
 
 
 def measure_resource(short_id):
-    """ Debug view for resource depicts output of various integrity checking scripts """
+    """ Print size and sharing status of a resource """
 
     try:
         res = BaseResource.objects.get(short_id=short_id)
@@ -20,10 +21,17 @@ def measure_resource(short_id):
     assert resource, (res, res.content_model)
 
     istorage = resource.get_irods_storage()
-    if istorage.exists(resource.file_path):
-        print("{} {}".format(resource.size, short_id))
+    if resource.raccess.public:
+        status = "public"
+    elif resource.raccess.discoverable:
+        status = "discoverable"
     else:
-        print("{} {} no file path".format(0, short_id))
+        status = "private"
+
+    if istorage.exists(resource.file_path):
+        print("{} {} {}".format(resource.size, short_id, status))
+    else:
+        print("{} {} {} NO IRODS FILES".format(0, short_id, status))
 
 
 class Command(BaseCommand):
