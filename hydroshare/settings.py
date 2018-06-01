@@ -4,6 +4,7 @@ TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
+import sys
 import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
@@ -705,3 +706,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 SWAGGER_SETTINGS = {
     "VALIDATOR_URL": False
 }
+
+# detect test mode to turn off some features 
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
