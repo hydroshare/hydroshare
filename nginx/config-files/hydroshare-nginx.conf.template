@@ -1,5 +1,9 @@
 # hydroshare-nginx.conf                                                         
 
+# $external is 1 if the URI is external and 0 if it cannot possibly be 
+# external due to use of RFC-1918 addressing. This enables loopback
+# testing of reverse proxy in management commands. 
+
 geo $external {
   default 1;
   192.168.0.0/24 0;
@@ -13,6 +17,10 @@ server {
     server_name     FQDN_OR_IP;
     root            /hydroshare/hydroshare/static/;
 
+    # Compute whether we need to rewrite an address. Rewrite all erronious 
+    # external addresses but avoid rewriting internal references (from django 
+    # management commands). 
+     
     set $need_rewrite 0;
 
     if ($http_host != "FQDN_OR_IP") {
