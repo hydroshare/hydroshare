@@ -6,7 +6,9 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
-var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select an aggregation to see aggregation type metadata.</h4></div>';
+var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert">' +
+    '<h4>Select content in the file browser to see metadata specific to that content. Metadata will only display here when the the content is selected above. Content specific metadata does not display on the Discover page.</h4>' +
+    '</div>';
 
 const MAX_FILE_SIZE = 1024; // MB
 
@@ -18,7 +20,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
         if (folderIcons[folderAgrregationType]) {
             iconTemplate = folderIcons[folderAgrregationType];
         }
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
+        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
                 iconTemplate +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
@@ -56,7 +58,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
     }
 
     if (logical_type.length > 0){
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Aggregation Type: " + aggregation_name;
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;" + aggregation_name;
     }
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));

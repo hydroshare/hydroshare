@@ -227,7 +227,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Geographic Raster Aggregation'
+        return 'Geographic Raster Content: A geographic grid represented by a virtual raster ' \
+               'tile (.vrt) file and one or more geotiff (.tif) files'
 
     @staticmethod
     def get_aggregation_type_name():
