@@ -822,6 +822,7 @@ function remove_aggregation_ajax_submit(url) {
         Content type was removed successfully.\
     </div>';
 
+    // This wait dialog may not be useful
     var waitDialog = showWaitDialog();
     return $.ajax({
         type: "POST",
