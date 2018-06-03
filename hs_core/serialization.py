@@ -954,7 +954,6 @@ class GenericResourceMeta(object):
 
             self.uri = uri
 
-
     class ResourceCreator(ResourceContributor):
         """
 
