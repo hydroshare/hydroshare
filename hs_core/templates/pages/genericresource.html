@@ -1147,13 +1147,12 @@
                                                 {% if not tool.agg_types or tool.file_extensions %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
-                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
     						                         {% if tool.approved %}
                                                          <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
                                                              <img class="app-approved-icon-img" src="/static/img/approved_app.png">
                                                          </a>
                                                      {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                    <a href="/resource/{{ tool.res_id }}/" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
                                                         {% if tool.title|length > 20 %}
                                                             <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                         {% else %}
