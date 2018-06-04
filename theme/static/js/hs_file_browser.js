@@ -1505,7 +1505,7 @@ $(document).ready(function () {
         var file = $("#fb-files-container li.ui-selected");
         var path = file.attr("data-url");
         var fullURL;
-        if (file.find("span.fb-logical-file-type").length){
+        if (file.find("span.fb-logical-file-type").text() !== ''){
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_DATA_URL_KEY", path);
         }
         else{
