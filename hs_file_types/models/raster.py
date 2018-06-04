@@ -528,7 +528,11 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
             error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
             return error_info, []
 
-        if set(files_ext) == {'.vrt', '.tif', '.tiff'} and files_ext.count('.vrt') == 1:
+        unique_files_ext = set(files_ext)
+        if (unique_files_ext == {'.vrt', '.tif', '.tiff'} or
+            unique_files_ext == {'.vrt', '.tif'} or
+            unique_files_ext == {'.vrt', '.tiff'}) and \
+                files_ext.count('.vrt') == 1:
             vrt_file_path = new_resource_files_to_add[files_ext.index('.vrt')]
             raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
             if raster_dataset is None:
