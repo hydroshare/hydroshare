@@ -12,6 +12,7 @@ from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 from hs_file_types.utils import get_SupportedAggTypes_choices
+from django.core.exceptions import ValidationError
 
 
 # TODO: reference hs_core.forms
@@ -122,8 +123,17 @@ class UrlValidationForm(forms.Form):
 
 
 class SupportedFileExtensionsValidationForm(forms.Form):
-    # TODO, probably should write a validator enforcing format
     value = forms.CharField(max_length=1024, required=False)
+
+    def clean(self):
+        cleaned_data = super(SupportedFileExtensionsValidationForm, self).clean()
+        cleaned_val = cleaned_data.get("value")
+
+        val_array = cleaned_val.split(",")
+        for val in val_array:
+            if not val.strip().startswith("."):
+                raise ValidationError("File extensions must be begin with a period and be comma "
+                                      "separated. (i.e. '.txt, .rtf,.pdf'")
 
 
 class SupportedFileExtensionsFormHelper(BaseFormHelper):

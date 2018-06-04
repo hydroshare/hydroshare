@@ -590,7 +590,13 @@ function bindFileBrowserItemEvents() {
                 }
                 var extension_app = false;
                 if ($(this).attr("file-extensions").trim() !== ""){
-                    extension_app = $.inArray(fileExtension, $(this).attr("file-extensions").split(" ")) !== -1;
+                    var extensions = $(this).attr("file-extensions").split(",")
+                    for (var i = 0; i < extensions.length; ++i) {
+                        if (fileExtension === extensions[i].trim()){
+                            extension_app = true;
+                            break;
+                        }
+                    }
                 }
                 $(this).toggle(agg_app || extension_app);
             });
