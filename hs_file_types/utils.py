@@ -28,7 +28,7 @@ def get_SupportedAggTypes_choices():
     agg_types_list = get_aggregation_types()
     for r_type in agg_types_list:
         class_name = r_type.__name__
-        verbose_name = r_type._meta.verbose_name
+        verbose_name = r_type.get_aggregation_display_name
         result_list.append([class_name, verbose_name])
     return result_list
 
