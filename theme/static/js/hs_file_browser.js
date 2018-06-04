@@ -125,12 +125,8 @@ function updateSelectionMenuContext() {
         }
         $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
 
-        // Multiple folder deletion is not allowed for composite resource
-        // to avoid race condition that can occur with logical file objects especially
-        // if a folder has many files
         var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
-            flagDisableDelete = true;
             flagDisableRemoveAggregation = true;
         }
         if(resourceType !== 'Composite Resource') {
@@ -160,11 +156,9 @@ function updateSelectionMenuContext() {
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetGeoFeatureFileType = true;
         flagDisableSetTimeseriesFileType = true;
-        // Multiple folder deletion is not allowed for composite resource
-        // to avoid race condition that can occur with logical file objects especially
-        // if a folder has many files
+
         var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-        if(resourceType === 'Composite Resource' && foldersSelected.length == 1) {
+        if(resourceType === 'Composite Resource' && foldersSelected.length > 0) {
             flagDisableDelete = false;
         }
         if(resourceType === 'Composite Resource') {
@@ -272,13 +266,6 @@ function updateSelectionMenuContext() {
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-                if(foldersSelected.length == 1) {
-                    flagDisableDelete = false;
-                }
-                else {
-                    flagDisableDelete = true;
-                }
                 flagDisableCut = true;
                 flagDisablePaste = true;
                 flagDisableCreateFolder = true;
@@ -293,7 +280,13 @@ function updateSelectionMenuContext() {
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableCreateFolder = true;
             flagDisableRename = true;
-            flagDisableDelete = true;
+            if(isFolderSelected){
+                flagDisableDelete = false;
+            }
+            else {
+                flagDisableDelete = true;
+            }
+
             flagDisableCut = true;
             flagDisableSetGenericFileType = true;
         }
