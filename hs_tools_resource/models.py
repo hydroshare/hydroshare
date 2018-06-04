@@ -162,6 +162,24 @@ class RequestUrlBase(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
+class RequestUrlBaseAggregation(AbstractMetaDataElement):
+    term = 'RequestUrlBaseAggregation'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # RequestUrlBaseAggregation element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class RequestUrlBaseFile(AbstractMetaDataElement):
+    term = 'RequestUrlBaseFile'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # RequestUrlBaseFile element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class ToolVersion(AbstractMetaDataElement):
     term = 'AppVersion'
     value = models.CharField(max_length=128, blank=True)
@@ -495,6 +513,8 @@ class ToolIcon(AbstractMetaDataElement):
 class ToolMetaData(CoreMetaData):
 
     _url_base = GenericRelation(RequestUrlBase)
+    _url_base_aggregation = GenericRelation(RequestUrlBaseAggregation)
+    _url_base_file = GenericRelation(RequestUrlBaseFile)
     _version = GenericRelation(ToolVersion)
     _supported_res_types = GenericRelation(SupportedResTypes)
     _supported_agg_types = GenericRelation(SupportedAggTypes)
@@ -519,6 +539,14 @@ class ToolMetaData(CoreMetaData):
     @property
     def url_base(self):
         return self._url_base.first()
+
+    @property
+    def url_base_aggregation(self):
+        return self._url_base_aggregation.first()
+
+    @property
+    def url_base_file(self):
+        return self._url_base_file.first()
 
     @property
     def version(self):
@@ -563,6 +591,12 @@ class ToolMetaData(CoreMetaData):
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
+        if 'requesturlbaseaggregation' in keys_to_update:
+            parsed_metadata.append({"requesturlbaseaggregation": metadata.pop('requesturlbaseaggregation')})
+
+        if 'requesturlbasefile' in keys_to_update:
+            parsed_metadata.append({"requesturlbasefile": metadata.pop('requesturlbasefile')})
+
         if 'toolversion' in keys_to_update:
             parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
 
@@ -590,6 +624,8 @@ class ToolMetaData(CoreMetaData):
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()
         elements.append('RequestUrlBase')
+        elements.append('RequestUrlBaseAggregation')
+        elements.append('RequestUrlBaseFile')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         elements.append('SupportedAggTypes')
@@ -638,6 +674,8 @@ class ToolMetaData(CoreMetaData):
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()
         self._url_base.all().delete()
+        self._url_base_aggregation.all().delete()
+        self._url_base_file.all().delete()
         self._version.all().delete()
         self._supported_res_types.all().delete()
         self._supported_agg_types.all().delete()
@@ -698,6 +736,24 @@ class ToolMetaData(CoreMetaData):
                                             value=dict_item['requesturlbase'])
                     else:
                         self.create_element('requesturlbase', value=dict_item['requesturlbase'])
+                elif 'requesturlbaseaggregation' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['requesturlbaseaggregation'])
+                    validate_form(validation_form)
+                    request_url = self.url_base_aggregation
+                    if request_url is not None:
+                        self.update_element('requesturlbaseaggregation', request_url.id,
+                                            value=dict_item['requesturlbaseaggregation'])
+                    else:
+                        self.create_element('requesturlbaseaggregation', value=dict_item['requesturlbaseaggregation'])
+                elif 'requesturlbasefile' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['requesturlbasefile'])
+                    validate_form(validation_form)
+                    request_url = self.url_base_file
+                    if request_url is not None:
+                        self.update_element('requesturlbasefile', request_url.id,
+                                            value=dict_item['requesturlbasefile'])
+                    else:
+                        self.create_element('requesturlbasefile', value=dict_item['requesturlbasefile'])
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)

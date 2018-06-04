@@ -3,7 +3,8 @@ from rest_framework import serializers
 from hs_core.views.resource_metadata_rest_api import CoreMetaDataSerializer
 from models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResTypeChoices, \
     SupportedResTypes, SupportedSharingStatusChoices, SupportedSharingStatus, ToolIcon, \
-    ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions
+    ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions, \
+    RequestUrlBaseAggregation, RequestUrlBaseFile
 
 
 class SupportedResTypeChoicesMetaDataSerializer(serializers.ModelSerializer):
@@ -39,6 +40,18 @@ class AppHomePageUrlMetaDataSerializer(serializers.ModelSerializer):
 class RequestUrlBaseMetaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestUrlBase
+        fields = ('value',)
+
+
+class RequestUrlBaseAggregationMetaDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RequestUrlBaseAggregation
+        fields = ('value',)
+
+
+class RequestUrlBaseFileMetaDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RequestUrlBaseFile
         fields = ('value',)
 
 
@@ -80,6 +93,8 @@ class ToolIconMetaDataSerializer(serializers.ModelSerializer):
 
 class ToolMetaDataSerializer(CoreMetaDataSerializer):
     url_base = RequestUrlBaseMetaDataSerializer(required=False, many=False)
+    url_base_aggregation = RequestUrlBaseAggregationMetaDataSerializer(required=False, many=False)
+    url_base_file = RequestUrlBaseFileMetaDataSerializer(required=False, many=False)
     version = ToolVersionMetaDataSerializer(required=False, many=False)
     supported_resource_types = SupportedResTypesMetaDataSerializer(required=False, many=False)
     supported_aggregation_types = SupportedAggTypesMetaDataSerializer(required=False, many=False)

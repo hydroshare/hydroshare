@@ -6,7 +6,7 @@ from crispy_forms.layout import Layout, Field, HTML
 from models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
     HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
     ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus, \
-    SupportedAggTypes
+    SupportedAggTypes, RequestUrlBaseAggregation, RequestUrlBaseFile
 
 from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
@@ -44,6 +44,75 @@ class UrlBaseForm(ModelForm):
 
     class Meta:
         model = RequestUrlBase
+        fields = ['value']
+        exclude = ['content_object']
+
+
+
+class UrlBaseAggregationFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = \
+            "App-launching Aggregation Level URL Pattern <a href='/terms#AppURLPattern' " \
+            "target='_blank'>" \
+            "<font size='3'>Help</font></a>"
+
+        super(UrlBaseAggregationFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class UrlBaseAggregationForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(UrlBaseAggregationForm, self).__init__(*args, **kwargs)
+        self.helper = UrlBaseAggregationFormHelper(allow_edit,
+                                        res_short_id,
+                                        element_id,
+                                        element_name='RequestUrlBaseAggregation')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = RequestUrlBaseAggregation
+        fields = ['value']
+        exclude = ['content_object']
+
+
+
+class UrlBaseFileFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = \
+            "App-launching File Level URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "<font size='3'>Help</font></a>"
+
+        super(UrlBaseFileFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class UrlBaseFileForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(UrlBaseFileForm, self).__init__(*args, **kwargs)
+        self.helper = UrlBaseFileFormHelper(allow_edit,
+                                        res_short_id,
+                                        element_id,
+                                        element_name='RequestUrlBaseFile')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = RequestUrlBaseFile
         fields = ['value']
         exclude = ['content_object']
 

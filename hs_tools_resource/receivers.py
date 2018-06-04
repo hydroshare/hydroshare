@@ -42,6 +42,10 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
         element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'requesturlbaseaggregation':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'requesturlbasefile':
+        element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':

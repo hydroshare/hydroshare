@@ -7,7 +7,8 @@ from hs_core.views import add_generic_context
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
     VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
-    SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm
+    SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm, \
+    UrlBaseAggregationForm, UrlBaseFileForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
 from hs_file_types.utils import get_SupportedAggTypes_choices
@@ -71,6 +72,8 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
 
         context['url_base'] = content_model.metadata.url_base
+        context['url_base_aggregation'] = content_model.metadata.url_base_aggregation
+        context['url_base_file'] = content_model.metadata.url_base_file
         context['version'] = content_model.metadata.version
         context['homepage_url'] = content_model.metadata.app_home_page_url
         context['testing_protocol_url'] = content_model.metadata.testing_protocol_url.first()
@@ -87,6 +90,18 @@ def landing_page(request, page):
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
                                     if url_base else None)
+
+        url_base_aggregation = content_model.metadata.url_base_aggregation
+        url_base_aggregation_form = UrlBaseAggregationForm(instance=url_base_aggregation,
+                                    res_short_id=content_model.short_id,
+                                    element_id=url_base_aggregation.id
+                                    if url_base_aggregation else None)
+
+        url_base_file = content_model.metadata.url_base_file
+        url_base_file_form = UrlBaseFileForm(instance=url_base_file,
+                                    res_short_id=content_model.short_id,
+                                    element_id=url_base_file.id
+                                    if url_base_file else None)
 
         supported_file_extensions = content_model.metadata.supported_file_extensions
         supported_file_extensions_form = \
@@ -200,6 +215,14 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_base_form %} '
                      '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases_aggregation'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy url_base_aggregation_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases_file'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy url_base_file_form %} '
+                     '</div>'),
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy version_form %} '
@@ -244,6 +267,8 @@ def landing_page(request, page):
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)
         context['url_base_form'] = url_base_form
+        context['url_base_aggregation_form'] = url_base_aggregation_form
+        context['url_base_file_form'] = url_base_file_form
         context['supported_file_extensions_form'] = supported_file_extensions_form
         context['homepage_url_form'] = homepage_url_form
         context['version_form'] = version_form

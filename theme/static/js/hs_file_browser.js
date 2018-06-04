@@ -1503,8 +1503,15 @@ $(document).ready(function () {
     // Open with method
     $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
-        var URL = file.attr("data-url");
-        var fullURL = $(this).attr("url").replace("HS_JS_DATA_URL_KEY", URL);
+        var path = file.attr("data-url");
+        var fullURL;
+        if (file.find("span.fb-logical-file-type").length){
+            fullURL = $(this).attr("url_aggregation").replace("HS_JS_DATA_URL_KEY", path);
+        }
+        else{
+            // not an aggregation
+            fullURL = $(this).attr("url_file").replace("HS_JS_DATA_URL_KEY", path);
+        }
         window.open(fullURL);
     });
 
