@@ -697,7 +697,9 @@ class ToolMetaData(CoreMetaData):
 
         from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
             UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
-            SupportedAggTypesValidationForm, SupportedFileExtensionsValidationForm
+            SupportedAggTypesValidationForm, SupportedFileExtensionsValidationForm, \
+            AppResourceLevelUrlValidationForm, AppAggregationLevelUrlValidationForm, \
+            AppFileLevelUrlValidationForm
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
@@ -728,7 +730,7 @@ class ToolMetaData(CoreMetaData):
                     self.create_element('supportedsharingstatus',
                                         **dict_item['supportedsharingstatus'])
                 elif 'requesturlbase' in dict_item:
-                    validation_form = UrlValidationForm(dict_item['requesturlbase'])
+                    validation_form = AppResourceLevelUrlValidationForm(dict_item['requesturlbase'])
                     validate_form(validation_form)
                     request_url = self.url_base
                     if request_url is not None:
@@ -737,7 +739,8 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'requesturlbaseaggregation' in dict_item:
-                    validation_form = UrlValidationForm(dict_item['requesturlbaseaggregation'])
+                    validation_form = AppAggregationLevelUrlValidationForm(dict_item[
+                                                                               'requesturlbaseaggregation'])
                     validate_form(validation_form)
                     request_url = self.url_base_aggregation
                     if request_url is not None:
@@ -746,7 +749,7 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('requesturlbaseaggregation', value=dict_item['requesturlbaseaggregation'])
                 elif 'requesturlbasefile' in dict_item:
-                    validation_form = UrlValidationForm(dict_item['requesturlbasefile'])
+                    validation_form = AppFileLevelUrlValidationForm(dict_item['requesturlbasefile'])
                     validate_form(validation_form)
                     request_url = self.url_base_file
                     if request_url is not None:

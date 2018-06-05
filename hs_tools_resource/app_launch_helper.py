@@ -78,20 +78,13 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         if tool_res_obj.metadata.url_base_file else None
     tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
         if tool_res_obj.metadata.app_icon else "raise-img-error"
-    hs_term_dict_user = {}
-    hs_term_dict_user["HS_USR_NAME"] = request_obj.user.username if \
-        request_obj.user.is_authenticated() \
-        else "anonymous"
-    hs_term_dict_file = {}
-    # HS_JS_DATA_URL_KEY is overwritten by jquery to launch the url specific to each file
-    hs_term_dict_file["HS_AGGREGATION_URL"] = "HS_JS_DATA_URL_KEY"
-    hs_term_dict_file["HS_FILE_URL"] = "HS_JS_DATA_URL_KEY"
-    tool_url_resource_new = parse_app_url_template(
-        tool_url_resource, [resource_obj.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file])
-    tool_url_aggregation_new = parse_app_url_template(
-        tool_url_aggregation, [resource_obj.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file])
-    tool_url_file_new = parse_app_url_template(
-        tool_url_file, [resource_obj.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file])
+
+    url_key_values = get_app_dict(request_obj.user, resource_obj)
+
+    tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
+    tool_url_aggregation_new = parse_app_url_template(tool_url_aggregation, url_key_values)
+    tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
+
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     agg_types = ""
@@ -122,6 +115,16 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         return is_open_with_app, tl
     else:
         return False, {}
+
+
+def get_app_dict(user, resource):
+    hs_term_dict_user = {}
+    hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated() else "anonymous"
+    hs_term_dict_file = {}
+    # HS_JS_DATA_URL_KEY is overwritten by jquery to launch the url specific to each file
+    hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_DATA_URL_KEY"
+    hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_DATA_URL_KEY"
+    return [resource.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file]
 
 
 def _check_user_can_view_app(request_obj, tool_res_obj):

@@ -8,7 +8,10 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     UrlValidationForm, \
                                     SupportedSharingStatusValidationForm, RoadmapForm, \
                                     ShowOnOpenWithListForm, SupportedAggTypesValidationForm, \
-                                    SupportedFileExtensionsValidationForm
+                                    SupportedFileExtensionsValidationForm, \
+                                    AppAggregationLevelUrlValidationForm, \
+                                    AppResourceLevelUrlValidationForm, \
+                                    AppFileLevelUrlValidationForm
 
 from default_icon import default_icon_data_url
 
@@ -41,11 +44,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
-        element_form = UrlValidationForm(data=request.POST)
+        element_form = AppResourceLevelUrlValidationForm(data=request.POST)
     elif element_name == 'requesturlbaseaggregation':
-        element_form = UrlValidationForm(data=request.POST)
+        element_form = AppAggregationLevelUrlValidationForm(data=request.POST)
     elif element_name == 'requesturlbasefile':
-        element_form = UrlValidationForm(data=request.POST)
+        element_form = AppFileLevelUrlValidationForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':
