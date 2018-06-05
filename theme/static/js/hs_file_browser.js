@@ -1097,6 +1097,7 @@ $(document).ready(function () {
                         location.reload(true);
                     }
                     else {
+                        var resourceType = $("#resource-type").val();
                         // Remove further paths from the log
                         var range = pathLog.length - pathLogIndex;
                         pathLog.splice(pathLogIndex + 1, range);
@@ -1105,6 +1106,9 @@ $(document).ready(function () {
 
                         refreshFileBrowser();
                         $("#previews").empty();
+                        if(resourceType === 'Composite Resource') {
+                            refreshResourceEditPage();
+                        }
                     }
                 });
 
