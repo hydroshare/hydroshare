@@ -656,7 +656,6 @@ class ToolMetaData(CoreMetaData):
                 missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
-            # TODO should I add a check for aggregation types as well, or is this enough?
             if self.supported_resource_types \
                and self.supported_resource_types.supported_res_types.count() > 0:
                 if not self.url_base or not self.url_base.value:
