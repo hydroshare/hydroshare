@@ -291,7 +291,7 @@ def delete_zip(zip_path):
 @shared_task
 def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
-    if sf_aggregation: 
+    if sf_aggregation:
         pass
     res = get_resource_by_shortkey(resource_id)
     full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
