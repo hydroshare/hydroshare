@@ -2,7 +2,7 @@
 
 """
 Check that bags can be downloaded from nginx via SENDFILE
-Note that it is not possible to test this in test mode. 
+Note that it is not possible to test this in test mode.
 """
 
 import os
@@ -10,7 +10,6 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.tasks import create_bag_by_irods
-from django_irods.icommands import SessionException
 from django_irods.views import get_nginx_ip
 import requests
 
@@ -75,12 +74,12 @@ def check_download(rid, options):
                 uri = resource.bag_url
                 qualified = "http://{}{}".format(ip, uri)
                 print("downloading {} via {}".format(resource.short_id, qualified))
-                # Skip verification because of unqualified URL. 
+                # Skip verification because of unqualified URL.
                 r = requests.get(qualified, stream=True, verify=False)
                 print("status code is {}".format(r.status_code))
                 for chunk in r.iter_content(chunk_size=128):
-                    break  # read one line 
-                r.connection.close()  # force close to clear up nginx 
+                    break  # read one line
+                r.connection.close()  # force close to clear up nginx
 
             else:
                 print("{} does not exist after being generated and cannot be downloaded"
