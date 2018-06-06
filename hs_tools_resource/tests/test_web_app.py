@@ -8,12 +8,12 @@ from django.conf import settings
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
-from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource,\
-                                     ToolIcon, AppHomePageUrl, SupportedSharingStatus, \
-                                     RequestUrlBaseAggregation, SupportedFileExtensions, \
-                                     SupportedAggTypes, RequestUrlBaseFile
+from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, \
+    ToolIcon, AppHomePageUrl, SupportedSharingStatus, \
+    RequestUrlBaseAggregation, SupportedFileExtensions, \
+    SupportedAggTypes, RequestUrlBaseFile
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
-                                        metadata_element_pre_update_handler
+    metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_core.testing import TestCaseCommonUtilities
@@ -26,26 +26,26 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
-                'scrawley@byu.edu',
-                username='scrawley',
-                first_name='Shawn',
-                last_name='Crawley',
-                superuser=False,
-                groups=[self.group]
+            'scrawley@byu.edu',
+            username='scrawley',
+            first_name='Shawn',
+            last_name='Crawley',
+            superuser=False,
+            groups=[self.group]
         )
         self.allowance = 0.00001
 
         self.resWebApp = hydroshare.create_resource(
-                resource_type='ToolResource',
-                owner=self.user,
-                title='Test Web App Resource',
-                keywords=['kw1', 'kw2'])
+            resource_type='ToolResource',
+            owner=self.user,
+            title='Test Web App Resource',
+            keywords=['kw1', 'kw2'])
 
         self.resComposite = hydroshare.create_resource(
-                resource_type='CompositeResource',
-                owner=self.user,
-                title='Test Composite Resource',
-                keywords=['kw1', 'kw2'])
+            resource_type='CompositeResource',
+            owner=self.user,
+            title='Test Composite Resource',
+            keywords=['kw1', 'kw2'])
 
         self.test_file_path = 'hs_composite_resource/tests/data/{}'
 
@@ -150,14 +150,14 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # may not create additional instance of ToolIcon
         with self.assertRaises(Exception):
-            resource.\
+            resource. \
                 create_metadata_element(self.resWebApp.short_id,
                                         'ToolIcon',
                                         value='https://www.hydroshare.org/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
-        resource.\
+        resource. \
             update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
                                     element_id=ToolIcon.objects.first().id,
                                     value='https://www.hydroshare.org/static/img/logo-sm.png')
@@ -270,7 +270,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create SupportedResTypes obj with required params
         metadata.append({'supportedrestypes': {'supported_res_types':
-                                               ['NetcdfResource', 'TimeSeriesResource']}})
+                                                   ['NetcdfResource', 'TimeSeriesResource']}})
 
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
@@ -287,7 +287,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         del metadata[:]
         self.assertEqual(SupportedSharingStatus.objects.all().count(), 0)
         metadata.append({'supportedsharingstatus': {'sharing_status':
-                                                    ['Public', 'Discoverable']}})
+                                                        ['Public', 'Discoverable']}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedSharingStatus.objects.all().count(), 1)
@@ -301,7 +301,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 ToolIcon obj with required params
         metadata.append({'toolicon': {'value':
-                                      'https://www.hydroshare.org/static/img/logo-sm.png'}})
+                                          'https://www.hydroshare.org/static/img/logo-sm.png'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
@@ -460,7 +460,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
     def test_agg_types(self):
         # set url launching pattern for aggregations
         metadata = [{'requesturlbaseaggregation':
-                        {'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
+                         {'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(RequestUrlBaseAggregation.objects.all().count(), 1)
 
@@ -515,13 +515,13 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
     def test_file_extensions(self):
         # set url launching pattern for aggregations
         metadata = [{'requesturlbasefile':
-                        {'value': 'https://www.google.com?agg_path=${HS_FILE_PATH}'}}]
+                         {'value': 'https://www.google.com?agg_path=${HS_FILE_PATH}'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(RequestUrlBaseFile.objects.all().count(), 1)
 
         # set web app to launch for geo raster
         metadata = [{'supportedfileextensions':
-                        {'value': '.tif'}}]
+                         {'value': '.tif'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
 

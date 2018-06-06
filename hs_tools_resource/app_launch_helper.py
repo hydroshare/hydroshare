@@ -6,7 +6,6 @@ from hs_tools_resource.app_keys import tool_app_key
 
 
 def resource_level_tool_urls(resource_obj, request_obj):
-
     res_type_str = resource_obj.resource_type
 
     tool_list = []
@@ -88,15 +87,15 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     agg_types = ""
     file_extensions = ""
     if (tool_url_agg_new and "HS_JS_AGG_KEY" or "HS_JS_FILE_KEY" in tool_url_agg_new) or \
-        (tool_url_file_new and "HS_JS_AGG_KEY" or "HS_JS_FILE_KEY" in tool_url_file_new):
+            (tool_url_file_new and "HS_JS_AGG_KEY" or "HS_JS_FILE_KEY" in tool_url_file_new):
         if tool_res_obj.metadata._supported_agg_types.first():
-            agg_types = tool_res_obj.metadata._supported_agg_types.first()\
+            agg_types = tool_res_obj.metadata._supported_agg_types.first() \
                 .get_supported_agg_types_str()
         if tool_res_obj.metadata.supported_file_extensions:
             file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if (tool_url_resource_new is not None) or \
-        (tool_url_agg_new is not None) or \
+            (tool_url_agg_new is not None) or \
             (tool_url_file_new is not None):
         tl = {'title': str(tool_res_obj.metadata.title.value),
               'res_id': tool_res_obj.short_id,
@@ -127,22 +126,19 @@ def get_app_dict(user, resource):
 
 
 def _check_user_can_view_app(request_obj, tool_res_obj):
-
     _, user_can_view_app, _ = authorize(
-                request_obj, tool_res_obj.short_id,
-                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                raises_exception=False)
+        request_obj, tool_res_obj.short_id,
+        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+        raises_exception=False)
     return user_can_view_app
 
 
 def _check_open_with_app(tool_res_obj, request_obj):
-
     return _check_webapp_in_user_open_with_list(tool_res_obj, request_obj) or \
-            _check_webapp_is_approved(tool_res_obj)
+           _check_webapp_is_approved(tool_res_obj)
 
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):
-
     if request_obj.user.is_authenticated():
         user_obj = get_user(request_obj)
         return tool_res_obj.rlabels.is_open_with_app(user_obj)
@@ -151,7 +147,6 @@ def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):
 
 
 def _check_webapp_is_approved(tool_res_obj):
-
     try:
         return tool_res_obj.metadata.approved
     except Exception:
@@ -159,26 +154,25 @@ def _check_webapp_is_approved(tool_res_obj):
 
 
 def _check_user_can_view_resource(request_obj, resource_obj):
-
     _, user_can_view_res, _ = authorize(
-                request_obj, resource_obj.short_id,
-                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                raises_exception=False)
+        request_obj, resource_obj.short_id,
+        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+        raises_exception=False)
     return user_can_view_res
 
 
 def _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
     sharing_status_supported = False
-    supported_sharing_status_obj = tool_res_obj.metadata.\
+    supported_sharing_status_obj = tool_res_obj.metadata. \
         supported_sharing_status
     if supported_sharing_status_obj is not None:
-        supported_sharing_status_str = supported_sharing_status_obj.\
-                                      get_sharing_status_str()
+        supported_sharing_status_str = supported_sharing_status_obj. \
+            get_sharing_status_str()
         if len(supported_sharing_status_str) > 0:
-                res_sharing_status = resource_obj.raccess.sharing_status
-                if supported_sharing_status_str.lower().\
-                        find(res_sharing_status.lower()) != -1:
-                    sharing_status_supported = True
+            res_sharing_status = resource_obj.raccess.sharing_status
+            if supported_sharing_status_str.lower(). \
+                    find(res_sharing_status.lower()) != -1:
+                sharing_status_supported = True
     else:
         # backward compatible: webapp without supported_sharing_status metadata
         # is considered to support all sharing status

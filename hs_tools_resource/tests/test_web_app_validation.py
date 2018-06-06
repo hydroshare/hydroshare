@@ -18,20 +18,20 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
-                'scrawley@byu.edu',
-                username='scrawley',
-                first_name='Shawn',
-                last_name='Crawley',
-                superuser=False,
-                groups=[self.group]
+            'scrawley@byu.edu',
+            username='scrawley',
+            first_name='Shawn',
+            last_name='Crawley',
+            superuser=False,
+            groups=[self.group]
         )
         self.allowance = 0.00001
 
         self.resWebApp = hydroshare.create_resource(
-                resource_type='ToolResource',
-                owner=self.user,
-                title='Test Web App Resource',
-                keywords=['kw1', 'kw2'])
+            resource_type='ToolResource',
+            owner=self.user,
+            title='Test Web App Resource',
+            keywords=['kw1', 'kw2'])
 
         self.factory = RequestFactory()
 
@@ -57,7 +57,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_file_level_keys_add_bad(self):
         bad_url = 'https://www.google.com?' \
-                   'file_id=${BAD_KEY}'
+                  'file_id=${BAD_KEY}'
 
         post_data = {'value': bad_url}
         url_params = {'element_name': "requesturlbasefile", 'shortkey': self.resWebApp.short_id}
@@ -104,7 +104,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.META['HTTP_REFERER'] = 'http_referer'
         id = RequestUrlBaseFile.objects.first().id
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbasefile",
+                                           element_name="requesturlbasefile",
                                            element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
@@ -118,7 +118,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbasefile", element_id=id)
+                                           element_name="requesturlbasefile", element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseFile.objects.all().count())
@@ -148,7 +148,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_aggregation_level_keys_add_bad(self):
         bad_url = 'https://www.google.com?' \
-                   'file_id=${BAD_KEY}'
+                  'file_id=${BAD_KEY}'
 
         post_data = {'value': bad_url}
         url_params = {'element_name': "requesturlbaseaggregation", 'shortkey':
@@ -197,7 +197,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.META['HTTP_REFERER'] = 'http_referer'
         id = RequestUrlBaseAggregation.objects.first().id
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbaseaggregation",
+                                           element_name="requesturlbaseaggregation",
                                            element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
@@ -211,7 +211,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbaseaggregation", element_id=id)
+                                           element_name="requesturlbaseaggregation", element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
@@ -241,7 +241,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_resource_level_keys_add_bad(self):
         bad_url = 'https://www.google.com?' \
-                   'file_id=${BAD_KEY}'
+                  'file_id=${BAD_KEY}'
 
         post_data = {'value': bad_url}
         url_params = {'element_name': "requesturlbase", 'shortkey':
@@ -290,7 +290,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.META['HTTP_REFERER'] = 'http_referer'
         id = RequestUrlBase.objects.first().id
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbase",
+                                           element_name="requesturlbase",
                                            element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
@@ -304,7 +304,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbase", element_id=id)
+                                           element_name="requesturlbase", element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBase.objects.all().count())
@@ -340,7 +340,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.META['HTTP_REFERER'] = 'http_referer'
         id = SupportedFileExtensions.objects.first().id
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="supportedfileextensions",
+                                           element_name="supportedfileextensions",
                                            element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
@@ -354,7 +354,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
         response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
-                                        element_name="requesturlbase", element_id=id)
+                                           element_name="requesturlbase", element_id=id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, SupportedFileExtensions.objects.all().count())

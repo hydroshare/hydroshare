@@ -18,8 +18,7 @@ from django.core.exceptions import ValidationError
 # TODO: reference hs_core.forms
 class UrlBaseFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -30,8 +29,8 @@ class UrlBaseFormHelper(BaseFormHelper):
             "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
-        super(UrlBaseFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(UrlBaseFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class UrlBaseForm(ModelForm):
@@ -49,11 +48,9 @@ class UrlBaseForm(ModelForm):
         exclude = ['content_object']
 
 
-
 class UrlBaseAggregationFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -65,17 +62,17 @@ class UrlBaseAggregationFormHelper(BaseFormHelper):
             "target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
-        super(UrlBaseAggregationFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(UrlBaseAggregationFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class UrlBaseAggregationForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseAggregationForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseAggregationFormHelper(allow_edit,
-                                        res_short_id,
-                                        element_id,
-                                        element_name='RequestUrlBaseAggregation')
+                                                   res_short_id,
+                                                   element_id,
+                                                   element_name='RequestUrlBaseAggregation')
         self.fields['value'].label = ''
 
     class Meta:
@@ -84,11 +81,9 @@ class UrlBaseAggregationForm(ModelForm):
         exclude = ['content_object']
 
 
-
 class UrlBaseFileFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -99,17 +94,17 @@ class UrlBaseFileFormHelper(BaseFormHelper):
             "App-launching File Level URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
-        super(UrlBaseFileFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(UrlBaseFileFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class UrlBaseFileForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseFileForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseFileFormHelper(allow_edit,
-                                        res_short_id,
-                                        element_id,
-                                        element_name='RequestUrlBaseFile')
+                                            res_short_id,
+                                            element_id,
+                                            element_name='RequestUrlBaseFile')
         self.fields['value'].label = ''
 
     class Meta:
@@ -142,7 +137,7 @@ class AppResourceLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(term_dict.keys())))
 
 
 class AppAggregationLevelUrlValidationForm(forms.Form):
@@ -165,7 +160,7 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(term_dict.keys())))
 
 
 class AppFileLevelUrlValidationForm(forms.Form):
@@ -188,7 +183,7 @@ class AppFileLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(term_dict.keys())))
 
 
 class SupportedFileExtensionsValidationForm(forms.Form):
@@ -209,8 +204,7 @@ class SupportedFileExtensionsValidationForm(forms.Form):
 
 class SupportedFileExtensionsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -219,8 +213,8 @@ class SupportedFileExtensionsFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Supported File Extensions"
 
-        super(SupportedFileExtensionsFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(SupportedFileExtensionsFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class SupportedFileExtensionsForm(ModelForm):
@@ -238,8 +232,7 @@ class SupportedFileExtensionsForm(ModelForm):
 
 class AppHomePageUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -248,8 +241,8 @@ class AppHomePageUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "App Home Page URL"
 
-        super(AppHomePageUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(AppHomePageUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class AppHomePageUrlForm(ModelForm):
@@ -269,8 +262,7 @@ class AppHomePageUrlForm(ModelForm):
 
 class TestingProtocolUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -279,8 +271,8 @@ class TestingProtocolUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Testing Protocol URL"
 
-        super(TestingProtocolUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(TestingProtocolUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class TestingProtocolUrlForm(ModelForm):
@@ -300,8 +292,7 @@ class TestingProtocolUrlForm(ModelForm):
 
 class HelpPageUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -310,8 +301,8 @@ class HelpPageUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Help Page URL"
 
-        super(HelpPageUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(HelpPageUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class HelpPageUrlForm(ModelForm):
@@ -331,8 +322,7 @@ class HelpPageUrlForm(ModelForm):
 
 class SourceCodeUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -341,8 +331,8 @@ class SourceCodeUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Source Code URL"
 
-        super(SourceCodeUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(SourceCodeUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class SourceCodeUrlForm(ModelForm):
@@ -362,8 +352,7 @@ class SourceCodeUrlForm(ModelForm):
 
 class IssuesPageUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -372,8 +361,8 @@ class IssuesPageUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Issues Page URL"
 
-        super(IssuesPageUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(IssuesPageUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class IssuesPageUrlForm(ModelForm):
@@ -393,8 +382,7 @@ class IssuesPageUrlForm(ModelForm):
 
 class MailingListUrlFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -403,8 +391,8 @@ class MailingListUrlFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Mailing List URL"
 
-        super(MailingListUrlFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(MailingListUrlFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class MailingListUrlForm(ModelForm):
@@ -424,8 +412,7 @@ class MailingListUrlForm(ModelForm):
 
 class RoadmapFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -434,8 +421,8 @@ class RoadmapFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Roadmap"
 
-        super(RoadmapFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(RoadmapFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class RoadmapForm(ModelForm):
@@ -455,8 +442,7 @@ class RoadmapForm(ModelForm):
 
 class ShowOnOpenWithListFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed
         # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
@@ -465,8 +451,8 @@ class ShowOnOpenWithListFormHelper(BaseFormHelper):
         )
         kwargs['element_name_label'] = "Show on 'Open With' List"
 
-        super(ShowOnOpenWithListFormHelper, self).\
-            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ShowOnOpenWithListFormHelper, self). \
+            __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class ShowOnOpenWithListForm(ModelForm):
@@ -491,7 +477,7 @@ class VersionFormHelper(BaseFormHelper):
         # listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                Field('value', css_class=field_width),
+            Field('value', css_class=field_width),
         )
         kwargs['element_name_label'] = 'Version'
         super(VersionFormHelper, self).__init__(allow_edit,
@@ -534,8 +520,8 @@ class ToolIconFormHelper(BaseFormHelper):
                 data_url = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
-                    Field('value', css_class=field_width),
-                    HTML("""
+            Field('value', css_class=field_width),
+            HTML("""
                         <span id="icon-preview-label" class="control-label">Preview</span>
                         <br>
                         <img id="tool-icon-preview" src="{data_url}">
@@ -584,20 +570,19 @@ class SupportedResTypeFormHelper(BaseFormHelper):
                  element_id=None,
                  element_name=None,
                  *args, **kwargs):
-
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_res_types'))
         kwargs['element_name_label'] = 'Supported Resource Types'
         super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout,  *args, **kwargs)
+                                                         element_name, layout, *args, **kwargs)
 
 
 class SupportedResTypesForm(ModelForm):
-    supported_res_types = forms.\
+    supported_res_types = forms. \
         MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                             widget=forms.CheckboxSelectMultiple(
-                                    attrs={'style': 'width:auto;margin-top:-5px'}))
+                                attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
@@ -634,20 +619,19 @@ class SupportedAggTypeFormHelper(BaseFormHelper):
                  element_id=None,
                  element_name=None,
                  *args, **kwargs):
-
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_agg_types'))
         kwargs['element_name_label'] = 'Supported Aggregation Types'
         super(SupportedAggTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout,  *args, **kwargs)
+                                                         element_name, layout, *args, **kwargs)
 
 
 class SupportedAggTypesForm(ModelForm):
-    supported_agg_types = forms.\
+    supported_agg_types = forms. \
         MultipleChoiceField(choices=get_SupportedAggTypes_choices(),
                             widget=forms.CheckboxSelectMultiple(
-                                    attrs={'style': 'width:auto;margin-top:-5px'}))
+                                attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
@@ -680,21 +664,20 @@ class SupportedAggTypesValidationForm(forms.Form):
 
 class SupportedSharingStatusFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('sharing_status'))
         kwargs['element_name_label'] = 'Supported Resource Sharing Status'
-        super(SupportedSharingStatusFormHelper, self).\
+        super(SupportedSharingStatusFormHelper, self). \
             __init__(allow_edit, res_short_id, element_id,
-                     element_name, layout,  *args, **kwargs)
+                     element_name, layout, *args, **kwargs)
 
 
 class SupportedSharingStatusForm(ModelForm):
     sharing_status = forms.MultipleChoiceField(choices=get_SupportedSharingStatus_choices(),
                                                widget=forms.CheckboxSelectMultiple(
-                                                attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                   attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')

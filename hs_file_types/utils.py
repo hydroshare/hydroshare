@@ -8,7 +8,6 @@ from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFi
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
 
 from hs_file_types.models.base import AbstractLogicalFile
-from hs_core.models import BaseResource
 from django.apps import apps
 
 

@@ -395,7 +395,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                 meta_instance.sharing_status.add(qs[0])
             elif isinstance(sharing_status, basestring):
                 # create or update res
-                qs = SupportedSharingStatusChoices.objects.\
+                qs = SupportedSharingStatusChoices.objects. \
                     filter(description__iexact=sharing_status)
                 if qs.exists():
                     meta_instance.sharing_status.add(qs[0])
@@ -409,9 +409,9 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     def _validate_sharing_status(cls, sharing_status_list):
         for sharing_status in sharing_status_list:
             if isinstance(sharing_status, basestring) and \
-                            sharing_status not in [sharing_status_choice_tuple[0]
-                                                   for sharing_status_choice_tuple in
-                                                   get_SupportedSharingStatus_choices()]:
+                    sharing_status not in [sharing_status_choice_tuple[0]
+                                           for sharing_status_choice_tuple in
+                                           get_SupportedSharingStatus_choices()]:
                 raise ValidationError('Invalid sharing_status:%s' % sharing_status)
 
     @classmethod
@@ -467,8 +467,8 @@ class ToolIcon(AbstractMetaDataElement):
         if image_type not in ["png", "gif", "jpeg"]:
             raise ValidationError("Supported icon image types are png, gif and jpeg")
         base64_string = base64.b64encode(response.content)
-        data_url = "data:image/{image_type};base64,{base64_string}".\
-                   format(image_type=image_type, base64_string=base64_string)
+        data_url = "data:image/{image_type};base64,{base64_string}". \
+            format(image_type=image_type, base64_string=base64_string)
         return data_url
 
     @classmethod
@@ -511,7 +511,6 @@ class ToolIcon(AbstractMetaDataElement):
 
 
 class ToolMetaData(CoreMetaData):
-
     _url_base = GenericRelation(RequestUrlBase)
     _url_base_aggregation = GenericRelation(RequestUrlBaseAggregation)
     _url_base_file = GenericRelation(RequestUrlBaseFile)
@@ -592,7 +591,8 @@ class ToolMetaData(CoreMetaData):
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
         if 'requesturlbaseaggregation' in keys_to_update:
-            parsed_metadata.append({"requesturlbaseaggregation": metadata.pop('requesturlbaseaggregation')})
+            parsed_metadata.append(
+                {"requesturlbaseaggregation": metadata.pop('requesturlbaseaggregation')})
 
         if 'requesturlbasefile' in keys_to_update:
             parsed_metadata.append({"requesturlbasefile": metadata.pop('requesturlbasefile')})
@@ -618,7 +618,7 @@ class ToolMetaData(CoreMetaData):
 
         if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append({"supportedsharingstatus":
-                                    metadata.pop('supportedsharingstatus')})
+                                        metadata.pop('supportedsharingstatus')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -652,23 +652,23 @@ class ToolMetaData(CoreMetaData):
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
         if (not self.url_base or not self.url_base.value) \
-           and (not self.url_base_file or not self.url_base_file.value) \
-           and (not self.url_base_aggregation or not self.url_base_aggregation.value) \
-           and (not self.app_home_page_url or not self.app_home_page_url.value):
-                missing_required_elements.append('App Home Page URL or an App-launching URL '
-                                                 'Pattern')
+                and (not self.url_base_file or not self.url_base_file.value) \
+                and (not self.url_base_aggregation or not self.url_base_aggregation.value) \
+                and (not self.app_home_page_url or not self.app_home_page_url.value):
+            missing_required_elements.append('App Home Page URL or an App-launching URL '
+                                             'Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
             if self.supported_resource_types \
-               and self.supported_resource_types.supported_res_types.count() > 0:
+                    and self.supported_resource_types.supported_res_types.count() > 0:
                 if not self.url_base or not self.url_base.value:
                     missing_required_elements.append('App-launching URL Pattern')
 
             # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
             if self.supported_resource_types \
-               and self.supported_resource_types.supported_res_types.count() > 0:
+                    and self.supported_resource_types.supported_res_types.count() > 0:
                 if not self.supported_sharing_status \
-                   or not self.supported_sharing_status.sharing_status.count() > 0:
+                        or not self.supported_sharing_status.sharing_status.count() > 0:
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
@@ -749,7 +749,8 @@ class ToolMetaData(CoreMetaData):
                         self.update_element('requesturlbaseaggregation', request_url.id,
                                             value=dict_item['requesturlbaseaggregation'])
                     else:
-                        self.create_element('requesturlbaseaggregation', value=dict_item['requesturlbaseaggregation'])
+                        self.create_element('requesturlbaseaggregation',
+                                            value=dict_item['requesturlbaseaggregation'])
                 elif 'requesturlbasefile' in dict_item:
                     validation_form = AppFileLevelUrlValidationForm(dict_item['requesturlbasefile'])
                     validate_form(validation_form)
@@ -758,7 +759,8 @@ class ToolMetaData(CoreMetaData):
                         self.update_element('requesturlbasefile', request_url.id,
                                             value=dict_item['requesturlbasefile'])
                     else:
-                        self.create_element('requesturlbasefile', value=dict_item['requesturlbasefile'])
+                        self.create_element('requesturlbasefile',
+                                            value=dict_item['requesturlbasefile'])
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)
@@ -777,14 +779,16 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('toolicon', **dict_item['toolicon'])
                 elif 'supportedfileextensions' in dict_item:
-                    validation_form = SupportedFileExtensionsValidationForm(dict_item['supportedfileextensions'])
+                    validation_form = SupportedFileExtensionsValidationForm(
+                        dict_item['supportedfileextensions'])
                     validate_form(validation_form)
                     supported_file_extensions = self.supported_file_extensions
                     if supported_file_extensions is not None:
                         self.update_element('supportedfileextensions', supported_file_extensions.id,
                                             **dict_item['supportedfileextensions'])
                     else:
-                        self.create_element('supportedfileextensions', **dict_item['supportedfileextensions'])
+                        self.create_element('supportedfileextensions',
+                                            **dict_item['supportedfileextensions'])
                 elif 'apphomepageurl' in dict_item:
                     validation_form = UrlValidationForm(dict_item['apphomepageurl'])
                     validate_form(validation_form)
