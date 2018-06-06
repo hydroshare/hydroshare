@@ -128,6 +128,8 @@ class AppResourceLevelUrlValidationForm(forms.Form):
     def clean(self):
         cleaned_data = super(AppResourceLevelUrlValidationForm, self).clean()
         cleaned_url = cleaned_data.get("value")
+        if not cleaned_url:
+            return
 
         from utils import parse_app_url_template
 
@@ -140,7 +142,7 @@ class AppResourceLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict)))
+                         format(cleaned_url, str(term_dict.keys())))
 
 
 class AppAggregationLevelUrlValidationForm(forms.Form):
@@ -149,6 +151,8 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
     def clean(self):
         cleaned_data = super(AppAggregationLevelUrlValidationForm, self).clean()
         cleaned_url = cleaned_data.get("value")
+        if not cleaned_url:
+            return
 
         from utils import parse_app_url_template
 
@@ -161,7 +165,7 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict)))
+                         format(cleaned_url, str(term_dict.keys())))
 
 
 class AppFileLevelUrlValidationForm(forms.Form):
@@ -170,6 +174,8 @@ class AppFileLevelUrlValidationForm(forms.Form):
     def clean(self):
         cleaned_data = super(AppFileLevelUrlValidationForm, self).clean()
         cleaned_url = cleaned_data.get("value")
+        if not cleaned_url:
+            return
 
         from utils import parse_app_url_template
 
@@ -182,7 +188,7 @@ class AppFileLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                         format(cleaned_url, str(term_dict)))
+                         format(cleaned_url, str(term_dict.keys())))
 
 
 class SupportedFileExtensionsValidationForm(forms.Form):
@@ -191,6 +197,8 @@ class SupportedFileExtensionsValidationForm(forms.Form):
     def clean(self):
         cleaned_data = super(SupportedFileExtensionsValidationForm, self).clean()
         cleaned_val = cleaned_data.get("value")
+        if not cleaned_val:
+            return
 
         val_array = cleaned_val.split(",")
         for val in val_array:

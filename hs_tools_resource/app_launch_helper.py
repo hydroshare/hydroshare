@@ -80,15 +80,15 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     url_key_values = get_app_dict(request_obj.user, resource_obj)
 
     tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
-    tool_url_aggregation_new = parse_app_url_template(tool_url_aggregation, url_key_values)
+    tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
     tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
 
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     agg_types = ""
     file_extensions = ""
-    if (tool_url_aggregation_new and "HS_JS_DATA_URL_KEY" in tool_url_aggregation_new) or \
-        (tool_url_file_new and "HS_JS_DATA_URL_KEY" in tool_url_file_new):
+    if (tool_url_agg_new and "HS_JS_AGG_KEY" or "HS_JS_FILE_KEY" in tool_url_agg_new) or \
+        (tool_url_file_new and "HS_JS_AGG_KEY" or "HS_JS_FILE_KEY" in tool_url_file_new):
         if tool_res_obj.metadata._supported_agg_types.first():
             agg_types = tool_res_obj.metadata._supported_agg_types.first()\
                 .get_supported_agg_types_str()
@@ -96,13 +96,13 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
             file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if (tool_url_resource_new is not None) or \
-        (tool_url_aggregation_new is not None) or \
+        (tool_url_agg_new is not None) or \
             (tool_url_file_new is not None):
         tl = {'title': str(tool_res_obj.metadata.title.value),
               'res_id': tool_res_obj.short_id,
               'icon_url': tool_icon_url,
               'url': tool_url_resource_new,
-              'url_aggregation': tool_url_aggregation_new,
+              'url_aggregation': tool_url_agg_new,
               'url_file': tool_url_file_new,
               'openwithlist': is_open_with_app,
               'approved': is_approved_app,
@@ -119,9 +119,10 @@ def get_app_dict(user, resource):
     hs_term_dict_user = {}
     hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated() else "anonymous"
     hs_term_dict_file = {}
-    # HS_JS_DATA_URL_KEY is overwritten by jquery to launch the url specific to each file
-    hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_DATA_URL_KEY"
-    hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_DATA_URL_KEY"
+    # HS_JS_AGG_KEY and HS_JS_FILE_KEY are overwritten by jquery to launch the url specific to each
+    # file
+    hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
+    hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     return [resource.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file]
 
 

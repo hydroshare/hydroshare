@@ -1513,14 +1513,15 @@ $(document).ready(function () {
     // Open with method
     $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
-        var path = file.attr("data-url");
+        // only need that path after /data/contents/
+        var path = file.attr("data-url").split('/data/contents/')[1];
         var fullURL;
-        if (file.find("span.fb-logical-file-type").text() !== ''){
-            fullURL = $(this).attr("url_aggregation").replace("HS_JS_DATA_URL_KEY", path);
+        if (~$(this).attr("url_aggregation").indexOf("HS_JS_AGG_KEY")){
+            fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
         }
         else{
             // not an aggregation
-            fullURL = $(this).attr("url_file").replace("HS_JS_DATA_URL_KEY", path);
+            fullURL = $(this).attr("url_file").replace("HS_JS_FILE_KEY", path);
         }
         window.open(fullURL);
     });
