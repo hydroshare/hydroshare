@@ -652,8 +652,11 @@ class ToolMetaData(CoreMetaData):
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
         if (not self.url_base or not self.url_base.value) \
+           and (not self.url_base_file or not self.url_base_file.value) \
+           and (not self.url_base_aggregation or not self.url_base_aggregation.value) \
            and (not self.app_home_page_url or not self.app_home_page_url.value):
-                missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
+                missing_required_elements.append('App Home Page URL or an App-launching URL '
+                                                 'Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
             if self.supported_resource_types \
@@ -776,12 +779,12 @@ class ToolMetaData(CoreMetaData):
                 elif 'supportedfileextensions' in dict_item:
                     validation_form = SupportedFileExtensionsValidationForm(dict_item['supportedfileextensions'])
                     validate_form(validation_form)
-                    app_url = self.supported_file_extensions
-                    if app_url is not None:
-                        self.update_element('supportedfileextensions', app_url.id,
+                    supported_file_extensions = self.supported_file_extensions
+                    if supported_file_extensions is not None:
+                        self.update_element('supportedfileextensions', supported_file_extensions.id,
                                             **dict_item['supportedfileextensions'])
                     else:
-                        self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                        self.create_element('supportedfileextensions', **dict_item['supportedfileextensions'])
                 elif 'apphomepageurl' in dict_item:
                     validation_form = UrlValidationForm(dict_item['apphomepageurl'])
                     validate_form(validation_form)

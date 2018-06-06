@@ -9,13 +9,16 @@ from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
 from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource,\
-                                     ToolIcon, AppHomePageUrl, SupportedSharingStatus
+                                     ToolIcon, AppHomePageUrl, SupportedSharingStatus, \
+                                     RequestUrlBaseAggregation, SupportedFileExtensions, \
+                                     SupportedAggTypes, RequestUrlBaseFile
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
                                         metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_core.testing import TestCaseCommonUtilities
 from hs_tools_resource.app_keys import tool_app_key, irods_path_key, irods_resc_key
+from hs_core.hydroshare.utils import resource_file_add_process
 
 
 class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
@@ -38,11 +41,13 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
                 title='Test Web App Resource',
                 keywords=['kw1', 'kw2'])
 
-        self.resGeneric = hydroshare.create_resource(
-                resource_type='GenericResource',
+        self.resComposite = hydroshare.create_resource(
+                resource_type='CompositeResource',
                 owner=self.user,
-                title='Test Generic Resource',
+                title='Test Composite Resource',
                 keywords=['kw1', 'kw2'])
+
+        self.test_file_path = 'hs_composite_resource/tests/data/{}'
 
         self.factory = RequestFactory()
 
@@ -332,37 +337,39 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertNotEqual(self.resWebApp.extra_metadata, {})
         self.assertEqual(self.resWebApp.extra_metadata[tool_app_key], 'test-app-value')
 
-        self.assertEqual(self.resGeneric.extra_metadata, {})
-        self.resGeneric.extra_metadata = {tool_app_key: 'test-app-value'}
-        self.resGeneric.save()
+        self.assertEqual(self.resComposite.extra_metadata, {})
+        self.resComposite.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resComposite.save()
 
-        self.assertNotEqual(self.resGeneric.extra_metadata, {})
-        self.assertEqual(self.resGeneric.extra_metadata[tool_app_key], 'test-app-value')
+        self.assertNotEqual(self.resComposite.extra_metadata, {})
+        self.assertEqual(self.resComposite.extra_metadata[tool_app_key], 'test-app-value')
 
-        url = '/resource/' + self.resGeneric.short_id + '/'
+        url = '/resource/' + self.resComposite.short_id + '/'
         request = self.factory.get(url)
         request.user = self.user
 
-        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
         self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
                                                  'matching')
-        tc = relevant_tools['open_with_app_counter']
+        tc = relevant_tools['resource_level_app_counter']
         self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
         self.assertFalse(tl['approved'])
         self.assertTrue(tl['openwithlist'])
+        self.assertEqual(tl['agg_types'], '')
+        self.assertEqual(tl['file_extensions'], '')
 
         # delete all extra metadata
         self.resWebApp.extra_metadata = {}
         self.resWebApp.save()
         self.assertEqual(self.resWebApp.extra_metadata, {})
 
-        self.resGeneric.extra_metadata = {}
-        self.resGeneric.save()
-        self.assertEqual(self.resGeneric.extra_metadata, {})
+        self.resComposite.extra_metadata = {}
+        self.resComposite.save()
+        self.assertEqual(self.resComposite.extra_metadata, {})
 
-        relevant_tools = resource_level_tool_urls(self.resGeneric, request)
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
         self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no appkey '
                                               'matching')
 
@@ -388,7 +395,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         self.assertEqual(self.resWebApp.extra_metadata, {})
 
-        res_id = self.resGeneric.short_id
+        res_id = self.resComposite.short_id
         tool_res_id = self.resWebApp.short_id
         ipath = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + \
                 settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE
@@ -433,19 +440,128 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         term_dict_user = {"HS_USR_NAME": self.user.username}
         new_url_string = parse_app_url_template(url_template_string,
-                                                [self.resGeneric.get_hs_term_dict(),
+                                                [self.resComposite.get_hs_term_dict(),
                                                  term_dict_user])
         o = urlparse(new_url_string)
         query = parse_qs(o.query)
 
-        self.assertEqual(query["resid"][0], self.resGeneric.short_id)
-        self.assertEqual(query["restype"][0], "GenericResource")
+        self.assertEqual(query["resid"][0], self.resComposite.short_id)
+        self.assertEqual(query["restype"][0], "CompositeResource")
         self.assertEqual(query["user"][0], self.user.username)
 
         url_template_string = "http://www.google.com/?" \
                               "resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&" \
                               "mypara=${HS_UNDEFINED_TERM}&user=${HS_USR_NAME}"
         new_url_string = parse_app_url_template(url_template_string,
-                                                [self.resGeneric.get_hs_term_dict(),
+                                                [self.resComposite.get_hs_term_dict(),
                                                  term_dict_user])
         self.assertEqual(new_url_string, None)
+
+    def test_agg_types(self):
+        # set url launching pattern for aggregations
+        metadata = [{'requesturlbaseaggregation':
+                        {'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBaseAggregation.objects.all().count(), 1)
+
+        # set web app to launch for geo raster
+        self.resWebApp.metadata.update(metadata, self.user)
+        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedAggTypes',
+                                         supported_agg_types=['GeoRasterLogicalFile'])
+
+        self.assertEqual(1, SupportedAggTypes.objects.all().count())
+
+        # add a geo raster aggregation to the resource
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        resource_file_add_process(resource=self.resComposite,
+                                  files=(open_file,), user=self.user)
+
+        # setup the web app to be launched by the resource
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+        self.resWebApp.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resWebApp.save()
+
+        self.assertNotEqual(self.resWebApp.extra_metadata, {})
+        self.assertEqual(self.resWebApp.extra_metadata[tool_app_key], 'test-app-value')
+
+        self.assertEqual(self.resComposite.extra_metadata, {})
+        self.resComposite.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resComposite.save()
+
+        self.assertNotEqual(self.resComposite.extra_metadata, {})
+        self.assertEqual(self.resComposite.extra_metadata[tool_app_key], 'test-app-value')
+
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        # get the web tools and ensure agg_types is there
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
+                                                 'matching')
+        tc = relevant_tools['resource_level_app_counter']
+        self.assertEqual(0, tc)
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(self.resWebApp.short_id, tl['res_id'])
+        self.assertFalse(tl['approved'])
+        self.assertTrue(tl['openwithlist'])
+        self.assertEqual('GeoRasterLogicalFile', tl['agg_types'])
+        self.assertEqual('', tl['file_extensions'])
+
+    def test_file_extensions(self):
+        # set url launching pattern for aggregations
+        metadata = [{'requesturlbasefile':
+                        {'value': 'https://www.google.com?agg_path=${HS_FILE_PATH}'}}]
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBaseFile.objects.all().count(), 1)
+
+        # set web app to launch for geo raster
+        metadata = [{'supportedfileextensions':
+                        {'value': '.tif'}}]
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
+
+        # add a geo raster aggregation to the resource
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        resource_file_add_process(resource=self.resComposite,
+                                  files=(open_file,), user=self.user)
+
+        # setup the web app to be launched by the resource
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.assertEqual(self.resWebApp.extra_metadata, {})
+        self.resWebApp.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resWebApp.save()
+
+        self.assertNotEqual(self.resWebApp.extra_metadata, {})
+        self.assertEqual(self.resWebApp.extra_metadata[tool_app_key], 'test-app-value')
+
+        self.assertEqual(self.resComposite.extra_metadata, {})
+        self.resComposite.extra_metadata = {tool_app_key: 'test-app-value'}
+        self.resComposite.save()
+
+        self.assertNotEqual(self.resComposite.extra_metadata, {})
+        self.assertEqual(self.resComposite.extra_metadata[tool_app_key], 'test-app-value')
+
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        # get the web tools
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
+                                                 'matching')
+        tc = relevant_tools['resource_level_app_counter']
+        self.assertEqual(0, tc)
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(self.resWebApp.short_id, tl['res_id'])
+        self.assertFalse(tl['approved'])
+        self.assertTrue(tl['openwithlist'])
+        self.assertEqual('', tl['agg_types'])
+        self.assertEqual('.tif', tl['file_extensions'])

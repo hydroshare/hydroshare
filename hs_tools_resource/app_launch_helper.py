@@ -10,7 +10,6 @@ def resource_level_tool_urls(resource_obj, request_obj):
     res_type_str = resource_obj.resource_type
 
     tool_list = []
-    file_tool_list = []
     tool_res_id_list = []
     resource_level_app_counter = 0
 
@@ -50,7 +49,6 @@ def resource_level_tool_urls(resource_obj, request_obj):
 
     if len(tool_list) > 0:
         return {"tool_list": tool_list,
-                "file_tool_list": file_tool_list,
                 "resource_level_app_counter": resource_level_app_counter}
     else:
         return None

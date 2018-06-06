@@ -4,7 +4,8 @@ from django.contrib.auth.models import Group
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
-from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseFile, RequestUrlBaseAggregation
+from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseFile, \
+    RequestUrlBaseAggregation, SupportedFileExtensions
 from hs_core.testing import TestCaseCommonUtilities
 from django.core.urlresolvers import reverse
 
@@ -309,3 +310,87 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, RequestUrlBase.objects.all().count())
         # ensure it did not change
         self.assertEqual(updated_url, RequestUrlBase.objects.first().value)
+
+    def test_file_extensions_update(self):
+        good_extensions = '.tif, .txt,.html'
+
+        post_data = {'value': good_extensions}
+        url_params = {'element_name': "supportedfileextensions", 'shortkey':
+            self.resWebApp.short_id}
+
+        # add extensions
+        url = reverse('add_metadata_element', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        request.META['HTTP_REFERER'] = 'http_referer'
+        response = add_metadata_element(request, shortkey=self.resWebApp.short_id,
+                                        element_name="supportedfileextensions")
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        self.assertEqual(1, SupportedFileExtensions.objects.all().count())
+        self.assertEqual(good_extensions, SupportedFileExtensions.objects.first().value)
+
+        # update good extensions
+        url_params["element_id"] = 1
+        url = reverse('update_metadata_element', kwargs=url_params)
+        updated_extensions = '.tif, .txt,.html, .yaml'
+        post_data = {'value': updated_extensions}
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        request.META['HTTP_REFERER'] = 'http_referer'
+        id = SupportedFileExtensions.objects.first().id
+        response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
+                                        element_name="supportedfileextensions",
+                                           element_id=id)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        self.assertEqual(1, SupportedFileExtensions.objects.all().count())
+        self.assertEqual(updated_extensions, SupportedFileExtensions.objects.first().value)
+
+        # update bad extension
+        url = reverse('update_metadata_element', kwargs=url_params)
+        post_data = {'value': '.tif, htm'}
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        request.META['HTTP_REFERER'] = 'http_referer'
+        response = update_metadata_element(request, shortkey=self.resWebApp.short_id,
+                                        element_name="requesturlbase", element_id=id)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        self.assertEqual(1, SupportedFileExtensions.objects.all().count())
+        # ensure it did not change
+        self.assertEqual(updated_extensions, SupportedFileExtensions.objects.first().value)
+
+    def test_file_extensions_add_good(self):
+        good_extensions = '.tif, .html'
+
+        post_data = {'value': good_extensions}
+        url_params = {'element_name': "supportedfileextensions", 'shortkey':
+            self.resWebApp.short_id}
+
+        url = reverse('add_metadata_element', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        request.META['HTTP_REFERER'] = 'http_referer'
+        response = add_metadata_element(request, shortkey=self.resWebApp.short_id,
+                                        element_name="supportedfileextensions")
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        self.assertEqual(1, SupportedFileExtensions.objects.all().count())
+
+    def test_file_extensions_add_bad(self):
+        bad_extensions = 'tif, html'
+
+        post_data = {'value': bad_extensions}
+        url_params = {'element_name': "supportedfileextensions", 'shortkey':
+            self.resWebApp.short_id}
+
+        url = reverse('add_metadata_element', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        request.META['HTTP_REFERER'] = 'http_referer'
+        response = add_metadata_element(request, shortkey=self.resWebApp.short_id,
+                                        element_name="supportedfileextensions")
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        self.assertEqual(0, SupportedFileExtensions.objects.all().count())
