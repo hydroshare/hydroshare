@@ -229,7 +229,7 @@
     "@type": "Dataset",
     "additionalType": ["http://schema.geolink.org/1.0/base/main#Dataset", "http://vivoweb.org/ontology/core#Dataset"],
     "name": "{{ title }}",
-    "description": "{{ cm.metadata.description }}",
+    "description": "{{ cm.metadata.description | escapejs }}",
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
     "version": "2017-06-04",
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
@@ -294,7 +294,7 @@
             "creator": {
                 "@id": "{{ cr.description }}",
                 "@type": "Person",
-                "additionalType": "http://schema.geolink.org/1.0/base/main#Person", // Is this necessary?
+                "additionalType": "http://schema.geolink.org/1.0/base/main#Person",
                 "name": "{{ cr.name }}",
                 "url": "{{ cr.description }}/"
             }
