@@ -592,7 +592,7 @@ function bindFileBrowserItemEvents() {
                 if ($(this).attr("file-extensions").trim() !== ""){
                     var extensions = $(this).attr("file-extensions").split(",")
                     for (var i = 0; i < extensions.length; ++i) {
-                        if (fileExtension === extensions[i].trim()){
+                        if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
                             extension_app = true;
                             break;
                         }
