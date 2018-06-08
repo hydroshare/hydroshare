@@ -617,8 +617,8 @@ class ToolMetaData(CoreMetaData):
             parsed_metadata.append({"supportedaggtypes": metadata.pop('supportedaggtypes')})
 
         if 'supportedsharingstatus' in keys_to_update:
-            parsed_metadata.append({"supportedsharingstatus":
-                                        metadata.pop('supportedsharingstatus')})
+            parsed_metadata.append(
+                {"supportedsharingstatus": metadata.pop('supportedsharingstatus')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -741,8 +741,8 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'requesturlbaseaggregation' in dict_item:
-                    validation_form = AppAggregationLevelUrlValidationForm(dict_item[
-                                                                               'requesturlbaseaggregation'])
+                    validation_form = AppAggregationLevelUrlValidationForm(
+                        dict_item['requesturlbaseaggregation'])
                     validate_form(validation_form)
                     request_url = self.url_base_aggregation
                     if request_url is not None:

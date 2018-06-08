@@ -1,7 +1,6 @@
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
 
-from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
 from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseFile, \
@@ -133,8 +132,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&fil=${HS_AGG_PATH}'
 
         post_data = {'value': good_url}
-        url_params = {'element_name': "requesturlbaseaggregation", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbaseaggregation",
+                      'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
@@ -151,8 +150,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                   'file_id=${BAD_KEY}'
 
         post_data = {'value': bad_url}
-        url_params = {'element_name': "requesturlbaseaggregation", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbaseaggregation",
+                      'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
@@ -172,8 +171,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&fil=${HS_AGG_PATH}'
 
         post_data = {'value': good_url}
-        url_params = {'element_name': "requesturlbaseaggregation", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbaseaggregation",
+                      'shortkey': self.resWebApp.short_id}
 
         # add url
         url = reverse('add_metadata_element', kwargs=url_params)
@@ -226,8 +225,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&fil=${HS_FILE_NAME}'
 
         post_data = {'value': good_url}
-        url_params = {'element_name': "requesturlbase", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
@@ -244,8 +242,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                   'file_id=${BAD_KEY}'
 
         post_data = {'value': bad_url}
-        url_params = {'element_name': "requesturlbase", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
@@ -265,8 +262,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&fil=${HS_FILE_NAME}'
 
         post_data = {'value': good_url}
-        url_params = {'element_name': "requesturlbase", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}
 
         # add url
         url = reverse('add_metadata_element', kwargs=url_params)
@@ -315,8 +311,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         good_extensions = '.tif, .txt,.html'
 
         post_data = {'value': good_extensions}
-        url_params = {'element_name': "supportedfileextensions", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "supportedfileextensions",
+                      'shortkey': self.resWebApp.short_id}
 
         # add extensions
         url = reverse('add_metadata_element', kwargs=url_params)
@@ -365,8 +361,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         good_extensions = '.tif, .html'
 
         post_data = {'value': good_extensions}
-        url_params = {'element_name': "supportedfileextensions", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "supportedfileextensions",
+                      'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
@@ -382,8 +378,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         bad_extensions = 'tif, html'
 
         post_data = {'value': bad_extensions}
-        url_params = {'element_name': "supportedfileextensions", 'shortkey':
-            self.resWebApp.short_id}
+        url_params = {'element_name': "supportedfileextensions",
+                      'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
         request = self.factory.post(url, data=post_data)

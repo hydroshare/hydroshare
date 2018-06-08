@@ -269,8 +269,8 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedResTypes.objects.all().count(), 0)
 
         # create SupportedResTypes obj with required params
-        metadata.append({'supportedrestypes': {'supported_res_types':
-                                                   ['NetcdfResource', 'TimeSeriesResource']}})
+        metadata.append({'supportedrestypes': {
+            'supported_res_types': ['NetcdfResource', 'TimeSeriesResource']}})
 
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
@@ -286,8 +286,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         # test updating SupportedSharingStatus
         del metadata[:]
         self.assertEqual(SupportedSharingStatus.objects.all().count(), 0)
-        metadata.append({'supportedsharingstatus': {'sharing_status':
-                                                        ['Public', 'Discoverable']}})
+        metadata.append({'supportedsharingstatus': {'sharing_status': ['Public', 'Discoverable']}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedSharingStatus.objects.all().count(), 1)
@@ -300,8 +299,8 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(ToolIcon.objects.all().count(), 0)
 
         # create 1 ToolIcon obj with required params
-        metadata.append({'toolicon': {'value':
-                                          'https://www.hydroshare.org/static/img/logo-sm.png'}})
+        metadata.append(
+            {'toolicon': {'value': 'https://www.hydroshare.org/static/img/logo-sm.png'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
@@ -459,8 +458,8 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_agg_types(self):
         # set url launching pattern for aggregations
-        metadata = [{'requesturlbaseaggregation':
-                         {'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
+        metadata = [{'requesturlbaseaggregation': {
+            'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(RequestUrlBaseAggregation.objects.all().count(), 1)
 
@@ -514,14 +513,13 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_file_extensions(self):
         # set url launching pattern for aggregations
-        metadata = [{'requesturlbasefile':
-                         {'value': 'https://www.google.com?agg_path=${HS_FILE_PATH}'}}]
+        metadata = [
+            {'requesturlbasefile': {'value': 'https://www.google.com?agg_path=${HS_FILE_PATH}'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(RequestUrlBaseFile.objects.all().count(), 1)
 
         # set web app to launch for geo raster
-        metadata = [{'supportedfileextensions':
-                         {'value': '.tif'}}]
+        metadata = [{'supportedfileextensions': {'value': '.tif'}}]
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
 
