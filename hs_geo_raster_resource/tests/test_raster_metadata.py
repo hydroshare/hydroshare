@@ -117,10 +117,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
-        # test allowed file type is '.tif, .zip'
+        # test allowed file types are: '.tiff', '.tif,', '.vrt' and '.zip'
+        self.assertIn('.tiff', RasterResource.get_supported_upload_file_types())
         self.assertIn('.tif', RasterResource.get_supported_upload_file_types())
+        self.assertIn('.vrt', RasterResource.get_supported_upload_file_types())
         self.assertIn('.zip', RasterResource.get_supported_upload_file_types())
-        self.assertEqual(len(RasterResource.get_supported_upload_file_types()), 2)
+        self.assertEqual(len(RasterResource.get_supported_upload_file_types()), 4)
 
         # there should not be any content file
         self.assertEqual(self.resRaster.files.all().count(), 0)
@@ -745,8 +747,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertFalse(RasterResource.can_have_multiple_files())
 
     def test_can_upload_multiple_content_files(self):
-        # only one file can be uploaded
-        self.assertFalse(RasterResource.allow_multiple_file_upload())
+        # multiple files can be uploaded
+        self.assertTrue(RasterResource.allow_multiple_file_upload())
 
     def test_public_or_discoverable(self):
         self.assertFalse(self.resRaster.has_required_content_files())
