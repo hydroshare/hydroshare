@@ -54,7 +54,7 @@ class TestResourceTypeFileTypes(TestCase):
 
         # test for RasterResource
         resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['file_types'], '[".tif", ".zip"]')
+        self.assertEqual(resp_json['file_types'], '[".tiff", ".tif", ".vrt", ".zip"]')
 
         # test for GeographicFeatureResource
         resp_json = self._make_request("GeographicFeatureResource")

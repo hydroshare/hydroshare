@@ -34,6 +34,13 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.res_title = 'Testing Raster File Type'
 
         # data files to use for testing
+        self.logan_tif_1_file_name = 'logan1.tif'
+        self.logan_tif_2_file_name = 'logan2.tif'
+        self.logan_vrt_file_name = 'logan.vrt'
+        self.logan_tif_1_file = 'hs_file_types/tests/{}'.format(self.logan_tif_1_file_name)
+        self.logan_tif_2_file = 'hs_file_types/tests/{}'.format(self.logan_tif_2_file_name)
+        self.logan_vrt_file = 'hs_file_types/tests/{}'.format(self.logan_vrt_file_name)
+
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.invalid_raster_file_name = 'raster_tif_invalid.tif'
@@ -256,6 +263,116 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation
         self._test_aggregation_from_zip_file(aggr_folder_path=new_folder)
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_multiple_tif_with_vrt(self):
+        """Here we are testing when there are multiple tif files along with a vrt file at the same
+        directory location, using one of the tif files to create an aggregation, should result in a
+        new aggregation that contains all the tif files and the vrt file"""
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+
+        # test aggregation
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        for res_file in self.composite_resource.files.all():
+            self.assertEqual(res_file.has_logical_file, True)
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_multiple_tif_without_vrt(self):
+        """Here we are testing when there are multiple tif files and no vrt file at the same
+        directory location, using one of the tif files to create an aggregation, should result in a
+        new aggregation that contains only the selected tif """
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+
+        # test aggregation
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        self.assertEqual(res_file_tif.file_name, self.logan_tif_1_file_name)
+        for res_file in self.composite_resource.files.all():
+            if res_file_tif.file_name == res_file.file_name or res_file.extension.lower() == '.vrt':
+                self.assertEqual(res_file.has_logical_file, True)
+            else:
+                self.assertEqual(res_file.has_logical_file, False)
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_with_missing_tif_with_vrt(self):
+        """Here we are testing when there is a vrt file, selecting a tif file from the same
+        location for creating aggregation will fail if all tif files referenced in vrt file does
+        not exist at that location """
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type should raise exception
+        with self.assertRaises(ValidationError):
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+
+        # test aggregation
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+
+        self.composite_resource.delete()
+
+    def test_create_aggregation_with_extra_tif_with_vrt(self):
+        """Here we are testing when there is a vrt file, selecting a tif file from the same
+        location for creating aggregation will fail if there is an extra tif file
+        at the same location that is no referenced in the vrt file """
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
+        # add the extra tif file
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type should raise exception
+        with self.assertRaises(ValidationError):
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+
+        # test aggregation
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
 
         self.composite_resource.delete()
 

@@ -1280,10 +1280,6 @@ class Coverage(AbstractMetaDataElement):
                             raise ValidationError("Value for '{}' must be numeric"
                                                   .format(value_item))
 
-            if value_dict['northlimit'] < value_dict['southlimit']:
-                raise ValidationError("Value for North latitude must be greater than or equal to "
-                                      "that of South latitude.")
-
             if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1292,9 +1288,11 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for South latitude should be "
                                       "in the range of -90 to 90")
 
-            if value_dict['eastlimit'] < value_dict['westlimit']:
-                raise ValidationError("Value for East longitude must be greater than or equal to "
-                                      "that of West longitude.")
+            if (value_dict['northlimit'] < 0 and value_dict['southlimit'] < 0) or (
+                    value_dict['northlimit'] > 0 and value_dict['southlimit'] > 0):
+                if value_dict['northlimit'] < value_dict['southlimit']:
+                    raise ValidationError("Value for North latitude must be greater than or "
+                                          "equal to that of South latitude.")
 
             if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
                 raise ValidationError("Value for East longitude should be "
@@ -1303,6 +1301,12 @@ class Coverage(AbstractMetaDataElement):
             if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
+
+            if (value_dict['eastlimit'] < 0 and value_dict['westlimit'] < 0) or (
+                    value_dict['eastlimit'] > 0 and value_dict['westlimit'] > 0):
+                if value_dict['eastlimit'] < value_dict['westlimit']:
+                    raise ValidationError("Value for East longitude must be greater than or "
+                                          "equal to that of West longitude.")
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
