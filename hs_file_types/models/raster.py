@@ -316,7 +316,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         res_files_to_delete = []
         raster_folder = folder_path if folder_path is not None else file_folder
         # validate the file
-        validation_results = raster_file_validation(raster_file=temp_file,resource=resource,
+        validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
                                                     raster_folder=raster_folder)
 
         if not validation_results['error_info']:
@@ -524,7 +524,8 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
                 return validation_results
 
             # check if there are files that are not raster related
-            non_raster_files = [f_ext for f_ext in files_ext if f_ext not in ('.tif', '.tiff', '.vrt')]
+            non_raster_files = [f_ext for f_ext in files_ext if f_ext
+                                not in ('.tif', '.tiff', '.vrt')]
             if non_raster_files:
                 error_info.append("Invalid zip file. Contains files that are not raster related.")
                 return validation_results
