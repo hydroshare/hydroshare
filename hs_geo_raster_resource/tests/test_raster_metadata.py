@@ -43,9 +43,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.logan_tif_1_file_name = 'logan1.tif'
         self.logan_tif_2_file_name = 'logan2.tif'
         self.logan_vrt_file_name = 'logan.vrt'
-        self.loagn_tif_1_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_1_file_name)
-        self.loagn_tif_2_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_2_file_name)
-        self.loagn_vrt_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_vrt_file_name)
+        self.logan_tif_1_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_1_file_name)
+        self.logan_tif_2_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_2_file_name)
+        self.logan_vrt_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_vrt_file_name)
         self.raster_tif_file_name = 'raster_tif_valid.tif'
         self.raster_tif_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_tif_file_name)
         target_temp_raster_tif_file = os.path.join(self.temp_dir, self.raster_tif_file_name)
@@ -238,12 +238,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_multiple_tif_file_with_vrt_upload(self):
         # test that multiple tif files along with a vrt file can be uploaded and
         # be successful with file validation
-        
-        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
                              name=self.logan_tif_2_file_name)
-        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
                            name=self.logan_vrt_file_name)
         files = [tif_1, tif_2, vrt]
 
@@ -264,9 +264,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_multiple_tif_file_without_vrt_upload(self):
         # test that multiple tif files without a vrt file uploaded will fail file validation
 
-        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
                              name=self.logan_tif_2_file_name)
 
         files = [tif_1, tif_2]
@@ -290,9 +290,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
         # otherwise file validation fails and no file will be added to the resource
 
-        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
                              name=self.logan_tif_1_file_name)
-        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
                            name=self.logan_vrt_file_name)
 
         files = [tif_1, vrt]
@@ -316,12 +316,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
         # and no extra file can be uploaded, otherwise file validation fails
 
-        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
                              name=self.logan_tif_2_file_name)
         extra_tif = UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)
-        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
                            name=self.logan_vrt_file_name)
 
         files = [tif_1, tif_2, extra_tif, vrt]
