@@ -40,6 +40,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         )
 
         self.temp_dir = tempfile.mkdtemp()
+        self.logan_tif_1_file_name = 'logan1.tif'
+        self.logan_tif_2_file_name = 'logan2.tif'
+        self.logan_vrt_file_name = 'logan.vrt'
+        self.loagn_tif_1_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_1_file_name)
+        self.loagn_tif_2_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_tif_2_file_name)
+        self.loagn_vrt_file = 'hs_geo_raster_resource/tests/{}'.format(self.logan_vrt_file_name)
         self.raster_tif_file_name = 'raster_tif_valid.tif'
         self.raster_tif_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_tif_file_name)
         target_temp_raster_tif_file = os.path.join(self.temp_dir, self.raster_tif_file_name)
@@ -228,6 +234,112 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                         extract_metadata=False)
 
         super(TestRasterMetaData, self).raster_metadata_extraction()
+
+    def test_multiple_tif_file_with_vrt_upload(self):
+        # test that multiple tif files along with a vrt file can be uploaded and
+        # be successful with file validation
+        
+        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+                             name=self.logan_tif_1_file_name)
+        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+                             name=self.logan_tif_2_file_name)
+        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+                           name=self.logan_vrt_file_name)
+        files = [tif_1, tif_2, vrt]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        # if the 3 files are in resource, assume file validation successful
+        self.assertEqual(self.resRaster.files.all().count(), 3)
+
+    def test_multiple_tif_file_without_vrt_upload(self):
+        # test that multiple tif files without a vrt file uploaded will fail file validation
+
+        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+                             name=self.logan_tif_1_file_name)
+        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+                             name=self.logan_tif_2_file_name)
+
+        files = [tif_1, tif_2]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler - which should raise validation exception
+        with self.assertRaises(utils.ResourceFileValidationException):
+            utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        # resource should not have any files
+        self.assertEqual(self.resRaster.files.all().count(), 0)
+
+    def test_missing_tif_with_vrt_upload(self):
+        # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
+        # otherwise file validation fails and no file will be added to the resource
+
+        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+                             name=self.logan_tif_1_file_name)
+        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+                           name=self.logan_vrt_file_name)
+
+        files = [tif_1, vrt]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler - which should raise validation exception
+        with self.assertRaises(utils.ResourceFileValidationException):
+            utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        # resource should not have any files
+        self.assertEqual(self.resRaster.files.all().count(), 0)
+
+    def test_extra_tif_with_vrt_upload(self):
+        # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
+        # and no extra file can be uploaded, otherwise file validation fails
+
+        tif_1 = UploadedFile(file=open(self.loagn_tif_1_file, 'r'),
+                             name=self.logan_tif_1_file_name)
+        tif_2 = UploadedFile(file=open(self.loagn_tif_2_file, 'r'),
+                             name=self.logan_tif_2_file_name)
+        extra_tif = UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)
+        vrt = UploadedFile(file=open(self.loagn_vrt_file, 'r'),
+                           name=self.logan_vrt_file_name)
+
+        files = [tif_1, tif_2, extra_tif, vrt]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler - which should raise validation exception
+        with self.assertRaises(utils.ResourceFileValidationException):
+            utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        # resource should not have any files
+        self.assertEqual(self.resRaster.files.all().count(), 0)
 
     def test_wgs84_coverage_extraction(self):
         # this is test that the resource level coverage (wsg84) is being created correctly
