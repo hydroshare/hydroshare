@@ -221,6 +221,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return [".zip", ".tif", ".tiff"]
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".vrt"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are: .tif and .vrt"""
         return [".tiff", ".tif", ".vrt"]

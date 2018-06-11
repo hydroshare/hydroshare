@@ -156,6 +156,7 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
         term_dict["HS_RES_TYPE"] = "b"
         term_dict["HS_USR_NAME"] = "c"
         term_dict["HS_AGG_PATH"] = "d"
+        term_dict["HS_MAIN_FILE"] = "e"
         parsed = parse_app_url_template(cleaned_url, [term_dict])
 
         if not parsed:

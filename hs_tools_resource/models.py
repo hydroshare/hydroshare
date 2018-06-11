@@ -651,18 +651,16 @@ class ToolMetaData(CoreMetaData):
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
-        if (not self.url_base or not self.url_base.value) \
-                and (not self.url_base_file or not self.url_base_file.value) \
-                and (not self.url_base_aggregation or not self.url_base_aggregation.value) \
-                and (not self.app_home_page_url or not self.app_home_page_url.value):
+        if not self._launching_pattern_exists() \
+                and not self._value_exists(self.app_home_page_url):
             missing_required_elements.append('App Home Page URL or an App-launching URL '
                                              'Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
             if self.supported_resource_types \
                     and self.supported_resource_types.supported_res_types.count() > 0:
-                if not self.url_base or not self.url_base.value:
-                    missing_required_elements.append('App-launching URL Pattern')
+                if not self._launching_pattern_exists():
+                    missing_required_elements.append('An App-launching URL Pattern')
 
             # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
             if self.supported_resource_types \
@@ -672,6 +670,14 @@ class ToolMetaData(CoreMetaData):
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
+
+    def _launching_pattern_exists(self):
+        return self._value_exists(self.url_base) \
+        or self._value_exists(self.url_base_file) \
+        or self._value_exists(self.url_base_aggregation)
+
+    def _value_exists(self, field):
+        return field and field.value
 
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()

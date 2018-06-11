@@ -988,3 +988,16 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should not be any files left
         self.assertEqual(self.composite_resource.files.count(), 0)
         self.composite_resource.delete()
+
+    def test_main_file(self):
+        self.create_composite_resource(self.states_required_zip_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set the zip file to GeoFeatureLogicalFile type
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GeoFeatureLogicalFile.objects.count())
+        self.assertEqual(".shp", GeoFeatureLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.states_shp_file_name,
+                         GeoFeatureLogicalFile.objects.first().get_main_file.file_name)

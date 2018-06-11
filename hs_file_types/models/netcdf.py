@@ -285,6 +285,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         return [".nc"]
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".nc"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are: .nc and .txt"""
         return [".nc", ".txt"]

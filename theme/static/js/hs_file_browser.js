@@ -10,7 +10,7 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath) {
+function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath, mainFile) {
     if(folderAgrregationType.length >0){
         var folderIcons = getFolderIcons();
         iconTemplate = folderIcons.DEFAULT;
@@ -18,7 +18,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
         if (folderIcons[folderAgrregationType]) {
             iconTemplate = folderIcons[folderAgrregationType];
         }
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
+        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' main-file='" + mainFile + "' + title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
                 iconTemplate +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
@@ -1516,10 +1516,16 @@ $(document).ready(function () {
         // only need that path after /data/contents/
         var path = file.attr("data-url").split('/data/contents/')[1];
         var fullURL;
-        if (~$(this).attr("url_aggregation").indexOf("HS_JS_AGG_KEY")){
+        if (~$(this).attr("url_aggregation").indexOf("HS_JS_AGG_KEY")) {
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
+            if (file.children('span.fb-file-type').text() === 'File Folder') {
+                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
+            }
+            else {
+                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
+            }
         }
-        else{
+        else {
             // not an aggregation
             fullURL = $(this).attr("url_file").replace("HS_JS_FILE_KEY", path);
         }

@@ -710,6 +710,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return [".json"]
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".json"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file type allowed in this logical file group is: .json"""
         return [".json"]

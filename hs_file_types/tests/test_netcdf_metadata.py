@@ -964,3 +964,15 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Variable.objects.count(), 0)
 
         self.composite_resource.delete()
+
+    def test_main_file(self):
+        self.create_composite_resource(self.netcdf_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.has_logical_file, False)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, NetCDFLogicalFile.objects.count())
+        self.assertEqual(".nc", NetCDFLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.netcdf_file_name,
+                         NetCDFLogicalFile.objects.first().get_main_file.file_name)
