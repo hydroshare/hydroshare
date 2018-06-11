@@ -319,15 +319,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         temp_file = utils.get_file_from_irods(res_file)
         temp_dir = os.path.dirname(temp_file)
         res_files_to_delete = []
+        raster_folder = folder_path if folder_path is not None else file_folder
         # validate the file
-        if folder_path is not None:
-            error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file,
-                                                                          raster_folder=folder_path,
-                                                                          resource=resource)
-        else:
-            error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file)
+        validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
+                                                    raster_folder=raster_folder)
 
-        if not error_info:
+        if not validation_results['error_info']:
             msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
             file_type_success = False
             log.info("Geographic raster aggregation validation successful.")
@@ -349,7 +346,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             # as the name for the new folder
                             upload_folder = cls._create_aggregation_folder(resource, file_folder,
                                                                            base_file_name)
-
                             log.info("Folder created:{}".format(upload_folder))
                             aggregation_folder_created = True
                         else:
@@ -357,48 +353,36 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                         if res_file.extension.lower() in [".tiff", ".tif"]:
                             if aggregation_folder_created:
-                                # copy the tif file to the new aggregation folder and make it part
-                                # of the logical file
                                 tgt_folder = upload_folder
-                                files_to_copy = [res_file]
+
+                                # copy any existing raster specific files to the new aggregation
+                                # folder and make them part of the logical file
+                                files_to_copy = validation_results['raster_resource_files']
                                 logical_file.copy_resource_files(resource, files_to_copy,
                                                                  tgt_folder)
-                                res_files_to_delete.append(res_file)
+                                res_files_to_delete.extend(files_to_copy)
                             else:
-                                # make the selected tif file as part of the aggregation/file type
-                                logical_file.add_resource_file(res_file)
+                                # make the existing raster specific files part of the
+                                # aggregation/file type
+                                for raster_res_file in validation_results['raster_resource_files']:
+                                    logical_file.add_resource_file(raster_res_file)
 
-                            # remove the tif file from the list of files to get the list of all new
-                            # files that needs to be part of the aggregation
-                            files_to_add_to_resource = [f for f in files_to_add_to_resource
-                                                        if not f.endswith(res_file.file_name)]
                         else:
                             # selected file must be a zip file
                             res_files_to_delete.append(res_file)
-
-                        # add all new files to resource and make those part of the logical file
-                        logical_file.add_files_to_resource(
-                            resource=resource, files_to_add=files_to_add_to_resource,
-                            upload_folder=upload_folder)
                     else:
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
 
                         # make all the files in the selected folder as part of the aggregation
-                        res_files = logical_file.add_resource_files_in_folder(resource, folder_path)
+                        logical_file.add_resource_files_in_folder(resource, folder_path)
 
-                        # any new files must be uploaded to the resource and be made part of the
-                        # aggregation
-                        # filter out all the files that already exist in the selected folder
-                        new_files_to_add = []
-                        for f in files_to_add_to_resource:
-                            if not any(f.endswith(fl.file_name) for fl in res_files):
-                                new_files_to_add.append(f)
-
+                    # add all new files to resource and make those part of the logical file
+                    if validation_results['new_resource_files_to_add']:
+                        files_to_add_to_resource = validation_results['new_resource_files_to_add']
                         logical_file.add_files_to_resource(
-                            resource=resource, files_to_add=new_files_to_add,
+                            resource=resource, files_to_add=files_to_add_to_resource,
                             upload_folder=upload_folder)
-
                     log.info("Geographic raster aggregation type - new files were added "
                              "to the resource.")
 
@@ -428,13 +412,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
                                                            file_folder, aggregation_from_folder)
                 raise ValidationError(msg)
-
         else:
             # remove temp dir
             if os.path.isdir(temp_dir):
                 shutil.rmtree(temp_dir)
             err_msg = "Geographic raster aggregation type validation failed. {}".format(
-                ' '.join(error_info))
+                ' '.join(validation_results['error_info']))
             log.error(err_msg)
             raise ValidationError(err_msg)
 
@@ -452,62 +435,69 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         self.metadata.save()
 
 
-def raster_file_validation(raster_file, raster_folder=None, resource=None):
+def raster_file_validation(raster_file, resource, raster_folder=None):
     """ Validates if the relevant files are valid for raster aggregation or raster resource type
 
     :param  raster_file: a temp file (extension tif or zip) retrieved from irods and stored on temp
     dir in django
     :param  raster_folder: (optional) folder in which raster file exists on irods.
-    :param  resource: (optional) an instance of CompositeResource in which raster_file exits.
-    If a value for raster_folder is specified then a value for resource must be specified.
+    :param  resource: an instance of CompositeResource or GeoRasterResource in which
+    raster_file exits.
+
     :return A list of error messages and a list of file paths for all files that belong to raster
     """
 
     error_info = []
     new_resource_files_to_add = []
-
+    raster_resource_files = []
+    create_vrt = True
+    validation_results = {'error_info': error_info,
+                          'new_resource_files_to_add': new_resource_files_to_add,
+                          'raster_resource_files': raster_resource_files,
+                          'vrt_created': create_vrt}
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     ext = ext.lower()
-    create_vrt = True
-    if ext == '.tif' or ext == '.tiff':
-        if raster_folder is not None:
-            res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
-                                                 sub_folders=False)
 
-            # check if there is already a vrt file in that folder
-            vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
-            tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
-                         f.extension.lower() == ".tiff"]
-            if vrt_files:
-                if len(vrt_files) > 1:
-                    error_info.append("More than one vrt file was found.")
-                    return error_info, new_resource_files_to_add
-                create_vrt = False
-            elif len(tif_files) != 1:
+    if ext == '.tif' or ext == '.tiff':
+        res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
+                                             sub_folders=False)
+
+        # check if there is already a vrt file in that folder
+        vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
+        tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
+                     f.extension.lower() == ".tiff"]
+        if vrt_files:
+            if len(vrt_files) > 1:
+                error_info.append("More than one vrt file was found.")
+                return validation_results
+            create_vrt = False
+        elif len(tif_files) != 1:
+            # if there are more than one tif file and no vrt file, then we just use the
+            # selected tif file to create the aggregation in case of composite resource
+            if resource.resource_type == "CompositeResource":
+                tif_files = [tif_file for tif_file in tif_files if
+                             raster_file.endswith(tif_file.file_name)]
+            else:
                 # if there are more than one tif file, there needs to be one vrt file
                 error_info.append("A vrt file is missing.")
-                return error_info, new_resource_files_to_add
+                return validation_results
 
-            # get all the resource files from irods to the temp dir where
-            # the temp raster file already exist
+        raster_resource_files.extend(vrt_files)
+        raster_resource_files.extend(tif_files)
+
+        if vrt_files:
             temp_dir = os.path.dirname(raster_file)
-            for f in res_files:
-                if not raster_file.endswith(f.file_name):
-                    temp_file = utils.get_file_from_irods(f, temp_dir)
-                    new_resource_files_to_add.append(temp_file)
-
-        if create_vrt:
+            temp_vrt_file = utils.get_file_from_irods(vrt_files[0], temp_dir)
+        else:
             # create the .vrt file
             try:
-                temp_vrt_file_path = create_vrt_file(raster_file)
+                temp_vrt_file = create_vrt_file(raster_file)
             except Exception as ex:
                 error_info.append(ex.message)
             else:
-                if os.path.isfile(temp_vrt_file_path):
-                    new_resource_files_to_add.append(temp_vrt_file_path)
+                if os.path.isfile(temp_vrt_file):
+                    new_resource_files_to_add.append(temp_vrt_file)
 
-        # add the tif (raster_file) to the list - needed for validation later
-        new_resource_files_to_add.append(raster_file)
     elif ext == '.zip':
         try:
             extract_file_paths = _explode_raster_zip_file(raster_file)
@@ -515,8 +505,7 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
             error_info.append(ex.message)
         else:
             if extract_file_paths:
-                for file_path in extract_file_paths:
-                    new_resource_files_to_add.append(file_path)
+                new_resource_files_to_add.extend(extract_file_paths)
     else:
         error_info.append("Invalid file mime type found.")
 
@@ -526,23 +515,34 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
             if len(new_resource_files_to_add) < 2:
                 error_info.append("Invalid zip file. Seems to contain only one file. "
                                   "Multiple tif files are expected.")
-                return error_info, []
+                return validation_results
 
-        files_ext = [os.path.splitext(path)[1].lower() for path in new_resource_files_to_add]
-        if files_ext.count('.vrt') > 1:
-            error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
-            return error_info, []
+            files_ext = [os.path.splitext(path)[1].lower() for path in new_resource_files_to_add]
+            if files_ext.count('.vrt') > 1:
+                error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
+                return validation_results
+            elif files_ext.count('.vrt') == 0:
+                error_info.append("Invalid zip file. No vrt file was found.")
+                return validation_results
+            elif files_ext.count('.tif') + files_ext.count('.tiff') < 1:
+                error_info.append("Invalid zip file. No tif/tiff file was found.")
+                return validation_results
 
-        unique_files_ext = set(files_ext)
-        if (unique_files_ext == {'.vrt', '.tif', '.tiff'} or
-            unique_files_ext == {'.vrt', '.tif'} or
-            unique_files_ext == {'.vrt', '.tiff'}) and \
-                files_ext.count('.vrt') == 1:
-            vrt_file_path = new_resource_files_to_add[files_ext.index('.vrt')]
-            raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
+            # check if there are files that are not raster related
+            non_raster_files = [f_ext for f_ext in files_ext if f_ext
+                                not in ('.tif', '.tiff', '.vrt')]
+            if non_raster_files:
+                error_info.append("Invalid zip file. Contains files that are not raster related.")
+                return validation_results
+
+            temp_vrt_file = new_resource_files_to_add[files_ext.index('.vrt')]
+
+        # validate vrt file if we didn't create it
+        if ext == '.zip' or not create_vrt:
+            raster_dataset = gdal.Open(temp_vrt_file, GA_ReadOnly)
             if raster_dataset is None:
                 error_info.append('Failed to open the vrt file.')
-                return error_info, []
+                return validation_results
 
             # check if the vrt file is valid
             try:
@@ -551,24 +551,28 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
                 raster_dataset.RasterCount
             except AttributeError:
                 error_info.append('Raster size and band information are missing.')
-                return error_info, []
+                return validation_results
 
             # check if the raster file numbers and names are valid in vrt file
-            with open(vrt_file_path, 'r') as vrt_file:
+            with open(temp_vrt_file, 'r') as vrt_file:
                 vrt_string = vrt_file.read()
                 root = ET.fromstring(vrt_string)
-                raster_file_names = [file_name.text for file_name in root.iter('SourceFilename')]
+                file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
 
-            file_names = [os.path.basename(path) for path in new_resource_files_to_add]
-            file_names.pop(files_ext.index('.vrt'))
+            if ext == '.zip':
+                file_names = [os.path.basename(path) for path in new_resource_files_to_add]
+            else:
+                file_names = [f.file_name for f in raster_resource_files]
 
-            if len(file_names) > len(raster_file_names):
+            file_names = [f_name for f_name in file_names if not f_name.endswith('.vrt')]
+
+            if len(file_names) > len(file_names_in_vrt):
                 msg = 'One or more additional tif files were found which are not listed in ' \
                       'the provided {} file.'
-                msg = msg.format(os.path.basename(vrt_file_path))
+                msg = msg.format(os.path.basename(temp_vrt_file))
                 error_info.append(msg)
             else:
-                for vrt_ref_raster_name in raster_file_names:
+                for vrt_ref_raster_name in file_names_in_vrt:
                     if vrt_ref_raster_name in file_names \
                             or (os.path.split(vrt_ref_raster_name)[0] == '.' and
                                 os.path.split(vrt_ref_raster_name)[1] in file_names):
@@ -582,17 +586,11 @@ def raster_file_validation(raster_file, raster_folder=None, resource=None):
                     else:
                         msg = "The file {tif} which is listed in the {vrt} file is missing."
                         msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
-                                         vrt=os.path.basename(vrt_file_path))
+                                         vrt=os.path.basename(temp_vrt_file))
                         error_info.append(msg)
                         break
 
-        elif (files_ext.count('.tif') + files_ext.count('.tiff')) > 1\
-                and files_ext.count('.vrt') == 0:
-            msg = "Since multiple tif files are found, a vrt file is required."
-            error_info.append(msg)
-            new_resource_files_to_add = []
-
-    return error_info, new_resource_files_to_add
+    return validation_results
 
 
 def extract_metadata(temp_vrt_file_path):
