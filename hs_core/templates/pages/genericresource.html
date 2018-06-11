@@ -183,15 +183,17 @@
                     {%  endif %}
                     {% if relevant_tools %}
                         {% for tool in relevant_tools.tool_list %}
-                            {% if tool.agg_types or tool.file_extensions and tool.openwithlist %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
+                            {% if tool.openwithlist %}
+                                {% if tool.agg_types or tool.file_extensions %}
+                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     {% endif %}
@@ -1144,7 +1146,6 @@
                                     {% if not metadata_form %}
                                         <div class="row">
                                             {% for tool in relevant_tools.tool_list %}
-                                                {% if not tool.agg_types or tool.file_extensions %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
     						                         {% if tool.approved %}
@@ -1162,7 +1163,6 @@
                                                     </a>
                                                 </div>
                                                 </div>
-                                                {% endif %}
                                             {% endfor %}
                                         </div>
                                     {% else %}
