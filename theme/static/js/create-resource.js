@@ -110,12 +110,12 @@ $(document).ready(function () {
             this.on("addedfile", function (file) {
                 // Initialize tooltips
                 var template = $(file.previewElement);
-                template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+                template.find(".dz-filename").attr("title", file.fullPath);
 
                 // Set file type icon
                 var fileName = template.find(".dz-filename").text();
                 var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
-                var iconTemplate
+                var iconTemplate;
                 if (fileIcons[fileTypeExt]) {
                     icontemplate = fileIcons[fileTypeExt];
                     if (icontemplate === fileIcons.JSON){
