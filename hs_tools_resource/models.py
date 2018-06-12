@@ -673,8 +673,8 @@ class ToolMetaData(CoreMetaData):
 
     def _launching_pattern_exists(self):
         return self._value_exists(self.url_base) \
-        or self._value_exists(self.url_base_file) \
-        or self._value_exists(self.url_base_aggregation)
+            or self._value_exists(self.url_base_file) \
+            or self._value_exists(self.url_base_aggregation)
 
     def _value_exists(self, field):
         return field and field.value

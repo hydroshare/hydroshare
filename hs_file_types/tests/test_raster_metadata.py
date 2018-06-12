@@ -1366,4 +1366,5 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(1, GeoRasterLogicalFile.objects.count())
         self.assertEqual(".vrt", GeoRasterLogicalFile.objects.first().get_main_file_type())
-        self.assertEqual("small_logan.vrt", GeoRasterLogicalFile.objects.first().get_main_file.file_name)
+        self.assertEqual("small_logan.vrt",
+                         GeoRasterLogicalFile.objects.first().get_main_file.file_name)
