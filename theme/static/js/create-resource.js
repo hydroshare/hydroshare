@@ -117,8 +117,8 @@ $(document).ready(function () {
                 var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
                 var iconTemplate;
                 if (fileIcons[fileTypeExt]) {
-                    icontemplate = fileIcons[fileTypeExt];
-                    if (icontemplate === fileIcons.JSON){
+                    iconTemplate = fileIcons[fileTypeExt];
+                    if (iconTemplate === fileIcons.JSON){
                         // json is really for refts.json icon
                         if (!fileName.toUpperCase().endsWith(".REFTS.JSON")){
                             iconTemplate = fileIcons.DEFAULT;
