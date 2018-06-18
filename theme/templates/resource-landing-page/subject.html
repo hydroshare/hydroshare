@@ -14,7 +14,7 @@
     {% endif %}
 {% else %}
     <div class="col-sm-12 content-block">
-        <h3>Subject</h3>
+        <h3>Subject Keywords</h3>
         <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
               method="post">
             {% csrf_token %}
