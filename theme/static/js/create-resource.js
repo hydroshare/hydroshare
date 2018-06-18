@@ -128,6 +128,7 @@ $(document).ready(function () {
                 else {
                     iconTemplate = fileIcons.DEFAULT;
                 }
+                template.find(".dz-filename").attr("title", file.fullPath);
                 template.find(".file-type-icon").append(iconTemplate);
 
                 template.find("[data-toggle='tooltip']").tooltip();
