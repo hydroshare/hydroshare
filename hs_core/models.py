@@ -1852,16 +1852,28 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.hydroshare.resource import update_quota_usage
+
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        self.setAVU("quotaUserName", new_holder.username)
+        attname = "quotaUserName"
+        oldqu = self.getAVU(attname)
+        if oldqu and oldqu != new_holder.username:
+            # have to remove the old AVU first before setting to the new one in order to trigger
+            # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
+            # holder will be reduced as a result of setting quota holder to a different user
+            self.removeAVU(attname, oldqu)
+
+        self.setAVU(attname, new_holder.username)
+        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -1879,6 +1891,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             # quotaUserName AVU does not exist, return None
             return None
+
+    def removeAVU(self, attribute, value):
+        """Remove an AVU at the resource level.
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
