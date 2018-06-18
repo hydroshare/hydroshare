@@ -194,7 +194,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Geographic Feature Aggregation'
+        return 'Geographic Feature Content: The multiple files that are part of a geographic ' \
+               'shapefile'
 
     @staticmethod
     def get_aggregation_type_name():

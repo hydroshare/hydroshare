@@ -349,8 +349,7 @@ function processDrawing (coordinates, shape) {
         deleteAllShapes();
     }
     // Show save changes button
-    $("#coverage-spatial").find(".btn-primary").show();
-    $("#btn-update-resource-spatial-coverage").hide();
+    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
     if (shape == "rectangle"){
         document.getElementById("id_type_1").checked = true;
         $("#div_id_north").hide();

@@ -135,7 +135,7 @@ class GenericLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Single File Aggregation'
+        return 'Single File Content: A single file with file specific metadata'
 
     @staticmethod
     def get_aggregation_type_name():

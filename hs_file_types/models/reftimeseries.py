@@ -736,7 +736,8 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Reference Timeseries Aggregation'
+        return 'Referenced Time Series Content: A reference to one or more time series served ' \
+               'from HydroServers outside of HydroShare in WaterML format'
 
     @staticmethod
     def get_aggregation_type_name():
