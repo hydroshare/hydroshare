@@ -58,7 +58,7 @@ def update_quota_usage(res=None, user=None):
             return
         # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
         # services enough time to finish before reflecting the quota usage in django DB
-        update_quota_usage_task.apply_async((quser.username,), countdown=60)
+        update_quota_usage_task.apply_async((quser.username,), countdown=30)
     return
 
 
@@ -607,7 +607,7 @@ def create_empty_resource(pk, user, action='version'):
     return new_resource
 
 
-def copy_resource(ori_res, new_res):
+def copy_resource(ori_res, new_res, user=None):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object
     as a copy of the ori_res object
@@ -615,6 +615,8 @@ def copy_resource(ori_res, new_res):
         ori_res: the original resource that is to be copied.
         new_res: the new_res to be populated with metadata and content from the original resource
         as a copy of the original resource.
+        user: requesting user for the copy action. It is optional, if being passed in, quota is
+        counted toward the user; otherwise, quota is not counted toward that user
     Returns:
         the new resource copied from the original resource
     """
@@ -636,7 +638,8 @@ def copy_resource(ori_res, new_res):
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
     # need to update quota usage for new_res quota holder
-    update_quota_usage(res=new_res)
+    if user:
+        update_quota_usage(user=user)
     return new_res
 
 
