@@ -27,10 +27,11 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .navbar-brand {
     padding: 0;
+    padding-top: 10px;
 }
 
 #img-brand-logo {
-	width: 195px;
+	width: 145px;
 }
 
 .container>.navbar-header, .container>.navbar-collapse {
@@ -38,9 +39,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     padding-right: 15px;
 }
 
-.container>.navbar-collapse {
-    padding-top: 11px;
-}
 .navbar-inverse .navbar-collapse, .navbar-inverse .navbar-form {
     border-color: #DDD;
 }
@@ -48,7 +46,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 .navbar-toggle {
     background: #B5B5B5;
     border-color: #8C8C8C !important;
-    margin-top: 15px;
 }
 
 .navbar-inverse {
@@ -3350,7 +3347,6 @@ div.description.active {
     text-align: center;
     color: #666;
     line-height:20px;
-    font-size: 12px;
 }
 
 .description-container {
