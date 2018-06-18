@@ -612,6 +612,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": ex.message}),
             content_type="application/json"
         )
+    except ValidationError as ex:
+        return HttpResponse(
+            json.dumps({"error": ex.message}),
+            content_type="application/json"
+        )
+
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,

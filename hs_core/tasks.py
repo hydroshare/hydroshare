@@ -206,8 +206,16 @@ def manage_task_nightly():
                 uq.remaining_grace_period = 0
             uq.save()
 
-            uemail = u.email
-            msg_str = 'Dear ' + u.username + ':\n\n'
+            if u.first_name and u.last_name:
+                sal_name = '{} {}'.format(u.first_name, u.last_name)
+            elif u.first_name:
+                sal_name = u.first_name
+            elif u.last_name:
+                sal_name = u.last_name
+            else:
+                sal_name = u.username
+
+            msg_str = 'Dear ' + sal_name + ':\n\n'
 
             ori_qm = get_quota_message(u)
             # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
@@ -220,7 +228,7 @@ def manage_task_nightly():
             subject = 'Quota warning'
             # send email for people monitoring and follow-up as needed
             send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                      [uemail, settings.DEFAULT_SUPPORT_EMAIL],
+                      [u.email, settings.DEFAULT_SUPPORT_EMAIL],
                       html_message=msg_str)
         else:
             if uq.remaining_grace_period >= 0:
@@ -444,15 +452,6 @@ def update_quota_usage_task(username):
 
     # get quota size for the user in iRODS user zone
     try:
-        # cannot use FedStorage() since the proxy iRODS account in data zone cannot access
-        # user type metadata for the proxy iRODS user in the user zone. Have to create an iRODS
-        # environment session using HS_USER_ZONE_PROXY_USER with an rodsadmin role
-        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
-                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                                  host=settings.HS_USER_ZONE_HOST,
-                                  port=settings.IRODS_PORT,
-                                  zone=settings.HS_USER_IRODS_ZONE,
-                                  sess_id='user_proxy_session')
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                      settings.IRODS_BAGIT_PATH)
