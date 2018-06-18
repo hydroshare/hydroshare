@@ -1817,12 +1817,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         validate_user_quota(new_holder, self.size)
         attname = "quotaUserName"
         oldqu = self.getAVU(attname)
-        if oldqu and oldqu != new_holder.username:
+        if oldqu:
             # have to remove the old AVU first before setting to the new one in order to trigger
             # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
             # holder will be reduced as a result of setting quota holder to a different user
             self.removeAVU(attname, oldqu)
-
         self.setAVU(attname, new_holder.username)
         update_quota_usage(res=self, user=setter)
 
