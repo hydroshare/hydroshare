@@ -38,6 +38,8 @@ logger = logging.getLogger(__name__)
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
         site_url = hydroshare.utils.current_site_url()
         bag_url = site_url + r.bag_url
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
@@ -71,6 +73,8 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
@@ -281,11 +285,9 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         if res.resource_type.lower() == "reftimeseriesresource":
 
             # if res is RefTimeSeriesResource
-            # bag_url = site_url + reverse('rest_download_refts_resource_bag',
             bag_url = reverse('rest_download_refts_resource_bag',
                               kwargs={'shortkey': pk})
         else:
-            # bag_url = site_url + reverse('rest_download',
             bag_url = reverse('rest_download',
                               kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
