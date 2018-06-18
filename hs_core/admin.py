@@ -23,6 +23,10 @@ UserAdmin.add_fieldsets = (
         'fields': ('email', 'username', 'password1', 'password2',)
     }),
 )
+UserAdmin.list_display = [
+    'username', 'email', 'first_name', 'last_name', 'is_staff',
+    'is_active', 'date_joined', 'last_login'
+]
 
 class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
