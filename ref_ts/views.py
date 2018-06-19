@@ -223,7 +223,8 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
             return response
 
         path = "bags/" + str(shortkey) + ".zip"
-        response_irods = download_bag_from_irods(request, path, use_async=False)
+        response_irods = download_bag_from_irods(request, path, use_async=False, 
+                                                 use_reverse_proxy=False)
 
         tempdir = tempfile.mkdtemp()
         response = assemble_refts_bag(shortkey, response_irods.streaming_content,
@@ -249,7 +250,8 @@ def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
     try:
 
         path = "bags/" + str(shortkey) + ".zip"
-        response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False)
+        response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False, 
+                                                 use_reverse_proxy=False)
 
         if not response_irods.streaming:
             raise Exception("Failed to stream RefTS bag")

@@ -165,10 +165,28 @@ def check_bag(rid, options):
                     with open(filename, 'wb') as fd:
                         for chunk in r.iter_content(chunk_size=128):
                             fd.write(chunk)
-                            break
                 else:
                     print("cannot download bag without username and password.")
 
+            if options['open_bag']:
+                if options['password']:
+                    server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
+                    uri = "https://{}/hsapi/resource/{}/".format(server, rid)
+                    print("download uri is {}".format(uri))
+                    r = hs_requests.get(uri, verify=False, stream=True,
+                                        auth=requests.auth.HTTPBasicAuth(options['login'],
+                                                                         options['password']))
+                    print("download return status is {}".format(str(r.status_code)))
+                    print("redirects:")
+                    for thing in r.history:
+                        print("...url: {}".format(thing.url))
+                    filename = 'tmp/check_bag_block'
+                    with open(filename, 'wb') as fd:
+                        for chunk in r.iter_content(chunk_size=128):
+                            fd.write(chunk)
+                            break
+                else:
+                    print("cannot open bag without username and password.")
         else:
             print("Resource with id {} does not exist in iRODS".format(rid))
     except BaseResource.DoesNotExist:
@@ -239,6 +257,13 @@ class Command(BaseCommand):
             action='store_true',  # True for presence, False for absence
             dest='download_bag',  # value is options['download_bag']
             help='try downloading the bag'
+        )
+
+        parser.add_argument(
+            '--open_bag',
+            action='store_true',  # True for presence, False for absence
+            dest='open_bag',  # value is options['open_bag']
+            help='try opening the bag in http without downloading'
         )
 
         parser.add_argument(
