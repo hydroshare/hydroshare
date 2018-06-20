@@ -1,7 +1,6 @@
 from django.test import TestCase
 from hs_core.hydroshare import hs_requests
-from django.core import settings
-
+from django.conf import settings
 
 
 class TestRewrite(TestCase):
