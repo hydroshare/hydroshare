@@ -291,7 +291,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Multidimensional Aggregation'
+        return 'Multidimensional Content: A multidimensional dataset represented by a NetCDF ' \
+               'file (.nc) and text file giving its NetCDF header content'
 
     @staticmethod
     def get_aggregation_type_name():

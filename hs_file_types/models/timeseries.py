@@ -417,7 +417,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Timeseries Aggregation'
+        return 'Time Series Content: One or more time series held in an ODM2 format SQLite ' \
+               'file and optional source comma separated (.csv) files'
 
     @staticmethod
     def get_aggregation_type_name():

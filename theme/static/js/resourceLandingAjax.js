@@ -784,7 +784,7 @@ function set_file_type_ajax_submit(url, folder_path) {
     var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
-        Aggregation type was successful.\
+        Selected content type creation was successful.\
     </div>';
 
     var waitDialog = showWaitDialog();
@@ -801,7 +801,6 @@ function set_file_type_ajax_submit(url, folder_path) {
             var json_response = JSON.parse(result);
             var spatialCoverage = json_response.spatial_coverage;
             updateResourceSpatialCoverage(spatialCoverage);
-            $alert_success = $alert_success.replace("Aggregation type was successful.", json_response.message);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
@@ -820,9 +819,10 @@ function remove_aggregation_ajax_submit(url) {
     var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
-        Aggregation was removed successfully.\
+        Content type was removed successfully.\
     </div>';
 
+    // This wait dialog may not be useful
     var waitDialog = showWaitDialog();
     return $.ajax({
         type: "POST",
@@ -834,7 +834,6 @@ function remove_aggregation_ajax_submit(url) {
             var json_response = JSON.parse(result);
             var spatialCoverage = json_response.spatial_coverage;
             updateResourceSpatialCoverage(spatialCoverage);
-            $alert_success = $alert_success.replace("Aggregation was removed successfully.", json_response.message);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
