@@ -3205,8 +3205,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return the iRODS URL of the file.
 
         This is a direct link and independent of the Django path in ResourceFile.url
-        However, this does not invoke Nginx large file support with sendfile. 
-        So use this with caution. 
+        However, this does not invoke Nginx large file support with sendfile.
+        So use this with caution.
         """
         if self.resource_file:
             return self.resource_file.url

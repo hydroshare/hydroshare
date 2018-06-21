@@ -6,7 +6,7 @@ from django.conf import settings
 class TestRewrite(TestCase):
     """ Test local rewriting that bypasses firewalls and hits local nginx server """
 
-    def setup(self):
+    def setUp(self):
         self.prod_fqdn = getattr(settings, "PROD_FQDN_OR_IP", "www.hydroshare.org")
         self.fqdn = getattr(settings, "FQDN_OR_IP", "www.hydroshare.org")
         self.nginx_ip = hs_requests.get_nginx_ip()
