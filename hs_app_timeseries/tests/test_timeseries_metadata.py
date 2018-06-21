@@ -507,14 +507,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         include real time precipitation, streamflow and water quality measurements."""
         self.resTimeSeries.metadata.create_element('processinglevel',
                                                    series_ids=['a456789-89yughys'],
-                                                   processing_level_code=0,
+                                                   processing_level_code='0',
                                                    definition='Raw data',
                                                    explanation=exp_text)
 
         proc_level_element = self.resTimeSeries.metadata.processing_levels.all().first()
         self.assertEqual(len(proc_level_element.series_ids), 1)
         self.assertIn('a456789-89yughys', proc_level_element.series_ids)
-        self.assertEqual(proc_level_element.processing_level_code, 0)
+        self.assertEqual(proc_level_element.processing_level_code, '0')
         self.assertEqual(proc_level_element.definition, 'Raw data')
         self.assertEqual(proc_level_element.explanation, exp_text)
         self.assertEqual(proc_level_element.is_dirty, False)
@@ -604,10 +604,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
 
         self.resTimeSeries.metadata.update_element(
             'processinglevel', self.resTimeSeries.metadata.processing_levels.all().first().id,
-            processing_level_code=9, definition='data', explanation=exp_text + 'some more text')
+            processing_level_code='9', definition='data', explanation=exp_text + 'some more text')
 
         proc_level_element = self.resTimeSeries.metadata.processing_levels.all().first()
-        self.assertEqual(proc_level_element.processing_level_code, 9)
+        self.assertEqual(proc_level_element.processing_level_code, '9')
         self.assertEqual(proc_level_element.definition, 'data')
         self.assertEqual(proc_level_element.explanation, exp_text + 'some more text')
         self.assertEqual(proc_level_element.is_dirty, True)
@@ -1393,7 +1393,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
 
         # add 1 processing level elements for the 2 series
         self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['0', '1'],
-                                                   processing_level_code=101)
+                                                   processing_level_code='101')
 
         # there should be 1 processinglevel element at this point
         self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
@@ -2106,19 +2106,19 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
 
         # add a processing level element
         self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['0'],
-                                                   processing_level_code=101)
+                                                   processing_level_code='101')
 
-        # creating a 2nd processinglevel element with same code should raise excpetion
+        # creating a 2nd processinglevel element with same code should raise exception
         with self.assertRaises(ValidationError):
             self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1'],
-                                                       processing_level_code=101)
+                                                       processing_level_code='101')
 
         # there should be 1 processinglevel element at this point
         self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
 
         # create 2nd processinglevel element with a different code
         self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1'],
-                                                   processing_level_code=105)
+                                                   processing_level_code='105')
 
         # there should be 2 processinglevel element at this point
         self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 2)
@@ -2129,7 +2129,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # trying to update with a duplicate code should raise exception
         with self.assertRaises(ValidationError):
             self.resTimeSeries.metadata.update_element('processinglevel', pro_level.id,
-                                                       processing_level_code=101)
+                                                       processing_level_code='101')
 
     def _upload_valid_csv_file(self):
         # first add a valid csv file to the resource
