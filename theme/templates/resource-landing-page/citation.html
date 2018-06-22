@@ -36,10 +36,10 @@
                         {% if rights.statement %}
                             {% if rights.statement|length > 1000 %}
                                 <div class="pre-scrollable">
-                                    <span>{{ rights.statement|linebreaks }}</span>
+                                    <span>{{ rights.statement|linebreaks|urlize }}</span>
                                 </div>
                             {% else %}
-                                <span>{{ rights.statement|linebreaks }}</span>
+                                <span>{{ rights.statement|linebreaks|urlize }}</span>
                             {% endif %}
                         {% endif %}
 
