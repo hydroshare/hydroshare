@@ -129,7 +129,7 @@ class SiteForm(ModelForm):
 
 class SiteValidationForm(forms.Form):
     site_code = forms.CharField(max_length=200)
-    site_name = forms.CharField(max_length=255)
+    site_name = forms.CharField(max_length=255, required=False)
     elevation_m = forms.FloatField(required=False)
     elevation_datum = forms.CharField(max_length=50, required=False)
     site_type = forms.CharField(max_length=100, required=False)
@@ -278,7 +278,7 @@ class VariableForm(ModelForm):
 
 
 class VariableValidationForm(forms.Form):
-    variable_code = forms.CharField(max_length=20)
+    variable_code = forms.CharField(max_length=50)
     variable_name = forms.CharField(max_length=100)
     variable_type = forms.CharField(max_length=100)
     no_data_value = forms.IntegerField()
@@ -614,7 +614,7 @@ class TimeSeriesResultValidationForm(forms.Form):
     units_type = forms.CharField(max_length=255)
     units_name = forms.CharField(max_length=255)
     units_abbreviation = forms.CharField(max_length=20)
-    status = forms.CharField(max_length=255)
+    status = forms.CharField(max_length=255, required=False)
     sample_medium = forms.CharField(max_length=255)
     value_count = forms.IntegerField()
     aggregation_statistics = forms.CharField(max_length=255)
@@ -631,8 +631,8 @@ class TimeSeriesResultValidationForm(forms.Form):
         if units_type is None or units_type == NO_SELECTION_DROPDOWN_OPTION:
             self._errors['units_type'] = ["A value for units type is missing"]
 
-        if status is None or status == NO_SELECTION_DROPDOWN_OPTION:
-            self._errors['status'] = ["A value for status is missing"]
+        if status == NO_SELECTION_DROPDOWN_OPTION:
+            cleaned_data['status'] = ""
 
         if sample_medium is None or sample_medium == NO_SELECTION_DROPDOWN_OPTION:
             self._errors['sample_medium'] = ["A value for sample medium is missing"]

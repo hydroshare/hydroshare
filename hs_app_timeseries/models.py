@@ -114,7 +114,7 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
     site_code = models.CharField(max_length=200)
-    site_name = models.CharField(max_length=255)
+    site_name = models.CharField(max_length=255, null=True, blank=True)
     elevation_m = models.FloatField(null=True, blank=True)
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
@@ -137,9 +137,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
                     with tr():
                         get_th('Code')
                         td(self.site_code)
-                    with tr():
-                        get_th('Name')
-                        td(self.site_name, style="word-break: normal;")
+                    if self.site_name:
+                        with tr():
+                            get_th('Name')
+                            td(self.site_name, style="word-break: normal;")
                     if self.elevation_m:
                         with tr():
                             get_th('Elevation M')
@@ -229,7 +230,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+        element_fields = [('site_code', 'SiteCode')]
+
+        if self.site_name:
+            element_fields.append(('site_name', 'SiteName'))
 
         if self.elevation_m:
             element_fields.append(('elevation_m', 'Elevation_m'))
@@ -251,7 +255,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
 
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
-    variable_code = models.CharField(max_length=20)
+    variable_code = models.CharField(max_length=50)
     variable_name = models.CharField(max_length=100)
     variable_type = models.CharField(max_length=100)
     no_data_value = models.IntegerField()
@@ -611,7 +615,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     units_type = models.CharField(max_length=255)
     units_name = models.CharField(max_length=255)
     units_abbreviation = models.CharField(max_length=20)
-    status = models.CharField(max_length=255)
+    status = models.CharField(max_length=255, blank=True, null=True)
     sample_medium = models.CharField(max_length=255)
     value_count = models.IntegerField()
     aggregation_statistics = models.CharField(max_length=255)
@@ -683,9 +687,10 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
                     with tr():
                         get_th('Units Abbreviation')
                         td(self.units_abbreviation)
-                    with tr():
-                        get_th('Status')
-                        td(self.status)
+                    if self.status:
+                        with tr():
+                            get_th('Status')
+                            td(self.status)
                     with tr():
                         get_th('Sample Medium')
                         td(self.sample_medium)
@@ -731,9 +736,10 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
             hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % NAMESPACES['hsterms'])
         hsterms_units_abbv.text = self.units_abbreviation
 
-        hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                          '{%s}Status' % NAMESPACES['hsterms'])
-        hsterms_status.text = self.status
+        if self.status:
+            hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
+                                              '{%s}Status' % NAMESPACES['hsterms'])
+            hsterms_status.text = self.status
 
         hsterms_sample_medium = etree.SubElement(
             hsterms_time_series_result_rdf_Description, '{%s}SampleMedium' %

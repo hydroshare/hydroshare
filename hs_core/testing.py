@@ -559,7 +559,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
                          parser.parse('01/01/2008').date())
         self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                         parser.parse('01/31/2008').date())
+                         parser.parse('01/30/2008').date())
 
         # there should be one format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
