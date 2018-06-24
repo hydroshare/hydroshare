@@ -16,6 +16,7 @@ from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 from hs_app_netCDF import views as nc_views
+from hs_explore import views as hs_explore_views
 
 
 autocomplete_light.autodiscover()
@@ -70,7 +71,8 @@ urlpatterns = i18n_patterns("",
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
-    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
+    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"), 
+    url(r'^explore/$', hs_explore_views.RecommendList.as_view(), name='recommend_list')
 )
 
 # Filebrowser admin media library.
