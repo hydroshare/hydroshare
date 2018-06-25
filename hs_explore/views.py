@@ -7,20 +7,37 @@ from hs_explore.models import RecommendedResource, RecommendedUser, \
 
 
 class RecommendList(TemplateView):
+    """ Get the top five recommendations for resources, users, groups """
     template_name = 'recommendations.html'
 
     def get_context_data(self, **kwargs):
+
         context = super(RecommendList, self).get_context_data(**kwargs)
+
         context['resource_list'] = RecommendedResource.objects\
-            .filter(status__le=Status.STATUS_EXPLORED)\
-            .order_by('-relevance')\
-            .limit(Status.RECOMMENDATION_LIMIT)
+            .filter(state__lte=Status.STATUS_EXPLORED)\
+            .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+        # mark relevant records as shown
+        for r in context['resource_list']:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
+
         context['user_list'] = RecommendedUser.objects\
-            .filter(status__le=Status.STATUS_EXPLORED)\
-            .order_by('-relevance')\
-            .limit(Status.RECOMMENDATION_LIMIT)
+            .filter(state__lte=Status.STATUS_EXPLORED)\
+            .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+        # mark relevant records as shown
+        for r in context['user_list']:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
+
         context['group_list'] = RecommendedGroup.objects\
-            .filter(status__le=Status.STATUS_EXPLORED)\
-            .order_by('-relevance')\
-            .limit(Status.RECOMMENDATION_LIMIT)
+            .filter(state__lte=Status.STATUS_EXPLORED)\
+            .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+        # mark relevant records as shown
+        for r in context['group_list']:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
         return context

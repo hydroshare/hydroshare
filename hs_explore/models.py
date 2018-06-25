@@ -12,7 +12,7 @@ class Status(object):
     STATUS_DISMISSED = 5
     STATUS_CHOICES = (
         (STATUS_NEW, 'New'),
-        (STATUS_VIEWED, 'Shown'),
+        (STATUS_SHOWN, 'Shown'),
         (STATUS_EXPLORED, 'Explored'),
         (STATUS_APPROVED, 'Approved'),
         (STATUS_DISMISSED, 'Dismissed')
@@ -43,8 +43,8 @@ class RecommendedResource(models.Model):
 
         with transaction.atomic():
             object, created = RecommendedResource.objects.get_or_create(user=u,
-                                                                         candidate_resource=r,
-                                                                         defaults=defaults)
+                                                                        candidate_resource=r,
+                                                                        defaults=defaults)
             if not created:
                 if relevance is not None:
                     object.relevance = relevance
@@ -60,8 +60,12 @@ class RecommendedResource(models.Model):
         r = get_resource_by_shortkey(rid, or_404=False)
         RecommendedResource.recommend(u, r, relevance=relevance, state=state)
 
-    def viewed(self):
-        self.state = Status.STATUS_VIEWED
+    def shown(self):
+        self.state = Status.STATUS_SHOWN
+        self.save()
+
+    def explored(self):
+        self.state = Status.STATUS_EXPLORED
         self.save()
 
     def approved(self):
@@ -109,7 +113,7 @@ class RecommendedUser(models.Model):
 
         with transaction.atomic():
             object, created = RecommendedUser.objects.get_or_create(user=u, candidate_user=r,
-                                                                     defaults=defaults)
+                                                                    defaults=defaults)
             if not created:
                 if relevance is not None:
                     object.relevance = relevance
@@ -125,8 +129,12 @@ class RecommendedUser(models.Model):
         r = user_from_id(rid, or_404=False)
         RecommendedUser.recommend(u, r, relevance=relevance, state=state)
 
-    def viewed(self):
-        self.state = Status.STATUS_VIEWED
+    def shown(self):
+        self.state = Status.STATUS_SHOWN
+        self.save()
+
+    def explored(self):
+        self.state = Status.STATUS_EXPLORED
         self.save()
 
     def approved(self):
@@ -174,8 +182,8 @@ class RecommendedGroup(models.Model):
 
         with transaction.atomic():
             object, created = RecommendedGroup.objects.get_or_create(user=u,
-                                                                      candidate_group=r,
-                                                                      defaults=defaults)
+                                                                     candidate_group=r,
+                                                                     defaults=defaults)
             if not created:
                 if relevance is not None:
                     object.relevance = relevance
@@ -191,8 +199,12 @@ class RecommendedGroup(models.Model):
         r = group_from_id(rid, or_404=False)
         RecommendedGroup.recommend(u, r, relevance=relevance, state=state)
 
-    def viewed(self):
-        self.state = Status.STATUS_VIEWED
+    def shown(self):
+        self.state = Status.STATUS_SHOWN
+        self.save()
+
+    def explored(self):
+        self.state = Status.STATUS_EXPLORED
         self.save()
 
     def approved(self):
