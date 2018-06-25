@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block title %}Explore{% endblock %}
+{% block main %}
+    <h2>Recommended resources</h2>
+    <ul>
+        {% for r in resource_list %}
+            <li>{{ r.candidate_resource.title }} (relevance {{ r.relevance }})</li>
+        {% endfor %}
+    </ul>
+    <h2>Recommended users</h2>
+    <ul>
+        {% for r in user_list %}
+            <li>{{ r.candidate_user.username }} (relevance {{ r.relevance }})</li>
+        {% endfor %}
+    </ul>
+    <h2>Recommended groups</h2>
+    <ul>
+        {% for r in group_list %}
+            <li>{{ r.candidate_group.name }} (relevance {{ r.relevance }})</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+
