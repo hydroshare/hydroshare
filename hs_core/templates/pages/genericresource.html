@@ -83,12 +83,12 @@
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
                     {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
-                    <li id="btn-open" data-menu-name="open">
-                        <span class="fa fa-folder-open icon-blue"></span>
-                        <span>Open</span>
-                    </li>
+                        <li id="btn-open" data-menu-name="open">
+                            <span class="fa fa-folder-open icon-blue"></span>
+                            <span>Open</span>
+                        </li>
 
-                    <li id="open-separator" role="separator" class="divider"></li>
+                        <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
                         {% if page.perms.change and metadata_form %}
@@ -181,6 +181,22 @@
                             <span>Remove content type</span>
                         </li>
                     {%  endif %}
+                    {% if relevant_tools %}
+                        {% for tool in relevant_tools.tool_list %}
+                            {% if tool.openwithlist %}
+                                {% if tool.agg_types or tool.file_extensions %}
+                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </ul>
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
@@ -1132,13 +1148,12 @@
                                             {% for tool in relevant_tools.tool_list %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
-                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
     						                         {% if tool.approved %}
                                                          <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
                                                              <img class="app-approved-icon-img" src="/static/img/approved_app.png">
                                                          </a>
                                                      {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                    <a href="/resource/{{ tool.res_id }}/" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open this WebApp resource">
                                                         {% if tool.title|length > 20 %}
                                                             <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                         {% else %}

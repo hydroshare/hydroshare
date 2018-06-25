@@ -77,6 +77,7 @@ def data_store_structure(request):
             d_pk = dname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, d_pk)
             d_url = to_external_url(istorage.url(name_with_full_path))
+            main_file = ''
             folder_aggregation_type = ''
             folder_aggregation_name = ''
             folder_aggregation_id = ''
@@ -93,6 +94,7 @@ def data_store_structure(request):
                     folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                     folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                     folder_aggregation_id = aggregation_object.id
+                    main_file = aggregation_object.get_main_file.file_name
                 else:
                     # find if any aggregation type can be created from this folder
                     folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
@@ -101,6 +103,7 @@ def data_store_structure(request):
                         folder_aggregation_type_to_set = ""
             dirs.append({'name': d_pk,
                          'url': d_url,
+                         'main_file': main_file,
                          'folder_aggregation_type': folder_aggregation_type,
                          'folder_aggregation_name': folder_aggregation_name,
                          'folder_aggregation_id': folder_aggregation_id,

@@ -173,6 +173,11 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ".mxs")
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".shp"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are the followings"""
         return [".shp", ".shx", ".dbf", ".prj",

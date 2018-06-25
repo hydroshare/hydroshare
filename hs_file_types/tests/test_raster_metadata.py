@@ -1356,3 +1356,15 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '2880.00708008')
         self.assertEqual(band_info.minimumValue, '2274.95898438')
+
+    def test_main_file(self):
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GeoRasterLogicalFile.objects.count())
+        self.assertEqual(".vrt", GeoRasterLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual("small_logan.vrt",
+                         GeoRasterLogicalFile.objects.first().get_main_file.file_name)

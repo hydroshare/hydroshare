@@ -7,6 +7,39 @@ from hs_core.hydroshare import utils
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
 
+from hs_file_types.models.base import AbstractLogicalFile
+from django.apps import apps
+
+
+def get_SupportedAggTypes_choices():
+    """
+    This function harvests all existing aggregation types in system,
+    and puts them in a list:
+    [
+        ["AGGREGATION_CLASS_NAME_1", "AGGREGATION_VERBOSE_NAME_1"],
+        ["AGGREGATION_CLASS_NAME_2", "AGGREGATION_VERBOSE_NAME_2"],
+        ...
+        ["AGGREGATION_CLASS_NAME_N", "AGGREGATION_VERBOSE_NAME_N"],
+    ]
+    """
+
+    result_list = []
+    agg_types_list = get_aggregation_types()
+    for r_type in agg_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type.get_aggregation_display_name()
+        result_list.append([class_name, verbose_name])
+    return result_list
+
+
+def get_aggregation_types():
+    aggregation_types = []
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            if not getattr(model, 'archived_model', False):
+                aggregation_types.append(model)
+    return aggregation_types
+
 
 def update_resource_coverage_element(resource):
     """Update resource spatial and temporal coverage based on the corresponding coverages

@@ -1236,3 +1236,15 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def _get_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
         return invalid_csv_file
+
+    def test_main_file(self):
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.sqlite_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, TimeSeriesLogicalFile.objects.count())
+        self.assertEqual(".sqlite", TimeSeriesLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.sqlite_file_name,
+                         TimeSeriesLogicalFile.objects.first().get_main_file.file_name)

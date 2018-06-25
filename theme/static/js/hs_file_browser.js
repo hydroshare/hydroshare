@@ -12,7 +12,7 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath) {
+function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath, mainFile) {
     if(folderAgrregationType.length >0){
         var folderIcons = getFolderIcons();
         iconTemplate = folderIcons.DEFAULT;
@@ -20,7 +20,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
         if (folderIcons[folderAgrregationType]) {
             iconTemplate = folderIcons[folderAgrregationType];
         }
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
+        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' main-file='" + mainFile + "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
                 iconTemplate +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
@@ -572,6 +572,29 @@ function bindFileBrowserItemEvents() {
                 $(event.target).closest("li").addClass("ui-last-selected");
             }
             menu = $("#right-click-menu");
+
+            var fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
+            var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+
+            // toggle apps by file extension and aggregations
+            menu.find("li.btn-open-with").each(function() {
+                var agg_app = false;
+                if ($(this).attr("agg-types").trim() !== ""){
+                    agg_app = $.inArray(fileAggType, $(this).attr("agg-types").split(",")) !== -1;
+                }
+                var extension_app = false;
+                if ($(this).attr("file-extensions").trim() !== ""){
+                    var extensions = $(this).attr("file-extensions").split(",")
+                    for (var i = 0; i < extensions.length; ++i) {
+                        if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
+                            extension_app = true;
+                            break;
+                        }
+                    }
+                }
+                $(this).toggle(agg_app || extension_app);
+            });
         }
         else {
             menu = $("#right-click-container-menu");    // empty space was clicked
@@ -1480,6 +1503,28 @@ $(document).ready(function () {
         var basePath = window.location.protocol + "//" + window.location.host;
         // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
         $("#txtFileURL").val(basePath + URL);
+    });
+
+    // Open with method
+    $(".btn-open-with").click(function () {
+        var file = $("#fb-files-container li.ui-selected");
+        // only need that path after /data/contents/
+        var path = file.attr("data-url").split('/data/contents/')[1];
+        var fullURL;
+        if (~$(this).attr("url_aggregation").indexOf("HS_JS_AGG_KEY")) {
+            fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
+            if (file.children('span.fb-file-type').text() === 'File Folder') {
+                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
+            }
+            else {
+                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
+            }
+        }
+        else {
+            // not an aggregation
+            fullURL = $(this).attr("url_file").replace("HS_JS_FILE_KEY", path);
+        }
+        window.open(fullURL);
     });
 
     // set generic file type method

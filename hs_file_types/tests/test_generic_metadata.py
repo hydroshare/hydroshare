@@ -427,3 +427,14 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
         # test that resource level coverage element exist - not got deleted
         self.assertEqual(Coverage.objects.count(), 2)
+
+    def test_main_file(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file)

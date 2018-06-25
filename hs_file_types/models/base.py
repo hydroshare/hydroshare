@@ -713,6 +713,21 @@ class AbstractLogicalFile(models.Model):
         return [".*"]
 
     @classmethod
+    def get_main_file_type(cls):
+        # a singel file extension in the group which is considered the main file
+        # - subclass needs to override this
+        return None
+
+    @property
+    def get_main_file(self):
+        file_extension = self.get_main_file_type()
+        if file_extension:
+            for f in self.files.all():
+                if f.extension == file_extension:
+                    return f
+        return None
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         # can store any file types in this logical file group - subclass needs to override this
         return [".*"]

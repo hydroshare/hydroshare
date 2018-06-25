@@ -553,3 +553,15 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
         self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
+
+    def test_main_file(self):
+        self.create_composite_resource(self.refts_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
+        self.assertEqual(".json", RefTimeseriesLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.refts_file_name,
+                         RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
