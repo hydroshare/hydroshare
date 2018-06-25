@@ -6,15 +6,18 @@ from hs_core.hydroshare import user_from_id, group_from_id, get_resource_by_shor
 
 class Status(object):
     STATUS_NEW = 1
-    STATUS_VIEWED = 2
-    STATUS_APPROVED = 3
-    STATUS_DISMISSED = 4
+    STATUS_SHOWN = 2
+    STATUS_EXPLORED = 3
+    STATUS_APPROVED = 4
+    STATUS_DISMISSED = 5
     STATUS_CHOICES = (
         (STATUS_NEW, 'New'),
-        (STATUS_VIEWED, 'Viewed'),
+        (STATUS_VIEWED, 'Shown'),
+        (STATUS_EXPLORED, 'Explored'),
         (STATUS_APPROVED, 'Approved'),
         (STATUS_DISMISSED, 'Dismissed')
     )
+    RECOMMENDATION_LIMIT = 5
 
 
 class RecommendedResource(models.Model):
