@@ -7,18 +7,42 @@
     <ul>
         {% for r in resource_list %}
             <li><a href="/resource/{{ r.candidate_resource.short_id }}/">{{ r.candidate_resource.title }}</a> (relevance {{ r.relevance }})</li>
+            {% if r.keywords %} 
+                due to keywords found in your resources, including: 
+                <ul> 
+                    {% for z in r.keywords.all %} 
+                        <li> {{ z.key }}: {{ z.value }} </li> 
+                    {% endfor %}
+                </ul> 
+            {% endif %}
         {% endfor %}
     </ul>
     <h2>Recommended users</h2>
     <ul>
         {% for r in user_list %}
             <li><a href="/user/{{ r.candidate_user.id }}/">{{ r.candidate_user.username }}</a> (relevance {{ r.relevance }})</li>
+            {% if r.keywords %} 
+                due to keywords found in your resources, including: 
+                <ul> 
+                    {% for z in r.keywords.all %} 
+                        <li> {{ z.key }}: {{ z.value }} </li> 
+                    {% endfor %}
+                </ul> 
+            {% endif %}
         {% endfor %}
     </ul>
     <h2>Recommended groups</h2>
     <ul>
         {% for r in group_list %}
             <li><a href="/group/{{ r.candidate_group.id }}/">{{ r.candidate_group.name }}</a> (relevance {{ r.relevance }})</li>
+            {% if r.keywords %} 
+                due to keywords found in your resources, including: 
+                <ul> 
+                    {% for z in r.keywords.all %} 
+                        <li> {{ z.key }}: {{ z.value }} </li> 
+                    {% endfor %}
+                </ul> 
+            {% endif %}
         {% endfor %}
     </ul>
 {% endblock %}
