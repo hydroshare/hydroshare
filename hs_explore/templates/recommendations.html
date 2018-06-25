@@ -6,7 +6,7 @@
     <h2>Recommended resources</h2>
     <ul>
         {% for r in resource_list %}
-            <li>{{ r.candidate_resource.title }} (relevance {{ r.relevance }})</li>
+            <li><a href="{{ r.candidate_resource.url }}">{{ r.candidate_resource.title }}</a> (relevance {{ r.relevance }})</li>
         {% endfor %}
     </ul>
     <h2>Recommended users</h2>
