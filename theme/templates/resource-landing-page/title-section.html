@@ -233,7 +233,7 @@
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
     "version": "2017-06-04",
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    "keywords": "{{ keywords }}",
+    "keywords": "{{ keywords | escapejs }}",
     {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
         "license": "http://creativecommons.org/licenses/by/4.0/",
     {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
