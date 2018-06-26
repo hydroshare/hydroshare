@@ -48,6 +48,9 @@ class TestCreateRecommendedResource(TestCaseCommonUtilities, TransactionTestCase
             'My Test Resource'
         )
 
+        self.group = self.user.uaccess.create_group(
+            title='meowers', description='We are the meowers')
+
     def tearDown(self):
         super(TestCreateRecommendedResource, self).tearDown()
 
@@ -57,85 +60,128 @@ class TestCreateRecommendedResource(TestCaseCommonUtilities, TransactionTestCase
         self.assertEqual(rec.candidate_resource, self.res)
         self.assertEqual(rec.relevance, 0.5)
         self.assertEqual(rec.keywords.count(), 0)
-        rec.relate('foo', 'bar', 0.4) 
+        rec.relate('foo', 'bar', 0.4)
         self.assertEqual(rec.keywords.count(), 1)
-        kv = rec.keywords.get(key='foo') 
-        self.assertEqual(kv.value, 'bar') 
-        rel = ResourceRecToPair.objects.get(pair=kv) 
-        self.assertEqual(rel.recommendation, rec) 
-        self.assertEqual(rel.weight, 0.4) 
-        rec.unrelate('foo', 'bar') 
+        kv = rec.keywords.get(key='foo')
+        self.assertEqual(kv.value, 'bar')
+        rel = ResourceRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 0.4)
+        rec.unrelate('foo', 'bar')
         self.assertEqual(rec.keywords.count(), 0)
         RecommendedResource.clear()
-        self.assertEqual(RecommendedResource.objects.all().count(), 0) 
-        # does cascade delete work? 
-        self.assertEqual(ResourceRecToPair.objects.all().count(), 0) 
+        self.assertEqual(RecommendedResource.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(ResourceRecToPair.objects.all().count(), 0)
         # deleting references doesn't delete key/value pairs
         KeyValuePair.clear()
-        self.assertEqual(KeyValuePair.objects.all().count(), 0) 
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
 
-    def test_create_rec_resource_with_keywords(self): 
-        rec = RecommendedResource.recommend(self.user, self.res, relevance=0.5, 
+    def test_create_rec_resource_with_keywords(self):
+        rec = RecommendedResource.recommend(self.user, self.res, relevance=0.5,
                                             keywords=(('subject', 'dogs', 1.0),))
         self.assertEqual(rec.user, self.user)
         self.assertEqual(rec.candidate_resource, self.res)
         self.assertEqual(rec.relevance, 0.5)
         self.assertEqual(rec.keywords.count(), 1)
-        kv = rec.keywords.get(key='subject', value='dogs') 
-        rel = ResourceRecToPair.objects.get(pair=kv) 
-        self.assertEqual(rel.recommendation, rec) 
-        self.assertEqual(rel.weight, 1.0) 
-        rec.unrelate('subject', 'dogs') 
+        kv = rec.keywords.get(key='subject', value='dogs')
+        rel = ResourceRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 1.0)
+        rec.unrelate('subject', 'dogs')
         self.assertEqual(rec.keywords.count(), 0)
         RecommendedResource.clear()
-        self.assertEqual(RecommendedResource.objects.all().count(), 0) 
-        # does cascade delete work? 
-        self.assertEqual(ResourceRecToPair.objects.all().count(), 0) 
+        self.assertEqual(RecommendedResource.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(ResourceRecToPair.objects.all().count(), 0)
         # deleting references doesn't delete key/value pairs
         KeyValuePair.clear()
-        self.assertEqual(KeyValuePair.objects.all().count(), 0) 
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
 
-    def test_create_rec_user(self): 
+    def test_create_rec_user(self):
         rec = RecommendedUser.recommend(self.user, self.user2, relevance=0.5)
         self.assertEqual(rec.user, self.user)
         self.assertEqual(rec.candidate_user, self.user2)
         self.assertEqual(rec.relevance, 0.5)
         self.assertEqual(rec.keywords.count(), 0)
-        rec.relate('foo', 'bar', 0.4) 
+        rec.relate('foo', 'bar', 0.4)
         self.assertEqual(rec.keywords.count(), 1)
-        kv = rec.keywords.get(key='foo') 
-        self.assertEqual(kv.value, 'bar') 
-        rel = UserRecToPair.objects.get(pair=kv) 
-        self.assertEqual(rel.recommendation, rec) 
-        self.assertEqual(rel.weight, 0.4) 
-        rec.unrelate('foo', 'bar') 
+        kv = rec.keywords.get(key='foo')
+        self.assertEqual(kv.value, 'bar')
+        rel = UserRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 0.4)
+        rec.unrelate('foo', 'bar')
         self.assertEqual(rec.keywords.count(), 0)
         RecommendedUser.clear()
-        self.assertEqual(RecommendedUser.objects.all().count(), 0) 
-        # does cascade delete work? 
-        self.assertEqual(UserRecToPair.objects.all().count(), 0) 
+        self.assertEqual(RecommendedUser.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(UserRecToPair.objects.all().count(), 0)
         # deleting references doesn't delete key/value pairs
         KeyValuePair.clear()
-        self.assertEqual(KeyValuePair.objects.all().count(), 0) 
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
 
-    def test_create_rec_user_with_keywords(self): 
-        rec = RecommendedUser.recommend(self.user, self.user2, relevance=0.5, 
+    def test_create_rec_user_with_keywords(self):
+        rec = RecommendedUser.recommend(self.user, self.user2, relevance=0.5,
                                         keywords=(('subject', 'dogs', 1.0),))
         self.assertEqual(rec.user, self.user)
         self.assertEqual(rec.candidate_user, self.user2)
         self.assertEqual(rec.relevance, 0.5)
         self.assertEqual(rec.keywords.count(), 1)
-        kv = rec.keywords.get(key='subject', value='dogs') 
-        rel = UserRecToPair.objects.get(pair=kv) 
-        self.assertEqual(rel.recommendation, rec) 
-        self.assertEqual(rel.weight, 1.0) 
-        rec.unrelate('subject', 'dogs') 
+        kv = rec.keywords.get(key='subject', value='dogs')
+        rel = UserRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 1.0)
+        rec.unrelate('subject', 'dogs')
         self.assertEqual(rec.keywords.count(), 0)
         RecommendedUser.clear()
-        self.assertEqual(RecommendedUser.objects.all().count(), 0) 
-        # does cascade delete work? 
-        self.assertEqual(UserRecToPair.objects.all().count(), 0) 
+        self.assertEqual(RecommendedUser.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(UserRecToPair.objects.all().count(), 0)
         # deleting references doesn't delete key/value pairs
         KeyValuePair.clear()
-        self.assertEqual(KeyValuePair.objects.all().count(), 0) 
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
 
+    def test_create_rec_group(self):
+        rec = RecommendedGroup.recommend(self.user, self.group, relevance=0.5)
+        self.assertEqual(rec.user, self.user)
+        self.assertEqual(rec.candidate_group, self.group)
+        self.assertEqual(rec.relevance, 0.5)
+        self.assertEqual(rec.keywords.count(), 0)
+        rec.relate('foo', 'bar', 0.4)
+        self.assertEqual(rec.keywords.count(), 1)
+        kv = rec.keywords.get(key='foo')
+        self.assertEqual(kv.value, 'bar')
+        rel = GroupRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 0.4)
+        rec.unrelate('foo', 'bar')
+        self.assertEqual(rec.keywords.count(), 0)
+        RecommendedGroup.clear()
+        self.assertEqual(RecommendedGroup.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(GroupRecToPair.objects.all().count(), 0)
+        # deleting references doesn't delete key/value pairs
+        KeyValuePair.clear()
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
+
+    def test_create_rec_group_with_keywords(self):
+        rec = RecommendedGroup.recommend(self.user, self.group, relevance=0.5,
+                                         keywords=(('subject', 'dogs', 1.0),))
+        self.assertEqual(rec.user, self.user)
+        self.assertEqual(rec.candidate_group, self.group)
+        self.assertEqual(rec.relevance, 0.5)
+        self.assertEqual(rec.keywords.count(), 1)
+        kv = rec.keywords.get(key='subject', value='dogs')
+        rel = GroupRecToPair.objects.get(pair=kv)
+        self.assertEqual(rel.recommendation, rec)
+        self.assertEqual(rel.weight, 1.0)
+        rec.unrelate('subject', 'dogs')
+        self.assertEqual(rec.keywords.count(), 0)
+        RecommendedGroup.clear()
+        self.assertEqual(RecommendedGroup.objects.all().count(), 0)
+        # does cascade delete work?
+        self.assertEqual(GroupRecToPair.objects.all().count(), 0)
+        # deleting references doesn't delete key/value pairs
+        KeyValuePair.clear()
+        self.assertEqual(KeyValuePair.objects.all().count(), 0)
