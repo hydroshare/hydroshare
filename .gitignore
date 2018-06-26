@@ -12,10 +12,13 @@
 /hydroshare/local_settings.py
 /hydroshare/static
 /log
-/nginx/config-files/hs-nginx.conf
 /nginx/.htpasswd
 /nginx/htpasswd
+/nginx/Dockerfile
+/nginx/config-files/hs-nginx.conf
+/nginx/config-files/nginx.conf-default
 /static
+/tmp
 celeryd.pid
 docker-compose.yml
 init-defaultworker

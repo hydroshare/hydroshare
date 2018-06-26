@@ -506,8 +506,9 @@ def file_download_url_mapper(request, shortkey):
         # it's a folder
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))
         return HttpResponseRedirect(file_download_url)
-    file_download_url = istorage.url(irods_file_path)
-    return HttpResponseRedirect(file_download_url)
+    else: 
+        file_download_url = istorage.url(irods_file_path)
+        return HttpResponseRedirect(file_download_url)
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -627,6 +628,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": ex.message}),
             content_type="application/json"
         )
+    except ValidationError as ex:
+        return HttpResponse(
+            json.dumps({"error": ex.message}),
+            content_type="application/json"
+        )
+
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,

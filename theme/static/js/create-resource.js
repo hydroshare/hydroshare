@@ -97,6 +97,10 @@ $(document).ready(function () {
                 }
             });
 
+            $(".btn-cancel-create-resource").click(function () {
+                history.back();
+            });
+
             // The user dragged a file onto the Dropzone
             this.on("dragenter", function (file) {
                 $("#hsDropzone").toggleClass("hs-dropzone-highlight", true);

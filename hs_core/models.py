@@ -41,6 +41,55 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+import unicodedata
+
+
+def clean_for_xml(s):
+    """
+    Remove all control characters from a unicode string in preparation for XML inclusion
+
+    * Convert \n\n+ to unicode paragraph
+    * Convert \n alone to unicode RETURN (return SYMBOL)
+    * Convert control characters to spaces if last character is not space.
+    * Space-pad paragraph and NL symbols as necessary
+
+    """
+    CR = unichr(0x23CE)  # carriage return unicode SYMBOL
+    PARA = unichr(0xB6)  # paragraph mark unicode SYMBOL
+    output = ''
+    next = None
+    last = None
+    for ch in s:
+        cat = unicodedata.category(ch)
+        ISCONTROL = cat[0] == 'C'
+        ISSPACE = cat[0] == 'Z'
+        ISNEWLINE = (ord(ch) == 10)
+        if next:
+            if ISNEWLINE:  # linux '\n'
+                next = PARA  # upgrade to two+ returns
+            elif ISSPACE or ISCONTROL:
+                pass  # ignore spaces in newline sequence
+            else:
+                if last != ' ':
+                    output += ' '
+                output += next + ' ' + ch
+                next = None
+                last = ch
+        else:
+            if ISNEWLINE:
+                next = CR
+            elif ISSPACE:
+                if last != ' ':
+                    output += ch
+                    last = ch
+            elif ISCONTROL:
+                if last != ' ':
+                    output += ' '
+                    last = ' '
+            else:
+                output += ch
+                last = ch
+    return output
 
 
 class GroupOwnership(models.Model):
@@ -3179,6 +3228,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return the iRODS URL of the file.
 
         This is a direct link and independent of the Django path in ResourceFile.url
+        However, this does not invoke Nginx large file support with sendfile.
+        So use this with caution.
         """
         if self.resource_file:
             return self.resource_file.url
@@ -3964,7 +4015,7 @@ class CoreMetaData(models.Model):
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
                                                 '{%s}abstract' % self.NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.description.abstract
+            dcterms_abstract.text = clean_for_xml(self.description.abstract)
 
         for agency in self.funding_agencies.all():
             hsterms_agency = etree.SubElement(rdf_Description,
@@ -3973,18 +4024,18 @@ class CoreMetaData(models.Model):
                                                               self.NAMESPACES['rdf'])
             hsterms_name = etree.SubElement(hsterms_agency_rdf_Description,
                                             '{%s}fundingAgencyName' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = agency.agency_name
+            hsterms_name.text = clean_for_xml(agency.agency_name)
             if agency.agency_url:
                 hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                                    agency.agency_url)
             if agency.award_title:
                 hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
                                                  self.NAMESPACES['hsterms'])
-                hsterms_title.text = agency.award_title
+                hsterms_title.text = clean_for_xml(agency.award_title)
             if agency.award_number:
                 hsterms_number = etree.SubElement(hsterms_agency_rdf_Description,
                                                   '{%s}awardNumber' % self.NAMESPACES['hsterms'])
-                hsterms_number.text = agency.award_number
+                hsterms_number.text = clean_for_xml(agency.award_number)
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -4078,7 +4129,7 @@ class CoreMetaData(models.Model):
                                                          '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
                                                  '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
-            hsterms_statement.text = self.rights.statement
+            hsterms_statement.text = clean_for_xml(self.rights.statement)
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description,
                                                '{%s}URL' % self.NAMESPACES['hsterms'])
