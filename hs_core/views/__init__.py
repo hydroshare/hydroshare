@@ -390,7 +390,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    referer = request.META['HTTP_REFERER'] + "#" + element_name
+    return HttpResponseRedirect(referer)
 
 
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -474,7 +475,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    referer = request.META['HTTP_REFERER'] + "#" + element_name
+    return HttpResponseRedirect(referer)
 
 
 @api_view(['GET'])
@@ -501,8 +503,9 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+    referer = request.META['HTTP_REFERER'] + "#" + element_name
+    return HttpResponseRedirect(referer)
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
