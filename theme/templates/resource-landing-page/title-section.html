@@ -233,7 +233,7 @@
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
     "version": "2017-06-04",
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    "keywords": "{{ keywords }}",
+    "keywords": "{{ keywords | escapejs }}",
     {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
         "license": "http://creativecommons.org/licenses/by/4.0/",
     {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
@@ -278,7 +278,7 @@
             "longitude": {{ spatial_coverage.east|floatformat:"4" }}
             {% else %}
             "@type": "GeoShape",
-            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
             {% endif %}
         }
     },
