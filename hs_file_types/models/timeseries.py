@@ -1093,7 +1093,10 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                         or len(target_obj.metadata.time_series_results) == 0:
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict["status"] = result["StatusCV"]
+                    if result["StatusCV"] is not None:
+                        data_dict["status"] = result["StatusCV"]
+                    else:
+                        data_dict["status"] = ""
                     data_dict["sample_medium"] = result["SampledMediumCV"]
                     data_dict["value_count"] = result["ValueCount"]
 
