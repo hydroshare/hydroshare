@@ -1,4 +1,5 @@
 import os
+import imghdr
 from string import Template
 import logging
 from hs_core.models import BaseResource
@@ -37,6 +38,16 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
         new_url_string = None
     finally:
         return new_url_string
+
+
+def get_image_type(h):
+    image_type = imghdr.what(None, h=h)
+    if not image_type:
+        if h.startswith(b'\xff\xd8'):
+            return 'jpeg'
+        return  None
+    else:
+        return image_type
 
 
 def get_SupportedResTypes_choices():
