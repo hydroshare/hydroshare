@@ -1,4 +1,3 @@
-import os
 from hs_tools_resource.utils import get_image_type
 from django.test import TestCase
 
