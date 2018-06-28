@@ -176,6 +176,7 @@ class RecommendedResource(models.Model):
         self.state = Status.STATUS_SHOWN
         self.save()
 
+>>>>>>> f9196986e7a75901eea990c97505314252f050a5
     def explored(self):
         self.state = Status.STATUS_EXPLORED
         self.save()
