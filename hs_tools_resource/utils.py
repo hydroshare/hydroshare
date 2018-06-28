@@ -41,6 +41,13 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
 
 
 def get_image_type(h):
+    """
+    Wraps the imghdr.what method to include a patch for identify Exif jpeg formats.
+    This is a documented bug that is not and will not be patched for python 2.7
+    https://bugs.python.org/issue16512
+    :param h: the byte array of an image file
+    :return: the image type as a string (i.e. jpeg, png... etc)
+    """
     image_type = imghdr.what(None, h=h)
     if not image_type:
         if h.startswith(b'\xff\xd8'):
