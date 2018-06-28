@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 
         print("target owns: " + str(len(users_own_resources[target_user])) + " public: " + str(len(public_r)) + " private: " + str(len(private_r)))
 
-
+        '''
         print("~~~~~~~~~~~~   target user resources access  ~~~~~~~~~~~~~~~~~~~~")
         tu = user_from_id(target_user)
         if tu is not None:
@@ -88,7 +88,7 @@ class Command(BaseCommand):
                 else:
                     print(ugr.short_id)
             print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")        
-
+        '''
 
 
         for user, resources in users_own_resources.iteritems():
@@ -103,7 +103,7 @@ class Command(BaseCommand):
        
         print("----------- build up propensity -----------")
         propensity_start_time = time.time()
-        views = Features.visited_resources(datetime(2017, 11, 15, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0))
+        views = Features.visited_resources(datetime(2017, 11, 01, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0))
         for user, res_set in views.iteritems():
             for res in res_set:
                 if (user, res) not in propensity:
@@ -112,7 +112,7 @@ class Command(BaseCommand):
                     propensity[(user, res)] += 1
         print("resources viewed")
 
-        downloads = Features.user_downloads(datetime(2017, 11, 15, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0))
+        downloads = Features.user_downloads(datetime(2017, 11, 01, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0))
         for user, res_set in downloads.iteritems():
             for res in res_set:
                 if (user, res) not in propensity:
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                     propensity[(user, res)] += 1
         print("resources downloads")
 
-        apps = Features.user_apps(datetime(2017, 11, 15, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0)) 
+        apps = Features.user_apps(datetime(2017, 11, 01, 0, 0, 0, 0), datetime(2017, 11, 30, 0, 0, 0, 0)) 
         for user, res_set in apps.iteritems():
             for res in res_set:
                 if (user, res) not in propensity:
@@ -347,10 +347,11 @@ class Command(BaseCommand):
         #pprint(target_ug_row.nonzero())
         #sorted_target_df_t = sorted_target_df.transpose()
         sorted_target_row = sorted_target_df.loc[target_user]
+        '''
         for i in sorted_target_row.nonzero():
             print(sorted_target_row.iloc[i])
             #target_user_nonzero_entries.append(target_ug_row.iloc[i])
-        '''
+        
         target_user_nonzero_entries.sort(reverse=True)
         
         sorted_row = nm_ug.loc[target_user]
@@ -384,6 +385,27 @@ class Command(BaseCommand):
         target_thresh_ones = nm_ug_avg_thresh.loc[target_user].values
         target_group_ones = m_uhg.loc[target_user].values
         target_og_row = m_og.loc[target_user].values
+        target_pref_nonzero_probs_list = []
+        target_pref_nonzero_ones_list = []
+        target_pref_nonzero_index = nm_ug.loc[target_user].nonzero()
+        print(type(target_pref_nonzero_index))
+        #nonzero_pref_size = len(target_pref_nonzero_index(0))
+        for i in target_pref_nonzero_index:
+            target_pref_nonzero_probs_list.append(target_pref_probs[i])
+            target_pref_nonzero_ones_list.append(target_pref_ones[i])
+        
+        target_pref_nonzero_probs_arr = np.array(target_pref_nonzero_probs_list)
+        target_pref_nonzero_ones_arr = np.asarray(target_pref_nonzero_ones_list)
+        #target_pref_nonzero_ones_arr = np.ones(nonzero_pref_size)
+        
+        print("++++++++++++++++ ONLY POSSITIVE preferences  +++++++++++++++++++++")
+        pprint(target_pref_nonzero_probs_arr)
+        pprint(target_pref_nonzero_ones_arr)
+        print("list type")
+        print(type(target_pref_nonzero_probs_list))
+        print("arr type")
+        print(type(target_pref_nonzero_probs_arr))
+        print("+++++++++++++++")
 
         target_jaccard_sim = {}
         target_cosine_sim ={}
@@ -397,6 +419,11 @@ class Command(BaseCommand):
 
         target_group_jaccard_sim = {}
         
+        target_nonzero_jaccard_sim = {}
+        target_nonzero_cosine_sim = {}
+        target_nonzero_jaccard_ones_sim = {}
+        target_nonzero_cosine_ones_sim = {}
+
         target_accessible_resources_ids = set()
         for res in users_own_resources[target_user]:
             target_accessible_resources_ids.add(res.short_id)
@@ -422,11 +449,21 @@ class Command(BaseCommand):
                 p_counter += 1
                 continue
 
+            row_corr_target_entries_list = []
+            for i in target_pref_nonzero_index:
+                row_corr_target_entries_list.append(row.values[i])
+            row_corr_target_entries_arr = np.array(row_corr_target_entries_list)
+            if not row_corr_target_entries_arr.any():
+                continue
+
             num = 0
             dom = 0
+            #print(type(target_pref_probs))
+            #print(type(row.values))
             for x, y in zip(target_pref_probs, row.values):
                 num += min(x, y)
                 dom += max(x, y)
+                #print(type(x), type(y))
             js = num/dom
 
             # Cosine similarity for probabilities
@@ -462,38 +499,100 @@ class Command(BaseCommand):
             target_ownership_jaccard_sim[index] = jows
             target_ownership_cosine_sim[index] = cows
             target_group_jaccard_sim[index] = jps
+            '''
+            row_corr_target_entries_list = []
+            for i in target_pref_nonzero_index:
+                row_corr_target_entries_list.append(row.values[i])
+            row_corr_target_entries_arr = np.array(row_corr_target_entries_list)
+            '''
+            #pprint(row_corr_target_entries_list) 
+            #print(len(row_corr_target_entries_list))   
+            #pprint(target_pref_nonzero_probs_list)
+            #print(len(target_pref_nonzero_probs_list))
+            pref_num = 0
+            pref_dom = 0
+            #print("tesing") 
+           
+            '''       
+            for x in target_pref_nonzero_probs_list:
+                print(x)
+             
+            for y in row_corr_target_entries_list:
+                print(y)
+            '''
+            for x, y in zip(target_pref_nonzero_probs_list[0].tolist(), row_corr_target_entries_list[0].tolist()):
+                '''
+                print(x, y)
+                print("x type")
+                print(type(x))
+                print("y type")
+                print(type(y))
+                '''
+                pref_num += min(x, y)
+                pref_dom += max(x, y)
+            jns = pref_num/pref_dom
+
+            # Cosine similarity for probabilities
+            cns = 1 / (1 + distance.cosine(target_pref_nonzero_probs_list[0].tolist(), row_corr_target_entries_list[0].tolist()))
+
+            # Jaccard similarity for ones
+            jnos = jaccard_similarity_score(target_pref_nonzero_ones_list[0], row_corr_target_entries_list[0])
+
+            # Cosine similarity for ones
+            cnos = 1 / (1 + distance.cosine(target_pref_nonzero_ones_list[0].tolist(), row_corr_target_entries_list[0].tolist()))
+
+            target_nonzero_jaccard_sim[index] = jns
+            target_nonzero_cosine_sim[index] = cns
+            target_nonzero_jaccard_ones_sim[index] = jnos
+            target_nonzero_cosine_ones_sim[index] = cnos
 
         print("+++++++ counters  ++++++++")
         print(str(o_counter) + ", " + str(p_counter) + ", " + str(p_o_counter))
         print("------------ Jaccard similarity for probabilities ---------------")
         rec_index = 1
         for key, value in sorted(target_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
             recommended_genres = m_rg.loc[key]
             print(rec_index)
             for i in recommended_genres.nonzero():
                 print(recommended_genres.iloc[i])
             rec_index += 1
+            '''
             print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
         rec_index = 1
         print("------------ Cosine similarity for probabilities ---------------")
         for key, value in sorted(target_cosine_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
             recommended_genres = m_rg.loc[key]
             print(rec_index)
             for i in recommended_genres.nonzero():
                 print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
             print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
         rec_index = 1
         print("------------ Jaccard similarity for Ones ---------------")
         for key, value in sorted(target_jaccard_ones_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
             recommended_genres = m_rg.loc[key]
             print(rec_index)
             for i in recommended_genres.nonzero():
                 print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
             print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
         rec_index = 1
         print("------------ Cosine similarity for Ones ---------------")
         for key, value in sorted(target_cosine_ones_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
+            recommended_genres = m_rg.loc[key]
+            print(rec_index)
+            for i in recommended_genres.nonzero():
+                print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
             print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+        rec_index = 1
         '''
         print("------------ Jaccard similarity for threshold Ones ---------------")
         for key, value in sorted(target_threshold_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
@@ -514,6 +613,54 @@ class Command(BaseCommand):
         print("------------ Jaccard similarity for group ---------------")
         for key, value in sorted(target_group_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
             print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+
+        print("------------ Jaccard similarity for Nonezero probs ---------------")
+        for key, value in sorted(target_nonzero_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
+            recommended_genres = m_rg.loc[key]
+            print(rec_index)
+            for i in recommended_genres.nonzero():
+                print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
+            print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+        rec_index = 1
+
+        print("------------ Cosine similarity for Nonezero probs ---------------")
+        for key, value in sorted(target_nonzero_cosine_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
+            recommended_genres = m_rg.loc[key]
+            print(rec_index)
+            for i in recommended_genres.nonzero():
+                print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
+            print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+        rec_index = 1
+
+        print("------------ Jaccard similarity for Nonezero ones ---------------")
+        for key, value in sorted(target_nonzero_jaccard_ones_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
+            recommended_genres = m_rg.loc[key]
+            print(rec_index)
+            for i in recommended_genres.nonzero():
+                print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
+            print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+        rec_index = 1
+
+        print("------------ Cosine similarity for Nonezero ones ---------------")
+        for key, value in sorted(target_nonzero_cosine_ones_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:15]:
+            '''
+            recommended_genres = m_rg.loc[key]
+            print(rec_index)
+            for i in recommended_genres.nonzero():
+                print(recommended_genres.iloc[i])
+            rec_index += 1
+            '''
+            print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+        rec_index = 1
 
         similarity_elapsed_time = time.time() - similarity_start_time
         print("similarities calculation time cost: " + str(similarity_elapsed_time))
