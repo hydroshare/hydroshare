@@ -43,7 +43,7 @@ def get_image_type(h):
     if not image_type:
         if h.startswith(b'\xff\xd8'):
             return 'jpeg'
-        return  None
+        return None
     else:
         return image_type
 
