@@ -537,7 +537,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return [obj.verbose_content_type]
         else: 
             output = []
-            for f in obj.get_logical_files(): 
+            for f in obj.logical_files: 
                 output.append(f.verbose_content_type) 
             return output
 
