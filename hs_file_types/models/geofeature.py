@@ -161,6 +161,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 class GeoFeatureLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
     data_type = "GeographicFeature"
+    verbose_content_Type = "Geographic Feature (ESRI Shapefiles)" 
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

@@ -10,6 +10,8 @@ from hs_file_types.models import GenericLogicalFile
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
+    verbose_content_type = 'Composite'  # used during discovery
+
     class Meta:
         verbose_name = 'Composite Resource'
         proxy = True

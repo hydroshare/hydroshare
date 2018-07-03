@@ -3277,6 +3277,8 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
+    verbose_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for BaseResource model."""
 
@@ -3473,6 +3475,11 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model()._meta.verbose_name
 
     @property
+    def verbose_content_type(self):
+        """Return verbose name of content type."""
+        return self.get_content_model().verbose_content_type
+
+    @property
     def can_be_published(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
@@ -3542,9 +3549,10 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
+    verbose_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for GenericResource model."""
-
         verbose_name = 'Generic'
         proxy = True
 

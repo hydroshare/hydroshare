@@ -352,6 +352,8 @@ class NetcdfResource(BaseResource):
         if nc_res_file and txt_res_file:
             netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
 
+    verbose_content_type = 'Multidimensional (NetCDF)'  # used during discovery
+
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True

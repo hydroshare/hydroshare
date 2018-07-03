@@ -17,6 +17,8 @@ from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_cho
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
+    verbose_content_type = 'Web App'  # used during discovery
+
     class Meta:
         proxy = True
         verbose_name = 'Web App Resource'

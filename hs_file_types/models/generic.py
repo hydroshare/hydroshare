@@ -116,6 +116,7 @@ class GenericLogicalFile(AbstractLogicalFile):
     Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
     data_type = "genericData"
+    verbose_content_type = "Generic Data"  # used during discovery
 
     @classmethod
     def create(cls):

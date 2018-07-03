@@ -13,6 +13,7 @@ class RefTimeSeriesResource(BaseResource):
 
     class Meta:
         verbose_name = "HIS Referenced Time Series"
+        verbose_content_type = "Reference to HIS Time Series"
         proxy = True
 
     @property

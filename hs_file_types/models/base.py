@@ -595,6 +595,9 @@ class AbstractLogicalFile(models.Model):
     # also this data type needs to be defined in in terms.html page
     data_type = "Generic"
 
+    # display name for content type: used in discovery faceting
+    verbose_content_type = "Generic"
+
     class Meta:
         abstract = True
 
