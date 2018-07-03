@@ -722,9 +722,13 @@ class AbstractLogicalFile(models.Model):
     def get_main_file(self):
         file_extension = self.get_main_file_type()
         if file_extension:
-            for f in self.files.all():
-                if f.extension == file_extension:
-                    return f
+            if file_extension == ".*":
+                # any file can serve as main file
+                return self.files.all().first()
+            else:
+                for f in self.files.all():
+                    if f.extension == file_extension:
+                        return f
         return None
 
     @classmethod
