@@ -664,7 +664,10 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             base_dir = full_dir if full_dir is not None else ''
             dir_name = dir_name if dir_name is not None else ''
-            full_dir = os.path.join(base_dir, dir_name)
+            if dir_name:
+                full_dir = os.path.join(base_dir, dir_name)
+            else:
+                full_dir = base_dir
         if full_dir:
             new_folders.add(full_dir)
             ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
@@ -687,7 +690,7 @@ def add_resource_files(pk, *files, **kwargs):
             for fol in new_folders:
                 folder = os.path.join(resource.file_path, fol)
                 agg_type = resource.get_folder_aggregation_type_to_set(folder)
-                if agg_type:
+                if agg_type and agg_type != "FileSetLogicalFile":
                     agg_type = agg_type.replace('LogicalFile', '')
                     set_logical_file_type(res=resource, user=None, file_id=None,
                                           hs_file_type=agg_type, folder_path=fol,
