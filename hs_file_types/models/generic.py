@@ -13,19 +13,22 @@ from hs_core.hydroshare import utils
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
-class GenericFileMetaData(AbstractFileMetaData):
+class GenericFileMetaDataMixin(AbstractFileMetaData):
     # the metadata element models are from the hs_core type app
     model_app_label = 'hs_core'
 
+    class Meta:
+        abstract = True
+
     def create_element(self, element_model_name, **kwargs):
-        element = super(GenericFileMetaData, self).create_element(element_model_name, **kwargs)
+        element = super(GenericFileMetaDataMixin, self).create_element(element_model_name, **kwargs)
         self.is_dirty = True
         return element
 
     def get_html(self):
         """overrides the base class function"""
 
-        html_string = super(GenericFileMetaData, self).get_html()
+        html_string = super(GenericFileMetaDataMixin, self).get_html()
         if not self.has_metadata:
             root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
             with root_div:
@@ -47,7 +50,7 @@ class GenericFileMetaData(AbstractFileMetaData):
 
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
-            super(GenericFileMetaData, self).get_html_forms()
+            super(GenericFileMetaDataMixin, self).get_html_forms()
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
@@ -63,28 +66,32 @@ class GenericFileMetaData(AbstractFileMetaData):
         context_dict = dict()
         temp_cov_form = self.get_temporal_coverage_form()
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        update_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/{2}/update-file-metadata/"
-        create_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/add-file-metadata/"
+        update_action = "/hsapi/_internal/{0}/{1}/{2}/{3}/update-file-metadata/"
+        create_action = "/hsapi/_internal/{0}/{1}/{2}/add-file-metadata/"
 
         element_name = "coverage"
+        logical_file_class_name = self.logical_file.__class__.__name__
         if self.temporal_coverage or self.spatial_coverage:
             if self.temporal_coverage:
-                temp_action = update_action.format(self.logical_file.id, element_name,
-                                                   self.temporal_coverage.id)
+                temp_action = update_action.format(logical_file_class_name, self.logical_file.id,
+                                                   element_name, self.temporal_coverage.id)
                 temp_cov_form.action = temp_action
             else:
-                temp_action = create_action.format(self.logical_file.id, element_name)
+                temp_action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                                   element_name)
                 temp_cov_form.action = temp_action
 
             if self.spatial_coverage:
-                spatial_action = update_action.format(self.logical_file.id, element_name,
-                                                      self.spatial_coverage.id)
+                spatial_action = update_action.format(logical_file_class_name, self.logical_file.id,
+                                                      element_name, self.spatial_coverage.id)
                 spatial_cov_form.action = spatial_action
             else:
-                spatial_action = create_action.format(self.logical_file.id, element_name)
+                spatial_action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                                      element_name)
                 spatial_cov_form.action = spatial_action
         else:
-            action = create_action.format(self.logical_file.id, element_name)
+            action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                          element_name)
             temp_cov_form.action = action
             spatial_cov_form.action = action
 
@@ -119,6 +126,10 @@ class GenericFileMetaData(AbstractFileMetaData):
             return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+
+
+class GenericFileMetaData(GenericFileMetaDataMixin):
+    pass
 
 
 class GenericLogicalFile(AbstractLogicalFile):
