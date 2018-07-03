@@ -11,7 +11,7 @@ from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource
 
 
 from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, TimeSeriesLogicalFile
+    NetCDFLogicalFile, TimeSeriesLogicalFile, FileSetLogicalFile
 
 
 class CompositeResource(BaseResource):
@@ -100,6 +100,7 @@ class CompositeResource(BaseResource):
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
+            return FileSetLogicalFile.__name__
         else:
             # check for raster
             aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
@@ -116,8 +117,7 @@ class CompositeResource(BaseResource):
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
-
-        return None
+            return FileSetLogicalFile.__name__
 
     @property
     def supports_folders(self):
