@@ -26,7 +26,6 @@ class GenericFileMetaData(AbstractFileMetaData):
     def has_modified_metadata(self):
         """Identifies whether a user has updated metadata."""
 
-        log = logging.getLogger()
         if self.coverages.all():
             return True
         if self.extra_metadata:
