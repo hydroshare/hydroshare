@@ -504,7 +504,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # check expected generated metadata state updated extra_metadata only
         self.assertEqual(0, gen_logical_file.metadata.coverages.count())
-        self.assertEqual({'key1': 'value 1', 'key2': 'value 2'}
-                         , gen_logical_file.metadata.extra_metadata)
+        self.assertEqual({'key1': 'value 1', 'key2': 'value 2'},
+                         gen_logical_file.metadata.extra_metadata)
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
