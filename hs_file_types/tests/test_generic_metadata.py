@@ -454,6 +454,24 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
 
+    def test_has_modified_metadata_empty_title(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        gen_logical_file.dataset_name = ""
+        gen_logical_file.save()
+
+        # check expected generated metadata state without modifications
+        self.assertEqual(0, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
+        self.assertFalse(gen_logical_file.dataset_name)
+        self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
+
     def test_has_modified_metadata_updated_title(self):
         self.create_composite_resource(self.generic_file)
 

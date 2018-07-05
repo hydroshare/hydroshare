@@ -36,7 +36,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         # if dataset_name different than the filename, the user must have updated metadata.
         res_file = self.logical_file.files.first()
         file_name = res_file.file_name[:-len(res_file.extension)]
-        if file_name != self.logical_file.dataset_name:
+        if self.logical_file.dataset_name and file_name != self.logical_file.dataset_name:
             return True
         return False
 
