@@ -24,6 +24,7 @@ class Command(BaseCommand):
                     generic_files += 1
                     if not file.logical_file.metadata.has_modified_metadata:
                         file.logical_file.remove_aggregation()
+                        unmodified_generic_files_removed_counter += 1
 
         print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
         print(">> {} TOTAL GENERIC FILES FOUND".format(generic_files))
