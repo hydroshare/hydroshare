@@ -978,6 +978,14 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                     raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
+        if folder is not None and resource.resource_type == 'CompositeResource':
+            try:
+                aggregation = resource.get_aggregation_by_name(folder)
+                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                    # make the added file part of the fileset aggregation
+                    aggregation.add_resource_file(ret)
+            except ObjectDoesNotExist:
+                pass
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
