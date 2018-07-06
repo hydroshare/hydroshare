@@ -624,7 +624,7 @@ class TestCaseCommonUtilities(object):
         proc_level = self.resTimeSeries.metadata.processing_levels.all().first()
         # there should be 7 series ids associated with this one element
         self.assertEqual(len(proc_level.series_ids), 7)
-        self.assertEqual(proc_level.processing_level_code, 1)
+        self.assertEqual(proc_level.processing_level_code, '1')
         self.assertEqual(proc_level.definition, 'Quality controlled data')
         explanation = 'Quality controlled data that have passed quality assurance procedures ' \
                       'such as routine estimation of timing and sensor calibration or visual ' \
