@@ -913,10 +913,16 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
         if filter_condition(filename_or_id, f):
             if delete_logical_file:
                 if f.logical_file is not None:
-                    # logical_delete() calls this function (delete_resource_file())
-                    # to delete each of its contained ResourceFile objects
-                    f.logical_file.logical_delete(user)
-                    return filename_or_id
+                    # delete logical file if any resource file that belongs to logical file
+                    # gets deleted for any logical file other than fileset logical file
+                    # delete fileset logical file only when the last resource file that belongs
+                    # to the fileset logical file gets deleted
+                    if f.logical_file.get_aggregation_class_name() != 'FileSetLogicalFile' or \
+                            f.logical_file.files.all().count() == 1:
+                        # logical_delete() calls this function (delete_resource_file())
+                        # to delete each of its contained ResourceFile objects
+                        f.logical_file.logical_delete(user)
+                        return filename_or_id
 
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
