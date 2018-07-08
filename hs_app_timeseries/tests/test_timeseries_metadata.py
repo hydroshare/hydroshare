@@ -49,7 +49,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
 
         self.odm2_sqlite_missing_data_file_name = \
             'ODM2_multi_site_single_variable_missing_data.sqlite'
-        self.odm2_sqlite_missing_data_file= 'hs_app_timeseries/tests/{}'.format(
+        self.odm2_sqlite_missing_data_file = 'hs_app_timeseries/tests/{}'.format(
             self.odm2_sqlite_missing_data_file_name)
 
         self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
