@@ -48,9 +48,12 @@ hydroshare:
     - "/hs_tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
+    - "/irods/hydroshare:/irods/hydroshare"
+    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
   ports:
     - "1338:2022"
     - "8000:8000"
+    - "15001:15001"
   links:
     - postgis:postgis
     - redis:redis

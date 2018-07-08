@@ -570,7 +570,7 @@ def assert_time_series_file_type_metadata(self):
     proc_level = logical_file.metadata.processing_levels.all().first()
     # there should be 7 series ids associated with this one element
     self.assertEqual(len(proc_level.series_ids), 7)
-    self.assertEqual(proc_level.processing_level_code, 1)
+    self.assertEqual(proc_level.processing_level_code, '1')
     self.assertEqual(proc_level.definition, 'Quality controlled data')
     explanation = 'Quality controlled data that have passed quality assurance procedures ' \
                   'such as routine estimation of timing and sensor calibration or visual ' \

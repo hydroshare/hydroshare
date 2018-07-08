@@ -19,7 +19,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, validate_user_url
+from hs_core.models import BaseResource, validate_user_url, clean_for_xml
 from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
@@ -118,10 +118,11 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         if resource_files is None:
             resource_files = []
 
-        page_url_dict, res_title, metadata, _ = resource_pre_create_actions(resource_type=rm.res_type,
-                                                                         files=resource_files,
-                                                                         resource_title=rm.title,
-                                                                         page_redirect_url_key=None)
+        page_url_dict, res_title, metadata, _ = \
+            resource_pre_create_actions(resource_type=rm.res_type,
+                                        files=resource_files,
+                                        resource_title=rm.title,
+                                        page_redirect_url_key=None)
     except ResourceFileSizeException as ex:
         raise HsDeserializationException(ex.message)
 
@@ -797,9 +798,10 @@ class GenericResourceMeta(object):
         if self.abstract:
             if resource.metadata.description:
                 resource.metadata.update_element('description', resource.metadata.description.id,
-                                                 abstract=self.abstract)
+                                                 abstract=clean_for_xml(self.abstract))
             else:
-                resource.metadata.create_element('description', abstract=self.abstract)
+                resource.metadata.create_element('description',
+                                                 abstract=clean_for_xml(self.abstract))
         if self.rights:
             resource.metadata.update_element('rights', resource.metadata.rights.id,
                                              statement=self.rights.statement)
@@ -951,7 +953,6 @@ class GenericResourceMeta(object):
                 self.id = pk
 
             self.uri = uri
-
 
     class ResourceCreator(ResourceContributor):
         """

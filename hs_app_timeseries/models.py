@@ -507,7 +507,7 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
-    processing_level_code = models.IntegerField()
+    processing_level_code = models.CharField(max_length=50)
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
 

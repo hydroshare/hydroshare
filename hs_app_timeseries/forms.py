@@ -498,7 +498,7 @@ class ProcessingLevelForm(ModelForm):
 
 
 class ProcessingLevelValidationForm(forms.Form):
-    processing_level_code = forms.IntegerField()
+    processing_level_code = forms.CharField(max_length=50)
     definition = forms.CharField(max_length=200, required=False)
     explanation = forms.CharField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
