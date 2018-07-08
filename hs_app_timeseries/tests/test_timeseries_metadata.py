@@ -47,6 +47,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
         self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
 
+        self.odm2_sqlite_missing_data_file_name = \
+            'ODM2_multi_site_single_variable_missing_data.sqlite'
+        self.odm2_sqlite_missing_data_file= 'hs_app_timeseries/tests/{}'.format(
+            self.odm2_sqlite_missing_data_file_name)
+
         self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
         self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(
             self.odm2_sqlite_bad_file_name)
@@ -160,7 +165,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
             utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
                                                 user=self.user)
 
-    def test_metadata_extraction_on_resource_creation(self):
+    def test_metadata_extraction_from_sqlite_on_resource_creation_1(self):
         # passing the file object that points to the temp dir doesn't work - create_resource
         # throws error open the file from the fixed file location
         self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
@@ -174,6 +179,32 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
         super(TestTimeSeriesMetaData, self).timeseries_metadata_extraction()
+
+    def test_metadata_extraction_from_sqlite_on_resource_creation_2(self):
+        # Here we are using a sqlite file that has data missing as specified in issue#2771
+
+        files = [open(self.odm2_sqlite_missing_data_file, 'r')]
+
+        self.resTimeSeries = hydroshare.create_resource(
+            resource_type='TimeSeriesResource',
+            owner=self.user,
+            title='My Test TimeSeries Resource',
+            files=files
+            )
+        utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
+
+        # test that there are sites with data for site name
+        self.assertTrue(self.resTimeSeries.metadata.sites.filter(site_name__isnull=False).exists())
+        # test that there are sites with no data for site name
+        self.assertTrue(self.resTimeSeries.metadata.sites.filter(site_name__isnull=True).exists())
+        # test that there are time series results with data for status
+        self.assertTrue(self.resTimeSeries.metadata.time_series_results.exclude(status="").exists())
+        # test that there are time series results with no data for status
+        self.assertTrue(self.resTimeSeries.metadata.time_series_results.filter(status="").exists())
+        # test that the variable code can be more than 20 characters long
+        variable = self.resTimeSeries.metadata.variables.filter(
+            variable_code__startswith='USU36_').first()
+        self.assertTrue(len(variable.variable_code) > 20)
 
     def test_metadata_extraction_on_sqlite_file_add(self):
         # resource creation with uploaded sqlite file
