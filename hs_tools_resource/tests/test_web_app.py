@@ -456,6 +456,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
                                                  term_dict_user])
         self.assertEqual(new_url_string, None)
 
+    def test_utils_parse_app_url_template_None(self):
+        term_dict_user = {"HS_USR_NAME": self.user.username}
+
+        url_template_string = None
+        new_url_string = parse_app_url_template(url_template_string,
+                                                [self.resComposite.get_hs_term_dict(),
+                                                 term_dict_user])
+        self.assertEqual(new_url_string, None)
+
     def test_agg_types(self):
         # set url launching pattern for aggregations
         metadata = [{'requesturlbaseaggregation': {
