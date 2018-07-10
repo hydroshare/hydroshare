@@ -1491,7 +1491,7 @@ body > .main-container {
 	outline: none;
 }
 
-.btn-create-resource {
+.btn-create-resource .btn-cancel-create-resource {
     height: 40px;
     line-height: 26px;
     width: 180px;
