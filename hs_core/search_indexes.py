@@ -532,13 +532,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Resource type is verbose_name attribute of obj argument."""
         return obj.verbose_name
 
-    def prepare_content_type(self, obj): 
-        if obj.verbose_name != 'Composite Resource': 
+    def prepare_content_type(self, obj):
+        if obj.verbose_name != 'Composite Resource':
             return [obj.verbose_content_type]
-        else: 
+        else:
             output = []
-            for f in obj.logical_files: 
-                output.append(f.verbose_content_type) 
+            for f in obj.logical_files:
+                output.append(f.verbose_content_type)
             return output
 
     def prepare_comment(self, obj):

@@ -161,7 +161,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 class GeoFeatureLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
     data_type = "GeographicFeature"
-    verbose_content_Type = "Geographic Feature (ESRI Shapefiles)" 
+    verbose_content_Type = "Geographic Feature (ESRI Shapefiles)"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
@@ -571,12 +571,12 @@ def extract_metadata(shp_file_full_path):
             # if extent is a point, create point type coverage
             if wgs84_dict["westlimit"] == wgs84_dict["eastlimit"] \
                and wgs84_dict["northlimit"] == wgs84_dict["southlimit"]:
-                coverage_dict = {"Coverage": {"type": "point",
-                                 "value": {"east": wgs84_dict["eastlimit"],
-                                           "north": wgs84_dict["northlimit"],
-                                           "units": wgs84_dict["units"],
-                                           "projection": wgs84_dict["projection"]}
-                                }}
+                coverage_dict = {"Coverage":
+                                 {"type": "point",
+                                  "value": {"east": wgs84_dict["eastlimit"],
+                                            "north": wgs84_dict["northlimit"],
+                                            "units": wgs84_dict["units"],
+                                            "projection": wgs84_dict["projection"]}}}
             else:  # otherwise, create box type coverage
                 coverage_dict = {"Coverage": {"type": "box",
                                               "value": parsed_md_dict["wgs84_extent_dict"]}}
