@@ -201,6 +201,7 @@ function updateSelectionMenuContext() {
         isFolderSelected = true;
         flagDisableSetGenericFileType = true;
         flagDisableSetRefTimeseriesFileType = true;
+        flagDisableSetFileSetFileType = false;
         if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
             flagDisableRemoveAggregation = true;
