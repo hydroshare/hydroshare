@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
+from hs_core.views.utils import move_or_rename_file_or_folder
 from utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile
 
@@ -111,7 +112,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
-        # there should be one resource files
+        # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # resource file is in a folder
@@ -146,6 +147,108 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         fileset_aggregation = FileSetLogicalFile.objects.first()
         self.assertEqual(fileset_aggregation.files.count(), 2)
+
+        self.composite_resource.delete()
+
+    def test_move_file_into_aggregation(self):
+        """Test that when we move a file into a folder that represents a fileset aggregation,
+        the moved file becomes part of the aggregation """
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # resource file is in a folder
+        self.assertEqual(res_file.file_folder, new_folder)
+        # check that the resource file is not part of an aggregation
+        self.assertEqual(res_file.has_logical_file, False)
+
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+
+        # resource file is still in the same folder
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, new_folder)
+
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # aggregation dataset name should be same as the folder name
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file.dataset_name, new_folder)
+
+        # add the the json file to the resource at the root
+        self.add_file_to_resource(file_to_add=self.json_file)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # test that the json file is not part of any aggregation
+        json_res_file = ResourceFile.get(resource=self.composite_resource, file=self.json_file_name)
+        self.assertEqual(json_res_file.has_logical_file, False)
+
+        # move the json file into the folder that represents fileset aggregation
+        src_path = 'data/contents/{}'.format(self.json_file_name)
+        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, self.json_file_name)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        # both resource files should be part of the fileset aggregation
+        for r_file in self.composite_resource.files.all():
+            self.assertEqual(r_file.has_logical_file, True)
+            self.assertEqual(r_file.logical_file_type_name, self.logical_file_type_name)
+
+        fileset_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fileset_aggregation.files.count(), 2)
+
+        self.composite_resource.delete()
+
+    def test_move_file_from_aggregation(self):
+        """Test that when we move a file out of a folder that represents a fileset aggregation,
+        the moved file is no more part of that aggregation """
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # add the the json file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=new_folder)
+
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fileset_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fileset_aggregation.files.count(), 2)
+
+        # both resource files should be part of the fileset aggregation
+        for r_file in self.composite_resource.files.all():
+            self.assertEqual(r_file.has_logical_file, True)
+            self.assertEqual(r_file.logical_file_type_name, self.logical_file_type_name)
+
+        # move the json file out of the aggregation folder into the root folder
+        src_path = 'data/contents/{0}/{1}'.format(new_folder, self.json_file_name)
+        tgt_path = 'data/contents/{}'.format(self.json_file_name)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        # test that the json file is not part of any aggregation
+        json_res_file = ResourceFile.get(resource=self.composite_resource, file=self.json_file_name)
+        self.assertEqual(json_res_file.has_logical_file, False)
+
+        # fileset aggregation should have only one resource file
+        fileset_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fileset_aggregation.files.count(), 1)
 
         self.composite_resource.delete()
 
