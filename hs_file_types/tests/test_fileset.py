@@ -328,3 +328,40 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
 
         self.composite_resource.delete()
+
+    def test_create_folder_in_fileset(self):
+        """Test that folders can be created inside a folder that represents a fileset
+        aggregation and file added to the sub folder is not going to be part of the fileset
+        aggregation"""
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check that the resource file is not part of an aggregation
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+
+        # create a folder inside filset_folder
+        agg_sub_folder = 'fileset_folder/another_folder'
+        ResourceFile.create_folder(self.composite_resource, agg_sub_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=agg_sub_folder)
+        # the json file added to the sub folder should not be part of the fileset aggregation
+        self.assertEqual(json_res_file.has_logical_file, False)
+        self.assertEqual(json_res_file.file_folder, agg_sub_folder)
+
+        self.composite_resource.delete()

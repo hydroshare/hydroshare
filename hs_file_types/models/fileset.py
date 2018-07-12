@@ -35,6 +35,11 @@ class FileSetLogicalFile(AbstractLogicalFile):
         """This aggregation supports one or more files"""
         return False
 
+    @property
+    def can_contain_folders(self):
+        """This aggregation can contain folders"""
+        return True
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""
