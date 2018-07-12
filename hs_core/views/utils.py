@@ -551,14 +551,38 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     relationships are preserved and no longer need adjustment.
     """
     # checks src_name as a side effect.
-    folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
-                                                            test_exists=False)
+    src_folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
+                                                                test_exists=False)
+    tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
+    file_move = src_folder != tgt_folder
     try:
-        res_file_obj = ResourceFile.get(resource=resource, file=base, folder=folder)
+        res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
+        # if the source file is part of a FileSet, we need to remove it from that FileSet in the
+        # case file being moved
+        if file_move and res_file_obj.file_folder is not None and \
+                resource.resource_type == 'CompositeResource':
+            try:
+                aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
+                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                    # remove aggregation form the file
+                    res_file_obj.logical_file_content_object = None
+            except ObjectDoesNotExist:
+                pass
+
         # checks tgt_name as a side effect.
-        ResourceFile.resource_path_is_acceptable(resource, tgt_name,
-                                                 test_exists=True)
+        ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
+        # if the file is getting moved into a folder that represents a FileSet, then make the file
+        # part of that FileSet
+        if file_move and res_file_obj.file_folder is not None and \
+                resource.resource_type == 'CompositeResource':
+            try:
+                aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
+                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                    # make the moved file part of the fileset aggregation
+                    aggregation.add_resource_file(res_file_obj)
+            except ObjectDoesNotExist:
+                pass
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
