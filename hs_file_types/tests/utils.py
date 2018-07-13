@@ -461,7 +461,7 @@ def assert_time_series_file_type_metadata(self):
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
                      parser.parse('01/01/2008').date())
     self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/31/2008').date())
+                     parser.parse('01/30/2008').date())
 
     # there should be one format element
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
@@ -518,7 +518,7 @@ def assert_time_series_file_type_metadata(self):
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
                      parser.parse('01/01/2008').date())
     self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/31/2008').date())
+                     parser.parse('01/30/2008').date())
 
     # test 'site' - there should be 7 sites
     self.assertEqual(logical_file.metadata.sites.all().count(), 7)
