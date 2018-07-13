@@ -716,7 +716,7 @@ function showFileTypeMetadata(file_type_time_series, url){
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
          if (logical_type === "NetCDFLogicalFile") {
              // don't let the user open the Projection String Type dropdown list
-             // when editing Oroginal Coverage element
+             // when editing Original Coverage element
              $("#id_projection_string_type_filetype").css('pointer-events', 'none');
              // don't let the user open the Variable type dropdown list when editing
              // Variable elements

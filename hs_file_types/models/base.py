@@ -971,8 +971,9 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def metadata_file_path(self):
-        """Full file path of the aggregation metadata xml file starting with {resource_id}/data/contents/
-        """
+        """Full file path of the aggregation metadata xml file starting
+        with {resource_id}/data/contents/ """
+
         return os.path.join(self.resource.file_path, self.metadata_short_file_path)
 
     @property

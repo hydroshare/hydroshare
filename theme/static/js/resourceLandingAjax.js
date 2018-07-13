@@ -1540,7 +1540,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
 
-    if (logical_type !== "GenericLogicalFile"){
+    if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
@@ -1552,13 +1552,13 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
     }
     else {
-        // file type is "GenericLogicalFile" - allow changing coverage type
+        // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
     }
 
     // #id_type_1 is the box radio button
     if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
-        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile')) {
+        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile")) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();

@@ -400,7 +400,7 @@ class CompositeResource(BaseResource):
                     aggregation = self.get_aggregation_by_name(aggregation_path)
                     return aggregation.can_contain_folders
                 except ObjectDoesNotExist:
-                    # target folder doesn't represent an aggrgation - no restriction
+                    # target folder doesn't represent an aggregation - no restriction
                     return True
             return True
 
