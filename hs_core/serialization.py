@@ -16,7 +16,7 @@ from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
     HsDateException
 
-from hs_core.hydroshare.utils import resource_pre_create_actions
+from hs_core.hydroshare.utils import resource_pre_create_actions, format_datetime
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
 from hs_core.models import BaseResource, validate_user_url, clean_for_xml
@@ -827,8 +827,8 @@ class GenericResourceMeta(object):
                 # val['end'] = c.end_date.isoformat()
                 # Cast temporal coverages to month/day/year format as this is how they are stored as strings
                 #  in the metadata tables.
-                val['start'] = c.start_date.strftime('%m/%d/%Y')
-                val['end'] = c.end_date.strftime('%m/%d/%Y')
+                val['start'] = format_datetime(c.start_date, template='%m/%d/%Y')
+                val['end'] = format_datetime(c.end_date, template='%m/%d/%Y')
                 val['scheme'] = c.scheme
                 kwargs['value'] = val
                 resource.metadata.create_element('coverage', **kwargs)

@@ -28,7 +28,7 @@ from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.hydroshare.utils import get_file_mime_type
+from hs_core.hydroshare.utils import get_file_mime_type, format_datetime
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 
@@ -944,6 +944,6 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
             temporal_coverage_dict['type'] = temporal_coverage.type
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
-            temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
+            temporal_coverage_dict['start'] = format_datetime(start_date, template='%m-%d-%Y')
+            temporal_coverage_dict['end'] = format_datetime(end_date, template='%m-%d-%Y')
         return temporal_coverage_dict

@@ -5,13 +5,12 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, format_datetime
 
 from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
     update_collection_list_csv
 
 logger = logging.getLogger(__name__)
-UI_DATETIME_FORMAT = "%m/%d/%Y"
 
 
 # update collection
@@ -328,8 +327,8 @@ def _calculate_collection_coverages(collection_res_obj):
     if len(time_list) > 0:
         time_start = min(time_list)
         time_end = max(time_list)
-        value_dict = {'start': time_start.strftime(UI_DATETIME_FORMAT),
-                      'end': time_end.strftime(UI_DATETIME_FORMAT)}
+        value_dict = {'start': format_datetime(time_start),
+                      'end': format_datetime(time_end)}
 
         new_coverage_list.append({'type': 'period',
                                   'value': value_dict, 'element_id_str': "-1"})

@@ -22,6 +22,8 @@ import osr
 import netCDF4
 from pyproj import Proj, transform
 
+from hs_core.hydroshare.utils import format_datetime
+
 from nc_utils import get_nc_dataset, get_nc_grid_mapping_projection_import_string_dict,\
     get_nc_variables_coordinate_type_mapping, get_nc_grid_mapping_crs_name, \
     get_nc_variable_coordinate_meta
@@ -210,8 +212,8 @@ def get_period_info_by_data(nc_dataset):
         try:
             if limit_meta:
                 if limit_meta['start'].year and limit_meta['end'].year:
-                    period_info['start'] = limit_meta['start'].strftime('%Y-%m-%d %H:%M:%S')
-                    period_info['end'] = limit_meta['end'].strftime('%Y-%m-%d %H:%M:%S')
+                    period_info['start'] = format_datetime(limit_meta['start'], template='%Y-%m-%d %H:%M:%S')
+                    period_info['end'] = format_datetime(limit_meta['end'], template='%Y-%m-%d %H:%M:%S')
                     break
         except Exception:
             continue

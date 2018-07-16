@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import format_datetime
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
@@ -126,9 +127,9 @@ class Command(BaseCommand):
         ]
         w.writerow(fields)
         for up in UserProfile.objects.filter(user__is_active=True):
-            last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
+            last_login = formate_datetime(up.user.last_login, template='%m/%d/%Y') if up.user.last_login else ""
             values = [
-                up.user.date_joined.strftime('%m/%d/%Y %H:%M:%S.%f'),
+                format_date(up.user.date_joined, template='%m/%d/%Y %H:%M:%S.%f'),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
@@ -156,7 +157,7 @@ class Command(BaseCommand):
             try:
                 values = [
                     r.metadata.dates.get(type="created").
-                    start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                    format_datetime(start_date, template="%m/%d/%Y %H:%M:%S.%f"),
                     r.metadata.title.value,
                     r.resource_type,
                     r.size,

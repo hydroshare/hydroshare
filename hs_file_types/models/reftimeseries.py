@@ -18,6 +18,7 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.utils import format_datetime
 from hs_core.models import CoreMetaData
 
 from base import AbstractFileMetaData, AbstractLogicalFile
@@ -403,9 +404,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         ts_serieses = []
         for series in self.series_list:
             st_date = parser.parse(series['beginDate'])
-            st_date = st_date.strftime('%m-%d-%Y')
+            st_date = format_datetime(st_date, template='%m-%d-%Y')
             end_date = parser.parse(series['endDate'])
-            end_date = end_date.strftime('%m-%d-%Y')
+            end_date = format_datetime(end_date, template='%m-%d-%Y')
             method_des = ''
             method_link = ''
             if 'method' in series:

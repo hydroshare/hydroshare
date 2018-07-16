@@ -41,6 +41,8 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from hs_core.hydroshare.utils import format_datetime
+
 import unicodedata
 
 
@@ -1407,10 +1409,10 @@ class Coverage(AbstractMetaDataElement):
                     with tbody():
                         with tr():
                             get_th('Start Date')
-                            td(start_date.strftime('%m/%d/%Y'))
+                            td(format_datetime(start_date, template='%m/%d/%Y'))
                         with tr():
                             get_th('End Date')
-                            td(end_date.strftime('%m/%d/%Y'))
+                            td(format_datetime(end_date, template='%m/%d/%Y'))
 
         return root_div.render(pretty=pretty)
 
@@ -1423,8 +1425,8 @@ class Coverage(AbstractMetaDataElement):
             start_date = parser.parse(element.value['start'])
             end_date = parser.parse(element.value['end'])
             # change the date format to match with datepicker date format
-            coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
-            coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
+            coverage_data_dict['start'] = format_datetime(start_date, template='%m/%d/%Y')
+            coverage_data_dict['end'] = format_datetime(end_date, template='%m/%d/%Y')
 
         coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                              res_short_id=resource.short_id if resource else None,

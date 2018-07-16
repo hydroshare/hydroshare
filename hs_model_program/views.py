@@ -4,6 +4,9 @@ from hs_model_program.models import ModelProgramResource
 import json
 import datetime
 
+from hs_core.hydroshare.utils import format_datetime
+
+
 def get_model_metadata(request):
 
     # get the request data
@@ -23,7 +26,7 @@ def get_model_metadata(request):
         protocol = 'https' if request.is_secure() else 'http'
 
         if mpmeta.modelReleaseDate:
-            dt = datetime.datetime.strftime(mpmeta.modelReleaseDate,'%m/%d/%Y')
+            dt = format_datetime(mpmeta.modelReleaseDate, template='%m/%d/%Y')
         else:
             dt = ''
 

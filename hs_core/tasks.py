@@ -24,6 +24,7 @@ from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare.utils import format_datetime
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
 
@@ -42,7 +43,7 @@ logger = logging.getLogger('django')
 @periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
     # delete 2 days ago
-    date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
+    date_folder = format_datetime(date.today() - timedelta(2))
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
@@ -124,7 +125,7 @@ def manage_task_nightly():
     for res in failed_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
-            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
+            pub_date = format_datetime(pub_date.start_date, template='%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
             if response.status_code == status.HTTP_200_OK:
@@ -148,7 +149,7 @@ def manage_task_nightly():
     for res in pending_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
-            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
+            pub_date = format_datetime(pub_date.start_date, template='%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
             req_str = '{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd=' \

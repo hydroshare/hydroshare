@@ -16,6 +16,7 @@ from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, Rela
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.utils import format_datetime
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 
@@ -122,8 +123,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             temporal_coverage = temporal_coverages[0]
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
-            temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
+            temporal_coverage_data_dict['start_date'] = format_datetime(start_date)
+            temporal_coverage_data_dict['end_date'] = format_datetime(end_date)
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         else:
             temporal_coverage_data_dict = None
@@ -314,8 +315,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage = temporal_coverages[0]
         start_date = parser.parse(temporal_coverage.value['start'])
         end_date = parser.parse(temporal_coverage.value['end'])
-        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
-        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['start'] = format_datetime(start_date, template='%m-%d-%Y')
+        temporal_coverage_data_dict['end'] = format_datetime(end_date, template='%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:

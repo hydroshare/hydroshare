@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from mezzanine.conf import settings
 
 from hs_core.signals import pre_check_bag_flag
+from hs_core.hydroshare.utils import format_datetime
 
 
 class ResourceIRODSMixin(models.Model):
@@ -156,7 +157,7 @@ class ResourceIRODSMixin(models.Model):
         # There is no current mechanism for determining the timezone of a remote iRODS
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
-        formatted = timeout.strftime("%Y-%m-%d.%H:%M")
+        formatted = format_datetime(timeout, template="%Y-%m-%d.%H:%M")
         istorage.session.run('iticket', None, 'mod', ticket_id,
                              'expire', formatted)
 

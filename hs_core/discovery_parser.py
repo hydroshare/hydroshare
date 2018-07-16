@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from haystack.query import SQ
 from django.conf import settings
 
+from hs_core.hydroshare.utils import format_datetime
 
 HAYSTACK_DEFAULT_OPERATOR = getattr(settings, 'HAYSTACK_DEFAULT_OPERATOR', 'AND')
 
@@ -250,21 +251,21 @@ class ParseSQ(object):
             # TODO: SOLR requires GMT; convert from GMT to local locale for date.
             if search_field in self.DATE_FIELDS:
                 thisday_object = parse_date(word)
-                thisday = thisday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                thisday = format_datetime(thisday_object, template="%Y-%m-%dT%H:%M:%SZ")
                 if search_operator == ':':
                     # limit creation date to one day by generating two inequalities
                     nextday_object = thisday_object + timedelta(days=1)
-                    nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    nextday = format_datetime(nextday_object, template="%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(SQ(**{search_field+'__gte': thisday}) &
                                                  SQ(**{search_field+'__lt': nextday}))
                 elif search_operator == '<=':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
-                    nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    nextday = format_datetime(nextday_object, template="%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
                         SQ(**{search_field+"__lt": nextday}))
                 elif search_operator == '>':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
-                    nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    nextday = format_datetime(nextday_object, template="%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
                         SQ(**{search_field+"__gte": nextday}))
                 else:
