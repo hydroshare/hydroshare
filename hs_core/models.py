@@ -2566,7 +2566,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                     if f.storage_path == fullpath:
                         found = True
                         break
-                if not found:
+                if not (found and self.is_aggregation_xml_file(fullpath)):
                     ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
