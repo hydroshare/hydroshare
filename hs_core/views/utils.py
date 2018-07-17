@@ -529,6 +529,9 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
+                if resource.resource_type == 'CompositeResource':
+                    if resource.is_aggregation_xml_file(file_path):
+                        continue
                 # This assumes that file_path is a full path
                 link_irods_file_to_django(resource, file_path)
         # recursively add sub-folders into Django resource model

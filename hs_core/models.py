@@ -2016,6 +2016,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.save()
             return metatdata_obj
 
+    def is_aggregation_xml_file(self, file_path):
+        """Checks if the file path *file_path* is one of the aggregation related xml file paths
+
+        :param  file_path: full file path starting with resource short_id
+        :return True if file_path is one of the aggregation xml file paths else False
+        """
+        return False
+
     def extra_capabilites(self):
         """Return None. No-op method.
 
