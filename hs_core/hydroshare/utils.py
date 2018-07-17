@@ -1111,7 +1111,7 @@ def format_datetime(dt, template='{0.year:4d}-{0.month:02d}-{0.day:02d}'):
     Function to work around the strftime limitation of not being able to handle
     pre-1900 dates. This function utilizes String.format's ability to display
     properties of the datetime object
-    
+
     .year
     .month
     .day
@@ -1119,7 +1119,7 @@ def format_datetime(dt, template='{0.year:4d}-{0.month:02d}-{0.day:02d}'):
     .minute
     .second
     .tzinfo
-    
+
     More: https://docs.python.org/2/library/datetime.html#datetime-objects`
     '''
     return template.format(dt)

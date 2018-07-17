@@ -127,9 +127,10 @@ class Command(BaseCommand):
         ]
         w.writerow(fields)
         for up in UserProfile.objects.filter(user__is_active=True):
-            last_login = formate_datetime(up.user.last_login, template='%m/%d/%Y') if up.user.last_login else ""
+            last_login = format_datetime(up.user.last_login,
+                template='%m/%d/%Y') if up.user.last_login else ""
             values = [
-                format_date(up.user.date_joined, template='%m/%d/%Y %H:%M:%S.%f'),
+                format_datetime(up.user.date_joined, template='%m/%d/%Y %H:%M:%S.%f'),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
@@ -140,7 +141,7 @@ class Command(BaseCommand):
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
-    def resources_details(self):
+    def resources_details(self, start_date):
         w = csv.writer(sys.stdout)
         fields = [
             'creation date',
@@ -247,7 +248,7 @@ class Command(BaseCommand):
                 month_start = month_end.replace(day=1)
                 self.monthly_users_by_type(month_start, month_end)
         if options["resources_details"]:
-            self.resources_details()
+            self.resources_details(start_date)
         if options["yesterdays_variables"]:
             if len(args) > 0:
                 # run look-back mode

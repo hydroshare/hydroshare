@@ -212,8 +212,10 @@ def get_period_info_by_data(nc_dataset):
         try:
             if limit_meta:
                 if limit_meta['start'].year and limit_meta['end'].year:
-                    period_info['start'] = format_datetime(limit_meta['start'], template='%Y-%m-%d %H:%M:%S')
-                    period_info['end'] = format_datetime(limit_meta['end'], template='%Y-%m-%d %H:%M:%S')
+                    period_info['start'] = format_datetime(limit_meta['start'],
+                        template='%Y-%m-%d %H:%M:%S')
+                    period_info['end'] = format_datetime(limit_meta['end'],
+                        template='%Y-%m-%d %H:%M:%S')
                     break
         except Exception:
             continue
