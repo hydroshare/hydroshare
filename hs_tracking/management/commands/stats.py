@@ -128,7 +128,7 @@ class Command(BaseCommand):
         w.writerow(fields)
         for up in UserProfile.objects.filter(user__is_active=True):
             last_login = format_datetime(up.user.last_login,
-                template='%m/%d/%Y') if up.user.last_login else ""
+                                         template='%m/%d/%Y') if up.user.last_login else ""
             values = [
                 format_datetime(up.user.date_joined, template='%m/%d/%Y %H:%M:%S.%f'),
                 up.user.first_name,
