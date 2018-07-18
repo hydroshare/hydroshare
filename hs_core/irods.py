@@ -7,7 +7,6 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from mezzanine.conf import settings
 
 from hs_core.signals import pre_check_bag_flag
-from hs_core.hydroshare.utils import format_datetime
 
 
 class ResourceIRODSMixin(models.Model):
@@ -106,7 +105,10 @@ class ResourceIRODSMixin(models.Model):
         ticket is not issued until the bag exists.
 
         """
+
+        # Avoid circular imports
         from hs_core.models import path_is_allowed
+        from hs_core.hydroshare.utils import format_datetime
 
         # raises SuspiciousFileOperation if path is not allowed
         path_is_allowed(path)

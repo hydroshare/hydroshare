@@ -41,7 +41,6 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from hs_core.hydroshare.utils import format_datetime
 
 import unicodedata
 
@@ -1405,6 +1404,10 @@ class Coverage(AbstractMetaDataElement):
                 legend('Temporal Coverage')
                 start_date = parser.parse(self.value['start'])
                 end_date = parser.parse(self.value['end'])
+
+                # Moved here to avoid circular imports
+                from hs_core.hydroshare.utils import format_datetime
+
                 with table(cls='custom-table'):
                     with tbody():
                         with tr():
@@ -1425,6 +1428,9 @@ class Coverage(AbstractMetaDataElement):
             start_date = parser.parse(element.value['start'])
             end_date = parser.parse(element.value['end'])
             # change the date format to match with datepicker date format
+            # import here to avoid circular imports
+            from hs_core.hydroshare.utils import format_datetime
+
             coverage_data_dict['start'] = format_datetime(start_date, template='%m/%d/%Y')
             coverage_data_dict['end'] = format_datetime(end_date, template='%m/%d/%Y')
 
