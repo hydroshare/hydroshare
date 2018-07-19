@@ -786,17 +786,6 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
-
-    # ensure the target_full_path contains the file name to be moved or renamed to
-    # if we are moving to a directory, put the filename into the request.
-    # This created some confusion in the UI, so we use it only in the public REST API
-    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
-        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
-
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
