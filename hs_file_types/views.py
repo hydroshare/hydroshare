@@ -41,7 +41,8 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     :param  file_id: id of the file which needs to be set to a file type. If file_id is not provided
     then the request must have a file_folder key. In that case the specified folder will be used
     for creating the logical file (aggregation)
-    :param  hs_file_type: file type to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
+    :param  hs_file_type: file type to be set (e.g, SingleFile, NetCDF, GeoRaster, RefTimeseries,
+    TimeSeries and GeoFeature)
     :return an instance of JsonResponse type
     """
 
