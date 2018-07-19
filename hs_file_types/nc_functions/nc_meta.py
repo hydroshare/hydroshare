@@ -211,11 +211,14 @@ def get_period_info_by_data(nc_dataset):
         limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
         try:
             if limit_meta:
+                dt_template = '{0.year:4d}-{0.month:02d}-{0.day:02d} '
+                dt_template = dt_template + '{0.hour:02d}:{0.minute:02d}:{0.second:02d}'
+                
                 if limit_meta['start'].year and limit_meta['end'].year:
                     period_info['start'] = format_datetime(limit_meta['start'],
-                                                           template='%Y-%m-%d %H:%M:%S')
+                                                           template=dt_template)
                     period_info['end'] = format_datetime(limit_meta['end'],
-                                                         template='%Y-%m-%d %H:%M:%S')
+                                                         template=dt_template)
                     break
         except Exception:
             continue

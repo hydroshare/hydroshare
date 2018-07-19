@@ -128,9 +128,9 @@ class Command(BaseCommand):
         w.writerow(fields)
         for up in UserProfile.objects.filter(user__is_active=True):
             last_login = format_datetime(up.user.last_login,
-                                         template='%m/%d/%Y') if up.user.last_login else ""
+                                         template='metadata') if up.user.last_login else ""
             values = [
-                format_datetime(up.user.date_joined, template='%m/%d/%Y %H:%M:%S.%f'),
+                format_datetime(up.user.date_joined, template='stats'),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
@@ -158,7 +158,7 @@ class Command(BaseCommand):
             try:
                 values = [
                     r.metadata.dates.get(type="created").
-                    format_datetime(start_date, template="%m/%d/%Y %H:%M:%S.%f"),
+                    format_datetime(start_date, template="stats"),
                     r.metadata.title.value,
                     r.resource_type,
                     r.size,

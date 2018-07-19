@@ -125,7 +125,7 @@ def manage_task_nightly():
     for res in failed_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
-            pub_date = format_datetime(pub_date.start_date, template='%m/%d/%Y')
+            pub_date = format_datetime(pub_date.start_date, template='metadata')
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
             if response.status_code == status.HTTP_200_OK:
@@ -149,7 +149,7 @@ def manage_task_nightly():
     for res in pending_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
-            pub_date = format_datetime(pub_date.start_date, template='%m/%d/%Y')
+            pub_date = format_datetime(pub_date.start_date, template='metadata')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
             req_str = '{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd=' \

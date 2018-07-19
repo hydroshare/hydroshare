@@ -26,7 +26,7 @@ def get_model_metadata(request):
         protocol = 'https' if request.is_secure() else 'http'
 
         if mpmeta.modelReleaseDate:
-            dt = format_datetime(mpmeta.modelReleaseDate, template='%m/%d/%Y')
+            dt = format_datetime(mpmeta.modelReleaseDate, template='metadata')
         else:
             dt = ''
 

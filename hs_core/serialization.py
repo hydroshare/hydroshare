@@ -827,8 +827,8 @@ class GenericResourceMeta(object):
                 # val['end'] = c.end_date.isoformat()
                 # Cast temporal coverages to month/day/year format as this is how they are stored as strings
                 #  in the metadata tables.
-                val['start'] = format_datetime(c.start_date, template='%m/%d/%Y')
-                val['end'] = format_datetime(c.end_date, template='%m/%d/%Y')
+                val['start'] = format_datetime(c.start_date, template='metadata')
+                val['end'] = format_datetime(c.end_date, template='metadata')
                 val['scheme'] = c.scheme
                 kwargs['value'] = val
                 resource.metadata.create_element('coverage', **kwargs)

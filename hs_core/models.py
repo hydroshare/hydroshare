@@ -1412,10 +1412,10 @@ class Coverage(AbstractMetaDataElement):
                     with tbody():
                         with tr():
                             get_th('Start Date')
-                            td(format_datetime(start_date, template='%m/%d/%Y'))
+                            td(format_datetime(start_date, template='metadata'))
                         with tr():
                             get_th('End Date')
-                            td(format_datetime(end_date, template='%m/%d/%Y'))
+                            td(format_datetime(end_date, template='metadata'))
 
         return root_div.render(pretty=pretty)
 
@@ -1431,8 +1431,8 @@ class Coverage(AbstractMetaDataElement):
             # import here to avoid circular imports
             from hs_core.hydroshare.utils import format_datetime
 
-            coverage_data_dict['start'] = format_datetime(start_date, template='%m/%d/%Y')
-            coverage_data_dict['end'] = format_datetime(end_date, template='%m/%d/%Y')
+            coverage_data_dict['start'] = format_datetime(start_date, template='metadata')
+            coverage_data_dict['end'] = format_datetime(end_date, template='metadata')
 
         coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                              res_short_id=resource.short_id if resource else None,

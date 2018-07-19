@@ -404,9 +404,10 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         ts_serieses = []
         for series in self.series_list:
             st_date = parser.parse(series['beginDate'])
-            st_date = format_datetime(st_date, template='%m-%d-%Y')
+            dt_template = '{0.year:4d}-{0.month:02d}-{0.day:02d}'
+            st_date = format_datetime(st_date, template=dt_template)
             end_date = parser.parse(series['endDate'])
-            end_date = format_datetime(end_date, template='%m-%d-%Y')
+            end_date = format_datetime(end_date, template=dt_template)
             method_des = ''
             method_link = ''
             if 'method' in series:

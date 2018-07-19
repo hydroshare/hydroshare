@@ -944,6 +944,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
             temporal_coverage_dict['type'] = temporal_coverage.type
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_dict['start'] = format_datetime(start_date, template='%m-%d-%Y')
-            temporal_coverage_dict['end'] = format_datetime(end_date, template='%m-%d-%Y')
+            dt_template = '{0.year:4d}-{0.month:02d}-{0.day:02d}'
+            temporal_coverage_dict['start'] = format_datetime(start_date, template=dt_template)
+            temporal_coverage_dict['end'] = format_datetime(end_date, template=dt_template)
         return temporal_coverage_dict

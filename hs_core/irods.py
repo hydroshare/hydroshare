@@ -159,7 +159,7 @@ class ResourceIRODSMixin(models.Model):
         # There is no current mechanism for determining the timezone of a remote iRODS
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
-        formatted = format_datetime(timeout, template="%Y-%m-%d.%H:%M")
+        formatted = format_datetime(timeout, template="irods")
         istorage.session.run('iticket', None, 'mod', ticket_id,
                              'expire', formatted)
 

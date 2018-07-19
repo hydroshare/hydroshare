@@ -1122,4 +1122,21 @@ def format_datetime(dt, template='{0.year:4d}-{0.month:02d}-{0.day:02d}'):
 
     More: https://docs.python.org/2/library/datetime.html#datetime-objects`
     '''
-    return template.format(dt)
+
+    t = template
+
+    if template is "irods":
+        t = '{0.year:4d}-{0.month:02d}-{0.day:02d}.{0.hour:02d}:{0.minute:02d}'
+
+    if template is "metadata":
+        t = '{0.month:02d}/{0.day:02d}/{0.year:4d}'
+
+    if template is "iso":
+        t = '{0.year:4d}-{0.month:02d}-{0.day:02d}'
+        t = t + 'T{0.hour:02d}:{0.minute:02d}:{0.second:02d}Z'
+
+    if template is "stats":
+        t = '{0.month:2d}/{0.day:02d}/{0.year:04d} '
+        t = t + '{0.hour:02d}:{0.minute:02d}:{0.second:02d}.{0.microsecond:04d}'
+
+    return t.format(dt)
