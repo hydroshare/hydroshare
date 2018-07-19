@@ -275,7 +275,6 @@ class TestCaseCommonUtilities(object):
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
 
-
         self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[0] +
                              ' in the old folder after renaming')
