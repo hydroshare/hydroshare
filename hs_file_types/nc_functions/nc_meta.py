@@ -213,7 +213,7 @@ def get_period_info_by_data(nc_dataset):
             if limit_meta:
                 dt_template = '{0.year:4d}-{0.month:02d}-{0.day:02d} '
                 dt_template = dt_template + '{0.hour:02d}:{0.minute:02d}:{0.second:02d}'
-                
+
                 if limit_meta['start'].year and limit_meta['end'].year:
                     period_info['start'] = format_datetime(limit_meta['start'],
                                                            template=dt_template)
