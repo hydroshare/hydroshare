@@ -1321,7 +1321,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should not be any resource files ending with _meta.xml or _resmap.xml
         for res_file in self.composite_resource.files.all():
             self.assertFalse(res_file.file_name.endswith('_mata.xml'))
-        self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
+            self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
 
     def test_unzip_folder_clash(self):
         """Test that when a zip file gets unzipped a folder with the same
