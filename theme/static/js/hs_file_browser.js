@@ -1533,7 +1533,7 @@ $(document).ready(function () {
 
     // set generic file type method
      $("#btn-set-generic-file-type").click(function () {
-         setFileType("Generic");
+         setFileType("SingleFile");
       });
 
     // set geo raster file type method
