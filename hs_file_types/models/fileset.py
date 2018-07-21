@@ -31,11 +31,6 @@ class FileSetLogicalFile(AbstractLogicalFile):
         return "FileSetAggregation"
 
     @property
-    def is_single_file_aggregation(self):
-        """This aggregation supports one or more files"""
-        return False
-
-    @property
     def can_contain_folders(self):
         """This aggregation can contain folders"""
         return True
