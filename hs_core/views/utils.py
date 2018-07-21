@@ -579,8 +579,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             try:
                 aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
                 if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
-                    # make the moved file part of the fileset aggregation
-                    aggregation.add_resource_file(res_file_obj)
+                    # make the moved file part of the fileset aggregation unless the file is
+                    # already part of another aggregation
+                    if not res_file_obj.has_logical_file:
+                        aggregation.add_resource_file(res_file_obj)
             except ObjectDoesNotExist:
                 pass
 
