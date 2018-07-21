@@ -51,12 +51,12 @@ class CompositeResource(BaseResource):
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        files_in_folder = [res_file for res_file in self.files.all()
-                           if res_file.dir_path == dir_path]
-        for fl in files_in_folder:
-            if fl.has_logical_file:
-                return fl.logical_file
-        return None
+
+        aggregation_path = dir_path[len(self.file_path) + 1:]
+        try:
+            return self.get_aggregation_by_name(aggregation_path)
+        except ObjectDoesNotExist:
+            return None
 
     def get_folder_aggregation_type_to_set(self, dir_path):
         """Returns an aggregation (file type) type that the specified folder *dir_path* can
@@ -71,23 +71,26 @@ class CompositeResource(BaseResource):
         does not contain other folders or does not have a parent folder then return the
         class name of that matching aggregation type.
         """
-        aggregation_type_to_set = ""
+
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
             return None
 
         istorage = self.get_irods_storage()
         store = istorage.listdir(dir_path)
-        if store[0]:
-            # seems there are folders under dir_path - no aggregation type can be set if the target
-            # folder contains other folders
-            return None
+        files_in_folder = ResourceFile.list_folder(self, folder=dir_path, sub_folders=False)
 
-        files_in_folder = [res_file for res_file in self.files.all()
-                           if res_file.dir_path == dir_path]
         if not files_in_folder:
             # folder is empty
             return None
+        if store[0]:
+            # there are folders under dir_path in which case the folder can be set as FileSet
+            # only if there is at least one file that is not part of any aggregation, otherwise no
+            # aggregation type can be set
+            if any(not res_file.has_logical_file for res_file in files_in_folder):
+                return FileSetLogicalFile.__name__
+            return None
+
         if len(files_in_folder) > 1:
             # check for geo feature
             aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
