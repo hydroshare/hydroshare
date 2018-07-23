@@ -192,44 +192,50 @@ def manage_task_weekly():
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
-    users = User.objects.filter(is_active=True).all()
+    users = User.objects.filter(is_active=True).filter(is_superuser=False).all()
     for u in users:
         uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
-        used_percent = uq.used_percent
-        if used_percent >= qmsg.soft_limit_percent:
-            if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-                if uq.remaining_grace_period < 0:
-                    # triggers grace period counting
-                    uq.remaining_grace_period = qmsg.grace_period
-                elif uq.remaining_grace_period > 0:
-                    # reduce remaining_grace_period by one day
-                    uq.remaining_grace_period -= 1
-            elif used_percent >= qmsg.hard_limit_percent:
-                # set grace period to 0 when user quota exceeds hard limit
-                uq.remaining_grace_period = 0
-            uq.save()
-
-            uemail = u.email
-            msg_str = 'Dear ' + u.username + ':\n\n'
-
-            ori_qm = get_quota_message(u)
-            # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
-            replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
-                settings.DEFAULT_SUPPORT_EMAIL)
-            new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
-            msg_str += new_qm
-
-            msg_str += '\n\nHydroShare Support'
-            subject = 'Quota warning'
-            # send email for people monitoring and follow-up as needed
-            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                      [uemail, settings.DEFAULT_SUPPORT_EMAIL],
-                      html_message=msg_str)
-        else:
-            if uq.remaining_grace_period >= 0:
-                # turn grace period off now that the user is below quota soft limit
-                uq.remaining_grace_period = -1
+        if uq:
+            used_percent = uq.used_percent
+            if used_percent >= qmsg.soft_limit_percent:
+                if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
+                    if uq.remaining_grace_period < 0:
+                        # triggers grace period counting
+                        uq.remaining_grace_period = qmsg.grace_period
+                    elif uq.remaining_grace_period > 0:
+                        # reduce remaining_grace_period by one day
+                        uq.remaining_grace_period -= 1
+                elif used_percent >= qmsg.hard_limit_percent:
+                    # set grace period to 0 when user quota exceeds hard limit
+                    uq.remaining_grace_period = 0
                 uq.save()
+
+                uemail = u.email
+                msg_str = 'Dear ' + u.username + ':\n\n'
+
+                ori_qm = get_quota_message(u)
+                # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
+                replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
+                    settings.DEFAULT_SUPPORT_EMAIL)
+                new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
+                msg_str += new_qm
+
+                msg_str += '\n\nHydroShare Support'
+                subject = 'Quota warning'
+                # send email for people monitoring and follow-up as needed
+                try:
+                    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                              [uemail, settings.DEFAULT_SUPPORT_EMAIL],
+                              html_message=msg_str)
+                except Exception as ex:
+                    logger.debug("Failed to send quota warning email: " + ex.message)
+            else:
+                if uq.remaining_grace_period >= 0:
+                    # turn grace period off now that the user is below quota soft limit
+                    uq.remaining_grace_period = -1
+                    uq.save()
+        else:
+            logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
 
 
 @shared_task
