@@ -185,7 +185,7 @@ def manage_task_nightly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0, day_of_week="monday"))
+@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1))
 def manage_task_weekly():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
