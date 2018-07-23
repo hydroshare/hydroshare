@@ -114,7 +114,7 @@ def sync_mailchimp(active_subscribed, list_id):
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def manage_task_nightly():
-    # The nightly running task do DOI activation check and over-quota check
+    # The nightly running task do DOI activation check
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
@@ -184,6 +184,9 @@ def manage_task_nightly():
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0, day_of_week="monday"))
+def manage_task_weekly():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
