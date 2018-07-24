@@ -309,7 +309,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types.
         """
-        return "Multi-dimensional (NetCDF)"
+        return "Multidimensional (NetCDF)"
 
     @classmethod
     def create(cls):
