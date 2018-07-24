@@ -703,6 +703,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     Composite Resource """
     metadata = models.OneToOneField(RefTimeseriesFileMetaData, related_name="logical_file")
     data_type = "referenceTimeseriesData"
+    verbose_content_type = "Reference to Time Series"  # used during discovery
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

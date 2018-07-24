@@ -404,6 +404,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 class TimeSeriesLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(TimeSeriesFileMetaData, related_name="logical_file")
     data_type = "TimeSeries"
+    verbose_content_type = "Time Series"  # used during discovery
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

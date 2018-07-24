@@ -214,6 +214,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
     data_type = "GeographicRaster"
+    verbose_content_type = "Geographic Raster"  # used during discovery
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
