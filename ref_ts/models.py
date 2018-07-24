@@ -11,7 +11,7 @@ from lxml import etree
 class RefTimeSeriesResource(BaseResource):
     objects = ResourceManager("RefTimeSeriesResource")
 
-    verbose_content_type = "Reference to HIS Time Series"  # used during discovery
+    discovery_content_type = "Reference to HIS Time Series"  # used during discovery
 
     class Meta:
         verbose_name = "HIS Referenced Time Series"

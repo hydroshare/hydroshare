@@ -13,7 +13,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 class ScriptResource(BaseResource):
     objects = ResourceManager('ScriptResource')
 
-    verbose_content_type = 'Script'  # used during discovery
+    discovery_content_type = 'Script'  # used during discovery
 
     class Meta:
         proxy = True

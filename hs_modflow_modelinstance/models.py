@@ -597,7 +597,7 @@ class GeneralElements(AbstractMetaDataElement):
 class MODFLOWModelInstanceResource(BaseResource):
     objects = ResourceManager("MODFLOWModelInstanceResource")
 
-    verbose_content_type = 'MODFLOW Model Instance'  # used during discovery
+    discovery_content_type = 'MODFLOW Model Instance'  # used during discovery
 
     class Meta:
         verbose_name = 'MODFLOW Model Instance Resource'

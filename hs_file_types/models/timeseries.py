@@ -404,7 +404,6 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 class TimeSeriesLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(TimeSeriesFileMetaData, related_name="logical_file")
     data_type = "TimeSeries"
-    verbose_content_type = "Time Series"  # used during discovery
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
@@ -429,6 +428,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_type_name():
         return "TimeSeriesAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Time Series"
 
     @classmethod
     def create(cls):

@@ -10,7 +10,7 @@ class CollectionResource(BaseResource):
 
     objects = ResourceManager('CollectionResource')
 
-    verbose_content_type = 'Collection'  # used during discovery
+    discovery_content_type = 'Collection'  # used during discovery
 
     class Meta:
         proxy = True

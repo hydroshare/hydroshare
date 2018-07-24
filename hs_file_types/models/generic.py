@@ -144,7 +144,6 @@ class GenericLogicalFile(AbstractLogicalFile):
     Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
     data_type = "genericData"
-    verbose_content_type = "Generic Data"  # used during discovery
 
     @classmethod
     def create(cls):
@@ -159,6 +158,14 @@ class GenericLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_type_name():
         return "SingleFileAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Generic Data"
 
     @property
     def is_single_file_aggregation(self):

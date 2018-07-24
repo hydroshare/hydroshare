@@ -639,9 +639,6 @@ class AbstractLogicalFile(models.Model):
     # also this data type needs to be defined in in terms.html page
     data_type = "Generic"
 
-    # display name for content type: used in discovery faceting
-    verbose_content_type = "Generic"
-
     class Meta:
         abstract = True
 
@@ -891,6 +888,15 @@ class AbstractLogicalFile(models.Model):
         """
         raise NotImplementedError
 
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        Subclasses must implement this method.
+        """
+        raise NotImplementedError
+
     @property
     def has_metadata(self):
         return hasattr(self, 'metadata')
@@ -970,7 +976,8 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def metadata_file_path(self):
-        """Full file path of the aggregation metadata xml file starting with {resource_id}/data/contents/
+        """Full file path of the aggregation metadata xml file
+           starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.metadata_short_file_path)
 

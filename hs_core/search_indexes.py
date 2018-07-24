@@ -538,7 +538,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             output = []
             for f in obj.logical_files:
-                output.append(f.verbose_content_type)
+                output.append(f.get_verbose_content_type())
             return output
 
     def prepare_comment(self, obj):

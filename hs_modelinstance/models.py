@@ -111,7 +111,7 @@ class ExecutedBy(AbstractMetaDataElement):
 class ModelInstanceResource(BaseResource):
     objects = ResourceManager("ModelInstanceResource")
 
-    verbose_content_type = 'Model Instance'  # used during discovery
+    discovery_content_type = 'Model Instance'  # used during discovery
 
     class Meta:
         verbose_name = 'Model Instance Resource'
