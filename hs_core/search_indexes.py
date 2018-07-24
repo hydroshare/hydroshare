@@ -534,11 +534,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_content_type(self, obj):
         if obj.verbose_name != 'Composite Resource':
-            return [obj.verbose_content_type]
+            return [obj.discovery_content_type]
         else:
             output = []
             for f in obj.logical_files:
-                output.append(f.get_verbose_content_type())
+                output.append(f.get_discovery_content_type())
             return output
 
     def prepare_comment(self, obj):

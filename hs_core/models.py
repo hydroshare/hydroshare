@@ -3498,9 +3498,9 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model()._meta.verbose_name
 
     @property
-    def verbose_content_type(self):
+    def discovery_content_type(self):
         """Return verbose name of content type."""
-        return self.get_content_model().verbose_content_type
+        return self.get_content_model().discovery_content_type
 
     @property
     def can_be_published(self):
@@ -3572,7 +3572,7 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
-    verbose_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic'  # used during discovery
 
     class Meta:
         """Define meta properties for GenericResource model."""
