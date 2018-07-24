@@ -2,6 +2,7 @@ import os
 import logging
 
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 
 from base import AbstractLogicalFile
 from generic import GenericFileMetaDataMixin
@@ -33,6 +34,11 @@ class FileSetLogicalFile(AbstractLogicalFile):
     @property
     def can_contain_folders(self):
         """This aggregation can contain folders"""
+        return True
+
+    @property
+    def supports_nested_aggregations(self):
+        """This aggregation type can contain other aggregations"""
         return True
 
     @classmethod
@@ -82,3 +88,20 @@ class FileSetLogicalFile(AbstractLogicalFile):
         logical_file.add_resource_files_in_folder(resource, folder_path)
         logical_file.create_aggregation_xml_documents()
         log.info("Fie set aggregation was created for file:{}.".format(res_file.storage_path))
+
+    def get_children(self):
+        child_aggregations = []
+        istorage = self.resource.get_irods_storage()
+        parent_aggr_rel_path = self.aggregation_name
+        parent_aggr_full_path = os.path.join(self.resource.file_path, parent_aggr_rel_path)
+        store = istorage.listdir(parent_aggr_full_path)
+        files_and_folders = store[0] + store[1]
+        for item in files_and_folders:
+            aggr_name = os.path.join(parent_aggr_rel_path, item)
+            try:
+                child_aggr = self.resource.get_aggregation_by_name(aggr_name)
+                child_aggregations.append(child_aggr)
+            except ObjectDoesNotExist:
+                pass
+
+        return child_aggregations

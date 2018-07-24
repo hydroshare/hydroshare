@@ -905,13 +905,19 @@ class AbstractLogicalFile(models.Model):
     def resource(self):
         res_file = self.files.all().first()
         if res_file is not None:
-            return res_file.resource
+            # return the typed resource
+            return res_file.resource.get_content_model()
         else:
             return None
 
     @property
     def can_contain_folders(self):
         """By default an aggregation can't have folders"""
+        return False
+
+    @property
+    def supports_nested_aggregations(self):
+        """By default an aggregation can't contain other aggregations"""
         return False
 
     @property
@@ -1189,6 +1195,28 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
+    def get_parent(self):
+        """Find the parent aggregation of this aggregation """
+
+        aggr_path = self.aggregation_name
+        if "/" in aggr_path:
+            parent_aggr_path = os.path.dirname(aggr_path)
+            try:
+                return self.resource.get_aggregation_by_name(parent_aggr_path)
+            except ObjectDoesNotExist:
+                return None
+
+        return None
+
+    def get_children(self):
+        """Returns a list of all aggregations that are directly under the folder that represents
+        this (self) aggregation
+
+        Note: Aggregation types that support nested aggregation must override this method
+        """
+
+        return []
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
         :param  create_map_xml: if true, aggregation map xml file will be created
@@ -1320,6 +1348,25 @@ class AbstractLogicalFile(models.Model):
         a.add_resource(resMetaFile)
         for f in resFiles:
             a.add_resource(f)
+
+        # Create a description of the contained aggregations and add it to the aggregation
+        child_ore_aggregations = []
+        for n, child_aggr in enumerate(self.get_children()):
+            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                aggr_name=child_aggr.map_file_path + '#aggregation')
+            child_ore_aggr = Aggregation(res_uri)
+            child_ore_aggregations.append(child_ore_aggr)
+            child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
+            agg_type_url = "{site}/terms/{aggr_type}"
+            agg_type_url = agg_type_url.format(site=current_site_url,
+                                               aggr_type=child_aggr.get_aggregation_type_name())
+            child_ore_aggregations[n]._dcterms.type = URIRef(agg_type_url)
+
+        # Add contained aggregations to the aggregation
+        for aggr in child_ore_aggregations:
+            a.add_resource(aggr)
 
         # Register a serializer with the aggregation, which creates a new ResourceMap that
         # needs a URI
