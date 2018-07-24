@@ -2445,7 +2445,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                     errors.extend(error2)
                     ecount += ecount2
 
-            # Step 2: does every file here refer to an existing file in iRODS?
+            # Step 2: does every file in Django refer to an existing file in iRODS?
             for f in self.files.all():
                 if not istorage.exists(f.storage_path):
                     ecount += 1
@@ -2464,7 +2464,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                     if stop_on_error:
                         raise ValidationError(msg)
 
-            # Step 3: does every iRODS file correspond to a record in files?
+            # Step 3: for composite resources, does every composite metadata file exist?
+            from hs_composite_resource.models import CompositeResource as CR
+            if isinstance(self, CR):
+                for lf in self.logical_files:
+                    if not istorage.exists(f.metadata_file_path):
+                        ecount += 1
+                        msg = "check_irods_files: logical metadata file {} does not exist in iRODS"\
+                            .format(lf.metadata_file_path)
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                    if not istorage.exists(lf.map_file_path):
+                        ecount += 1
+                        msg = "check_irods_files: logical map file {} does not exist in iRODS"\
+                            .format(lf.map_file_path)
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+
+            # Step 4: does every iRODS file correspond to a record in files?
             error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
                                                            stop_on_error=stop_on_error,
                                                            log_errors=log_errors,
@@ -2474,7 +2503,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             errors.extend(error2)
             ecount += ecount2
 
-            # Step 4: check whether the iRODS public flag agrees with Django
+            # Step 5: check whether the iRODS public flag agrees with Django
             django_public = self.raccess.public
             irods_public = None
             try:
