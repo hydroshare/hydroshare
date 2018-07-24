@@ -19,3 +19,18 @@ class CanViewOrEditResourceMetadata(permissions.BasePermission):
             _, authorized, _ = authorize(request, view.kwargs.get('pk'),
                                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         return authorized
+
+
+class CanEditResourceMetadata(permissions.BasePermission):
+    """
+    Global API permission to edit resource metadata
+    """
+
+    def has_permission(self, request, view):
+        if not view.kwargs.get('pk', False):
+            return True
+
+        _, authorized, _ = authorize(request, view.kwargs.get('pk'),
+                                     needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+
+        return authorized

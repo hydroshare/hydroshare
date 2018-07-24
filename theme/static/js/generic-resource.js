@@ -447,12 +447,21 @@ $(document).ready(function () {
         }
     });
 
-    $("#agree-chk").on('click', function(e) {
+    $("#submit-for-publication-dialog input[type='checkbox']").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        var isAllChecked = true;
+
+        $("#submit-for-publication-dialog input[type='checkbox']").each(function (e,f,b) {
+            if(!f.checked) {
+                isAllChecked = false;
+            }
+        });
+
+        if (isAllChecked) {
             $('#publish-btn').removeAttr('disabled');
-        else
+        } else {
             $('#publish-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#agree-chk-copy").on('click', function(e) {

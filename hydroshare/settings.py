@@ -291,6 +291,7 @@ INSTALLED_APPS = (
     "mezzanine.mobile",
     "haystack",
     "jquery_ui",
+    "hs_publication",
     "rest_framework",
     "robots",
     "hs_core",

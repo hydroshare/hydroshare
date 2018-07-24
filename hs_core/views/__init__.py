@@ -696,19 +696,6 @@ def create_new_version_resource_public(request, pk):
     return HttpResponse(redirect.url.split('/')[2], status=202)
 
 
-def publish(request, shortkey, *args, **kwargs):
-    # only resource owners are allowed to change resource flags (e.g published)
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-
-    try:
-        hydroshare.publish_resource(request.user, shortkey)
-    except ValidationError as exp:
-        request.session['validation_error'] = exp.message
-    else:
-        request.session['just_published'] = True
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
@@ -1194,7 +1181,7 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['message'] = ex.message
         ajax_response_data['status'] = 'success'
         ajax_response_data['file_upload_status'] = 'error'
-        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        ajax_response_data['resource_url'] = resource.get_absolute_url() + "?resource-mode=edit"
         return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
@@ -1202,7 +1189,7 @@ def create_resource(request, *args, **kwargs):
         if resource.files.all():
             ajax_response_data['file_upload_status'] = 'success'
         ajax_response_data['status'] = 'success'
-        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        ajax_response_data['resource_url'] = resource.get_absolute_url() + "?resource-mode=edit"
 
     return JsonResponse(ajax_response_data)
 
