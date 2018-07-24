@@ -461,7 +461,7 @@ def assert_time_series_file_type_metadata(self):
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
                      parser.parse('01/01/2008').date())
     self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/31/2008').date())
+                     parser.parse('01/30/2008').date())
 
     # there should be one format element
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
@@ -518,7 +518,7 @@ def assert_time_series_file_type_metadata(self):
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
                      parser.parse('01/01/2008').date())
     self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/31/2008').date())
+                     parser.parse('01/30/2008').date())
 
     # test 'site' - there should be 7 sites
     self.assertEqual(logical_file.metadata.sites.all().count(), 7)
@@ -570,7 +570,7 @@ def assert_time_series_file_type_metadata(self):
     proc_level = logical_file.metadata.processing_levels.all().first()
     # there should be 7 series ids associated with this one element
     self.assertEqual(len(proc_level.series_ids), 7)
-    self.assertEqual(proc_level.processing_level_code, 1)
+    self.assertEqual(proc_level.processing_level_code, '1')
     self.assertEqual(proc_level.definition, 'Quality controlled data')
     explanation = 'Quality controlled data that have passed quality assurance procedures ' \
                   'such as routine estimation of timing and sensor calibration or visual ' \

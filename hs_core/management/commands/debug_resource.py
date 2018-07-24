@@ -82,6 +82,5 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 debug_resource(rid)
-
-            else:
-                print("No resources to check.")
+        else:
+            print("No resources to check.")

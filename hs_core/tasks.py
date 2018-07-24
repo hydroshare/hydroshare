@@ -210,8 +210,18 @@ def manage_task_weekly():
                     uq.remaining_grace_period = 0
                 uq.save()
 
+                if u.first_name and u.last_name:
+                    sal_name = '{} {}'.format(u.first_name, u.last_name)
+                elif u.first_name:
+                    sal_name = u.first_name
+                elif u.last_name:
+                    sal_name = u.last_name
+                else:
+                    sal_name = u.username
+
+                msg_str = 'Dear ' + sal_name + ':\n\n'                        
+
                 uemail = u.email
-                msg_str = 'Dear ' + u.username + ':\n\n'
 
                 ori_qm = get_quota_message(u)
                 # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
@@ -298,8 +308,10 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path):
+def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
+    if sf_aggregation:
+        pass
     res = get_resource_by_shortkey(resource_id)
     full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
 

@@ -2,6 +2,7 @@ from hs_core.models import get_user, BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_tools_resource.models import SupportedResTypeChoices, ToolResource
 from hs_tools_resource.utils import parse_app_url_template
+from hs_tools_resource.app_keys import tool_app_key
 
 
 def resource_level_tool_urls(resource_obj, request_obj):
@@ -13,7 +14,6 @@ def resource_level_tool_urls(resource_obj, request_obj):
     open_with_app_counter = 0
 
     # associate resources with app tools using extended metadata name-value pair with 'appkey' key
-    tool_app_key = 'appkey'
     filterd_res_obj = BaseResource.objects.filter(short_id=resource_obj.short_id,
                                                   extra_metadata__has_key=tool_app_key).first()
     if filterd_res_obj:
@@ -80,6 +80,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
+
     if tool_url_new is not None:
         tl = {'title': str(tool_res_obj.metadata.title.value),
               'res_id': tool_res_obj.short_id,
@@ -88,6 +89,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
               'openwithlist': is_open_with_app,
               'approved': is_approved_app
               }
+
         return is_open_with_app, tl
     else:
         return False, {}

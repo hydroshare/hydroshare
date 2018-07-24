@@ -12,8 +12,7 @@ from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GeoF
 class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(GeoFeatureFileTypeMetaDataTest, self).setUp()
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -45,15 +44,12 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
 
     def tearDown(self):
         super(GeoFeatureFileTypeMetaDataTest, self).tearDown()
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
+
         super(GeoFeatureFileTypeMetaDataTest, self).delete_irods_user_in_user_zone()
 
     def test_zip_set_file_type_to_geo_feature(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         # here we are using a valid zip file for setting it
         # to Geo Feature file type which includes metadata extraction

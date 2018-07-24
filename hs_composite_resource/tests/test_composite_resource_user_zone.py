@@ -18,8 +18,7 @@ from hs_file_types.models import GenericLogicalFile
 class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(CompositeResourceTest, self).setUp()
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -51,15 +50,13 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
 
     def tearDown(self):
         super(CompositeResourceTest, self).tearDown()
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
         super(CompositeResourceTest, self).delete_irods_user_in_user_zone()
 
     def test_create_composite_resource_with_file_upload(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         # test that when we create composite resource with an uploaded file, then the uploaded file
         # is automatically set to genericlogicalfile type
@@ -95,8 +92,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
     def test_file_add_to_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         # test that when we add file to an existing composite resource, the added file
         # automatically set to genericlogicalfile type
@@ -154,8 +150,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
     def test_file_delete_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self._create_composite_resource()
         # set the logical file - which get sets as part of the post resource creation signal
@@ -176,8 +171,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
     def test_delete_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not super(CompositeResourceTest, self).is_federated_irods_available():
-            return
+        super(CompositeResourceTest, self).assert_federated_irods_available()
 
         self.assertEqual(BaseResource.objects.count(), 0)
         self._create_composite_resource()
