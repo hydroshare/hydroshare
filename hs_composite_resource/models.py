@@ -270,10 +270,8 @@ class CompositeResource(BaseResource):
             return False
 
         for logical_file in self.logical_files:
-            if file_path.endswith('_meta.xml'):
-                if logical_file.metadata_file_path == file_path:
-                    return True
-            elif logical_file.map_file_path == file_path:
+            if logical_file.metadata_file_path == file_path or \
+                    logical_file.map_file_path == file_path:
                 return True
         return False
 
