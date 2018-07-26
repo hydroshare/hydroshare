@@ -2279,6 +2279,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
 
+    @property
+    def storage_type(self):
+        if not self.is_federated:
+            return 'local'
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+        if self.resource_federation_path == userpath:
+            return 'user'
+        else:
+            return 'federated'
+
     class Meta:
         """Define meta properties for AbstractResource class."""
 
@@ -2468,7 +2481,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             from hs_composite_resource.models import CompositeResource as CR
             if isinstance(self, CR):
                 for lf in self.logical_files:
-                    if not istorage.exists(f.metadata_file_path):
+                    if not istorage.exists(lf.metadata_file_path):
                         ecount += 1
                         msg = "check_irods_files: logical metadata file {} does not exist in iRODS"\
                             .format(lf.metadata_file_path)

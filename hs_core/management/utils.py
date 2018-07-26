@@ -17,7 +17,7 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
-
+from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 
 from requests import post
 
@@ -41,7 +41,7 @@ def ingest_irods_files(self,
 
     # skip federated resources if not configured to handle these
     if self.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
+        msg = "ingest_irods_files: skipping ingest of federated resource {} in unfederated mode"\
             .format(self.short_id)
         if echo_errors:
             print(msg)
@@ -91,7 +91,7 @@ def __ingest_irods_directory(self,
                              echo_errors=False,
                              return_errors=False):
     """
-    list a directory and check files there for conformance with django ResourceFiles
+    list a directory and ingest files there for conformance with django ResourceFiles
 
     :param stop_on_error: whether to raise a ValidationError exception on first error
     :param log_errors: whether to log errors to Django log
@@ -107,11 +107,11 @@ def __ingest_irods_directory(self,
         for fname in listing[1]:  # files
             fullpath = os.path.join(dir, fname)
             found = False
-            for f in self.files.all():
-                if f.storage_path == fullpath:
+            for res_file in self.files.all():
+                if res_file.storage_path == fullpath:
                     found = True
-                    break
-            if not found:
+
+            if not found and not self.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
                     .format(fullpath)
@@ -123,8 +123,38 @@ def __ingest_irods_directory(self,
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
-                # TODO: only works properly for generic and composite resources!
+                # TODO: only works properly for generic, model, and composite resources!
                 link_irods_file_to_django(self, fullpath)
+
+                # Create required logical files as necessary
+                if self.resource_type == "CompositeResource":
+                    file_type = get_logical_file_type(res=self, user=None,
+                                                      file_id=res_file.pk, fail_feedback=False)
+                    if not res_file.has_logical_file and file_type is not None:
+                        msg = "ingest_irods_files: setting required logical file for {}"\
+                              .format(fullpath)
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                        set_logical_file_type(res=self, user=None, file_id=res_file.pk,
+                                              fail_feedback=False)
+                    elif res_file.has_logical_file and \
+                         not isinstance(res_file.logical_file, file_type):
+                        msg = "ingest_irods_files: logical file has type {}, should be {}"\
+                            .format(str(type(res_file.logical_file)), str(file_type))
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
 
         for dname in listing[0]:  # directories
             error2, ecount2 = __ingest_irods_directory(self,
@@ -264,12 +294,27 @@ class CheckResource(object):
             for e in irods_issues:
                 print("    {}".format(e))
 
-        logical_header = False
-
         if self.resource.resource_type == 'CompositeResource':
+            logical_issues = []
             for res_file in self.resource.files.all():
-                if not res_file.has_logical_file:
-                    self.label()
-                    if not logical_header:
-                        print("  logical file errors:")
-                    print("    {} logical file NOT SPECIFIED".format(res_file.short_path))
+                file_type = get_logical_file_type(res=self.resource, user=None,
+                                                  file_id=res_file.pk, fail_feedback=False)
+                if not res_file.has_logical_file and file_type is not None:
+                    msg = "check_resource: file {} does not have required logical file {}"\
+                          .format(res_file.storage_path, str(file_type))
+                    logical_issues.append(msg)
+                elif res_file.has_logical_file and file_type is None:
+                    msg = "check_resource: logical file has type {}, should not exist"\
+                          .format(str(type(res_file.logical_file)), str(file_type))
+                    logical_issues.append(msg)
+                elif res_file.has_logical_file and file_type is not None and \
+                     not isinstance(res_file.logical_file, file_type):
+                    msg = "check_resource: logical file has type {}, should be {}"\
+                          .format(str(type(res_file.logical_file)), str(file_type))
+                    logical_issues.append(msg)
+
+            if logical_issues:
+                self.label()
+                print("  Logical file errors:")
+                for e in logical_issues:
+                    print("    {}".format(e))
