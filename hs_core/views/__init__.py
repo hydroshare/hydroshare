@@ -501,7 +501,10 @@ def file_download_url_mapper(request, shortkey):
     irods_split = request.path.split('/')[2:-1]
     irods_file_path = '/'.join(irods_split)
     # [0:-1] excludes the last item on the list
-    listing = istorage.listdir('/'.join(irods_split[0:-1]))
+    irods_dir_path = '/'.join(irods_split[0:-1])
+    if resource.is_federated: 
+        irods_dir_path = resource.resource_federation_path + '/' + irods_dir_path
+    listing = istorage.listdir(irods_dir_path)
     if irods_split[-1] in listing[0]:
         # it's a folder
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))

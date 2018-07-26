@@ -326,14 +326,17 @@ def get_resource_file_url(res_file):
     :param res_file: an instance of ResourceFile for which download url is to be retrieved
     :return: download url for the resource file
     """
+    return res_file.url
 
-    if res_file.resource_file:
-        f_url = res_file.resource_file.url
-    elif res_file.fed_resource_file:
-        f_url = res_file.fed_resource_file.url
-    else:
-        f_url = ''
-    return f_url
+    # This does not utilize large file download
+
+    # if res_file.resource_file:
+    #     f_url = res_file.resource_file.url
+    # elif res_file.fed_resource_file:
+    #     f_url = res_file.fed_resource_file.url
+    # else:
+    #     f_url = ''
+    # return f_url
 
 
 # TODO: should be classmethod of ResourceFile

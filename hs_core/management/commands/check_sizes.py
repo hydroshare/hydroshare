@@ -7,6 +7,7 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 def measure_resource(short_id):
@@ -29,9 +30,9 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print("{} {} {}".format(resource.size, short_id, status))
+        print("{} {} {} {}".format(resource.size, short_id, status, resource.storage_type))
     else:
-        print("{} {} {} NO IRODS FILES".format(0, short_id, status))
+        print("{} {} {} {} NO IRODS FILES".format(0, short_id, status, resource.storage_type))
 
 
 class Command(BaseCommand):
@@ -50,15 +51,36 @@ class Command(BaseCommand):
             help='log errors to system log',
         )
 
+        parser.add_argument(
+            '--type',
+            dest='type',
+            help='limit to resources of a particular type'
+        )
+
+        parser.add_argument(
+            '--storage',
+            dest='storage',
+            help='limit to specific storage medium (local, user, federated)'
+        )
+
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
-                measure_resource(rid)
+                resource = get_resource_by_shortkey(rid)
+                if (options['type'] is None or resource.resource_type == options['type']) and \
+                   (options['storage'] is None or resource.storage_type == options['storage']):
+                    storage = resource.get_irods_storage()
+                    if storage.exists(resource.root_path):
+                        measure_resource(rid)
+                    else:
+                        print("{} does not exist in iRODS".format(rid))
 
         else:
-            for r in BaseResource.objects.all():
-                storage = r.get_irods_storage()
-                if storage.exists(r.root_path):
-                    measure_resource(r.short_id)
-                else:
-                    print("{} does not exist in iRODS".format(r.short_id))
+            for resource in BaseResource.objects.all():
+                if (options['type'] is None or resource.resource_type == options['type']) and \
+                   (options['storage'] is None or resource.storage_type == options['storage']):
+                    storage = resource.get_irods_storage()
+                    if storage.exists(resource.root_path):
+                        measure_resource(resource.short_id)
+                    else:
+                        print("{} does not exist in iRODS".format(resource.short_id))
