@@ -143,10 +143,23 @@ def __ingest_irods_directory(self,
                             raise ValidationError(msg)
                         set_logical_file_type(res=self, user=None, file_id=res_file.pk,
                                               fail_feedback=False)
-                    elif res_file.has_logical_file and \
-                         not isinstance(res_file.logical_file, file_type):
-                        msg = "ingest_irods_files: logical file has type {}, should be {}"\
-                            .format(str(type(res_file.logical_file)), str(file_type))
+                    elif res_file.has_logical_file and file_type is not None and \
+                            not isinstance(res_file.logical_file, file_type):
+                        msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
+                            .format(res_file.storage_path, type(res_file.logical_file).__name__,
+                                    file_type.__name__)
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                    elif res_file.has_logical_file and file_type is None:
+                        msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
+                            .format(res_file.storage_path, type(res_file.logical_file).__name__,
+                                    file_type.__name__)
                         if echo_errors:
                             print(msg)
                         if log_errors:
@@ -301,16 +314,17 @@ class CheckResource(object):
                                                   file_id=res_file.pk, fail_feedback=False)
                 if not res_file.has_logical_file and file_type is not None:
                     msg = "check_resource: file {} does not have required logical file {}"\
-                          .format(res_file.storage_path, str(file_type))
+                          .format(res_file.storage_path, file_type.__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is None:
-                    msg = "check_resource: logical file has type {}, should not exist"\
-                          .format(str(type(res_file.logical_file)), str(file_type))
+                    msg = "check_resource: logical file for {} has type {}, not needed"\
+                          .format(res_file.storage_path, type(res_file.logical_file).__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is not None and \
-                     not isinstance(res_file.logical_file, file_type):
-                    msg = "check_resource: logical file has type {}, should be {}"\
-                          .format(str(type(res_file.logical_file)), str(file_type))
+                        not isinstance(res_file.logical_file, file_type):
+                    msg = "check_resource: logical file for {} has type {}, should be {}"\
+                          .format(res_file.storage_path, type(res_file.logical_file).__name__,
+                                  file_type.__name__)
                     logical_issues.append(msg)
 
             if logical_issues:
