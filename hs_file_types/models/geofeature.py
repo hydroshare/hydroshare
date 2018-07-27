@@ -155,7 +155,8 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container_to_add_to)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
