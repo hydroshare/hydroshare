@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -10,9 +10,7 @@ from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
 schema_view = get_swagger_view(title='Hydroshare API')
 
-urlpatterns = patterns(
-    '',
-
+urlpatterns = [
     # Swagger Docs View
     url(r'^$', schema_view),
 
@@ -156,4 +154,4 @@ urlpatterns = patterns(
         name='get_update_delete_resource_access'),
 
 
-)
+]

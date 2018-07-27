@@ -2,7 +2,8 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 
-from mezzanine.core.admin import TabularDynamicInlineAdmin, SingletonAdmin
+from mezzanine.core.admin import TabularDynamicInlineAdmin
+from mezzanine.utils.admin import SingletonAdmin
 from mezzanine.pages.admin import PageAdmin
 
 from models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage
@@ -24,7 +25,7 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['user', 'allocated_value', 'used_value', 'unit', 'zone']
+        fields = ['allocated_value', 'used_value', 'unit', 'zone']
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
@@ -37,6 +38,8 @@ class QuotaAdmin(admin.ModelAdmin):
 
     list_display = ('user', 'allocated_value', 'used_value', 'unit', 'zone')
     list_filter = ('zone', 'user__username', )
+
+    readonly_fields = ('user',)
 
     def get_form(self, request, obj=None, **kwargs):
         # use a customized form class when adding a UserQuota object so that

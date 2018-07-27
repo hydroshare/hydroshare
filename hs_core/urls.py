@@ -1,7 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from hs_core import views
+from hs_core.views.autocomplete import autocomplete
 
-urlpatterns = patterns('',
+urlpatterns = [
     # internal API
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$',
         views.add_files_to_resource, name='add_files_to_resource'),
@@ -72,7 +73,7 @@ urlpatterns = patterns('',
         views.get_supported_file_types_for_resource_type, name='resource_type_file_types'),
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
         views.is_multiple_file_upload_allowed, name="resource_type_multiple_file_upload"),
-    url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
+    url(r'^_internal/search/autocomplete/', autocomplete),
     url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
     url(r'^_internal/data-store-folder-zip/$',
         views.resource_folder_hierarchy.data_store_folder_zip),
@@ -88,4 +89,4 @@ urlpatterns = patterns('',
         views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
-)
+]
