@@ -680,9 +680,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
+    unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    unzip_path = istorage.unzip(zip_with_full_path)
-    link_irods_folder_to_django(resource, istorage, unzip_path)
+    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
+    link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
@@ -785,6 +786,17 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     istorage = resource.get_irods_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
+
+    tgt_file_name = os.path.basename(tgt_full_path)
+    tgt_file_dir = os.path.dirname(tgt_full_path)
+    src_file_name = os.path.basename(src_full_path)
+    src_file_dir = os.path.dirname(src_full_path)
+
+    # ensure the target_full_path contains the file name to be moved or renamed to
+    # if we are moving to a directory, put the filename into the request.
+    # This created some confusion in the UI, so we use it only in the public REST API
+    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
+        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type

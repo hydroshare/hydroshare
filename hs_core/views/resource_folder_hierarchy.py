@@ -10,8 +10,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, \
-    get_resource_file_url, resolve_request
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
@@ -68,52 +67,63 @@ def data_store_structure(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
-    res_coll = os.path.join(resource.root_path, store_path)
-    try:
-        store = istorage.listdir(res_coll)
-        files = []
-        dirs = []
-        for dname in store[0]:     # directories
-            d_pk = dname.decode('utf-8')
-            name_with_full_path = os.path.join(res_coll, d_pk)
-            d_url = to_external_url(istorage.url(name_with_full_path))
-            main_file = ''
-            folder_aggregation_type = ''
-            folder_aggregation_name = ''
-            folder_aggregation_id = ''
-            folder_aggregation_type_to_set = ''
-            folder_short_path = os.path.join(store_path, d_pk)
-            if resource.resource_type == "CompositeResource":
-                dir_path = name_with_full_path
-                # find if this folder *dir_path* represents (contains) an aggregation object
-                aggregation_object = resource.get_folder_aggregation_object(dir_path)
-                # folder aggregation type is not relevant for single file aggregation types - which
-                # are: GenericLogicalFile, and RefTimeseriesLogicalFile
-                if aggregation_object is not None and not \
-                        aggregation_object.is_single_file_aggregation:
-                    folder_aggregation_type = aggregation_object.get_aggregation_class_name()
-                    folder_aggregation_name = aggregation_object.get_aggregation_display_name()
-                    folder_aggregation_id = aggregation_object.id
-                    main_file = aggregation_object.get_main_file.file_name
-                else:
-                    # find if any aggregation type can be created from this folder
-                    folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
-                        dir_path)
-                    if folder_aggregation_type_to_set is None:
-                        folder_aggregation_type_to_set = ""
-            dirs.append({'name': d_pk,
-                         'url': d_url,
-                         'main_file': main_file,
-                         'folder_aggregation_type': folder_aggregation_type,
-                         'folder_aggregation_name': folder_aggregation_name,
-                         'folder_aggregation_id': folder_aggregation_id,
-                         'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                         'folder_short_path': folder_short_path})
+    directory_in_irods = os.path.join(resource.root_path, store_path)
+    logger.debug("directory in irods = {}".format(directory_in_irods)) 
+    directory_in_url = os.path.join(resource.short_id, store_path)
+    logger.debug("directory in url = {}".format(directory_in_url)) 
+
+    # try:
+    store = istorage.listdir(directory_in_irods)
+    # except SessionException as ex:
+    #     logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
+    #     return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    files = []
+    dirs = []
+    for dname in store[0]:     # directories
+        d_pk = dname.decode('utf-8')
+        # folder_in_irods = os.path.join(directory_in_irods, d_pk)
+        folder_in_url = os.path.join(directory_in_url, d_pk)
+        d_url = to_external_url(istorage.url(folder_in_url))
+        logger.debug("d_url is {}".format(d_url))
+        main_file = ''
+        folder_aggregation_type = ''
+        folder_aggregation_name = ''
+        folder_aggregation_id = ''
+        folder_aggregation_type_to_set = ''
+        folder_short_path = os.path.join(store_path, d_pk)
+        if resource.resource_type == "CompositeResource":
+            dir_path = folder_in_url
+            # find if this folder *dir_path* represents (contains) an aggregation object
+            aggregation_object = resource.get_folder_aggregation_object(dir_path)
+            # folder aggregation type is not relevant for single file aggregation types - which
+            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            if aggregation_object is not None and not \
+                    aggregation_object.is_single_file_aggregation:
+                folder_aggregation_type = aggregation_object.get_aggregation_class_name()
+                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
+                folder_aggregation_id = aggregation_object.id
+                main_file = aggregation_object.get_main_file.file_name
+            else:
+                # find if any aggregation type can be created from this folder
+                folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
+                    dir_path)
+                if folder_aggregation_type_to_set is None:
+                    folder_aggregation_type_to_set = ""
+        dirs.append({'name': d_pk,
+                     'url': d_url,
+                     'main_file': main_file,
+                     'folder_aggregation_type': folder_aggregation_type,
+                     'folder_aggregation_name': folder_aggregation_name,
+                     'folder_aggregation_id': folder_aggregation_id,
+                     'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
+                     'folder_short_path': folder_short_path})
 
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')
-            name_with_full_path = os.path.join(res_coll, fname)
-            size = istorage.size(name_with_full_path)
+            file_in_irods = os.path.join(directory_in_irods, fname)
+            logger.debug("file in irods is {}".format(file_in_irods))
+            size = istorage.size(file_in_irods)
             mtype = get_file_mime_type(fname)
             idx = mtype.find('/')
             if idx >= 0:
@@ -124,9 +134,9 @@ def data_store_structure(request):
             logical_file_id = ''
             aggregation_name = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
-                if name_with_full_path == f.storage_path:
+                if file_in_irods == f.storage_path:
                     f_pk = f.pk
-                    f_url = to_external_url(get_resource_file_url(f))
+                    f_url = to_external_url(f.url)
                     if resource.resource_type == "CompositeResource":
                         if f.has_logical_file:
                             logical_file_type = f.logical_file_type_name
@@ -135,17 +145,15 @@ def data_store_structure(request):
                     break
 
             if f_pk:  # file is found in Django
+                logger.debug("file url is {}".format(f_url))
                 files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
                               'aggregation_name': aggregation_name,
                               'logical_type': logical_file_type,
                               'logical_file_id': logical_file_id})
             else:  # file is not found in Django
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
-                             .format(name_with_full_path))
+                             .format(file_in_irods))
 
-    except SessionException as ex:
-        logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
                      'folders': dirs,
