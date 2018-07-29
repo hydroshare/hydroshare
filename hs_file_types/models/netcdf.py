@@ -457,7 +457,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                                  name=os.path.basename(dump_file))
 
                     new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=upload_folder
+                        resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
                     )
 
                     # make this new resource file we added part of the logical file

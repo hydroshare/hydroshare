@@ -820,7 +820,8 @@ class AbstractLogicalFile(models.Model):
         if res_file is None or not res_file.exists:
             raise ValidationError("File not found.")
 
-        if res_file.has_logical_file:
+        if res_file.has_logical_file and \
+                res_file.logical_file.get_aggregation_class_name() != 'FileSetLogicalFile':
             msg = "Selected {} {} is already part of an aggregation."
             if folder_path is None:
                 msg = msg.format('file', res_file.file_name)
@@ -1037,7 +1038,7 @@ class AbstractLogicalFile(models.Model):
             uploaded_file = UploadedFile(file=open(fl, 'rb'),
                                          name=os.path.basename(fl))
             new_res_file = add_file_to_resource(
-                resource, uploaded_file, folder=upload_folder
+                resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
             )
 
             # make each resource file we added part of the logical file
