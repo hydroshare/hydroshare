@@ -572,19 +572,15 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
-        # if the file is getting moved into a folder that represents a FileSet, then make the file
-        # part of that FileSet
+        # if the file is getting moved into a folder that represents a FileSet or to a folder
+        # inside a fileset folder, then make the file part of that FileSet
         if file_move and res_file_obj.file_folder is not None and \
                 resource.resource_type == 'CompositeResource':
-            try:
-                aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
-                    # make the moved file part of the fileset aggregation unless the file is
-                    # already part of another aggregation
-                    if not res_file_obj.has_logical_file:
-                        aggregation.add_resource_file(res_file_obj)
-            except ObjectDoesNotExist:
-                pass
+            aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
+            if aggregation is not None and not res_file_obj.has_logical_file:
+                # make the moved file part of the fileset aggregation unless the file is
+                # already part of another aggregation (single file aggregation)
+                aggregation.add_resource_file(res_file_obj)
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names

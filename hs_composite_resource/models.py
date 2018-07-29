@@ -207,16 +207,37 @@ class CompositeResource(BaseResource):
                 aggregation.create_aggregation_xml_documents()
 
     def get_aggregation_by_name(self, name):
-            """Get an aggregation that matches the aggregation name specified by *name*
-            :param  name: name (aggregation path) of the aggregation to find
-            :return an aggregation object if found
-            :raises ObjectDoesNotExist if no matching aggregation is found
-            """
-            for aggregation in self.logical_files:
-                if aggregation.aggregation_name == name:
-                    return aggregation
+        """Get an aggregation that matches the aggregation name specified by *name*
+        :param  name: name (aggregation path) of the aggregation to find
+        :return an aggregation object if found
+        :raises ObjectDoesNotExist if no matching aggregation is found
+        """
+        for aggregation in self.logical_files:
+            if aggregation.aggregation_name == name:
+                return aggregation
 
-            raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+
+    def get_fileset_aggregation_in_path(self, path):
+        """Get the first fileset aggregation in the path moving up (towards the root)in the path
+        :param  path: directory path in which to search for a fileset aggregation
+        :return a fileset aggregation object if found, otherwise None
+        """
+        while True:
+            try:
+                aggregation = self.get_aggregation_by_name(path)
+                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                    return aggregation
+            except ObjectDoesNotExist:
+                pass
+
+            if '/' in path:
+                path = os.path.dirname(path)
+            else:
+                break
+
+        return None
+
 
     def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
         """

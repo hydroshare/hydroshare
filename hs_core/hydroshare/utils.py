@@ -941,7 +941,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False, check_target_folder=False):
+                         move=False, check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -963,6 +963,9 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
 
     :param  check_target_folder: if true and the resource is a composite resource then uploading
     a file to the specified folder will be validated before adding the file to the resource
+    :param  add_to_aggregation: if true and the resource is a composite resource then the file
+    being added to the resource also will be added to a fileset aggregation if such an aggregation
+    exists in the file path
     :return: The identifier of the ResourceFile added.
     """
 
@@ -978,14 +981,12 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                     raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
-        if folder is not None and resource.resource_type == 'CompositeResource':
-            try:
-                aggregation = resource.get_aggregation_by_name(folder)
-                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+        if add_to_aggregation:
+            if folder is not None and resource.resource_type == 'CompositeResource':
+                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                if aggregation is not None:
                     # make the added file part of the fileset aggregation
                     aggregation.add_resource_file(ret)
-            except ObjectDoesNotExist:
-                pass
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)

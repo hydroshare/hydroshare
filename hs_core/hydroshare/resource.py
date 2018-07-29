@@ -697,7 +697,8 @@ def add_resource_files(pk, *files, **kwargs):
                                           fail_feedback=False)
             # check files for aggregation
             for res_file in ret:
-                if not res_file.has_logical_file:
+                if not res_file.has_logical_file or \
+                        res_file.logical_file.get_aggregation_class_name() == 'FileSetLogicalFile':
                     set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                           fail_feedback=False)
         # some file(s) added, need to update quota usage
