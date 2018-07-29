@@ -102,6 +102,64 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_create_aggregation_3(self):
+        """Test that we can create a fileset aggregation inside another fileset aggregation - nested
+        fileset aggregations"""
+
+        self.create_composite_resource()
+        parent_fs_folder = 'parent_fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check that the resource file is not part of an aggregation
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=parent_fs_folder)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        # There should be one fileset aggregation associated with one resource file
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggregation.files.count(), 1)
+
+        # create a folder inside fileset folder - new_folder
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # set child folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=child_fs_folder)
+        # There should be two fileset aggregations
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=child_fs_folder)
+        # the json file in the child folder should be part of a new fileset aggregation
+        self.assertEqual(json_res_file.has_logical_file, True)
+        self.assertEqual(json_res_file.file_folder, child_fs_folder)
+        child_fs_aggr = json_res_file.logical_file
+        self.assertEqual(child_fs_aggr.files.count(), 1)
+        self.assertEqual(child_fs_aggr.files.first().file_name, self.json_file_name)
+
+        txt_res_file = ResourceFile.get(resource=self.composite_resource,
+                                        file=self.generic_file_name, folder=parent_fs_folder)
+        # the txt file in the parent folder should be part of a different fileset aggregation
+        self.assertEqual(txt_res_file.has_logical_file, True)
+        self.assertEqual(txt_res_file.file_folder, parent_fs_folder)
+        parent_fs_aggr = txt_res_file.logical_file
+        self.assertEqual(parent_fs_aggr.files.count(), 1)
+        self.assertEqual(parent_fs_aggr.files.first().file_name, self.generic_file_name)
+
+        self.composite_resource.delete()
+
     def test_add_file_to_aggregation(self):
         """Test that when we add a file to a folder that represents a fileset aggregation,
         the newly added file becomes part of the aggregation """
@@ -361,8 +419,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_delete_file_in_aggregation_2(self):
-        """Test that we delete one of the files of a fileset aggregation the aggregation doesn't
-        get deleted """
+        """Test that when we delete one of the files of a fileset aggregation the aggregation
+        doesn't get deleted """
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
@@ -407,7 +465,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_create_folder_in_fileset(self):
         """Test that folders can be created inside a folder that represents a fileset
-        aggregation and file added to the sub folder is not going to be part of the fileset
+        aggregation and file added to the sub folder is going to be part of the fileset
         aggregation"""
 
         self.create_composite_resource()
@@ -425,10 +483,13 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        # There should be one fileset aggregation associated with one resource file
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggregation.files.count(), 1)
 
-        # create a folder inside filset_folder
-        agg_sub_folder = 'fileset_folder/another_folder'
+        # create a folder inside fileset_folder
+        agg_sub_folder = 'fileset_folder/folder_1'
         ResourceFile.create_folder(self.composite_resource, agg_sub_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
@@ -436,8 +497,29 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         json_res_file = ResourceFile.get(resource=self.composite_resource,
                                          file=self.json_file_name, folder=agg_sub_folder)
-        # the json file added to the sub folder should not be part of the fileset aggregation
-        self.assertEqual(json_res_file.has_logical_file, False)
+        # the json file added to the sub folder should be part of the fileset aggregation
+        self.assertEqual(json_res_file.has_logical_file, True)
         self.assertEqual(json_res_file.file_folder, agg_sub_folder)
+        # There should be one fileset aggregation associated with both of the resource files
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggregation.files.count(), 2)
+
+        # create a folder inside folder_1 - case of nested folders inside fileset folder
+        agg_sub_folder = agg_sub_folder + '/folder_1_1'
+        ResourceFile.create_folder(self.composite_resource, agg_sub_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
+        # there should be three resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=agg_sub_folder)
+        # the json file added to the sub folder should be part of the fileset aggregation
+        self.assertEqual(json_res_file.has_logical_file, True)
+        self.assertEqual(json_res_file.file_folder, agg_sub_folder)
+        # There should be one fileset aggregation associated with all three resource files
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggregation.files.count(), 3)
 
         self.composite_resource.delete()
