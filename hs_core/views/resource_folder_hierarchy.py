@@ -66,17 +66,20 @@ def data_store_structure(request):
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    short_path = store_path[len("data/contents"):]
+    logger.debug("short path is {}".format(short_path))
+
     istorage = resource.get_irods_storage()
     directory_in_irods = os.path.join(resource.root_path, store_path)
-    logger.debug("directory in irods = {}".format(directory_in_irods)) 
+    logger.debug("directory in irods = {}".format(directory_in_irods))
     directory_in_url = os.path.join(resource.short_id, store_path)
-    logger.debug("directory in url = {}".format(directory_in_url)) 
+    logger.debug("directory in url = {}".format(directory_in_url))
 
-    # try:
-    store = istorage.listdir(directory_in_irods)
-    # except SessionException as ex:
-    #     logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
-    #     return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        store = istorage.listdir(directory_in_irods)
+    except SessionException as ex:
+        logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     files = []
     dirs = []
@@ -84,14 +87,15 @@ def data_store_structure(request):
         d_pk = dname.decode('utf-8')
         # folder_in_irods = os.path.join(directory_in_irods, d_pk)
         folder_in_url = os.path.join(directory_in_url, d_pk)
-        d_url = to_external_url(istorage.url(folder_in_url))
+        d_url = resource.get_url_of_path(d_pk)
         logger.debug("d_url is {}".format(d_url))
         main_file = ''
         folder_aggregation_type = ''
         folder_aggregation_name = ''
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
-        folder_short_path = os.path.join(store_path, d_pk)
+        folder_store_path = os.path.join(store_path, d_pk)
+        # folder_short_path = os.path.join(short_path, d_pk)
         if resource.resource_type == "CompositeResource":
             dir_path = folder_in_url
             # find if this folder *dir_path* represents (contains) an aggregation object
@@ -117,43 +121,42 @@ def data_store_structure(request):
                      'folder_aggregation_name': folder_aggregation_name,
                      'folder_aggregation_id': folder_aggregation_id,
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                     'folder_short_path': folder_short_path})
+                     'folder_short_path': folder_store_path})  # this is NOT the short path
 
-        for fname in store[1]:  # files
-            fname = fname.decode('utf-8')
-            file_in_irods = os.path.join(directory_in_irods, fname)
-            logger.debug("file in irods is {}".format(file_in_irods))
-            size = istorage.size(file_in_irods)
-            mtype = get_file_mime_type(fname)
-            idx = mtype.find('/')
-            if idx >= 0:
-                mtype = mtype[idx + 1:]
-            f_pk = ''
-            f_url = ''
-            logical_file_type = ''
-            logical_file_id = ''
-            aggregation_name = ''
-            for f in ResourceFile.objects.filter(object_id=resource.id):
-                if file_in_irods == f.storage_path:
-                    f_pk = f.pk
-                    f_url = to_external_url(f.url)
-                    if resource.resource_type == "CompositeResource":
-                        if f.has_logical_file:
-                            logical_file_type = f.logical_file_type_name
-                            logical_file_id = f.logical_file.id
-                            aggregation_name = f.aggregation_display_name
-                    break
+    for fname in store[1]:  # files
+        fname = fname.decode('utf-8')
+        file_in_irods = os.path.join(directory_in_irods, fname)
+        logger.debug("file in irods is {}".format(file_in_irods))
+        size = istorage.size(file_in_irods)
+        mtype = get_file_mime_type(fname)
+        idx = mtype.find('/')
+        if idx >= 0:
+            mtype = mtype[idx + 1:]
+        f_pk = ''
+        f_url = ''
+        logical_file_type = ''
+        logical_file_id = ''
+        aggregation_name = ''
+        for f in ResourceFile.objects.filter(object_id=resource.id):
+            if file_in_irods == f.storage_path:
+                f_pk = f.pk
+                f_url = to_external_url(f.url)
+                if resource.resource_type == "CompositeResource":
+                    if f.has_logical_file:
+                        logical_file_type = f.logical_file_type_name
+                        logical_file_id = f.logical_file.id
+                        aggregation_name = f.aggregation_display_name
+                break
 
-            if f_pk:  # file is found in Django
-                logger.debug("file url is {}".format(f_url))
-                files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
-                              'aggregation_name': aggregation_name,
-                              'logical_type': logical_file_type,
-                              'logical_file_id': logical_file_id})
-            else:  # file is not found in Django
-                logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
-                             .format(file_in_irods))
-
+        if f_pk:  # file is found in Django
+            logger.debug("file url is {}".format(f_url))
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                          'aggregation_name': aggregation_name,
+                          'logical_type': logical_file_type,
+                          'logical_file_id': logical_file_id})
+        else:  # file is not found in Django
+            logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
+                         .format(file_in_irods))
 
     return_object = {'files': files,
                      'folders': dirs,

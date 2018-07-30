@@ -1850,6 +1850,28 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def get_url_of_path(self, path):
+        """Return the URL of an arbtrary path in this resource.
+
+        A GET of this URL simply returns the contents of the path.
+        This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+        path includes data/contents/ 
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.short_id, path)
+
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
 
@@ -3219,24 +3241,22 @@ class ResourceFile(ResourceFileIRODSMixin):
                 name='get_resource_file')
 
         """
-        # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.resource.short_id,
-                                  'data', 'contents', self.short_path)
+        return self.get_url_of_short_path(self.short_path)
 
-    @property
-    def irods_url(self):
-        """Return the iRODS URL of the file.
-
-        This is a direct link and independent of the Django path in ResourceFile.url
-        However, this does not invoke Nginx large file support with sendfile.
-        So use this with caution.
-        """
-        if self.resource_file:
-            return self.resource_file.url
-        elif self.fed_resource_file:
-            return self.fed_resource_file.url
-        else:
-            return None
+    # @property
+    # def irods_url(self):
+    #     """Return the iRODS URL of the file.
+    #
+    #     This is a direct link and independent of the Django path in ResourceFile.url
+    #     However, this does not invoke Nginx large file support with sendfile.
+    #     So use this with caution.
+    #     """
+    #     if self.resource_file:
+    #         return self.resource_file.url
+    #     elif self.fed_resource_file:
+    #         return self.fed_resource_file.url
+    #     else:
+    #         return None
 
 
 class Bags(models.Model):
