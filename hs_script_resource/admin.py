@@ -5,4 +5,4 @@ from mezzanine.pages.admin import PageAdmin
 
 from .models import ScriptResource
 
-admin.site.register(ScriptResource, PageAdmin)
+#admin.site.register(ScriptResource, PageAdmin)

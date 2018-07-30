@@ -6,7 +6,7 @@ from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import ugettext_lazy as _
 
-from mezzanine.pages.admin import PageAdmin
+#from mezzanine.pages.admin import PageAdmin
 
 from .models import *
 
@@ -31,9 +31,9 @@ UserAdmin.list_display = [
 class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
 
-class GenericResourceAdmin(PageAdmin):
-    inlines = PageAdmin.inlines + [InlineResourceFiles]
+#class GenericResourceAdmin(PageAdmin):
+#    inlines = PageAdmin.inlines + [InlineResourceFiles]
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-admin.site.register(GenericResource, GenericResourceAdmin)
+#admin.site.register(GenericResource, GenericResourceAdmin)

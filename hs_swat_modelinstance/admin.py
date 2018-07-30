@@ -4,4 +4,4 @@ from django.contrib import admin
 
 from hs_swat_modelinstance.models import SWATModelInstanceResource
 
-admin.site.register(SWATModelInstanceResource, PageAdmin)
+#admin.site.register(SWATModelInstanceResource, PageAdmin)

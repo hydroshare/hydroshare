@@ -77,4 +77,4 @@ class ToolMetaDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ToolMetaData, ToolMetaDataAdmin)
-admin.site.register(ToolResource, PageAdmin)
+#admin.site.register(ToolResource, PageAdmin)

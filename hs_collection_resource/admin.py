@@ -5,4 +5,4 @@ from mezzanine.pages.admin import PageAdmin
 
 from .models import CollectionResource
 
-admin.site.register(CollectionResource, PageAdmin)
+#admin.site.register(CollectionResource, PageAdmin)

@@ -5,4 +5,4 @@ from mezzanine.pages.admin import PageAdmin
 
 from .models import GeographicFeatureResource
 
-admin.site.register(GeographicFeatureResource, PageAdmin)
+#admin.site.register(GeographicFeatureResource, PageAdmin)
