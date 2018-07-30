@@ -105,3 +105,19 @@ class FileSetLogicalFile(AbstractLogicalFile):
                 pass
 
         return child_aggregations
+
+    def remove_aggregation(self):
+        """If this a child fileset aggregation, then the files associated with this aggregation
+        need to be made part of the immediate parent fileset if such a fileset exists """
+
+        parent_fs_aggr = None
+        if '/' in self.aggregation_name:
+            path_to_search = os.path.dirname(self.aggregation_name)
+            parent_fs_aggr = self.resource.get_fileset_aggregation_in_path(path_to_search)
+
+        res_files = []
+        res_files.extend(self.files.all())
+        super(FileSetLogicalFile, self).remove_aggregation()
+        if parent_fs_aggr is not None:
+            for res_file in res_files:
+                parent_fs_aggr.add_resource_file(res_file)
