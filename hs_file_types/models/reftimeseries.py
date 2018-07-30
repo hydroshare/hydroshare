@@ -773,8 +773,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
             raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
                 res_file.file_name))
 
-        if res_file.has_logical_file and \
-                res_file.logical_file.get_aggregation_class_name() != 'FileSetLogicalFile':
+        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
             raise ValidationError("Selected file '{}' is already part of an aggregation".format(
                 res_file.file_name))
 

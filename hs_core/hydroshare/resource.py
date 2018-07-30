@@ -697,8 +697,7 @@ def add_resource_files(pk, *files, **kwargs):
                                           fail_feedback=False)
             # check files for aggregation
             for res_file in ret:
-                if not res_file.has_logical_file or \
-                        res_file.logical_file.get_aggregation_class_name() == 'FileSetLogicalFile':
+                if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                     set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                           fail_feedback=False)
         # some file(s) added, need to update quota usage
@@ -918,8 +917,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
                     # gets deleted for any logical file other than fileset logical file
                     # delete fileset logical file only when the last resource file that belongs
                     # to the fileset logical file gets deleted
-                    if f.logical_file.get_aggregation_class_name() != 'FileSetLogicalFile' or \
-                            f.logical_file.files.all().count() == 1:
+                    if not f.logical_file.is_fileset or f.logical_file.files.all().count() == 1:
                         # logical_delete() calls this function (delete_resource_file())
                         # to delete each of its contained ResourceFile objects
                         f.logical_file.logical_delete(user)

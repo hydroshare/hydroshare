@@ -563,7 +563,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 resource.resource_type == 'CompositeResource':
             try:
                 aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                if aggregation.is_fileset:
                     # remove aggregation form the file
                     res_file_obj.logical_file_content_object = None
             except ObjectDoesNotExist:

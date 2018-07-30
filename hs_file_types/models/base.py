@@ -820,8 +820,7 @@ class AbstractLogicalFile(models.Model):
         if res_file is None or not res_file.exists:
             raise ValidationError("File not found.")
 
-        if res_file.has_logical_file and \
-                res_file.logical_file.get_aggregation_class_name() != 'FileSetLogicalFile':
+        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
             msg = "Selected {} {} is already part of an aggregation."
             if folder_path is None:
                 msg = msg.format('file', res_file.file_name)
@@ -885,6 +884,11 @@ class AbstractLogicalFile(models.Model):
     def get_aggregation_class_name(self):
         """Return the class name of the logical type (aggregation type)"""
         return self.__class__.__name__
+
+    @property
+    def is_fileset(self):
+        """Return True if this aggregation is a fileset aggregation, otherwise False"""
+        return self.get_aggregation_class_name() == 'FileSetLogicalFile'
 
     @staticmethod
     def get_aggregation_type_name():

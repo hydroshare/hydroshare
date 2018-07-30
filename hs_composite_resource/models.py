@@ -85,10 +85,13 @@ class CompositeResource(BaseResource):
             return None
         if store[0]:
             # there are folders under dir_path in which case the folder can be set as FileSet
-            # only if there is at least one file that is not part of any aggregation, otherwise no
-            # aggregation type can be set
+            # only if there is at least one file that is not part of any aggregation or part
+            # of another fileset aggregation, otherwise no aggregation type can be set
             if any(not res_file.has_logical_file for res_file in files_in_folder):
                 return FileSetLogicalFile.__name__
+            elif any(res_file.logical_file.is_fileset for res_file in files_in_folder):
+                return FileSetLogicalFile.__name__
+
             return None
 
         if len(files_in_folder) > 1:
@@ -226,7 +229,7 @@ class CompositeResource(BaseResource):
         while True:
             try:
                 aggregation = self.get_aggregation_by_name(path)
-                if aggregation.get_aggregation_class_name() == 'FileSetLogicalFile':
+                if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
                 pass
