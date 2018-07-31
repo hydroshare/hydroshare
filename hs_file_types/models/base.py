@@ -1360,7 +1360,7 @@ class AbstractLogicalFile(models.Model):
             res_uri = u'{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
-                aggr_name=child_aggr.map_file_path + '#aggregation')
+                aggr_name=child_aggr.map_short_file_path + '#aggregation')
             child_ore_aggr = Aggregation(res_uri)
             child_ore_aggregations.append(child_ore_aggr)
             child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
