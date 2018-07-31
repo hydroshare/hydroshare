@@ -285,7 +285,7 @@ class AbstractFileMetaData(models.Model):
         resource = self.logical_file.resource
 
         aggregation_map_file_path = '{}#aggregation'.format(self.logical_file.map_file_path)
-        aggregation_map_uri = current_site_url() + "/{}".format(aggregation_map_file_path)
+        aggregation_map_uri = current_site_url() + "/resource/{}".format(aggregation_map_file_path)
         rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], aggregation_map_uri)
 
         # add aggregation title
