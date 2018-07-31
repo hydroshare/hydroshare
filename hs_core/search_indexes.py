@@ -95,6 +95,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
+    storage_type = indexes.CharField()
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
@@ -463,6 +464,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return end_date_object
         else:
             return None
+
+    def prepare_storage_type(self, obj):
+        return obj.storage_type
 
     # # TODO: SOLR extension needs to be installed for these to work
     # def prepare_coverage_point(self, obj):
