@@ -67,7 +67,8 @@ def data_store_structure(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
-    directory_in_irods = os.path.join(resource.root_path, store_path)
+    directory_in_irods = resource.get_irods_path(store_path)
+    # directory_in_irods = os.path.join(resource.root_path, store_path)
     logger.debug("directory in irods = {}".format(directory_in_irods))
 
     try:
@@ -80,16 +81,16 @@ def data_store_structure(request):
     dirs = []
     for dname in store[0]:     # directories
         d_pk = dname.decode('utf-8')
-        d_url = resource.get_url_of_path(os.path.join(store_path, d_pk))
+        d_store_path = os.path.join(store_path, d_pk)
+        d_url = resource.get_url_of_path(d_store_path)
         logger.debug("d_url is {}".format(d_url))
         main_file = ''
         folder_aggregation_type = ''
         folder_aggregation_name = ''
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
-        folder_store_path = os.path.join(store_path, d_pk)
         if resource.resource_type == "CompositeResource":
-            dir_path = os.path.join(resource.short_id, folder_store_path)
+            dir_path = resource.get_public_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path)
             # folder aggregation type is not relevant for single file aggregation types - which
@@ -102,8 +103,8 @@ def data_store_structure(request):
                 main_file = aggregation_object.get_main_file.file_name
             else:
                 # find if any aggregation type can be created from this folder
-                folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
-                    dir_path)
+                folder_aggregation_type_to_set =  \
+                    resource.get_folder_aggregation_type_to_set(dir_path)
                 if folder_aggregation_type_to_set is None:
                     folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
@@ -117,7 +118,8 @@ def data_store_structure(request):
 
     for fname in store[1]:  # files
         fname = fname.decode('utf-8')
-        file_in_irods = os.path.join(directory_in_irods, fname)
+        f_store_path = os.path.join(store_path, fname)
+        file_in_irods = resource.get_irods_path(f_store_path)
         size = istorage.size(file_in_irods)
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
