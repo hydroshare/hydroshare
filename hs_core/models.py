@@ -1856,7 +1856,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         A GET of this URL simply returns the contents of the path.
         This URL is independent of federation.
         PUT, POST, and DELETE are not supported.
-        path includes data/contents/ 
+        path includes data/contents/
 
         This choice for a URL is dependent mainly upon conformance to DataOne URL standards
         that are also conformant to the format in resourcemap.xml. This url does not contain
@@ -2292,6 +2292,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def supports_delete_folder_on_zip(self, original_folder):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
+
+    @property
+    def storage_type(self):
+        if not self.is_federated:
+            return 'local'
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+        if self.resource_federation_path == userpath:
+            return 'user'
+        else:
+            return 'federated'
 
     class Meta:
         """Define meta properties for AbstractResource class."""
@@ -3241,22 +3254,8 @@ class ResourceFile(ResourceFileIRODSMixin):
                 name='get_resource_file')
 
         """
-        return self.get_url_of_short_path(self.short_path)
-
-    # @property
-    # def irods_url(self):
-    #     """Return the iRODS URL of the file.
-    #
-    #     This is a direct link and independent of the Django path in ResourceFile.url
-    #     However, this does not invoke Nginx large file support with sendfile.
-    #     So use this with caution.
-    #     """
-    #     if self.resource_file:
-    #         return self.resource_file.url
-    #     elif self.fed_resource_file:
-    #         return self.fed_resource_file.url
-    #     else:
-    #         return None
+        return '/' + os.path.join('resource', self.resource.short_id, 'data', 'contents',
+                                  self.short_path)
 
 
 class Bags(models.Model):
