@@ -500,10 +500,10 @@ def file_download_url_mapper(request, shortkey):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     istorage = resource.get_irods_storage()
-    logger.debug("got request path {}".format(request.path))
+    logger.debug("mapper got request path {}".format(request.path))
     irods_split = request.path.split('/')[2:-1]
     irods_file_path = '/'.join(irods_split)
-    logger.debug("irods_file_path is {}".format(irods_file_path))
+    logger.debug("mapper irods_file_path is {}".format(irods_file_path))
     # [0:-1] excludes the last item on the list
     irods_dir_path = '/'.join(irods_split[0:-1])
     logger.debug("irods_dir_path is {}".format(irods_dir_path))
@@ -515,11 +515,11 @@ def file_download_url_mapper(request, shortkey):
     if irods_split[-1] in listing[0]:
         # it's a folder
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))
-        logger.debug("redirect is {}".format(file_download_url)) 
+        logger.debug("mapper redirect is {}".format(file_download_url)) 
         return HttpResponseRedirect(file_download_url)
     else:
         file_download_url = istorage.url(irods_file_path)
-        logger.debug("redirect is {}".format(file_download_url)) 
+        logger.debug("mapper redirect is {}".format(file_download_url)) 
         return HttpResponseRedirect(file_download_url)
 
 

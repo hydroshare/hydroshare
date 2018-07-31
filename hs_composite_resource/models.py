@@ -77,7 +77,10 @@ class CompositeResource(BaseResource):
             return None
 
         istorage = self.get_irods_storage()
-        store = istorage.listdir(dir_path)
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+        store = istorage.listdir(irods_path)
         if store[0]:
             # seems there are folders under dir_path - no aggregation type can be set if the target
             # folder contains other folders

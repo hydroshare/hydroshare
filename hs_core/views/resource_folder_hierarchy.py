@@ -66,14 +66,9 @@ def data_store_structure(request):
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    short_path = store_path[len("data/contents"):]
-    logger.debug("short path is {}".format(short_path))
-
     istorage = resource.get_irods_storage()
     directory_in_irods = os.path.join(resource.root_path, store_path)
     logger.debug("directory in irods = {}".format(directory_in_irods))
-    directory_in_url = os.path.join(resource.short_id, store_path)
-    logger.debug("directory in url = {}".format(directory_in_url))
 
     try:
         store = istorage.listdir(directory_in_irods)
@@ -85,9 +80,7 @@ def data_store_structure(request):
     dirs = []
     for dname in store[0]:     # directories
         d_pk = dname.decode('utf-8')
-        # folder_in_irods = os.path.join(directory_in_irods, d_pk)
-        folder_in_url = os.path.join(directory_in_url, d_pk)
-        d_url = resource.get_url_of_path(d_pk)
+        d_url = resource.get_url_of_path(os.path.join(store_path, d_pk))
         logger.debug("d_url is {}".format(d_url))
         main_file = ''
         folder_aggregation_type = ''
@@ -95,9 +88,8 @@ def data_store_structure(request):
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
         folder_store_path = os.path.join(store_path, d_pk)
-        # folder_short_path = os.path.join(short_path, d_pk)
         if resource.resource_type == "CompositeResource":
-            dir_path = folder_in_url
+            dir_path = os.path.join(resource.short_id, folder_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path)
             # folder aggregation type is not relevant for single file aggregation types - which
@@ -121,12 +113,11 @@ def data_store_structure(request):
                      'folder_aggregation_name': folder_aggregation_name,
                      'folder_aggregation_id': folder_aggregation_id,
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                     'folder_short_path': folder_store_path})  # this is NOT the short path
+                     'folder_short_path': os.path.join(store_path, d_pk)})  # this is NOT short path
 
     for fname in store[1]:  # files
         fname = fname.decode('utf-8')
         file_in_irods = os.path.join(directory_in_irods, fname)
-        logger.debug("file in irods is {}".format(file_in_irods))
         size = istorage.size(file_in_irods)
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
@@ -140,7 +131,7 @@ def data_store_structure(request):
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if file_in_irods == f.storage_path:
                 f_pk = f.pk
-                f_url = to_external_url(f.url)
+                f_url = f.url
                 if resource.resource_type == "CompositeResource":
                     if f.has_logical_file:
                         logical_file_type = f.logical_file_type_name
@@ -163,10 +154,9 @@ def data_store_structure(request):
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
-        spatial_coverage_dict = get_coverage_data_dict(resource)
-        temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
-        return_object['spatial_coverage'] = spatial_coverage_dict
-        return_object['temporal_coverage'] = temporal_coverage_dict
+        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
+        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
+                                                                    coverage_type='temporal')
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
