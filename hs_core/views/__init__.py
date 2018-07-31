@@ -506,14 +506,15 @@ def file_download_url_mapper(request, shortkey):
     logger.debug("mapper irods_file_path is {}".format(irods_file_path))
     # [0:-1] excludes the last item on the list
     irods_dir_path = '/'.join(irods_split[0:-1])
-    logger.debug("irods_dir_path is {}".format(irods_dir_path))
+    logger.debug("mapper irods_dir_path is {}".format(irods_dir_path))
     irods_ls_path = irods_dir_path
     if resource.is_federated:
         irods_ls_path = os.path.join(resource.resource_federation_path, irods_ls_path)
-    logger.debug("irods_ls_path is {}".format(irods_ls_path))
+    logger.debug("mapper irods_ls_path is {}".format(irods_ls_path))
     listing = istorage.listdir(irods_ls_path)
     if irods_split[-1] in listing[0]:
         # it's a folder
+        # TODO now zips/ mapping occurs in two seperate places. Make that one place. 
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))
         logger.debug("mapper redirect is {}".format(file_download_url)) 
         return HttpResponseRedirect(file_download_url)

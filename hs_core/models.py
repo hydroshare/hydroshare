@@ -1872,6 +1872,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.short_id, path)
 
+    def get_public_path(self, path): 
+        """Return the public path for a specific path within the resource. 
+           This is the path that appears in public URLs. 
+           The input path includes data/contents/ as needed. 
+        """
+        return os.path.join(self.short_id, path)
+
+    def get_irods_path(self, path): 
+        """Return the irods path by which the given path is accessed. 
+           The input path includes data/contents/ as needed. 
+        """
+        if self.is_federated: 
+            return os.path.join(self.resource_federation_path, self.get_public_path(path)
+        else: 
+            return self.get_public_path(path) 
+
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
 
@@ -3253,10 +3269,27 @@ class ResourceFile(ResourceFileIRODSMixin):
                 views.file_download_url_mapper,
                 name='get_resource_file')
 
+        This url does NOT depend upon federation status. 
         """
-        return '/' + os.path.join('resource', self.resource.short_id, 'data', 'contents',
-                                  self.short_path)
+        return '/' + os.path.join('resource', self.public_path')
 
+    @property
+    def public_path(self): 
+        """ return the public path (unqualified iRODS path) for a resource. 
+            This corresponds to the iRODS path if the resource isn't federated. 
+        """
+        return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path) 
+
+    @property 
+    def irods_path(self): 
+        """ Return the irods path for accessing a file, including possible federation information.
+            This consists of the resource id, /data/contents/, and the file path. 
+        """
+        
+        if self.resource.is_federated: 
+            return os.path.join(self.resource.resource_federation_path, self.public_path)
+        else: 
+            return self.public_path
 
 class Bags(models.Model):
     """Represent data bags format as django model."""
