@@ -21,7 +21,8 @@ import time
 from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
 from django.db.models import Q
 from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair
+    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
+    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair
 import simplejson as json
 from sklearn.metrics.pairwise import pairwise_distances
 
@@ -40,6 +41,7 @@ class Command(BaseCommand):
         users_own_resources = {}
         users_interested_resources = {}
         
+        ResourcePreferences.clear()
         UserPreferences.clear()
         GroupPreferences.clear()
         ownership_start_time = time.time()
@@ -230,33 +232,22 @@ class Command(BaseCommand):
         m_hg = pd.DataFrame(m_hg_values, index=list(group_names), columns=all_subjects_list)
         m_hg[m_hg != 0] = 1
         '''
-        
-        ug_jac_sim = 1 - pairwise_distances(nm_ug_ones, metric = "hamming")
-        ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nm_ug_ones.index, columns=nm_ug_ones.index)
+        nonzero_nm_ug_ones = nm_ug_ones[(nm_ug_ones.T != 0).any()] 
+        ug_jac_sim = 1 - pairwise_distances(nonzero_nm_ug_ones, metric = "hamming")
+        ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nonzero_nm_ug_ones.index, columns=nonzero_nm_ug_ones.index)
         knn = 10
         order = np.argsort(-ug_jac_sim.values, axis=1)[:, :knn]
         ug_nearest_neighbors = pd.DataFrame(ug_jac_sim.columns[order],
                               columns=['neighbor{}'.format(i) for i in range(1, knn+1)],
                               index=ug_jac_sim.index) 
-       
-        og_jac_sim = 1 - pairwise_distances(nm_og_ones, metric = "hamming")
-        og_jac_sim = pd.DataFrame(og_jac_sim, index=nm_og_ones.index, columns=nm_og_ones.index)
-        knn = 10
+
+        nonzero_nm_og_ones = nm_og_ones[(nm_og_ones.T != 0).any()]
+        og_jac_sim = 1 - pairwise_distances(nonzero_nm_og_ones, metric = "hamming")
+        og_jac_sim = pd.DataFrame(og_jac_sim, index=nonzero_nm_og_ones.index, columns=nonzero_nm_og_ones.index)
         order = np.argsort(-og_jac_sim.values, axis=1)[:, :knn]
         og_nearest_neighbors = pd.DataFrame(og_jac_sim.columns[order],
                               columns=['neighbor{}'.format(i) for i in range(1, knn+1)],
                               index=og_jac_sim.index)
-        print("~~~~~~~~~~~~~~~~~~~~~~~")
-        print(nm_ug_ones.shape)
-        print(ug_jac_sim.shape)
-        print(ug_nearest_neighbors.shape)
-        #for nn in res_nearest_neighbors.loc['ChristinaBandaragoda']:
-        #    print(nn)
-        print("+++++++")
-        print(nm_og_ones.shape)
-        print(og_jac_sim.shape)
-        print(og_nearest_neighbors.shape)
-        print("~~~~~~~~~~~~~~~~~~~~~~~")                
         
         matrices_elapsed_time = time.time() - matrices_start_time
         print("build matrices time cost: " + str(matrices_elapsed_time))
@@ -266,14 +257,11 @@ class Command(BaseCommand):
         for index, row in m_og.iterrows():
             if index not in users_interested_resources:
                 continue
-            if index != 'ChristinaBandaragoda':
-                continue
-            print("building {} ownership prefrences".format(index))
             current_user = user_from_id(index)
             user_nonzero_index = row.nonzero()
             if len(user_nonzero_index[0]) == 0:
                 continue
-            user_subjects = []
+            res_pref_subjects = []
             sorted_row = (-row).argsort()
             
             #for i in user_nonzero_index[0]:
@@ -281,10 +269,7 @@ class Command(BaseCommand):
                 if row.iat[i] == 0:
                     break
                 subject = all_subjects_list[i]
-                if index == 'ChristinaBandaragoda':
-                    print(subject)
-                    print("loc : {}, at : {}".format(m_og.at[index, subject], row.iat[i]))
-                user_subjects.append(('subject', subject, row.iat[i]))
+                res_pref_subjects.append(('subject', subject, row.iat[i]))
             interested_resources = []
             for rid in users_interested_resources[index]:
                 try:
@@ -292,7 +277,10 @@ class Command(BaseCommand):
                     interested_resources.append(r)
                 except:
                     pass
+            '''
             neighbors = []
+            if len(og_nearest_neighbors.loc[index]) == 0:
+                continue
             for username in og_nearest_neighbors.loc[index]:
                 if username == index:
                     continue
@@ -301,7 +289,9 @@ class Command(BaseCommand):
                     neighbors.append(user)
                 except:
                     pass
-            UserPreferences.prefer(current_user, 'Ownership', user_subjects, interested_resources, neighbors)
+            '''
+            ResourcePreferences.prefer(current_user, 'Ownership', res_pref_subjects, interested_resources)
+            #UserPreferences.prefer(current_user, 'Ownership', res_pref_subjects, neighbors)
         store_users_elapsed_time = time.time() - store_users_start_time
         print("time for storing users ownership preferences: " + str(store_users_elapsed_time))
         
@@ -310,33 +300,42 @@ class Command(BaseCommand):
         for index, row in m_ug.iterrows():
             if index not in users_interested_resources:
                 continue
-            if index != 'ChristinaBandaragoda':
-                continue
+            #if index != 'ChristinaBandaragoda':
+            #    continue
             current_user = user_from_id(index)
             user_nonzero_index = row.nonzero()
             if len(user_nonzero_index[0]) == 0:
                 continue
 
-            user_subjects = []
-
+            res_pref_subjects = []
+            
             sorted_row = (-row).argsort()
             #for i in user_nonzero_index[0]:
             for i in sorted_row[:5]:
                 if row.iat[i] == 0:
                     break
                 subject = all_subjects_list[i]
+                res_pref_subjects.append(('subject', subject, row.iat[i]))
+             
+            user_pref_subjects = []
+            for i in user_nonzero_index[0]:
+                subject = all_subjects_list[i]
                 if index == 'ChristinaBandaragoda':
                     print(subject)
-                    print("loc : {}, at : {}".format(m_ug.at[index, subject], row.iat[i]))
-                user_subjects.append(('subject', subject, row.iat[i]))
+                user_pref_subjects.append(('subject', subject, row.iat[i]))
+            
             interested_resources = []
             for rid in users_interested_resources[index]:
                 try:
                     r = get_resource_by_shortkey(rid)
                     interested_resources.append(r)
                 except:
-                    pass
+                    continue
+
             neighbors = []
+            if len(ug_nearest_neighbors.loc[index]) == 0:
+                continue
+
             for username in ug_nearest_neighbors.loc[index]:
                 if username == index:
                     continue
@@ -344,8 +343,10 @@ class Command(BaseCommand):
                     user = user_from_id(username)
                     neighbors.append(user)
                 except:
-                    pass
-            UserPreferences.prefer(current_user, 'Propensity', user_subjects, interested_resources, neighbors)
+                    continue
+
+            ResourcePreferences.prefer(current_user, 'Propensity', res_pref_subjects, interested_resources)
+            UserPreferences.prefer(current_user, 'Propensity', user_pref_subjects, neighbors)
         store_users_elapsed_time = time.time() - store_users_start_time
         print("time for storing users propensity preferences: " + str(store_users_elapsed_time))
         

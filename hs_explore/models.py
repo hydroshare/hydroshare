@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, Subject
 from django.contrib.auth.models import User, Group
 from hs_core.hydroshare import user_from_id, group_from_id, get_resource_by_shortkey
 
@@ -119,20 +119,22 @@ class RecommendedResource(models.Model):
     candidate_resource = models.ForeignKey(BaseResource, editable=False,
                                            related_name='resource_recommendation')
     relevance = models.FloatField(editable=False, default=0.0)
+    rec_type = models.CharField(max_length=11, null=True, 
+                                choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity'),
+                                         ('Combination', 'Combination')))
     state = models.IntegerField(choices=Status.STATUS_CHOICES,
                                 default=Status.STATUS_NEW,
                                 editable=False)
-
     keywords = models.ManyToManyField(KeyValuePair, editable=False,
                                       related_name='for_resource_rec',
                                       through=ResourceRecToPair,
                                       through_fields=('recommendation', 'pair'))
 
     class Meta:
-        unique_together = ('user', 'candidate_resource')
+        unique_together = ('user', 'candidate_resource', 'rec_type')
 
     @staticmethod
-    def recommend(u, r, relevance=None, state=None, keywords=()):
+    def recommend(u, r, t, relevance=None, state=None, keywords=()):
 
         defaults = {}
         if relevance is not None:
@@ -143,6 +145,7 @@ class RecommendedResource(models.Model):
         with transaction.atomic():
             object, created = RecommendedResource.objects.get_or_create(user=u,
                                                                         candidate_resource=r,
+                                                                        rec_type=t,
                                                                         defaults=defaults)
             if not created:
                 if relevance is not None:
@@ -158,11 +161,11 @@ class RecommendedResource(models.Model):
         return object
 
     @staticmethod
-    def recommend_ids(uid, rid, relevance=None, state=None, keywords=()):
+    def recommend_ids(uid, rid, t, relevance=None, state=None, keywords=()):
         """ use string ids rather than User and Resource objects """
         u = user_from_id(uid, raise404=False)
         r = get_resource_by_shortkey(rid, or_404=False)
-        RecommendedResource.recommend(u, r, relevance=relevance, state=state, keywords=keywords)
+        RecommendedResource.recommend(u, r, t, relevance=relevance, state=state, keywords=keywords)
 
     def relate(self, key, value, weight):
         ResourceRecToPair.create(self, key, value, weight)
@@ -176,12 +179,9 @@ class RecommendedResource(models.Model):
         self.state = Status.STATUS_SHOWN
         self.save()
 
->>>>>>> f9196986e7a75901eea990c97505314252f050a5
     def explored(self):
         self.state = Status.STATUS_EXPLORED
         self.save()
-
-    def approved(self):
         self.state = Status.STATUS_APPROVED
         self.save()
 
@@ -377,20 +377,203 @@ class RecommendedGroup(models.Model):
         RecommendedGroup.objects.all().delete()
         GroupRecToPair.objects.all().delete()
 
-class UserPreferences(models.Model):
-    user = models.ForeignKey(User, editable=False)
-    preferences = models.TextField(null=True)
 
-    class Meta:
-        unique_together = ('user', 'preferences')
+class ResourcePrefToPair(models.Model):
+    res_pref = models.ForeignKey('ResourcePreferences', editable=False,
+                                  null=False, on_delete=models.CASCADE)
+    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity')))
+    pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
+    weight = models.FloatField(editable=False, null=False)
+    state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
+                             default='Seen')
+
+    class Meta:  # this works with uniqueness of each pair
+        unique_together = ('res_pref', 'pair', 'pref_type')
 
     @staticmethod
-    def prefer(u, p):
+    def create(u, t, k, v, w, s=None):
+        """ eliminate duplicates: only thing that can change is weight """
+        p = KeyValuePair.create(key=k, value=v)
+        defaults = {}
+        defaults['weight'] = w
+        if s is not None:
+            defaults['state'] = s
         with transaction.atomic():
-            object, created = UserPreferences.objects.get_or_create(user=u,preferences=p)
+            object, created = ResourcePrefToPair.objects.get_or_create(res_pref=u, pref_type=t, pair=p, defaults=defaults)
+            if not created:
+                object.weight = w
+                if s is not None:
+                    object.state = s
+                object.save()
+
+        return object
+
+
+class UserPrefToPair(models.Model):
+    user_pref = models.ForeignKey('UserPreferences', editable=False,
+                                  null=False, on_delete=models.CASCADE)
+    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity')))
+    pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
+    weight = models.FloatField(editable=False, null=False)
+    state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
+                             default='Seen')
+
+    class Meta:  # this works with uniqueness of each pair
+        unique_together = ('user_pref', 'pair', 'pref_type')
+
+    @staticmethod
+    def create(u, t, k, v, w, s=None):
+        """ eliminate duplicates: only thing that can change is weight """
+        p = KeyValuePair.create(key=k, value=v)
+        defaults = {}
+        defaults['weight'] = w
+        if s is not None:
+            defaults['state'] = s
+        with transaction.atomic():
+            object, created = UserPrefToPair.objects.get_or_create(user_pref=u, pref_type=t, pair=p, defaults=defaults)
+            if not created:
+                object.weight = w
+                if s is not None:
+                    object.state = s
+                object.save()
+
+        return object
+
+
+class GroupPrefToPair(models.Model):
+    group_pref = models.ForeignKey('GroupPreferences', editable=False,
+                                   null=False, on_delete=models.CASCADE)
+    pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
+    weight = models.FloatField(editable=False, null=False)
+
+    class Meta:  # this works with uniqueness of each pair
+        unique_together = ('group_pref', 'pair')
+
+    @staticmethod
+    def create(g, k, v, w):
+        """ eliminate duplicates: only thing that can change is weight """
+        p = KeyValuePair.create(key=k, value=v)
+
+        with transaction.atomic():
+            object, created = GroupPrefToPair.objects.get_or_create(group_pref=g, pair=p, weight=w)
+            if not created:
+                object.weight = w
+                object.save()
+
+        return object
+
+
+class ResourcePreferences(models.Model):
+    user = models.OneToOneField(User, editable=False)
+    preferences = models.ManyToManyField(KeyValuePair, editable=False,
+                                         related_name='for_res_pref',
+                                         through=ResourcePrefToPair,
+                                         through_fields=('res_pref', 'pair'))
+    interacted_resources = models.ManyToManyField(BaseResource, editable=False, related_name='interested_resources')    
+   
+    @staticmethod
+    def prefer(u, pref_type, preferences=(), interacted_resources=()):
+        with transaction.atomic():
+            object, created = ResourcePreferences.objects.get_or_create(user=u)
             if not created:
                 object.save()
+        for p in preferences:
+            ResourcePrefToPair.create(object, pref_type, p[0], p[1], p[2])
+        for r in interacted_resources:
+            object.interacted_resources.add(r)
         return object
+
+    def relate(self, pref_type, key, value, weight):
+        ResourcePrefToPair.create(self, pref_type, key, value, weight)
+
+    def unrelate(self, key, value):
+        pair = KeyValuePair.objects.get(key=key, value=value)
+        relationships = ResourcePrefToPair.objects.filter(pair=pair, res_pref=self)
+        for r in relationships:
+            r.delete()
+    
+    def reject(self, key, value):
+        pair = KeyValuePair.objects.get(key=key, value=value)
+        relationships = ResourcePrefToPair.objects.filter(pair=pair, res_pref=self)
+        for r in relationships:
+            r.state = 'Rejected'
+            r.save()
+
     @staticmethod
     def clear():
-        UserPreferences.objects.all().delte()
+        ResourcePreferences.objects.all().delete()
+        ResourcePrefToPair.objects.all().delete()
+
+
+class UserPreferences(models.Model):
+    user = models.OneToOneField(User, editable=False)
+    preferences = models.ManyToManyField(KeyValuePair, editable=False,
+                                         related_name='for_user_pref',
+                                         through=UserPrefToPair,
+                                         through_fields=('user_pref', 'pair'))
+    neighbors = models.ManyToManyField(User, editable=False, related_name='nearest_neighbors')
+
+    @staticmethod
+    def prefer(u, pref_type, preferences=(), neighbors=()):
+        with transaction.atomic():
+            object, created = UserPreferences.objects.get_or_create(user=u)
+            if not created:
+                object.save()
+        for p in preferences:
+            UserPrefToPair.create(object, pref_type, p[0], p[1], p[2])
+        for n in neighbors:
+            object.neighbors.add(n)
+        return object
+
+    def relate(self, pref_type, key, value, weight):
+        UserPrefToPair.create(self, pref_type, key, value, weight)
+
+    def unrelate(self, key, value):
+        pair = KeyValuePair.objects.get(key=key, value=value)
+        relationships = UserPrefToPair.objects.filter(pair=pair, user_pref=self)
+        for r in relationships:
+            r.delete()
+    
+    def reject(self, key, value):
+        pair = KeyValuePair.objects.get(key=key, value=value)
+        relationships = UserPrefToPair.objects.filter(pair=pair, user_pref=self)
+        for r in relationships:
+            r.state = 'Rejected'
+            r.save()
+
+    @staticmethod
+    def clear():
+        UserPreferences.objects.all().delete()
+        UserPrefToPair.objects.all().delete()
+
+
+class GroupPreferences(models.Model):
+    group = models.ForeignKey(Group, editable=False)
+    preferences = models.ManyToManyField(KeyValuePair, editable=False,
+                                         related_name='for_group_pref',
+                                         through=GroupPrefToPair,
+                                         through_fields=('group_pref', 'pair'))
+
+    @staticmethod
+    def prefer(g, preferences=()):
+        with transaction.atomic():
+            object, created = GroupPreferences.objects.get_or_create(group=g)
+            if not created:
+                object.save()
+        for r in preferences:
+            GroupPrefToPair.create(object, r[0], r[1], r[2])
+        return object
+
+    def relate(self, key, value, weight):
+        GroupPrefToPair.create(self, key, value, weight)
+
+    def unrelate(self, key, value):
+        pair = KeyValuePair.objects.get(key=key, value=value)
+        relationship = GroupPrefToPair.objects.get(pair=pair, group_pref=self)
+        relationship.delete()
+
+    @staticmethod
+    def clear():
+        GroupPreferences.objects.all().delete()
+        GroupPrefToPair.objects.all().delete()
+

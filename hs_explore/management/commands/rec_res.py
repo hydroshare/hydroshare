@@ -21,7 +21,8 @@ import time
 from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
 from django.db.models import Q
 from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair
+    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
+    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair
 import re
 from hs_tracking.models import Variable
 from haystack.query import SearchQuerySet, SQ
@@ -34,37 +35,31 @@ class Command(BaseCommand):
         ind = BaseResourceIndex()
         rec_types = ['Ownership', 'Propensity']
         RecommendedResource.clear()
-        #RecommendedUser.clear()
+        RecommendedUser.clear()
         #RecommendedGroup.clear()
         #out = SearchQuerySet()
         start_time = time.time()
-        for up in UserPreferences.objects.filter(user__username='ChristinaBandaragoda'):
+        for rp in ResourcePreferences.objects.all():
             #for rec_type in rec_types:
-            target_username = up.user.username
+            target_username = rp.user.username
             print(target_username)
             target_user = user_from_id(target_username)
-            all_p = up.preferences.all()
-            ownership_preferences = UserPrefToPair.objects.filter(user_pref=up, pair__in=all_p, state='Seen', pref_type='Ownership')
-            propensity_preferences = UserPrefToPair.objects.filter(user_pref=up, pair__in=all_p, state='Seen', pref_type='Propensity')
-            #preferences = up.preferences.filter(pref_type=rec_type)
-            interacted_resources = up.interacted_resources.all()
-            #subjects = []
-            target_ownership_preferences_set = set()
-            target_propensity_preferences_set = set()
+            all_p = rp.preferences.all()
+            ownership_preferences = ResourcePrefToPair.objects.filter(res_pref=rp, pair__in=all_p, state='Seen', pref_type='Ownership')
+            propensity_preferences = ResourcePrefToPair.objects.filter(res_pref=rp, pair__in=all_p, state='Seen', pref_type='Propensity')
+            interacted_resources = rp.interacted_resources.all()
+            target_res_ownership_preferences_set = set()
+            target_res_propensity_preferences_set = set()
             target_own_interact_res = set()
             if (ownership_preferences.count() == 0 and propensity_preferences.count() == 0) or (interacted_resources.count() == 0):
                 continue
             for p in ownership_preferences:
                 if p.pair.key == 'subject':
-                    if target_username == 'ChristinaBandaragoda':
-                        print("Ownership: {}".format( p.pair.value))
-                    target_ownership_preferences_set.add(p.pair.value)
+                    target_res_ownership_preferences_set.add(p.pair.value)
             
             for p in propensity_preferences:
                 if p.pair.key == 'subject':
-                    if target_username == 'ChristinaBandaragoda':
-                        print("Propensity : {}".format(p.pair.value))
-                    target_propensity_preferences_set.add(p.pair.value)
+                    target_res_propensity_preferences_set.add(p.pair.value)
 
             for r in interacted_resources:
                 target_own_interact_res.add(r.short_id)
@@ -77,7 +72,7 @@ class Command(BaseCommand):
             
             ownership_filter_sq = None
             ownership_out = out
-            for tp in target_ownership_preferences_set:
+            for tp in target_res_ownership_preferences_set:
                 if ownership_filter_sq is None:
                     ownership_filter_sq = SQ(subject__exact=tp)
                 else:
@@ -91,7 +86,7 @@ class Command(BaseCommand):
 
             propensity_filter_sq = None
             propensity_out = out
-            for tp in target_propensity_preferences_set:
+            for tp in target_res_propensity_preferences_set:
                 if propensity_filter_sq is None:
                     propensity_filter_sq = SQ(subject__exact=tp)
                 else:
@@ -111,8 +106,8 @@ class Command(BaseCommand):
                 res_id = res.short_id
                 if len(subjects) == 0:
                     continue
-                intersection_cardinality = len(set.intersection(*[target_ownership_preferences_set, set(subjects)]))
-                union_cardinality = len(set.union(*[target_ownership_preferences_set, set(subjects)]))
+                intersection_cardinality = len(set.intersection(*[target_res_ownership_preferences_set, set(subjects)]))
+                union_cardinality = len(set.union(*[target_res_ownership_preferences_set, set(subjects)]))
                 js = intersection_cardinality/float(union_cardinality)
                 target_jaccard_sim[res_id] = js
 
@@ -124,45 +119,62 @@ class Command(BaseCommand):
                 res_id = res.short_id
                 if len(subjects) == 0:
                     continue
-                intersection_cardinality = len(set.intersection(*[target_propensity_preferences_set, set(subjects)]))
-                union_cardinality = len(set.union(*[target_propensity_preferences_set, set(subjects)]))
+                intersection_cardinality = len(set.intersection(*[target_res_propensity_preferences_set, set(subjects)]))
+                union_cardinality = len(set.union(*[target_res_propensity_preferences_set, set(subjects)]))
                 js = intersection_cardinality/float(union_cardinality)
                 if res_id not in target_jaccard_sim:
                     target_jaccard_sim[res_id] = js
                 else:
                     target_jaccard_sim[res_id] += js
 
-            if target_username == 'ChristinaBandaragoda':
-                print("------------ Jaccard similarity for Combination  ---------------")
-                for key, value in sorted(target_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
-                    candidate_resource = get_resource_by_shortkey(key)
-                    r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Combination', round(value, 4))
-                    recommended_subjects = ind.prepare_subject(candidate_resource)
-                    recommended_subjects = [sub.lower() for sub in recommended_subjects]
-                    common_subjects = set.union(set.intersection(target_ownership_preferences_set, set(recommended_subjects)),
-                                                set.intersection(target_propensity_preferences_set, set(recommended_subjects)))
-                    for cs in common_subjects:
-                        r1.relate('subject', cs, 1)
-                    print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
-            '''           
-            if up.neighbors.all().count() == 0:
-                continue 
+            #if target_username == 'ChristinaBandaragoda':
+            print("------------ Jaccard similarity for Combination  ---------------")
+            for key, value in sorted(target_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+                candidate_resource = get_resource_by_shortkey(key)
+                r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Combination', round(value, 4))
+                recommended_subjects = ind.prepare_subject(candidate_resource)
+                recommended_subjects = [sub.lower() for sub in recommended_subjects]
+                common_subjects = set.union(set.intersection(target_res_ownership_preferences_set, set(recommended_subjects)),
+                                            set.intersection(target_res_propensity_preferences_set, set(recommended_subjects)))
+                for cs in common_subjects:
+                    r1.relate('subject', cs, 1)
+                print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
+
             print("========== Making user recommendations =============")
             jaccard_users_sim = {}
+            try:
+                up = UserPreferences.objects.get(user=target_user)
+            except:
+                continue
+            if up.neighbors.count() == 0:
+                continue
+            all_up = up.preferences.all()
+            target_user_propensity_preferences = UserPrefToPair.objects.filter(user_pref=up, 
+                                                                               pair__in=all_up,
+                                                                               state='Seen',
+                                                                               pref_type='Propensity')
+            target_user_propensity_preferences_set = set()
+            for p in target_user_propensity_preferences:
+                if p.pair.key == 'subject':
+                    target_user_propensity_preferences_set.add(p.pair.value)
+
             for neighbor in up.neighbors.all():
                 try:
                     neighbor_up = UserPreferences.objects.get(user=neighbor)
                     neighbor_pref = neighbor_up.preferences.all()
+                    neighbor_propensity_preferences = UserPrefToPair.objects.filter(user_pref=neighbor_up,
+                                                                                    pair__in=neighbor_pref, 
+                                                                                    pref_type='Propensity')
                     neighbor_subjects = set()
-                    for p in neighbor_pref:
-                        if p.key == 'subject':
-                            neighbor_subjects.add(p.value)
+                    for p in neighbor_propensity_preferences:
+                        if p.pair.key == 'subject':
+                            neighbor_subjects.add(p.pair.value)
                    
                     if (len(neighbor_subjects) == 0):
                         continue
                      
-                    intersection_cardinality = len(set.intersection(*[target_preferences_set, neighbor_subjects]))
-                    union_cardinality = len(set.union(*[target_preferences_set, neighbor_subjects]))
+                    intersection_cardinality = len(set.intersection(*[target_user_propensity_preferences_set, neighbor_subjects]))
+                    union_cardinality = len(set.union(*[target_user_propensity_preferences_set, neighbor_subjects]))
                     js = intersection_cardinality/float(union_cardinality)
                     jaccard_users_sim[neighbor.username] = js
                 except:
@@ -173,17 +185,21 @@ class Command(BaseCommand):
                 r2 = RecommendedUser.recommend(target_user, candidate_user, round(value, 4))
                 neighbor_up = UserPreferences.objects.get(user__username=key)
                 neighbor_pref = neighbor_up.preferences.all()
+                neighbor_propensity_preferences = UserPrefToPair.objects.filter(user_pref=neighbor_up,
+                                                                                pair__in=neighbor_pref,
+                                                                                pref_type='Propensity')
                 neighbor_subjects = set()
-                for p in neighbor_pref:
-                    if p.key == 'subject':
-                        neighbor_subjects.add(p.value)
-                #recommended_subjects = ug_dict[key]
-                common_subjects = set.intersection(target_preferences_set, neighbor_subjects)
-
+                for p in neighbor_propensity_preferences:
+                    if p.pair.key == 'subject':
+                        neighbor_subjects.add(p.pair.value)
+                common_subjects = set.intersection(target_user_propensity_preferences_set, neighbor_subjects)
+                
                 for cs in common_subjects:
+                    if target_username == 'ChristinaBandaragoda':
+                        print("{} : {}".format(key, cs))
                     r2.relate('subject', cs, 1)
 
                 print("user {}:, {}".format(candidate_user.username, str(value)))
-            '''
+           
         elapsed_time = time.time() - start_time
         print("time for recommending resources: " + str(elapsed_time))
