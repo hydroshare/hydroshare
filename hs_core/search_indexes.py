@@ -430,7 +430,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
                     except ValueError:
-                        logger = logging.getLogger('django')
+                        logger = logging.getLogger(__name__)
                         logger.error("invalid start date {} in resource {}".format(obj.short_id,
                                                                                    start_date))
                         return None
@@ -457,7 +457,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
                     except ValueError:
-                        logger = logging.getLogger('django')
+                        logger = logging.getLogger(__name__)
                         logger.error("invalid end date {} in resource {}".format(end_date,
                                                                                  obj.short_id))
                         return None

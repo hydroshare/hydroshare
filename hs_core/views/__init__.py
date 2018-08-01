@@ -514,7 +514,7 @@ def file_download_url_mapper(request, shortkey):
     listing = istorage.listdir(irods_ls_path)
     if irods_split[-1] in listing[0]:
         # it's a folder
-        # TODO now zips/ mapping occurs in two seperate places. Make that one place. 
+        # TODO now zips/ mapping occurs in two separate places. Make that one place. 
         file_download_url = istorage.url(os.path.join('zips', irods_file_path))
         logger.debug("mapper redirect is {}".format(file_download_url)) 
         return HttpResponseRedirect(file_download_url)

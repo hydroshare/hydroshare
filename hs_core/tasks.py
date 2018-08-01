@@ -39,11 +39,15 @@ from theme.utils import get_quota_message
 logger = logging.getLogger('django')
 
 
+# TODO: Currently there are two different cleanups scheduled. 
+# TODO: One is 20 minutes after creation, the other is nightly. 
 @periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
+    # TODO: This only cleans up zipfiles in local storage. 
+    # TODO: User and federated storage accumulate zip directories that are not cleaned up.
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
