@@ -1183,6 +1183,13 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
+        # find if there is a parent fileset aggregation - files in this (self) aggregation
+        # need to be added to parent if exists
+        parent_fs_aggr = self.get_parent()
+
+        res_files = []
+        res_files.extend(self.files.all())
+
         # first need to set the aggregation for each of the associated resource files to None
         # so that deleting the aggregation (logical file) does not cascade to deleting of
         # resource files associated with the aggregation
@@ -1200,22 +1207,27 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
+        # make all the resource files of this (self) aggregation part of the parent aggregation
+        if parent_fs_aggr is not None:
+            for res_file in res_files:
+                parent_fs_aggr.add_resource_file(res_file)
+
     def get_parent(self):
-        """Find the parent aggregation of this aggregation """
+        """Find the parent fileset aggregation of this aggregation
+        :return a fileset aggregation if found, otherwise None
+        """
 
         aggr_path = self.aggregation_name
         if "/" in aggr_path:
             parent_aggr_path = os.path.dirname(aggr_path)
-            try:
-                return self.resource.get_aggregation_by_name(parent_aggr_path)
-            except ObjectDoesNotExist:
-                return None
+            return self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
 
         return None
 
     def get_children(self):
         """Returns a list of all aggregations that are directly under the folder that represents
         this (self) aggregation
+        :return a list of aggregations
 
         Note: Aggregation types that support nested aggregation must override this method
         """

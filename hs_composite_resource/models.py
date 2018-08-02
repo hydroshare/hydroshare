@@ -241,7 +241,6 @@ class CompositeResource(BaseResource):
 
         return None
 
-
     def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
         """
         When a folder or file representing an aggregation is renamed or moved,
