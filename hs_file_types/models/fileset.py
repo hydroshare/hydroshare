@@ -2,8 +2,8 @@ import os
 import logging
 
 from django.db import models
-from django.core.exceptions import ObjectDoesNotExist
 
+from hs_core.models import ResourceFile
 from base import AbstractLogicalFile
 from generic import GenericFileMetaDataMixin
 
@@ -89,35 +89,34 @@ class FileSetLogicalFile(AbstractLogicalFile):
         logical_file.create_aggregation_xml_documents()
         log.info("Fie set aggregation was created for file:{}.".format(res_file.storage_path))
 
+    def add_resource_files_in_folder(self, resource, folder):
+        """
+        A helper for creating aggregation. Makes all resource files in a given folder and its
+        sub folders as part of the aggregation/logical file type
+        :param  resource:  an instance of CompositeResource
+        :param  folder: folder from which all files need to be made part of this aggregation
+        """
+
+        # get all resource files that in folder *folder* and all its sub folders
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder, sub_folders=True)
+
+        for res_file in res_files:
+            if not res_file.has_logical_file:
+                self.add_resource_file(res_file)
+            elif res_file.logical_file.is_fileset and not \
+                    res_file.logical_file.aggregation_name.startswith(folder):
+                # resource file that is part of a fileset aggregation where the fileset aggregation
+                # is not a sub folder of *folder* needs to be made part of this new fileset
+                # aggregation
+                self.add_resource_file(res_file)
+
+        return res_files
+
     def get_children(self):
         child_aggregations = []
-        istorage = self.resource.get_irods_storage()
-        parent_aggr_rel_path = self.aggregation_name
-        parent_aggr_full_path = os.path.join(self.resource.file_path, parent_aggr_rel_path)
-        store = istorage.listdir(parent_aggr_full_path)
-        files_and_folders = store[0] + store[1]
-        for item in files_and_folders:
-            aggr_name = os.path.join(parent_aggr_rel_path, item)
-            try:
-                child_aggr = self.resource.get_aggregation_by_name(aggr_name)
-                child_aggregations.append(child_aggr)
-            except ObjectDoesNotExist:
-                pass
+        for aggr in self.resource.logical_files:
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None and parent_aggr == self:
+                child_aggregations.append(aggr)
 
         return child_aggregations
-
-    def remove_aggregation(self):
-        """If this a child fileset aggregation, then the files associated with this aggregation
-        need to be made part of the immediate parent fileset if such a fileset exists """
-
-        parent_fs_aggr = None
-        if '/' in self.aggregation_name:
-            path_to_search = os.path.dirname(self.aggregation_name)
-            parent_fs_aggr = self.resource.get_fileset_aggregation_in_path(path_to_search)
-
-        res_files = []
-        res_files.extend(self.files.all())
-        super(FileSetLogicalFile, self).remove_aggregation()
-        if parent_fs_aggr is not None:
-            for res_file in res_files:
-                parent_fs_aggr.add_resource_file(res_file)
