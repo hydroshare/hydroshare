@@ -8,7 +8,8 @@ from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
 from utils import CompositeResourceTestMixin
-from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile
+from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
+    GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile
 
 
 class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -27,13 +28,30 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.res_title = "Test Generic File Type"
         self.logical_file_type_name = "FileSetLogicalFile"
-
+        base_file_path = 'hs_file_types/tests/{}'
         self.generic_file_name = 'generic_file.txt'
+        self.generic_file = base_file_path.format(self.generic_file_name)
+
         self.json_file_name = 'multi_sites_formatted_version1.0.refts.json'
-        self.generic_file = 'hs_file_types/tests/{}'.format(self.generic_file_name)
-        self.json_file = 'hs_file_types/tests/{}'.format(self.json_file_name)
+        self.json_file = base_file_path.format(self.json_file_name)
+
         self.netcdf_file_name = 'netcdf_valid.nc'
-        self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
+        self.netcdf_file = base_file_path.format(self.netcdf_file_name)
+
+        base_data_file_path = 'hs_file_types/tests/data/{}'
+        self.raster_file_name = 'small_logan.tif'
+        self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
+        self.sqlite_file_name = 'ODM2_Multi_Site_one_variable.sqlite'
+        self.sqlite_file = base_data_file_path.format(self.sqlite_file_name)
+
+        self.states_prj_file_name = 'states.prj'
+        self.states_prj_file = base_data_file_path.format(self.states_prj_file_name)
+        self.states_shp_file_name = 'states.shp'
+        self.states_shp_file = base_data_file_path.format(self.states_shp_file_name)
+        self.states_dbf_file_name = 'states.dbf'
+        self.states_dbf_file = base_data_file_path.format(self.states_dbf_file_name)
+        self.states_shx_file_name = 'states.shx'
+        self.states_shx_file = base_data_file_path.format(self.states_shx_file_name)
 
     def test_create_aggregation_1(self):
         """Test that we can create a fileset aggregation from a folder that contains one file """
@@ -516,9 +534,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
         # there should be three resource files
         self.assertEqual(self.composite_resource.files.all().count(), 3)
+        # the json file added to the sub folder should be part of the fileset aggregation
         json_res_file = ResourceFile.get(resource=self.composite_resource,
                                          file=self.json_file_name, folder=agg_sub_folder)
-        # the json file added to the sub folder should be part of the fileset aggregation
         self.assertEqual(json_res_file.has_logical_file, True)
         self.assertEqual(json_res_file.file_folder, agg_sub_folder)
         # There should be one fileset aggregation associated with all three resource files
@@ -532,64 +550,135 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """Test that when a netcdf file is uploaded to a folder that represents a fileset,
         a netcdf aggregation is created automatically"""
 
-        self.create_composite_resource()
-        new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
-        # there should be one resource file
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-        # check that the resource file is not part of an aggregation
-        self.assertEqual(res_file.has_logical_file, False)
-        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
-        # set folder to fileset logical file type (aggregation)
-        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
-        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
-        self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 1)
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
 
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # upload a netcdf file to the new_folder - folder that represents the above fileset
         # aggregation
-        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
-        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=new_folder)
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
         # there should be three resource file - one generated by netcdf aggregation
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
-        nc_aggr_path = os.path.join(new_folder, self.netcdf_file_name[:-3])
+        # the netcdf file added to the fileset folder should be part of a new netcdf aggregation
+        nc_aggr_path = os.path.join(fs_aggr_path, self.netcdf_file_name[:-3])
         nc_res_file = ResourceFile.get(resource=self.composite_resource,
                                        file=self.netcdf_file_name, folder=nc_aggr_path)
-        # the netcdf file added to the fileset folder should be part of a new netcdf aggregation
         self.assertEqual(nc_res_file.has_logical_file, True)
+        # the netcdf aggregation should contain 2 files - nc and the txt files
         self.assertEqual(NetCDFLogicalFile.objects.first().files.count(), 2)
 
         self.composite_resource.delete()
 
     def test_auto_raster_aggregation_creation(self):
-        """Test that when a raster file is uploaded to a folder that represents a fileset,
+        """Test that when a raster file (.tif) is uploaded to a folder that represents a fileset,
         a raster aggregation is created automatically"""
-        # TODO: implement this test
-        pass
+
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        # there should be three resource file - one generated by raster aggregation
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        # the tif file added to the fileset folder should be part of a new raster aggregation
+        raster_aggr_path = os.path.join(fs_aggr_path, self.raster_file_name[:-4])
+        raster_res_file = ResourceFile.get(resource=self.composite_resource,
+                                           file=self.raster_file_name, folder=raster_aggr_path)
+        self.assertEqual(raster_res_file.has_logical_file, True)
+        # the raster aggregation should contain 2 files (tif and vrt)
+        self.assertEqual(GeoRasterLogicalFile.objects.first().files.count(), 2)
+
+        self.composite_resource.delete()
 
     def test_auto_geofeature_aggregation_creation(self):
         """Test that when files that represents a geofeature are uploaded to a folder that
         represents a fileset, a geofeature aggregation is created automatically"""
-        # TODO: implement this test
-        pass
+
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        # upload all 4 geo feature files the new_folder - folder that represents the above fileset
+        # aggregation
+        geo_feature_files = [self.states_shp_file, self.states_shx_file, self.states_dbf_file,
+                             self.states_prj_file]
+        self.add_files_to_resource(files_to_add=geo_feature_files, upload_folder=fs_aggr_path)
+        # there should be 5 resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 5)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        # the shp file added to the fileset folder should be part of a new geofeature
+        # aggregation
+        gf_aggr_path = os.path.join(fs_aggr_path, self.states_shp_file_name[:-4])
+        shp_res_file = ResourceFile.get(resource=self.composite_resource,
+                                        file=self.states_shp_file_name, folder=gf_aggr_path)
+        self.assertEqual(shp_res_file.has_logical_file, True)
+
+        # the geofeature aggregation should contain five files
+        self.assertEqual(GeoFeatureLogicalFile.objects.first().files.count(), 4)
+
+        self.composite_resource.delete()
 
     def test_auto_timeseries_aggregation_creation(self):
         """Test that when a sqlite file is uploaded to a folder that represents a fileset,
         a timeseries aggregation is created automatically"""
-        # TODO: implement this test
-        pass
+
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
+        # upload a sqlite file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.sqlite_file], upload_folder=fs_aggr_path)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
+        # the sqlite file added to the fileset folder should be part of a new timeseries aggregation
+        ts_aggr_path = os.path.join(fs_aggr_path, self.sqlite_file_name[:-7])
+        sqlite_res_file = ResourceFile.get(resource=self.composite_resource,
+                                           file=self.sqlite_file_name, folder=ts_aggr_path)
+        self.assertEqual(sqlite_res_file.has_logical_file, True)
+        # the timeseries aggregation should contain one file
+        self.assertEqual(TimeSeriesLogicalFile.objects.first().files.count(), 1)
+
+        self.composite_resource.delete()
 
     def test_auto_reftimeseries_aggregation_creation(self):
         """Test that when a ref tiemseries json file is uploaded to a folder that represents a
         fileset, a ref timeseries aggregation is created automatically"""
-        # TODO: implement this test
-        pass
+
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
+        # upload a ts json file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.json_file], upload_folder=fs_aggr_path)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        # the json file added to the fileset folder should be part of a new ref timeseries
+        # aggregation
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=fs_aggr_path)
+        self.assertEqual(json_res_file.has_logical_file, True)
+        # the ref timeseries aggregation should contain one file
+        self.assertEqual(RefTimeseriesLogicalFile.objects.first().files.count(), 1)
+
+        self.composite_resource.delete()
 
     def test_remove_child_aggregation(self):
         """Test that when we remove a child fileset aggregation the files that are part of the
         child aggregation become part of the immediate parent fileset aggregation"""
         # TODO: implement this test
         pass
+
+    def _create_fileset_aggregation(self):
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+
