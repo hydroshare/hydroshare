@@ -124,61 +124,11 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_create_aggregation_3(self):
+    def test_create_aggregation_4(self):
         """Test that we can create a fileset aggregation inside another fileset aggregation - nested
         fileset aggregations"""
 
-        self.create_composite_resource()
-        parent_fs_folder = 'parent_fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
-        # add the the txt file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
-        # there should be one resource file
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-        # check that the resource file is not part of an aggregation
-        self.assertEqual(res_file.has_logical_file, False)
-        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
-        # set folder to fileset logical file type (aggregation)
-        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
-                                         folder_path=parent_fs_folder)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
-        # There should be one fileset aggregation associated with one resource file
-        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
-        fs_aggregation = FileSetLogicalFile.objects.first()
-        self.assertEqual(fs_aggregation.files.count(), 1)
-
-        # create a folder inside fileset folder - new_folder
-        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
-        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
-        # add the the json file to the resource at the above sub folder
-        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
-        # there should be two resource files
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
-
-        # set child folder to fileset logical file type (aggregation)
-        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
-                                         folder_path=child_fs_folder)
-        # There should be two fileset aggregations
-        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
-        json_res_file = ResourceFile.get(resource=self.composite_resource,
-                                         file=self.json_file_name, folder=child_fs_folder)
-        # the json file in the child folder should be part of a new fileset aggregation
-        self.assertEqual(json_res_file.has_logical_file, True)
-        self.assertEqual(json_res_file.file_folder, child_fs_folder)
-        child_fs_aggr = json_res_file.logical_file
-        self.assertEqual(child_fs_aggr.files.count(), 1)
-        self.assertEqual(child_fs_aggr.files.first().file_name, self.json_file_name)
-
-        txt_res_file = ResourceFile.get(resource=self.composite_resource,
-                                        file=self.generic_file_name, folder=parent_fs_folder)
-        # the txt file in the parent folder should be part of a different fileset aggregation
-        self.assertEqual(txt_res_file.has_logical_file, True)
-        self.assertEqual(txt_res_file.file_folder, parent_fs_folder)
-        parent_fs_aggr = txt_res_file.logical_file
-        self.assertEqual(parent_fs_aggr.files.count(), 1)
-        self.assertEqual(parent_fs_aggr.files.first().file_name, self.generic_file_name)
+        self._create_nested_fileset_aggregations()
 
         self.composite_resource.delete()
 
@@ -485,6 +435,39 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_delete_file_in_aggregation_3(self):
+        """Test that when we delete the only file of a fileset aggregation the aggregation
+        doesn't get deleted if the fileset contains at least one more aggregation"""
+
+        self._create_fileset_aggregation()
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        txt_res_file = self.composite_resource.files.first()
+        # there should be one fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # fileset aggregation should have only one file
+        self.assertEqual(fs_aggr.files.count(), 1)
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        # there should be three resource file - one generated by raster aggregation
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        # delete the only res file that is part of the filset aggregation
+        hydroshare.delete_resource_file(self.composite_resource.short_id, txt_res_file.id,
+                                        self.user)
+        # there should be 2 resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # fileset aggregation should have no file
+        self.assertEqual(fs_aggr.files.count(), 0)
+        # fileset aggregation should still be there
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+
+        self.composite_resource.delete()
+
     def test_create_folder_in_fileset(self):
         """Test that folders can be created inside a folder that represents a fileset
         aggregation and file added to the sub folder is going to be part of the fileset
@@ -666,11 +649,131 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_remove_child_aggregation(self):
+    def test_remove_aggregation(self):
+        """Test that we can remove fileset aggregation that lives at the root"""
+
+        # no fileset aggregation at this point
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        # create a filset aggregation at the the root
+        self._create_fileset_aggregation()
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # There should be now one fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertTrue(res_file.has_logical_file)
+        # remove fileset aggregation
+        fs_aggr.remove_aggregation()
+        # There should be no fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        res_file = self.composite_resource.files.first()
+        self.assertFalse(res_file.has_logical_file)
+
+        self.composite_resource.delete()
+
+    def test_remove_child_fs_aggregation(self):
         """Test that when we remove a child fileset aggregation the files that are part of the
         child aggregation become part of the immediate parent fileset aggregation"""
-        # TODO: implement this test
-        pass
+
+        self._create_nested_fileset_aggregations()
+
+        # remove the nested fileset aggregation
+        parent_fs_folder = 'parent_fileset_folder'
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=child_fs_folder)
+        child_fs_aggr = json_res_file.logical_file
+        child_fs_aggr.remove_aggregation()
+        # There should be now one fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        parent_fs_aggr = FileSetLogicalFile.objects.first()
+        # parent fs aggregation should have 2 resource files now
+        self.assertEqual(parent_fs_aggr.files.count(), 2)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=child_fs_folder)
+        txt_res_file = ResourceFile.get(resource=self.composite_resource,
+                                        file=self.generic_file_name, folder=parent_fs_folder)
+        self.assertEqual(json_res_file.logical_file, txt_res_file.logical_file)
+
+        self.composite_resource.delete()
+
+    def test_remove_child_aggregation(self):
+        """Test that when we remove any child aggregation (e.g., raster aggregation) of a fileset
+        aggregation (parent aggregation), the files that are part of the child aggregation
+        become part of the parent fileset aggregation"""
+
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # there should be one resource file that is part of the fileset aggregation
+        self.assertEqual(fs_aggr.files.count(), 1)
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        # there should be three resource file - one generated by raster aggregation
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        # the tif file added to the fileset folder should be part of a new raster aggregation
+        raster_aggr_path = os.path.join(fs_aggr_path, self.raster_file_name[:-4])
+        raster_res_file = ResourceFile.get(resource=self.composite_resource,
+                                           file=self.raster_file_name, folder=raster_aggr_path)
+        self.assertEqual(raster_res_file.has_logical_file, True)
+        # the raster aggregation should contain 2 files (tif and vrt)
+        self.assertEqual(GeoRasterLogicalFile.objects.first().files.count(), 2)
+        raster_aggr = raster_res_file.logical_file
+        # remove raster aggregation and test that the raster files are now part of the fileset
+        # aggregation
+        raster_aggr.remove_aggregation()
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # there should be now three resource file that are part of the fileset aggregation
+        self.assertEqual(fs_aggr.files.count(), 3)
+
+        self.composite_resource.delete()
+
+    def test_remove_grand_child_aggregation(self):
+        """Test that when we remove any child aggregation (e.g., raster aggregation) of a fileset
+        aggregation (parent aggregation), the files that are part of the child aggregation
+        become part of the immediate parent fileset aggregation"""
+
+        # create nested fileset aggregations
+        self._create_nested_fileset_aggregations()
+        parent_fs_folder = 'parent_fileset_folder'
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        # there should be two resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        # each of the fileset aggregation should have one resource file
+        parent_fs_aggr = self.composite_resource.get_aggregation_by_name(parent_fs_folder)
+        self.assertEqual(parent_fs_aggr.files.count(), 1)
+        child_fs_aggr = self.composite_resource.get_aggregation_by_name(child_fs_folder)
+        self.assertEqual(child_fs_aggr.files.count(), 1)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the child_fs_folder - folder that represents the child fileset
+        # aggregation - which should auto generate the raster aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=child_fs_folder)
+        # there should be four resource file - one generated by raster aggregation
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        # the tif file added to the fileset folder should be part of a new raster aggregation
+        raster_aggr_path = os.path.join(child_fs_folder, self.raster_file_name[:-4])
+        raster_res_file = ResourceFile.get(resource=self.composite_resource,
+                                           file=self.raster_file_name, folder=raster_aggr_path)
+        self.assertEqual(raster_res_file.has_logical_file, True)
+        raster_aggr = raster_res_file.logical_file
+        # remove raster aggregation - this should make the two raster files part of the child
+        # fileset aggregation
+        raster_aggr.remove_aggregation()
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # child fileset aggregation should have three resource files
+        self.assertEqual(child_fs_aggr.files.count(), 3)
+        # parent fileset aggregation - no change
+        self.assertEqual(parent_fs_aggr.files.count(), 1)
+
+        self.composite_resource.delete()
 
     def _create_fileset_aggregation(self):
         self.create_composite_resource()
@@ -682,3 +785,55 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # set folder to fileset logical file type (aggregation)
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
 
+    def _create_nested_fileset_aggregations(self):
+        self.create_composite_resource()
+        parent_fs_folder = 'parent_fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check that the resource file is not part of an aggregation
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=parent_fs_folder)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
+        # There should be one fileset aggregation associated with one resource file
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggregation = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggregation.files.count(), 1)
+
+        # create a folder inside fileset folder - new_folder
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # set child folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=child_fs_folder)
+        # There should be two fileset aggregations
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        json_res_file = ResourceFile.get(resource=self.composite_resource,
+                                         file=self.json_file_name, folder=child_fs_folder)
+        # the json file in the child folder should be part of a new fileset aggregation
+        self.assertEqual(json_res_file.has_logical_file, True)
+        self.assertEqual(json_res_file.file_folder, child_fs_folder)
+        child_fs_aggr = json_res_file.logical_file
+        self.assertEqual(child_fs_aggr.files.count(), 1)
+        self.assertEqual(child_fs_aggr.files.first().file_name, self.json_file_name)
+
+        txt_res_file = ResourceFile.get(resource=self.composite_resource,
+                                        file=self.generic_file_name, folder=parent_fs_folder)
+        # the txt file in the parent folder should be part of a different fileset aggregation
+        self.assertEqual(txt_res_file.has_logical_file, True)
+        self.assertEqual(txt_res_file.file_folder, parent_fs_folder)
+        parent_fs_aggr = txt_res_file.logical_file
+        self.assertEqual(parent_fs_aggr.files.count(), 1)
+        self.assertEqual(parent_fs_aggr.files.first().file_name, self.generic_file_name)
