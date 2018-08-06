@@ -1,4 +1,4 @@
-FROM django-1.11:latest
+FROM hydroshare/hs_docker_base:django-1.11
 MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
