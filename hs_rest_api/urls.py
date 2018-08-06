@@ -10,9 +10,33 @@ from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
 schema_view = get_swagger_view(title='Hydroshare API')
 
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+schema_view_yasg = get_schema_view(
+   openapi.Info(
+      title="Snippets API",
+      default_version='v1',
+      description="Test description",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   validators=[],
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
 urlpatterns = [
     # Swagger Docs View
     url(r'^$', schema_view),
+
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view_yasg.without_ui(cache_timeout=None),
+        name='schema-json'),
+    url(r'^swagger/$', schema_view_yasg.with_ui('swagger', cache_timeout=None),
+        name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view_yasg.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
 
     # resource API
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),

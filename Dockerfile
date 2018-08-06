@@ -5,6 +5,9 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 RUN pip install --upgrade pip
 RUN pip install \
   robot_detection \
+  drf-yasg \
+  flex \
+  swagger_spec_validator \
   django-ipware \
   django-autocomplete-light==2.3.3 \
   django-test-without-migrations \
