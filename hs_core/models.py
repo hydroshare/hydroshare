@@ -2322,6 +2322,30 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return 'federated'
 
+    def is_folder(self, folder_path):
+        """Determine whether a given path (relative to resource root, including /data/contents/)
+           is a folder or not. Returns False if the path does not exist.
+        """
+        path_split = os.path.split(folder_path)
+        dir_path = '/'.join(path_split[0:-1])
+        logger = logging.getLogger(__name__)
+        logger.debug("dir_path is {}".format(dir_path))
+        logger.debug("root_path is {}".format(self.root_path))
+
+        # handles federation
+        irods_path = os.path.join(self.root_path, dir_path)
+        istorage = self.get_irods_storage()
+        # logger.debug("is_folder: irods path is {}".format(irods_path))
+        try:
+            listing = istorage.listdir(irods_path)
+        except SessionException:
+            # logger.debug("path {} does not exist in irods".format(irods_path))
+            return False
+        if path_split[-1] in listing[0]:
+            return True
+        else:
+            return False
+
     class Meta:
         """Define meta properties for AbstractResource class."""
 

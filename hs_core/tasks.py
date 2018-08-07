@@ -39,14 +39,14 @@ from theme.utils import get_quota_message
 logger = logging.getLogger('django')
 
 
-# TODO: Currently there are two different cleanups scheduled. 
-# TODO: One is 20 minutes after creation, the other is nightly. 
+# TODO: Currently there are two different cleanups scheduled.
+# TODO: One is 20 minutes after creation, the other is nightly.
 @periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
-    # TODO: This only cleans up zipfiles in local storage. 
+    # TODO: This only cleans up zipfiles in local storage.
     # TODO: User and federated storage accumulate zip directories that are not cleaned up.
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
@@ -302,24 +302,30 @@ def delete_zip(zip_path):
 
 @shared_task
 def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
+    """ Create temporary zip file from input_path and store in output_path
+    :param input_path: full irods path of input starting with federation path
+    :param output_path: full irods path of output starting with federation path
+    :param sf_aggregation: if True, include logical metadata files
+    """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
-    if sf_aggregation:
-        pass
     res = get_resource_by_shortkey(resource_id)
-    full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
-    istorage = IrodsStorage()
+    istorage = res.get_irods_storage()  # invoke federated storage if necessary
 
     try:
         if sf_aggregation:
-            name, ext = os.path.splitext(output_path)
-            head, tail = os.path.split(name)
-            out_with_folder = os.path.join(name, tail)
-            istorage.copyFiles(full_input_path, out_with_folder)
-            istorage.copyFiles(full_input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
-            istorage.copyFiles(full_input_path + '_meta.xml', out_with_folder + '_meta.xml')
-            istorage.zipup(name, output_path)
-        else:
-            istorage.zipup(full_input_path, output_path)
+            # input path points to single file
+            # ensure that foo.zip contains foo, foo/file1, foo/file2, foo/file3
+            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+            temp_folder_name, ext = os.path.splitext(output_path)  # strip .zip to get scratch dir
+            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+            istorage.copyFiles(input_path, out_with_folder)
+            istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+            istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+            istorage.zipup(temp_folder_name, output_path)
+            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+        else:  # regular folder to zip
+            istorage.zipup(input_path, output_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return False
