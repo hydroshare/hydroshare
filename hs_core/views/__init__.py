@@ -502,13 +502,13 @@ def file_download_url_mapper(request, shortkey):
     except exception: 
         logger.debug("authorize failed")
     istorage = res.get_irods_storage()
-    logger.debug("got request path {}".format(request.path))
+    logger.debug("request path is {}".format(request.path))
     if request.path.startswith('/resource/'): 
         path_split = request.path.split('/')[2:]  # strip /resource/
     elif request.path.startswith('/zips/') or request.path.startswith('/bags/'): 
         path_split = request.path.split('/')[1:]  # strip leading /
     public_file_path = '/'.join(path_split)
-    logger.debug("public_file_path is {}".format(public_file_path))
+    # logger.debug("public_file_path is {}".format(public_file_path))
     file_download_url = istorage.url(public_file_path)
     logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)
