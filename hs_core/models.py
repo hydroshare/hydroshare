@@ -2326,22 +2326,28 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Determine whether a given path (relative to resource root, including /data/contents/)
            is a folder or not. Returns False if the path does not exist.
         """
-        path_split = os.path.split(folder_path)
-        dir_path = '/'.join(path_split[0:-1])
         logger = logging.getLogger(__name__)
+        logger.debug("folder_path is {}".format(folder_path))
+        path_split = folder_path.split('/')
+        while path_split[-1] == '': 
+            path_split.pop()
+        logger.debug("path_split is {}".format(path_split))
+        logger.debug("path_split[0:-1] is {}".format(path_split[0:-1]))
+        dir_path = u'/'.join(path_split[0:-1])
         logger.debug("dir_path is {}".format(dir_path))
-        logger.debug("root_path is {}".format(self.root_path))
 
         # handles federation
         irods_path = os.path.join(self.root_path, dir_path)
+        logger.debug("irods_path is {}".format(irods_path))
         istorage = self.get_irods_storage()
-        # logger.debug("is_folder: irods path is {}".format(irods_path))
         try:
             listing = istorage.listdir(irods_path)
+            logger.debug("listing is {}".format(listing))
         except SessionException:
-            # logger.debug("path {} does not exist in irods".format(irods_path))
+            logger.debug("exception during listing")
             return False
-        if path_split[-1] in listing[0]:
+        logger.debug("path_split[-1] = {}".format(path_split[-1]))
+        if path_split[-1] in listing[0]:  # folders
             return True
         else:
             return False
@@ -2909,17 +2915,27 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def size(self):
-        """Retturn file size for federated or non-federated files."""
+        """Return file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
-            return self.fed_resource_file.size
+            try:
+                return self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
-            return self.resource_file.size
+            try:
+                return self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
 
     # TODO: write unit test
     @property

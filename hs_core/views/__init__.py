@@ -496,17 +496,21 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
-    # resource, _, _ = authorize(request, shortkey,
-    #                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    # istorage = resource.get_irods_storage()
-    # logger.debug("mapper got request path {}".format(request.path))
-    path_split = request.path.split('/')[1:-1]  # strip resource/
-    public_file_path = '/'.join(irods_split)
-    # logger.debug("mapper irods_file_path is {}".format(irods_file_path))
-    # file_download_url = istorage.url(irods_file_path)
+    try: 
+        res, _, _ = authorize(request, shortkey,
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    except exception: 
+        logger.debug("authorize failed")
+    istorage = res.get_irods_storage()
+    logger.debug("got request path {}".format(request.path))
+    if request.path.startswith('/resource/'): 
+        path_split = request.path.split('/')[2:]  # strip /resource/
+    elif request.path.startswith('/zips/') or request.path.startswith('/bags/'): 
+        path_split = request.path.split('/')[1:]  # strip leading /
+    public_file_path = '/'.join(path_split)
     logger.debug("public_file_path is {}".format(public_file_path))
     file_download_url = istorage.url(public_file_path)
-    logger.debug("mapper redirect is {}".format(file_download_url))
+    logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)
 
 
