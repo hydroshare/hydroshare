@@ -15,6 +15,7 @@ RUN pip install \
   jsonschema \
   nameparser \
   probablepeople \
+  requests==2.13.0 \
   geopy
 
 RUN pip uninstall -y django-inplaceedit

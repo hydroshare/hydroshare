@@ -99,11 +99,18 @@ maint_off_hs() {
 
 solr_schema_hs() {
     echo "SOLR SCHEMA:"
+    echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
+    docker exec solr bin/solr create -c collection1 -d basic_configs
     echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
     docker exec hydroshare python manage.py build_solr_schema -f schema.xml
     sleep 1s
     echo "  - docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
-    docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
+    docker exec solr cp /hydroshare/schema.xml /opt/solr/server/solr/collection1/conf/schema.xml
+    echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
+    docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
+    echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
+    docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
+
 }
 
 delete_celerybeat_scheduler() {

@@ -153,6 +153,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(Q(raccess__discoverable=True) |
                                                Q(raccess__public=True))
 
+    def prepare_created(self, obj):
+        return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def prepare_modified(self, obj):
+        return obj.updated.strftime('%Y-%m-%dT%H:%M:%SZ')
+
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
