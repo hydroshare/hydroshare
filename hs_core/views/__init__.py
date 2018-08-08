@@ -24,6 +24,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
@@ -498,17 +499,19 @@ def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
     try: 
         res, _, _ = authorize(request, shortkey,
-                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    except exception: 
-        logger.debug("authorize failed")
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, 
+                              raises_exception=False)
+    except ObjectDoesNotExist: 
+        return HTTPResponse("resource not found", status=status.404_NOT_FOUND) 
+    except PermissionDenied: 
+        return HTTPResponse("access not authorized", status=status.401_UNAUTHORIZED) 
+
     istorage = res.get_irods_storage()
     logger.debug("request path is {}".format(request.path))
-    if request.path.startswith('/resource/'): 
-        path_split = request.path.split('/')[2:]  # strip /resource/
-    elif request.path.startswith('/zips/') or request.path.startswith('/bags/'): 
-        path_split = request.path.split('/')[1:]  # strip leading /
+    path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
     # logger.debug("public_file_path is {}".format(public_file_path))
+    istorage = res.get_irods_storage()
     file_download_url = istorage.url(public_file_path)
     logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)
