@@ -68,8 +68,6 @@ def data_store_structure(request):
 
     istorage = resource.get_irods_storage()
     directory_in_irods = resource.get_irods_path(store_path)
-    # directory_in_irods = os.path.join(resource.root_path, store_path)
-    logger.debug("directory in irods = {}".format(directory_in_irods))
 
     try:
         store = istorage.listdir(directory_in_irods)
@@ -83,7 +81,6 @@ def data_store_structure(request):
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
-        logger.debug("d_url is {}".format(d_url))
         main_file = ''
         folder_aggregation_type = ''
         folder_aggregation_name = ''
@@ -142,7 +139,6 @@ def data_store_structure(request):
                 break
 
         if f_pk:  # file is found in Django
-            logger.debug("file url is {}".format(f_url))
             files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
                           'aggregation_name': aggregation_name,
                           'logical_type': logical_file_type,
