@@ -61,8 +61,7 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 
 from hs_collection_resource.models import CollectionDeletedResource
 
-logger = logging.getLogger('hydroshare')
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def short_url(request, *args, **kwargs):
