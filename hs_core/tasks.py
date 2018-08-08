@@ -328,13 +328,13 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
             head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
             out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
             istorage.copyFiles(input_path, out_with_folder)
-            try: 
+            try:
                 istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
-            except SessionException: 
+            except SessionException:
                 logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
-            try: 
+            try:
                 istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
-            except SessionException: 
+            except SessionException:
                 logger.error("cannot copy {}".format(input_path + '_meta.xml'))
 
             istorage.zipup(temp_folder_name, output_path)

@@ -2326,27 +2326,27 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Determine whether a given path (relative to resource root, including /data/contents/)
            is a folder or not. Returns False if the path does not exist.
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("folder_path is {}".format(folder_path))
+        # logger = logging.getLogger(__name__)
+        # logger.debug("folder_path is {}".format(folder_path))
         path_split = folder_path.split('/')
-        while path_split[-1] == '': 
+        while path_split[-1] == '':
             path_split.pop()
-        logger.debug("path_split is {}".format(path_split))
-        logger.debug("path_split[0:-1] is {}".format(path_split[0:-1]))
+        # logger.debug("path_split is {}".format(path_split))
+        # logger.debug("path_split[0:-1] is {}".format(path_split[0:-1]))
         dir_path = u'/'.join(path_split[0:-1])
-        logger.debug("dir_path is {}".format(dir_path))
+        # logger.debug("dir_path is {}".format(dir_path))
 
         # handles federation
         irods_path = os.path.join(self.root_path, dir_path)
-        logger.debug("irods_path is {}".format(irods_path))
+        # logger.debug("irods_path is {}".format(irods_path))
         istorage = self.get_irods_storage()
         try:
             listing = istorage.listdir(irods_path)
-            logger.debug("listing is {}".format(listing))
+            # logger.debug("listing is {}".format(listing))
         except SessionException:
-            logger.debug("exception during listing")
+            # logger.debug("exception during listing")
             return False
-        logger.debug("path_split[-1] = {}".format(path_split[-1]))
+        # logger.debug("path_split[-1] = {}".format(path_split[-1]))
         if path_split[-1] in listing[0]:  # folders
             return True
         else:

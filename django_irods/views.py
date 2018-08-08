@@ -62,7 +62,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
-    while split_path_strs[-1] == '':   
+    while split_path_strs[-1] == '':
         split_path_strs.pop()
     path = u'/'.join(split_path_strs)  # no trailing slash
 
@@ -150,9 +150,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                                 is_sf_agg_file = True
                             break
                 if not is_sf_agg_file:
-                    logger.debug("zipping file {} to {}".format(root, output_path)) 
+                    logger.debug("zipping file {} to {}".format(root, output_path))
                     is_zip_request = True
-                else: 
+                else:
                     logger.debug("zipping single-file-aggregate {} to {}".format(root, output_path))
 
                 # At this point, either is_zip_request or is_sf_agg_file is True.
