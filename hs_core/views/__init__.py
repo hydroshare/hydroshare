@@ -502,9 +502,9 @@ def file_download_url_mapper(request, shortkey):
                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, 
                               raises_exception=False)
     except ObjectDoesNotExist: 
-        return HTTPResponse("resource not found", status=status.404_NOT_FOUND) 
+        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND) 
     except PermissionDenied: 
-        return HTTPResponse("access not authorized", status=status.401_UNAUTHORIZED) 
+        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED) 
 
     istorage = res.get_irods_storage()
     logger.debug("request path is {}".format(request.path))

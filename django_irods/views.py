@@ -332,6 +332,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
         if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):
+            metadata_dirty = res.getAVU("metadata_dirty") 
             if metadata_dirty is None or metadata_dirty:
                 create_bag_files(res)  # sets metadata_dirty to False
 
