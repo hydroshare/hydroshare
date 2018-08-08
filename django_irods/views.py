@@ -335,6 +335,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible
         download_file_name = split_path_strs[-1]  # end of path
+        # this logs the download request in the tracking system
         pre_download_file.send(sender=resource_cls, resource=res,
                                download_file_name=download_file_name,
                                request=request)
