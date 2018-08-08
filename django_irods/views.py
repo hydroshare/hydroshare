@@ -75,16 +75,13 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if split_path_strs[0] == 'bags':
         is_bag_download = True
         # format is bags/{rid}.zip
-        # logger.debug("fetching rid from bags field 1 = {}".format(split_path_strs[1]))
         res_id = os.path.splitext(split_path_strs[1])[0]
     elif split_path_strs[0] == 'zips':
         is_zip_download = True
         # zips prefix means that we are following up on an asynchronous download request
         # format is zips/{date}/{zip-uuid}/{public-path}.zip where {public-path} contains the rid
-        # logger.debug("fetching rid from zips field 3 = {}".format(split_path_strs[3]))
         res_id = split_path_strs[3]
     else:  # regular download request
-        # logger.debug("fetching rid from public path field 0 = {}".format(split_path_strs[0]))
         res_id = split_path_strs[0]
 
     logger.debug("resource id is {}".format(res_id))
@@ -141,7 +138,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
-                # logger.debug("zipping file {} to {}".format(root, output_path))
 
                 if "data/contents/" in path:  # not a metadata file
                     for f in ResourceFile.objects.filter(object_id=res.id):
