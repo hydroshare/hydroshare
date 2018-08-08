@@ -248,18 +248,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                                    countdown=(20 * 60))  # delete after 20 minutes
 
             if rest_call:
-                return HttpResponse(json.dumps({'zip_status': 'Not ready',
-                                                'task_id': task.task_id,
-                                                'download_path': '/' + output_path}),
-                                    content_type="application/json")
-            request.session['task_id'] = task.task_id
-
-            # TODO: this is mistaken for a bag download in the UI!
-            # TODO: multiple asynchronous downloads don't stack!
-            request.session['download_path'] = '/' + output_path  # path once async is done
-            logger.debug("download_path is {}".format(request.session['download_path']))
-
-            return HttpResponseRedirect(res.get_absolute_url())
+                return HttpResponse(
+                    json.dumps({
+                        'zip_status': 'Not ready',
+                        'task_id': task.task_id,
+                        'download_path': '/django_irods/rest_download/' + output_path}),
+                    content_type="application/json")
+            else:
+                # return status to the UI
+                request.session['task_id'] = task.task_id
+                # TODO: this is mistaken for a bag download in the UI!
+                # TODO: multiple asynchronous downloads don't stack!
+                request.session['download_path'] = '/django_irods/download/' + output_path
+                # redirect to resource landing page, which interprets session variables.
+                return HttpResponseRedirect(res.get_absolute_url())
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
@@ -276,9 +278,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     response.content = "<h1>" + content_msg + "</h1>"
                 return response
             # At this point, output_path presumably exists and contains a zipfile
+            # to be streamed below
 
     elif is_bag_download:
-        # Shorten request if it contains extra junk
+        # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
         if not res.is_federated:
@@ -342,7 +345,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # If we get this far,
     # * path and irods_path point to true input
     # * output_path and irods_output_path point to true output.
-    # Try to return the file
+    # Try to stream the file back to the requester.
 
     # obtain mime_type to set content_type
     mtype = 'application-x/octet-stream'
@@ -350,6 +353,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if mime_type[0] is not None:
         mtype = mime_type[0]
     # retrieve file size to set up Content-Length header
+    # TODO: standardize this to make it less brittle
     stdout = session.run("ils", None, "-l", irods_output_path)[0].split()
     flen = int(stdout[3])
 
@@ -419,7 +423,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # OR the user specifically requested a non-proxied download.
     if flen <= FILE_SIZE_LIMIT:
         options = ('-',)  # we're redirecting to stdout.
-        # this unusual way of calling works for federated or local resources
+        # this unusual way of calling works for streaming federated or local resources
         logger.debug("Locally streaming {}".format(output_path))
         proc = session.run_safe('iget', None, irods_output_path, *options)
         response = FileResponse(proc.stdout, content_type=mtype)
