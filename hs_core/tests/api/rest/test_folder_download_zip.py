@@ -7,7 +7,7 @@ from rest_framework import status
 from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
 from datetime import date
-from pprint import pprint 
+from pprint import pprint
 
 
 class TestPublicZipEndpoint(HSRESTTestCase):
@@ -60,7 +60,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
         response = self.client.get(zip_download_url, format="json", follow=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pprint(response.content) 
+        pprint(response.content)
         response_json = json.loads(response.content)
         task_id = response_json["task_id"]
         download_path = response_json["download_path"]
