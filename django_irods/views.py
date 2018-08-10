@@ -59,7 +59,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     In cases 2, 5, and 7, the output path is created as a result of
     the operation of zipping the object and its metadata into a new zipfile.
     """
-    logger.debug("request path is {}".format(path))
+    if __debug__:
+        logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
@@ -84,7 +85,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     else:  # regular download request
         res_id = split_path_strs[0]
 
-    logger.debug("resource id is {}".format(res_id))
+    if __debug__:
+        logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
     # if the resource does not exist in django, authorized will be false
@@ -121,9 +123,11 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 irods_output_path = os.path.join(res.resource_federation_path, output_path)
             else:
                 irods_output_path = output_path
-            logger.debug("automatically zipping folder {} to {}".format(path, output_path))
+            if __debug__:
+                logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
-            logger.debug("request for single file {}".format(path))
+            if __debug__:
+                logger.debug("request for single file {}".format(path))
         else:  # special case: single file compression request: add .zip to existing file
             root, ext = os.path.splitext(path)
             irods_root, ext = os.path.splitext(irods_path)
@@ -146,10 +150,13 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                                 is_sf_agg_file = True
                             break
                 if not is_sf_agg_file:
-                    logger.debug("zipping file {} to {}".format(root, output_path))
+                    if __debug__:
+                        logger.debug("zipping file {} to {}".format(root, output_path))
                     is_zip_request = True
                 else:
-                    logger.debug("zipping single-file-aggregate {} to {}".format(root, output_path))
+                    if __debug__:
+                        logger.debug("zipping single-file-aggregate {} to {}"
+                                     .format(root, output_path))
 
                 # At this point, either is_zip_request or is_sf_agg_file is True.
                 # NOTE: there is an existence check below for the final path
@@ -219,10 +226,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             session.create_environment(environment)
             session.run('iinit', None, environment.auth)
         elif getattr(settings, 'IRODS_GLOBAL_SESSION', False):
-            logger.debug("using GLOBAL_SESSION")
+            if __debug__:
+                logger.debug("using GLOBAL_SESSION")
             session = GLOBAL_SESSION
         elif icommands.ACTIVE_SESSION:
-            logger.debug("using ACTIVE_SESSION")
+            if __debug__:
+                logger.debug("using ACTIVE_SESSION")
             session = icommands.ACTIVE_SESSION
         else:
             raise KeyError('settings must have IRODS_GLOBAL_SESSION set '
@@ -402,7 +411,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             response['Content-Length'] = flen
             response['X-Accel-Redirect'] = '/'.join([
                 getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
+            if __debug__:
+                logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
             return response
 
         elif res.resource_federation_path == userpath:  # this guarantees a "user" resource
@@ -413,7 +423,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             response['Content-Length'] = flen
             response['X-Accel-Redirect'] = os.path.join(
                 getattr(settings, 'IRODS_USER_URI', '/irods-user'), output_path)
-            logger.debug("Reverse proxying user {}".format(response['X-Accel-Redirect']))
+            if __debug__:
+                logger.debug("Reverse proxying user {}".format(response['X-Accel-Redirect']))
             return response
 
     # if we get here, none of the above conditions are true
@@ -422,7 +433,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if flen <= FILE_SIZE_LIMIT:
         options = ('-',)  # we're redirecting to stdout.
         # this unusual way of calling works for streaming federated or local resources
-        logger.debug("Locally streaming {}".format(output_path))
+        if __debug__:
+            logger.debug("Locally streaming {}".format(output_path))
         proc = session.run_safe('iget', None, irods_output_path, *options)
         response = FileResponse(proc.stdout, content_type=mtype)
         response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
@@ -431,7 +443,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         return response
 
     else:
-        logger.debug("Rejecting download of > 1GB file {}".format(output_path))
+        if __debug__:
+            logger.debug("Rejecting download of > 1GB file {}".format(output_path))
         content_msg = "File larger than 1GB cannot be downloaded directly via HTTP. " \
                       "Please download the large file via iRODS clients."
         response = HttpResponse(status=403)
