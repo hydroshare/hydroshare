@@ -20,12 +20,20 @@ def debug_resource(short_id):
     assert resource, (res, res.content_model)
 
     if resource.resource_type == 'CompositeResource':
-        istorage = resource.get_irods_storage()
+        storage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-                print("  {} is single file aggregation".format(f.short_path))
+                print("  {} is single file aggregation {} "
+                      .format(f.short_path,
+                              f.logical_file.get_aggregation_type_name()))
+                if not storage.exists(f.storage_path):
+                    print("    {} does not exist".format(f.storage_path))
+                if not storage.exists(f.storage_path + "_resmap.xml"):
+                    print("    {} does not exist".format(f.storage_path + "_resmap.xml"))
+                if not storage.exists(f.storage_path + "_meta.xml"):
+                    print("    {} does not exist".format(f.storage_path + "_meta.xml"))
 
 
 class Command(BaseCommand):
@@ -49,7 +57,7 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 debug_resource(rid)
         else:
-            for r in BaseResource.objects.filter(resource_type="CompositeResource"): 
+            for r in BaseResource.objects.filter(resource_type="CompositeResource"):
                 debug_resource(r.short_id)
 
             print("No resources to check.")
