@@ -54,7 +54,6 @@ class FileSetLogicalFile(AbstractLogicalFile):
         part of the aggregation gets deleted.
         :return True if there is no more than one resource file in the folder (including
         any sub-folders) that represent the aggregation
-        :return:
         """
 
         # get all res files that exist under the folder that represents this aggregation and under
