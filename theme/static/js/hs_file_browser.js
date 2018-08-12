@@ -221,9 +221,7 @@ function updateSelectionMenuContext() {
                 if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
                     flagDisableSetTimeseriesFileType = true;
                 }
-                if(logicalFileTypeToSet !== "FileSetLogicalFile"){
-                    flagDisableSetFileSetFileType = true;
-                }
+                
             }
             else {
                 flagDisableSetNetCDFFileType = true;
