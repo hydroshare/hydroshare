@@ -438,3 +438,91 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(1, GenericLogicalFile.objects.count())
         self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file_type())
         self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file)
+
+    def test_has_modified_metadata_no_change(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        # check expected generated metadata state without modifications
+        self.assertEqual(0, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
+        self.assertEqual("generic_file", gen_logical_file.dataset_name)
+        self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
+
+    def test_has_modified_metadata_empty_title(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        gen_logical_file.dataset_name = ""
+        gen_logical_file.save()
+
+        # check expected generated metadata state without modifications
+        self.assertEqual(0, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
+        self.assertFalse(gen_logical_file.dataset_name)
+        self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
+
+    def test_has_modified_metadata_updated_title(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        gen_logical_file.dataset_name = "Updated"
+        gen_logical_file.save()
+
+        # check expected generated metadata state updated title only
+        self.assertEqual(0, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
+        self.assertEqual("Updated", gen_logical_file.dataset_name)
+        self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
+
+    def test_has_modified_metadata_updated_coverages(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+
+        # check expected generated metadata state updated coverages only
+        self.assertEqual(1, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
+        self.assertEqual("generic_file", gen_logical_file.dataset_name)
+        self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
+
+    def test_has_modified_metadata_updated_extra_metadata(self):
+        self.create_composite_resource(self.generic_file)
+
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, GenericLogicalFile.objects.count())
+        gen_logical_file = GenericLogicalFile.objects.first()
+
+        gen_logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
+        gen_logical_file.metadata.save()
+
+        # check expected generated metadata state updated extra_metadata only
+        self.assertEqual(0, gen_logical_file.metadata.coverages.count())
+        self.assertEqual({'key1': 'value 1', 'key2': 'value 2'},
+                         gen_logical_file.metadata.extra_metadata)
+        self.assertEqual("generic_file", gen_logical_file.dataset_name)
+        self.assertTrue(gen_logical_file.metadata.has_modified_metadata)

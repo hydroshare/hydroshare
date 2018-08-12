@@ -1112,10 +1112,14 @@ $(document).ready(function () {
                         pathLog.push("data/contents");
                         pathLogIndex = pathLog.length - 1;
 
-                        refreshFileBrowser();
-                        $("#previews").empty();
                         if(resourceType === 'Composite Resource') {
+                            // uploaded files can affect metadata in composite resource.
+                            // a full refresh is needed to reflect those changes
                             refreshResourceEditPage();
+                        }
+                        else {
+                            refreshFileBrowser();
+                            $("#previews").empty();
                         }
                     }
                 });
@@ -1542,7 +1546,7 @@ $(document).ready(function () {
 
     // set generic file type method
      $("#btn-set-generic-file-type").click(function () {
-         setFileType("Generic");
+         setFileType("SingleFile");
       });
 
     // set fileset file type method

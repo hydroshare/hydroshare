@@ -78,4 +78,3 @@ class TestFolderDownloadZip(TestCase):
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
                                         output_path, True))
         self.assertTrue(IrodsStorage().exists(output_path))
-

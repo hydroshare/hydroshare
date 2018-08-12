@@ -24,6 +24,9 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
     :return: the updated url string, or None if template contains undefined terms
     """
 
+    if not url_template_string:
+        return None
+
     new_url_string = url_template_string
     merged_term_dic = {}
     try:
