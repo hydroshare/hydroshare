@@ -284,7 +284,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # make the netcdf file part of the NetCDFLogicalFile
         res_file = self.composite_resource.files.first()
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
-        netcdf_logical_file = NetCDFLogicalFile.create()
+        netcdf_logical_file = NetCDFLogicalFile.create(self.composite_resource)
+        netcdf_logical_file.save()
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
         netcdf_logical_file.add_resource_file(res_file)
 
