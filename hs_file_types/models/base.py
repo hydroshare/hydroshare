@@ -629,6 +629,7 @@ class AbstractFileMetaData(models.Model):
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
+    resource = models.ForeignKey('hs_composite_resource.CompositeResource')
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
@@ -643,15 +644,17 @@ class AbstractLogicalFile(models.Model):
         abstract = True
 
     @classmethod
-    def initialize(cls, dataset_name):
+    def initialize(cls, dataset_name, resource):
         """
         A helper for creating aggregation. Creates a new aggregation/logical_file type
         instance and sets it's dataset field
         :param  dataset_name: a name/title for the aggregation/logical file
+        :param  resource: an instance of composite resource for which this aggregation being
+        created
         """
-        logical_file = cls.create()
+        logical_file = cls.create(resource)
         logical_file.dataset_name = dataset_name
-        logical_file.save()
+        # at this point the logical file is not created in DB - caller needs to save it to DB
         return logical_file
 
     def _finalize(self, user, resource, folder_created, res_files_to_delete, reset_title=False):
@@ -802,31 +805,34 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            # get the files from the specified folder location
-            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                 sub_folders=False)
-            if not res_files:
-                msg = "The specified folder {} does not contain any file."
-                msg = msg.format(path_to_check)
-                raise ValidationError(msg)
-            else:
-                # check if the specified folder is suitable for aggregation
-                if cls.check_files_for_aggregation_type(res_files):
-                    # get the primary file suitable for creating a specific aggregation type
-                    res_file = cls.get_primary_resouce_file(res_files)
+            res_file = None
+            if cls.__name__ != 'FileSetLogicalFile':
+                # get the files from the specified folder location
+                res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                     sub_folders=False)
+                if not res_files:
+                    msg = "The specified folder {} does not contain any file."
+                    msg = msg.format(path_to_check)
+                    raise ValidationError(msg)
                 else:
-                    res_file = None
+                    # check if the specified folder is suitable for aggregation
+                    if cls.check_files_for_aggregation_type(res_files):
+                        # get the primary file suitable for creating a specific aggregation type
+                        res_file = cls.get_primary_resouce_file(res_files)
+                    else:
+                        res_file = None
 
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
+        if cls.__name__ != 'FileSetLogicalFile':
+            if res_file is None or not res_file.exists:
+                raise ValidationError("File not found.")
 
-        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
-            msg = "Selected {} {} is already part of an aggregation."
-            if folder_path is None:
-                msg = msg.format('file', res_file.file_name)
-            else:
-                msg = msg.format('folder', folder_path)
-            raise ValidationError(msg)
+            if res_file.has_logical_file and not res_file.logical_file.is_fileset:
+                msg = "Selected {} {} is already part of an aggregation."
+                if folder_path is None:
+                    msg = msg.format('file', res_file.file_name)
+                else:
+                    msg = msg.format('folder', folder_path)
+                raise ValidationError(msg)
 
         return res_file, folder_path
 
@@ -907,15 +913,6 @@ class AbstractLogicalFile(models.Model):
         return sum([f.size for f in self.files.all()])
 
     @property
-    def resource(self):
-        res_file = self.files.all().first()
-        if res_file is not None:
-            # return the typed resource
-            return res_file.resource.get_content_model()
-        else:
-            return None
-
-    @property
     def can_contain_folders(self):
         """By default an aggregation can't have folders"""
         return False
@@ -964,7 +961,11 @@ class AbstractLogicalFile(models.Model):
             return self.files.first().short_path
         else:
             # self is a multi- file aggregation type
-            return self.files.first().file_folder
+            if not self.is_fileset:
+                return self.files.first().file_folder
+
+            # self is a fileset aggregation
+            return self.folder
 
     @property
     def metadata_short_file_path(self):
@@ -975,7 +976,10 @@ class AbstractLogicalFile(models.Model):
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_meta.xml"
-        file_folder = self.files.first().file_folder
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
         if file_folder is not None:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
@@ -995,7 +999,10 @@ class AbstractLogicalFile(models.Model):
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_resmap.xml"
-        file_folder = self.files.first().file_folder
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
         if file_folder is not None:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name

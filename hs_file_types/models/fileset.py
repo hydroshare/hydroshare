@@ -14,14 +14,20 @@ class FileSetMetaData(GenericFileMetaDataMixin):
 
 class FileSetLogicalFile(AbstractLogicalFile):
     """ One more files in a specific folder can be part of this aggregation """
+
     metadata = models.OneToOneField(FileSetMetaData, related_name="logical_file")
+    # folder path relative to {resource_id}/data/contents/ that represents this aggregation
+    # folder becomes the name of the aggregation
+    folder = models.CharField(max_length=4096)
     data_type = "GenericData"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
         generic_metadata = FileSetMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=generic_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=generic_metadata, resource=resource)
 
     @staticmethod
     def get_aggregation_display_name():
@@ -93,17 +99,20 @@ class FileSetLogicalFile(AbstractLogicalFile):
         if folder_path is None:
             raise ValueError("Must specify folder to be set as a file set aggregation type")
 
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        _, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         folder_name = folder_path
         if '/' in folder_path:
             folder_name = os.path.basename(folder_path)
 
-        logical_file = cls.initialize(folder_name)
+        logical_file = cls.initialize(folder_name, resource)
+        logical_file.folder = folder_path
+        # logical file record gets created in DB
+        logical_file.save()
         # make all the files in the selected folder as part of the aggregation
         logical_file.add_resource_files_in_folder(resource, folder_path)
         logical_file.create_aggregation_xml_documents()
-        log.info("Fie set aggregation was created for file:{}.".format(res_file.storage_path))
+        log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
 
     def add_resource_files_in_folder(self, resource, folder):
         """

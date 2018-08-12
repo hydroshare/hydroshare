@@ -34,6 +34,21 @@ class CompositeResource(BaseResource):
 
         return True
 
+    @property
+    def logical_files(self):
+        """Returns a list of all logical file type objects associated with this resource """
+
+        lf_list = []
+        lf_list.extend(self.filesetlogicalfile_set.all())
+        lf_list.extend(self.genericlogicalfile_set.all())
+        lf_list.extend(self.geofeaturelogicalfile_set.all())
+        lf_list.extend(self.netcdflogicalfile_set.all())
+        lf_list.extend(self.georasterlogicalfile_set.all())
+        lf_list.extend(self.reftimeserieslogicalfile_set.all())
+        lf_list.extend(self.timeserieslogicalfile_set.all())
+
+        return lf_list
+
     def set_default_logical_file(self):
         """sets an instance of GenericLogicalFile to any resource file objects of this instance
         of the resource that is not already associated with a logical file. """
@@ -82,17 +97,16 @@ class CompositeResource(BaseResource):
 
         if not files_in_folder:
             # folder is empty
-            return None
-        if store[0]:
-            # there are folders under dir_path in which case the folder can be set as FileSet
-            # only if there is at least one file that is not part of any aggregation or part
-            # of another fileset aggregation, otherwise no aggregation type can be set
-            if any(not res_file.has_logical_file for res_file in files_in_folder):
-                return FileSetLogicalFile.__name__
-            elif any(res_file.logical_file.is_fileset for res_file in files_in_folder):
+            # check sub folders for files - if file exist we can set FileSet aggregation
+            files_in_sub_folders = ResourceFile.list_folder(self, folder=dir_path,
+                                                            sub_folders=True)
+            if files_in_sub_folders:
                 return FileSetLogicalFile.__name__
 
             return None
+        if store[0]:
+            # there are folders under dir_path as well as files - only FileSet can bet set
+            return FileSetLogicalFile.__name__
 
         if len(files_in_folder) > 1:
             # check for geo feature

@@ -139,10 +139,12 @@ class GenericLogicalFile(AbstractLogicalFile):
     data_type = "genericData"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
         generic_metadata = GenericFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=generic_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=generic_metadata, resource=resource)
 
     @staticmethod
     def get_aggregation_display_name():
@@ -173,7 +175,7 @@ class GenericLogicalFile(AbstractLogicalFile):
             raise ValidationError("Selected file '{}' is already part of an aggregation".format(
                 res_file.file_name))
 
-        logical_file = GenericLogicalFile.create()
+        logical_file = GenericLogicalFile.create(resource)
         dataset_name, _ = os.path.splitext(res_file.file_name)
         logical_file.dataset_name = dataset_name
         logical_file.save()

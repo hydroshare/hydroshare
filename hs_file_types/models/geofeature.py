@@ -187,10 +187,12 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ]
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=feature_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=feature_metadata, resource=resource)
 
     @staticmethod
     def get_aggregation_display_name():
@@ -273,7 +275,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         with transaction.atomic():
             # create a GeoFeature logical file object to be associated with
             # resource files
-            logical_file = cls.initialize(base_file_name)
+            logical_file = cls.initialize(base_file_name, resource)
             try:
                 if folder_path is None:
                     # we are here means aggregation is being created by selecting a file
@@ -286,7 +288,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
                         log.info("Folder created:{}".format(upload_folder))
                         aggregation_folder_created = True
-
+                        # create logical file record in DB
+                        logical_file.save()
                         if res_file.extension.lower() == ".shp":
                             # selected file is a shp file - that means we didn't create any new
                             # files - we just need to copy all the existing files to a new folder
@@ -303,6 +306,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                 upload_folder=upload_folder)
                             res_files_to_delete.append(res_file)
                     else:
+                        # create logical file record in DB
+                        logical_file.save()
                         upload_folder = file_folder
 
                         # we need to upload files to the resource only if the selected file is a zip
@@ -319,6 +324,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                             # of the aggregation
                             logical_file.add_resource_files_in_folder(resource, upload_folder)
                 else:
+                    # create logical file record in DB
+                    logical_file.save()
                     # user selected a folder to create aggregation
                     # make all the files in the selected folder as part of the aggregation
                     logical_file.add_resource_files_in_folder(resource, folder_path)

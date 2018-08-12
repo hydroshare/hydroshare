@@ -749,10 +749,12 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return True
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
         rf_ts_metadata = RefTimeseriesFileMetaData.objects.create(json_file_content="No data")
-        return cls.objects.create(metadata=rf_ts_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=rf_ts_metadata, resource=resource)
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
@@ -789,7 +791,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         with transaction.atomic():
             # create a reftiemseries logical file object to be associated with
             # resource files
-            logical_file = cls.create()
+            logical_file = cls.create(resource)
+            # create logical file record in DB
+            logical_file.save()
             logical_file.metadata.json_file_content = json_file_content
             logical_file.metadata.save()
 

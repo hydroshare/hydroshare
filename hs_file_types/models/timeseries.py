@@ -430,10 +430,12 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return "TimeSeriesAggregation"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=ts_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=ts_metadata, resource=resource)
 
     @property
     def supports_resource_file_move(self):
@@ -557,7 +559,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
-            logical_file = cls.initialize(base_file_name)
+            logical_file = cls.initialize(base_file_name, resource)
 
             try:
                 if folder_path is None:
@@ -574,17 +576,23 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                         aggregation_folder_created = True
                         tgt_folder = upload_folder
                         files_to_copy = [res_file]
+                        # create logical file record in DB
+                        logical_file.save()
                         logical_file.copy_resource_files(resource, files_to_copy,
                                                          tgt_folder)
                         res_files_to_delete.append(res_file)
                     else:
                         # selected file is already in a folder
                         upload_folder = file_folder
+                        # create logical file record in DB
+                        logical_file.save()
                         # make the selected file part of the aggregation
                         logical_file.add_resource_file(res_file)
                 else:
                     # folder has been selected for creating the aggregation
                     upload_folder = folder_path
+                    # create logical file record in DB
+                    logical_file.save()
                     # make the selected file part of the aggregation
                     logical_file.add_resource_file(res_file)
 
