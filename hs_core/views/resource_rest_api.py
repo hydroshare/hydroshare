@@ -8,6 +8,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
+from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
@@ -642,7 +643,7 @@ class AccessRulesUpdate(APIView):
         res = get_resource_by_shortkey(pk)
         try:
             res.set_public(validated_request_data['public'], request.user)
-        except ValidationError:
+        except CoreValidationError:
             return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
