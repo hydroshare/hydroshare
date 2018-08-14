@@ -51,7 +51,7 @@ class TestSetAccessRules(HSRESTTestCase):
         access_url = "/hsapi/resource/accessRules/{res_id}/".format(res_id=res_id)
         response = self.client.put(access_url, {'public': True})
         # this test resource does not have content file, so it cannot be made public
-        self.assertEqual(response.status_code, status.status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
