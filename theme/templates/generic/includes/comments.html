@@ -15,5 +15,13 @@ $(function() {
 <style>.input_id_honeypot {display:none !important;}</style>
 {% comment_thread object_for_comments %}
 <h3>{% trans "New Comment" %}</h3>
+<form method="post" id="comment" class="comment-form" action="/comment/#comment">
+    {% if not request.POST.replied_to %}
+    {% fields_for posted_comment_form %}
+    {% else %}
+    {% fields_for unposted_comment_form %}
+    {% endif %}
+    <input class="hl-btn hl-btn-dark hl-btn-sm" type="submit" value="{% trans "Comment" %}">
+</form>
 {% endif %}
 </div>
