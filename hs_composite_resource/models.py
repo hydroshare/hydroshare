@@ -265,6 +265,16 @@ class CompositeResource(BaseResource):
                 # action is needed
                 pass
 
+    def is_aggregation_xml_file(self, file_path):
+        if not (file_path.endswith('_meta.xml') or file_path.endswith('_resmap.xml')):
+            return False
+
+        for logical_file in self.logical_files:
+            if logical_file.metadata_file_path == file_path or \
+                    logical_file.map_file_path == file_path:
+                return True
+        return False
+
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path
         :param  folder_full_path: the target path where the new folder needs to be created
