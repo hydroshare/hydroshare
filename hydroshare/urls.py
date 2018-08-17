@@ -103,12 +103,12 @@ urlpatterns += [
 
 # robots.txt URLs for django-robots
 urlpatterns += [
-    url(r'^robots\.txt$', include('robots.urls')),
+    url(r'^robots\.txt', include('robots.urls')),
 ]
-
+from django.views.static import serve
 if settings.DEBUG is False:   # if DEBUG is True it will be served automatically
   urlpatterns += [
-  url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
+  url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]
 
 if 'heartbeat' in settings.INSTALLED_APPS:
