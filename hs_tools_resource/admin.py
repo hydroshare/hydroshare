@@ -1,6 +1,7 @@
 # Register your models here.
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
+from mezzanine.pages.admin import Page
 
 from .models import ToolResource, ToolMetaData, AppHomePageUrl, \
     HelpPageUrl, TestingProtocolUrl, SourceCodeUrl, IssuesPageUrl, \
@@ -75,3 +76,6 @@ class ToolMetaDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ToolMetaData, ToolMetaDataAdmin)
+
+# remove mezzanine Page registration due to it being unusable
+admin.site.unregister(Page)
