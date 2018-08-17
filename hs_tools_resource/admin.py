@@ -2,8 +2,6 @@
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 
-from mezzanine.pages.admin import PageAdmin
-
 from .models import ToolResource, ToolMetaData, AppHomePageUrl, \
     HelpPageUrl, TestingProtocolUrl, SourceCodeUrl, IssuesPageUrl, \
     MailingListUrl, Roadmap, ShowOnOpenWithList
@@ -77,4 +75,3 @@ class ToolMetaDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ToolMetaData, ToolMetaDataAdmin)
-#admin.site.register(ToolResource, PageAdmin)
