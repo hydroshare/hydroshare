@@ -202,9 +202,9 @@ def assert_netcdf_file_type_metadata(self, title):
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
     proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
-    self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
+    self.assertEqual(ori_coverage.value['northlimit'], '4635150.0')
     self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
-    self.assertEqual(ori_coverage.value['southlimit'], '4.63479e+06')
+    self.assertEqual(ori_coverage.value['southlimit'], '4634790.0')
     self.assertEqual(ori_coverage.value['westlimit'], '457560.0')
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')

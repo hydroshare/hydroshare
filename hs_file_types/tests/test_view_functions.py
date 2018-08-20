@@ -272,7 +272,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # there should be original coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.original_coverage, None)
         orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(orig_coverage.value['northlimit'], '4.63515e+06')
+        self.assertEqual(orig_coverage.value['northlimit'], '4635150.0')
 
         coverage_data = {'northlimit': '111.333', 'southlimit': '42.678', 'eastlimit': '123.789',
                          'westlimit': '40.789', 'units': 'meters'}
