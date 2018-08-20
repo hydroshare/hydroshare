@@ -146,15 +146,6 @@ USE_I18N = False
 #   * Receive x-headers
 INTERNAL_IPS = ("127.0.0.1",)
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    "django.template.loaders.filesystem.Loader",
-    "django.template.loaders.app_directories.Loader",
-)
-
-ALLOWED_INCLUDE_ROOTS = ()
-TEMPLATE_STRING_IF_INVALID = ()
-
 # make django file uploader to always write uploaded file to a temporary directory
 # rather than holding uploaded file in memory for small files. This is due to
 # the difficulty of metadata extraction from an uploaded file being held in memory
