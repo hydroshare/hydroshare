@@ -432,6 +432,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
@@ -864,6 +865,7 @@ class ResourceFileCRUD(APIView):
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileCRUD, self).initialize_request(request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
@@ -1049,6 +1051,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileListCreate, self).initialize_request(
                 request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
