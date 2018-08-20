@@ -20,7 +20,6 @@ def debug_resource(short_id):
     assert resource, (res, res.content_model)
 
     if resource.resource_type == 'CompositeResource':
-        istorage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
         for f in ResourceFile.objects.filter(object_id=resource.id):
@@ -49,7 +48,7 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 debug_resource(rid)
         else:
-            for r in BaseResource.objects.filter(resource_type="CompositeResource"): 
+            for r in BaseResource.objects.filter(resource_type="CompositeResource"):
                 debug_resource(r.short_id)
 
             print("No resources to check.")
