@@ -64,18 +64,7 @@ class InlineHelpPageUrl(GenericTabularInline):
     extra = 1
 
 
-class ToolMetaDataAdmin(admin.ModelAdmin):
-    fields = ['approved']
-
-    inlines = [InlineAppHomePageUrlAdmin, InlineHelpPageUrl, InlineIssuesPageUrlAdmin,
-               InlineSourceCodeUrldmin, InlineTestingProtocolUrlAdmin,
-               InlineMailingListUrlAdmin, InlineRoadmapAdmin, InlineShowOnOpenWithListAdmin]
-
-    def has_add_permission(self, request):
-        return False
-
-
-admin.site.register(ToolMetaData, ToolMetaDataAdmin)
+admin.site.unregister(ToolMetaData)
 
 # remove mezzanine Page registration due to it being unusable
 admin.site.unregister(Page)

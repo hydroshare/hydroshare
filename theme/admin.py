@@ -2,9 +2,16 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 
+from mezzanine.core.admin import TabularDynamicInlineAdmin
 from mezzanine.utils.admin import SingletonAdmin
 
-from models import SiteConfiguration, HomePage, UserQuota, QuotaMessage
+from models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage
+
+
+class IconBoxInline(TabularDynamicInlineAdmin):
+    model = IconBox
+    extra = 5
+    max_num = 5
 
 
 class UserQuotaForm(forms.ModelForm):
@@ -37,6 +44,8 @@ class QuotaAdmin(admin.ModelAdmin):
         else:
             return super(QuotaAdmin, self).get_form(request, obj, **kwargs)
 
+
+admin.site.unregister(HomePage)
 admin.site.register(SiteConfiguration, SingletonAdmin)
 admin.site.register(UserQuota, QuotaAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
