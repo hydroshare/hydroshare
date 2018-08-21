@@ -4,7 +4,6 @@ import copy
 
 from django.forms import ModelForm, BaseFormSet
 from django.contrib.admin.widgets import forms
-from django.utils.safestring import mark_safe
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
