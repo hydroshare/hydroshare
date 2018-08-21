@@ -11,6 +11,8 @@ from rest_framework.test import APITestCase
 from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
 
+from django.contrib.sites.models import Site
+
 
 class HSRESTTestCase(APITestCase):
 
@@ -110,14 +112,13 @@ class HSRESTTestCase(APITestCase):
 
 
 class SciMetaTestCase(HSRESTTestCase):
-
     NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
           'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
           'dc': "http://purl.org/dc/elements/1.1/",
           'dcterms': "http://purl.org/dc/terms/",
           'hsterms': "http://hydroshare.org/terms/"}
 
-    RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
+    RESOURCE_URL_TEMPLATE = "http://" + Site.objects.first().domain + "/resource/{0}"
 
     RESOURCE_METADATA = 'resourcemetadata.xml'
     RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
