@@ -334,6 +334,8 @@ rebuild_hs() {
     echo "BEGIN BUILD"
     echo "  - git submodule init && git submodule update"
     git submodule init && git submodule update
+    echo "  - docker-compose down"
+    docker-compose down
     echo "  - docker-compose build"
     docker-compose build
     echo "  - docker-compose up -d"
