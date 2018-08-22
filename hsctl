@@ -336,6 +336,8 @@ rebuild_hs() {
     git submodule init && git submodule update
     echo "  - docker-compose down"
     docker-compose down
+    echo "  - docker-compose pull"
+    docker-compose pull
     echo "  - docker-compose build"
     docker-compose build
     echo "  - docker-compose up -d"
