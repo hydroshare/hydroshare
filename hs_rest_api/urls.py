@@ -4,11 +4,7 @@ from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 
-from rest_framework_swagger.views import get_swagger_view
-
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
-
-schema_view = get_swagger_view(title='Hydroshare API')
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -16,12 +12,11 @@ from rest_framework import permissions
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
-      title="Snippets API",
+      title="Hydroshare API",
       default_version='v1',
-      description="Test description",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      description="Hydroshare Rest API",
+      terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
+      contact=openapi.Contact(email="help@cuahsi.org"),
    ),
    validators=[],
    public=True,
@@ -30,11 +25,9 @@ schema_view_yasg = get_schema_view(
 
 urlpatterns = [
     # Swagger Docs View
-    url(r'^$', schema_view),
-
-    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view_yasg.without_ui(cache_timeout=None),
+    url(r'^(?P<format>\.json|\.yaml)$', schema_view_yasg.without_ui(cache_timeout=None),
         name='schema-json'),
-    url(r'^swagger/$', schema_view_yasg.with_ui('swagger', cache_timeout=None),
+    url(r'^$', schema_view_yasg.with_ui('swagger', cache_timeout=None),
         name='schema-swagger-ui'),
     url(r'^redoc/$', schema_view_yasg.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
 

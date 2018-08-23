@@ -259,7 +259,6 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "rest_framework_swagger",
     "inplaceeditform",
     "django_nose",
     "django_irods",
