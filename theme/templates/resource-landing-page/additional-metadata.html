@@ -1,0 +1,52 @@
+<!-- ========= EXTRA METADATA TAB ========= -->
+{% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+    <br><br>
+    <div class="col-xs-12 content-block">
+        <h3>Extended Metadata</h3>
+        <table id="extraMetaTable" class="hs-table table" width="100%">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+                {% if metadata_form %}
+                    <th></th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for extra_meta_name, extra_meta_value in page.get_content_model.extra_metadata.items %}
+                <tr id="{{ forloop.counter0 }}">
+                    <td>
+                        {{ extra_meta_name }}
+                    </td>
+                    <td>
+                        {{ extra_meta_value|urlize }}
+                    </td>
+                    {% if metadata_form %}
+                        <td>
+                                                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
+                                                                  data-toggle="tooltip" data-placement="top"
+                                                                  title="Edit">
+                                                            </span>
+                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                  class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
+                                  data-toggle="tooltip" data-placement="top"
+                                  title="Remove">
+                                                            </span>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <br>
+
+        {% if metadata_form %}
+            <a id="btn-add-new-entry" type="button" class="btn btn-success">
+                <i class="fa fa-plus"></i> Add New Entry
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

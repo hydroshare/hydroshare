@@ -190,7 +190,18 @@ $(document).ready(function () {
             }
         },
         error: showUniversalMessage()
-    })
+    });
+
+    $(".profile-preview").click(function () {
+        var data = $(this).data();
+
+        for (var item in data) {
+            $("#profile-preview-modal [data-" + item + "]").text(data[item]);
+            $("#btn-preview-profile").attr("href", data.profileUrl)
+        }
+    });
+
+
 });
 
 function showUniversalMessage(type, message, timeout) {

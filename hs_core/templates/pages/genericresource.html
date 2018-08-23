@@ -59,23 +59,274 @@
             {# ======= Title and header content ======= #}
             {% include "resource-landing-page/resource-header.html" %}
 
+{#            {% if not metadata_form %}#}
+{#                <h4>Authors </h4>#}
+{#                <div>#}
+{#                    <small class="text-muted division-title-caption">The people#}
+{#                        or organizations that created the intellectual content#}
+{#                        of the resource.#}
+{#                    </small>#}
+{#                </div>#}
+{#                <br>#}
+{#                <table class="table hs-table contact-table contact-table-view">#}
+{#                    <thead>#}
+{#                    <tr class="header-row">#}
+{#                        <th>Name</th>#}
+{#                        <th>Organization</th>#}
+{#                        <th>Address</th>#}
+{#                        <th>Phone</th>#}
+{#                        <th>Author Identifiers</th>#}
+{#                    </tr>#}
+{#                    </thead>#}
+{##}
+{#                    <tbody>#}
+{#                    {% for cr in creators %}#}
+{#                        <tr>#}
+{#                            <td>{% if cr.description %}#}
+{#                                <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}#}
+{#                                {{ cr.name }}{% endif %}</td>#}
+{#                            <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>#}
+{#                            <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>#}
+{#                            <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>#}
+{#                            <td>#}
+{#                                {% for name, link in cr.identifiers.items %}#}
+{#                                    {{ identif.name }}#}
+{#                                    <a href="{{ link }}"#}
+{#                                       target="_blank">{{ name }}</a>#}
+{#                                    {% if not forloop.last %}, {% endif %}#}
+{#                                {% endfor %}#}
+{#                            </td>#}
+{#                        </tr>#}
+{#                    {% endfor %}#}
+{#                    </tbody>#}
+{#                </table>#}
+{##}
+{#                {% if contributors %}#}
+{#                    <hr>#}
+{#                    <h4>Contributors</h4>#}
+{#                    <div>#}
+{#                        <small class="text-muted division-title-caption">People or#}
+{#                            organizations that contributed technically, materially,#}
+{#                            financially, or provided general support for the#}
+{#                            creation of the resource's content but are not#}
+{#                            considered authors.#}
+{#                        </small>#}
+{#                    </div>#}
+{#                    <br>#}
+{#                    <table class="table hs-table contact-table contact-table-view">#}
+{#                        <thead>#}
+{#                        <tr class="header-row">#}
+{#                            <th>Name</th>#}
+{#                            <th>Organization</th>#}
+{#                            <th>Address</th>#}
+{#                            <th>Phone</th>#}
+{#                            <th>Author Identifiers</th>#}
+{#                        </tr>#}
+{#                        </thead>#}
+{#                        <tbody>#}
+{#                        {% for cont in contributors %}#}
+{#                            <tr>#}
+{#                                <td>{% if cont.description %}#}
+{#                                    <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}#}
+{#                                    {{ cont.name }}{% endif %}</td>#}
+{#                                <td>{% if cont.organization %}#}
+{#                                    {{ cont.organization }}{% endif %}</td>#}
+{#                                <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>#}
+{#                                <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>#}
+{#                                <td>#}
+{#                                    {% for name, link in cont.identifiers.items %}#}
+{#                                        {{ identif.name }}#}
+{#                                        <a href="{{ link }}"#}
+{#                                           target="_blank">{{ name }}</a>#}
+{#                                        {% if not forloop.last %}, {% endif %}#}
+{#                                    {% endfor %}#}
+{#                                </td>#}
+{#                            </tr>#}
+{#                        {% endfor %}#}
+{#                        </tbody>#}
+{#                    </table>#}
+{#                {% endif %}#}
+{##}
+{#            {% else %}#}
+{#                <div class="tab-pane active" id="contactTab">#}
+{#                    <h4>Authors</h4>#}
+{#                    <div>#}
+{#                        <small class="text-muted division-title-caption">The people#}
+{#                            or organizations that created the intellectual content#}
+{#                            of the resource.#}
+{#                        </small>#}
+{#                    </div>#}
+{#                    <br>#}
+{##}
+{#                    <table id="authors-table" class="hs-table contact-table table">#}
+{#                        <thead>#}
+{#                        <tr class="header-row">#}
+{#                            <th class="drag-indicator"></th>#}
+{#                            <th>Name</th>#}
+{#                            <th>Organization</th>#}
+{#                            <th>Address</th>#}
+{#                            <th>Phone</th>#}
+{#                            <th>Author Identifiers</th>#}
+{#                            <th></th>#}
+{#                        </tr>#}
+{#                        </thead>#}
+{#                        <tbody class="sortable">#}
+{#                        {% for author in creator_formset.initial %}#}
+{#                            <tr>#}
+{#                                <td class="drag-indicator">#}
+{#                                    <i class="fa fa-arrows-v" aria-hidden="true"></i>#}
+{#                                    <form class="hidden-form"#}
+{#                                          action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"#}
+{#                                           enctype="multipart/form-data">#}
+{#                                        {% csrf_token %}#}
+{#                                        <input name="resource-mode" type="hidden" value="edit">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-name"#}
+{#                                               value="{% if author.name %}{{ author.name }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-description"#}
+{#                                               value="{% if author.description %}{{ author.description }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"#}
+{#                                               value="{% if author.organization %}{{ author.organization }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-email"#}
+{#                                               value="{% if author.email %}{{ author.email }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-address"#}
+{#                                               value="{% if author.address %}{{ author.address }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-phone"#}
+{#                                               type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">#}
+{##}
+{#                                        <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"#}
+{#                                               value="{% if author.homepage %}{{ author.homepage }}{% endif %}">#}
+{##}
+{#                                        <input class="order-input"#}
+{#                                               name="creator-{{ author.order|add:"- 1" }}-order"#}
+{#                                               type="number" value="{% if author.order %}{{ author.order }}{% endif %}">#}
+{#                                    </form>#}
+{#                                </td>#}
+{#                                <td>#}
+{#                                    {% if author.description %}#}
+{#                                    <a href="{{ author.description }}">{{ author.name }}</a>{% else %}#}
+{#                                    {{ author.name }}{% endif %}</td>#}
+{#                                <td>{% if  author.organization %}#}
+{#                                    {{ author.organization }}{% endif %}</td>#}
+{#                                <td>{% if  author.address %}{{ author.address }}{% endif %}</td>#}
+{#                                <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>#}
+{#                                <td>#}
+{#                                    {% for name, link in author.identifiers.items %}#}
+{#                                        {{ identif.name }}#}
+{#                                        <a href="{{ link }}"#}
+{#                                           target="_blank">{{ name }}</a>#}
+{#                                        {% if not forloop.last %}, {% endif %}#}
+{#                                    {% endfor %}#}
+{#                                </td>#}
+{#                                <td>#}
+{#                                    <a data-toggle="modal" data-placement="auto" title="Edit"#}
+{#                                       class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"#}
+{#                                       data-target="#edit-creator-dialog{{ author.id }}"#}
+{#                                    ></a>#}
+{##}
+                                    {# Prevent deletion of last author #}
+{#                                    {% if creator_formset.initial|length > 1 %}#}
+{#                                        <a data-toggle="modal" data-placement="auto" title="Remove"#}
+{#                                           class="glyphicon glyphicon-trash icon-button table-icon btn-remove"#}
+{#                                           data-target="#delete-creator-dialog{{ author.id }}"></a>#}
+{#                                    {% endif %}#}
+{#                                </td>#}
+{#                            </tr>#}
+{#                        {% endfor %}#}
+{#                        </tbody>#}
+{#                    </table>#}
+{##}
+{#                    <a type="button" class="btn btn-success" data-toggle="modal"#}
+{#                       data-target="#add-creator-dialog" multiple="multiple">#}
+{#                                            <span class="glyphicon glyphicon-plus"><span#}
+{#                                                    class="button-label"> Add Author</span></span>#}
+{#                    </a>#}
+{##}
+{#                    <hr>#}
+{##}
+{#                    <h4>Contributors</h4>#}
+{##}
+{#                    <div>#}
+{#                        <small class="text-muted division-title-caption">People or#}
+{#                            organizations that contributed technically, materially,#}
+{#                            financially, or provided general support for the#}
+{#                            creation of the resource's content but are not#}
+{#                            considered authors.#}
+{#                        </small>#}
+{#                    </div>#}
+{#                    <br>#}
+{##}
+{#                    <table class="hs-table contact-table table">#}
+{#                        <thead>#}
+{#                        <tr class="header-row">#}
+{#                            <th>Name</th>#}
+{#                            <th>Organization</th>#}
+{#                            <th>Address</th>#}
+{#                            <th>Phone</th>#}
+{#                            <th>Author Identifiers</th>#}
+{#                            <th></th>#}
+{#                        </tr>#}
+{#                        </thead>#}
+{#                        <tbody>#}
+{#                        {% for contributor in contributor_formset.initial %}#}
+{#                            <tr>#}
+{#                                <td>{% if contributor.description %}#}
+{#                                    <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}#}
+{#                                    {{ contributor.name }}{% endif %}</td>#}
+{#                                <td>{% if  contributor.organization %}#}
+{#                                    {{ contributor.organization }}{% endif %}</td>#}
+{#                                <td>{% if  contributor.address %}#}
+{#                                    {{ contributor.address }}{% endif %}</td>#}
+{#                                <td>{% if  contributor.phone %}#}
+{#                                    {{ contributor.phone }}{% endif %}</td>#}
+{#                               <td>#}
+{#                                    {% for name, link in contributor.identifiers.items %}#}
+{#                                        {{ identif.name }}#}
+{#                                        <a href="{{ link }}"#}
+{#                                           target="_blank">{{ name }}</a>#}
+{#                                        {% if not forloop.last %}, {% endif %}#}
+{#                                    {% endfor %}#}
+{#                                </td>#}
+{#                                <td>#}
+{#                                    <a data-toggle="modal" data-placement="auto" title="Edit"#}
+{#                                       class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"#}
+{#                                       data-target="#edit-contributor-dialog{{ contributor.id }}"#}
+{#                                    ></a>#}
+{#                                    <a data-toggle="modal" data-placement="auto" title="Remove"#}
+{#                                       class="glyphicon glyphicon-trash table-icon icon-button btn-remove"#}
+{#                                       data-target="#delete-contributor-dialog{{ contributor.id }}"#}
+{#                                    ></a>#}
+{#                                </td>#}
+{#                            </tr>#}
+{#                        {% endfor %}#}
+{#                        </tbody>#}
+{#                    </table>#}
+{##}
+{#                    <a type="button" class="btn btn-success" data-toggle="modal"#}
+{#                       data-target="#add-contributor-dialog" multiple="multiple">#}
+{#                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>#}
+{#                    </a>#}
+{#                </div>#}
+{#            {% endif %}#}
+
             {# ======= Abstract ======= #}
             {% include "resource-landing-page/abstract.html" %}
 
             {# ======= Subject ======= #}
             {% include "resource-landing-page/subject.html" %}
 
-            {# ======= Citation ======= #}
-            {% if metadata_form %}
-                {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
-            {% else %}
-                {% include "resource-landing-page/citation.html" with resource_mode="view" %}
-            {% endif %}
-
             {# ======= Coverage ======= #}
             {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                 {% include "resource-landing-page/coverage.html" %}
             {% endif %}
+
+            {# ======= Readme ======= #}
+            {% include "resource-landing-page/readme-file.html" %}
 
             {% block content_block %}
             {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
@@ -582,646 +833,60 @@
             {% endif %}
             {% endblock %} {# content_block #}
 
-            {# ======= Content tabs (code moved here because django does not render blocks inside included templates) ======= #}
-            <div class="col-sm-12">
-                <!-- === Tabs begin === -->
-                <div class="tab-elements">
-                    <div class="panel-tabs">
-                        <ul class="nav nav-tabs">
-                            {% if not is_resource_specific_tab_active %}
-                                <li class="active col-xs-2 col-md-2">
-                            {% else %}
-                               <li class="col-xs-2 col-md-2">
-                            {%  endif %}
-                                <a href="#contactTab" data-toggle="tab" title="Contact">
-                                    <span class="glyphicon glyphicon-user"> </span>
-                                    &nbspAuthorship
-                                </a>
-                            </li>
-                            {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
-                                        <span class="glyphicon glyphicon-book"></span>
-                                        &nbspRelated Resources
-                                    </a>
-                                </li>
-                            {% endif %}
-                            {% if extended_metadata_exists or metadata_form %}
-                                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource"%}
-                                        {% if  cm|resource_type|lower != "collection resource" %}
-                                            {% if is_resource_specific_tab_active %}
-                                                <li class="active col-xs-2 col-md-2">
-                                            {% else %}
-                                                <li class="col-xs-2 col-md-2">
-                                            {% endif %}
-                                                <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
-                                                    <span class="glyphicon glyphicon-folder-close"></span>
-                                                    &nbspResource Specific
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-                            {% if relevant_tools %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
-                                        <span class="glyphicon glyphicon-wrench"></span>
-                                        &nbsp; Web Apps
-                                    </a>
-                                </li>
-                            {% endif %}
-                            {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
-                                        <span class="glyphicon glyphicon-paperclip"> </span>
-                                        &nbspExtended Metadata
-                                    </a>
-                                 </li>
-                            {% endif %}
-                            {% if connections %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#connectionsTab" data-toggle="tab" title="Connections">
-                                        <span class="glyphicon glyphicon-fullscreen"> </span>
-                                        &nbspConnections
-                                    </a>
-                                 </li>
-                            {% endif %}
-                            {% if cm.resource_type == "CompositeResource" %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
-                                        <span class="glyphicon glyphicon-list-alt"> </span>
-                                        &nbspFile Metadata
-                                    </a>
-                                 </li>
-                            {% endif %}
-                        </ul>
+            {% if cm.resource_type == "CompositeResource" %}
+                <div id="fileTypeMetaDataTab">
+                    <div class="alert alert-warning alert-dismissible" role="alert">
+                        <span>Select a file to see file type metadata.</span>
                     </div>
-                    <div class="tabs-body">
-                        <!-- Tab panes -->
-                        <div class="tab-content">
-                            <!-- ========= CONTACT TAB ========= -->
-                            <div {% if not is_resource_specific_tab_active %}class="tab-pane active"
-                                 {% else %} class="tab-pane"{% endif %} id="contactTab">
-                                {% if not metadata_form %}
-                                    <h4>Authors </h4>
-                                    <div>
-                                        <small class="text-muted division-title-caption">The people
-                                            or organizations that created the intellectual content
-                                            of the resource.
-                                        </small>
-                                    </div>
-                                    <br>
-                                    <table class="table hs-table contact-table contact-table-view">
-                                        <thead>
-                                        <tr class="header-row">
-                                            <th>Name</th>
-                                            <th>Organization</th>
-                                            <th>Address</th>
-                                            <th>Phone</th>
-                                            <th>Author Identifiers</th>
-                                        </tr>
-                                        </thead>
-
-                                        <tbody>
-                                        {% for cr in creators %}
-                                            <tr>
-                                                <td>{% if cr.description %}
-                                                    <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}
-                                                    {{ cr.name }}{% endif %}</td>
-                                                <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
-                                                <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
-                                                <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
-                                                <td>
-                                                    {% for name, link in cr.identifiers.items %}
-                                                        {{ identif.name }}
-                                                        <a href="{{ link }}"
-                                                           target="_blank">{{ name }}</a>
-                                                        {% if not forloop.last %}, {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-
-                                    {% if contributors %}
-                                        <hr>
-                                        <h4>Contributors</h4>
-                                        <div>
-                                            <small class="text-muted division-title-caption">People or
-                                                organizations that contributed technically, materially,
-                                                financially, or provided general support for the
-                                                creation of the resource's content but are not
-                                                considered authors.
-                                            </small>
-                                        </div>
-                                        <br>
-                                        <table class="table hs-table contact-table contact-table-view">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for cont in contributors %}
-                                                <tr>
-                                                    <td>{% if cont.description %}
-                                                        <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
-                                                        {{ cont.name }}{% endif %}</td>
-                                                    <td>{% if cont.organization %}
-                                                        {{ cont.organization }}{% endif %}</td>
-                                                    <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
-                                                    <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
-                                                    <td>
-                                                        {% for name, link in cont.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    {% endif %}
-
-                                {% else %}
-                                    <div class="tab-pane active" id="contactTab">
-                                        <h4>Authors</h4>
-                                        <div>
-                                            <small class="text-muted division-title-caption">The people
-                                                or organizations that created the intellectual content
-                                                of the resource.
-                                            </small>
-                                        </div>
-                                        <br>
-
-                                        <table id="authors-table" class="hs-table contact-table table">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th class="drag-indicator"></th>
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                                <th></th>
-                                            </tr>
-                                            </thead>
-                                            <tbody class="sortable">
-                                            {% for author in creator_formset.initial %}
-                                                <tr>
-                                                    <td class="drag-indicator">
-                                                        <i class="fa fa-arrows-v" aria-hidden="true"></i>
-                                                        <form class="hidden-form"
-                                                              action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                                                               enctype="multipart/form-data">
-                                                            {% csrf_token %}
-                                                            <input name="resource-mode" type="hidden" value="edit">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                                                   value="{% if author.name %}{{ author.name }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                                                   value="{% if author.description %}{{ author.description }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                                                   value="{% if author.organization %}{{ author.organization }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                                                   value="{% if author.email %}{{ author.email }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                                                   value="{% if author.address %}{{ author.address }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                                                   type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                                                   value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
-
-                                                            <input class="order-input"
-                                                                   name="creator-{{ author.order|add:"- 1" }}-order"
-                                                                   type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
-                                                        </form>
-                                                    </td>
-                                                    <td>
-                                                        {% if author.description %}
-                                                        <a href="{{ author.description }}">{{ author.name }}</a>{% else %}
-                                                        {{ author.name }}{% endif %}</td>
-                                                    <td>{% if  author.organization %}
-                                                        {{ author.organization }}{% endif %}</td>
-                                                    <td>{% if  author.address %}{{ author.address }}{% endif %}</td>
-                                                    <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
-                                                    <td>
-                                                        {% for name, link in author.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                                                           data-target="#edit-creator-dialog{{ author.id }}"
-                                                        ></a>
-
-                                                        {# Prevent deletion of last author #}
-                                                        {% if creator_formset.initial|length > 1 %}
-                                                            <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                                                               data-target="#delete-creator-dialog{{ author.id }}"></a>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-creator-dialog" multiple="multiple">
-                                                                <span class="glyphicon glyphicon-plus"><span
-                                                                        class="button-label"> Add Author</span></span>
-                                        </a>
-
-                                        <hr>
-
-                                        <h4>Contributors</h4>
-
-                                        <div>
-                                            <small class="text-muted division-title-caption">People or
-                                                organizations that contributed technically, materially,
-                                                financially, or provided general support for the
-                                                creation of the resource's content but are not
-                                                considered authors.
-                                            </small>
-                                        </div>
-                                        <br>
-
-                                        <table class="hs-table contact-table table">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                                <th></th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for contributor in contributor_formset.initial %}
-                                                <tr>
-                                                    <td>{% if contributor.description %}
-                                                        <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
-                                                        {{ contributor.name }}{% endif %}</td>
-                                                    <td>{% if  contributor.organization %}
-                                                        {{ contributor.organization }}{% endif %}</td>
-                                                    <td>{% if  contributor.address %}
-                                                        {{ contributor.address }}{% endif %}</td>
-                                                    <td>{% if  contributor.phone %}
-                                                        {{ contributor.phone }}{% endif %}</td>
-                                                   <td>
-                                                        {% for name, link in contributor.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                                                           data-target="#edit-contributor-dialog{{ contributor.id }}"
-                                                        ></a>
-                                                        <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                                           data-target="#delete-contributor-dialog{{ contributor.id }}"
-                                                        ></a>
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-contributor-dialog" multiple="multiple">
-                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
-                                        </a>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <!-- ========= RELATED RESOURCES TAB ========= -->
-                            {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
-                                <div class="tab-pane" id="relatedResourcesTab">
-                                    {% if not metadata_form %}
-                                    {% if sources %}
-                                        <table class="table hs-table">
-                                            <legend>Sources</legend>
-                                            {% for source in sources %}
-                                            <tr>
-                                                <th class="dataset-label"><strong>Derived From:</strong></th>
-                                                <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </table>
-                                    {% endif %}
-                                    {% if show_relations_section %}
-                                        <table class="table hs-table" style="margin-bottom: 0;">
-                                            <legend>Relations</legend>
-                                            {% for relation in relations %}
-                                            {% if relation.type|lower != "haspart"%}
-                                            <tr>
-                                                <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
-                                                <td class="dataset-details">{{ relation.value|urlize }}</td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </table>
-                                    {% endif %}
-                                    {% else %}
-                                        <div>
-                                            <table class="table hs-table" style="margin-bottom: 0;">
-                                                <tbody>
-                                                <legend>Sources</legend>
-                                                {% for source in source_formset.initial %}
-                                                    <tr>
-                                                        <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                                                        <td>
-                                                            <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                                                               data-target="#edit-source-dialog{{ source.id }}"></a>
-                                                        </td>
-                                                        <td>
-                                                            <a data-toggle="modal" data-placement="auto"
-                                                               title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                                                               data-target="#delete-source-element-dialog{{ source.id }}"></a>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-                                            <br>
-                                            <a id="add-source" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-source-dialog"><i
-                                                    class="fa fa-plus"></i> Add Source</a>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
-                                              class="glyphicon glyphicon-info-sign text-muted"></span>
-                                        </div>
-                                        <hr style="border: 0;">
-                                        <div>
-                                            <table class="table hs-table">
-                                                <tbody>
-                                                <legend>Relations</legend>
-                                                {% for relation in relation_formset.initial %}
-                                                    {% if  relation.type|lower != "haspart"%}
-                                                        <tr>
-                                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value|urlize }}</td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"></a>
-                                                            </td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto"
-                                                                   title="Remove"
-                                                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
-                                                            </td>
-                                                        </tr>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-
-                                            <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-relation-dialog">
-                                                <i class="fa fa-plus"></i> Add Relation</a>
-
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
-                                                  class="glyphicon glyphicon-info-sign text-muted"></span>
-                                            <hr style="border: 0;">
-                                        </div>
-                                    {% endif %}
-                                    {% if belongs_to_collections %}
-                                        <legend>This resource belongs to the following collections:</legend>
-                                        <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Title</th>
-                                                    <th>Owners</th>
-                                                    <th>Sharing Status</th>
-                                                    <th>My Permission</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for res in belongs_to_collections %}
-                                                <tr id="{{ res.short_id }}">
-                                                    <td>
-                                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                            <strong>{{ res.metadata.title }}</strong>
-                                                        {% else %}
-                                                            <strong><a href="{{ res.get_absolute_url }}"
-                                                                       target="_blank">{{ res.metadata.title }}</a></strong>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% for owner in res.raccess.owners.all %}
-                                                            {% if forloop.counter0 > 0 %} · {% endif %}
-                                                            {% if owner.first_name %}
-                                                                <a href='/user/{{ owner.pk }}/'
-                                                                           target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a>
-                                                            {% else %}
-                                                                <a href='/user/{{ owner.pk }}/'
-                                                                           target="_blank">{{ owner.username }}</a>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        {% if res.raccess.published %}
-                                                            <strong class="label-public">&nbsp;Published</strong>
-                                                        {% elif res.raccess.public %}
-                                                            <strong class="label-public">&nbsp;Public</strong>
-                                                        {% elif res.raccess.discoverable %}
-                                                            <strong class="label-discoverable">
-                                                                &nbsp;Discoverable</strong>
-                                                        {% else %}
-                                                            <strong class="label-private">&nbsp;Private</strong>
-                                                        {% endif %}
-                                                        {% if res.raccess.published %}
-                                                            {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                                &#8210; Note that the DOI will not be available
-                                                                until
-                                                                it has been registered and activated.{% endif %}
-                                                        {% else %}
-                                                            &{% if res.raccess.shareable %}
-                                                            <strong style="color:#5cb85c">&nbsp;Shareable</strong>
-                                                        {% else %}<strong style="color:#d9534f">&nbsp;Not
-                                                                Shareable</strong>{% endif %}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                                        {% else %}
-                                                            {{ res|user_permission:request.user.pk }}
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-
-                                        </tbody>
-                                    </table>
-                                    {% endif%}
-                                </div>
-                            {% endif %}
-                            <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-                            {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
-                                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
-                                        {% if  cm|resource_type|lower != "collection resource" %}
-                                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
-                                                 id="resourceSpecificTab">
-                                                {% if not metadata_form %}
-
-                                                    {% block extended_metadata %}
-
-                                                    {% endblock %}
-
-                                                {% else %}
-                                                    {% crispy metadata_form %}
-                                                {% endif %}
-                                                {% block extra_section %} {# add extra section for resource landing page #}
-                                                {% endblock %}
-                                            </div>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-
-                            <!-- ========= RELEVANT TOOLS TAB ========= -->
-                            {% if relevant_tools %}
-                                <div class="tab-pane" id="relevantTools">
-                                    {% if not metadata_form %}
-                                        <div class="row">
-                                            {% for tool in relevant_tools.tool_list %}
-                                                <div class="col-lg-3 col-md-4 col-sm-12">
-                                                    <div title="{{ tool.title }}" id="web-app-item">
-                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
-    						                         {% if tool.approved %}
-                                                         <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
-                                                             <img class="app-approved-icon-img" src="/static/img/approved_app.png">
-                                                         </a>
-                                                     {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
-                                                        {% if tool.title|length > 20 %}
-                                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                        {% else %}
-                                                            <h4>{{ tool.title }}</h4>
-                                                        {% endif %}
-                                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                                    </a>
-                                                </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% else %}
-                                        ------- Relevant tools form here -------
-                                    {%  endif %}
-                                </div>
-                            {% endif %}
-
-                            <!-- ========= EXTRA METADATA TAB ========= -->
-                            {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
-                                <div class="tab-pane" id="extraMetaTab">
-                                    <legend>Extended Metadata</legend>
-                                    <table id="extraMetaTable" class="hs-table table" width="100%">
-                                        <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Value</th>
-                                            {% if metadata_form %}
-                                                <th></th>
-                                            {% endif %}
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for extra_meta_name, extra_meta_value in page.get_content_model.extra_metadata.items %}
-                                                <tr id="{{ forloop.counter0 }}">
-                                                    <td>
-                                                        {{ extra_meta_name }}
-                                                    </td>
-                                                    <td>
-                                                        {{ extra_meta_value|urlize }}
-                                                    </td>
-                                                    {% if metadata_form %}
-                                                        <td>
-                                                            <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
-                                                                  data-toggle="tooltip" data-placement="top"
-                                                                  title="Edit">
-                                                            </span>
-                                                            <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
-                                                                  data-toggle="tooltip" data-placement="top"
-                                                                  title="Remove">
-                                                            </span>
-                                                        </td>
-                                                    {% endif %}
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-
-                                    <br>
-
-                                    {% if metadata_form %}
-                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                            <i class="fa fa-plus"></i> Add New Entry
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-
-                            {# ===========   File Type Metadata Tab ================== #}
-                            {% if cm.resource_type == "CompositeResource" %}
-                                <div class="tab-pane" id="fileTypeMetaDataTab">
-                                    <div class="alert alert-warning alert-dismissible" role="alert">
-                                        <span>Select a file to see file type metadata.</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            </div>
-                        </div>
-                     <!-- ==== Tabs end ==== -->
                 </div>
+            {% endif %}
+
+            {# ======= Extended Metadata ======= #}
+            <div class="col-xs-12 content-block">
+                <h3>Extended Metadata</h3>
+                {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
+                    {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                    {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                        {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
+                            {% if  cm|resource_type|lower != "collection resource" %}
+                                <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                     id="resourceSpecificTab">
+                                    {% if not metadata_form %}
+                                        {% block extended_metadata %}{% endblock %}
+                                    {% else %}
+                                        {% crispy metadata_form %}
+                                    {% endif %}
+                                    {% block extra_section %} {# add extra section for resource landing page #}
+                                    {% endblock %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
             </div>
+
+            {# ======= Additional Metadata ======= #}
+            {% include "resource-landing-page/additional-metadata.html" %}
+
+            {# ======= References ======= #}
+            {% include "resource-landing-page/references.html" %}
 
             {# ======= Credits ======= #}
             {% include "resource-landing-page/credits.html" %}
 
+            {# ======= Citation ======= #}
+            {% if metadata_form %}
+                {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+            {% else %}
+                {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+            {% endif %}
+
             {# ======= Change quota holder ======= #}
             {% include "resource-landing-page/quota.html" %}
 
+{#        TODO: MOVE TO TOP#}
             {# ======= Ratings ======= #}
-            {% include "resource-landing-page/ratings.html" %}
+{#            {% include "resource-landing-page/ratings.html" %}#}
 
             {# ======= Comments ======= #}
             {% include "resource-landing-page/comments.html" %}

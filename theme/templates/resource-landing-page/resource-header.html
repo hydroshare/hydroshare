@@ -8,7 +8,18 @@
                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                 {% if cr.name %}
                     {% if cr.description %}
-                        <a href="{{ cr.description }}">{{ cr.name }}</a>
+                        {#                        <a data-toggle="modal" data-target="profile-preview-modal" href="{{ cr.description }}">{{ cr.name }}</a>#}
+                        <a class="profile-preview" data-toggle="modal" data-target="#profile-preview-modal" href="#"
+                           data-name="{{ cr.name }}" data-email="{{ cr.email }}"
+                           data-organization="{{ cr.organization }}"
+                           data-title="{{ cr.title }}"
+                            {% for name, link in cr.supported_identifiers.items %}
+                            data-{{ name }}="{{ link }}"
+                            {% endfor %}
+                           data-state="{{ cr.state }}" data-country="{{ cr.country }}"
+                           data-profile-url="{{ cr.description }}">
+                            {{ cr.name }}
+                        </a>
                     {% else %}
                         <span>{{ cr.name }}</span>
                     {% endif %}
@@ -32,6 +43,68 @@
         <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
     </table>
 </div>
+<!-- Modal -->
+<div class="modal fade" id="profile-preview-modal" tabindex="-1" role="dialog" aria-labelledby="profileName"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="profile-badge-container">
+            <div class="profile-badge-header">
+                <div class="profile-pic round-image user-icon"></div>
+                <div class="external-profiles">
+                    <i class="identifier-icon ai ai-google-scholar-square"></i>
+                    <i class="identifier-icon ai ai-orcid"></i>
+                    <i class="identifier-icon ai ai-researchgate-square"></i>
+                    <img class="identifier-icon"
+                         src="{{ STATIC_URL }}img/researcherID.png"
+                         alt="ResearcherID icon"/>
+                    <i class="identifier-icon fa fa-address-card"></i>
+                </div>
+            </div>
+            <div class="profile-badge-content">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2 data-name></h2>
+                    </div>
+                    <div class="col-xs-6">
+                        <table class="info-table">
+                            <tr>
+                                <td class="text-center"><i class="fa fa-envelope icon-blue" aria-hidden="true"></i></td>
+                                <td><span data-email></span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center"><i class="fa fa-map-marker icon-blue" aria-hidden="true"></i></td>
+                                <td><span data-state></span>, <span data-country></span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="profile-badge-stat">
+                            <span data-contributions></span><span>Contributions</span>
+                        </div>
+
+                        <div class="profile-badge-stat">
+                            <span>Joined</span><span data-joined></span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <br>
+                    <h4 class="text-muted"><span data-organization></span> | <span
+                            data-title></span>
+                    </h4>
+                    <div class="text-muted">Subject Areas:</div>
+                    <div data-subject-areas></div>
+                </div>
+
+                <hr>
+                <div>
+                    <a id="btn-preview-profile" href="#" class="btn btn-primary">View Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% else %}
     <div class="col-sm-6">
         <table class="info-table">
