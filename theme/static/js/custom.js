@@ -199,9 +199,15 @@ $(document).ready(function () {
             $("#profile-preview-modal [data-" + item + "]").text(data[item]);
             $("#btn-preview-profile").attr("href", data.profileUrl)
         }
+
+        // TODO: REMOVE AFTER IMPLEMENTING THESE FIELDS IN THE VIEW
+        $("#profile-preview-modal [data-state]").text("UT");
+        $("#profile-preview-modal [data-country]").text("US");
+        $("#profile-preview-modal [data-contributions]").text("12");
+        $("#profile-preview-modal [data-joined]").text("Nov 24th, 2017");
+        $("#profile-preview-modal [data-title]").text("Web Developer");
+        $("#profile-preview-modal [data-subject-areas]").text("Hydrology, Water quality, Hydroinformatics")
     });
-
-
 });
 
 function showUniversalMessage(type, message, timeout) {
