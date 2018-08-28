@@ -496,23 +496,25 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
-    try: 
+    try:
         res, _, _ = authorize(request, shortkey,
-                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, 
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                               raises_exception=False)
-    except ObjectDoesNotExist: 
-        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND) 
-    except PermissionDenied: 
-        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED) 
+    except ObjectDoesNotExist:
+        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
     istorage = res.get_irods_storage()
-    logger.debug("request path is {}".format(request.path))
+    if __debug__:
+        logger.debug("request path is {}".format(request.path))
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
     # logger.debug("public_file_path is {}".format(public_file_path))
     istorage = res.get_irods_storage()
     file_download_url = istorage.url(public_file_path)
-    logger.debug("redirect is {}".format(file_download_url))
+    if __debug__:
+        logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)
 
 
@@ -544,9 +546,9 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
-            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.debug(ex.message)
+            logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
