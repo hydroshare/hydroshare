@@ -1554,8 +1554,9 @@ body > .main-container {
 }
 
 .content-block h3, #comments h3 {
-	padding-bottom: 9px;
+	padding-bottom: 10px;
 	border-bottom: 1px solid #eee;
+	margin-top: 40px;
 }
 
 .sharing-public{
@@ -2195,7 +2196,7 @@ button.loading {
 
 .access-table-wrapper {
 	min-height: 100px;
-	height: 250px;
+	height: 150px;
 	overflow: auto;
 	resize: vertical;
     border: 1px solid #DDD;
@@ -4752,7 +4753,7 @@ div#resource-content {
 	display: inline-block;
 	position: relative;
 	float: right;
-	top: 96px;
+	top: 120px;
 	right: 26px;
 }
 

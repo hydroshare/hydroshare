@@ -1393,12 +1393,11 @@
 
             <div class="modal-body">
                 <div class="alert alert-info" role="alert">
-                    <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse" data-target="#usage-info">&nbsp;</span>Use this window to share your resource with specific HydroShare users. You can give other
+                    <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse"
+                             data-target="#usage-info">&nbsp;</span>
+                        Use this window to share your resource with specific HydroShare users. You can give other
                         users the ability to view or edit this resource. You can also add additional owners who
-                        will
-                        have full permissions.</p>
-
-                    <p><a href="#" data-toggle="collapse" data-target="#usage-info">Show more/less</a></p>
+                        will have full permissions.</p>
 
                     <div id="usage-info" class="collapse">
                         <ul>
@@ -1429,6 +1428,9 @@
                             </li>
                         </ul>
                     </div>
+                    <a href="#" data-toggle="collapse" data-target="#usage-info" class="show-more-btn btn-default"
+                       title="Show more" style="text-decoration: none;">...</a>
+                    <br>
                 </div>
 
                 <p>Who has access</p>
@@ -1528,7 +1530,7 @@
                     </table>
                 </div>
             </div>
-            <hr>
+
             <div class="modal-body">
                 <div id="div-invite-people">
                     <span>Invite:</span>
@@ -1586,10 +1588,185 @@
                         </form>
                     </div>
                 </div>
+                <hr>
+                <div id="sharing-status">
+                    <div>Sharing status</div>
+                    <br>
+                    {% if can_change_resource_flags %}
+                        <div class="btn-group" role="group">
+                            {# -------- PUBLIC -------- #}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                {% csrf_token %}
+                                <input name="flag" type="hidden" value="make_public"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                <button {% if not cm.can_be_public_or_discoverable or cm.raccess.public %}
+                                    disabled {% endif %}
+                                    id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded by anyone.' type="submit"
+                                        {% if cm.raccess.public %}
+                                    class="btn btn-default active"
+                                        {% else %}
+                                    class="btn btn-default"
+                                        {% endif %}
+                                >Public
+                                </button>
+                            </form>
+                            {# -------- DISCOVERABLE -------- #}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                <input name="flag" type="hidden" value="make_discoverable"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                {% csrf_token %}
+                                <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                                                                                      id="btn-discoverable"
+                                                                                      data-toggle="tooltip"
+                                                                                      data-placement="auto"
+                                                                                      title='Metadata is public but data is protected.'
+                                                                                      type="submit"
+                                        {% if cm.raccess.discoverable and not cm.raccess.public %}
+                                                                                      class="btn btn-default active"
+                                        {% else %}
+                                                                                      class="btn btn-default"
+                                        {% endif %}
+                                >Discoverable
+                                </button>
+                            </form>
+                            {# -------- PRIVATE -------- #}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                <input name="flag" type="hidden" value="make_private"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                {% csrf_token %}
+                                <button {% if not cm.raccess.public and not cm.raccess.discoverable %}
+                                    disabled {% endif %}
+                                    id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded only by designated users or research groups.'
+                                    type="submit"
+                                        {% if not cm.raccess.public and not cm.raccess.discoverable %}
+                                    class="btn btn-default active"
+                                        {% else %}
+                                    class="btn btn-default"
+                                        {% endif %}
+                                >Private
+                                </button>
+                            </form>
+                        </div>
+
+                        {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
+                            <div class="label-public">Note that making the resource public may take a little extra time
+                                to update
+                                Hyrax server in order to provide OPeNDAP service for this resource.
+                            </div>
+                        {% endif %}
+
+                        {% if is_owner_user %}
+                            <div id="shareable-container" class="height-fix">
+                                {#   Shareable flag    #}
+                                <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                      method="POST">
+                                    {% csrf_token %}
+
+                                    <input name="flag" type="hidden"
+                                           {% if cm.raccess.shareable %}value="make_not_shareable"
+                                           {% else %}value="make_shareable"{% endif %}/>
+
+                                    <br>
+                                    <div class="input-group" data-toggle="tooltip" style="width: 235px;"
+                                         title="When checked, users other than owners may grant access to the resource.">
+                                      <span class="input-group-addon">
+                                        <input id="btn-shareable" type="checkbox"
+                                               {% if cm.raccess.shareable %}checked{% endif %}>
+                                      </span>
+                                        <span class="form-control">Shareable</span>
+                                    </div><!-- /input-group -->
+                                </form>
+                            </div>
+                            <br>
+                        {% endif %}
+                    {% else %}
+                        <ul class="list-group">
+                            {% if cm.raccess.published %}
+                                <li class="list-group-item">
+                                    <div>
+                                        <img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/>
+                                        <span>&nbsp;Published</span>
+                                    </div>
+                                </li>
+                            {% elif cm.raccess.public %}
+                                <li class="list-group-item">
+                                    <div>
+                                        <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
+                                        <span>&nbsp;Public</span>
+                                    </div>
+                                </li>
+                            {% elif cm.raccess.discoverable %}
+                                <li class="list-group-item">
+                                    <div>
+                                        <img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/>
+                                        <span>&nbsp;Discoverable</span>
+                                    </div>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">
+                                    <div>
+                                        <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
+                                        <span>&nbsp;Private</span>
+                                    </div>
+                                </li>
+                            {% endif %}
+                            {% if cm.raccess.published %}
+                                {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                    <li class="list-group-item">
+                                        <div>
+                                            <small class="text-muted">Note that the DOI will not be available until it
+                                                has been
+                                                registered and activated.
+                                            </small>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="list-group-item">
+                                    {% if cm.raccess.shareable %}
+                                        <div>
+                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
+                                            <span>&nbsp;Shareable</span>
+                                        </div>
+                                    {% else %}
+                                        <div>
+                                            <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                 alt="Non Sharable Resource"/>
+                                            <span>&nbsp;Not Shareable</span>
+                                        </div>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                    <div id="user-permission-msg">
+                        {% if is_owner_user %}
+                            <div class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i> You
+                                are the owner of this resource.
+                            </div>
+                        {% elif is_edit_user %}
+                            <div class="alert alert-info" role="alert">You have been given specific permission to
+                                {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
+                            </div>
+                        {% elif is_view_user %}
+                            <div class="alert alert-info" role="alert">You have been given specific permission to view
+                                this resource.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
             <div class="modal-footer">
-                <a type="button" data-dismiss="modal" class="btn btn-primary">Close</a>
+                <a type="button" data-dismiss="modal" class="btn btn-default">Close</a>
             </div>
         </div>
     </div>
@@ -1903,6 +2080,69 @@
 
             <div class="modal-footer">
                 <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Preview Modal -->
+<div class="modal fade" id="profile-preview-modal" tabindex="-1" role="dialog" aria-labelledby="profileName"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="profile-badge-container">
+            <div class="profile-badge-header">
+                <div class="profile-pic round-image user-icon"></div>
+                <div class="external-profiles">
+                    <i class="identifier-icon ai ai-google-scholar-square"></i>
+                    <i class="identifier-icon ai ai-orcid"></i>
+                    <i class="identifier-icon ai ai-researchgate-square"></i>
+                    <img class="identifier-icon"
+                         src="{{ STATIC_URL }}img/researcherID.png"
+                         alt="ResearcherID icon"/>
+                    <i class="identifier-icon fa fa-address-card"></i>
+                </div>
+            </div>
+            <div class="profile-badge-content">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2 data-name></h2>
+                    </div>
+                    <div class="col-xs-6">
+                        <table class="info-table">
+                            <tr>
+                                <td class="text-center"><i class="fa fa-envelope icon-blue" aria-hidden="true"></i></td>
+                                <td><span data-email></span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center"><i class="fa fa-map-marker icon-blue" aria-hidden="true"></i></td>
+                                <td><span data-state></span>, <span data-country></span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="profile-badge-stat">
+                            <span data-contributions></span><span>Contributions</span>
+                        </div>
+
+                        <div class="profile-badge-stat">
+                            <span>Joined</span><span data-joined></span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <br>
+                    <h4><span data-organization></span> | <span
+                            data-title></span>
+                    </h4>
+                    <div class="text-muted">Subject Areas:</div>
+                    <div data-subject-areas></div>
+                </div>
+
+                <hr>
+                <div class="text-right">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <a id="btn-preview-profile" href="#" class="btn btn-primary">View Profile</a>
+                </div>
             </div>
         </div>
     </div>

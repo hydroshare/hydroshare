@@ -4,7 +4,7 @@
     {% if sources %}
         <div class="col-xs-12 content-block">
             <h3>Sources</h3>
-            <table class="table hs-table">
+            <table class="info-table">
                 {% for source in sources %}
                     <tr>
                         <th class="dataset-label"><strong>Derived From:</strong></th>
@@ -13,11 +13,12 @@
                 {% endfor %}
             </table>
         </div>
+
     {% endif %}
     {% if show_relations_section %}
         <div class="col-xs-12 content-block">
             <h3>Relations</h3>
-            <table class="table hs-table" style="margin-bottom: 0;">
+            <table class="info-table">
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" %}
                         <tr>
@@ -53,6 +54,12 @@
             {% endfor %}
             </tbody>
         </table>
+        <p>
+            If the data in your resource was derived from another source or dataset, you can cite or acknowledge
+            those
+            references here. Click on "Add Source" and then add a full text citation to the original content, a web
+            link, or text describing the source of the data.
+        </p>
         <br>
         <a id="add-source" class="btn btn-success" data-toggle="modal"
            data-target="#add-source-dialog"><i
@@ -86,6 +93,13 @@
             {% endfor %}
             </tbody>
         </table>
+
+        <p>If this resource is related to other documents, datasets, websites, etc., you can record those
+        relationships here as references. For example, if this resource is cited by a paper you published,
+        select a relationship type of "Data for" and then provide a full text citation for the paper that used
+        the data, including the paper's DOI encoded as an HTTP URL if available. This records that this resource
+        is the data for the paper that cited it. If you enter a URL as part of the citation, it will be
+        converted to an active link.</p>
 
         <a id="add-relation" class="btn btn-success" data-toggle="modal"
            data-target="#add-relation-dialog">

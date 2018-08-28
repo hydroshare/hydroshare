@@ -115,20 +115,6 @@ div.affiliation {
     padding-top:0;
 }
 
-.show-more-btn {
-    width: 50px;
-    margin-left: 10px;
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
-    text-align: center;
-    color: #AAA;
-    border: 1px solid #ddd;
-    font-size: 12px;
-    cursor: pointer;
-    float: left;
-}
-
 #div_id_abstract textarea, #id_statement {
     resize: vertical;
 }

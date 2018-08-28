@@ -67,4 +67,10 @@ $(document).ready(function() {
     });
 
     $("input#id_user-autocomplete").addClass("form-control");
+
+    $('#usage-info').on('hidden.bs.collapse', function () {
+        $("a[data-target='#usage-info']").text("...").attr("title", "Show more");
+    }).on('shown.bs.collapse', function () {
+        $("a[data-target='#usage-info']").text("▲").attr("title", "Show less");
+    });
 });

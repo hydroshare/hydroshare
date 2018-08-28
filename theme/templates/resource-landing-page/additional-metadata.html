@@ -2,7 +2,7 @@
 {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
     <br><br>
     <div class="col-xs-12 content-block">
-        <h3>Extended Metadata</h3>
+        <h3>Additional Resource Level Metadata</h3>
         <table id="extraMetaTable" class="hs-table table" width="100%">
             <thead>
             <tr>
@@ -24,16 +24,15 @@
                     </td>
                     {% if metadata_form %}
                         <td>
-                                                            <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
-                                                                  data-toggle="tooltip" data-placement="top"
-                                                                  title="Edit">
-                                                            </span>
+                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
+                                  data-toggle="tooltip" data-placement="top"
+                                  title="Edit">
+                            </span>
                             <span data-loop-counter="{{ forloop.counter0 }}"
                                   class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
                                   data-toggle="tooltip" data-placement="top"
-                                  title="Remove">
-                                                            </span>
+                                  title="Remove"></span>
                         </td>
                     {% endif %}
                 </tr>

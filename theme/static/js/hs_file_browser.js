@@ -108,6 +108,7 @@ function updateSelectionMenuContext() {
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
             flagDisableDelete = true;
         }
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     }
     else if (selected.length == 1) {    // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
@@ -133,6 +134,7 @@ function updateSelectionMenuContext() {
         flagDisableSetTimeseriesFileType = true;
 
         $("#fb-download-help").toggleClass("hidden", true);
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     }
 
     if (selected.hasClass("fb-file")) {
