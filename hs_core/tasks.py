@@ -323,8 +323,7 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
-    # TODO: defaulting to local storage for now as federated storage does not get cleaned up
-    istorage = IrodsStorage()
+    istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
     # update metadata files here, in background
     if res.resource_type == "CompositeResource":
