@@ -1281,7 +1281,7 @@ class AbstractLogicalFile(models.Model):
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = "{site}/terms/{aggr_type}".format(site=current_site_url,
+        agg_type_url = u"{site}/terms/{aggr_type}".format(site=current_site_url,
                                                          aggr_type=self.get_aggregation_type_name())
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
@@ -1327,6 +1327,6 @@ class AbstractLogicalFile(models.Model):
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
         # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
-        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
