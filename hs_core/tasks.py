@@ -39,18 +39,32 @@ from theme.utils import get_quota_message
 logger = logging.getLogger('django')
 
 
-# TODO: Currently there are two different cleanups scheduled.
-# TODO: One is 20 minutes after creation, the other is nightly.
+# Currently there are two different cleanups scheduled.
+# One is 20 minutes after creation, the other is nightly.
+# TODO Clean up zipfiles in remote federated storage as well.
 @periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
-    # TODO: This only cleans up zipfiles in local storage.
-    # TODO: User and federated storage accumulate zip directories that are not cleaned up.
+    if __debug__:
+        logger.debug("cleaning up {}".format(zips_daily_date))
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
+    federated_prefixes = BaseResource.objects.all().values_list('resource_federation_path')\
+        .distinct()
+
+    for p in federated_prefixes:
+        prefix = p[0]  # strip tuple
+        if prefix != "":
+            zips_daily_date = "{prefix}/zips/{daily_date}"\
+                .format(prefix=prefix, daily_date=date_folder)
+            if __debug__:
+                logger.debug("cleaning up {}".format(zips_daily_date))
+            istorage = IrodsStorage("federated")
+            if istorage.exists(zips_daily_date):
+                istorage.delete(zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
