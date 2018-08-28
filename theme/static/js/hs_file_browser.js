@@ -162,11 +162,17 @@ function updateSelectionMenuContext() {
             flagDisableDelete = false;
         }
         if(resourceType === 'Composite Resource') {
-             var logicalFileType = $("#fb-files-container").find('span.fb-logical-file-type').attr("data-logical-file-type");
-             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-                logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                 flagDisableCreateFolder = true;
-             }
+            $("#fb-files-container").find('span.fb-logical-file-type').each(function() {
+                var logicalFileType = $(this).attr("data-logical-file-type");
+                //disable folder creation in aggregation folders
+                //TODO this needs to be updated when new aggregations are added...
+                if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile"){
+                    if($(this).parent().hasClass("fb-file")){
+                        flagDisableCreateFolder = true;
+                    }
+                }
+            });
         }
 
         $("#fb-download-help").toggleClass("hidden", true);
@@ -576,6 +582,7 @@ function bindFileBrowserItemEvents() {
             var fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
             var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+            var isFolder = $(event.target).closest("li").hasClass("fb-folder");
 
             // toggle apps by file extension and aggregations
             menu.find("li.btn-open-with").each(function() {
@@ -594,6 +601,14 @@ function bindFileBrowserItemEvents() {
                     }
                 }
                 $(this).toggle(agg_app || extension_app);
+            });
+            menu.find("li#btn-download").each(function() {
+                if(isFolder){
+                    $(this).toggle(false);
+                }
+                else{
+                    $(this).toggle(true);
+                }
             });
         }
         else {
@@ -896,7 +911,7 @@ function onOpenFile() {
     startDownload();
 }
 
-function startDownload() {
+function startDownload(zipped) {
     var downloadList = $("#fb-files-container li.ui-selected");
 
     // Remove previous temporary download frames
@@ -906,6 +921,9 @@ function startDownload() {
         // Workaround for Firefox and IE
         for (var i = 0; i < downloadList.length; i++) {
             var url = $(downloadList[i]).attr("data-url");
+            if(zipped === true){
+                url += "?zipped=True"
+            }
             var frameID = "download-frame-" + i;
             $("body").append("<iframe class='temp-download-frame' id='"
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");
@@ -1498,6 +1516,15 @@ $(document).ready(function () {
         }
 
         startDownload();
+    });
+
+    // Download method
+    $(" #btn-download-zip").click(function (e) {
+        if(e.currentTarget.id === "download-file-btn"){
+            $("#license-agree-dialog-file").modal('hide');
+        }
+
+        startDownload(true);
     });
 
     // Get file URL method
