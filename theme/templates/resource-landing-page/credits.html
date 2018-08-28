@@ -30,6 +30,52 @@
             </table>
         </div>
     {% endif %}
+    {% if contributors %}
+        <div class="col-xs-12 content-block">
+            <h3>Contributors</h3>
+            <div>
+                <span class="division-title-caption">People or
+                    organizations that contributed technically, materially,
+                    financially, or provided general support for the
+                    creation of the resource's content but are not
+                    considered authors.
+                </span>
+            </div>
+            <br>
+            <table class="table hs-table contact-table contact-table-view">
+                <thead>
+                <tr class="header-row">
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Author Identifiers</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for cont in contributors %}
+                    <tr>
+                        <td>{% if cont.description %}
+                            <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
+                            {{ cont.name }}{% endif %}</td>
+                        <td>{% if cont.organization %}
+                            {{ cont.organization }}{% endif %}</td>
+                        <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
+                        <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                        <td>
+                            {% for name, link in cont.identifiers.items %}
+                                {{ identif.name }}
+                                <a href="{{ link }}"
+                                   target="_blank">{{ name }}</a>
+                                {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+{% endif %}
 {% else %}
     <div class="col-sm-12 content-block">
         <h3>Credits</h3>
@@ -59,12 +105,12 @@
                         <td>{{ agency.award_title }}</td>
                         <td>{{ agency.award_number }}</td>
                         <td>
-                            <a data-toggle="modal" data-placement="auto" title="Edit"
-                               class="glyphicon glyphicon-pencil icon-button icon-blue"
-                               data-target="#edit-funding-agency-{{ agency.id }}"></a>
-                            <a data-toggle="modal" data-placement="auto" title="Remove"
-                               class="glyphicon glyphicon-trash icon-button btn-remove"
-                               data-target="#delete-funding-agency-{{ agency.id }}"></a>
+                            <span data-toggle="modal" data-placement="auto" title="Edit"
+                               class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
+                               data-target="#edit-funding-agency-{{ agency.id }}"></span>
+                            <span data-toggle="modal" data-placement="auto" title="Remove"
+                               class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
+                               data-target="#delete-funding-agency-{{ agency.id }}"></span>
                         </td>
                     </tr>
                 {% endfor %}
@@ -75,6 +121,70 @@
         <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
            data-target="#add-funding-agency">
             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
+        </a>
+    </div>
+
+    <div class="col-xs-12 content-block">
+        <h3>Contributors</h3>
+        <div>
+            <span class="">People or
+                organizations that contributed technically, materially,
+                financially, or provided general support for the
+                creation of the resource's content but are not
+                considered authors.
+            </span>
+        </div>
+        <br>
+
+        <table class="hs-table contact-table table">
+            <thead>
+            <tr class="header-row">
+                <th>Name</th>
+                <th>Organization</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Author Identifiers</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for contributor in contributor_formset.initial %}
+                <tr>
+                    <td>{% if contributor.description %}
+                        <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
+                        {{ contributor.name }}{% endif %}</td>
+                    <td>{% if  contributor.organization %}
+                        {{ contributor.organization }}{% endif %}</td>
+                    <td>{% if  contributor.address %}
+                        {{ contributor.address }}{% endif %}</td>
+                    <td>{% if  contributor.phone %}
+                        {{ contributor.phone }}{% endif %}</td>
+                   <td>
+                        {% for name, link in contributor.identifiers.items %}
+                            {{ identif.name }}
+                            <a href="{{ link }}"
+                               target="_blank">{{ name }}</a>
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <span data-toggle="modal" data-placement="auto" title="Edit"
+                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                           data-target="#edit-contributor-dialog{{ contributor.id }}">
+                        </span>
+                        <span data-toggle="modal" data-placement="auto" title="Remove"
+                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                           data-target="#delete-contributor-dialog{{ contributor.id }}">
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a type="button" class="btn btn-success" data-toggle="modal"
+           data-target="#add-contributor-dialog" multiple="multiple">
+            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
         </a>
     </div>
 {% endif %}

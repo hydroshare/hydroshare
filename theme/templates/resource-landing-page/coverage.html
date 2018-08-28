@@ -9,36 +9,26 @@
                     <div class="col-xs-12 col-sm-4">
                         {% if spatial_coverage %}
                             <h4>Spatial:</h4>
-                            <table class="info-table">
-                                <tbody>
-                                {% if spatial_coverage.projection %}
-                                    <tr>
-                                        <td>
-                                            <i class="fa fa-globe" aria-hidden="true"></i>
-                                            <strong>&nbsp;Coordinate System/Geographic Projection:&nbsp;</strong>
-                                        </td>
-                                        <td>
-                                            <span>{{ spatial_coverage.projection }}</span>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.units %}
-                                    <tr>
-                                        <td>
-                                            <i class="fa fa-tachometer" aria-hidden="true"></i>
-                                            <strong>&nbsp;Coordinate Units:&nbsp;</strong>
-                                        </td>
-                                        <td>
-                                            <span>{{ spatial_coverage.units }}</span>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                                </tbody>
-                            </table>
+                            {% if spatial_coverage.projection %}
+                                <div>
+                                    <i class="fa fa-globe" aria-hidden="true"></i>
+                                    <span class="text-muted">&nbsp;Coordinate System/Geographic Projection:&nbsp;</span>
+                                </div>
+                                <div>{{ spatial_coverage.projection }}</div>
+                                <br>
+                            {% endif %}
+                            {% if spatial_coverage.units %}
+                                <div>
+                                    <i class="fa fa-tachometer" aria-hidden="true"></i>
+                                    <span class="text-muted">&nbsp;Coordinate Units:&nbsp;</span>
+                                </div>
+                                <div>{{ spatial_coverage.units }}</div>
+                                <br>
+                            {% endif %}
                             <div>
                                 {% if spatial_coverage.name %}
                                     <div>
-                                        <strong>Place/Area Name: </strong>
+                                        <span>Place/Area Name: </span>
                                         <span>{{ spatial_coverage.name }}</span>
                                     </div>
                                     <br>

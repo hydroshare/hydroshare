@@ -124,8 +124,10 @@
                 </div>
             {% endif %}
         </div>
+
+        {% if metadata_form %}
         <div class="col-xs-12">
-            {#   Require license agreement for file download flag    #}
+            {# Require license agreement for file download #}
             {% if is_owner_user %}
                 <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                       method="POST">
@@ -155,5 +157,6 @@
                 {% endif %}
             {% endif %}
         </div>
+        {% endif %}
     </div>
 </div>

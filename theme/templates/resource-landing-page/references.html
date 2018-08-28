@@ -1,9 +1,14 @@
 {% load hydroshare_tags crispy_forms_tags %}
 
 {% if not metadata_form %}
+    {% if sources or show_relations_section %}
+        <div class="col-xs-12 content-block">
+            <h3>References</h3>
+        </div>
+    {% endif %}
     {% if sources %}
         <div class="col-xs-12 content-block">
-            <h3>Sources</h3>
+            <h4>Sources</h4>
             <table class="info-table">
                 {% for source in sources %}
                     <tr>
@@ -13,11 +18,10 @@
                 {% endfor %}
             </table>
         </div>
-
     {% endif %}
     {% if show_relations_section %}
         <div class="col-xs-12 content-block">
-            <h3>Relations</h3>
+            <h4>Relations</h4>
             <table class="info-table">
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" %}
@@ -43,9 +47,7 @@
                         <a data-toggle="modal" data-placement="auto" title="Edit"
                            class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
                            data-target="#edit-source-dialog{{ source.id }}"></a>
-                    </td>
-                    <td>
-                        <a data-toggle="modal" data-placement="auto"
+                         <a data-toggle="modal" data-placement="auto"
                            title="Remove"
                            class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
                            data-target="#delete-source-element-dialog{{ source.id }}"></a>
@@ -54,12 +56,10 @@
             {% endfor %}
             </tbody>
         </table>
-        <p>
-            If the data in your resource was derived from another source or dataset, you can cite or acknowledge
+        <p><i>If the data in your resource was derived from another source or dataset, you can cite or acknowledge
             those
             references here. Click on "Add Source" and then add a full text citation to the original content, a web
-            link, or text describing the source of the data.
-        </p>
+            link, or text describing the source of the data.</i></p>
         <br>
         <a id="add-source" class="btn btn-success" data-toggle="modal"
            data-target="#add-source-dialog"><i
@@ -78,15 +78,13 @@
                         <th scope="row" class="dataset-label">{{ relation.type }}:</th>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
                         <td>
-                            <a data-toggle="modal" data-placement="auto" title="Edit"
-                               class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                               data-target="#edit-relation-dialog_{{ relation.id }}"></a>
-                        </td>
-                        <td>
-                            <a data-toggle="modal" data-placement="auto"
-                               title="Remove"
+                            <span data-toggle="modal" data-placement="auto" title="Edit"
+                               class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                               data-target="#edit-relation-dialog_{{ relation.id }}">
+                            </span>
+                            <span data-toggle="modal" data-placement="auto" title="Remove"
                                class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                               data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
+                               data-target="#delete-relation-element-dialog{{ relation.id }}"></span>
                         </td>
                     </tr>
                 {% endif %}
@@ -94,12 +92,12 @@
             </tbody>
         </table>
 
-        <p>If this resource is related to other documents, datasets, websites, etc., you can record those
+        <p><i>If this resource is related to other documents, datasets, websites, etc., you can record those
         relationships here as references. For example, if this resource is cited by a paper you published,
         select a relationship type of "Data for" and then provide a full text citation for the paper that used
         the data, including the paper's DOI encoded as an HTTP URL if available. This records that this resource
         is the data for the paper that cited it. If you enter a URL as part of the citation, it will be
-        converted to an active link.</p>
+        converted to an active link.</i></p>
 
         <a id="add-relation" class="btn btn-success" data-toggle="modal"
            data-target="#add-relation-dialog">
@@ -181,7 +179,6 @@
                     </td>
                 </tr>
             {% endfor %}
-
             </tbody>
         </table>
     </div>

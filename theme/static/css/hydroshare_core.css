@@ -916,7 +916,6 @@ li.account p{
 /* ===== Resource edit page changes ===== */
 
 .contact-table .icon-button, .funding-agencies-table .icon-button {
-    float:left;
     background-color: transparent;
     border: 0;
     text-decoration: none;
@@ -960,6 +959,7 @@ li.account p{
 	background-color: #F1F1F1;
 	text-overflow: ellipsis;
 	overflow: hidden;
+	border-bottom: 0 !important;
 }
 
 .contact-table-view td {
@@ -1301,10 +1301,6 @@ table.table-plain td{
 .division-title > span {
 	font-size: 20px;
 	font-weight: 500;
-}
-
-.division-title-caption {
-	font-weight: normal;
 }
 
 .page-title {
@@ -2262,7 +2258,8 @@ table.table.access-table {
 }
 
 .glyphicon-info-sign {
-    top: 2px;
+	top: 2px;
+	margin-left: 10px;
 }
 
 /*  =============== Coverage - Google map css ================ */
@@ -4202,7 +4199,6 @@ div.fb-upload-caption {
 	padding: 8px;
 	border: 1px solid #DDD;
 	border-top: 0;
-	background: #fafafa;
 	color: #555;
 	margin-bottom: 20px;
 	padding-bottom: 20px;
