@@ -6,6 +6,7 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource, ResourceFile
+from pprint import pprint
 
 
 def debug_resource(short_id):
@@ -20,6 +21,13 @@ def debug_resource(short_id):
     assert resource, (res, res.content_model)
 
     if resource.resource_type == 'CompositeResource':
+        # first dump the data from each logical file
+        for f in resource.files.all():
+            if f.has_logical_file:
+                metadata = f.metadata.get_html()
+                print("metadata for {} is".format(resource.short_id))
+                pprint(metadata)
+
         storage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
