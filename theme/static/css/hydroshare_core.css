@@ -4351,12 +4351,12 @@ span.caption-file-type {
 
 #hsDropzone {
     border: 0;
+    min-height: 100%;
 }
 
 .fb-dropzone-wrapper {
-    margin: 10px;
+    margin: 10px 0;
     border: 1px solid #DDD;
-    border-radius: 4px;
     height: calc(100% - 20px);
     overflow: auto;
 }
@@ -4372,9 +4372,6 @@ span.caption-file-type {
     margin: 10px 0;
     padding: 2em;
     background-color: #FFF;
-    box-shadow: 1px 1px 1px #cecece;
-    -moz-box-shadow: 1px 1px 1px #cecece;
-    -webkit-box-shadow: 1px 1px 1px #cecece;
 }
 
 .fb-content-wrapper {

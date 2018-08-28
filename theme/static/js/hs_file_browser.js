@@ -6,7 +6,10 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
-var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
+var file_metadata_alert = '<div id="#fb-metadata-default" class="text-center text-muted" role="alert">' +
+    '<div>Select a file to see file type metadata.</div>' +
+    '<hr><span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>' +
+    '<i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"style="top: 14px;"></i></span></div>';
 
 const MAX_FILE_SIZE = 1024; // MB
 
