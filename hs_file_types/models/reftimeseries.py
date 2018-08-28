@@ -497,10 +497,10 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         html_string = super(RefTimeseriesFileMetaData, self).get_html()
         if not self.has_metadata:
-            root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
-            with root_div:
-                div("No file level metadata exists for the selected file.")
-            html_string = root_div.render()
+            html_string = '<div id="#fb-metadata-default" class="text-center text-muted" ' \
+                          'role="alert"><div>No file level metadata exists for the selected file.</div>' \
+                          '<hr>' \
+                          '<i class="fa fa-eye-slash fa-2x" aria-hidden="true"></i></div>'
         else:
             if self.abstract:
                 abstract_div = div(cls="col-xs-12 content-block")

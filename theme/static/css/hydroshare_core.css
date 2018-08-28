@@ -3941,9 +3941,6 @@ form#covereage-search-fields {
 }
 
 .files-container {
-	height: 252px;
-	overflow-y: auto;
-	overflow-x: hidden;
     background-color: #FAFAFA;
 }
 
@@ -4068,6 +4065,7 @@ ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-se
 
 ul#fb-files-container {
     min-height: 100%;
+    overflow: auto;
 }
 
 .fb-file span.fb-file-icon::before, .fb-stack .fa-file-o {
@@ -4352,7 +4350,15 @@ span.caption-file-type {
 }
 
 #hsDropzone {
-	border: 0;
+    border: 0;
+}
+
+.fb-dropzone-wrapper {
+    margin: 10px;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    height: calc(100% - 20px);
+    overflow: auto;
 }
 
 .h-100 {
@@ -4366,6 +4372,9 @@ span.caption-file-type {
     margin: 10px 0;
     padding: 2em;
     background-color: #FFF;
+    box-shadow: 1px 1px 1px #cecece;
+    -moz-box-shadow: 1px 1px 1px #cecece;
+    -webkit-box-shadow: 1px 1px 1px #cecece;
 }
 
 .fb-content-wrapper {
@@ -4373,9 +4382,9 @@ span.caption-file-type {
     height: 200px;
     padding-right: 15px;
     resize: vertical;
+    background-color: #fafafa;
     overflow-y: hidden;
     overflow-x: hidden;
-    background-color: #f2f2f2;
 }
 
 .hs-upload-indicator {
