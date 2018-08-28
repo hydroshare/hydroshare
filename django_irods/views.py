@@ -296,6 +296,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
+        if __debug__: 
+            logger.debug(u"irods_output_path is {}".format(irods_output_path)) 
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True
