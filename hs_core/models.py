@@ -1359,7 +1359,7 @@ class Coverage(AbstractMetaDataElement):
         This function should be used for displaying one spatial coverage element
         or one temporal coverage element
         """
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div()
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")

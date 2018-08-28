@@ -671,31 +671,45 @@
                                         </ol>
                                     </div>
                                 </div>
-                                <form id="hsDropzone"
-                                      class="files-container ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
-                                      method="POST">
-                                    {% csrf_token %}
+                                <div class="fb-content-wrapper">
 
-                                    <div id="flag-uploading" class="hidden">
-                                        <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
-                                        <small class="uploading-message">
-                                            <strong>Uploading files to:</strong>&nbsp;
-                                            <span id="upload-folder-path"></span>
-                                            <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
-                                            <span id="upload-progress"></span></small>
+                                    <div class="col-xs-12 col-md-8 h-100" style="padding: 0;">
+                                        <form id="hsDropzone"
+                                              class="files-container ui-widget-content h-100 {% if page.perms.change and metadata_form %}dropzone{% endif %}"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
+                                              method="POST">
+                                            {% csrf_token %}
+
+                                            <div id="flag-uploading" class="hidden">
+                                                <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                                <small class="uploading-message">
+                                                    <strong>Uploading files to:</strong>&nbsp;
+                                                    <span id="upload-folder-path"></span>
+                                                    <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                    <span id="upload-progress"></span></small>
+                                            </div>
+
+                                            <div class="fb-drag-flag">
+                                                <span class="fa fa-plus-square fa-5x"></span>
+                                            </div>
+
+                                            <ul id="fb-files-container" class="selectable fb-view-grid height-fix h-100">
+                                                <li class="fb-loading-spinner">
+                                                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                                </li>
+                                            </ul>
+                                        </form>
                                     </div>
-
-                                    <div class="fb-drag-flag">
-                                        <span class="fa fa-plus-square fa-5x"></span>
+                                    <div class="col-xs-12 col-md-4 h-100 b-left" style="padding-right: 0;">
+                                        {% if cm.resource_type == "CompositeResource" %}
+                                            <div id="fileTypeMetaDataTab">
+                                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                                    <span>Select a file to see file type metadata.</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
                                     </div>
-
-                                    <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
-                                        <li class="fb-loading-spinner">
-                                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                        </li>
-                                    </ul>
-                                </form>
+                                </div>
 
                                 <form id="fb-delete-files-form" class="hidden"
                                       action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
@@ -832,14 +846,6 @@
                 </div>
             {% endif %}
             {% endblock %} {# content_block #}
-
-            {% if cm.resource_type == "CompositeResource" %}
-                <div id="fileTypeMetaDataTab">
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <span>Select a file to see file type metadata.</span>
-                    </div>
-                </div>
-            {% endif %}
 
             {# ======= Extended Metadata ======= #}
             <div class="col-xs-12 content-block">

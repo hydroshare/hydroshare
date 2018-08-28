@@ -499,7 +499,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         if not self.has_metadata:
             root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
             with root_div:
-                h4("No file level metadata exists for the selected file.")
+                div("No file level metadata exists for the selected file.")
             html_string = root_div.render()
         else:
             if self.abstract:

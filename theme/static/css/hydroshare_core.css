@@ -1042,11 +1042,12 @@ pre.readme {
 }
 
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
-	box-shadow: none;
+    box-shadow: none;
 }
 
 .custom-table th {
-	padding-right: 40px;
+    padding-right: 40px;
+    font-weight: normal;
 }
 
 .custom-table th, .custom-table td {
@@ -3943,6 +3944,7 @@ form#covereage-search-fields {
 	height: 252px;
 	overflow-y: auto;
 	overflow-x: hidden;
+    background-color: #FAFAFA;
 }
 
 .file-browser-breadcrumb .breadcrumb{
@@ -4089,13 +4091,6 @@ ul#fb-files-container {
 
 .file-browser-container {
     border:1px solid #DDD;
-}
-
-.files-container {
-    background-color: #FAFAFA;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
-	-webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
-	-moz-box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
 }
 
 .file-browser-search {
@@ -4357,9 +4352,30 @@ span.caption-file-type {
 }
 
 #hsDropzone {
-	resize: vertical;
 	border: 0;
-	min-height: 200px;
+}
+
+.h-100 {
+	height: 100%;
+}
+
+#fileTypeMetaDataTab {
+    border: 1px solid #DDD;
+    overflow: auto;
+    height: calc(100% - 20px);
+    margin: 10px 0;
+    padding: 2em;
+    background-color: #FFF;
+}
+
+.fb-content-wrapper {
+    min-height: 200px;
+    height: 200px;
+    padding-right: 15px;
+    resize: vertical;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    background-color: #f2f2f2;
 }
 
 .hs-upload-indicator {
@@ -4386,6 +4402,10 @@ span.caption-file-type {
     border-top: 1px solid #DDD;
     padding: 4px;
     background: #f9f9f9;
+}
+
+.b-left {
+    border-left: 1px solid #DDD;
 }
 
 #previews {
