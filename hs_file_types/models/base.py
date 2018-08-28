@@ -360,7 +360,8 @@ class AbstractFileMetaData(models.Model):
                                             CoreMetaData.NAMESPACES['rdfs1'])
         rdfs_isDefinedBy.text = current_site_url() + "/terms"
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
     def _get_xml_containers(self):
         """Helper for the subclasses to get the xml containers element to which the sub classes
@@ -967,7 +968,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def metadata_file_path(self):
-        """Full file path of the aggregation metadata xml file starting with {resource_id}/data/contents/
+        """Full path of the aggregation metadata xml file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.metadata_short_file_path)
 
