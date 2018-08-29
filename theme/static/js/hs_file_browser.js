@@ -1435,16 +1435,21 @@ $(document).ready(function () {
 
     updateSelectionMenuContext();
 
-    $(".fb-dropzone-wrapper").resizable(
-        {
-            resize: function (event, ui) {
-                $("#fb-metadata").height(ui.size.height);
-            },
-            maxWidth: 800,
-            minHeight: 200,
-        }
-    );
-    // $("#fb-metadata").resizable();
+    $(".fb-dropzone-wrapper").resizable({
+        resize: function (event, ui) {
+            $("#fb-metadata").height(ui.size.height);
+        },
+        handles: "e, s, se",
+        maxWidth: 800,
+        minHeight: 200,
+    });
+    $("#fb-metadata").resizable({
+        resize: function (event, ui) {
+            $(".fb-dropzone-wrapper").height(ui.size.height);
+        },
+        minHeight: 200,
+        handles: "s",
+    });
 });
 
 var cookieName = "page_scroll";
