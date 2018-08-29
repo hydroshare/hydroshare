@@ -1434,6 +1434,17 @@ $(document).ready(function () {
     });
 
     updateSelectionMenuContext();
+
+    $(".fb-dropzone-wrapper").resizable(
+        {
+            resize: function (event, ui) {
+                $("#fb-metadata").height(ui.size.height);
+            },
+            maxWidth: 800,
+            minHeight: 200,
+        }
+    );
+    // $("#fb-metadata").resizable();
 });
 
 var cookieName = "page_scroll";
