@@ -1220,7 +1220,7 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+            log.exception("Failed to create aggregation metadata xml file")
             raise ex
         finally:
             shutil.rmtree(tmpdir)
