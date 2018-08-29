@@ -12,7 +12,7 @@
                             {% if spatial_coverage.projection %}
                                 <div>
                                     <i class="fa fa-globe" aria-hidden="true"></i>
-                                    <span class="text-muted">&nbsp;Coordinate System/Geographic Projection:&nbsp;</span>
+                                    <small>&nbsp;Coordinate System/Geographic Projection:&nbsp;</small>
                                 </div>
                                 <div>{{ spatial_coverage.projection }}</div>
                                 <br>
@@ -20,7 +20,7 @@
                             {% if spatial_coverage.units %}
                                 <div>
                                     <i class="fa fa-tachometer" aria-hidden="true"></i>
-                                    <span class="text-muted">&nbsp;Coordinate Units:&nbsp;</span>
+                                    <small>&nbsp;Coordinate Units:&nbsp;</small>
                                 </div>
                                 <div>{{ spatial_coverage.units }}</div>
                                 <br>
@@ -28,7 +28,7 @@
                             <div>
                                 {% if spatial_coverage.name %}
                                     <div>
-                                        <span>Place/Area Name: </span>
+                                        <small>Place/Area Name: </small>
                                         <span>{{ spatial_coverage.name }}</span>
                                     </div>
                                     <br>
@@ -39,33 +39,33 @@
                                 <div class="row coordinates-list-container">
                                     {% if spatial_coverage.type == 'point' %}
                                         {% if spatial_coverage.east %}
-                                            <div class="col-xs-12 col-sm-6"><strong>Longitude</strong>
+                                            <div class="col-xs-12 col-sm-6"><small>Longitude</small>
                                                 <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.north %}
-                                            <div class="col-xs-12 col-sm-6"><strong>Latitude</strong>
+                                            <div class="col-xs-12 col-sm-6"><small>Latitude</small>
                                                 <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                     {% else %}
                                         {% if spatial_coverage.northlimit %}
-                                            <div class="col-xs-12 col-sm-6"><strong>North Latitude</strong>
+                                            <div class="col-xs-12 col-sm-6 "><small>North Latitude</small>
                                                 <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.eastlimit %}
-                                            <div class="col-xs-12 col-sm-6"><strong>East Longitude</strong>
+                                            <div class="col-xs-12 col-sm-6"><small>East Longitude</small>
                                                 <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.southlimit %}
-                                            <div class="col-xs-12 col-sm-6"><strong>South Latitude</strong>
+                                            <div class="col-xs-12 col-sm-6"><small>South Latitude</small>
                                                 <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.westlimit %}
-                                            <div class="col-xs-12 col-sm-6"><strong>West Longitude</strong>
+                                            <div class="col-xs-12 col-sm-6"><small>West Longitude</small>
                                                 <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
@@ -97,8 +97,6 @@
                     {% if spatial_coverage %}
                         <div class="col-xs-12 col-sm-8">
                             <div id="coverageMap" data-mode="view" data-shape-type="{{ spatial_coverage.type }}"></div>
-                            <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
-                               data-placement="left" title="Recenter"></i>
                         </div>
                     {% endif %}
                 </div>
@@ -245,9 +243,6 @@
 
                                 </div>
                                 <div id="coverageMap"></div>
-
-                                <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
-                                   data-placement="left" title="Recenter"></i>
 
                                 <br>
                                 <button type="button" class="btn btn-primary pull-right btn-form-submit"

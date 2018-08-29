@@ -180,6 +180,7 @@ function initMap() {
             shapeType = " ";
         }
     }
+
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",
         zoom: 3,
@@ -196,6 +197,27 @@ function initMap() {
             position: google.maps.ControlPosition.TOP_RIGHT
         }
     });
+
+    var centerControlDiv = document.createElement('div');
+
+    // Set CSS for the control border.
+    var controlUI = document.createElement('div');
+    controlUI.style.backgroundColor = '#fff';
+    controlUI.style.border = '2px solid #fff';
+    controlUI.style.borderRadius = '3px';
+    controlUI.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
+    controlUI.style.margin = '1em';
+    controlUI.style.width = "40px";
+    centerControlDiv.appendChild(controlUI);
+
+    // Set CSS for the control interior.
+    var controlText = document.createElement('div');
+    controlText.style.padding = "1em";
+    controlText.innerHTML = '<i id="resetZoomBtn" class="fa fa-map-marker" data-toggle="tooltip" ' +
+        'data-placement="left" title="Recenter"></i>';
+    controlUI.appendChild(controlText);
+
+    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
 
     drawInitialShape();
     if (!shapeType) {

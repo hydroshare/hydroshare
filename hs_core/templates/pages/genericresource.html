@@ -672,37 +672,34 @@
                                     </div>
                                 </div>
                                 <div class="fb-content-wrapper">
-                                    <div class="col-xs-12 col-md-8 h-100">
-                                        <div class="fb-dropzone-wrapper">
-                                            <form id="hsDropzone"
-                                                  class="files-container ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
-                                                  action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
-                                                  method="POST">
-                                                {% csrf_token %}
+                                    <div class="fb-dropzone-wrapper">
+                                        <form id="hsDropzone"
+                                              class="files-container h-100 ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
+                                              method="POST">
+                                            {% csrf_token %}
 
-                                                <div id="flag-uploading" class="hidden">
-                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
-                                                    <small class="uploading-message">
-                                                        <strong>Uploading files to:</strong>&nbsp;
-                                                        <span id="upload-folder-path"></span>
-                                                        <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
-                                                        <span id="upload-progress"></span></small>
-                                                </div>
+                                            <div id="flag-uploading" class="hidden">
+                                                <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                                <small class="uploading-message">
+                                                    <strong>Uploading files to:</strong>&nbsp;
+                                                    <span id="upload-folder-path"></span>
+                                                    <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                    <span id="upload-progress"></span></small>
+                                            </div>
 
-                                                <div class="fb-drag-flag">
-                                                    <span class="fa fa-plus-square fa-5x"></span>
-                                                </div>
+                                            <div class="fb-drag-flag">
+                                                <span class="fa fa-plus-square fa-5x"></span>
+                                            </div>
 
-                                                <ul id="fb-files-container" class="selectable fb-view-grid height-fix h-100">
-                                                    <li class="fb-loading-spinner">
-                                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                                    </li>
-                                                </ul>
-                                            </form>
-                                        </div>
-
+                                            <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
+                                                <li class="fb-loading-spinner">
+                                                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                                </li>
+                                            </ul>
+                                        </form>
                                     </div>
-                                    <div class="col-xs-12 col-md-4 h-100 b-left" style="padding-right: 0;">
+                                    <div class="fb-metadata h-100">
                                         {% if cm.resource_type == "CompositeResource" %}
                                             <div id="fileTypeMetaDataTab">
                                                 <div id="#fb-metadata-default" class="text-center text-muted" role="alert">
@@ -766,6 +763,29 @@
                             {% endif %}
                         </div>
 
+                        {% for b in cm.bags.all %}
+                            <div>
+                                <a id="btn-download-all" type="button"
+                                   class="btn btn-default row-selector"
+                                        {% if cm.raccess.require_download_agreement %}
+                                   data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                   data-placement="auto"
+                                        {% else %}
+                                   href="{{ cm.bag_url }}"
+                                        {% endif %}>
+                                    <span class="glyphicon glyphicon-download-alt">
+                                    <span title='Download All Content as Zipped BagIt Archive'
+                                          class="button-label"> Download All Content as Zipped BagIt Archive
+                                    </span>
+                                    </span>
+                                </a>
+                            </div>
+                            <div>
+                                <a target="_blank" href="https://en.wikipedia.org/wiki/BagIt">Learn more
+                                    about the Bagit archive format</a>
+                            </div>
+                        {% endfor %}
+
                         <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
                             <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large
                                 Files</strong>
@@ -816,25 +836,7 @@
                                 </span>
                             </a>
                         {% endif %}
-                        {% for b in cm.bags.all %}
-                            <div>
-                            {% if cm.raccess.require_download_agreement %}
-                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                data-target="#license-agree-dialog-bag" data-toggle="modal" data-placement="auto">
-                            {% else %}
-                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                   href="{{ cm.bag_url }}">
-                            {% endif %}
-                                <span class="glyphicon glyphicon-download-alt">
-                                    <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label"> Download All Content as Zipped BagIt Archive</span>
-                                </span>
-                                </a>
-                            </div>
-                            <div>
-                                <a target="_blank" href="https://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                            </div>
-                        {% endfor %}
+
                         {% if user_zone_account_exist %}
                             <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>

@@ -1649,8 +1649,6 @@ div#sharing-status .col-sm-12{
 }
 
 a.tag:hover {
-    text-decoration: none;
-    cursor:default;
 	color: #111;
 }
 
@@ -2335,21 +2333,10 @@ div#coverage-spatial .coordinates-label-addon {
 }
 
 #resetZoomBtn {
-    width: 28px;
-    text-align: center;
-    padding: 8px;
-    -webkit-border-radius: 2px;
-    -moz-border-radius: 2px;
-    border-radius: 2px;
-	-webkit-box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
-	-moz-box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
-    box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
-    background-color: #FFF;
-    float: right;
-    right: 26px;
-    top: 255px;
-    color: #666;
-    position: absolute;
+	font-size: 14px;
+	color: #666;
+	position: relative;
+	top: -4px;
 }
 
 #resetZoomBtn:hover {
@@ -4352,10 +4339,12 @@ span.caption-file-type {
 }
 
 .fb-dropzone-wrapper {
-    margin: 10px 0;
-    border: 1px solid #DDD;
-    height: calc(100% - 20px);
-    overflow: auto;
+	border-right: 1px solid #DDD;
+	overflow: auto;
+	resize: both;
+	max-width: 800px;
+	min-height: 200px;
+	width: 80%;
 }
 
 .h-100 {
@@ -4363,22 +4352,18 @@ span.caption-file-type {
 }
 
 #fileTypeMetaDataTab {
-    border: 1px solid #DDD;
-    overflow: auto;
-    height: calc(100% - 20px);
-    margin: 10px 0;
-    padding: 2em;
-    background-color: #FFF;
+	overflow: auto;
+	height: 100%;
+	padding: 2em;
+	background-color: #FFF;
 }
 
 .fb-content-wrapper {
-    min-height: 200px;
-    height: 200px;
-    padding-right: 15px;
-    resize: vertical;
-    background-color: #fafafa;
-    overflow-y: hidden;
-    overflow-x: hidden;
+	display: flex;
+}
+
+.fb-metadata {
+	flex-grow: 1;
 }
 
 .hs-upload-indicator {

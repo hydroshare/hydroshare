@@ -143,7 +143,7 @@ $(document).ready(function () {
     for (var i = 0; i < keywords.length; i++) {
         if (keywords[i]) {
             var li = $("<li><a class='tag'></a></li>");
-            li.find('a').text(keywords[i]);
+            li.find('a').text(keywords[i]).attr("href", "/search/?subject=" + keywords[i]).attr("target", "_blank");
             list.append(li);
         }
     }
