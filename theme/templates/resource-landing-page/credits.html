@@ -1,7 +1,12 @@
 {% if not metadata_form %}
+    {% if fundingagencies or contributors %}
+        <div class="col-xs-12 content-block">
+            <h3>Credits</h3>
+        </div>
+    {% endif %}
     {% if fundingagencies %}
         <div class="col-sm-12 content-block">
-            <h3>Credits</h3>
+            <h4>Funding Agencies</h4>
             <h5>This resource was created using funding from the following sources:</h5>
             <table class="table hs-table table-striped funding-agencies-table">
                 <tbody>
@@ -32,7 +37,7 @@
     {% endif %}
     {% if contributors %}
         <div class="col-xs-12 content-block">
-            <h3>Contributors</h3>
+            <h4>Contributors</h4>
             <div>
                 <span class="division-title-caption">People or
                     organizations that contributed technically, materially,
