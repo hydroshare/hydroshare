@@ -1,5 +1,5 @@
 postgis:
-  image: mjstealey/hs_postgres:9.4.7
+  image: hydroshare/hs_postgres:9.4.7
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
