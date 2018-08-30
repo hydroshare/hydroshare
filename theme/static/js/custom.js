@@ -210,7 +210,7 @@ $(document).ready(function () {
     });
 
     // Abstract collapse toggle
-    $(".show-more-btn").click(function () {
+    $(".toggle-abstract").click(function () {
         if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
             var block = $(this).parent().find(".activity-description");
 
@@ -219,14 +219,23 @@ $(document).ready(function () {
             block.css("max-height", "50px");    // Restore
 
             block.animate({'max-height': maxHeight}, 300); // Animate to max height
-            $(this).text("▲");
-            $(this).attr("title", "Show less");
         }
         else {
             $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
-            $(this).attr("title", "Show more");
-            $(this).text("···");
         }
+    });
+
+    // Toggle for stats button
+    $(".show-more-btn").click(function() {
+        var caption = ["▲", "···"];
+        var titles = ["Show less", "Show more"];
+        var current = $(this).text() == caption[0] ? 1 : 0;
+        $(this).text(caption[current]);
+        $(this).attr("title", titles[current]);
+    });
+
+    $("#stats-toggle").click(function () {
+        $(".info-collapsible").toggleClass("hidden");
     });
 });
 

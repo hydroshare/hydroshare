@@ -1030,6 +1030,12 @@ table.info-table {
     margin-bottom: 20px
 }
 
+.res-header .collapsing {
+    -webkit-transition: none;
+    transition: none;
+    display: none;
+}
+
 #resourceSpecificTab {
     overflow-x: hidden
 }
@@ -2459,7 +2465,6 @@ div.affiliation {
 
 .show-more-btn {
     width: 50px;
-    margin-left: 10px;
     -webkit-border-radius: 8px;
     -moz-border-radius: 8px;
     border-radius: 8px;
@@ -2469,6 +2474,10 @@ div.affiliation {
     font-size: 12px;
     cursor: pointer;
     float: left
+}
+
+.show-more-btn.toggle-abstract {
+    margin-left: 10px;
 }
 
 #div_id_abstract textarea, #id_statement {

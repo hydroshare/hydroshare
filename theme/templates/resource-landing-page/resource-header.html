@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 {% if not metadata_form %}
-<div class="col-sm-12 col-md-6">
+<div class="col-sm-12 col-md-6 res-header">
     <table class="info-table">
         <tr><th>Authors:</th><td id="authors">
             {% for cr in creators %}
@@ -32,16 +32,16 @@
                 {% endif %}
             {% endfor %}
         </td></tr>
-        <tr><th>Owners:</th><td>
+        <tr class="info-collapsible"><th>Owners:</th><td>
             {% for u in owners %}
                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                 <span>{{ u|contact }}</span>
             {% endfor %}
         </td></tr>
-        <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-        <tr><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-        <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
-        <tr>
+        <tr class="info-collapsible"><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+        <tr class="info-collapsible"><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
+        <tr class="info-collapsible"><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
+        <tr class="info-collapsible">
             <th>Content types:</th>
             <td>
                 <span class="label label-default">Time Series</span>&nbsp;
@@ -49,8 +49,10 @@
             </td>
         </tr>
     </table>
+    <a id="stats-toggle" href="#" class="show-more-btn btn-default"
+       title="Show less" style="text-decoration: none;">▲</a>
 </div>
-<div class="col-sm-12 col-md-6">
+<div class="col-sm-12 col-md-6 res-header">
     <table id="table-stats" class="info-table">
         <tr>
             {% if cm.raccess.published %}
@@ -93,24 +95,24 @@
                 {% endif %}
             </tr>
         {% endif %}
-        <tr>
+        <tr class="info-collapsible">
             <td class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></td>
             <td><strong>Views:&nbsp;&nbsp;</strong>1,835</td>
         </tr>
-        <tr>
+        <tr class="info-collapsible">
             <td class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></td>
             <td><strong>Downloads:&nbsp;&nbsp;</strong>201</td>
         </tr>
-        <tr>
+        <tr class="info-collapsible">
             {% include "resource-landing-page/ratings.html" %}
         </tr>
-        <tr>
+        <tr class="info-collapsible">
             <td class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></td>
             <td>
                 <span><a href="#comments">Comments:&nbsp;&nbsp;</a></span>0
             </td>
         </tr>
-        <tr>
+        <tr class="info-collapsible">
             <td class="text-center"><i class="fa fa-quote-right" aria-hidden="true"></i></td>
             <td><a href="#citation">Cite this resource</a></td>
         </tr>
