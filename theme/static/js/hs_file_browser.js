@@ -1451,6 +1451,14 @@ $(document).ready(function () {
         minHeight: 200,
         handles: "s",
     });
+
+    $(".fb-metadata-collapse").click(function() {
+        $(".fb-metadata-collapse").toggleClass("hidden");
+        $(".fb-metadata").toggleClass("hidden");
+        $(".fb-dropzone-wrapper").toggleClass("fb-collapsed");
+        $(".ui-resizable-e").toggleClass("hidden");
+        $("#fb-metadata-helper .ui-icon-grip-dotted-vertical").toggleClass("hidden");
+    });
 });
 
 var cookieName = "page_scroll";

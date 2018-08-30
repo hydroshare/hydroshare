@@ -3361,8 +3361,6 @@ div.description.active {
 }
 
 .img-step {
-    width: 150px;
-    height: 150px;
     margin: auto;
 }
 
@@ -3921,10 +3919,6 @@ form#covereage-search-fields {
 	margin-bottom: 10px;
 }
 
-.files-container {
-    background-color: #FAFAFA;
-}
-
 .file-browser-breadcrumb .breadcrumb{
     background: #FFF;
     margin-bottom: 0;
@@ -4342,10 +4336,21 @@ span.caption-file-type {
 	width: 80%;
 }
 
+.fb-dropzone-wrapper.fb-collapsed {
+	width: 100% !important;
+	max-width: initial;
+}
+
 .ui-resizable-se {
 	background-color: #ffffff;
 	margin-right: -1px;
 	background-position: -81px -224px !important;
+}
+
+.ui-resizable-e {
+    right: -12px;
+    top: 30px;
+    height: calc(100% - 30px);
 }
 
 .h-100 {
@@ -4365,7 +4370,33 @@ span.caption-file-type {
 
 .fb-metadata {
 	flex-grow: 1;
+	border-left: 1px solid #DDD;
+	min-height: 200px;
 }
+
+#fb-metadata-helper {
+    min-height: 100%;
+    width: 20px;
+    text-align: center;
+    color: #959495;
+    background: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+}
+
+.fb-metadata-collapse {
+	margin-top: 10px;
+}
+
+.fb-metadata-collapse:hover {
+	cursor: pointer;
+	color: #666;
+}
+
+#fb-metadata-helper .ui-icon-grip-dotted-vertical {
+	margin: auto;
+}
+
 
 .hs-upload-indicator {
 	position: absolute;
@@ -4758,4 +4789,8 @@ div#resource-content {
 
 .external-profiles, img.identifier-icon {
 	margin-top: -11px !important;
+}
+
+#table-stats .fa {
+	font-size: 18px;
 }
