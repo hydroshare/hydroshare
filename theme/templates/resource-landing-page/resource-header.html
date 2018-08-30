@@ -47,25 +47,23 @@
     <table class="info-table">
         <tr>
             <td><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></td>
-            <td><strong>Sharing Status: </strong>Public</td>
+            <td><strong>Sharing Status:&nbsp;&nbsp;</strong>Public</td>
         </tr>
         <tr>
             <td class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></td>
-            <td><strong>Views: </strong>1,835</td>
+            <td><strong>Views:&nbsp;&nbsp;</strong>1,835</td>
         </tr>
         <tr>
             <td class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></td>
-            <td><strong>Downloads: </strong>201</td>
+            <td><strong>Downloads:&nbsp;&nbsp;</strong>201</td>
         </tr>
         <tr>
-            <td class="text-center"><i class="fa fa-thumbs-o-up" aria-hidden="true"></i></td>
-            <td><strong>+1 Votes: </strong>0</td>
+            {% include "resource-landing-page/ratings.html" %}
         </tr>
         <tr>
-            <td class="text-center"><i class="fa fa-comments" aria-hidden="true"></i></td>
+            <td class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></td>
             <td>
-                <strong>Comments: </strong>0
-                <a href="#comments" style="margin-left: 20px;">Discuss this resource</a>
+                <span><a href="#comments">Comments:&nbsp;&nbsp;</a></span>0
             </td>
         </tr>
         <tr>

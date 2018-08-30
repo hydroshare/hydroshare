@@ -79,7 +79,7 @@ function drawInitialShape() {
             allShapes.push(marker);
             // Center map at new market
             coverageMap.setCenter(marker.getPosition());
-            $("#resetZoomBtn").click(function () {
+            $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
@@ -119,7 +119,7 @@ function drawInitialShape() {
             rectangle.setMap(coverageMap);
             allShapes.push(rectangle);
             zoomCoverageMap(bounds);
-            $("#resetZoomBtn").click(function () {
+             $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 zoomCoverageMap(bounds);
             });
         }
@@ -198,26 +198,29 @@ function initMap() {
         }
     });
 
-    var centerControlDiv = document.createElement('div');
-
     // Set CSS for the control border.
-    var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = '#fff';
-    controlUI.style.border = '2px solid #fff';
-    controlUI.style.borderRadius = '3px';
-    controlUI.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
-    controlUI.style.margin = '1em';
-    controlUI.style.width = "40px";
-    centerControlDiv.appendChild(controlUI);
+    var btnRecenter = document.createElement('button');
+    btnRecenter.setAttribute("dragable", "false");
+    btnRecenter.setAttribute("title", "Recenter");
+    btnRecenter.setAttribute("aria-label", "Recenter");
+    btnRecenter.setAttribute("type", "button");
+    btnRecenter.setAttribute("id", "resetZoomBtn");
+    btnRecenter.setAttribute("class", "gm-control-active");
+    btnRecenter.style.background = 'none rgb(255, 255, 255)';
+    btnRecenter.style.border = '0';
+    btnRecenter.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
+    btnRecenter.style.margin = '10px';
+    btnRecenter.style.padding = '0px';
+    btnRecenter.style.position = 'absolute';
+    btnRecenter.style.borderRadius = "2px";
+    btnRecenter.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 1px 4px -1px";
+    btnRecenter.style.width = "40px";
+    btnRecenter.style.height = "40px";
+    btnRecenter.style.color = "#666666";
+    btnRecenter.style.fontSize = "24px";
+    btnRecenter.innerHTML = '<i class="fa-dot-circle-o"></i>';
 
-    // Set CSS for the control interior.
-    var controlText = document.createElement('div');
-    controlText.style.padding = "1em";
-    controlText.innerHTML = '<i id="resetZoomBtn" class="fa fa-map-marker" data-toggle="tooltip" ' +
-        'data-placement="left" title="Recenter"></i>';
-    controlUI.appendChild(controlText);
-
-    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
+    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(btnRecenter);
 
     drawInitialShape();
     if (!shapeType) {
@@ -288,7 +291,7 @@ function drawMarkerOnTextChange(){
     // Center map at new market
     coverageMap.setCenter(marker.getPosition());
     // Set onClick event for recenter button
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         coverageMap.setCenter(marker.getPosition());
     });
     allShapes.push(marker);
@@ -353,7 +356,7 @@ function drawRectangleOnTextChange(){
         processDrawing(coordinates, "rectangle");
     });
     zoomCoverageMap(bounds);
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         zoomCoverageMap(bounds);
     });
     allShapes.push(rectangle);
@@ -399,7 +402,7 @@ function processDrawing (coordinates, shape) {
         $("#id_eastlimit").removeClass("invalid-input");
         $("#id_southlimit").removeClass("invalid-input");
         $("#id_westlimit").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function(){
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             zoomCoverageMap(bounds);
         });
     }
@@ -419,7 +422,7 @@ function processDrawing (coordinates, shape) {
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function () {
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             coverageMap.setCenter(coordinates);
         });
     }

@@ -1533,6 +1533,10 @@ body > .main-container {
     color: #428BD2;
 }
 
+.icon-green {
+	color: #10ae10;
+}
+
 #delete > span {
 	margin-left: 20px;
 }
@@ -2335,20 +2339,9 @@ div#coverage-spatial .coordinates-label-addon {
 	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
 }
 
-#resetZoomBtn {
-	font-size: 14px;
-	color: #666;
-	position: relative;
-	top: -4px;
-}
-
 #resetZoomBtn:hover {
-    cursor:pointer;
-    color: #353535;
-}
-
-#resetZoomBtn::before {
-    margin-left: -1px;
+	cursor: pointer;
+	color: #333 !important;
 }
 
 /*			User profile revamp css			*/
