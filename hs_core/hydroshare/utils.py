@@ -1047,7 +1047,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                          "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
                                                                   field=xml_element_name))
-                field.text = str(attr)
+                field.text = unicode(attr)
 
 
 class ZipContents(object):

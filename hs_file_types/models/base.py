@@ -1220,7 +1220,7 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+            log.exception("Failed to create aggregation metadata xml file")
             raise ex
         finally:
             shutil.rmtree(tmpdir)
@@ -1281,8 +1281,8 @@ class AbstractLogicalFile(models.Model):
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = u"{site}/terms/{aggr_type}".format(site=current_site_url,
-                                                         aggr_type=self.get_aggregation_type_name())
+        agg_type_url = u"{site}/terms/{aggr_type}"\
+            .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
         a._ore.isDescribedBy = res_map_url
