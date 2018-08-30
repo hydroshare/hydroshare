@@ -4348,7 +4348,8 @@ span.caption-file-type {
 }
 
 .ui-resizable-e {
-    right: -12px;
+    right: -21px;
+    width: 20px;
     top: 30px;
     height: calc(100% - 30px);
 }

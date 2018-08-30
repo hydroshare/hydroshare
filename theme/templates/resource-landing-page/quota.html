@@ -1,6 +1,9 @@
+<div class="col-sm-12 content-block">
+    <h3>Storage</h3>
+    <p>The size of this resource is XXX MB.</p>
+</div>
 {% if is_owner_user %}
     <div class="col-sm-12 content-block">
-        <h3>Storage</h3>
         <h5>The quota holder of this resource is:
             {% if quota_holder|default_if_none:'' %}
                 {% if quota_holder.first_name %}

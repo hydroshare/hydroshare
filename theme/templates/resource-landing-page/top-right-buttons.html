@@ -3,7 +3,6 @@
 <div class="col-sm-12">
     <div class="custom-btn-toolbar height-fix">
         {% if not metadata_form %}
-
             {# "add to open with list" for WebApp resource only #}
             {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
                 {% if cm|app_on_open_with_list:user %}

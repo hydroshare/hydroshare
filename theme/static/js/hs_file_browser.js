@@ -1441,7 +1441,7 @@ $(document).ready(function () {
         },
         handles: "e, s, se",
         maxWidth: 800,
-        minWidth: 200,
+        minWidth: 300,
         minHeight: 200,
     });
     $("#fb-metadata").resizable({
