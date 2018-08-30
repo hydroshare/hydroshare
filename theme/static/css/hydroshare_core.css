@@ -4376,13 +4376,13 @@ span.caption-file-type {
 }
 
 #fb-metadata-helper {
-    min-height: 100%;
-    width: 20px;
-    text-align: center;
-    color: #959495;
-    background: #f8f8f8;
-    display: flex;
-    flex-direction: column;
+	min-height: 100%;
+	width: 20px;
+	text-align: center;
+	color: #959495;
+	display: flex;
+	flex-direction: column;
+	background: #f8f8f8;
 }
 
 .fb-metadata-collapse {
@@ -4397,7 +4397,6 @@ span.caption-file-type {
 #fb-metadata-helper .ui-icon-grip-dotted-vertical {
 	margin: auto;
 }
-
 
 .hs-upload-indicator {
 	position: absolute;
