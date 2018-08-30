@@ -218,7 +218,7 @@ function initMap() {
     btnRecenter.style.height = "40px";
     btnRecenter.style.color = "#666666";
     btnRecenter.style.fontSize = "24px";
-    btnRecenter.innerHTML = '<i class="fa-dot-circle-o"></i>';
+    btnRecenter.innerHTML = '<i class="fa fa-dot-circle-o"></i>';
 
     coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(btnRecenter);
 
