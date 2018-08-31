@@ -4352,7 +4352,6 @@ span.caption-file-type {
 
 .fb-metadata {
     flex-grow: 1;
-    border-left: 1px solid #DDD;
     min-height: 200px
 }
 
@@ -4363,7 +4362,8 @@ span.caption-file-type {
     color: #959495;
     display: flex;
     flex-direction: column;
-    background: #f8f8f8
+    background: #f8f8f8;
+    border-right: 1px solid #DDD;
 }
 
 .fb-metadata-collapse {
@@ -4687,10 +4687,13 @@ div#resource-content {
     width: 150px;
     height: 150px;
     display: inline-block;
-    background: #FFF;
     position: relative;
     top: 26px;
     left: 26px
+}
+
+#profile-preview-modal .profile-pic.user-icon {
+    background: #FFF;
 }
 
 .profile-badge-header {

@@ -1,124 +1,206 @@
 {% load hydroshare_tags %}
 
 {% if not metadata_form %}
-<div class="col-sm-12 col-md-6 res-header">
-    <table class="info-table">
-        <tr><th>Authors:</th><td id="authors">
-            {% for cr in creators %}
-                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                {% if cr.name %}
-                    {% if cr.description %}
-                        {#                        <a data-toggle="modal" data-target="profile-preview-modal" href="{{ cr.description }}">{{ cr.name }}</a>#}
-                        <a class="profile-preview" data-toggle="modal" data-target="#profile-preview-modal" href="#"
-                           data-name="{{ cr.name }}" data-email="{{ cr.email }}"
-                           data-organization="{{ cr.organization }}"
-                           data-title="{{ cr.title }}"
-                            {% for name, link in cr.supported_identifiers.items %}
-                            data-{{ name }}="{{ link }}"
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-6 res-header">
+                <table class="info-table">
+                    <tr>
+                        <th>Authors:</th>
+                        <td id="authors">
+                            {% for cr in creators %}
+                                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
+                                {% if cr.name %}
+                                    {% if cr.description %}
+                                        <a class="profile-preview" data-toggle="modal"
+                                           data-target="#profile-preview-modal" href="#"
+                                           data-name="{{ cr.name }}" data-email="{{ cr.email }}"
+                                           data-organization="{{ cr.organization }}"
+                                           data-title="{{ cr.title }}"
+                                                {% for name, link in cr.supported_identifiers.items %}
+                                           data-{{ name }}="{{ link }}"
+                                                {% endfor %}
+                                           data-state="{{ cr.state }}" data-country="{{ cr.country }}"
+                                           data-profile-url="{{ cr.description }}">
+                                            {{ cr.name }}
+                                        </a>
+                                    {% else %}
+                                        <span>{{ cr.name }}</span>
+                                    {% endif %}
+                                    {% else %}{# Author is an organization #}
+                                    {% if cr.homepage %}
+                                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
+                                    {% else %}
+                                        <span>{{ cr.organization }}</span>
+                                    {% endif %}
+                                {% endif %}
                             {% endfor %}
-                           data-state="{{ cr.state }}" data-country="{{ cr.country }}"
-                           data-profile-url="{{ cr.description }}">
-                            {{ cr.name }}
-                        </a>
-                    {% else %}
-                        <span>{{ cr.name }}</span>
-                    {% endif %}
-                {% else %}{# Author is an organization #}
-                    {% if cr.homepage %}
-                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
-                    {% else %}
-                        <span>{{ cr.organization }}</span>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-        </td></tr>
-        <tr class="info-collapsible"><th>Owners:</th><td>
-            {% for u in owners %}
-                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                <span>{{ u|contact }}</span>
-            {% endfor %}
-        </td></tr>
-        <tr class="info-collapsible"><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-        <tr class="info-collapsible"><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-        <tr class="info-collapsible"><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
-        <tr class="info-collapsible">
-            <th>Content types:</th>
-            <td>
-                <span class="label label-default">Time Series</span>&nbsp;
-                <span class="label label-default">Geographic Feature</span>&nbsp;
-            </td>
-        </tr>
-    </table>
-    <a id="stats-toggle" href="#" class="show-more-btn btn-default"
-       title="Show less" style="text-decoration: none;">▲</a>
-</div>
-<div class="col-sm-12 col-md-6 res-header">
-    <table id="table-stats" class="info-table">
-        <tr>
-            {% if cm.raccess.published %}
-                <td><img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/></td>
-                <td>Published</td>
-            {% elif cm.raccess.public %}
-                <td><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></td>
-                <td>Public</td>
-            {% elif cm.raccess.discoverable %}
-                <td><img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/></td>
-                <td>Discoverable</td>
-            {% else %}
-                <td><img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/></td>
-                <td>Private</td>
-            {% endif %}
-        </tr>
-        {% if cm.raccess.published %}
-            {% if "pending" in cm.doi or "failure" in cm.doi %}
-                <tr>
-                    <td><img src="{{ STATIC_URL }}img/pending.png" alt=""/></td>
-                    <td>Pending publication</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <span class="small text-muted">
-                            Note that the DOI will not be available until it has been registered and activated.
-                        </span>
-                    </td>
-                </tr>
-            {% endif %}
-        {% else %}
-            <tr>
-                {% if cm.raccess.shareable %}
-                    <td><img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/></td>
-                    <td>Shareable</td>
-                {% else %}
-                    <td><img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/></td>
-                    <td>Not Shareable</td>
-                {% endif %}
-            </tr>
-        {% endif %}
-        <tr class="info-collapsible">
-            <td class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></td>
-            <td><strong>Views:&nbsp;&nbsp;</strong>1,835</td>
-        </tr>
-        <tr class="info-collapsible">
-            <td class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></td>
-            <td><strong>Downloads:&nbsp;&nbsp;</strong>201</td>
-        </tr>
-        <tr class="info-collapsible">
-            {% include "resource-landing-page/ratings.html" %}
-        </tr>
-        <tr class="info-collapsible">
-            <td class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></td>
-            <td>
-                <span><a href="#comments">Comments:&nbsp;&nbsp;</a></span>0
-            </td>
-        </tr>
-        <tr class="info-collapsible">
-            <td class="text-center"><i class="fa fa-quote-right" aria-hidden="true"></i></td>
-            <td><a href="#citation">Cite this resource</a></td>
-        </tr>
-    </table>
-</div>
+                        </td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <th>Owners:</th>
+                        <td>
+                            {% for u in owners %}
+                                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
+{#                                <span>{{ u|contact }}</span>#}
 
+                                <a class="profile-preview" data-toggle="modal"
+                                   data-target="#profile-preview-modal" href="#"
+                                   data-name="{% if u.first_name or u.last_name %}
+                                    {{ u.first_name }} {% if u.middle_name %}
+                                    {{ u.middle_name }}{% endif %} {{ u.last_name }}
+                                    {% else %}
+                                    {{ u.username }}
+                                    {% endif %}"
+                                   data-email="{{ u.email }}"
+                                   data-organization="{{ u.userprofile.organization }}"
+                                   data-title="{{ u.userprofile.title }}"
+                                   data-subjectAreas="{{ u.userprofile.subject_areas }}"
+                                   {% for name, link in u.userprofile.identifiers.items %}
+                                   data-{{ name }}="{{ link }}"
+                                   {% endfor %}
+                                   data-state="{{ u.userprofile.state }}" data-country="{{ u.userprofile.country }}"
+                                   data-joined="{{ u.date_joined|date:"M d, Y" }}"
+                                   {% if u.userprofile.picture %}
+                                       data-profile-picture="{{ u.userprofile.picture.url }}"
+                                   {% endif %}
+                                   data-profile-url="/users/{{ u.id }}">
+                                    {% if u.first_name or u.last_name %}
+                                    {{ u.first_name }} {% if u.middle_name %}
+                                    {{ u.middle_name }}{% endif %} {{ u.last_name }}
+                                    {% else %}
+                                    {{ u.username }}
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <th>Resource type:</th>
+                        <td>{{ cm|resource_type }}</td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <th>Created:</th>
+                        <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <th>Last updated:</th>
+                        <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
+                            {% if cm.last_changed_by %} by
+                                <a class="profile-preview" data-toggle="modal"
+                                   data-target="#profile-preview-modal" href="#"
+                                   data-name="{% if cm.last_changed_by.first_name or cm.last_changed_by.last_name %}
+                                    {{ cm.last_changed_by.first_name }} {% if cm.last_changed_by.middle_name %}
+                                    {{ cm.last_changed_by.middle_name }}{% endif %} {{ cm.last_changed_by.last_name }}
+                                    {% else %}
+                                    {{ cm.last_changed_by.username }}
+                                    {% endif %}"
+                                   data-email="{{ cm.last_changed_by.email }}"
+                                   data-organization="{{ cm.last_changed_by.userprofile.organization }}"
+                                   data-title="{{ cm.last_changed_by.userprofile.title }}"
+                                   data-subjectAreas="{{ cm.last_changed_by.userprofile.subject_areas }}"
+                                        {% for name, link in cm.last_changed_by.userprofile.identifiers.items %}
+                                   data-{{ name }}="{{ link }}"
+                                        {% endfor %}
+                                   data-state="{{ cm.last_changed_by.userprofile.state }}" data-country="{{ cm.last_changed_by.userprofile.country }}"
+                                   data-joined="{{ cm.last_changed_by.date_joined|date:"M d, Y" }}"
+                                        {% if cm.last_changed_by.userprofile.picture %}
+                                   data-profile-picture="{{ cm.last_changed_by.userprofile.picture.url }}"
+                                        {% endif %}
+                                   data-profile-url="/users/{{ cm.last_changed_by.id }}">
+                                    {% if cm.last_changed_by.first_name or cm.last_changed_by.last_name %}
+                                        {{ cm.last_changed_by.first_name }} {% if cm.last_changed_by.middle_name %}
+                                        {{ cm.last_changed_by.middle_name }}{% endif %} {{ cm.last_changed_by.last_name }}
+                                    {% else %}
+                                        {{ cm.last_changed_by.username }}
+                                    {% endif %}
+                                </a>
+                            {% endif %}</td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <th>Content types:</th>
+                        <td>
+                            <span class="label label-default">Time Series</span>&nbsp;
+                            <span class="label label-default">Geographic Feature</span>&nbsp;
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-sm-12 col-md-6 res-header">
+                <table id="table-stats" class="info-table">
+                    <tr>
+                        {% if cm.raccess.published %}
+                            <td><img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/></td>
+                            <td>Published</td>
+                        {% elif cm.raccess.public %}
+                            <td><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></td>
+                            <td>Public</td>
+                        {% elif cm.raccess.discoverable %}
+                            <td><img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/></td>
+                            <td>Discoverable</td>
+                        {% else %}
+                            <td><img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/></td>
+                            <td>Private</td>
+                        {% endif %}
+                    </tr>
+                    {% if cm.raccess.published %}
+                        {% if "pending" in cm.doi or "failure" in cm.doi %}
+                            <tr>
+                                <td><img src="{{ STATIC_URL }}img/pending.png" alt=""/></td>
+                                <td>Pending publication</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                <span class="small text-muted">
+                                    Note that the DOI will not be available until it has been registered and activated.
+                                </span>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% else %}
+                        <tr>
+                            {% if cm.raccess.shareable %}
+                                <td><img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/></td>
+                                <td>Shareable</td>
+                            {% else %}
+                                <td><img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/></td>
+                                <td>Not Shareable</td>
+                            {% endif %}
+                        </tr>
+                    {% endif %}
+                    <tr class="info-collapsible">
+                        <td class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></td>
+                        <td><strong>Views:&nbsp;&nbsp;</strong>1,835</td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <td class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></td>
+                        <td><strong>Downloads:&nbsp;&nbsp;</strong>201</td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        {% include "resource-landing-page/ratings.html" %}
+                    </tr>
+                    <tr class="info-collapsible">
+                        <td class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></td>
+                        <td>
+                            <span><a href="#comments">Comments:&nbsp;&nbsp;</a></span>0
+                        </td>
+                    </tr>
+                    <tr class="info-collapsible">
+                        <td class="text-center"><i class="fa fa-quote-right" aria-hidden="true"></i></td>
+                        <td><a href="#citation">Cite this resource</a></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <a id="stats-toggle" href="#" class="show-more-btn btn-default"
+                   title="Show less" style="text-decoration: none;">▲</a>
+            </div>
+        </div>
+    </div>
 {% else %}
     <div class="col-sm-6">
         <table class="info-table">

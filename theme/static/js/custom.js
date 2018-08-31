@@ -193,21 +193,34 @@ $(document).ready(function () {
     });
 
     $(".profile-preview").click(function () {
+        resetProfilePreview();
         var data = $(this).data();
 
-        for (var item in data) {
-            $("#profile-preview-modal [data-" + item + "]").text(data[item]);
-            $("#btn-preview-profile").attr("href", data.profileUrl)
+        $("#btn-preview-profile").attr("href", data.profileUrl);
+        delete data.profileUrl;
+        var pic = $("#profile-preview-modal .profile-pic");
+        if (data.profilePicture) {
+            pic.toggleClass("user-icon", false);
+            pic.css("background-image", "url('" + data.profilePicture + "')");
+        }
+        else {
+            pic.toggleClass("user-icon", true);
+            pic.css("background-image", "none");
         }
 
-        // TODO: REMOVE AFTER IMPLEMENTING THESE FIELDS IN THE VIEW
-        $("#profile-preview-modal [data-state]").text("UT");
-        $("#profile-preview-modal [data-country]").text("US");
-        $("#profile-preview-modal [data-contributions]").text("12");
-        $("#profile-preview-modal [data-joined]").text("Nov 24th, 2017");
-        $("#profile-preview-modal [data-title]").text("Web Developer");
-        $("#profile-preview-modal [data-subject-areas]").text("Hydrology, Water quality, Hydroinformatics")
+        for (var item in data) {
+            $("#profile-preview-modal [data-" + item + "]:not(.identifier-icon)").text(data[item]);
+            $("#profile-preview-modal [data-" + item + "].identifier-icon").show();
+        }
     });
+
+    function resetProfilePreview() {
+        var fields = ["name", "email", "country", "state", "organization", "title", "subject-areas", "joined", "contributions"];
+        fields.forEach(function(f) {
+            $(".profile-badge-content [data-" + f + "]").text("");
+        });
+        $(".profile-badge-header .identifier-icon").hide();
+    }
 
     // Abstract collapse toggle
     $(".toggle-abstract").click(function () {
