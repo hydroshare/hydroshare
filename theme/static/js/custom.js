@@ -228,7 +228,7 @@ $(document).ready(function () {
     });
 
     function resetProfilePreview() {
-        var fields = ["name", "email", "country", "state", "organization", "title", "subject-areas", "joined", "contributions"];
+        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         fields.forEach(function(f) {
             $(".profile-badge-content [data-" + f + "]").text("");
         });
