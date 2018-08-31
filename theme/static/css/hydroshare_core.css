@@ -3268,7 +3268,7 @@ span.you-flag {
 #profile-menu .profile-pic-thumbnail {
     margin: 0;
     margin-top: 5px;
-    cursor: default
+    cursor: pointer;
 }
 
 .come-in {
