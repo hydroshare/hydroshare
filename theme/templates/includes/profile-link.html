@@ -1,0 +1,28 @@
+<a class="profile-preview" data-toggle="modal"
+   data-target="#profile-preview-modal" href="#"
+   data-name="{% if user.first_name or user.last_name %}
+    {{ user.first_name }} {% if user.middle_name %}
+    {{ user.middle_name }}{% endif %} {{ user.last_name }}
+    {% else %}
+    {{ user.username }}
+    {% endif %}"
+   data-email="{{ user.email }}"
+   data-organization="{{ user.userprofile.organization }}"
+   data-title="{{ user.userprofile.title }}"
+   data-subjectareas="{{ user.userprofile.subject_areas }}"
+        {% for name, link in user.userprofile.identifiers.items %}
+   data-{{ name }}="{{ link }}"
+        {% endfor %}
+   data-state="{{ user.userprofile.state }}" data-country="{{ user.userprofile.country }}"
+   data-joined="{{ user.date_joined|date:"M d, Y" }}"
+        {% if user.userprofile.picture %}
+   data-profile-picture="{{ user.userprofile.picture.url }}"
+        {% endif %}
+   data-profile-url="/users/{{ user.id }}">
+    {% if user.first_name or user.last_name %}
+        {{ user.first_name }} {% if user.middle_name %}
+        {{ user.middle_name }}{% endif %} {{ user.last_name }}
+    {% else %}
+        {{ user.username }}
+    {% endif %}
+</a>

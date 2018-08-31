@@ -193,11 +193,17 @@ $(document).ready(function () {
     });
 
     $(".profile-preview").click(function () {
+        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
+        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+
         resetProfilePreview();
         var data = $(this).data();
 
+        // Populate profile button url
         $("#btn-preview-profile").attr("href", data.profileUrl);
         delete data.profileUrl;
+
+        // Populate profile picture
         var pic = $("#profile-preview-modal .profile-pic");
         if (data.profilePicture) {
             pic.toggleClass("user-icon", false);
@@ -208,9 +214,16 @@ $(document).ready(function () {
             pic.css("background-image", "none");
         }
 
+        // Rest of the fields
         for (var item in data) {
-            $("#profile-preview-modal [data-" + item + "]:not(.identifier-icon)").text(data[item]);
-            $("#profile-preview-modal [data-" + item + "].identifier-icon").show();
+            if ($.inArray(item, fields) != -1) {
+                $("#profile-preview-modal [data-" + item + "]").text(data[item]);
+            }
+            else if ($.inArray(item, identifiers) != -1) {
+                var ident = $("#profile-preview-modal [data-" + item + "]");
+                ident.show();
+                ident.attr("href", data[item]);
+            }
         }
     });
 
@@ -247,6 +260,7 @@ $(document).ready(function () {
         $(this).attr("title", titles[current]);
     });
 
+    // Toggle for resource header
     $("#stats-toggle").click(function () {
         $(".info-collapsible").toggleClass("hidden");
     });

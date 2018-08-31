@@ -42,36 +42,7 @@
                         <td>
                             {% for u in owners %}
                                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-{#                                <span>{{ u|contact }}</span>#}
-
-                                <a class="profile-preview" data-toggle="modal"
-                                   data-target="#profile-preview-modal" href="#"
-                                   data-name="{% if u.first_name or u.last_name %}
-                                    {{ u.first_name }} {% if u.middle_name %}
-                                    {{ u.middle_name }}{% endif %} {{ u.last_name }}
-                                    {% else %}
-                                    {{ u.username }}
-                                    {% endif %}"
-                                   data-email="{{ u.email }}"
-                                   data-organization="{{ u.userprofile.organization }}"
-                                   data-title="{{ u.userprofile.title }}"
-                                   data-subjectAreas="{{ u.userprofile.subject_areas }}"
-                                   {% for name, link in u.userprofile.identifiers.items %}
-                                   data-{{ name }}="{{ link }}"
-                                   {% endfor %}
-                                   data-state="{{ u.userprofile.state }}" data-country="{{ u.userprofile.country }}"
-                                   data-joined="{{ u.date_joined|date:"M d, Y" }}"
-                                   {% if u.userprofile.picture %}
-                                       data-profile-picture="{{ u.userprofile.picture.url }}"
-                                   {% endif %}
-                                   data-profile-url="/users/{{ u.id }}">
-                                    {% if u.first_name or u.last_name %}
-                                    {{ u.first_name }} {% if u.middle_name %}
-                                    {{ u.middle_name }}{% endif %} {{ u.last_name }}
-                                    {% else %}
-                                    {{ u.username }}
-                                    {% endif %}
-                                </a>
+                                {% include "includes/profile-link.html" with user=u %}
                             {% endfor %}
                         </td>
                     </tr>
@@ -87,34 +58,7 @@
                         <th>Last updated:</th>
                         <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
                             {% if cm.last_changed_by %} by
-                                <a class="profile-preview" data-toggle="modal"
-                                   data-target="#profile-preview-modal" href="#"
-                                   data-name="{% if cm.last_changed_by.first_name or cm.last_changed_by.last_name %}
-                                    {{ cm.last_changed_by.first_name }} {% if cm.last_changed_by.middle_name %}
-                                    {{ cm.last_changed_by.middle_name }}{% endif %} {{ cm.last_changed_by.last_name }}
-                                    {% else %}
-                                    {{ cm.last_changed_by.username }}
-                                    {% endif %}"
-                                   data-email="{{ cm.last_changed_by.email }}"
-                                   data-organization="{{ cm.last_changed_by.userprofile.organization }}"
-                                   data-title="{{ cm.last_changed_by.userprofile.title }}"
-                                   data-subjectAreas="{{ cm.last_changed_by.userprofile.subject_areas }}"
-                                        {% for name, link in cm.last_changed_by.userprofile.identifiers.items %}
-                                   data-{{ name }}="{{ link }}"
-                                        {% endfor %}
-                                   data-state="{{ cm.last_changed_by.userprofile.state }}" data-country="{{ cm.last_changed_by.userprofile.country }}"
-                                   data-joined="{{ cm.last_changed_by.date_joined|date:"M d, Y" }}"
-                                        {% if cm.last_changed_by.userprofile.picture %}
-                                   data-profile-picture="{{ cm.last_changed_by.userprofile.picture.url }}"
-                                        {% endif %}
-                                   data-profile-url="/users/{{ cm.last_changed_by.id }}">
-                                    {% if cm.last_changed_by.first_name or cm.last_changed_by.last_name %}
-                                        {{ cm.last_changed_by.first_name }} {% if cm.last_changed_by.middle_name %}
-                                        {{ cm.last_changed_by.middle_name }}{% endif %} {{ cm.last_changed_by.last_name }}
-                                    {% else %}
-                                        {{ cm.last_changed_by.username }}
-                                    {% endif %}
-                                </a>
+                                {% include "includes/profile-link.html" with user=cm.last_changed_by %}
                             {% endif %}</td>
                     </tr>
                     <tr class="info-collapsible">

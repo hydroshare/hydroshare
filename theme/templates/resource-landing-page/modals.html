@@ -2038,13 +2038,28 @@
             <div class="profile-badge-header">
                 <div class="profile-pic round-image user-icon"></div>
                 <div class="external-profiles">
-                    <i data-googlescholarid class="identifier-icon ai ai-google-scholar-square"></i>
-                    <i class="identifier-icon ai ai-orcid"></i>
-                    <i data-researchgateid class="identifier-icon ai ai-researchgate-square"></i>
-                    <img class="identifier-icon"
-                         src="{{ STATIC_URL }}img/researcherID.png"
-                         alt="ResearcherID icon"/>
-                    <i class="identifier-icon fa fa-address-card"></i>
+                    <a href="" data-googlescholarid class="identifier-icon" target="_blank" data-toggle="tooltip" data-placement="bottom"
+                       title="Google Scholar">
+                        <i class="ai ai-google-scholar-square hover-shadow"></i>
+                    </a>
+                    <a href="" data-orcid class="identifier-icon" target="_blank" data-toggle="tooltip" data-placement="bottom"
+                       title="ORCID">
+                        <i class="ai ai-orcid hover-shadow"></i>
+                    </a>
+                    <a href="" data-researchgateid class="identifier-icon" target="_blank" data-toggle="tooltip" data-placement="bottom"
+                       title="ResearchGate">
+                        <i class="ai ai-researchgate-square hover-shadow"></i>
+                    </a>
+                    <a href="" data-researcerid class="identifier-icon" target="_blank" data-toggle="tooltip" data-placement="bottom"
+                       title="ResearcherID">
+                        <img class="hover-shadow"
+                             src="{{ STATIC_URL }}img/researcherID.png"
+                             alt="ResearcherID icon"/>
+                    </a>
+                    <a href="" data-identifier-other class="identifier-icon" target="_blank" data-toggle="tooltip" data-placement="bottom"
+                       title="">
+                        <i class="fa fa-address-card hover-shadow"></i>
+                    </a>
                 </div>
             </div>
             <div class="profile-badge-content">
@@ -2080,7 +2095,7 @@
                             data-title></span>
                     </h4>
                     <div class="text-muted">Subject Areas:</div>
-                    <div data-subjectAreas></div>
+                    <div data-subjectareas></div>
                 </div>
 
                 <hr>
