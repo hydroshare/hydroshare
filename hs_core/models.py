@@ -1701,7 +1701,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         and False otherwise
         """
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         has_metadata = self.has_required_metadata
         return has_files and has_metadata
 
@@ -1732,7 +1732,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
@@ -1784,7 +1784,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
