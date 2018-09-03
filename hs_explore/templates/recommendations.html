@@ -8,31 +8,91 @@
         {% include "recommended_resources.html" %}
     </ul>
     <h2>Recommended users</h2>
-    <ul id='rec-user'>
+    <ul id='rec-users'>
         {% include "recommended_users.html"  %}
     </ul>
     <h2>Recommended groups</h2>
-    <ul id='rec-group'>
+    <ul id='rec-groups'>
         {% include "recommended_groups.html"  %}
     </ul>
 {% endblock %}
 {% block extra_js %}
     <script>
+        var update_resources = function(key, value) {
+            console.log(key + ":" + value);
+            $.ajax({
+                url: '/rec_res/',
+                type: 'GET',
+                data: {
+                    action: 'update',
+                    genre_key: key,
+                    genre_value: value
+                },
+                success: function(data) {
+                    console.log(data)
+                    $('#rec-res').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        };
+
+        var update_users = function(key, value) {
+            console.log(key + ":" + value);
+            $.ajax({
+                url: '/rec_users/',
+                type: 'GET',
+                data: {
+                    action: 'update',
+                    genre_key: key,
+                    genre_value: value
+                },
+                success: function(data) {
+                    console.log(data)
+                    $('#rec-users').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        };
+
+        var update_groups = function(key, value) {
+            console.log(key + ":" + value);
+            $.ajax({
+                url: '/rec_groups/',
+                type: 'GET',
+                data: {
+                    action: 'update',
+                    genre_key: key,
+                    genre_value: value
+                },
+                success: function(data) {
+                    console.log(data)
+                    $('#rec-groups').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        };
+
         var update_recommended = function(part, key, value) {
             console.log(part + ":" + key + ":" + value);
             startTime = new Date();
             if (part == 'resources') {
                 $('#rec-res').empty();
             } else if (part == 'users'){
-                $('#rec-user').empty();    
+                $('#rec-users').empty();    
             } else {
-                $('#rec-group').empty();
+                $('#rec-groups').empty();
             }
 
             $.ajax({
                 url: '/update_explore/',
                 type: 'GET',
-                dataType: 'json',
+                //dataType: 'json',
                 data: {
                     recommended_part: part,
                     genre_key: key,
@@ -40,9 +100,9 @@
                 },
                 success: function(data) {
                     if (part == 'resources') {
-                        //console.log(data)
+                        console.log(data)
 
-                        
+                        /*
                         var json_results = [];
                         for (var j = 0; j < data.length; j++) {
                             var item = $.parseJSON(data[j]);
@@ -54,12 +114,12 @@
                             console.log(item);
                             //var item1 = JSON.parse(data[j]);
                             //console.log(item1);
-                        }
+                        }*/
                         //$('#rec-res').html(data);
                     } else if (part == 'users'){
-                        $('#rec-user').html(data);
+                        $('#rec-users').html(data);
                     } else {
-                        $('#rec-group').html(data);
+                        $('#rec-groups').html(data);
                     }
                     endTime = new Date();
                     var timeDiff = Math.round(endTime - startTime)/1000;
@@ -70,60 +130,72 @@
                 }
             });
         };
-        /*
+       
         $(document).ready(function () {
             $.ajax({
-                url: '/update_explore/',
+                url: '/rec_res/',
                 type: 'GET',
                 data: {
-                    recommended_part: 'init',
+                    action: 'init',
                     genre_key: '',
                     genre_value: ''
                 },
                 success: function(data) {
-                    $('#rec-res').html(data.resource_list);
-                    $('#rec-user').html(data.user_list);
-                    $('#rec-group').html(data.group_list);
-                    endTime = new Date();
-                    var timeDiff = Math.round(endTime - startTime)/1000;
-                    console.log(timeDiff + " seconds");
+                    //console.log(data)
+                    $('#rec-res').html(data);
+                    //$('#rec-user').html(data.user_list);
+                    //$('#rec-group').html(data.group_list);
+                    //endTime = new Date();
+                    //var timeDiff = Math.round(endTime - startTime)/1000;
+                    //console.log(timeDiff + " seconds");
                 },
                 failure: function(data) { 
                     console.log('Got an error dude');
                 }
             });
-        });*/
-
-
-        /*
-        $(document).ready(function () {            
-            $(".dismiss-button").click(function (e) {
-                e.preventDefault();
-                var arr = $(this).val().split(",");
-                var key = arr[0];
-                var value = arr[1];
-                console.log(key + ":" + value);
-                startTime = new Date();
-                $('#rec-res').empty();
-                $.ajax({
-                    url: '/update_explore/',
-                    type: 'GET',
-                    data: {
-                        genre_key: key,
-                        genre_value: value
-                    },
-                    success: function(data) {
-                        $('#rec-res').html(data);
-                         endTime = new Date();
-                         var timeDiff = Math.round(endTime - startTime)/1000;
-                         console.log(timeDiff + " seconds");
-                    },
-                    failure: function(data) { 
-                        console.log('Got an error dude');
-                    }
-                }); 
-
+            $.ajax({
+                url: '/rec_users/',
+                type: 'GET',
+                data: {
+                    action: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    //console.log(data)
+                    $('#rec-users').html(data);
+                    //$('#rec-user').html(data.user_list);
+                    //$('#rec-group').html(data.group_list);
+                    //endTime = new Date();
+                    //var timeDiff = Math.round(endTime - startTime)/1000;
+                    //console.log(timeDiff + " seconds");
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
             });
-        });*/
+            $.ajax({
+                url: '/rec_groups/',
+                type: 'GET',
+                data: {
+                    action: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    //console.log(data)
+                    $('#rec-groups').html(data);
+                    //$('#rec-user').html(data.user_list);
+                    //$('#rec-group').html(data.group_list);
+                    //endTime = new Date();
+                    //var timeDiff = Math.round(endTime - startTime)/1000;
+                    //console.log(timeDiff + " seconds");
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        });
+
     </script>
 {% endblock %}
