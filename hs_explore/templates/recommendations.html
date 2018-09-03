@@ -11,6 +11,10 @@
     <ul id='rec-user'>
         {% include "recommended_users.html"  %}
     </ul>
+    <h2>Recommended groups</h2>
+    <ul id='rec-group'>
+        {% include "recommended_groups.html"  %}
+    </ul>
 {% endblock %}
 {% block extra_js %}
     <script>
@@ -19,12 +23,16 @@
             startTime = new Date();
             if (part == 'resources') {
                 $('#rec-res').empty();
-            } else {
+            } else if (part == 'users'){
                 $('#rec-user').empty();    
+            } else {
+                $('#rec-group').empty();
             }
+
             $.ajax({
                 url: '/update_explore/',
                 type: 'GET',
+                dataType: 'json',
                 data: {
                     recommended_part: part,
                     genre_key: key,
@@ -32,9 +40,26 @@
                 },
                 success: function(data) {
                     if (part == 'resources') {
-                        $('#rec-res').html(data);
-                    } else {
+                        //console.log(data)
+
+                        
+                        var json_results = [];
+                        for (var j = 0; j < data.length; j++) {
+                            var item = $.parseJSON(data[j]);
+                   
+                            item['keywords'] = $.parseJSON(item['keywords']);
+                            for (var i = 0; i < item['keywords'].length; i++) {
+                                item['keywords'][i] = $.parseJSON(item['keywords'][i]);
+                            }
+                            console.log(item);
+                            //var item1 = JSON.parse(data[j]);
+                            //console.log(item1);
+                        }
+                        //$('#rec-res').html(data);
+                    } else if (part == 'users'){
                         $('#rec-user').html(data);
+                    } else {
+                        $('#rec-group').html(data);
                     }
                     endTime = new Date();
                     var timeDiff = Math.round(endTime - startTime)/1000;
@@ -44,7 +69,32 @@
                     console.log('Got an error dude');
                 }
             });
-        }
+        };
+        /*
+        $(document).ready(function () {
+            $.ajax({
+                url: '/update_explore/',
+                type: 'GET',
+                data: {
+                    recommended_part: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    $('#rec-res').html(data.resource_list);
+                    $('#rec-user').html(data.user_list);
+                    $('#rec-group').html(data.group_list);
+                    endTime = new Date();
+                    var timeDiff = Math.round(endTime - startTime)/1000;
+                    console.log(timeDiff + " seconds");
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        });*/
+
+
         /*
         $(document).ready(function () {            
             $(".dismiss-button").click(function (e) {
