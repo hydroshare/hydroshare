@@ -11,7 +11,10 @@ RUN pip install \
   jsonschema \
   nameparser \
   probablepeople \
-  geopy
+  geopy \
+  hs_restclient==1.2.12 \
+  pyyaml
+
 ### End - HydroShare Development Image Additions ###
 
 USER root
