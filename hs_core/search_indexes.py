@@ -12,6 +12,7 @@ from nameparser import HumanName
 import probablepeople
 from string import maketrans
 import logging
+from hs_explore.models import RecommendedResource, UserPreferences
 # # SOLR extension needs to be installed for this to work
 # from haystack.utils.geo import Point
 
@@ -140,6 +141,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     units_type = indexes.MultiValueField(faceted=True)
     aggregation_statistics = indexes.MultiValueField()
     absolute_url = indexes.CharField(indexed=False)
+    #interested_by_users = indexes.MultiValueField()
+    recommend_to_users = indexes.MultiValueField()
 
     # extra metadata
     extra = indexes.MultiValueField()
@@ -885,3 +888,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         for key, value in obj.extra_metadata.items():
             extra.append(key + ': ' + value)
         return extra
+
+    def prepare_recommend_to_users(self, obj):
+        """ Return a list of usernames """
+        recommend_to_users = []
+        for r in RecommendedResource.objects.filter(candidate_resource=obj):
+            #recommend_user = r.user.username + "," + str(r.relevance)
+            recommend_to_users.append(r.user.username)
+        return recommend_to_users
+
