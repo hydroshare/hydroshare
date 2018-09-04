@@ -77,59 +77,6 @@
                 }
             });
         };
-        /*
-        var update_recommended = function(part, key, value) {
-            console.log(part + ":" + key + ":" + value);
-            startTime = new Date();
-            if (part == 'resources') {
-                $('#rec-res').empty();
-            } else if (part == 'users'){
-                $('#rec-users').empty();    
-            } else {
-                $('#rec-groups').empty();
-            }
-
-            $.ajax({
-                url: '/update_explore/',
-                type: 'GET',
-                //dataType: 'json',
-                data: {
-                    recommended_part: part,
-                    genre_key: key,
-                    genre_value: value
-                },
-                success: function(data) {
-                    if (part == 'resources') {
-                        console.log(data)
-
-                        
-                        var json_results = [];
-                        for (var j = 0; j < data.length; j++) {
-                            var item = $.parseJSON(data[j]);
-                   
-                            item['keywords'] = $.parseJSON(item['keywords']);
-                            for (var i = 0; i < item['keywords'].length; i++) {
-                                item['keywords'][i] = $.parseJSON(item['keywords'][i]);
-                            }
-                            console.log(item);
-                            //var item1 = JSON.parse(data[j]);
-                            //console.log(item1);
-                        }
-                        //$('#rec-res').html(data);
-                    } else if (part == 'users'){
-                        $('#rec-users').html(data);
-                    } else {
-                        $('#rec-groups').html(data);
-                    }
-                    endTime = new Date();
-                    var timeDiff = Math.round(endTime - startTime)/1000;
-                    console.log(timeDiff + " seconds");
-                },
-                failure: function(data) { 
-                    console.log('Got an error dude');
-                }
-            });
-        };*/
        
         $(document).ready(function () {
             $.ajax({
@@ -147,6 +94,7 @@
                     console.log('Got an error dude');
                 }
             });
+
             $.ajax({
                 url: '/rec_users/',
                 type: 'GET',
@@ -162,6 +110,7 @@
                     console.log('Got an error dude');
                 }
             });
+
             $.ajax({
                 url: '/rec_groups/',
                 type: 'GET',
