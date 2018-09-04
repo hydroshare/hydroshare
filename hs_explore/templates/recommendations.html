@@ -19,7 +19,6 @@
 {% block extra_js %}
     <script>
         var update_resources = function(key, value) {
-            console.log(key + ":" + value);
             $.ajax({
                 url: '/rec_res/',
                 type: 'GET',
@@ -29,7 +28,6 @@
                     genre_value: value
                 },
                 success: function(data) {
-                    console.log(data)
                     $('#rec-res').html(data);
                 },
                 failure: function(data) { 
@@ -39,7 +37,6 @@
         };
 
         var update_users = function(key, value) {
-            console.log(key + ":" + value);
             $.ajax({
                 url: '/rec_users/',
                 type: 'GET',
@@ -49,7 +46,6 @@
                     genre_value: value
                 },
                 success: function(data) {
-                    console.log(data)
                     $('#rec-users').html(data);
                 },
                 failure: function(data) { 
@@ -59,7 +55,6 @@
         };
 
         var update_groups = function(key, value) {
-            console.log(key + ":" + value);
             $.ajax({
                 url: '/rec_groups/',
                 type: 'GET',
@@ -69,7 +64,6 @@
                     genre_value: value
                 },
                 success: function(data) {
-                    console.log(data)
                     $('#rec-groups').html(data);
                 },
                 failure: function(data) { 
