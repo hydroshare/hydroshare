@@ -16,7 +16,11 @@ from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 from hs_app_netCDF import views as nc_views
-from hs_explore import views as hs_explore_views
+from hs_explore import view_init as hs_explore_init
+from hs_explore import rec_resources as hs_explore_resources
+from hs_explore import rec_users as hs_explore_users
+from hs_explore import rec_groups as hs_explore_groups
+from django.contrib.auth.decorators import login_required
 
 
 autocomplete_light.autodiscover()
@@ -72,7 +76,10 @@ urlpatterns = i18n_patterns("",
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"), 
-    url(r'^explore/$', hs_explore_views.RecommendList.as_view(), name='recommend_list')
+    url(r'^explore/$', login_required(hs_explore_init.init_explore), name='init_recommend_list'),
+    url(r'^rec_res/$', hs_explore_resources.RecommendResources.as_view(), name='recommend_resources'),
+    url(r'^rec_users/$', hs_explore_users.RecommendUsers.as_view(), name='recommend_users'),
+    url(r'^rec_groups/$', hs_explore_groups.RecommendGroups.as_view(), name='recommend_groups')
 )
 
 # Filebrowser admin media library.
