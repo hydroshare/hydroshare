@@ -3,7 +3,7 @@ import logging
 import os
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
@@ -337,6 +337,19 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
     sys_pathname = 'data/contents/%s' % pathname
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
+
+
+def data_store_add_reference(request):
+    """
+    create the reference url file and add the url to metadata accordingly for easy later retrieval
+    """
+    res_id = request.POST.get('res_id', None)
+    ref_name = request.POST.get('ref_name', None)
+    ref_url = request.POST.get('ref_url', None)
+
+    return JsonResponse(data={'res_id': res_id,
+                              'ref_name': ref_name,
+                              'ref_url': ref_url})
 
 
 def data_store_create_folder(request):

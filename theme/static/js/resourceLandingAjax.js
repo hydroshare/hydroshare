@@ -1223,6 +1223,27 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+function add_ref_content_ajax_submit(res_id, ref_name, ref_url) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-add-reference/',
+        async: true,
+        data: {
+            res_id: res_id,
+            ref_name: ref_name,
+            ref_url: ref_url
+        },
+        success: function (result) {
+            $('#add-reference-dialog').modal('hide');
+            $("#txtRefName").val("");
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Add reference content Failed', xhr.responseText);
+        }
+    });
+}
+
 // TODO: #2105: replace with move-to-folder and rename-file-or-folder: 
 // TODO: ambiguous function based upon conflation in REST API
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {

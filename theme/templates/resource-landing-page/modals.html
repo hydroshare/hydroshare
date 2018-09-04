@@ -1815,6 +1815,39 @@
     </div>
 </div>
 
+<div class="modal fade in" id="add-reference-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="add-reference" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="create-folder">Add content from the web</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    {# Reference Name #}
+                    <fieldset class="col-sm-12">
+                        <label>Create a name for the referenced content*</label>
+                        <input id="txtRefName" class="form-control modal-only-required">
+                    </fieldset>
+                    {# Reference URL #}
+                    <fieldset class="col-sm-12">
+                        <label>Specify the HTTP or FTP URL of a file or website*</label>
+                        <input id="txtRefURL" class="form-control modal-only-required">
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="btn-add-reference" class="btn btn-primary disabled" data-dismiss="modal">Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade in" id="rename-dialog" tabindex="-1" role="dialog"
      aria-labelledby="rename" aria-hidden="false">
     <div class="modal-dialog">

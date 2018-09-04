@@ -99,7 +99,7 @@ function updateSelectionMenuContext() {
     var flagDisableSetTimeseriesFileType = false;
     var flagDisableRemoveAggregation = false;
     var flagDisableGetLink = false;
-    var flagDisableCreateFolder = false;
+    var flagDisableCreateFolderOrFile = false;
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
@@ -165,7 +165,7 @@ function updateSelectionMenuContext() {
              var logicalFileType = $("#fb-files-container").find('span.fb-logical-file-type').attr("data-logical-file-type");
              if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                 flagDisableCreateFolder = true;
+                 flagDisableCreateFolderOrFile = true;
              }
         }
 
@@ -268,7 +268,7 @@ function updateSelectionMenuContext() {
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                 flagDisableCut = true;
                 flagDisablePaste = true;
-                flagDisableCreateFolder = true;
+                flagDisableCreateFolderOrFile = true;
             }
         }
     }
@@ -278,7 +278,7 @@ function updateSelectionMenuContext() {
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            flagDisableCreateFolder = true;
+            flagDisableCreateFolderOrFile = true;
             flagDisableRename = true;
             if(isFolderSelected){
                 flagDisableDelete = false;
@@ -291,7 +291,10 @@ function updateSelectionMenuContext() {
             flagDisableSetGenericFileType = true;
         }
     // set Create folder toolbar option
-    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolderOrFile);
+
+    // set Add reference content toolbar option
+    $("#fb-add-reference").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
@@ -360,7 +363,10 @@ function updateSelectionMenuContext() {
     $("#fb-paste").toggleClass("disabled", flagDisablePaste);
 
     // set create folder right click menu option
-    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolder);
+    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolderOrFile);
+
+    // set add reference content right click menu option
+    menu2.children("li[data-menu-name='add-reference-content']").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
@@ -919,7 +925,7 @@ function onOpenFolder() {
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
 
-    var flagDisableCreateFolder = false;
+    var flagDisableCreateFolderOrFile = false;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
@@ -935,14 +941,16 @@ function onOpenFolder() {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
         if (logicalFileType.length > 0){
-            flagDisableCreateFolder = true;
+            flagDisableCreateFolderOrFile = true;
         }
         else {
-            flagDisableCreateFolder = false;
+            flagDisableCreateFolderOrFile = false;
         }
 
         // Set Create folder toolbar option
-        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolderOrFile);
+        // set Add reference content toolbar option
+        $("#fb-add-reference").toggleClass("disabled", flagDisableCreateFolderOrFile);
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1210,6 +1218,12 @@ $(document).ready(function () {
         $('#txtFolderName').val("");
         $('#txtFolderName').closest(".modal-content").find(".btn-primary").toggleClass("disabled", true);
         $('#txtFolderName').focus();
+    });
+
+    $('#add-reference-dialog').on('shown.bs.modal', function () {
+        $('#txtRefName').val("");
+        $('#txtRefName').closest(".modal-content").find(".btn-primary").toggleClass("disabled", true);
+        $('#txtRefName').focus();
     });
 
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
