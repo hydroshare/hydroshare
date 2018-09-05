@@ -1223,7 +1223,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-function add_ref_content_ajax_submit(res_id, ref_name, ref_url) {
+function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1231,12 +1231,14 @@ function add_ref_content_ajax_submit(res_id, ref_name, ref_url) {
         async: true,
         data: {
             res_id: res_id,
+            curr_path: curr_path,
             ref_name: ref_name,
             ref_url: ref_url
         },
         success: function (result) {
             $('#add-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
+            $("#txtRefURL").val("");
         },
         error: function(xhr, errmsg, err){
             display_error_message('Add reference content Failed', xhr.responseText);

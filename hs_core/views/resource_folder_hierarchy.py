@@ -344,6 +344,7 @@ def data_store_add_reference(request):
     create the reference url file and add the url to metadata accordingly for easy later retrieval
     """
     res_id = request.POST.get('res_id', None)
+    curr_path = request.POST.get('curr_path', None)
     ref_name = request.POST.get('ref_name', None)
     ref_url = request.POST.get('ref_url', None)
 

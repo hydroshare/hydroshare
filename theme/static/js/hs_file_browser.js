@@ -1337,6 +1337,27 @@ $(document).ready(function () {
         return false;
     });
 
+    // Add web url reference content at current directory
+    $("#btn-add-reference-url").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var refName = $("#txtRefName").val();
+        var refURL = $("#txtRefURL").val();
+        if (refName && refURL) {
+            var calls = [];
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
+
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+            });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
+        }
+        return false;
+    });
+
     // Move up one directory
     $("#fb-move-up").click(function () {
         var upPath = $("#hs-file-browser").attr("data-current-path");
