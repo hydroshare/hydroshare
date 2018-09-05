@@ -208,13 +208,11 @@
                                 <span class="fa fa-folder icon-blue"></span>
                                 <span>New Folder</span>
                             </li>
-                            {% if cm|resource_type == "CompositeResource" %}
-                                <li id="btn-add-reference" data-menu-name="add-reference" data-toggle="modal"
-                                    data-target="#add-reference-dialog">
-                                    <span class="fa fa-link icon-blue"></span>
-                                    <span>Add content from the web</span>
-                                </li>
-                            {% endif %}
+                            <li id="btn-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-link icon-blue"></span>
+                                <span>Add content from the web</span>
+                            </li>
                             <li role="separator" class="divider"></li>
                         {% endif %}
                     {% endif %}
@@ -376,7 +374,7 @@
                                                     {% if cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-add-reference" class="fb-space-right disabled"
                                                                 data-toggle="modal"
-                                                                data-target="#add-reference-dialog"
+                                                                data-target="#add-reference-url-dialog"
                                                             title="Add content from the web">
                                                         <span class="fa fa-link icon-blue"></span>
                                                         </button>

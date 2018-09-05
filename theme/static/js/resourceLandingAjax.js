@@ -1235,7 +1235,7 @@ function add_ref_content_ajax_submit(res_id, ref_name, ref_url) {
             ref_url: ref_url
         },
         success: function (result) {
-            $('#add-reference-dialog').modal('hide');
+            $('#add-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
         },
         error: function(xhr, errmsg, err){

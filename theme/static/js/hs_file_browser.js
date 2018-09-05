@@ -366,7 +366,7 @@ function updateSelectionMenuContext() {
     menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     // set add reference content right click menu option
-    menu2.children("li[data-menu-name='add-reference-content']").toggleClass("disabled", flagDisableCreateFolderOrFile);
+    menu2.children("li[data-menu-name='add-reference']").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
@@ -1220,7 +1220,7 @@ $(document).ready(function () {
         $('#txtFolderName').focus();
     });
 
-    $('#add-reference-dialog').on('shown.bs.modal', function () {
+    $('#add-reference-url-dialog').on('shown.bs.modal', function () {
         $('#txtRefName').val("");
         $('#txtRefName').closest(".modal-content").find(".btn-primary").toggleClass("disabled", true);
         $('#txtRefName').focus();
