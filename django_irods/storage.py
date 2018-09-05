@@ -267,8 +267,8 @@ class IrodsStorage(Storage):
             return False
 
     def listdir(self, path):
-        stdout = self.session.run("ils", None, path)[0].split("\n")
-        listing = ([], [])
+        stdout = self.session.run("ils", None, "-l", path)[0].split("\n")
+        listing = ([], [], [])
         directory = stdout[0][0:-1]
         directory_prefix = "  C- " + directory + "/"
         for i in range(1, len(stdout)):
@@ -276,10 +276,17 @@ class IrodsStorage(Storage):
                 dirname = stdout[i][len(directory_prefix):].strip()
                 if dirname:
                     listing[0].append(dirname)
+                    listing[2].append("-1")
             else:
-                filename = stdout[i].strip()
+                line = stdout[i].split()
+                if len(line) != 7:
+                    # the last line is empty
+                    continue
+                filename = line[6]
+                size = line[3]
                 if filename:
                     listing[1].append(filename)
+                    listing[2].append(size)
         return listing
 
     def size(self, name):
