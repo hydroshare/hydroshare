@@ -1825,16 +1825,20 @@
             </div>
 
             <div class="modal-body">
-                <div class="row">
+                <div class="form-group">
+                    <fieldset>
                     {# Reference Name #}
-                    <fieldset class="col-sm-12">
-                        <label>Create a name for the referenced content*</label>
-                        <input id="txtRefName" class="form-control modal-only-required">
+                        <label class="col-sm-12">Create a name for the referenced content</label>
+                        <label for="txtRefName" class="col-sm-2 control-label">Name: *</label>
+                        <input id="txtRefName" class="col-sm-10 modal-only-required" placeholder="Untitled">
                     </fieldset>
-                    {# Reference URL #}
-                    <fieldset class="col-sm-12">
-                        <label>Specify the HTTP or FTP URL of a file or website*</label>
-                        <input id="txtRefURL" class="form-control modal-only-required">
+                </div>
+                {# Reference URL #}
+                <div class="form-group">
+                    <fieldset>
+                        <label class="col-sm-12">Specify the HTTP or FTP URL of a file or website</label>
+                        <label for="txtRefURL" class="col-sm-2 control-label">URL: *</label>
+                        <input id="txtRefURL" class="col-sm-10 modal-only-required" placeholder="HTTP or FTP URL">
                     </fieldset>
                 </div>
             </div>
