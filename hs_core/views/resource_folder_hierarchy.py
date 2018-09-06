@@ -1,9 +1,14 @@
 import json
 import logging
 import os
+from urllib2 import urlopen, HTTPError, URLError
+from tempfile import NamedTemporaryFile
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.core.validators import URLValidator
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.base import File
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
@@ -12,6 +17,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
+from hs_core.hydroshare import add_resource_files
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -339,18 +345,64 @@ def data_store_folder_unzip_public(request, pk, pathname):
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
 
 
+@api_view(['POST'])
 def data_store_add_reference(request):
     """
-    create the reference url file and add the url to metadata accordingly for easy later retrieval
+    create the reference url file, add the url file to resource, and add the url to
+    metadata accordingly for easy later retrieval
+    :param request:
+    :return: JsonResponse on success or HttpResponse with error status code on error
     """
+
     res_id = request.POST.get('res_id', None)
     curr_path = request.POST.get('curr_path', None)
     ref_name = request.POST.get('ref_name', None)
     ref_url = request.POST.get('ref_url', None)
 
-    return JsonResponse(data={'res_id': res_id,
-                              'ref_name': ref_name,
-                              'ref_url': ref_url})
+    if not res_id:
+        return HttpResponseBadRequest('Must have res_id included in the POST data')
+    if not curr_path:
+        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+    if not ref_name:
+        return HttpResponseBadRequest('Must have ref_name included in the POST data')
+    if not ref_url:
+        return HttpResponseBadRequest('Must have ref_url included in the POST data')
+
+    # validate curr_path starts with data/contents
+
+    ref_name = ref_name.lower()
+    if not ref_name.endswith('.url'):
+        ref_name += '.url'
+
+    # validate ref_url's syntax is valid
+    try:
+        validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
+        validator(ref_url)
+    except ValidationError:
+        return HttpResponseBadRequest('Not a valid reference URL')
+
+    # validate ref_url is valid, i.e., can be opened
+    try:
+        urlopen(ref_url)
+    except HTTPError as ex:
+        return HttpResponseBadRequest('Reference URL does not exist - error: ' + ex.code)
+    except URLError as ex:
+        return HttpResponseBadRequest('Reference URL does not exist - error: ' + ex.reason)
+
+    # create URL file
+    urltempfile = NamedTemporaryFile()
+    urlstring = '[InternetShortcut]\nURL=[' + ref_url + ']'
+    urltempfile.write(urlstring)
+    fileobj = File(file=urltempfile, name=ref_name)
+
+    prefix_path = 'data/contents'
+    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+        add_resource_files(res_id, fileobj)
+    else:
+        curr_path = curr_path[len(prefix_path)+1:]
+        add_resource_files(res_id, fileobj, folder=curr_path)
+
+    return JsonResponse({'status': 'success'})
 
 
 def data_store_create_folder(request):
