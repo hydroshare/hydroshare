@@ -8,7 +8,7 @@ Add the issues included in the release and update this document as release tasks
 
 <!-- Update the checklist as items are completed -->
 ### Beta Deployment
-- [ ] Deployed to Beta (https://docs.google.com/document/d/13mmOQvVvvuOIYZxzmPMNRcXUEKLVvaCpXwhfUSAs-WI/edit?ts=5b915082)
+- [ ] Deployed to Beta
 - [ ] check_resource beta results match current www results
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile
