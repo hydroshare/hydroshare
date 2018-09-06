@@ -164,12 +164,12 @@
 	top: -4px;
 }
 
-.fb-view-grid .fb-stack-url .fa-link, .dz-details .fb-stack-url .fa-link {
+.fb-view-grid .fb-stack-url .fa-external-link, .dz-details .fb-stack-url .fa-external-link {
     top: 4px;
     font-size: 19px;
 }
 
-.fb-view-list .fb-stack-url .fa-link {
+.fb-view-list .fb-stack-url .fa-external-link {
     top: -4px;
     font-size: 11px;
 }
