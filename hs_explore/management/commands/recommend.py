@@ -84,8 +84,6 @@ def recommended_groups(target_user, target_group_preferences_set):
         intersection_cardinality = len(set.intersection(*[target_group_preferences_set, group_subjects]))
         union_cardinality = len(set.union(*[target_group_preferences_set, group_subjects]))
         js = intersection_cardinality/float(union_cardinality)
-        if js - 0 < 0.00000001:
-            break
         jaccard_groups_sim[gp.group.name] = js
 
     for key, value in sorted(jaccard_groups_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
@@ -136,8 +134,6 @@ def recommended_users(target_user, target_user_preferences_set):
             intersection_cardinality = len(set.intersection(*[target_user_preferences_set, neighbor_subjects]))
             union_cardinality = len(set.union(*[target_user_preferences_set, neighbor_subjects]))
             js = intersection_cardinality/float(union_cardinality)
-            if js - 0 < 0.00000001:
-                break
             jaccard_users_sim[neighbor.username] = js
         except:
             continue
