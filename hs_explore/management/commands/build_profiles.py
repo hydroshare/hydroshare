@@ -297,21 +297,6 @@ class Command(BaseCommand):
                 subject = all_subjects_list[i]
                 prop_pref_subjects.append(('subject', subject, row.iat[i]))
             
-            '''
-            user_pref_subjects = []
-            for i in user_nonzero_index[0]:
-                subject = all_subjects_list[i]
-                user_pref_subjects.append(('subject', subject, row.iat[i]))
-            '''
-            '''
-            interested_resources = []
-            for rid in users_interested_resources[index]:
-                try:
-                    r = get_resource_by_shortkey(rid)
-                    interested_resources.append(r)
-                except:
-                    continue
-            '''
             neighbors = []
             if len(ug_nearest_neighbors.loc[index]) == 0:
                 continue

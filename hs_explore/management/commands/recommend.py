@@ -30,7 +30,6 @@ from haystack.query import SearchQuerySet, SQ
 
 
 def recommended_resources(target_user, out, target_res_preferences_set, target_jaccard_sim):
-    #ind = BaseResourceIndex()
 
     filter_sq = None
     target_out = out
@@ -45,18 +44,6 @@ def recommended_resources(target_user, out, target_res_preferences_set, target_j
 
     if target_out.count() == 0:
         return
-
-    # Ownership Similarity
-    # for res in ownership_out:
-    #     subjects = res.subject
-    #     subjects = [sub.lower() for sub in subjects]
-    #     res_id = res.short_id
-    #     if len(subjects) == 0:
-    #         continue
-    #     intersection_cardinality = len(set.intersection(*[target_res_ownership_preferences_set, set(subjects)]))
-    #     union_cardinality = len(set.union(*[target_res_ownership_preferences_set, set(subjects)]))
-    #     js = intersection_cardinality/float(union_cardinality)
-    #     target_jaccard_sim[res_id] = js
 
     # Propensity SImilarity
     for res in target_out:
@@ -73,19 +60,6 @@ def recommended_resources(target_user, out, target_res_preferences_set, target_j
         else:
             target_jaccard_sim[res_id] += js
 
-    #if target_username == 'ChristinaBandaragoda':
-    '''
-    print("------------ Jaccard similarity for Propensity  ---------------")
-    for key, value in sorted(target_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
-        candidate_resource = get_resource_by_shortkey(key)
-        r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Propensity', round(value, 4))
-        recommended_subjects = ind.prepare_subject(candidate_resource)
-        recommended_subjects = [sub.lower() for sub in recommended_subjects]
-        common_subjects = set.intersection(target_res_preferences_set, set(recommended_subjects))
-        for cs in common_subjects:
-            r1.relate('subject', cs, 1)
-        print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
-    '''
 
 def recommended_groups(target_user, target_group_preferences_set):
     jaccard_groups_sim = {}
@@ -110,6 +84,8 @@ def recommended_groups(target_user, target_group_preferences_set):
         intersection_cardinality = len(set.intersection(*[target_group_preferences_set, group_subjects]))
         union_cardinality = len(set.union(*[target_group_preferences_set, group_subjects]))
         js = intersection_cardinality/float(union_cardinality)
+        if js - 0 < 0.00000001:
+            break
         jaccard_groups_sim[gp.group.name] = js
 
     for key, value in sorted(jaccard_groups_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
@@ -140,16 +116,6 @@ def recommended_users(target_user, target_user_preferences_set):
         return
     if user_neighbors.neighbors.count() == 0:
         return
-
-    # all_up = up.preferences.all()
-    # target_user_propensity_preferences = UserPrefToPair.objects.filter(user_pref=up,
-    #                                                                    pair__in=all_up,
-    #                                                                    state='Seen',
-    #                                                                    pref_type='Propensity')
-    # target_user_propensity_preferences_set = set()
-    # for p in target_user_propensity_preferences:
-    #     if p.pair.key == 'subject':
-    #         target_user_propensity_preferences_set.add(p.pair.value)
 
     for neighbor in user_neighbors.neighbors.all():
         try:
