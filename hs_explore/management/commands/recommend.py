@@ -87,6 +87,8 @@ def recommended_groups(target_user, target_group_preferences_set):
         jaccard_groups_sim[gp.group.name] = js
 
     for key, value in sorted(jaccard_groups_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+        if value - 0 < 0.000001:
+            break
         candidate_group = Group.objects.get(name=key)
         rg = RecommendedGroup.recommend(target_user, candidate_group, round(value, 4))
         group_gp = GroupPreferences.objects.get(group__name=key)
@@ -141,6 +143,8 @@ def recommended_users(target_user, target_user_preferences_set):
         return
 
     for key, value in sorted(jaccard_users_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+        if value - 0 < 0.000001:
+            break
         candidate_user = user_from_id(key)
         r2 = RecommendedUser.recommend(target_user, candidate_user, round(value, 4))
         neighbor_up = PropensityPreferences.objects.get(user__username=key)
