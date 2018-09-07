@@ -38,6 +38,8 @@ server {
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
     error_log       /var/log/nginx/system.log notice;
+    # Uncomment the following line to generate debugging log entries
+    # error_log       /var/log/nginx/system.log debug;
 
     charset         utf-8;
     client_max_body_size 4096m;
@@ -52,17 +54,17 @@ server {
 
     location /IRODS_DATA_URI/ {
         internal; 
-        alias IRODS_DATA_ROOT;
+        alias IRODS_DATA_ROOT/;
     }
 
     location /IRODS_USER_URI/ {
         internal; 
-        alias IRODS_USER_ROOT;
+        alias IRODS_USER_ROOT/;
     }
 
     location /IRODS_CACHE_URI/ {
         internal; 
-        alias IRODS_CACHE_ROOT;
+        alias IRODS_CACHE_ROOT/;
     }
 
     location / {
