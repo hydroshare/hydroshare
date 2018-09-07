@@ -4,10 +4,15 @@ from hs_core.models import Identifier
 
 from django.db import migrations
 
+
 def remove_dx(apps, schema_editor):
     for id in Identifier.objects.filter(url__startswith='http://dx.'):
         id.url = id.url.replace('http://dx.', 'https://')
         id.save()
+
+def backwards(apps, schema_editor):
+    # adding backwards for testing
+    pass
 
 
 class Migration(migrations.Migration):
@@ -17,5 +22,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(remove_dx),
+        migrations.RunPython(remove_dx, backwards),
     ]
