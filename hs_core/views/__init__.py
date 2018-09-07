@@ -24,6 +24,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
@@ -495,20 +496,26 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
+    try:
+        res, _, _ = authorize(request, shortkey,
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                              raises_exception=False)
+    except ObjectDoesNotExist:
+        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    istorage = resource.get_irods_storage()
-    irods_split = request.path.split('/')[2:-1]
-    irods_file_path = '/'.join(irods_split)
-    # [0:-1] excludes the last item on the list
-    listing = istorage.listdir('/'.join(irods_split[0:-1]))
-    if irods_split[-1] in listing[0]:
-        # it's a folder
-        file_download_url = istorage.url(os.path.join('zips', irods_file_path))
-        return HttpResponseRedirect(file_download_url)
-    else: 
-        file_download_url = istorage.url(irods_file_path)
-        return HttpResponseRedirect(file_download_url)
+    istorage = res.get_irods_storage()
+    if __debug__:
+        logger.debug("request path is {}".format(request.path))
+    path_split = request.path.split('/')[2:]  # strip /resource/
+    public_file_path = '/'.join(path_split)
+    # logger.debug("public_file_path is {}".format(public_file_path))
+    istorage = res.get_irods_storage()
+    file_download_url = istorage.url(public_file_path)
+    if __debug__:
+        logger.debug("redirect is {}".format(file_download_url))
+    return HttpResponseRedirect(file_download_url)
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -539,9 +546,9 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
-            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.debug(ex.message)
+            logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])

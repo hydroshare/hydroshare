@@ -1850,6 +1850,44 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def get_url_of_path(self, path):
+        """Return the URL of an arbtrary path in this resource.
+
+        A GET of this URL simply returns the contents of the path.
+        This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+        path includes data/contents/
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.short_id, path)
+
+    def get_public_path(self, path):
+        """Return the public path for a specific path within the resource.
+           This is the path that appears in public URLs.
+           The input path includes data/contents/ as needed.
+        """
+        return os.path.join(self.short_id, path)
+
+    def get_irods_path(self, path):
+        """Return the irods path by which the given path is accessed.
+           The input path includes data/contents/ as needed.
+        """
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        else:
+            return self.get_public_path(path)
+
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
 
@@ -2015,6 +2053,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.object_id = metatdata_obj.id
             self.save()
             return metatdata_obj
+
+    def is_aggregation_xml_file(self, file_path):
+        """Checks if the file path *file_path* is one of the aggregation related xml file paths
+
+        :param  file_path: full file path starting with resource short_id
+        :return True if file_path is one of the aggregation xml file paths else False
+
+        This function is overridden for Composite Resource.
+        """
+        return False
 
     def extra_capabilites(self):
         """Return None. No-op method.
@@ -2270,6 +2318,40 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def supports_delete_folder_on_zip(self, original_folder):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
+
+    @property
+    def storage_type(self):
+        if not self.is_federated:
+            return 'local'
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+        if self.resource_federation_path == userpath:
+            return 'user'
+        else:
+            return 'federated'
+
+    def is_folder(self, folder_path):
+        """Determine whether a given path (relative to resource root, including /data/contents/)
+           is a folder or not. Returns False if the path does not exist.
+        """
+        path_split = folder_path.split('/')
+        while path_split[-1] == '':
+            path_split.pop()
+        dir_path = u'/'.join(path_split[0:-1])
+
+        # handles federation
+        irods_path = os.path.join(self.root_path, dir_path)
+        istorage = self.get_irods_storage()
+        try:
+            listing = istorage.listdir(irods_path)
+        except SessionException:
+            return False
+        if path_split[-1] in listing[0]:  # folders
+            return True
+        else:
+            return False
 
     class Meta:
         """Define meta properties for AbstractResource class."""
@@ -2558,7 +2640,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                     if f.storage_path == fullpath:
                         found = True
                         break
-                if not found:
+                if not found and not self.is_aggregation_xml_file(fullpath):
                     ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
@@ -2834,17 +2916,27 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def size(self):
-        """Retturn file size for federated or non-federated files."""
+        """Return file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
-            return self.fed_resource_file.size
+            try:
+                return self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
-            return self.resource_file.size
+            try:
+                return self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
 
     # TODO: write unit test
     @property
@@ -3218,25 +3310,27 @@ class ResourceFile(ResourceFileIRODSMixin):
                 views.file_download_url_mapper,
                 name='get_resource_file')
 
+        This url does NOT depend upon federation status.
         """
-        # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.resource.short_id,
-                                  'data', 'contents', self.short_path)
+        return '/' + os.path.join('resource', self.public_path)
 
     @property
-    def irods_url(self):
-        """Return the iRODS URL of the file.
-
-        This is a direct link and independent of the Django path in ResourceFile.url
-        However, this does not invoke Nginx large file support with sendfile.
-        So use this with caution.
+    def public_path(self):
+        """ return the public path (unqualified iRODS path) for a resource.
+            This corresponds to the iRODS path if the resource isn't federated.
         """
-        if self.resource_file:
-            return self.resource_file.url
-        elif self.fed_resource_file:
-            return self.fed_resource_file.url
+        return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
+
+    @property
+    def irods_path(self):
+        """ Return the irods path for accessing a file, including possible federation information.
+            This consists of the resource id, /data/contents/, and the file path.
+        """
+
+        if self.resource.is_federated:
+            return os.path.join(self.resource.resource_federation_path, self.public_path)
         else:
-            return None
+            return self.public_path
 
 
 class Bags(models.Model):

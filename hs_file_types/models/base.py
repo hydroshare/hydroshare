@@ -358,7 +358,8 @@ class AbstractFileMetaData(models.Model):
                                             CoreMetaData.NAMESPACES['rdfs1'])
         rdfs_isDefinedBy.text = current_site_url() + "/terms"
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
     def _get_xml_containers(self):
         """Helper for the subclasses to get the xml containers element to which the sub classes
@@ -965,7 +966,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def metadata_file_path(self):
-        """Full file path of the aggregation metadata xml file starting with {resource_id}/data/contents/
+        """Full path of the aggregation metadata xml file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.metadata_short_file_path)
 
@@ -1217,7 +1218,7 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+            log.exception("Failed to create aggregation metadata xml file")
             raise ex
         finally:
             shutil.rmtree(tmpdir)
@@ -1278,8 +1279,8 @@ class AbstractLogicalFile(models.Model):
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = "{site}/terms/{aggr_type}".format(site=current_site_url,
-                                                         aggr_type=self.get_aggregation_type_name())
+        agg_type_url = u"{site}/terms/{aggr_type}"\
+            .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
         a._ore.isDescribedBy = res_map_url
@@ -1324,6 +1325,6 @@ class AbstractLogicalFile(models.Model):
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
         # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
-        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
