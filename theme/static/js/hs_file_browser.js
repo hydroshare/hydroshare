@@ -940,7 +940,7 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        if (logicalFileType.length > 0){
+        if (typeof logicalFileType != "undefined" && logicalFileType.length > 0) {
             flagDisableCreateFolderOrFile = true;
         }
         else {

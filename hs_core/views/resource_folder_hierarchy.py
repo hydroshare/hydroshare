@@ -5,9 +5,8 @@ from urllib2 import urlopen, HTTPError, URLError
 from tempfile import NamedTemporaryFile
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError
 from django.core.validators import URLValidator
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.base import File
 
 from rest_framework.decorators import api_view
@@ -391,16 +390,25 @@ def data_store_add_reference(request):
 
     # create URL file
     urltempfile = NamedTemporaryFile()
-    urlstring = '[InternetShortcut]\nURL=[' + ref_url + ']'
+    urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
     urltempfile.write(urlstring)
     fileobj = File(file=urltempfile, name=ref_name)
 
     prefix_path = 'data/contents'
+    filelist = []
     if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        add_resource_files(res_id, fileobj)
+        filelist = add_resource_files(res_id, fileobj)
     else:
         curr_path = curr_path[len(prefix_path)+1:]
-        add_resource_files(res_id, fileobj, folder=curr_path)
+        filelist = add_resource_files(res_id, fileobj, folder=curr_path)
+
+    if not filelist:
+        return HttpResponseServerError('New file failed to be added to the resource')
+    # make sure the new file has logical file set and is single file aggregation
+    for f in filelist:
+        if f.has_logical_file and f.logical_file.is_single_file_aggregation:
+            f.logical_file.metadata.extra_metadata = {'url': ref_url}
+            f.logical_file.metadata.save()
 
     return JsonResponse({'status': 'success'})
 
