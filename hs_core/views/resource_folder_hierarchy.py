@@ -14,9 +14,10 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, get_resource_by_shortkey
 from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
+from hs_file_types.utils import set_logical_file_type
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -405,10 +406,15 @@ def data_store_add_reference(request):
     if not filelist:
         return HttpResponseServerError('New file failed to be added to the resource')
     # make sure the new file has logical file set and is single file aggregation
-    for f in filelist:
-        if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-            f.logical_file.metadata.extra_metadata = {'url': ref_url}
-            f.logical_file.metadata.save()
+    f = filelist[0]
+    try:
+        # set 'SingleFile' logical file type to this .url file
+        res = get_resource_by_shortkey(res_id)
+        set_logical_file_type(res, request.user, f.id, 'SingleFile')
+        f.logical_file.extra_data = {'url': ref_url}
+        f.logical_file.save()
+    except Exception as ex:
+        return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse({'status': 'success'})
 
