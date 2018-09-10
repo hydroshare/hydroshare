@@ -1,3 +1,4 @@
+import warnings
 from lxml import etree
 
 from django.db import models
@@ -224,6 +225,11 @@ class GeometryInformation(AbstractMetaDataElement):
 
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")
+
+    def __init__(self, *args, **kwargs):
+        super(GeographicFeatureResource, self).__init__()
+        warnings.warn("GeographicFeatureResource has been deprecated in favor of CompositeResource "
+                      "with a Geographic Feature aggregation", DeprecationWarning)
 
     @property
     def metadata(self):

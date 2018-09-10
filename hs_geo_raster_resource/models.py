@@ -1,4 +1,5 @@
 import json
+import warnings
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -346,6 +347,11 @@ class CellInformation(AbstractMetaDataElement):
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
+
+    def __init__(self, *args, **kwargs):
+        super(RasterResource, self).__init__()
+        warnings.warn("RasterResource has been deprecated in favor of CompositeResource "
+                      "with a Geographic Raster aggregation", DeprecationWarning)
 
     class Meta:
         verbose_name = 'Geographic Raster'

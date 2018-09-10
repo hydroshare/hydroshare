@@ -3,6 +3,7 @@ import sqlite3
 import csv
 import shutil
 import logging
+import warnings
 from uuid import uuid4
 from dateutil import parser
 import json
@@ -843,6 +844,11 @@ class CVAggregationStatistic(AbstractCVLookupTable):
 
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
+
+    def __init__(self, *args, **kwargs):
+        super(TimeSeriesResource, self).__init__()
+        warnings.warn("TimeSeriesResource has been deprecated in favor of CompositeResource "
+                      "with a Time Series aggregation", DeprecationWarning)
 
     class Meta:
         verbose_name = 'Time Series'

@@ -4,6 +4,7 @@ import os.path
 import json
 import arrow
 import logging
+import warnings
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
@@ -3651,6 +3652,12 @@ class BaseResource(Page, AbstractResource):
 
 class GenericResource(BaseResource):
     """Define GenericResource model."""
+
+    def __init__(self, *args, **kwargs):
+        super(GenericResource, self).__init__()
+        warnings.warn("GenericResource has been deprecated in favor of CompositeResource",
+                      DeprecationWarning)
+
 
     objects = ResourceManager('GenericResource')
 
