@@ -491,7 +491,11 @@
                                     <input type="hidden" name="file_ids" value=""/>
                                 </form>
                             </div>
-
+                            <div id="ref_file_note" class="text-muted division-title-caption"
+                                    {% if not SHOW_REFERENCE_FILE_NOTE %} hidden {% endif %}>
+                            Please note: This resource contains links to external content. Linked content is NOT stored in
+                            HydroShare, and we can't guarantee its availability, quality, or security.
+                            </div>
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                                 <div class="fb-upload-caption {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
                                     <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
