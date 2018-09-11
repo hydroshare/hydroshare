@@ -190,7 +190,7 @@ def update_resource_temporal_coverage(resource):
         temp_cov.delete()
 
 
-def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None,
+def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None, extra_data = {},
                           fail_feedback=True):
     if hs_file_type is None:
         res_file = utils.get_resource_file_by_id(res, file_id)
@@ -228,7 +228,7 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
     logical_file_type_class = file_type_map[hs_file_type]
     try:
         logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                              folder_path=folder_path)
+                                              folder_path=folder_path, extra_data=extra_data)
     except:
         if fail_feedback:
             raise

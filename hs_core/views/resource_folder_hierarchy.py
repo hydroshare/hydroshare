@@ -410,9 +410,7 @@ def data_store_add_reference(request):
     try:
         # set 'SingleFile' logical file type to this .url file
         res = get_resource_by_shortkey(res_id)
-        set_logical_file_type(res, request.user, f.id, 'SingleFile')
-        f.logical_file.extra_data = {'url': ref_url}
-        f.logical_file.save()
+        set_logical_file_type(res, request.user, f.id, 'SingleFile', extra_data={'url': ref_url})
     except Exception as ex:
         return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
