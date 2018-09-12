@@ -8,14 +8,15 @@
         <div class="col-sm-12 content-block">
             <h4>Funding Agencies</h4>
             <h5>This resource was created using funding from the following sources:</h5>
-            <table class="table hs-table table-striped funding-agencies-table">
-                <tbody>
+            <table class="table hs-table funding-agencies-table">
+                <thead>
                 <tr class="header-row">
                     <th>Agency Name</th>
                     <th>Award Title</th>
                     <th>Award Number</th>
                 </tr>
-
+                </thead>
+                <tbody>
                 {% for agency in fundingagencies %}
                     <tr data-index="{{ forloop.counter0 }}">
                         <td>

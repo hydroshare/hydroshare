@@ -217,7 +217,7 @@ $(document).ready(function () {
         // Rest of the fields
         for (var item in data) {
             if ($.inArray(item, fields) != -1) {
-                $("#profile-preview-modal [data-" + item + "]").text(data[item]);
+                $("#profile-preview-modal [data-" + item + "]").text(data[item].trim());
             }
             else if ($.inArray(item, identifiers) != -1) {
                 var ident = $("#profile-preview-modal [data-" + item + "]");

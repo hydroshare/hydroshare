@@ -1,10 +1,12 @@
+{% load markup_tags %}
+
 <div class="col-xs-12 content-block">
     <h3>README.MD</h3>
     <pre class="readme">
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid consequuntur, cupiditate harum numquam sunt vitae. Blanditiis commodi consectetur corporis cupiditate debitis delectus dolorum est fugit id magnam maxime minus molestias nesciunt nihil nisi odio odit perferendis placeat porro, possimus reiciendis reprehenderit, sint sunt veniam voluptates. Ab accusantium aliquam consectetur cupiditate est explicabo, fuga labore provident quisquam voluptates. Beatae consequuntur ex, impedit iste molestiae mollitia nemo nobis optio quia reprehenderit repudiandae saepe sequi sint ullam veniam? Adipisci alias aperiam autem beatae dolor dolorem dolorum ducimus, esse, fugit incidunt numquam odio sit tenetur veritatis vitae? Aliquid amet aut consectetur, corporis cupiditate distinctio doloremque doloribus ea error esse eveniet excepturi exercitationem expedita explicabo incidunt ipsa iusto laboriosam magnam minus molestias nam natus neque nesciunt nihil non nostrum omnis pariatur provident quia quibusdam quos reiciendis rerum sapiente tenetur voluptas, voluptatibus voluptatum. Accusamus consequuntur ea eos facere hic iure laborum laudantium magnam magni molestias mollitia non obcaecati omnis possimus, praesentium quae qui, quibusdam! Amet, delectus deserunt excepturi laboriosam possimus velit! Ab accusamus ad beatae corporis, dolore ea eaque eligendi eum, illo impedit in iusto minus molestias neque nisi nulla numquam odio officia officiis perspiciatis porro quos repudiandae, saepe sequi tempora veritatis vero vitae voluptate voluptatem!
+        {% filter apply_markup:"markdown" %}
+            # Hello World #
 
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. A ab accusantium aliquam, amet animi commodi cumque dolore doloremque earum inventore ipsam nemo pariatur quia quisquam quod reiciendis rerum unde veniam. Amet cum debitis, deleniti facilis inventore laborum minima, mollitia nostrum quia reiciendis reprehenderit vel veniam. Alias asperiores commodi ipsam itaque!
-
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Commodi, deserunt molestiae obcaecati officiis perferendis sed veniam. Aliquam beatae dignissimos dolorem eius enim expedita facilis fugiat impedit incidunt ipsa, magni molestias natus necessitatibus, nesciunt nobis possimus quam qui quibusdam quis rerum sit unde veritatis vitae voluptate voluptatem! Aut consequatur eum laudantium quod quos repudiandae temporibus! Alias aut autem consequuntur corporis culpa deserunt, fugit harum illum ipsa, maiores necessitatibus nobis non numquam quae rem sequi vel voluptatem.
+            I am a text that was converted with **markdown**!
+        {% endfilter %}
     </pre>
 </div>

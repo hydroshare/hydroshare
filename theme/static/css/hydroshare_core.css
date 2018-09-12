@@ -4743,15 +4743,13 @@ div#resource-content {
 }
 
 .external-profiles .identifier-icon i, .external-profiles .identifier-icon img {
-    border: 1px solid #DDD;
     background: #FFF;
-    padding: 1px 1px 1px 2px;
     border-radius: 4px;
     font-size: 24px;
-    height: 28px;
-    width: 28px;
+    padding: 4px 6px;
     cursor: pointer;
     margin: 0;
+    text-align: center;
 }
 
 .hover-shadow {
