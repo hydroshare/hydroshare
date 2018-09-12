@@ -12,7 +12,9 @@ RUN pip install \
   nameparser \
   probablepeople \
   geopy \
-  hs_restclient==1.2.12
+  hs_restclient==1.2.12 \
+  markdown \
+  django-markup
 
 ### End - HydroShare Development Image Additions ###
 

@@ -3,10 +3,6 @@
 <div class="col-xs-12 content-block">
     <h3>README.MD</h3>
     <pre class="readme">
-        {% filter apply_markup:"markdown" %}
-            # Hello World #
-
-            I am a text that was converted with **markdown**!
-        {% endfilter %}
+        {{ readme|apply_markup:"markdown" }}
     </pre>
 </div>

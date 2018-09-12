@@ -165,11 +165,19 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
 
+        readme = """
+# Hello World #
+
+I am a text that was converted with **markdown**!
+more and more ...
+        """
+
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
                    'title': title,
+                   'readme': readme,
                    'abstract': abstract,
                    'creators': content_model.metadata.creators.all(),
                    'contributors': content_model.metadata.contributors.all(),
