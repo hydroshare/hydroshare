@@ -1,5 +1,4 @@
 import json
-import warnings
 from lxml import etree
 
 from django.db import models, transaction
@@ -306,13 +305,9 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
-
-    def __init__(self, *args, **kwargs):
-        super(NetcdfResource, self).__init__()
-        warnings.warn("NetcdfResource has been deprecated in favor of CompositeResource "
-                      "with a Netcdf aggregation", DeprecationWarning)
 
     @property
     def metadata(self):

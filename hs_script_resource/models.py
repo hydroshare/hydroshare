@@ -1,4 +1,3 @@
-import warnings
 from lxml import etree
 
 from django.db import models, transaction
@@ -11,13 +10,9 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
     AbstractMetaDataElement
 
 
+# TODO Deprecated
 class ScriptResource(BaseResource):
     objects = ResourceManager('ScriptResource')
-
-    def __init__(self, *args, **kwargs):
-        super(ScriptResource, self).__init__()
-        warnings.warn("ScriptResource has been deprecated in favor of CompositeResource",
-                      DeprecationWarning)
 
     class Meta:
         proxy = True
