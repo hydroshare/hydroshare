@@ -3649,6 +3649,7 @@ class BaseResource(Page, AbstractResource):
         return hs_term_dict
 
 
+# TODO Deprecated
 class GenericResource(BaseResource):
     """Define GenericResource model."""
 

@@ -841,6 +841,7 @@ class CVAggregationStatistic(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_aggregation_statistics")
 
 
+# TODO Deprecated
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
 

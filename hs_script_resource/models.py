@@ -10,6 +10,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
     AbstractMetaDataElement
 
 
+# TODO Deprecated
 class ScriptResource(BaseResource):
     objects = ResourceManager('ScriptResource')
 
