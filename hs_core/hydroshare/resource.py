@@ -41,6 +41,22 @@ def update_quota_usage(res):
     update_quota_usage_task.apply_async((quser.username,), countdown=60)
 
 
+def res_has_web_reference(res):
+    """
+    Check whether a resource includes web reference url file.
+    :param res: resource object
+    :return: True if yes, False otherwise
+    """
+    if res.resource_type != "CompositeResource":
+        return False
+
+    for f in ResourceFile.objects.filter(object_id=res.id):
+        if f.has_logical_file:
+            if 'url' in f.logical_file.extra_data:
+                return True
+    return False
+
+
 def get_resource(pk):
     """
     Retrieve an instance of type Bags associated with the resource identified by **pk**

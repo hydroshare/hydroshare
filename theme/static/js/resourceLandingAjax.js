@@ -1239,6 +1239,7 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
             $('#add-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
             $("#txtRefURL").val("");
+            $("#ref_file_note").show();
         },
         error: function(xhr, errmsg, err){
             display_error_message('Add reference content Failed', xhr.responseText);
