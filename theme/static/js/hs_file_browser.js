@@ -899,7 +899,16 @@ function onSort() {
 
 
 function onOpenFile() {
-    startDownload();
+    // Check to see if it is .url web referenced file, if yes, do redirect rather than download
+    var file = $("#fb-files-container li.ui-selected");
+    var fileName = file.children(".fb-file-name").text();
+    if (fileName.toUpperCase().endsWith('.URL')) {
+        // do redirect
+
+    }
+    else {
+        startDownload();
+    }
 }
 
 function startDownload() {
@@ -1421,10 +1430,10 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        targetPath = currentPath + "/" + folderName
+        targetPath = currentPath + "/" + folderName;
         
         var calls = [];
-        var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
+        var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
         calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
 
         // Wait for the asynchronous call to finish to get new folder structure
@@ -1633,7 +1642,7 @@ $(document).ready(function () {
 
         var calls = [];
         for (var i = 0; i < files.length; i++) {
-            var fileName = $(files[i]).children(".fb-file-name").text()
+            var fileName = $(files[i]).children(".fb-file-name").text();
             calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
         }
 
