@@ -888,6 +888,133 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_auto_update_spatial_coverage_from_children_1(self):
+        """Here we are testing fileset level spatial coverage auto update when
+        a contained aggregation spatial coverage gets created as part of that aggregation creation
+        provided the fileset aggregation has no spatial coverage prior to the child aggregation
+        creation
+        """
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # fileset aggregation should not have any spatial coverage at this point
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        # raster child aggregation should have been created
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        raster_aggr = GeoRasterLogicalFile.objects.first()
+        self.assertTrue(raster_aggr.has_parent)
+        # raster aggregation should have spatial coverage
+        self.assertNotEqual(raster_aggr.metadata.spatial_coverage, None)
+
+        # fileset aggregation should now have spatial coverage
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+        # spatial coverage of the fileset aggregation should match with that of the contained
+        # raster aggregation
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            self.assertEqual(fs_aggr.metadata.spatial_coverage.value[limit],
+                             raster_aggr.metadata.spatial_coverage.value[limit])
+        self.composite_resource.delete()
+
+    def test_auto_update_spatial_coverage_from_children_2(self):
+        """Here we are testing fileset level spatial coverage auto update does not happen
+        when a 2nd child aggregation is created with spatial coverage - since auto update has
+        already set fileset spatial coverage when the 1st child aggregation is created"""
+
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        fs_aggr_path = fs_aggr.aggregation_name
+        # fileset aggregation should not have any spatial coverage at this point
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        raster_aggr = GeoRasterLogicalFile.objects.first()
+        self.assertTrue(raster_aggr.has_parent)
+        # raster aggregation should have spatial coverage
+        self.assertNotEqual(raster_aggr.metadata.spatial_coverage, None)
+
+        # update fileset aggregation spatial coverage from contained raster aggregation
+        # fs_aggr.update_spatial_coverage()
+        # fileset aggregation should now have spatial coverage
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106195)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286029891)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+
+        # upload a nc file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+        self.assertTrue(nc_aggr.has_parent)
+        # nc aggregation should have spatial coverage
+        self.assertNotEqual(nc_aggr.metadata.spatial_coverage, None)
+
+        # test that fileset aggregation spatial coverage didn't get updated as a result of nc
+        # aggregation creation.
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            self.assertEqual(fs_aggr.metadata.spatial_coverage.value[limit],
+                             raster_aggr.metadata.spatial_coverage.value[limit])
+
+        self.composite_resource.delete()
+
+    def test_update_spatial_coverage_from_children(self):
+        """Here we are testing fileset level spatial coverage update using the spatial data from the
+        contained (children) aggregations - two child aggregations"""
+
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        fs_aggr_path = fs_aggr.aggregation_name
+        # fileset aggregation should not have any spatial coverage at this point
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # upload a raster tif file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.raster_file], upload_folder=fs_aggr_path)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        raster_aggr = GeoRasterLogicalFile.objects.first()
+        self.assertTrue(raster_aggr.has_parent)
+        # raster aggregation should have spatial coverage
+        self.assertNotEqual(raster_aggr.metadata.spatial_coverage, None)
+        # fileset aggregation should have spatial coverage at this point due to auto update
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+
+        # fileset aggregation should now have spatial coverage
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106195)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286029891)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+
+        # upload a nc file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+        self.assertTrue(nc_aggr.has_parent)
+        # nc aggregation should have spatial coverage
+        self.assertNotEqual(nc_aggr.metadata.spatial_coverage, None)
+
+        # update fileset aggregation spatial coverage from the contained 2 aggregations
+        fs_aggr.update_spatial_coverage()
+        # test fileset aggregation spatial coverage data
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.505940368)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.8639080745)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+
+        self.composite_resource.delete()
+
     def _create_fileset_aggregation(self):
         self.create_composite_resource()
         new_folder = 'fileset_folder'
