@@ -1,4 +1,7 @@
-ga_irods - iRODS connector for Django with Celery
+Originally written by Jefferson Heard. Updated by Alva Couch
+for the HydroShare project. 
+
+django_irods - iRODS connector for Django with Celery
 #################################################
 
 `ga_irods`_ is a Django+Celery -> `iRODS`_ connector.  The idea is that you can
@@ -31,7 +34,7 @@ Once environments are setup, you can write a webapp that manipulates iRODS.  One
 might attach a RodsEnvironment to a session object, then use this to accomplish
 things in an example view like so in your views.py::
 
-    from ga_irods import tasks as itasks
+    from django_irods import tasks as itasks
 
     @requires_login
     def my_view(request):

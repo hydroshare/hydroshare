@@ -89,14 +89,40 @@ class IrodsStorage(Storage):
 
     def zipup(self, in_name, out_name):
         """
-        run iRODS ibun command to generate zip file for the bag
-        :param in_name: input parameter to indicate the collection path to generate zip
-        :param out_name: the output zipped file name
+        run iRODS ibun command to generate zip file for a bag or other folder
+        :param in_name: fully qualified irods name of folder to be zipped
+        :param out_name: fully qualified irods name of output zipfile.
         :return: None
         """
+        # make directory containing output zipfile if necessary
         self.session.run("imkdir", None, '-p', out_name.rsplit('/', 1)[0])
         # SessionException will be raised from run() in icommands.py
         self.session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
+
+    def unzip(self, zip_file_path):
+        """
+        run iRODS ibun command to unzip files into a new folder
+        :param zip_file_path: path of the zipped file to be unzipped
+        :return: the folder files were unzipped to
+        """
+
+        abs_path = os.path.dirname(zip_file_path)
+        unzipped_folder = os.path.splitext(os.path.basename(zip_file_path))[0].strip()
+        unzipped_folder = self._get_nonexistant_path(os.path.join(abs_path, unzipped_folder))
+
+        # SessionException will be raised from run() in icommands.py
+        self.session.run("ibun", None, '-xDzip', zip_file_path, unzipped_folder)
+        return unzipped_folder
+
+    def _get_nonexistant_path(self, path):
+        if not self.exists(path):
+            return path
+        i = 1
+        new_path = "{}-{}".format(path, i)
+        while self.exists(new_path):
+            i += 1
+            new_path = "{}-{}".format(path, i)
+        return new_path
 
     def setAVU(self, name, attName, attVal, attUnit=None):
         """
@@ -241,8 +267,8 @@ class IrodsStorage(Storage):
             return False
 
     def listdir(self, path):
-        stdout = self.session.run("ils", None, path)[0].split("\n")
-        listing = ([], [])
+        stdout = self.session.run("ils", None, "-l", path)[0].split("\n")
+        listing = ([], [], [])
         directory = stdout[0][0:-1]
         directory_prefix = "  C- " + directory + "/"
         for i in range(1, len(stdout)):
@@ -250,10 +276,17 @@ class IrodsStorage(Storage):
                 dirname = stdout[i][len(directory_prefix):].strip()
                 if dirname:
                     listing[0].append(dirname)
+                    listing[2].append("-1")
             else:
-                filename = stdout[i].strip()
+                line = stdout[i].split()
+                if len(line) != 7:
+                    # the last line is empty
+                    continue
+                filename = line[6]
+                size = line[3]
                 if filename:
                     listing[1].append(filename)
+                    listing[2].append(size)
         return listing
 
     def size(self, name):
