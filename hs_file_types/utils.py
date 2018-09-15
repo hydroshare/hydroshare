@@ -41,28 +41,25 @@ def get_aggregation_types():
     return aggregation_types
 
 
-def update_resource_coverage_element(resource):
-    """Update resource spatial and temporal coverage based on the corresponding coverages
-    from all the contained aggregations (logical file) only if the resource coverage is not
-    already set"""
-
-    # update resource spatial coverage only if it is empty
-    if resource.metadata.spatial_coverage is None:
-        update_resource_spatial_coverage(resource)
-
-    # update resource temporal coverage only if it empty
-    if resource.metadata.temporal_coverage is None:
-        update_resource_temporal_coverage(resource)
-
-
-def update_resource_spatial_coverage(resource):
-    """Updates resource spatial coverage based on the contained spatial coverages of
-    aggregations (file type). Note: This action will overwrite any existing resource spatial
+def update_target_spatial_coverage(target):
+    """Updates target spatial coverage based on the contained spatial coverages of
+    aggregations (file type). Note: This action will overwrite any existing target spatial
     coverage data.
-    :param  resource: an instance of composite resource
+
+    :param  target: an instance of CompositeResource or FileSetLogicalFile
     """
-    spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
-                         if lf.metadata.spatial_coverage is not None]
+
+    if isinstance(target, FileSetLogicalFile):
+        spatial_coverages = [lf.metadata.spatial_coverage for lf in target.get_children()
+                             if lf.metadata.spatial_coverage is not None]
+    else:
+        spatial_coverages = [lf.metadata.spatial_coverage for lf in target.logical_files
+                             if lf.metadata.spatial_coverage is not None and not lf.has_parent]
+
+    if not spatial_coverages:
+        # no aggregation level spatial coverage data exist - no need to update resource
+        # spatial coverage
+        return
 
     bbox_limits = {'box': {'northlimit': 'northlimit', 'southlimit': 'southlimit',
                            'eastlimit': 'eastlimit', 'westlimit': 'westlimit'},
@@ -130,33 +127,36 @@ def update_resource_spatial_coverage(resource):
             bbox_value['north'] = sp_cov.value['north']
             bbox_value['east'] = sp_cov.value['east']
 
-    spatial_cov = resource.metadata.spatial_coverage
-    if len(spatial_coverages) > 0:
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            place_name = spatial_cov.value.get('name', None)
-            if place_name is not None:
-                bbox_value['name'] = place_name
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+    spatial_cov = target.metadata.spatial_coverage
+    if spatial_cov:
+        spatial_cov.type = cov_type
+        place_name = spatial_cov.value.get('name', None)
+        if place_name is not None:
+            bbox_value['name'] = place_name
+        spatial_cov._value = json.dumps(bbox_value)
+        spatial_cov.save()
     else:
-        # delete spatial coverage element for the resource since the content files don't
-        # have any spatial coverage
-        if spatial_cov:
-            spatial_cov.delete()
+        target.metadata.create_element("coverage", type=cov_type, value=bbox_value)
 
 
-def update_resource_temporal_coverage(resource):
-    """Updates resource temporal coverage based on the contained temporal coverages of
-    aggregations (file type). Note: This action will overwrite any existing resource temporal
+def update_target_temporal_coverage(target):
+    """Updates target temporal coverage based on the contained temporal coverages of
+    aggregations (file type).
+    Note: This action will overwrite any existing target temporal
     coverage data.
-    :param  resource: an instance of composite resource
-    """
 
-    temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
-                          if lf.metadata.temporal_coverage is not None]
+    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    """
+    if isinstance(target, FileSetLogicalFile):
+        temporal_coverages = [lf.metadata.temporal_coverage for lf in target.get_children()
+                              if lf.metadata.temporal_coverage is not None]
+    else:
+        temporal_coverages = [lf.metadata.temporal_coverage for lf in target.logical_files
+                              if lf.metadata.temporal_coverage is not None and not lf.has_parent]
+
+    if not temporal_coverages:
+        # no aggregation level temporal coverage data - no update at resource level is needed
+        return
 
     date_data = {'start': None, 'end': None}
 
@@ -177,17 +177,13 @@ def update_resource_temporal_coverage(resource):
         set_date_value(date_data, temp_cov, 'start')
         set_date_value(date_data, temp_cov, 'end')
 
-    temp_cov = resource.metadata.temporal_coverage
+    temp_cov = target.metadata.temporal_coverage
     if date_data['start'] is not None and date_data['end'] is not None:
         if temp_cov:
             temp_cov._value = json.dumps(date_data)
             temp_cov.save()
         else:
-            resource.metadata.create_element("coverage", type='period', value=date_data)
-    elif temp_cov:
-        # delete the temporal coverage for the resource since the content files don't have
-        # temporal coverage
-        temp_cov.delete()
+            target.metadata.create_element("coverage", type='period', value=date_data)
 
 
 def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None,

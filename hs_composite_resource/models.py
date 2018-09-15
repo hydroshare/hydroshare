@@ -12,6 +12,7 @@ from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource
 
 from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
     NetCDFLogicalFile, TimeSeriesLogicalFile, FileSetLogicalFile
+from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
 class CompositeResource(BaseResource):
@@ -539,90 +540,8 @@ class CompositeResource(BaseResource):
         aggregations (file type). Note: This action will overwrite any existing resource spatial
         coverage data.
         """
-        spatial_coverages = [lf.metadata.spatial_coverage for lf in self.logical_files
-                             if lf.metadata.spatial_coverage is not None]
 
-        if not spatial_coverages:
-            # no aggregation level spatial coverage data exist - no need to update resource
-            # spatial coverage
-            return
-
-        bbox_limits = {'box': {'northlimit': 'northlimit', 'southlimit': 'southlimit',
-                               'eastlimit': 'eastlimit', 'westlimit': 'westlimit'},
-                       'point': {'northlimit': 'north', 'southlimit': 'north',
-                                 'eastlimit': 'east', 'westlimit': 'east'}
-                       }
-
-        def set_coverage_data(res_coverage_value, lfo_coverage_element, box_limits):
-            comparison_operator = {'northlimit': lt, 'southlimit': gt, 'eastlimit': lt,
-                                   'westlimit': gt}
-            for key in comparison_operator.keys():
-                if comparison_operator[key](res_coverage_value[key],
-                                            lfo_coverage_element.value[box_limits[key]]):
-                    res_coverage_value[key] = lfo_coverage_element.value[box_limits[key]]
-
-        cov_type = "point"
-        bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
-                      'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
-
-        if len(spatial_coverages) > 1:
-            # check if one of the coverage is of type box
-            if any(sp_cov.type == 'box' for sp_cov in spatial_coverages):
-                cov_type = 'box'
-            else:
-                # check if the coverages represent different locations
-                unique_lats = set([sp_cov.value['north'] for sp_cov in spatial_coverages])
-                unique_lons = set([sp_cov.value['east'] for sp_cov in spatial_coverages])
-                if len(unique_lats) == 1 and len(unique_lons) == 1:
-                    cov_type = 'point'
-                else:
-                    cov_type = 'box'
-            if cov_type == 'point':
-                sp_cov = spatial_coverages[0]
-                bbox_value = dict()
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['north'] = sp_cov.value['north']
-                bbox_value['east'] = sp_cov.value['east']
-            else:
-                for sp_cov in spatial_coverages:
-                    if sp_cov.type == "box":
-                        box_limits = bbox_limits['box']
-                        set_coverage_data(bbox_value, sp_cov, box_limits)
-                    else:
-                        # point type coverage
-                        box_limits = bbox_limits['point']
-                        set_coverage_data(bbox_value, sp_cov, box_limits)
-
-        elif len(spatial_coverages) == 1:
-            sp_cov = spatial_coverages[0]
-            if sp_cov.type == "box":
-                cov_type = 'box'
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['northlimit'] = sp_cov.value['northlimit']
-                bbox_value['eastlimit'] = sp_cov.value['eastlimit']
-                bbox_value['southlimit'] = sp_cov.value['southlimit']
-                bbox_value['westlimit'] = sp_cov.value['westlimit']
-            else:
-                # point type coverage
-                cov_type = "point"
-                bbox_value = dict()
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['north'] = sp_cov.value['north']
-                bbox_value['east'] = sp_cov.value['east']
-
-        spatial_cov = self.metadata.spatial_coverage
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            place_name = spatial_cov.value.get('name', None)
-            if place_name is not None:
-                bbox_value['name'] = place_name
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            self.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+        update_target_spatial_coverage(self)
 
     def update_temporal_coverage(self):
         """Updates resource temporal coverage based on the contained temporal coverages of
@@ -630,39 +549,8 @@ class CompositeResource(BaseResource):
         coverage data.
         """
 
-        temporal_coverages = [lf.metadata.temporal_coverage for lf in self.logical_files
-                              if lf.metadata.temporal_coverage is not None]
+        update_target_temporal_coverage(self)
 
-        if not temporal_coverages:
-            # no aggregation level temporal coverage data - no update at resource level is needed
-            return
-
-        date_data = {'start': None, 'end': None}
-
-        def set_date_value(date_data, coverage_element, key):
-            comparison_operator = gt if key == 'start' else lt
-            if date_data[key] is None:
-                date_data[key] = coverage_element.value[key]
-            else:
-                if comparison_operator(parser.parse(date_data[key]),
-                                       parser.parse(coverage_element.value[key])):
-                    date_data[key] = coverage_element.value[key]
-
-        for temp_cov in temporal_coverages:
-            start_date = parser.parse(temp_cov.value['start'])
-            end_date = parser.parse(temp_cov.value['end'])
-            temp_cov.value['start'] = start_date.strftime('%m/%d/%Y')
-            temp_cov.value['end'] = end_date.strftime('%m/%d/%Y')
-            set_date_value(date_data, temp_cov, 'start')
-            set_date_value(date_data, temp_cov, 'end')
-
-        temp_cov = self.metadata.temporal_coverage
-        if date_data['start'] is not None and date_data['end'] is not None:
-            if temp_cov:
-                temp_cov._value = json.dumps(date_data)
-                temp_cov.save()
-            else:
-                self.metadata.create_element("coverage", type='period', value=date_data)
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
