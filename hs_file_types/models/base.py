@@ -384,6 +384,14 @@ class AbstractFileMetaData(models.Model):
                 # get the typed resource - CompositeResource
                 resource = get_resource_by_shortkey(resource.short_id)
                 resource.update_coverage()
+
+            # if the aggregation (logical file) for which coverage data is created
+            # has a parent aggregation then coverage needs to be updated for that
+            # parent aggregation
+            aggr = element.metadata.logical_file
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None:
+                parent_aggr.update_coverage()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -398,6 +406,14 @@ class AbstractFileMetaData(models.Model):
             # get the typed resource - CompositeResource
             resource = get_resource_by_shortkey(resource.short_id)
             resource.update_coverage()
+
+            # if the aggregation (logical file) for which coverage data is updated
+            # has a parent aggregation then coverage needs to be updated for that
+            # parent aggregation
+            aggr = element.metadata.logical_file
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None:
+                parent_aggr.update_coverage()
 
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -1228,6 +1244,13 @@ class AbstractLogicalFile(models.Model):
             return self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
 
         return None
+
+    @property
+    def has_parent(self):
+        """Checks if this aggregation has a parent aggregation
+        :return True if there is a parent aggregation otherwise False
+        """
+        return self.get_parent() is not None
 
     def get_children(self):
         """Returns a list of all aggregations that are directly under the folder that represents
