@@ -319,23 +319,6 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
-# TODO: should be ResourceFile.url
-def get_resource_file_url(res_file):
-    """
-    Gets the download url of the specified resource file
-    :param res_file: an instance of ResourceFile for which download url is to be retrieved
-    :return: download url for the resource file
-    """
-
-    if res_file.resource_file:
-        f_url = res_file.resource_file.url
-    elif res_file.fed_resource_file:
-        f_url = res_file.fed_resource_file.url
-    else:
-        f_url = ''
-    return f_url
-
-
 # TODO: should be classmethod of ResourceFile
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
@@ -1073,7 +1056,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                          "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
                                                                   field=xml_element_name))
-                field.text = str(attr)
+                field.text = unicode(attr)
 
 
 class ZipContents(object):

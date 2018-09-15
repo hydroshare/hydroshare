@@ -222,6 +222,7 @@ class GeometryInformation(AbstractMetaDataElement):
         add_metadata_element_to_xml(container, self, md_fields)
 
 
+# TODO Deprecated
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")
 

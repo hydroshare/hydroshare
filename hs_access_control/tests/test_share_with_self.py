@@ -10,15 +10,12 @@ from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
-import logging
-
 
 class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
         super(T05ShareResource, self).setUp()
         global_reset()
-        self.logger = logging.getLogger('django')
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.admin = hydroshare.create_account(
             'admin@gmail.com',

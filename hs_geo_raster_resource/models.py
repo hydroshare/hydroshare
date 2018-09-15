@@ -343,6 +343,7 @@ class CellInformation(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")

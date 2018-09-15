@@ -305,6 +305,7 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 

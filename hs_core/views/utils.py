@@ -117,7 +117,7 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     stdout = session.makefile('rb', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
-    logger = logging.getLogger('django')
+    logger = logging.getLogger(__name__)
     output = stdout.readlines()
     if output:
         logger.debug(output)
