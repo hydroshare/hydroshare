@@ -1096,12 +1096,16 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['aggregation_name'], v['logical_type'], v['logical_file_id'], v['size'], v['pk'], v['url']));
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
+                        v['aggregation_name'], v['logical_type'], v['logical_file_id'],
+                        v['size'], v['pk'], v['url'], v['reference_url']));
                 });
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'], v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'], v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
+                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
+                        v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
+                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
                 });
             }
             if (!files.length && !folders.length) {

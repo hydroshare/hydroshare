@@ -40,7 +40,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
 
     var iconTemplate;
@@ -63,7 +63,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
+    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
@@ -904,7 +904,9 @@ function onOpenFile() {
     var fileName = file.children(".fb-file-name").text();
     if (fileName.toUpperCase().endsWith('.URL')) {
         // do redirect
-
+        var ref_url = file.attr("data-ref-url");
+        $('#file_redirect_url').prop('href', ref_url);
+        $('#redirect-referenced-url-dialog').modal('show');
     }
     else {
         startDownload();
@@ -1021,6 +1023,9 @@ $(document).ready(function () {
         }
     }
 
+    $('#file_redirect_url').click(function() {
+        $('#redirect-referenced-url-dialog').modal('hide');
+    });
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {

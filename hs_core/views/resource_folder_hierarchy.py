@@ -130,6 +130,7 @@ def data_store_structure(request):
             mtype = mtype[idx + 1:]
         f_pk = ''
         f_url = ''
+        f_ref_url = ''
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
@@ -142,10 +143,13 @@ def data_store_structure(request):
                         logical_file_type = f.logical_file_type_name
                         logical_file_id = f.logical_file.id
                         aggregation_name = f.aggregation_display_name
+                        if 'url' in f.logical_file.extra_data:
+                            f_ref_url = f.logical_file.extra_data['url']
                 break
 
         if f_pk:  # file is found in Django
             files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                          'reference_url': f_ref_url,
                           'aggregation_name': aggregation_name,
                           'logical_type': logical_file_type,
                           'logical_file_id': logical_file_id})
