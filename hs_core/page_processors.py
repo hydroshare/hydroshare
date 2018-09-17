@@ -166,11 +166,92 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
 
         readme = """
-# Hello World #
+# This is an h1 tag
+## This is an h2 tag
+###### This is an h6 tag
 
-I am a text that was converted with **markdown**!
-more and more ...
-        """
+*This text will be italic*
+_This will also be italic_
+
+**This text will be bold**
+__This will also be bold__
+
+_You **can** combine them_
+
+
+* Item 1
+* Item 2
+    * Item 2a
+    * Item 2b
+* A list item with a blockquote:
+ > This is a blockquote
+ > inside a list item.
+
+
+### This is an h3 tag
+1. First item
+1. Second item
+
+This is a normal paragraph. Below is a code block:
+
+    <div class="footer">
+        &copy; 2004 Foo Corporation
+    </div>
+
+
+---------------------------------------
+
+*single asterisks*
+
+_single underscores_
+
+**double asterisks**
+
+__double underscores__
+
+
+Use the `printf()` function.
+
+<http://example.com/>
+
+### This is an h3 tag
+
+1. This is a list item with two paragraphs. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.
+
+    Vestibulum enim wisi, viverra nec, fringilla in, laoreet
+    vitae, risus. Donec sit amet nisl. Aliquam semper ipsum
+    sit amet velit.
+
+2. Suspendisse id sem consectetuer libero luctus adipiscing.
+
+
+<http://github.com> - automatic!
+[GitHub](http://github.com)
+
+This is a quote:
+
+> We're living the future so
+> the present is our past.
+
+
+> This is the first level of quoting.
+>
+> > This is nested blockquote.
+>
+> Back to the first level.
+
+
+Here's our logo (hover to see the title text):
+
+Inline-style:
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+
+Reference-style:
+![alt text][logo]
+
+[logo]: https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 2"
+
+"""
 
         context = {
                    'resource_edit_mode': resource_edit,
