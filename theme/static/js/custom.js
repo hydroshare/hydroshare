@@ -193,18 +193,23 @@ $(document).ready(function () {
     });
 
     $(".profile-preview").click(function () {
+        // Move the profile card below the clicked item
+        var profileCard = $(this).parent().find(".profile-card");
+        profileCard.css("top", ($(this).position().top + 30) + "px");
+        profileCard.css("left", ($(this).position().left - 200 + $(this).width()/2) + "px");
+
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
 
-        resetProfilePreview();
+        resetProfilePreview(profileCard);
         var data = $(this).data();
 
         // Populate profile button url
-        $("#btn-preview-profile").attr("href", data.profileUrl);
+        profileCard.find("[data-name]").attr("href", data.profileUrl);
         delete data.profileUrl;
 
         // Populate profile picture
-        var pic = $("#profile-preview-modal .profile-pic");
+        var pic = profileCard.find(".profile-pic");
         if (data.profilePicture) {
             pic.toggleClass("user-icon", false);
             pic.css("background-image", "url('" + data.profilePicture + "')");
@@ -217,22 +222,22 @@ $(document).ready(function () {
         // Rest of the fields
         for (var item in data) {
             if ($.inArray(item, fields) != -1) {
-                $("#profile-preview-modal [data-" + item + "]").text(data[item].trim());
+                profileCard.find("[data-" + item + "]").text(data[item].trim());
             }
             else if ($.inArray(item, identifiers) != -1) {
-                var ident = $("#profile-preview-modal [data-" + item + "]");
+                var ident = profileCard.find("[data-" + item + "]");
                 ident.show();
                 ident.attr("href", data[item]);
             }
         }
     });
 
-    function resetProfilePreview() {
+    function resetProfilePreview(profileCard) {
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         fields.forEach(function(f) {
-            $(".profile-badge-content [data-" + f + "]").text("");
+           profileCard.find("[data-" + f + "]").text("");
         });
-        $(".profile-badge-header .identifier-icon").hide();
+        profileCard.find(".identifier-icon").hide();
     }
 
     // Abstract collapse toggle

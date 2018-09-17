@@ -326,7 +326,9 @@
             {% endif %}
 
             {# ======= Readme ======= #}
-            {% include "resource-landing-page/readme-file.html" %}
+            {% if readme %}
+                {% include "resource-landing-page/readme-file.html" %}
+            {% endif %}
 
             {% block content_block %}
             {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}

@@ -44,6 +44,7 @@
                                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                                 {% include "includes/profile-link.html" with user=u %}
                             {% endfor %}
+                            {% include "includes/profile-card.html" %}
                         </td>
                     </tr>
                     <tr class="info-collapsible">
@@ -59,7 +60,9 @@
                         <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
                             {% if cm.last_changed_by %} by
                                 {% include "includes/profile-link.html" with user=cm.last_changed_by %}
-                            {% endif %}</td>
+                            {% endif %}
+                            {% include "includes/profile-card.html" %}
+                        </td>
                     </tr>
                     <tr class="info-collapsible">
                         <th>Content types:</th>
