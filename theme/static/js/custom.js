@@ -209,13 +209,13 @@ $(document).ready(function () {
         delete data.profileUrl;
 
         // Populate profile picture
-        var pic = profileCard.find(".profile-pic");
+        var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
         if (data.profilePicture) {
-            pic.toggleClass("user-icon", false);
+            pic.toggleClass("dropdown-user-icon", false);
             pic.css("background-image", "url('" + data.profilePicture + "')");
         }
         else {
-            pic.toggleClass("user-icon", true);
+            pic.toggleClass("dropdown-user-icon", true);
             pic.css("background-image", "none");
         }
 
