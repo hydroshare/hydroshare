@@ -85,9 +85,12 @@
 {% else %}
     <div class="col-sm-12 content-block">
         <h3>Credits</h3>
+    </div>
+    <div class="col-sm-12 content-block">
         {% if fundingagnency_formset.initial %}
-        <h5>This resource was created using funding from the following sources:</h5>
-            {% endif %}
+            <h4>Funding Agencies</h4>
+            <h5>This resource was created using funding from the following sources:</h5>
+        {% endif %}
 
         {% if fundingagnency_formset.initial|length > 0%}
             <table class="table hs-table table-striped funding-agencies-table">
@@ -131,7 +134,7 @@
     </div>
 
     <div class="col-xs-12 content-block">
-        <h3>Contributors</h3>
+        <h4>Contributors</h4>
         <div>
             <span class="">People or
                 organizations that contributed technically, materially,
