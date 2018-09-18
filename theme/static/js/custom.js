@@ -204,6 +204,14 @@ $(document).ready(function () {
         resetProfilePreview(profileCard);
         var data = $(this).data();
 
+        // Populate subject areas
+        ;
+        var areas = data.subjectareas.split(",");
+        for (var i = 0; i < areas.length; i++) {
+            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ")
+        }
+        delete data.subjectareas;
+
         // Populate profile button url
         profileCard.find("[data-name]").attr("href", data.profileUrl);
         delete data.profileUrl;

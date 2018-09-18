@@ -370,7 +370,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     color: #333
 }
 
-a.sign-out-inline:hover {
+a.sign-out-inline:hover, .profile-card [data-name]:hover {
     text-decoration: none
 }
 
@@ -1130,7 +1130,8 @@ pre.readme {
     height: 155px
 }
 
-span.abstract p {
+span.abstract p, #div_id_abstract {
+    font-size: 14px;
     line-height: 1.5;
     max-width: 960px;
 }
