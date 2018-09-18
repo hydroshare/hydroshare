@@ -198,23 +198,20 @@ $(document).ready(function () {
         profileCard.css("top", ($(this).position().top + 30) + "px");
         profileCard.css("left", ($(this).position().left - 200 + $(this).width()/2) + "px");
 
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
+        var fields = ["name", "email", "country", "state", "organization", "title", "joined", "contributions"];
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
 
         resetProfilePreview(profileCard);
         var data = $(this).data();
 
         // Populate subject areas
-        ;
         var areas = data.subjectareas.split(",");
         for (var i = 0; i < areas.length; i++) {
             profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ")
         }
-        delete data.subjectareas;
 
         // Populate profile button url
         profileCard.find("[data-name]").attr("href", data.profileUrl);
-        delete data.profileUrl;
 
         // Populate profile picture
         var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
