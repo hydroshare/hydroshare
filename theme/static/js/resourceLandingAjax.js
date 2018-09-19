@@ -1572,7 +1572,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     }
 }
 
-// updates the UI spatial coverage elements
+// updates the UI spatial coverage elements for resource
 function updateResourceSpatialCoverage(spatialCoverage) {
     if ($("#id-coverage-spatial").length) {
         $("#spatial-coverage-type").val(spatialCoverage.type);
@@ -1645,6 +1645,36 @@ function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_end").attr('data-date', temporalCoverage.end);
     $("#id-coverage-temporal").find("button.btn-primary").hide();
     initializeDatePickers();
+}
+// updates the UI spatial coverage elements for the aggregation
+function updateAggregationSpatialCoverageUI(spatialCoverage) {
+    var $id_type_div = $("#id_type_filetype");
+    var $point_radio = $id_type_div.find("#id_type_2");
+    var $box_radio = $id_type_div.find("#id_type_1");
+    if (spatialCoverage.type === 'point') {
+        $point_radio.attr('checked', 'checked');
+        $("#id_north_filetype").val(spatialCoverage.north);
+        $("#id_east_filetype").val(spatialCoverage.east);
+        $("#id_north_filetype").parent().closest("#div_id_north").show();
+        $("#id_east_filetype").parent().closest("#div_id_east").show();
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+    }
+    else {
+        $box_radio.attr('checked', 'checked');
+        $("#id_eastlimit_filetype").val(spatialCoverage.eastlimit);
+        $("#id_northlimit_filetype").val(spatialCoverage.northlimit);
+        $("#id_westlimit_filetype").val(spatialCoverage.westlimit);
+        $("#id_southlimit_filetype").val(spatialCoverage.southlimit);
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
+        $("#id_north_filetype").parent().closest("#div_id_north").hide();
+        $("#id_east_filetype").parent().closest("#div_id_east").hide();
+    }
 }
 
 function setFileTypeMetadataFormsClickHandlers(){
