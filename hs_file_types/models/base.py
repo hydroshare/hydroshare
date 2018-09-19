@@ -1262,6 +1262,11 @@ class AbstractLogicalFile(models.Model):
 
         return []
 
+    @property
+    def has_children(self):
+        """Returns True if the this aggregation contains any other aggregations, otherwise False"""
+        return len(self.get_children()) > 0
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
         :param  create_map_xml: if true, aggregation map xml file will be created
