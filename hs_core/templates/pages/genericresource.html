@@ -151,6 +151,10 @@
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
+                    <li id="btn-get-referenced-url" data-menu-name="get-ref-url" data-toggle="modal" data-target="#redirect-referenced-url-dialog" hidden>
+                        <span class="fa fa-link icon-blue"></span>
+                        <span>Open referenced URL</span>
+                    </li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip" title="Add metadata to an individual file">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
