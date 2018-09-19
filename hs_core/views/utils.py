@@ -938,14 +938,15 @@ def irods_path_is_directory(istorage, path):
     return base in listing[0]
 
 
-def get_coverage_data_dict(resource, coverage_type='spatial'):
+def get_coverage_data_dict(source, coverage_type='spatial'):
     """Get coverage data as a dict for the specified resource
-    :param  resource: An instance of BaseResource for which coverage data is needed
+    :param  source: An instance of BaseResource or FileSet aggregation for which coverage data is
+    needed
     :param  coverage_type: Type of coverage data needed. Default is spatial otherwise temporal
     :return A dict of coverage data
     """
     if coverage_type.lower() == 'spatial':
-        spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+        spatial_coverage = source.metadata.spatial_coverage
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
@@ -961,7 +962,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
                 spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
         return spatial_coverage_dict
     else:
-        temporal_coverage = resource.metadata.coverages.filter(type='period').first()
+        temporal_coverage = source.metadata.temporal_coverage
         temporal_coverage_dict = {}
         if temporal_coverage:
             temporal_coverage_dict['element_id'] = temporal_coverage.id
