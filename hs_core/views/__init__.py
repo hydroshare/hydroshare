@@ -41,7 +41,8 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    replicate_resource_bag_to_user_zone
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -620,7 +621,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
     try:
-        utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
             json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
@@ -648,7 +649,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource)
+        new_resource = hydroshare.copy_resource(res, new_resource, user=request.user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
@@ -678,7 +679,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.locked_time = None
             res.save()
         else:
-            # cannot create new version for this resource since the resource is locked by another user
+            # cannot create new version for this resource since the resource is locked by another
+            # user
             request.session['resource_creation_error'] = 'Failed to create a new version for ' \
                                                          'this resource since another user is ' \
                                                          'creating a new version for this ' \
