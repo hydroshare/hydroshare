@@ -78,35 +78,36 @@ def data_store_structure(request):
             dirs.append({'name': d_pk, 'url': d_url})
 
         files = []
-        for fname in store[1]:  # files
+        is_federated = resource.is_federated
+        for index, fname in enumerate(store[1]):  # files
             fname = fname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, fname)
-            size = istorage.size(name_with_full_path)
+            size = store[2][index]
             mtype = get_file_mime_type(fname)
             idx = mtype.find('/')
             if idx >= 0:
                 mtype = mtype[idx + 1:]
-            f_pk = ''
-            f_url = ''
             logical_file_type = ''
             logical_file_id = ''
-            for f in ResourceFile.objects.filter(object_id=resource.id):
-                if name_with_full_path == f.storage_path:
-                    f_pk = f.pk
-                    f_url = to_external_url(get_resource_file_url(f))
-                    if resource.resource_type == "CompositeResource":
-                        f_logical = f.get_or_create_logical_file
-                        logical_file_type = f.logical_file_type_name
-                        logical_file_id = f_logical.id
-                    break
-
-            if f_pk:  # file is found in Django
-                files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
-                              'logical_type': logical_file_type,
-                              'logical_file_id': logical_file_id})
-            else:  # file is not found in Django
+            if is_federated:
+                f = ResourceFile.objects.filter(object_id=resource.id,
+                                                fed_resource_file=name_with_full_path).first()
+            else:
+                f = ResourceFile.objects.filter(object_id=resource.id,
+                                                resource_file=name_with_full_path).first()
+            if not f:
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
                              .format(name_with_full_path))
+                continue
+
+            f_url = to_external_url(get_resource_file_url(f))
+            if resource.resource_type == "CompositeResource":
+                f_logical = f.get_or_create_logical_file
+                logical_file_type = f.logical_file_type_name
+                logical_file_id = f_logical.id
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f_url,
+                          'logical_type': logical_file_type,
+                          'logical_file_id': logical_file_id})
 
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
