@@ -57,6 +57,11 @@ urlpatterns = patterns(
         views.update_dataset_name,
         name="update_filetype_datatset_name"),
 
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/(?P<coverage_type>[A-z]+)/'
+        r'update-coverage-fileset/$',
+        views.update_aggregation_coverage,
+        name="update_fileset_coverage"),
+
     url(r'^_internal/(?P<file_type_id>[0-9]+)/'
         r'update-reftimeseries-abstract/$',
         views.update_refts_abstract,

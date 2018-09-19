@@ -211,6 +211,49 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
 
 @login_required
+def update_aggregation_coverage(request, file_type_id, coverage_type):
+    """Updates fileset aggregation level coverage using coverage data from the contained
+    aggregations
+    :param  file_type_id:   id of the fileset aggregation for which coverage needs to be updated
+    :param  coverage_type:  a value of either temporal or spatial
+    """
+    response_data = {'status': 'error'}
+    fs_aggr = FileSetLogicalFile.objects.filter(id=file_type_id).first()
+    if fs_aggr is None:
+        err_msg = "No matching fileset aggregation was found."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+    resource_id = fs_aggr.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        response_data['message'] = "Permission denied"
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if coverage_type.lower() not in ('temporal', 'spatial'):
+        err_msg = "Invalid coverage type specified."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if coverage_type.lower() == 'spatial':
+        fs_aggr.update_spatial_coverage()
+    else:
+        fs_aggr.update_temporal_coverage()
+
+    msg = "Aggregation {} coverage was updated successfully.".format(coverage_type.lower())
+    response_data['status'] = 'success'
+    response_data['message'] = msg
+    if coverage_type.lower() == 'spatial':
+        response_data['spatial_coverage'] = get_coverage_data_dict(fs_aggr)
+    else:
+        response_data['temporal_coverage'] = get_coverage_data_dict(fs_aggr, 'temporal')
+
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
+
+
+@login_required
 def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                             element_id, **kwargs):
     err_msg = "Failed to update metadata element '{}'. {}."
