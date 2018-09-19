@@ -79,6 +79,16 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
                             button("Save changes", type="button",
                                    cls="btn btn-primary pull-right btn-form-submit",
                                    style="display: none;")  # TODO: TESTING
+                # for aggregation that contains other aggregation, show option to update
+                # spatial coverage from contained aggregations
+                # TODO: Need to use a property self.logical_file.has_children_spatial_data to decide
+                # if this button should be included or not
+                if self.logical_file.has_children:
+                    with div(cls="col-md-offset-6 col-xs-offset-2 "
+                                 "col-md-2 col-xs-6"):
+                        button("Set spatial coverage from contained aggregations", type="button",
+                               cls="btn btn-primary pull-right",
+                               id="btn-update-aggregation-spatial-coverage")
 
         template = Template(root_div.render())
         context_dict = dict()
