@@ -268,7 +268,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # resource is wrongly set to False when the bag for this resource does not exist and
         # need to be recreated
         res.setAVU('bag_modified', 'false')
-        hydroshare.replicate_resource_bag_to_user_zone(self.user, res.short_id)
+        hydroshare.resource.replicate_resource_bag_to_user_zone(self.user, res.short_id)
         self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
                         msg='replicated resource bag is not in the user zone')
 
