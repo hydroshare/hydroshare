@@ -3,6 +3,8 @@
 <div class="col-xs-12 content-block">
     <h3>README.MD</h3>
     <pre class="readme">
-        {{ readme|apply_markup:"markdown" }}
+        {# Pabitra: the following filter is not needed #}
+{#        {{ readme|apply_markup:"markdown" }}  #}
+        {{ readme|safe }}
     </pre>
 </div>

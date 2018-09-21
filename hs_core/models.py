@@ -8,6 +8,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from markdown import markdown
 
 from django_irods.icommands import SessionException
 
@@ -2181,6 +2182,48 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 return False
         else:
             return True
+
+    @property
+    def readme_file(self):
+        """Returns a resource file that is at the root with a file name of either
+        'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
+        is returned. If both files exist then resource file for readme.md is returned"""
+
+        res_files_at_root = [f for f in self.files.all() if f.file_folder is None]
+        readme_txt_file = None
+        readme_md_file = None
+        for res_file in res_files_at_root:
+            if res_file.file_name.lower() == 'readme.md':
+                readme_md_file = res_file
+            elif res_file.file_name.lower() == 'readme.txt':
+                readme_txt_file = res_file
+            if readme_md_file is not None:
+                break
+
+        if readme_md_file is not None:
+            return readme_md_file
+        else:
+            return readme_txt_file
+
+    @property
+    def has_readme_file(self):
+        """Returns True if the resource has a readme.md or readme.txt file at the root, otherwise
+        False."""
+
+        return self.readme_file is not None
+
+    def get_readme_file_content(self):
+        """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
+        then the content of the readme.md file is returned.
+        :raises If there is no readme file, ObjectDoesNotExist is raised
+        """
+        if self.readme_file is None:
+            raise ObjectDoesNotExist
+        else:
+            if self.readme_file.extension.lower() == '.md':
+                return markdown(self.readme_file.read())
+            else:
+                return self.readme_file.read()
 
     @property
     def logical_files(self):
