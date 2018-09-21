@@ -574,8 +574,9 @@ def create_irods_account(request):
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
                             exec_cmd=exec_cmd)
             if output:
-                if 'ERROR:' in output.upper():
-                    # there is an error from icommand run, report the error
+                if 'ERROR:' in output.upper() and \
+                        not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in output.upper():
+                    # there is an error from icommand run which is not about the fact that the user already exists, report the error
                     return HttpResponse(
                         dumps({"error": 'iRODS server failed to create this iRODS account {0}. Check the server log for details.'.format(user.username)}),
                         content_type = "application/json"
@@ -598,3 +599,4 @@ def create_irods_account(request):
             dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
+
