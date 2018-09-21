@@ -69,7 +69,6 @@ def data_store_structure(request):
     istorage = resource.get_irods_storage()
     directory_in_irods = resource.get_irods_path(store_path)
 
-
     try:
         store = istorage.listdir(directory_in_irods)
     except SessionException as ex:
@@ -113,7 +112,6 @@ def data_store_structure(request):
                      'folder_aggregation_id': folder_aggregation_id,
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
                      'folder_short_path': os.path.join(store_path, d_pk)})  # this is NOT short path
-
 
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
