@@ -137,7 +137,17 @@ class AbstractFileMetaData(models.Model):
 
             self.get_extra_metadata_html_form()
             if temporal_coverage:
-                self.get_temporal_coverage_html_form()
+                # for aggregation that contains other aggregations with temporal data,
+                # show option to update temporal coverage from contained aggregations
+                if self.logical_file.has_children_temporal_data:
+                    with self.get_temporal_coverage_html_form():
+                        with div():
+                            button("Set temporal coverage from contained aggregations",
+                                   type="button",
+                                   cls="btn btn-primary",
+                                   id="btn-update-aggregation-temporal-coverage")
+                else:
+                    self.get_temporal_coverage_html_form()
         return root_div
 
     def get_keywords_html_form(self):
@@ -1266,6 +1276,18 @@ class AbstractLogicalFile(models.Model):
     def has_children(self):
         """Returns True if the this aggregation contains any other aggregations, otherwise False"""
         return len(self.get_children()) > 0
+
+    @property
+    def has_children_spatial_data(self):
+        """Returns True if any of the contained aggregation has spatial data, otherwise False"""
+        return any(child_aggr.metadata.spatial_coverage is not None for child_aggr in
+                   self.get_children())
+
+    @property
+    def has_children_temporal_data(self):
+        """Returns True if any of the contained aggregation has temporal data, otherwise False"""
+        return any(child_aggr.metadata.temporal_coverage is not None for child_aggr in
+                   self.get_children())
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files

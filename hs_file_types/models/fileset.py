@@ -169,6 +169,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
             self.update_temporal_coverage()
 
     def get_children(self):
+        """Return a list of aggregation that this (self) aggregation contains"""
         child_aggregations = []
         for aggr in self.resource.logical_files:
             parent_aggr = aggr.get_parent()
@@ -176,3 +177,4 @@ class FileSetLogicalFile(AbstractLogicalFile):
                 child_aggregations.append(aggr)
 
         return child_aggregations
+

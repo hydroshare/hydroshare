@@ -80,7 +80,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with root_div:
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
-            with div(cls="row"):
+            with div():
                 with div(cls="col-lg-6 col-xs-12", id="original-coverage-filetype"):
                     with form(id="id-origcoverage-file-type",
                               action="{{ orig_coverage_form.action }}",
