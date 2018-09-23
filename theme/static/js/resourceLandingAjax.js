@@ -1637,7 +1637,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
     }
 }
 
-// updates the UI temporal coverage elements
+// updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
     $("#id_start").attr('data-date', temporalCoverage.start);
@@ -1675,6 +1675,16 @@ function updateAggregationSpatialCoverageUI(spatialCoverage) {
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
     }
+}
+
+// updates the UI temporal coverage elements for the aggregation
+function updateAggregationTemporalCoverage(temporalCoverage) {
+    $("#id_start_filetype").val(temporalCoverage.start);
+    $("#id_start_filetype").attr('data-date', temporalCoverage.start);
+    $("#id_end_filetype").val(temporalCoverage.end);
+    $("#id_end_filetype").attr('data-date', temporalCoverage.end);
+    $("#id-coverage-temporal").find("button.btn-primary").hide();
+    initializeDatePickers();
 }
 
 function setFileTypeMetadataFormsClickHandlers(){

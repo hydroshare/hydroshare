@@ -74,7 +74,7 @@ function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
             }
             else {
                 var temporalCoverage = json_response.temporal_coverage;
-                updateResourceTemporalCoverage(temporalCoverage);
+                updateAggregationTemporalCoverage(temporalCoverage);
             }
             $("#fb-inner-controls").after($alert_success);
             $(".alert-success").fadeTo(3000, 500).slideUp(1000, function(){

@@ -762,6 +762,10 @@ function showFileTypeMetadata(file_type_time_series, url){
              $("#btn-update-aggregation-spatial-coverage").click(function () {
                 fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
              });
+             // Submit for aggregation temporal coverage update
+             $("#btn-update-aggregation-temporal-coverage").click(function () {
+                fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
+             });
          }
          $("#div_id_type_filetype input:radio").trigger("change");
     });
