@@ -82,6 +82,7 @@ function formatBytes(bytes) {
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
     var resourceType = $("#resource-type").val();
+    var mode = $("#hs-file-browser").attr("data-mode");
     var selectedFileName = selected.children(".fb-file-name").text().toUpperCase();
     var flagDisableOpen = false;
     var flagDisableDownload = false;
@@ -185,6 +186,8 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 flagDisableRemoveAggregation = true;
                 $('#btn-get-referenced-url').show();
+                if (mode == "edit")
+                    $('#btn-edit-referenced-url').show();
             }
             else if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
                 // if the selected file is not part of the RefTimeseriesLogical or
