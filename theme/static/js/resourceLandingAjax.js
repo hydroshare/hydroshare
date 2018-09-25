@@ -1251,6 +1251,26 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
     });
 }
 
+function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-edit-reference-url/',
+        async: true,
+        data: {
+            res_id: res_id,
+            curr_path: curr_path,
+            url_filename: url_filename,
+            new_ref_url: new_ref_url
+        },
+        success: function (result) {
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Edit reference url Failed', xhr.responseText);
+        }
+    });
+}
+
 // TODO: #2105: replace with move-to-folder and rename-file-or-folder: 
 // TODO: ambiguous function based upon conflation in REST API
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {

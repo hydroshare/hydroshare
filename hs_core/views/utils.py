@@ -7,6 +7,8 @@ from collections import namedtuple
 import paramiko
 import logging
 from dateutil import parser
+from urllib2 import urlopen, HTTPError, URLError
+from tempfile import NamedTemporaryFile
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -16,6 +18,7 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse, QueryDict
+from django.core.validators import URLValidator
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
@@ -31,6 +34,7 @@ from hs_core.signals import pre_metadata_element_create, post_delete_file_from_r
 from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare import add_resource_files
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -90,6 +94,59 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
 
     # delete the user session after iRODS file operations are done
     irods_storage.delete_user_session()
+
+
+def validate_url(url):
+    """
+    Validate URL
+    :param url: input url to be validated
+    :return: [True, ''] if url is valid,[False, 'error message'] if url is not valid
+    """
+    # validate url's syntax is valid
+    try:
+        validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
+        validator(url)
+    except ValidationError:
+        return False, 'Not a valid reference URL'
+
+    # validate url is valid, i.e., can be opened
+    try:
+        urlopen(url)
+    except HTTPError as ex:
+        return False, 'Reference URL does not exist - error: ' + ex.code
+    except URLError as ex:
+        return False, 'Reference URL does not exist - error: ' + ex.reason
+
+    return True, ''
+
+
+def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
+    """
+    Create URL file and add it to resource
+    :param res_id: resource id to add url file to
+    :param ref_url: referenced url to create the url file
+    :param ref_file_name: referenced url file name to be created
+    :param curr_path: the folder path in the resource to add url file to
+    :return: file object being added into resource if successful, otherwise, return None
+    """
+    # create URL file
+    urltempfile = NamedTemporaryFile()
+    urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
+    urltempfile.write(urlstring)
+    fileobj = File(file=urltempfile, name=ref_file_name)
+
+    prefix_path = 'data/contents'
+    filelist = []
+    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+        filelist = add_resource_files(res_id, fileobj)
+    else:
+        curr_path = curr_path[len(prefix_path) + 1:]
+        filelist = add_resource_files(res_id, fileobj, folder=curr_path)
+
+    if filelist:
+        return filelist[0]
+    else:
+        return None
 
 
 def run_ssh_command(host, uname, pwd, exec_cmd):

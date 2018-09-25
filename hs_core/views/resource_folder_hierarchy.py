@@ -1,13 +1,11 @@
 import json
 import logging
 import os
-from urllib2 import urlopen, HTTPError, URLError
-from tempfile import NamedTemporaryFile
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError
-from django.core.validators import URLValidator
 from django.core.files.base import File
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
@@ -16,12 +14,12 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, get_resource_by_shortkey
 from hs_core.models import ResourceFile
-from hs_core.hydroshare import add_resource_files
 from hs_file_types.utils import set_logical_file_type
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
+    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, validate_url, \
+    add_url_file_to_resource
 
 logger = logging.getLogger(__name__)
 
@@ -373,50 +371,94 @@ def data_store_add_reference(request):
         return HttpResponseBadRequest('Must have ref_url included in the POST data')
 
     # validate curr_path starts with data/contents
-
     ref_name = ref_name.lower()
     if not ref_name.endswith('.url'):
         ref_name += '.url'
 
-    # validate ref_url's syntax is valid
-    try:
-        validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
-        validator(ref_url)
-    except ValidationError:
-        return HttpResponseBadRequest('Not a valid reference URL')
+    is_valid, err_msg = validate_url(ref_url)
+    if not is_valid:
+        return HttpResponseBadRequest(err_msg)
 
-    # validate ref_url is valid, i.e., can be opened
-    try:
-        urlopen(ref_url)
-    except HTTPError as ex:
-        return HttpResponseBadRequest('Reference URL does not exist - error: ' + ex.code)
-    except URLError as ex:
-        return HttpResponseBadRequest('Reference URL does not exist - error: ' + ex.reason)
+    f =  add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
 
-    # create URL file
-    urltempfile = NamedTemporaryFile()
-    urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
-    urltempfile.write(urlstring)
-    fileobj = File(file=urltempfile, name=ref_name)
-
-    prefix_path = 'data/contents'
-    filelist = []
-    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        filelist = add_resource_files(res_id, fileobj)
-    else:
-        curr_path = curr_path[len(prefix_path)+1:]
-        filelist = add_resource_files(res_id, fileobj, folder=curr_path)
-
-    if not filelist:
+    if not f:
         return HttpResponseServerError('New file failed to be added to the resource')
+
     # make sure the new file has logical file set and is single file aggregation
-    f = filelist[0]
     try:
         # set 'SingleFile' logical file type to this .url file
         res = get_resource_by_shortkey(res_id)
         set_logical_file_type(res, request.user, f.id, 'SingleFile', extra_data={'url': ref_url})
     except Exception as ex:
         return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return JsonResponse({'status': 'success'})
+
+
+@api_view(['POST'])
+def data_store_edit_reference_url(request):
+    """
+    edit the referenced url in an url file
+    :param request:
+    :return: JsonResponse on success or HttpResponse with error status code on error
+    """
+    res_id = request.POST.get('res_id', None)
+    curr_path = request.POST.get('curr_path', None)
+    url_filename = request.POST.get('url_filename', None)
+    new_ref_url = request.POST.get('new_ref_url', None)
+
+    if not res_id:
+        return HttpResponseBadRequest('Must have res_id included in the POST data')
+    if not curr_path:
+        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+    if not url_filename:
+        return HttpResponseBadRequest('Must have url_filename included in the POST data')
+    if not new_ref_url:
+        return HttpResponseBadRequest('Must have new_ref_url included in the POST data')
+
+    # validate curr_url_file_path starts with data/contents
+    ref_name = url_filename.lower()
+    if not ref_name.endswith('.url'):
+        return HttpResponseBadRequest('url_filename must have .url extension in the POST data')
+
+    try:
+        res, _, _ = authorize(request, res_id,
+                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponseBadRequest('Bad request - resource not found')
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    is_valid, err_msg = validate_url(new_ref_url)
+    if not is_valid:
+        return HttpResponseBadRequest(err_msg)
+
+    try:
+        prefix_path = 'data/contents'
+        if curr_path != prefix_path and curr_path.startswith(prefix_path):
+            curr_path = curr_path[len(prefix_path) + 1:]
+        if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+            folder = None
+        else:
+            folder = curr_path[len(prefix_path) + 1:]
+
+        f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+        f.delete()
+        f = add_url_file_to_resource(res_id, new_ref_url, ref_name, curr_path)
+
+        if not f:
+            return HttpResponseServerError('URL file failed to be updated')
+
+        # make sure the new file has logical file set and is single file aggregation
+        # set 'SingleFile' logical file type to this .url file
+        res = get_resource_by_shortkey(res_id)
+        set_logical_file_type(res, request.user, f.id, 'SingleFile',
+                              extra_data={'url': new_ref_url})
+    except ObjectDoesNotExist:
+        return HttpResponseBadRequest('Bad request - url file not found')
+    except Exception as ex:
+        return JsonResponse({'message': ex.message},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse({'status': 'success'})
 
