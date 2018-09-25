@@ -1680,9 +1680,8 @@ function updateAggregationSpatialCoverageUI(spatialCoverage) {
 // updates the UI temporal coverage elements for the aggregation
 function updateAggregationTemporalCoverage(temporalCoverage) {
     $("#id_start_filetype").val(temporalCoverage.start);
-    $("#id_start_filetype").attr('data-date', temporalCoverage.start);
     $("#id_end_filetype").val(temporalCoverage.end);
-    $("#id_end_filetype").attr('data-date', temporalCoverage.end);
+
     $("#id-coverage-temporal").find("button.btn-primary").hide();
     initializeDatePickers();
 }
