@@ -134,7 +134,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
                                 is_sf_agg_file = True
                                 if __debug__:
-                                    logger.debug("request for single file aggregation {}".format(path))
+                                    logger.debug(
+                                        "request for single file aggregation {}".format(path))
                                 break
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
@@ -151,16 +152,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # * is_bag_download: download a bag in format bags/{rid}.zip
     # * is_zip_download: download a zipfile in format zips/{date}/{random guid}/{path}.zip
     # if none of these are set, it's a normal download
-
-    # logger.debug(" after aggregation check, bag={}, zipd={} zipr={} sfagg={}".format(
-    #     str(is_bag_download),
-    #     str(is_zip_download),
-    #     str(is_zip_request),
-    #     str(is_sf_agg_file)
-    # ))
-    # logger.debug(" after aggregation check, path={}, opath={}".format(
-    #     path, output_path
-    # ))
 
     # determine active session
     if res.is_federated:

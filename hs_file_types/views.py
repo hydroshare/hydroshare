@@ -767,7 +767,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     if not logical_file.resource.raccess.public:
         if request.user.is_authenticated:
             authorize(request, logical_file.resource.short_id,
-                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         else:
             raise PermissionDenied()
 
