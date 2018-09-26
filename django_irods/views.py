@@ -2,7 +2,6 @@ import datetime
 import json
 import mimetypes
 import os
-# import random
 from uuid import uuid4
 
 from django.conf import settings
@@ -11,7 +10,6 @@ from django.http import HttpResponse, FileResponse, HttpResponseRedirect
 from rest_framework.decorators import api_view
 
 from django_irods import icommands
-# from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import FILE_SIZE_LIMIT
@@ -103,6 +101,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
     # default values are changed later as needed
+
+
     istorage = res.get_irods_storage()
     if res.is_federated:
         irods_path = os.path.join(res.resource_federation_path, path)
@@ -181,6 +181,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             for f in ResourceFile.objects.filter(object_id=res.id):
                 if path == f.storage_path:
                     if f.has_logical_file and f.logical_file.is_single_file_aggregation:
+                        if 'url' in f.logical_file.extra_data:
+                            redirect_url = f.logical_file.extra_data['url']
+                            return HttpResponseRedirect(redirect_url)
                         is_sf_agg_file = True
                         daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                         output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
