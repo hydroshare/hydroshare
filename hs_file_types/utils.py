@@ -227,8 +227,12 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
         return
     logical_file_type_class = file_type_map[hs_file_type]
     try:
-        logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                              folder_path=folder_path, extra_data=extra_data)
+        if extra_data:
+            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                  folder_path=folder_path, extra_data=extra_data)
+        else:
+            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                  folder_path=folder_path)
     except:
         if fail_feedback:
             raise
