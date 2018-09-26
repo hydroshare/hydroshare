@@ -1484,18 +1484,20 @@ function initializeDatePickers(){
 
     // Set stored dates
     $(".dateinput").each(function () {
-        var dateString;
+        var dateString = null;
         var pickerDate = null;
         if($(this).attr('data-date')){
             // resource temporal date picker
             dateString = $(this).attr("data-date").split("-");
-            pickerDate = new Date(dateString);
         }
         else{
             // file type temporal date picker
             if($(this).attr('value')){
-                pickerDate = new Date($(this).attr("value"));
+                dateString = $(this).attr("value").split("-");
             }
+        }
+        if(dateString != null) {
+            pickerDate = new Date(dateString);
         }
         if(pickerDate != null){
             $(this).datepicker("setDate", pickerDate);
