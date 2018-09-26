@@ -192,7 +192,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                                                              output_path)
                         else:
                             irods_output_path = output_path
-                break
+                        break
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # At most one of the following flags has also been set:
