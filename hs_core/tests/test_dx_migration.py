@@ -41,8 +41,8 @@ class TestMigrations(TestCase):
 
 
 class TestDelimiterMigration(TestMigrations):
-    migrate_from = '0037_auto_20180209_0309'
-    migrate_to = '0038_doi_url'
+    migrate_from = '0038_auto_20180831_2201'
+    migrate_to = '0039_doi_url'
 
     def setUpBeforeMigration(self, apps):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
