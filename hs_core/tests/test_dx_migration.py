@@ -65,7 +65,6 @@ class TestDelimiterMigration(TestMigrations):
         id.url = "http://dx.doi.org/123"
         id.save()
 
-
     def test_delimiter_migration(self):
         id = Identifier.objects.all().first()
         self.assertEqual('https://doi.org/123', id.url)
