@@ -1,21 +1,55 @@
 # hydroshare-ssl-nginx.conf
+ 
+# $external is 1 if the URI is external and 0 if it cannot possibly be
+# external due to use of RFC-1918 addressing. This avoids redirects 
+# to canonical naming when a request comes from inside hydroshare
+
+geo $external {
+  default 1;
+  192.168.0.0/16 0;
+  172.16.0.0/12 0;
+  127.0.0.0/8 0;
+  10.0.0.0/8 0;
+}
 
 server {
     listen          80;
     server_name     FQDN_OR_IP;
-    rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    # This should not rewrite hostname! 
+    # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    # This syntax is considered more efficient in nginx documentation 
+    # and does the same thing as the above: 
+    return 301 https://$http_host/$request_uri; 
 }
 
 server {
     listen          443 ssl;
     server_name     FQDN_OR_IP;
     root            /hydroshare/hydroshare/static/;
+
+    # Compute whether we need to rewrite an address. Rewrite all erronious
+    # external addresses but avoid rewriting internal references (from django
+    # management commands).
+     
+    set $need_rewrite 0;
+
     if ($http_host != "FQDN_OR_IP") {
-        rewrite ^ https://FQDN_OR_IP$request_uri permanent;
+        set $need_rewrite 1;
     }
+
+    if ($external) {
+        set $need_rewrite "${need_rewrite}1";
+    }
+
+    if ($need_rewrite = 11) {
+        return 301 https://FQDN_OR_IP$request_uri;
+    }
+
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
     error_log       /var/log/nginx/system.log notice;
+    # Uncomment the following line to generate debugging log entries 
+    # error_log       /var/log/nginx/system.log debug;
 
     charset         utf-8;
     client_max_body_size 4096m;
@@ -29,6 +63,21 @@ server {
 
     location /media/ {
         alias /hydroshare/hydroshare/static/media/;
+    }
+
+    location /IRODS_DATA_URI/ {
+        internal; 
+        alias IRODS_DATA_ROOT/;
+    }
+
+    location /IRODS_USER_URI/ {
+        internal; 
+        alias IRODS_USER_ROOT/;
+    }
+
+    location /IRODS_CACHE_URI/ {
+        internal; 
+        alias IRODS_CACHE_ROOT/;
     }
 
     location / {
@@ -46,6 +95,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Django-Reverse-Proxy true;
 
         client_max_body_size 4096m;
         client_body_buffer_size 1m;

@@ -570,15 +570,20 @@ def create_irods_account(request):
         try:
             user = request.user
             pwd = str(request.POST.get('password'))
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD, user.username, pwd)
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                            exec_cmd=exec_cmd)
+            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+                                            user.username, pwd)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
+                                     uname=settings.HS_USER_ZONE_PROXY_USER,
+                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper() and \
                         not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in output.upper():
-                    # there is an error from icommand run which is not about the fact that the user already exists, report the error
+                    # there is an error from icommand run which is not about the fact 
+                    # that the user already exists, report the error
                     return HttpResponse(
-                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. '
+                                        'Check the server log for details.'.format(user.username)}),
                         content_type = "application/json"
                     )
 
@@ -586,12 +591,14 @@ def create_irods_account(request):
             user_profile.create_irods_user_account = True
             user_profile.save()
             return HttpResponse(
-                    dumps({"success": "iRODS account {0} is created successfully".format(user.username)}),
+                    dumps({"success": "iRODS account {0} is created successfully".format(
+                        user.username)}),
                     content_type = "application/json"
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message + ' - iRODS server failed to create this iRODS account.'}),
+                    dumps({"error": ex.message + ' - iRODS server failed to create this '
+                                                 'iRODS account.'}),
                     content_type = "application/json"
             )
     else:

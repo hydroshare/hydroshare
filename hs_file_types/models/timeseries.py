@@ -1093,7 +1093,10 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                         or len(target_obj.metadata.time_series_results) == 0:
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict["status"] = result["StatusCV"]
+                    if result["StatusCV"] is not None:
+                        data_dict["status"] = result["StatusCV"]
+                    else:
+                        data_dict["status"] = ""
                     data_dict["sample_medium"] = result["SampledMediumCV"]
                     data_dict["value_count"] = result["ValueCount"]
 
@@ -1353,29 +1356,16 @@ def _extract_coverage_metadata(resource, cur, logical_file=None):
 
         target_obj.metadata.create_element('coverage', type='box', value=bbox)
 
-    cur.execute("SELECT * FROM Results")
-    results = cur.fetchall()
-    min_begin_date = None
-    max_end_date = None
-    for result in results:
-        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
-                    (result["FeatureActionID"],))
-        feature_action = cur.fetchone()
-        cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
-                    (feature_action["ActionID"],))
-        action = cur.fetchone()
-        if min_begin_date is None:
-            min_begin_date = action["BeginDateTime"]
-        elif min_begin_date > action["BeginDateTime"]:
-            min_begin_date = action["BeginDateTime"]
+    # extract temporal coverage
+    cur.execute("SELECT MAX(ValueDateTime) AS 'EndDate', MIN(ValueDateTime) AS 'BeginDate' "
+                "FROM TimeSeriesResultValues")
 
-        if max_end_date is None:
-            max_end_date = action["EndDateTime"]
-        elif max_end_date < action["EndDateTime"]:
-            max_end_date = action["EndDateTime"]
+    dates = cur.fetchone()
+    begin_date = dates['BeginDate']
+    end_date = dates['EndDate']
 
     # create coverage element
-    value_dict = {"start": min_begin_date, "end": max_end_date}
+    value_dict = {"start": begin_date, "end": end_date}
     target_obj.metadata.create_element('coverage', type='period', value=value_dict)
 
 

@@ -56,7 +56,7 @@ class TestFolderDownloadZip(TestCase):
         input_path = "/data/contents/foo"
         try:
             self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                            self.output_path))
+                                            self.output_path, False))
             self.assertTrue(IrodsStorage().exists(self.output_path))
         except Exception as ex:
             self.fail("create_temp_zip() raised exception.{}".format(ex.message))
