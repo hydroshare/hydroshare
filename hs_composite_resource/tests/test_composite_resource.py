@@ -6,9 +6,10 @@ from django.contrib.auth.models import Group
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
+    unzip_file
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData
 from hs_file_types.tests.utils import CompositeResourceTestMixin
@@ -34,6 +35,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
         self.generic_file_name = 'generic_file.txt'
         self.generic_file = 'hs_composite_resource/tests/data/{}'.format(self.generic_file_name)
+        self.zip_file_name = 'test.zip'
+        self.zip_file = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_name)
 
     def tearDown(self):
         super(CompositeResourceTest, self).tearDown()
@@ -1289,3 +1292,58 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # this is the function we are testing - aggregation folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
+
+    def test_unzip(self):
+        """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation
+        exists, the single file aggregation related xml files do not get added to the resource as
+        resource files """
+
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        gen_res_file = self.composite_resource.files.first()
+        # set the generic file to generic single file aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # add a zip file that contains only one file
+        self.add_file_to_resource(file_to_add=self.zip_file)
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
+        zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # resource should have 3 files now
+        self.assertEqual(self.composite_resource.files.count(), 3)
+        # there should not be any resource files ending with _meta.xml or _resmap.xml
+        for res_file in self.composite_resource.files.all():
+            self.assertFalse(res_file.file_name.endswith('_mata.xml'))
+            self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
+
+    def test_unzip_folder_clash(self):
+        """Test that when a zip file gets unzipped a folder with the same
+        name already exists, the existing folder is not overwritten """
+
+        self.create_composite_resource()
+        # add a zip file that contains only one file
+        self.add_file_to_resource(file_to_add=self.zip_file)
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
+        zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        # unzip again
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # ensure files aren't overwriting name clash
+        self.assertEqual(self.composite_resource.files.count(), 3)
