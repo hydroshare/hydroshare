@@ -959,7 +959,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
         self.res.doi = None
         self.res.save()
-        url_doi = "http://dx.doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
+        url_doi = "https://doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
                                                                               name='DOI',  url=url_doi))
 
@@ -974,7 +974,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               doi_idf.id, name='DOI-1'))
 
         # test that 'DOI' identifier url can be changed
-        resource.update_metadata_element(self.res.short_id, 'identifier', doi_idf.id, url='http://doi.org/001')
+        resource.update_metadata_element(self.res.short_id, 'identifier', doi_idf.id, url='https://doi.org/001')
 
         # test that hydroshareidentifier can't be deleted - raise exception
         hs_idf = self.res.metadata.identifiers.all().filter(name='hydroShareIdentifier').first()
@@ -1495,7 +1495,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # add 'DOI' identifier
         self.res.doi='doi1000100010001'
         self.res.save()
-        self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
+        self.res.metadata.create_element('identifier', name='DOI', url="https://doi.org/001")
 
         # no need to add a language element - language element is created at the time of resource creation
 

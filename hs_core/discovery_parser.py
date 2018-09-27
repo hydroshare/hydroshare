@@ -121,6 +121,7 @@ class ParseSQ(object):
         'westlimit',
         'start_date',
         'end_date',
+        'storage_type',
         'format',
         'identifier',
         'language',

@@ -10,7 +10,7 @@ You can find the full BagIt specification here: https://tools.ietf.org/html/draf
 
 You can also find a much more detailed description of HydroShare's resource data model and packaging scheme in the following paper:
 
-Horsburgh, J. S., Morsy, M. M., Castronova, A., Goodall, J. L., Gan, T., Yi, H., Stealey, M. J., and D.G. Tarboton (2015). HydroShare: Sharing diverse hydrologic data types and models as social objects within a Hydrologic Information System, Journal Of the American Water Resources Association(JAWRA), http://dx.doi.org/10.1111/1752-1688.12363.
+Horsburgh, J. S., Morsy, M. M., Castronova, A., Goodall, J. L., Gan, T., Yi, H., Stealey, M. J., and D.G. Tarboton (2015). HydroShare: Sharing diverse hydrologic data types and models as social objects within a Hydrologic Information System, Journal Of the American Water Resources Association(JAWRA), https://doi.org/10.1111/1752-1688.12363.
 
 We've summarized the important points below.
 

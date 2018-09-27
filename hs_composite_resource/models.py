@@ -79,7 +79,10 @@ class CompositeResource(BaseResource):
             return None
 
         istorage = self.get_irods_storage()
-        store = istorage.listdir(dir_path)
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+        store = istorage.listdir(irods_path)
         if store[0]:
             # seems there are folders under dir_path - no aggregation type can be set if the target
             # folder contains other folders
@@ -266,6 +269,19 @@ class CompositeResource(BaseResource):
                 # the file path *new_aggr_name* is not a single file aggregation - no more
                 # action is needed
                 pass
+
+    def is_aggregation_xml_file(self, file_path):
+        """ determine whether a given file in the file hierarchy is metadata.
+
+        This is true if it is listed as metadata in any logical file.
+        """
+        if not (file_path.endswith('_meta.xml') or file_path.endswith('_resmap.xml')):
+            return False
+        for logical_file in self.logical_files:
+            if logical_file.metadata_file_path == file_path or \
+                    logical_file.map_file_path == file_path:
+                return True
+        return False
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path

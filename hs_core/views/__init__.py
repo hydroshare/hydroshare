@@ -24,6 +24,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
@@ -40,7 +41,8 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    replicate_resource_bag_to_user_zone
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -495,20 +497,26 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
+    try:
+        res, _, _ = authorize(request, shortkey,
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                              raises_exception=False)
+    except ObjectDoesNotExist:
+        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    istorage = resource.get_irods_storage()
-    irods_split = request.path.split('/')[2:-1]
-    irods_file_path = '/'.join(irods_split)
-    # [0:-1] excludes the last item on the list
-    listing = istorage.listdir('/'.join(irods_split[0:-1]))
-    if irods_split[-1] in listing[0]:
-        # it's a folder
-        file_download_url = istorage.url(os.path.join('zips', irods_file_path))
-        return HttpResponseRedirect(file_download_url)
-    else: 
-        file_download_url = istorage.url(irods_file_path)
-        return HttpResponseRedirect(file_download_url)
+    istorage = res.get_irods_storage()
+    if __debug__:
+        logger.debug("request path is {}".format(request.path))
+    path_split = request.path.split('/')[2:]  # strip /resource/
+    public_file_path = '/'.join(path_split)
+    # logger.debug("public_file_path is {}".format(public_file_path))
+    istorage = res.get_irods_storage()
+    file_download_url = istorage.url(public_file_path)
+    if __debug__:
+        logger.debug("redirect is {}".format(file_download_url))
+    return HttpResponseRedirect(file_download_url)
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -539,9 +547,9 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
-            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.debug(ex.message)
+            logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -613,7 +621,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
     try:
-        utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
             json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
@@ -641,7 +649,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource)
+        new_resource = hydroshare.copy_resource(res, new_resource, user=request.user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
@@ -671,7 +679,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.locked_time = None
             res.save()
         else:
-            # cannot create new version for this resource since the resource is locked by another user
+            # cannot create new version for this resource since the resource is locked by another
+            # user
             request.session['resource_creation_error'] = 'Failed to create a new version for ' \
                                                          'this resource since another user is ' \
                                                          'creating a new version for this ' \

@@ -5,6 +5,7 @@
 
 import redis
 import os
+import yaml
 from kombu import Queue, Exchange
 from kombu.common import Broadcast
 
@@ -79,7 +80,7 @@ CARTO_HOME='/hs_tmp/node_modules/carto'
 
 
 USE_SOUTH = False
-SITE_TITLE = "HydroShare"
+SITE_TITLE = "CUAHSI HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -197,3 +198,9 @@ LOCAL_CACHE_URI = "/local-cache"
 RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+
+with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+    try:
+        EXTERNAL_CONFIG = yaml.load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)

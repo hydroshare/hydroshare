@@ -155,7 +155,8 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container_to_add_to)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -652,12 +653,13 @@ def extract_metadata(shp_file_full_path):
             # if extent is a point, create point type coverage
             if wgs84_dict["westlimit"] == wgs84_dict["eastlimit"] \
                and wgs84_dict["northlimit"] == wgs84_dict["southlimit"]:
-                coverage_dict = {"Coverage":
-                                 {"type": "point",
-                                  "value": {"east": wgs84_dict["eastlimit"],
-                                            "north": wgs84_dict["northlimit"],
-                                            "units": wgs84_dict["units"],
-                                            "projection": wgs84_dict["projection"]}}}
+                coverage_dict = {"Coverage": {"type": "point",
+                                              "value": {
+                                                  "east": wgs84_dict["eastlimit"],
+                                                  "north": wgs84_dict["northlimit"],
+                                                  "units": wgs84_dict["units"],
+                                                  "projection": wgs84_dict["projection"]
+                                              }}}
             else:  # otherwise, create box type coverage
                 coverage_dict = {"Coverage": {"type": "box",
                                               "value": parsed_md_dict["wgs84_extent_dict"]}}
