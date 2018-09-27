@@ -141,14 +141,16 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
             spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
             if spatial_coverage is not None:
+                # defaulting to point if not provided for backwards compatibility
+                type = spatial_coverage["type"] if "type" in spatial_coverage else "point"
                 if resource_file.metadata.spatial_coverage is not None:
                     cov_id = resource_file.metadata.spatial_coverage.id
                     resource_file.metadata.update_element('coverage',
                                                           cov_id,
-                                                          type='point',
+                                                          type=type,
                                                           value=spatial_coverage)
                 elif resource_file.metadata.spatial_coverage is None:
-                    resource_file.metadata.create_element('coverage', type="point",
+                    resource_file.metadata.create_element('coverage', type=type,
                                                           value=spatial_coverage)
 
             temporal_coverage = file_serializer.data.pop("temporal_coverage", None)

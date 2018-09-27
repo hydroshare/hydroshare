@@ -19,6 +19,7 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+from django_irods.icommands import SessionException
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -29,16 +30,36 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def update_quota_usage(res):
-    from hs_core.tasks import update_quota_usage_task
-    quser = res.get_quota_holder()
-    if quser is None:
-        # no quota holder for this resource, this should not happen, but check just in case
-        logger.error('no quota holder is found for resource' + res.short_id)
+def update_quota_usage(res=None, user=None):
+    """
+    Update quota usage as follows:
+    (1) if res is not None & user is None, quota usage of the res' quota holder will be updated
+    (2) if res is None & user is not None, quota usage of the user will be updated
+    (3) if both res and user are None, nothing is updated
+    (4) if both res and user are not None, quota usage of both res' quota holder and user will be
+    updated.
+    :param res: a resource object
+    :param user: a user object
+    :return:
+    """
+    if not res and not user:
         return
-    # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
-    # services enough time to finish before reflecting the quota usage in django DB
-    update_quota_usage_task.apply_async((quser.username,), countdown=60)
+
+    from hs_core.tasks import update_quota_usage_task
+
+    if user:
+        update_quota_usage_task.apply_async((user.username,), countdown=30)
+
+    if res:
+        quser = res.get_quota_holder()
+        if quser is None:
+            # no quota holder for this resource, this should not happen, but check just in case
+            logger.error('no quota holder is found for resource' + res.short_id)
+            return
+        # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
+        # services enough time to finish before reflecting the quota usage in django DB
+        update_quota_usage_task.apply_async((quser.username,), countdown=30)
+    return
 
 
 def get_resource(pk):
@@ -164,6 +185,66 @@ def update_resource_file(pk, filename, f):
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
+
+
+def replicate_resource_bag_to_user_zone(user, res_id):
+    """
+    Replicate resource bag to iRODS user zone
+    Args:
+        user: the requesting user
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+    # do on-demand bag creation
+
+    res = utils.get_resource_by_shortkey(res_id)
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
+    bag_modified_flag = True
+    # needs to check whether res_id collection exists before getting/setting AVU on it to
+    # accommodate the case where the very same resource gets deleted by another request when
+    # it is getting downloaded
+    if istorage.exists(res_coll):
+        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
+
+        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
+        # is False; otherwise, bag_modified_flag will take the default True value so that the
+        # bag will be created or recreated
+        if bag_modified:
+            if bag_modified.lower() == "false":
+                bag_file_name = res_id + '.zip'
+                if res.resource_federation_path:
+                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
+                                                 bag_file_name)
+                else:
+                    bag_full_path = os.path.join('bags', bag_file_name)
+
+                if istorage.exists(bag_full_path):
+                    bag_modified_flag = False
+
+        if bag_modified_flag:
+            # import here to avoid circular import issue
+            from hs_core.tasks import create_bag_by_irods
+            status = create_bag_by_irods(res_id)
+            if not status:
+                # bag fails to be created successfully
+                raise SessionException(-1, '', 'The resource bag fails to be created '
+                                               'before bag replication')
+
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        fsize = istorage.size(src_file)
+        utils.validate_user_quota(user, fsize)
+        istorage.copyFiles(src_file, tgt_file)
+        update_quota_usage(user=user)
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def get_related(pk):
@@ -526,7 +607,7 @@ def create_empty_resource(pk, user, action='version'):
     return new_resource
 
 
-def copy_resource(ori_res, new_res):
+def copy_resource(ori_res, new_res, user=None):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object
     as a copy of the ori_res object
@@ -534,6 +615,8 @@ def copy_resource(ori_res, new_res):
         ori_res: the original resource that is to be copied.
         new_res: the new_res to be populated with metadata and content from the original resource
         as a copy of the original resource.
+        user: requesting user for the copy action. It is optional, if being passed in, quota is
+        counted toward the user; otherwise, quota is not counted toward that user
     Returns:
         the new resource copied from the original resource
     """
@@ -554,7 +637,9 @@ def copy_resource(ori_res, new_res):
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
-
+    # need to update quota usage for new_res quota holder
+    if user:
+        update_quota_usage(user=user)
     return new_res
 
 
@@ -607,6 +692,8 @@ def create_new_version_resource(ori_res, new_res, user):
     # obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
     ori_res.raccess.save()
+    # need to update quota usage for the user
+    update_quota_usage(user=user)
     return new_res
 
 
@@ -663,7 +750,7 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
     else:
         # some file(s) added, need to update quota usage
-        update_quota_usage(resource)
+        update_quota_usage(res=resource)
     return ret
 
 
@@ -767,7 +854,7 @@ def delete_resource(pk):
             obsolete_res.raccess.save()
 
     # need to update quota usage when a resource is deleted
-    update_quota_usage(res)
+    update_quota_usage(res=res)
 
     res.delete()
     return pk
@@ -799,7 +886,7 @@ def delete_resource_file_only(resource, f):
     short_path = f.short_path
     f.delete()
     # need to update quota usage when a file is deleted
-    update_quota_usage(resource)
+    update_quota_usage(res=resource)
     return short_path
 
 
