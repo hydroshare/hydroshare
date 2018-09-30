@@ -128,6 +128,7 @@ class ParseSQ(object):
         'source',
         'relation',
         'resource_type',
+        'content_type',
         'comment',
         'comments_count',
         'owner_login',

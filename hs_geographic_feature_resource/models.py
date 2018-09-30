@@ -257,6 +257,8 @@ class GeographicFeatureResource(BaseResource):
             hs_term_dict["HS_GFR_FEATURE_COUNT"] = 0
         return hs_term_dict
 
+    discovery_content_type = 'Geographic Feature (ESRI Shapefiles)'  # used during discovery
+
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True

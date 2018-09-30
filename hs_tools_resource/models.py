@@ -18,6 +18,8 @@ from hs_file_types.utils import get_SupportedAggTypes_choices
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
+    discovery_content_type = 'Web App'  # used during discovery
+
     class Meta:
         proxy = True
         verbose_name = 'Web App Resource'

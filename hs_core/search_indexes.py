@@ -108,6 +108,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     source = indexes.MultiValueField()
     relation = indexes.MultiValueField()
     resource_type = indexes.CharField(faceted=True)
+    content_type = indexes.MultiValueField(faceted=True)
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owner_login = indexes.MultiValueField(faceted=True)
@@ -534,6 +535,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_resource_type(self, obj):
         """Resource type is verbose_name attribute of obj argument."""
         return obj.verbose_name
+
+    def prepare_content_type(self, obj):
+        if obj.verbose_name != 'Composite Resource':
+            return [obj.discovery_content_type]
+        else:
+            output = []
+            for f in obj.logical_files:
+                output.append(f.get_discovery_content_type())
+            return output
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""

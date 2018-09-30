@@ -348,6 +348,8 @@ class CellInformation(AbstractMetaDataElement):
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
 
+    discovery_content_type = 'Geographic Raster'  # used during discovery
+
     class Meta:
         verbose_name = 'Geographic Raster'
         proxy = True

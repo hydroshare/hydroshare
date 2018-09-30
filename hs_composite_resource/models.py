@@ -17,6 +17,8 @@ from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoR
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
+    discovery_content_type = 'Composite'  # used during discovery
+
     class Meta:
         verbose_name = 'Composite Resource'
         proxy = True

@@ -430,6 +430,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "TimeSeriesAggregation"
 
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Time Series"
+
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
