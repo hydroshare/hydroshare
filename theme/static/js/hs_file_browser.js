@@ -929,6 +929,9 @@ function startDownload() {
         // Workaround for Firefox and IE
         for (var i = 0; i < downloadList.length; i++) {
             var url = $(downloadList[i]).attr("data-url");
+            var fileName = $(downloadList[i]).children(".fb-file-name").text();
+            if (fileName.toUpperCase().endsWith(".URL"))
+                url += '?url_download=true';
             var frameID = "download-frame-" + i;
             $("body").append("<iframe class='temp-download-frame' id='"
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");

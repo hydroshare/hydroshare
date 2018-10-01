@@ -512,7 +512,11 @@ def file_download_url_mapper(request, shortkey):
     public_file_path = '/'.join(path_split)
     # logger.debug("public_file_path is {}".format(public_file_path))
     istorage = res.get_irods_storage()
-    file_download_url = istorage.url(public_file_path)
+    url_download = request.GET.get('url_download', 'false')
+    if url_download == 'true':
+        file_download_url = istorage.url(public_file_path, url_download=True)
+    else:
+        file_download_url = istorage.url(public_file_path)
     if __debug__:
         logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)

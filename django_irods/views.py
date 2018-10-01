@@ -182,8 +182,11 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if path == f.storage_path:
                     if f.has_logical_file and f.logical_file.is_single_file_aggregation:
                         if 'url' in f.logical_file.extra_data:
-                            redirect_url = f.logical_file.extra_data['url']
-                            return HttpResponseRedirect(redirect_url)
+                            download_url = request.GET.get('url_download', 'false')
+                            if download_url == 'false':
+                                # redirect to referenced url in the url file instead
+                                redirect_url = f.logical_file.extra_data['url']
+                                return HttpResponseRedirect(redirect_url)
                         is_sf_agg_file = True
                         daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                         output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
@@ -458,6 +461,11 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         else:
             response.content = "<h1>" + content_msg + "</h1>"
         return response
+
+
+def url_download(request, path, *args, **kwargs):
+    # download the URL file rather than redirect
+    return download(request, path, url_redirect=False, *args, **kwargs)
 
 
 @api_view(['GET'])

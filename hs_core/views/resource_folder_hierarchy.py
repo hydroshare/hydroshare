@@ -4,7 +4,6 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError
-from django.core.files.base import File
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.decorators import api_view

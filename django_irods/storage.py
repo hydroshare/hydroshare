@@ -286,8 +286,12 @@ class IrodsStorage(Storage):
         stdout = self.session.run("ils", None, "-l", name)[0].split()
         return int(stdout[3])
 
-    def url(self, name):
-        return reverse('django_irods.views.download', kwargs={'path': name})
+    def url(self, name, url_download=False):
+        reverse_url = reverse('django_irods.views.download', kwargs={'path': name})
+        if url_download:
+            return reverse_url + '?url_download=true'
+        else:
+            return reverse_url
 
     def get_available_name(self, name):
         """
