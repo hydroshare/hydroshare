@@ -1112,6 +1112,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
+        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
