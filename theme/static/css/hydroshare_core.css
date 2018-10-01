@@ -4657,3 +4657,9 @@ div#resource-content {
   padding: 9px 14px;
   font-size: 14px;
 }
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
+}
