@@ -198,20 +198,22 @@ $(document).ready(function () {
         profileCard.css("top", ($(this).position().top + 30) + "px");
         profileCard.css("left", ($(this).position().left - 200 + $(this).width()/2) + "px");
 
-        var fields = ["name", "email", "country", "state", "organization", "title", "joined", "contributions"];
+        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
 
         resetProfilePreview(profileCard);
-        var data = $(this).data();
+        // var data = $(this).data().clone();
+        var data = jQuery.extend({}, $(this).data())
 
         // Populate subject areas
         var areas = data.subjectareas.split(",");
         for (var i = 0; i < areas.length; i++) {
-            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ")
+            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ");
         }
 
         // Populate profile button url
         profileCard.find("[data-name]").attr("href", data.profileUrl);
+        profileCard.find("[data-url]").attr("href", data.profileUrl);
 
         // Populate profile picture
         var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
@@ -224,14 +226,44 @@ $(document).ready(function () {
             pic.css("background-image", "none");
         }
 
+        // Toggle wrappers visibility:
+
+        // State and Country
+        if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
+            $("#location-wrapper").show();
+        }
+
+        // Show a comma if both State and Country are listed
+        if ((data["country"] && data["country"] != "Unspecified") && (data["state"] && data["state"] != "Unspecified")) {
+            data["state"] += "&nbsp;,";
+        }
+
+        // Organization and Title
+        if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
+            $("#org-wrapper").show();
+        }
+
+        // Show a separator if both Organization and Title are listed
+        if ((data["organization"] && data["organization"] != "Unspecified") && (data["title"] && data["title"] != "Unspecified")) {
+            data["organization"] += " | ";
+        }
+
         // Rest of the fields
         for (var item in data) {
             if ($.inArray(item, fields) != -1) {
-                profileCard.find("[data-" + item + "]").text(data[item].trim());
+                var content = data[item];
+                var field = profileCard.find("[data-" + item + "]");
+                if (content && content != "Unspecified") {
+                    field.text(content);
+                }
+                else {
+                    profileCard.find("#" + item + "-wrapper").hide();
+                }
             }
             else if ($.inArray(item, identifiers) != -1) {
                 var ident = profileCard.find("[data-" + item + "]");
                 ident.show();
+                $("#externalprofiles-wrapper").show();
                 ident.attr("href", data[item]);
             }
         }
@@ -239,10 +271,14 @@ $(document).ready(function () {
 
     function resetProfilePreview(profileCard) {
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        fields.forEach(function(f) {
-           profileCard.find("[data-" + f + "]").text("");
+        fields.forEach(function (f) {
+            profileCard.find("[data-" + f + "]").text("");
+            profileCard.find("#" + f + "-wrapper").show();
         });
         profileCard.find(".identifier-icon").hide();
+        $("#externalprofiles-wrapper").hide();
+        $("#location-wrapper").hide();
+        $("#org-wrapper").hide();
     }
 
     // Abstract collapse toggle

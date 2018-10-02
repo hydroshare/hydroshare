@@ -9,6 +9,7 @@
    data-email="{{ user.email }}"
    data-organization="{{ user.userprofile.organization }}"
    data-title="{{ user.userprofile.title }}"
+   data-contributions="{{ user.contributions }}"
    data-subjectareas="{{ user.userprofile.subject_areas }}"
         {% for name, link in user.userprofile.identifiers.items %}
    data-{{ name }}="{{ link }}"

@@ -99,9 +99,8 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     border-right: 1px solid #DDD;
 }
 
-.profile-card .profile-pic {
-    width: 100px;
-    height: 100px;
+.profile-card .dropdown-profile-pic-thumbnail{
+    margin-right: 0;
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {

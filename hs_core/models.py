@@ -2221,7 +2221,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             raise ObjectDoesNotExist
         else:
             if self.readme_file.extension.lower() == '.md':
-                return markdown(self.readme_file.read())
+                return markdown(self.readme_file.read().decode('utf-8'))
             else:
                 return self.readme_file.read()
 
