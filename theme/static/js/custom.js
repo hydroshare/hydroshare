@@ -203,7 +203,7 @@ $(document).ready(function () {
 
         resetProfilePreview(profileCard);
         // var data = $(this).data().clone();
-        var data = jQuery.extend({}, $(this).data())
+        var data = jQuery.extend({}, $(this).data());
 
         // Populate subject areas
         var areas = data.subjectareas.split(",");
@@ -230,17 +230,17 @@ $(document).ready(function () {
 
         // State and Country
         if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
-            $("#location-wrapper").show();
+            $(".location-wrapper").show();
         }
 
         // Show a comma if both State and Country are listed
         if ((data["country"] && data["country"] != "Unspecified") && (data["state"] && data["state"] != "Unspecified")) {
-            data["state"] += "&nbsp;,";
+            data["state"] += " ,";
         }
 
         // Organization and Title
         if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
-            $("#org-wrapper").show();
+            $(".org-wrapper").show();
         }
 
         // Show a separator if both Organization and Title are listed
@@ -257,13 +257,13 @@ $(document).ready(function () {
                     field.text(content);
                 }
                 else {
-                    profileCard.find("#" + item + "-wrapper").hide();
+                    profileCard.find("." + item + "-wrapper").hide();
                 }
             }
             else if ($.inArray(item, identifiers) != -1) {
                 var ident = profileCard.find("[data-" + item + "]");
                 ident.show();
-                $("#externalprofiles-wrapper").show();
+                $(".externalprofiles-wrapper").show();
                 ident.attr("href", data[item]);
             }
         }
@@ -273,12 +273,12 @@ $(document).ready(function () {
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         fields.forEach(function (f) {
             profileCard.find("[data-" + f + "]").text("");
-            profileCard.find("#" + f + "-wrapper").show();
+            profileCard.find("." + f + "-wrapper").show();
         });
         profileCard.find(".identifier-icon").hide();
-        $("#externalprofiles-wrapper").hide();
-        $("#location-wrapper").hide();
-        $("#org-wrapper").hide();
+        $(".profile-card .externalprofiles-wrapper").hide();
+        $(".profile-card .location-wrapper").hide();
+        $(".profile-card .org-wrapper").hide();
     }
 
     // Abstract collapse toggle

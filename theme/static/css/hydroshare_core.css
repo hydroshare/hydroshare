@@ -4720,12 +4720,6 @@ div#resource-content {
     background: #FFF;
 }
 
-.profile-badge-header {
-    background: #ECECEC;
-    height: 100px;
-    border-radius: 4px 4px 0 0
-}
-
 #profile-preview-modal .profile-pic:before {
     font-size: 130px;
     width: 150px;
@@ -4735,14 +4729,6 @@ div#resource-content {
     border: 7px solid #DDD;
     border-radius: 50%;
     color: #2D9EB3
-}
-
-#profile-preview-modal .external-profiles {
-    display: inline-block;
-    position: relative;
-    float: right;
-    top: 120px;
-    right: 26px
 }
 
 .external-profiles .identifier-icon i, .external-profiles .identifier-icon img {
@@ -4804,15 +4790,12 @@ div#resource-content {
     width: 28px;
     display: inline-block;
     margin: 0 8px 0 0;
+    vertical-align: middle;
 }
 
 .external-profiles .fa-address-card {
     width: initial !important;
     padding-right: 2px
-}
-
-#profile-preview-modal .external-profiles, .identifier-icon img {
-    margin-top: -11px !important
 }
 
 #table-stats .fa {
