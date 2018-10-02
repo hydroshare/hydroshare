@@ -784,6 +784,7 @@ def add_resource_files(pk, *files, **kwargs):
                 if not res_file.has_logical_file:
                     set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                           fail_feedback=False)
+        utils.check_aggregations(resource, new_folders, ret)
         # some file(s) added, need to update quota usage
         update_quota_usage(res=resource)
     return ret

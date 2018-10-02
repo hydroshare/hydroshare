@@ -253,7 +253,7 @@ function updateSelectionMenuContext() {
             if (!fileName.toUpperCase().endsWith("ZIP")) {
                 flagDisableUnzip = true;
             }
-            if ((!fileName.toUpperCase().endsWith("TIF") && !fileName.toUpperCase().endsWith("ZIP")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith("TIF")) || logicalFileType != "") {
                 flagDisableSetGeoRasterFileType = true;
             }
 
@@ -261,7 +261,7 @@ function updateSelectionMenuContext() {
                 flagDisableSetNetCDFFileType = true;
             }
 
-            if ((!fileName.toUpperCase().endsWith("SHP") && !fileName.toUpperCase().endsWith("ZIP")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith("SHP")) || logicalFileType != "") {
                 flagDisableSetGeoFeatureFileType = true;
             }
             if (!fileName.toUpperCase().endsWith("REFTS.JSON")  || logicalFileType != "") {
