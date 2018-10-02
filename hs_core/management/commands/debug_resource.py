@@ -23,7 +23,8 @@ def debug_resource(short_id):
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
-    print("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name))
+    print("resource creator: {} {}".format(resource.creator.first_name.encode('ascii', 'replace'),
+                                           resource.creator.last_name.encode('ascii', 'replace')))
     print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
     print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
     print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
