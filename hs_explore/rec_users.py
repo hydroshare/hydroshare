@@ -21,7 +21,7 @@ class RecommendUsers(TemplateView):
             gk = str(self.request.GET['genre_key'])
             gv = str(self.request.GET['genre_value'])
 
-            recommended_users = RecommendedUser.filter(user=target_user)
+            recommended_users = RecommendedUser.objects.filter(user=target_user)
             recommended_users.delete()
 
             rpp = PropensityPreferences.objects.get(user=target_user)
