@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     if count:
                         print("... affected resource {} has type {}, title '{}'"
                               .format(resource.short_id, resource.resource_type,
-                                      resource.title.encode('ascii', 'replace')))
+                                      resource.title.value.encode('ascii', 'replace')))
                 _, count = resource.check_irods_files(stop_on_error=False,
                                                       echo_errors=True,
                                                       log_errors=False,
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                 if count:
                     print("... affected resource {} has type {}, title '{}'"
                           .format(resource.short_id, resource.resource_type,
-                                  resource.title.encode('ascii', 'replace')))
+                                  resource.title.value.encode('ascii', 'replace')))
 
             # NOT NEEDED after composite resource phase II
             # if resource.resource_type == 'CompositeResource':
@@ -115,7 +115,7 @@ class Command(BaseCommand):
             if count:
                 print("... affected resource {} has type {}, title '{}'"
                       .format(resource.short_id, resource.resource_type,
-                              resource.title.encode('ascii', 'replace')))
+                              resource.title.value.encode('ascii', 'replace')))
 
         else:  # check all resources
             print("REPAIRING ALL RESOURCES")
@@ -130,7 +130,7 @@ class Command(BaseCommand):
                         logger.error(msg)
                     msg = "... affected resource {} has type {}, title '{}'"\
                           .format(r.short_id, r.resource_type,
-                                  r.title.encode('ascii', 'replace'))
+                                  r.title.value.encode('ascii', 'replace'))
                     if log_errors:
                         logger.info(msg)
                     if echo_errors:
@@ -153,7 +153,7 @@ class Command(BaseCommand):
                     if count:
                         print("... affected resource {} has type {}, title '{}'"
                               .format(resource.short_id, resource.resource_type,
-                                      resource.title.encode('ascii', 'replace')))
+                                      resource.title.value.encode('ascii', 'replace')))
 
                 # clean up Django references to non-existent iRODS files
                 _, count = resource.check_irods_files(stop_on_error=False,
@@ -166,7 +166,7 @@ class Command(BaseCommand):
                 if count:
                     print("... affected resource {} has type {}, title '{}'"
                           .format(resource.short_id, resource.resource_type,
-                                  resource.title.encode('ascii', 'replace')))
+                                  resource.title.value.encode('ascii', 'replace')))
 
                 # NOT NEEDED after composite resource phase II
                 # if resource.resource_type == 'CompositeResource':
@@ -181,4 +181,4 @@ class Command(BaseCommand):
                 if count:
                     print("... affected resource {} has type {}, title '{}'"
                           .format(resource.short_id, resource.resource_type,
-                                  resource.title.encode('ascii', 'replace')))
+                                  resource.title.value.encode('ascii', 'replace')))
