@@ -502,18 +502,20 @@ def file_download_url_mapper(request, shortkey):
                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                               raises_exception=False)
     except ObjectDoesNotExist:
-        return HTTPResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
+        return HttpResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
     except PermissionDenied:
-        return HTTPResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
+        return HttpResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
-    istorage = res.get_irods_storage()
     if __debug__:
         logger.debug("request path is {}".format(request.path))
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
     # logger.debug("public_file_path is {}".format(public_file_path))
     istorage = res.get_irods_storage()
-    file_download_url = istorage.url(public_file_path)
+    if request.GET.get('zipped', "False") == "True":
+        file_download_url = istorage.url(public_file_path) + "?zipped=True"
+    else:
+        file_download_url = istorage.url(public_file_path)
     if __debug__:
         logger.debug("redirect is {}".format(file_download_url))
     return HttpResponseRedirect(file_download_url)
@@ -1495,7 +1497,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
 
 @login_required
 def get_file(request, *args, **kwargs):
-    from django_irods.icommands import RodsSession
+    from django_irods.icommands import Session as RodsSession
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
     session.runCmd("iinit")

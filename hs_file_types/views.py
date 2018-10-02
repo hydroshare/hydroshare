@@ -745,7 +745,6 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@login_required
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
     Gets metadata html for the logical file type
@@ -762,6 +761,16 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+
+    from hs_core.views.utils import authorize
+    from rest_framework.exceptions import PermissionDenied
+    if not logical_file.resource.raccess.public:
+        if request.user.is_authenticated:
+            authorize(request, logical_file.resource.short_id,
+                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        else:
+            raise PermissionDenied()
+
     if json_response is not None:
         return json_response
 

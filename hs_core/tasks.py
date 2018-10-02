@@ -324,7 +324,7 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
+def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
@@ -334,32 +334,24 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
     res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
-    # update metadata files here, in background
-    if res.resource_type == "CompositeResource":
-        if '/data/contents/' in input_path:
-            short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
-            res.create_aggregation_xml_documents(aggregation_name=short_path)
-        else:  # all metadata included, e.g., /data/*
-            res.create_aggregation_xml_documents()
-
     try:
-        if sf_aggregation:
-            # input path points to single file
-            # ensure that foo.zip contains foo, foo/file1, foo/file2, foo/file3
+        if sf_zip:
+            # input path points to single file aggregation
+            # ensure that foo.zip contains aggregation metadata
             # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-            temp_folder_name, ext = os.path.splitext(output_path)  # strip .zip to get scratch dir
+            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
             head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
             out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
             istorage.copyFiles(input_path, out_with_folder)
-            try:
-                istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
-            except SessionException:
-                logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
-            try:
-                istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
-            except SessionException:
-                logger.error("cannot copy {}".format(input_path + '_meta.xml'))
-
+            if sf_aggregation:
+                try:
+                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                try:
+                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
             istorage.zipup(temp_folder_name, output_path)
             istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
         else:  # regular folder to zip
