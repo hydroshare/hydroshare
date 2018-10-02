@@ -2479,7 +2479,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if ecount > 0:  # print information about the affected resource (not really an error)
             msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
-                .format(self.short_id, self.resource_type, self.metadata.title.value)
+                .format(self.short_id, self.resource_type,
+                        self.metadata.title.encode('ascii', 'replace'))
             if log_actions:
                 logger.info(msg)
             if echo_actions:
@@ -2630,7 +2631,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if ecount > 0:  # print information about the affected resource (not really an error)
             msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
-                .format(self.short_id, self.resource_type, self.metadata.title.value)
+                .format(self.short_id, self.resource_type,
+                        self.metadata.title.encode('ascii', 'replace'))
             if log_errors:
                 logger.error(msg)
             if echo_errors:

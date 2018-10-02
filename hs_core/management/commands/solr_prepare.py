@@ -13,7 +13,7 @@ from pprint import pprint
 def debug_harvest():
     ind = BaseResourceIndex()
     for obj in BaseResource.objects.all():
-        print ("TESTING RESOURCE {}".format(obj.metadata.title))
+        print ("TESTING RESOURCE {}".format(obj.metadata.title.value.encode('ascii', 'ignore')))
         print('sample_medium')
         pprint(ind.prepare_sample_medium(obj))
         print('creator')

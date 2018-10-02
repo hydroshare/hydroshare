@@ -75,7 +75,8 @@ class Command(BaseCommand):
                         if echo_errors:
                             print(msg)
                         msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(r.short_id, r.resource_type, r.title)
+                              .format(r.short_id, r.resource_type,
+                                      r.title.encode('ascii', 'replace'))
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
@@ -91,7 +92,7 @@ class Command(BaseCommand):
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type,
-                                      resource.title)
+                                      resource.title.encode('ascii', 'replace'))
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
@@ -119,7 +120,8 @@ class Command(BaseCommand):
                         if echo_errors:
                             print(msg)
                         msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(r.short_id, r.resource_type, r.title)
+                              .format(r.short_id, r.resource_type,
+                                      r.title.encode('ascii', 'replace'))
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
@@ -134,7 +136,8 @@ class Command(BaseCommand):
                                                   return_errors=False)
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(resource.short_id, resource.resource_type, resource.title)
+                              .format(resource.short_id, resource.resource_type,
+                                      resource.title.encode('ascii', 'replace'))
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:

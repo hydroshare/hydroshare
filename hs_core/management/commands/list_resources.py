@@ -38,12 +38,13 @@ def measure_resource(short_id):
 
     if istorage.exists(resource.file_path):
         print("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
-                                         resource.resource_type, resource.title))
+                                         resource.resource_type,
+                                         resource.title.encode('ascii', 'replace')))
     else:
         print("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
                                                         resource.storage_type,
                                                         resource.resource_type,
-                                                        resource.title))
+                                                        resource.title.encode('ascii', 'replace')))
 
 
 class Command(BaseCommand):
