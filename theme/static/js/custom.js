@@ -276,6 +276,10 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
+    $(".profile-card").click(function (e) {
+        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
+    });
+
     function resetProfilePreview(profileCard) {
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         fields.forEach(function (f) {

@@ -8,30 +8,19 @@
                     <tr>
                         <th>Authors:</th>
                         <td id="authors">
-                            {% for cr in creators %}
+                            {% for author in creators %}
                                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                                {% if cr.name %}
-                                    {% if cr.description %}
-                                        <a class="author-preview" data-toggle="modal"
-                                           data-target="#profile-preview-modal" href="#"
-                                           data-name="{{ cr.name }}" data-email="{{ cr.email }}"
-                                           data-organization="{{ cr.organization }}"
-                                           data-title="{{ cr.title }}"
-                                                {% for name, link in cr.supported_identifiers.items %}
-                                           data-{{ name }}="{{ link }}"
-                                                {% endfor %}
-                                           data-state="{{ cr.state }}" data-country="{{ cr.country }}"
-                                           data-profile-url="{{ cr.description }}">
-                                            {{ cr.name }}
-                                        </a>
+                                {% if author.name %}
+                                    {% if author.description %}
+                                        {% include "includes/author-link.html" with author=author %}
                                     {% else %}
-                                        <span>{{ cr.name }}</span>
+                                        <span>{{ author.name }}</span>
                                     {% endif %}
                                     {% else %}{# Author is an organization #}
-                                    {% if cr.homepage %}
-                                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
+                                    {% if author.homepage %}
+                                        <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
                                     {% else %}
-                                        <span>{{ cr.organization }}</span>
+                                        <span>{{ author.organization }}</span>
                                     {% endif %}
                                 {% endif %}
                             {% endfor %}
@@ -156,32 +145,36 @@
                 <td><span id="authors">
                         {% for author in creator_formset.initial %}
                             {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                            {% if author.name %}
-                                {% if author.description %}
-                                    <a href="{{ author.description }}">{{ author.name }}</a>
-                                {% else %}
-                                    <span>{{ author.name }}</span>
-                                {% endif %}
-                            {% else %}{# Author is an organization #}
-                                {% if author.homepage %}
-                                    <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
-                                {% else %}
-                                    <span>{{ author.organization }}</span>
-                                {% endif %}
-                            {% endif %}
+                            <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
+                               data-target="#edit-creator-dialog{{ author.id }}">
+                                    {% if author.name %}{{ author.name }}{% else %}{{ author.organization }}{% endif %}
+                            </a>
                         {% endfor %}
                     </span>
+                    <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
+                       data-target="#add-creator-dialog" multiple="multiple">
+                        <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
+                    </a>
                 </td>
             </tr>
             <tr><th>Owners:</th><td>
                 {% for u in owners %}
                     {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                    <span>{{ u|contact }}</span>
+                    {% include "includes/profile-link.html" with user=u %}
                 {% endfor %}
+                {% include "includes/profile-card.html" %}
             </td></tr>
             <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
             <tr><th>Created: </th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-            <tr><th>Last updated:</th><td>{{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
+            <tr>
+                <th>Last updated:</th>
+                <td>{{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by
+                    {% if cm.last_changed_by %}
+                        {% include "includes/profile-link.html" with user=cm.last_changed_by %}
+                        {% include "includes/profile-card.html" %}
+                    {% endif %}
+                </td>
+            </tr>
         </table>
     </div>
 {% endif %}
