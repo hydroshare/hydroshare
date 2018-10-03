@@ -344,18 +344,16 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
-                        {% if page.perms.change and metadata_form %}
-                            {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
-                                <li id="btn-cut" data-menu-name="cut">
-                                    <span class="fa fa-scissors icon-blue"></span>
-                                    <span>Cut</span>
-                                </li>
-
+                    {% if page.perms.change and metadata_form %}
+                        {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
+                            <li id="btn-cut" data-menu-name="cut">
+                                <span class="fa fa-scissors icon-blue"></span>
+                                <span>Cut</span>
+                            </li>
                             <li data-menu-name="paste">
                                 <span class="fa fa-clipboard icon-blue"></span>
                                 <span>Paste</span>
                             </li>
-
                         {% endif %}
 
                         {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
@@ -405,25 +403,29 @@
                         <span>Get file URL</span>
                     </li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                        <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Raster File Type</span>
-                        </li>
-                        <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Multidimensional Data File Type</span>
-                        </li>
-                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Feature File Type</span>
-                        </li>
-                        <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Reference Timeseries File Type</span>
-                        </li>
-                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Timeseries File Type</span>
+                        <li class="dropdown-submenu submenu-trigger">
+                            <span tabindex="-1" class="">
+                                <span class="glyphicon glyphicon-check icon-blue"></span>
+                                Set file type
+                                <span class="caret"></span>
+                            </span>
+                            <ul class="dropdown-menu">
+                                <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
+                                    <span>Geographic Raster</span>
+                                </li>
+                                <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
+                                    <span>Multidimensional Data</span>
+                                </li>
+                                <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
+                                    <span>Geographic Feature</span>
+                                </li>
+                                <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
+                                    <span>Reference Timeseries</span>
+                                </li>
+                                <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
+                                    <span>Timeseries</span>
+                                </li>
+                            </ul>
                         </li>
                     {%  endif %}
                 </ul>

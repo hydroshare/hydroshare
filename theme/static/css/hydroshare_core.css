@@ -4124,6 +4124,20 @@ ul#fb-files-container {
     text-shadow: initial
 }
 
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+}
+
+.dropdown-submenu > * {
+    outline: none;
+}
+
 #fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size, #fb-files-container.fb-view-grid .fb-logical-file-type {
     display: none
 }

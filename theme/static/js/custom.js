@@ -192,6 +192,7 @@ $(document).ready(function () {
         error: showUniversalMessage()
     });
 
+    // Event trigger for profile preview
     $(".profile-preview").click(function () {
         // Move the profile card below the clicked item
         var profileCard = $(this).parent().find(".profile-card");
@@ -267,6 +268,12 @@ $(document).ready(function () {
                 ident.attr("href", data[item]);
             }
         }
+    });
+
+    $(".submenu-trigger").click(function (e) {
+        $(this).next('ul').toggle();
+        e.stopPropagation();
+        e.preventDefault();
     });
 
     function resetProfilePreview(profileCard) {
