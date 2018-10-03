@@ -13,7 +13,10 @@ var drawingManager;
         if ($(this).hasClass("has-coordinates-picker")) {
             return this;
         }
-
+        var selectedItem = $("#fb-files-container li.ui-selected");
+        var logical_type = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type");
+        initMapFileType();
+        var spatial_form = $(this);
         var items = $(this).find("input[data-map-item]");
 
         items.each(function () {
@@ -38,34 +41,95 @@ var drawingManager;
                 '</span>');
 
             item.toggleClass("form-control", true);
+            // Delete previous drawings
+            for (var i = 0; i < allOverlays.length; i++) {
+                allOverlays[i].overlay.setMap(null);
+            }
+
+            allOverlays = [];
 
             // Map trigger event handler
             item.parent().find(".btn-choose-coordinates").click(function () {
+                var btn_choose_coordinates = $(this);
                 currentInstance = item.closest("[data-coordinates-type]");
                 var type = currentInstance.attr("data-coordinates-type");
-
+                // Delete previous drawings
+                for (var i = 0; i < allShapes.length; i++) {
+                    allShapes[i].setMap(null);
+                }
+                allShapes = [];
+                for (var i = 0; i < allOverlays.length; i++) {
+                    allOverlays[i].overlay.setMap(null);
+                }
+                allOverlays = [];
                 // Set the type of controls
-                if (type == "point") {
+                if (type === "point") {
                     drawingManager.drawingControlOptions.drawingModes = [
                         google.maps.drawing.OverlayType.MARKER
                     ];
                     drawingManager.drawingMode = null;  // Set the default hand control
                     drawingManager.setMap(coordinatesPicker);
+                    var lat_field;
+                    var lon_field;
+                    if(logical_type === "TimeSeriesLogicalFile") {
+                        lat_field = spatial_form.find("#id_latitude_filetype");
+                        lon_field = spatial_form.find("#id_longitude_filetype");
+                    }
+                    else {
+                        lat_field = spatial_form.find("#id_north_filetype");
+                        lon_field = spatial_form.find("#id_east_filetype");
+                    }
+                    var myLatLng = {
+                        lat: parseFloat(lat_field.val()),
+                        lng: parseFloat(lon_field.val())
+                    };
+                    if(myLatLng.lat && myLatLng.lng) {
+                        // Define the rectangle and set its editable property to true.
+                        var marker = new google.maps.Marker({
+                            position: myLatLng,
+                            map: coordinatesPicker
+                        });
+                        allShapes.push(marker);
+                        var coordinates = (marker.getPosition());
+                        // Set onClick event for recenter button
+                        processDrawingFileType(coordinates, "marker");
+                        // Center map at new market
+                        coordinatesPicker.setCenter(marker.getPosition());
+                        $("#resetZoomBtn").click(function () {
+                            coordinatesPicker.setCenter(marker.getPosition());
+                        });
+                    }
                 }
-                else if (type == "rectangle") {
+                else if (type === "rectangle") {
                     drawingManager.drawingControlOptions.drawingModes = [
                         google.maps.drawing.OverlayType.RECTANGLE
                     ];
                     drawingManager.drawingMode = null;  // Set the default hand control
                     drawingManager.setMap(coordinatesPicker);
+                    var bounds = {
+                        north: parseFloat(spatial_form.find("#id_northlimit_filetype").val()),
+                        south: parseFloat(spatial_form.find("#id_southlimit_filetype").val()),
+                        east: parseFloat(spatial_form.find("#id_eastlimit_filetype").val()),
+                        west: parseFloat(spatial_form.find("#id_westlimit_filetype").val())
+                    };
+                    if (bounds.north && bounds.south && bounds.east && bounds.west) {
+                        var rectangle = new google.maps.Rectangle({
+                            bounds: bounds,
+                            editable: true,
+                            draggable: true
+                        });
+                        rectangle.setMap(coordinatesPicker);
+                        rectangle.addListener('bounds_changed', function () {
+                            var coordinates = (rectangle.getBounds());
+                            processDrawingFileType(coordinates, "rectangle");
+                        });
+                        allShapes.push(rectangle);
+                        zoomCoverageMap(bounds);
+                        $("#resetZoomBtn").click(function () {
+                            zoomCoverageMap(bounds);
+                        });
+                    }
                 }
-
-                // Delete previous drawings
-                for (var i = 0; i < allOverlays.length; i++) {
-                    allOverlays[i].overlay.setMap(null);
-                }
-
-                allOverlays = [];
 
                 // Set default behavior. It is overridden once coordinates are selected.
                 $("#btn-confirm-coordinates").unbind("click");
@@ -83,7 +147,8 @@ var drawingManager;
     };
 })( jQuery );
 
-$(document).ready(function () {
+
+function initMapFileType() {
     $('#coordinates-picker-modal').on('shown.bs.modal', function () {
         google.maps.event.trigger(coordinatesPicker, 'resize');
     });
@@ -120,75 +185,82 @@ $(document).ready(function () {
     // When a rectangle is drawn
     google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
         var coordinates = (rectangle.getBounds());
-        processDrawing(coordinates, "rectangle");
+        processDrawingFileType(coordinates, "rectangle");
 
         // When this rectangle is modified
         rectangle.addListener('bounds_changed', function () {
             var coordinates = (rectangle.getBounds());
-            processDrawing(coordinates, "rectangle");
+            processDrawingFileType(coordinates, "rectangle");
         });
     });
 
     // When a point is selected
     google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
         var coordinates = (marker.getPosition());
-            processDrawing(coordinates, "marker");
+            processDrawingFileType(coordinates, "marker");
     });
 
     google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
         allOverlays.push(e);
     });
 
-    function processDrawing(coordinates, shape) {
-        // Delete previous drawings
-        if (allOverlays.length > 1) {
-            for (var i = 1; i < allOverlays.length; i++) {
-                allOverlays[i - 1].overlay.setMap(null);
-            }
-            allOverlays.shift();
-        }
 
-        if (shape == "rectangle") {
-            var bounds = {
-                north: parseFloat(coordinates.getNorthEast().lat()),
-                south: parseFloat(coordinates.getSouthWest().lat()),
-                east: parseFloat(coordinates.getNorthEast().lng()),
-                west: parseFloat(coordinates.getSouthWest().lng())
-            };
-
-            $("#btn-confirm-coordinates").unbind("click");
-            $("#btn-confirm-coordinates").click(function () {
-                currentInstance.find("input[data-map-item='northlimit']").val(bounds.north.toFixed(4));
-                currentInstance.find("input[data-map-item='eastlimit']").val(bounds.east.toFixed(4));
-                currentInstance.find("input[data-map-item='southlimit']").val(bounds.south.toFixed(4));
-                currentInstance.find("input[data-map-item='westlimit']").val(bounds.west.toFixed(4));
-
-                // Issue a text change
-                currentInstance.find("input[data-map-item='northlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='eastlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='southlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='westlimit']").trigger("change");
-
-                $('#coordinates-picker-modal').modal('hide')
-            });
-        }
-        else {
-            $("#btn-confirm-coordinates").unbind("click");
-            $("#btn-confirm-coordinates").click(function () {
-                currentInstance.find("input[data-map-item='longitude']").val(coordinates.lng().toFixed(4));
-                currentInstance.find("input[data-map-item='latitude']").val(coordinates.lat().toFixed(4));
-
-                // Issue a text change
-                currentInstance.find("input[data-map-item='longitude']").trigger("change");
-                currentInstance.find("input[data-map-item='latitude']").trigger("change");
-
-                $('#coordinates-picker-modal').modal('hide')
-            });
-        }
-    }
-
-    $(".hs-coordinates-picker").each(function() {
+    $(".has-coordinates-picker").each(function() {
         const instance = $(this);
         instance.coordinatesPicker();
     })
-});
+}
+
+function processDrawingFileType(coordinates, shape) {
+    // Delete previous drawings
+    if (allOverlays.length > 1) {
+        for (var i = 1; i < allOverlays.length; i++) {
+            allOverlays[i - 1].overlay.setMap(null);
+        }
+        allOverlays.shift();
+    }
+    if (allOverlays.length > 0) {
+        for (var i = 0; i < allShapes.length; i++) {
+            allShapes[i].setMap(null);
+        }
+        allShapes = [];
+    }
+
+    if (shape === "rectangle") {
+        var bounds = {
+            north: parseFloat(coordinates.getNorthEast().lat()),
+            south: parseFloat(coordinates.getSouthWest().lat()),
+            east: parseFloat(coordinates.getNorthEast().lng()),
+            west: parseFloat(coordinates.getSouthWest().lng())
+        };
+
+        $("#btn-confirm-coordinates").unbind("click");
+        $("#btn-confirm-coordinates").click(function () {
+            currentInstance.find("input[data-map-item='northlimit']").val(bounds.north.toFixed(4));
+            currentInstance.find("input[data-map-item='eastlimit']").val(bounds.east.toFixed(4));
+            currentInstance.find("input[data-map-item='southlimit']").val(bounds.south.toFixed(4));
+            currentInstance.find("input[data-map-item='westlimit']").val(bounds.west.toFixed(4));
+
+            // Issue a text change
+            currentInstance.find("input[data-map-item='northlimit']").trigger("change");
+            currentInstance.find("input[data-map-item='eastlimit']").trigger("change");
+            currentInstance.find("input[data-map-item='southlimit']").trigger("change");
+            currentInstance.find("input[data-map-item='westlimit']").trigger("change");
+
+            $('#coordinates-picker-modal').modal('hide')
+        });
+    }
+    else {
+        $("#btn-confirm-coordinates").unbind("click");
+        $("#btn-confirm-coordinates").click(function () {
+            currentInstance.find("input[data-map-item='longitude']").val(coordinates.lng().toFixed(4));
+            currentInstance.find("input[data-map-item='latitude']").val(coordinates.lat().toFixed(4));
+
+            // Issue a text change
+            currentInstance.find("input[data-map-item='longitude']").trigger("change");
+            currentInstance.find("input[data-map-item='latitude']").trigger("change");
+
+            $('#coordinates-picker-modal').modal('hide')
+        });
+    }
+}

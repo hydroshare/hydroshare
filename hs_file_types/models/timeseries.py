@@ -179,7 +179,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 with div(cls="row"):
                     with div(cls="col-sm-6 col-xs-12 time-series-forms hs-coordinates-picker",
                              id="site-filetype", data_coordinates_type="point"):
-                        with form(id="id-site-file-type",
+                        with form(id="id-site-file-type", data_coordinates_type='point',
                                   action="{{ site_form.action }}",
                                   method="post", enctype="multipart/form-data"):
                             div("{% crispy site_form %}")

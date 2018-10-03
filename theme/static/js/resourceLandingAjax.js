@@ -1541,7 +1541,7 @@ function updateEditCoverageState() {
 function setFileTypeSpatialCoverageFormFields(logical_type){
     // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
-
+       
     if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
@@ -1552,10 +1552,24 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         }
         $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
         $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
+        if (logical_type === "NetCDFLogicalFile" || logical_type === "GeoRasterLogicalFile"){
+            $("#id-spatial-coverage-file-type").attr('data-coordinates-type', 'rectangle');
+            $("#id-spatial-coverage-file-type").coordinatesPicker();
+            $("#id-origcoverage-file-type").attr('data-coordinates-type', 'rectangle');
+            $("#id-origcoverage-file-type").coordinatesPicker();
+        }
     }
     else {
         // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
+        // set spatial form attribute 'data-coordinates-type' to point or rectangle
+        if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked"){
+            $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'rectangle');
+        }
+        else {
+            $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'point');
+        }
+        $("#id-coverage-spatial-filetype").coordinatesPicker();
     }
 
     // #id_type_1 is the box radio button
