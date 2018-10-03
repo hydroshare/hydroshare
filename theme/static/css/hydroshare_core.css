@@ -988,6 +988,10 @@ li.account p {
     margin: 0 4px;
 }
 
+.authors-wrapper.sortable span:last-child a {
+    margin-right: 10px;
+}
+
 .contact-table td:last-child {
     width: calc(20% - 20px)
 }
@@ -1037,8 +1041,17 @@ li.account p {
     margin-top: 20px
 }
 
-table.info-table td {
+table.info-table > tbody > tr > td {
     padding-left: 15px
+}
+
+.res-header table.info-table > tbody > tr > th {
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.res-header table.info-table > tbody > tr > td {
+    padding-bottom: 8px;
 }
 
 table.info-table {
@@ -2847,7 +2860,6 @@ span.you-flag {
 
 #btn-add-new-author {
     height: 25px;
-    margin-left: 10px;
 }
 
 #resource-search-input, #id_q {

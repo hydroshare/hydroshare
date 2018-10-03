@@ -5,15 +5,19 @@
 {% if is_owner_user %}
     <div class="col-sm-12 content-block">
         <h5>The quota holder of this resource is:
-            {% if quota_holder|default_if_none:'' %}
-                {% if quota_holder.first_name %}
-                    <a href='/user/{{ quota_holder.pk }}/'
-                               target="_blank">{{ quota_holder.first_name }} {{ quota_holder.last_name }}</a>
-                {% else %}
-                    <a href='/user/{{ quota_holder.pk }}/'
-                               target="_blank">{{ quota_holder.username }}</a>
-                {% endif %}
-            {% endif %}
+{#            {% if quota_holder|default_if_none:'' %}#}
+{#                {% if quota_holder.first_name %}#}
+{#                    <a href='/user/{{ quota_holder.pk }}/'#}
+{#                               target="_blank">{{ quota_holder.first_name }} {{ quota_holder.last_name }}</a>#}
+{#                {% else %}#}
+{#                    <a href='/user/{{ quota_holder.pk }}/'#}
+{#                               target="_blank">{{ quota_holder.username }}</a>#}
+{#                {% endif %}#}
+{#            {% endif %}#}
+
+
+            {% include "includes/profile-link.html" with user=quota_holder %}
+            {% include "includes/profile-card.html" %}
         </h5>
     </div>
     {% if metadata_form and owners|length > 1 %}
