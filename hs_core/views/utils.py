@@ -664,7 +664,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=True):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -689,6 +689,15 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     zip_fname = os.path.basename(zip_with_rel_path)
     unzip_path = istorage.unzip(zip_with_full_path)
     link_irods_folder_to_django(resource, istorage, unzip_path)
+
+    if overwrite:
+        listing = istorage.listdir(unzip_path)
+        listing_with_path = []
+        parent_dir = os.path.dirname(zip_with_rel_path)
+        for f in listing[0] + listing[1]:
+            listing_with_path.append(os.path.join(unzip_path, f).split(res_id + "/")[1])
+        move_to_folder(user, res_id, listing_with_path, parent_dir)
+        istorage.delete(unzip_path)
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
