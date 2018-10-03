@@ -1431,10 +1431,10 @@ class AbstractLogicalFile(models.Model):
             child_ore_aggr = Aggregation(res_uri)
             child_ore_aggregations.append(child_ore_aggr)
             child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
-            agg_type_url = "{site}/terms/{aggr_type}"
-            agg_type_url = agg_type_url.format(site=current_site_url,
-                                               aggr_type=child_aggr.get_aggregation_type_name())
-            child_ore_aggregations[n]._dcterms.type = URIRef(agg_type_url)
+            child_agg_type_url = "{site}/terms/{aggr_type}"
+            child_agg_type_url = child_agg_type_url.format(
+                site=current_site_url, aggr_type=child_aggr.get_aggregation_type_name())
+            child_ore_aggregations[n]._dcterms.type = URIRef(child_agg_type_url)
 
         # Add contained aggregations to the aggregation
         for aggr in child_ore_aggregations:
