@@ -264,20 +264,13 @@ $(document).ready(function () {
             else if ($.inArray(item, identifiers) != -1) {
                 var ident = profileCard.find("[data-" + item + "]");
                 ident.show();
-                $(".externalprofiles-wrapper").show();
+                var wrapper = profileCard.find(".externalprofiles-wrapper");
                 ident.attr("href", data[item]);
+                if (wrapper.hasClass("hidden")) {
+                    profileCard.find(".externalprofiles-wrapper").show();
+                }
             }
         }
-    });
-
-    $(".submenu-trigger").click(function (e) {
-        $(this).next('ul').toggle();
-        e.stopPropagation();
-        e.preventDefault();
-    });
-
-    $(".profile-card").click(function (e) {
-        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
     });
 
     function resetProfilePreview(profileCard) {
@@ -291,6 +284,65 @@ $(document).ready(function () {
         $(".profile-card .location-wrapper").hide();
         $(".profile-card .org-wrapper").hide();
     }
+
+    $(".author-preview").click(function() {
+        resetAuthorPreview();
+        var preview = $("#view-author-modal");
+        var data = jQuery.extend({}, $(this).data());
+        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+        var fields = ["name", "organization", "email", "address", "phone"];
+
+        // If entry is an organization, hide name and profile rows
+        preview.find("[data-name]").closest("tr").toggleClass("hidden", !data["name"]);
+        preview.find("[data-profileurl]").closest("tr").toggleClass("hidden", !data["profileurl"]);
+
+        // Populate profile url
+        if (data["profileurl"]) {
+            preview.find("[data-profileurl]").attr("href", data["profileurl"]);
+            preview.find("[data-profileurl]").text(data["profileurl"])
+        }
+        delete data["profileurl"];
+
+        // Populate homepage url
+        if (data["homepage"]) {
+            preview.find("[data-homepage]").attr("href", data["homepage"]);
+            preview.find("[data-homepage]").text(data["homepage"]);
+            preview.find("[data-homepage]").show();
+        }
+        delete data["homepage"];
+
+        // Populate rest of the fields
+        for (var item in data) {
+            if ($.inArray(item, fields) != -1) {
+                var content = data[item];
+                var field = preview.find("[data-" + item + "]");
+                field.text(content);
+            }
+            else if ($.inArray(item, identifiers) != -1) {
+                var ident = preview.find("[data-" + item + "]");
+                ident.show();
+                preview.find(".externalprofiles-wrapper").show();
+                ident.attr("href", data[item]);
+            }
+        }
+    });
+
+    function resetAuthorPreview(){
+        var preview = $("#view-author-modal");
+        preview.find(".identifier-icon").hide();
+        preview.find("[data-name]").parent().show();
+        preview.find("[data-profileurl]").parent().show();
+    }
+
+    $(".submenu-trigger").click(function (e) {
+        $(this).next('ul').toggle();
+        e.stopPropagation();
+        e.preventDefault();
+    });
+
+    $(".profile-card").click(function (e) {
+        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
+    });
 
     // Abstract collapse toggle
     $(".toggle-abstract").click(function () {

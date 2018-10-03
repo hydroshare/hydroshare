@@ -980,12 +980,12 @@ li.account p {
     table-layout: fixed
 }
 
-.contact-table .drag-indicator > i {
-    color: #777
-}
-
-.contact-table td.drag-indicator, .contact-table th.drag-indicator {
-    width: 45px
+.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child) a::before,
+.owners-wrapper > a:not(:first-child)::before {
+    content: "·";
+    color: #333;
+    display: inline-block;
+    margin: 0 4px;
 }
 
 .contact-table td:last-child {

@@ -7,14 +7,14 @@
     {{ user.username }}
     {% endif %}"
    data-email="{{ user.email }}"
-   data-organization="{{ user.userprofile.organization }}"
-   data-title="{{ user.userprofile.title }}"
+   data-organization="{{ user.userprofile.organization|default:"" }}"
+   data-title="{{ user.userprofile.title|default:"" }}"
    data-contributions="{{ user.contributions }}"
-   data-subjectareas="{{ user.userprofile.subject_areas }}"
+   data-subjectareas="{{ user.userprofile.subject_areas|default:"" }}"
         {% for name, link in user.userprofile.identifiers.items %}
    data-{{ name }}="{{ link }}"
         {% endfor %}
-   data-state="{{ user.userprofile.state }}" data-country="{{ user.userprofile.country }}"
+   data-state="{{ user.userprofile.state|default:"" }}" data-country="{{ user.userprofile.country|default:"" }}"
    data-joined="{{ user.date_joined|date:"M d, Y" }}"
         {% if user.userprofile.picture %}
    data-profile-picture="{{ user.userprofile.picture.url }}"

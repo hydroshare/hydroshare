@@ -7,30 +7,16 @@
                 <table class="info-table">
                     <tr>
                         <th>Authors:</th>
-                        <td id="authors">
+                        <td class="authors-wrapper">
                             {% for author in creators %}
-                                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                                {% if author.name %}
-                                    {% if author.description %}
-                                        {% include "includes/author-link.html" with author=author %}
-                                    {% else %}
-                                        <span>{{ author.name }}</span>
-                                    {% endif %}
-                                    {% else %}{# Author is an organization #}
-                                    {% if author.homepage %}
-                                        <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
-                                    {% else %}
-                                        <span>{{ author.organization }}</span>
-                                    {% endif %}
-                                {% endif %}
+                                {% include "includes/author-link.html" with author=author %}
                             {% endfor %}
                         </td>
                     </tr>
                     <tr class="info-collapsible">
                         <th>Owners:</th>
-                        <td>
+                        <td class="owners-wrapper">
                             {% for u in owners %}
-                                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                                 {% include "includes/profile-link.html" with user=u %}
                             {% endfor %}
                             {% include "includes/profile-card.html" %}
@@ -142,28 +128,71 @@
         <table class="info-table">
             <tr>
                 <th>Authors:</th>
-                <td><span id="authors">
+                <td>
+                    <span class="authors-wrapper sortable">
                         {% for author in creator_formset.initial %}
-                            {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                            <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
-                               data-target="#edit-creator-dialog{{ author.id }}">
-                                    {% if author.name %}{{ author.name }}{% else %}{{ author.organization }}{% endif %}
-                            </a>
+                            <span>
+                                {% if author.name %}
+                                    <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
+                                       data-target="#edit-creator-dialog{{ author.id }}">
+                                        {{ author.name }}
+                                    </a>
+                                {% else %}
+                                    <a data-toggle="modal" data-placement="auto" title="Edit {{ author.organization }}"
+                                       data-target="#edit-creator-dialog{{ author.id }}">
+                                        {{ author.organization }}
+                                    </a>
+                                {% endif %}
+
+                                <form class="hidden-form"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                      enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input name="resource-mode" type="hidden" value="edit">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                           value="{% if author.name %}{{ author.name }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                           value="{% if author.description %}{{ author.description }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
+                                           value="{% if author.organization %}{{ author.organization }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                           value="{% if author.email %}{{ author.email }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                           value="{% if author.address %}{{ author.address }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                           type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+
+                                    <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
+                                           value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
+
+                                    <input class="order-input"
+                                           name="creator-{{ author.order|add:"- 1" }}-order"
+                                           type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
+                                </form>
+                             </span>
                         {% endfor %}
                     </span>
                     <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
-                       data-target="#add-creator-dialog" multiple="multiple">
+                       data-target="#add-creator-dialog">
                         <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
                     </a>
                 </td>
             </tr>
-            <tr><th>Owners:</th><td>
+            <tr>
+                <th>Owners:</th>
+                <td class="owners-wrapper">
                 {% for u in owners %}
-                    {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                     {% include "includes/profile-link.html" with user=u %}
                 {% endfor %}
                 {% include "includes/profile-card.html" %}
-            </td></tr>
+                </td>
+            </tr>
             <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
             <tr><th>Created: </th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
             <tr>

@@ -415,10 +415,10 @@ $(document).ready(function () {
         update_download_status(task_id, download_path);
     }
 
-    $('.contact-table .sortable').sortable({
-        axis: "y",
+    $('.authors-wrapper.sortable').sortable({
+        axis: "x",
         stop: function( event, ui ) {
-            var forms = $("#authors-table .drag-indicator > form");
+            var forms = $(".authors-wrapper.sortable form");
 
             // Set the new order value in the form items
             for (var i = 0; i < forms.length; i++) {
@@ -426,7 +426,7 @@ $(document).ready(function () {
                 $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
             }
 
-            $form = $(ui.item.find(".drag-indicator > form"));
+            $form = $(ui.item.find("form"));
             var url = $form.attr('action');
             var datastring = $form.serialize();
             $("html").css("cursor", "progress");
@@ -435,9 +435,8 @@ $(document).ready(function () {
                 type: "POST",
                 url: url,
                 data: datastring,
-                success: function (result) {
+                success: function () {
                     $("html").css("cursor", "initial");
-
                 },
                 error: function (xhr, errmsg, err) {
                     $("html").css("cursor", "initial");
