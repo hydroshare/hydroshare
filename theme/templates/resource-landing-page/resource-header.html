@@ -13,7 +13,7 @@
                         {% endfor %}
                     </td>
                     {% else %}
-                    <td>
+                    <td>lorem50
                         <span class="authors-wrapper sortable">
                             {% for author in creator_formset.initial %}
                                 <span>
@@ -99,14 +99,16 @@
                         {% include "includes/profile-card.html" %}
                     </td>
                 </tr>
+                {% if cm.resource_type == "CompositeResource" %}
                 <tr class="info-collapsible">
                     <th>Content types:</th>
                     <td>
-{#                        TODO: EXPOSE CONTENT TYPES#}
+                        {# TODO: EXPOSE CONTENT TYPES#}
                         <span class="label label-info">Time Series</span>&nbsp;
                         <span class="label label-info">Geographic Feature</span>&nbsp;
                     </td>
                 </tr>
+                {% endif %}
             </table>
         </div>
         <div class="col-sm-12 col-md-6 res-header">
