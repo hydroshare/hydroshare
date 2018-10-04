@@ -1892,6 +1892,28 @@ a.tag:hover {
         overflow: hidden;
         background-color: #999
     }
+
+    .fb-content-wrapper {
+        flex-direction: column;
+    }
+
+    .fb-dropzone-wrapper {
+        width: 100% !important;
+        max-height: 400px !important;
+        overflow: auto !important;
+    }
+
+    #fb-metadata {
+        border-top: 1px solid #DDD;
+        max-height: 400px;
+        overflow: auto;
+    }
+
+    #fb-metadata-helper, .fb-dropzone-wrapper .ui-resizable-handle {
+        display: none !important;
+    }
+
+
 }
 
 .bs-sidebar {
@@ -4215,11 +4237,12 @@ span.fb-control-square {
 
 div.fb-upload-caption {
     padding: 8px;
-    border: 1px solid #DDD;
-    border-top: 0;
     color: #555;
     margin-bottom: 20px;
-    padding-bottom: 20px
+    background: #f8f8f8;
+    padding-bottom: 20px;
+    border: 1px solid #DDD;
+    border-top: 0;
 }
 
 div.fb-upload-caption a {
