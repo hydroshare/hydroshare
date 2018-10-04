@@ -19,8 +19,10 @@ from django_irods.icommands import SessionException
 def check_bag(rid, options):
     requests.packages.urllib3.disable_warnings()
     try:
-        resource = BaseResource.objects.get(short_id=rid)
+        res = BaseResource.objects.get(short_id=rid)
+        resource = res.get_content_model()
         istorage = resource.get_irods_storage()
+        assert resource, (res, res.content_model)
 
         root_exists = istorage.exists(resource.root_path)
 
