@@ -1,152 +1,123 @@
 {% load hydroshare_tags %}
 
-{% if not metadata_form %}
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12 col-md-6 res-header">
-                <table class="info-table">
-                    <tr>
-                        <th>Authors:</th>
-                        <td class="authors-wrapper">
-                            {% for author in creators %}
-                                {% include "includes/author-link.html" with author=author %}
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    <tr class="info-collapsible">
-                        <th>Owners:</th>
-                        <td class="owners-wrapper">
-                            {% for u in owners %}
-                                {% include "includes/profile-link.html" with user=u %}
-                            {% endfor %}
-                            {% include "includes/profile-card.html" %}
-                        </td>
-                    </tr>
-                    <tr class="info-collapsible">
-                        <th>Resource type:</th>
-                        <td>{{ cm|resource_type }}</td>
-                    </tr>
-                    <tr class="info-collapsible">
-                        <th>Created:</th>
-                        <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
-                    </tr>
-                    <tr class="info-collapsible">
-                        <th>Last updated:</th>
-                        <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
-                            {% if cm.last_changed_by %} by
-                                {% include "includes/profile-link.html" with user=cm.last_changed_by %}
-                            {% endif %}
-                            {% include "includes/profile-card.html" %}
-                        </td>
-                    </tr>
-                    <tr class="info-collapsible">
-                        <th>Content types:</th>
-                        <td>
-                            <span class="label label-info">Time Series</span>&nbsp;
-                            <span class="label label-info">Geographic Feature</span>&nbsp;
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-sm-12 col-md-6 res-header">
-                {% include "resource-landing-page/highlights.html" %}
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-12 col-md-12">
-                <a id="stats-toggle" href="#" class="show-more-btn btn-default"
-                   title="Show less" style="text-decoration: none;">▲</a>
-            </div>
-        </div>
-    </div>
-{% else %}
-    <div class="col-sm-12 col-md-6 res-header">
-        <table class="info-table">
-            <tr>
-                <th>Authors:</th>
-                <td>
-                    <span class="authors-wrapper sortable">
-                        {% for author in creator_formset.initial %}
-                            <span>
-                                {% if author.name %}
-                                    <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
-                                       data-target="#edit-creator-dialog{{ author.id }}">
-                                        {{ author.name }}
-                                    </a>
-                                {% else %}
-                                    <a data-toggle="modal" data-placement="auto" title="Edit {{ author.organization }}"
-                                       data-target="#edit-creator-dialog{{ author.id }}">
-                                        {{ author.organization }}
-                                    </a>
-                                {% endif %}
-
-                                <form class="hidden-form"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                                      enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input name="resource-mode" type="hidden" value="edit">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                           value="{% if author.name %}{{ author.name }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                           value="{% if author.description %}{{ author.description }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                           value="{% if author.organization %}{{ author.organization }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                           value="{% if author.email %}{{ author.email }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                           value="{% if author.address %}{{ author.address }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                           type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
-
-                                    <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                           value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
-
-                                    <input class="order-input"
-                                           name="creator-{{ author.order|add:"- 1" }}-order"
-                                           type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
-                                </form>
-                             </span>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-6 res-header">
+            <table class="info-table">
+                <tr>
+                    <th>Authors:</th>
+                     {% if not metadata_form %}
+                    <td class="authors-wrapper">
+                        {% for author in creators %}
+                            {% include "includes/author-link.html" with author=author %}
                         {% endfor %}
-                        <span data-toggle="tooltip" data-placement="auto"
-                              title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted"></span>
-                    </span>
-                    <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
-                       data-target="#add-creator-dialog">
-                        <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <th>Owners:</th>
-                <td class="owners-wrapper">
-                {% for u in owners %}
-                    {% include "includes/profile-link.html" with user=u %}
-                {% endfor %}
-                {% include "includes/profile-card.html" %}
-                </td>
-            </tr>
-            <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-            <tr><th>Created: </th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-            <tr>
-                <th>Last updated:</th>
-                <td>{{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by
-                    {% if cm.last_changed_by %}
-                        {% include "includes/profile-link.html" with user=cm.last_changed_by %}
-                        {% include "includes/profile-card.html" %}
+                    </td>
+                    {% else %}
+                    <td>
+                        <span class="authors-wrapper sortable">
+                            {% for author in creator_formset.initial %}
+                                <span>
+                                    {% if author.name %}
+                                        <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
+                                           data-target="#edit-creator-dialog{{ author.id }}">
+                                            {{ author.name }}
+                                        </a>
+                                    {% else %}
+                                        <a data-toggle="modal" data-placement="auto" title="Edit {{ author.organization }}"
+                                           data-target="#edit-creator-dialog{{ author.id }}">
+                                            {{ author.organization }}
+                                        </a>
+                                    {% endif %}
+
+                                    <form class="hidden-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                          enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input name="resource-mode" type="hidden" value="edit">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                               value="{% if author.name %}{{ author.name }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                               value="{% if author.description %}{{ author.description }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
+                                               value="{% if author.organization %}{{ author.organization }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                               value="{% if author.email %}{{ author.email }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                               value="{% if author.address %}{{ author.address }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                               type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
+                                               value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
+
+                                        <input class="order-input"
+                                               name="creator-{{ author.order|add:"- 1" }}-order"
+                                               type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
+                                    </form>
+                                 </span>
+                            {% endfor %}
+                            <span data-toggle="tooltip" data-placement="auto"
+                                  title='Drag and drop Authors to rearrange.'
+                                  class="glyphicon glyphicon-info-sign text-muted"></span>
+                        </span>
+                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
+                           data-target="#add-creator-dialog">
+                            <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
+                        </a>
+                    </td>
                     {% endif %}
-                </td>
-            </tr>
-        </table>
+                </tr>
+                <tr class="info-collapsible">
+                    <th>Owners:</th>
+                    <td class="owners-wrapper">
+                        {% for u in owners %}
+                            {% include "includes/profile-link.html" with user=u %}
+                        {% endfor %}
+                        {% include "includes/profile-card.html" %}
+                    </td>
+                </tr>
+                <tr class="info-collapsible">
+                    <th>Resource type:</th>
+                    <td>{{ cm|resource_type }}</td>
+                </tr>
+                <tr class="info-collapsible">
+                    <th>Created:</th>
+                    <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
+                </tr>
+                <tr class="info-collapsible">
+                    <th>Last updated:</th>
+                    <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
+                        {% if cm.last_changed_by %} by
+                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}
+                        {% endif %}
+                        {% include "includes/profile-card.html" %}
+                    </td>
+                </tr>
+                <tr class="info-collapsible">
+                    <th>Content types:</th>
+                    <td>
+{#                        TODO: EXPOSE CONTENT TYPES#}
+                        <span class="label label-info">Time Series</span>&nbsp;
+                        <span class="label label-info">Geographic Feature</span>&nbsp;
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-sm-12 col-md-6 res-header">
+            {% include "resource-landing-page/highlights.html" %}
+        </div>
     </div>
-    <div class="col-sm-12 col-md-6 res-header">
-        {% include "resource-landing-page/highlights.html" %}
+
+    <div class="row">
+        <div class="col-sm-12 col-md-12">
+            <a id="stats-toggle" href="#" class="show-more-btn btn-default"
+               title="Show less" style="text-decoration: none;">▲</a>
+        </div>
     </div>
-{% endif %}
+</div>
