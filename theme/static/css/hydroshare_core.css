@@ -1851,6 +1851,12 @@ a.tag:hover {
   }
 }}
 
+@media(min-width: 767px) and (max-width: 991px){
+  /* Add extra padding to push down the text */
+  .page-tip {
+    padding: 50px 0px 15px;
+  }
+}
 
 
 .resource-search {
