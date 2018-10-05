@@ -16,7 +16,7 @@ This checks that:
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.management.utils import ingest_irods_files
-
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 import logging
 
 
@@ -45,29 +45,11 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    r = BaseResource.objects.get(short_id=rid)
+                    resource = get_resource_by_shortkey(rid, or_404=False)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     if log_errors:
                         logger.error(msg)
-                    if echo_errors:
-                        print(msg)
-                    continue  # next resource
-
-                try:
-                    resource = r.get_content_model()
-                except Exception as e:
-                    msg = "resource {} has no proxy class: {}"\
-                          .format(r.short_id, e.value)
-                    if log_errors:
-                        logger.error(msg)
-                    if echo_errors:
-                        print(msg)
-                    msg = "... affected resource {} has type {}, title '{}'"\
-                          .format(r.short_id, r.resource_type,
-                                  r.title.value.encode('ascii', 'replace'))
-                    if log_errors:
-                        logger.info(msg)
                     if echo_errors:
                         print(msg)
                     continue  # next resource
@@ -121,7 +103,7 @@ class Command(BaseCommand):
             print("REPAIRING ALL RESOURCES")
             for r in BaseResource.objects.all():
                 try:
-                    resource = r.get_content_model()
+                    resource = get_resource_by_shortkey(r.short_id, or_404=False)
                 except Exception as e:
                     msg = "resource {} has no proxy class: {}".format(r.short_id, e.value)
                     if echo_errors:

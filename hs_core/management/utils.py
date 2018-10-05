@@ -18,7 +18,6 @@ from django.core.exceptions import ValidationError
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
-
 from requests import post
 
 from hs_core.models import BaseResource
@@ -221,13 +220,10 @@ class CheckResource(object):
         # print("TESTING {}".format(self.short_id))  # leave this for debugging
 
         try:
-            res = BaseResource.objects.get(short_id=self.short_id)
+            self.resource = get_resource_by_shortkey(self.short_id)
         except BaseResource.DoesNotExist:
             print("{} does not exist in Django".format(self.short_id))
             return
-
-        self.resource = res.get_content_model()
-        assert self.resource, (res, res.content_model)
 
         # skip federated resources if not configured to handle these
         if self.resource.is_federated and not settings.REMOTE_USE_IRODS:

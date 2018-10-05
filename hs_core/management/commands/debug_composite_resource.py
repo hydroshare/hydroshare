@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource, ResourceFile
 from django_irods.icommands import SessionException
 from django.core.exceptions import ValidationError
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 import os
 import logging
 
@@ -75,12 +76,10 @@ def debug_resource(short_id):
     """ Debug view for resource depicts output of various integrity checking scripts """
 
     try:
-        res = BaseResource.objects.get(short_id=short_id)
+        resource = get_resource_by_shortkey(short_id, or_404=False)
     except BaseResource.DoesNotExist:
         print("{} does not exist".format(short_id))
-
-    resource = res.get_content_model()
-    assert resource, (res, res.content_model)
+        return
 
     logger = logging.getLogger(__name__)
     if resource.resource_type == 'CompositeResource':

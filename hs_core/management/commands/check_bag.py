@@ -14,18 +14,15 @@ from hs_core.hydroshare import hs_requests
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.tasks import create_bag_by_irods
 from django_irods.icommands import SessionException
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 def check_bag(rid, options):
     requests.packages.urllib3.disable_warnings()
     try:
-        res = BaseResource.objects.get(short_id=rid)
-        resource = res.get_content_model()
+        resource = get_resource_by_shortkey(rid, or_404=False)
         istorage = resource.get_irods_storage()
-        assert resource, (res, res.content_model)
-
         root_exists = istorage.exists(resource.root_path)
-
         if root_exists:
             # print status of metadata/bag system
             scimeta_path = os.path.join(resource.root_path, 'data',

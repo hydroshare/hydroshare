@@ -23,7 +23,6 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    BaseResource.objects.get(short_id=rid)
                     delete_resource(rid)
                     print("Resource with id {} DELETED from Django".format(rid))
                 except BaseResource.DoesNotExist:

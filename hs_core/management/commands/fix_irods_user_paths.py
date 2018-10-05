@@ -16,6 +16,7 @@ This checks that:
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
@@ -42,10 +43,11 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = BaseResource.objects.get(short_id=rid)
+                    resource = get_resource_by_shortkey(rid, or_404=False)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
+                    continue
 
                 if resource.resource_federation_path == defaultpath:
                     print("REMAPPING RESOURCE {} TO LOCAL USERSPACE".format(rid))
@@ -59,6 +61,7 @@ class Command(BaseCommand):
             print("REMAPPING ALL USERSPACE RESOURCES TO LOCAL USERSPACE")
             # only for resources with default federation paths in userspace
             for r in BaseResource.objects.filter(resource_federation_path=defaultpath):
-                r.fix_irods_user_paths(echo_actions=not options['log'],  # Don't both log and echo
-                                       log_actions=options['log'],
-                                       return_actions=False)
+                resource = get_resource_by_shortkey(r.short_id, or_404=False)
+                resource.fix_irods_user_paths(echo_actions=not options['log'],
+                                              log_actions=options['log'],
+                                              return_actions=False)

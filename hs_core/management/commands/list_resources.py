@@ -21,12 +21,10 @@ def measure_resource(short_id):
     """ Print size and sharing status of a resource """
 
     try:
-        res = BaseResource.objects.get(short_id=short_id)
+        resource = get_resource_by_shortkey(short_id, or_404=False)
     except BaseResource.DoesNotExist:
         print("{} does not exist".format(short_id))
-
-    resource = res.get_content_model()
-    assert resource, (res, res.content_model)
+        return
 
     istorage = resource.get_irods_storage()
     if resource.raccess.public:
@@ -108,5 +106,6 @@ class Command(BaseCommand):
                 self.measure_filtered_resource(resource, options)
 
         else:
-            for resource in BaseResource.objects.all():
+            for r in BaseResource.objects.all():
+                resource = get_resource_by_shortkey(r.short_id, or_404=False)
                 self.measure_filtered_resource(resource, options)

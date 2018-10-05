@@ -96,10 +96,11 @@ class Command(BaseCommand):
         elif len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = BaseResource.objects.get(short_id=rid)
+                    resource = get_resource_by_shortkey(rid, or_404=False)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
+                    continue
 
                 print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid))
                 if options['clean_irods']:

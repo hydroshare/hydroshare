@@ -17,7 +17,7 @@ More tests are left for later.
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 import logging
 
 
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = BaseResource.objects.get(short_id=rid)
+                    resource = get_resource_by_shortkey(rid, or_404=False)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
@@ -113,7 +113,8 @@ class Command(BaseCommand):
         else:  # check all resources
             print("LOOKING FOR METADATA ERRORS FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
-                check_django_metadata(r, stop_on_error=False,
+                resource = get_resource_by_shortkey(r.short_id, or_404=False)
+                check_django_metadata(resource, stop_on_error=False,
                                       echo_errors=not options['log'],  # Don't both log and echo
                                       log_errors=options['log'],
                                       return_errors=False)

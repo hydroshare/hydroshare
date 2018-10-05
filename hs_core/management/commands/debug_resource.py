@@ -6,20 +6,17 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 def debug_resource(short_id):
     """ Debug view for resource depicts output of various integrity checking scripts """
 
     try:
-        res = BaseResource.objects.get(short_id=short_id)
+        resource = get_resource_by_shortkey(short_id, or_404=False)
     except BaseResource.DoesNotExist:
         print("{} does not exist".format(short_id))
-
-    resource = res.get_content_model()
-    assert resource, (res, res.content_model)
-
-    irods_issues, irods_errors = resource.check_irods_files(log_errors=False, return_errors=True)
+        return
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
@@ -29,6 +26,8 @@ def debug_resource(short_id):
     print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
     print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
     print("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName'))))
+
+    irods_issues, irods_errors = resource.check_irods_files(log_errors=False, return_errors=True)
     if irods_errors:
         print("iRODS errors:")
         for e in irods_issues:

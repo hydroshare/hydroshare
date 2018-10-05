@@ -12,7 +12,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.management.utils import ingest_irods_files
 
 
@@ -45,6 +45,8 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 try:
                     r = BaseResource.objects.get(short_id=rid)
+                    resource = r.get_content_model()
+                    assert resource, (r, r.content_model)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     if log_errors:
@@ -55,34 +57,15 @@ class Command(BaseCommand):
 
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
-                if r.resource_type != 'CompositeResource' and \
-                   r.resource_type != 'GenericResource' and \
-                   r.resource_type != 'ModelInstanceResource' and \
-                   r.resource_type != 'ModelProgramResource':
+                if resource.resource_type != 'CompositeResource' and \
+                   resource.resource_type != 'GenericResource' and \
+                   resource.resource_type != 'ModelInstanceResource' and \
+                   resource.resource_type != 'ModelProgramResource':
                     print("resource {} has type {}: skipping".format(r.short_id,
                                                                      r.resource_type))
                 else:
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(rid, str(r.files.all().count())))
-                    # get the typed resource
-                    try:
-                        resource = r.get_content_model()
-                    except Exception as e:
-                        msg = "resource {} has no proxy resource: {}"\
-                              .format(r.short_id, e.value)
-                        if log_errors:
-                            logger.info(msg)
-                        if echo_errors:
-                            print(msg)
-                        msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(r.short_id, r.resource_type,
-                                      r.title.value.encode('ascii', 'replace'))
-                        if log_errors:
-                            logger.info(msg)
-                        if echo_errors:
-                            print(msg)
-                        continue
-
                     _, count = ingest_irods_files(resource,
                                                   logger,
                                                   stop_on_error=False,
@@ -92,7 +75,7 @@ class Command(BaseCommand):
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type,
-                                      resource.title.value.encode('ascii', 'replace'))
+                                      resource.title.encode('ascii', 'replace'))
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
@@ -111,7 +94,7 @@ class Command(BaseCommand):
                           .format(r.short_id, str(r.files.all().count())))
                     try:
                         # get the typed resource
-                        resource = r.get_content_model()
+                        resource = get_resource_by_shortkey(r, or_404=False)
                     except Exception as e:
                         msg = "resource {} has no proxy resource: {}"\
                               .format(r.short_id, e.value)
