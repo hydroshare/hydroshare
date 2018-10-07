@@ -385,7 +385,7 @@ function bindFileBrowserItemEvents() {
     var mode = $("#hs-file-browser").attr("data-mode");
 
     // Drop
-    if (mode == "edit") {
+    if (mode === "edit") {
         $(".droppable").droppable({
             drop: function (event, ui) {
                 var resID = $("#hs-file-browser").attr("data-res-id");
@@ -394,7 +394,7 @@ function bindFileBrowserItemEvents() {
                 var destName = destination.children(".fb-file-name").text();
                 var destFileType = destination.children(".fb-file-type").text();
 
-                if (destFileType != "File Folder") {
+                if (destFileType !== "File Folder") {
                     return;
                 }
 
@@ -406,7 +406,7 @@ function bindFileBrowserItemEvents() {
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
                     var destPath = destFolderPath + "/" + $(sources[i]).text();
-                    if (sourcePath != destPath) {
+                    if (sourcePath !== destPath) {
                         callSources.push(sourcePath);
                     }
                 }
@@ -512,7 +512,7 @@ function bindFileBrowserItemEvents() {
     });
 
     // Drag method
-    if (mode == "edit") {
+    if (mode === "edit") {
         $(".draggable").draggable({
                 containment: "#fb-files-container",
                 start: function (event, ui) {
@@ -620,7 +620,7 @@ function bindFileBrowserItemEvents() {
 
         menu.css({top: top, left: left});
 
-        if (menu.css("display") == "none") {
+        if (menu.css("display") === "none") {
             menu.show();
         }
         else {
@@ -779,7 +779,7 @@ function InitializeTimeSeriesFileTypeForms() {
     tsSelect.parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
 
     tsSelect.change(function(e){
-        if (e.target.value == "Other") {
+        if (e.target.value === "Other") {
             var name = e.target.name;
             $(e.target).parent().parent().find(".other-field").show();
             $(e.target).parent().parent().find(".other-field input").attr("name", name);
@@ -808,7 +808,7 @@ function setBreadCrumbs(path) {
         return;
     }
 
-    if (path && path.lastIndexOf("/") == "-1") {
+    if (path && path.lastIndexOf("/") === "-1") {
         $("#fb-move-up").toggleClass("disabled", true)
     }
     else {
@@ -844,9 +844,9 @@ function setBreadCrumbs(path) {
 // File sorting sort algorithms
 function sort(method, order) {
     var sorted;
-    if (method == "name") {
+    if (method === "name") {
         // Sort by name
-        if (order == "asc") {
+        if (order === "asc") {
             sorted = $('#fb-files-container li').sort(function (element1, element2) {
                 return $(element2).children('span.fb-file-name').text().localeCompare($(element1).children('span.fb-file-name').text());
             });
@@ -857,12 +857,12 @@ function sort(method, order) {
             });
         }
     }
-    else if (method == "size") {
+    else if (method === "size") {
         // Sort by size
         var size1, size2;
 
         sorted = $('#fb-files-container li').sort(function (element1, element2) {
-            if (order == "asc") {
+            if (order === "asc") {
                 size1 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
                 size2 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
             }
@@ -884,9 +884,9 @@ function sort(method, order) {
             return 0;
         });
     }
-    else if (method == "type") {
+    else if (method === "type") {
         // Sort by type
-        if (order == "asc") {
+        if (order === "asc") {
             sort("name", "desc");    // First sort by name
             sorted = $('#fb-files-container li').sort(function (element1, element2) {
                 return $(element2).children('span.fb-file-type').text().localeCompare($(element1).children('span.fb-file-type').text());
@@ -940,7 +940,7 @@ function onOpenFolder() {
     var currentPath = $("#hs-file-browser").attr("data-current-path");
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
-
+    sessionStorage.currentBrowsepath = targetPath;
     var flagDisableCreateFolder = false;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
@@ -973,13 +973,13 @@ function onOpenFolder() {
 }
 
 function updateNavigationState() {
-    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 0);
+    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 1);
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
 
     var upPath = $("#hs-file-browser").attr("data-current-path");
     upPath = upPath.substr(0, upPath.lastIndexOf("/"));
 
-    $("#fb-move-up").toggleClass("disabled", upPath == "data");
+    $("#fb-move-up").toggleClass("disabled", upPath === "data");
 }
 
 // Reload the current folder structure
@@ -987,7 +987,7 @@ function refreshFileBrowser() {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var currentPath = $("#hs-file-browser").attr("data-current-path");
     var calls = [];
-    calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
+    calls.push(get_irods_folder_struct_ajax_submit(resID, sessionStorage.currentBrowsepath));
 
     $.when.apply($, calls).done(function () {
         $("#fb-files-container li").removeClass("fb-cutting");
@@ -1001,6 +1001,7 @@ function refreshFileBrowser() {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
+        sessionStorage.currentBrowsepath = currentPath;
         updateSelectionMenuContext();
     });
 }
@@ -1029,8 +1030,25 @@ $(document).ready(function () {
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
-        get_irods_folder_struct_ajax_submit(resID, 'data/contents');
-        pathLog.push('data/contents');
+
+        if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
+            sessionStorage.currentBrowsepath = 'data/contents';
+        }
+        if(sessionStorage.resID !== resID) {
+            sessionStorage.resID = resID;
+        }
+        get_irods_folder_struct_ajax_submit(resID, sessionStorage.currentBrowsepath);
+        var currentPaths = sessionStorage.currentBrowsepath.split("/");
+        var path = currentPaths[0];
+        pathLog.push(path);
+        for(var i=1; i < currentPaths.length; i++) {
+            path += "/" + currentPaths[i];
+            pathLog.push(path);
+        }
+        
+        pathLogIndex = pathLog.length - 1;
+        updateNavigationState();
+
     }
 
     var previewNode = $("#flag-uploading").removeClass("hidden").clone();
@@ -1045,7 +1063,7 @@ $(document).ready(function () {
         if ($("#hs-file-browser").attr("data-allow-multiple-files") != "True") {
             allowMultiple = 1;
         }
-        if (acceptedFiles == ".*") {
+        if (acceptedFiles === ".*") {
             acceptedFiles = null; // Dropzone default to accept all files
         }
 
@@ -1109,7 +1127,9 @@ $(document).ready(function () {
 
                 // Called when all files in the queue finish uploading.
                 this.on("queuecomplete", function () {
-                    if ($("#hs-file-browser").attr("data-refresh-on-upload") == "true") {
+                    if ($("#hs-file-browser").attr("data-refresh-on-upload") === "true") {
+                        var currentPath = $("#hs-file-browser").attr("data-current-path");
+                        sessionStorage.currentBrowsepath = currentPath;
                         // Page refresh is needed to show updated metadata
                         location.reload(true);
                     }
@@ -1118,10 +1138,12 @@ $(document).ready(function () {
                         // Remove further paths from the log
                         var range = pathLog.length - pathLogIndex;
                         pathLog.splice(pathLogIndex + 1, range);
-                        pathLog.push("data/contents");
+                        pathLog.push(sessionStorage.currentBrowsepath);
                         pathLogIndex = pathLog.length - 1;
 
                         if(resourceType === 'Composite Resource') {
+                            var currentPath = $("#hs-file-browser").attr("data-current-path");
+                            sessionStorage.currentBrowsepath = currentPath;
                             // uploaded files can affect metadata in composite resource.
                             // a full refresh is needed to reflect those changes
                             refreshResourceEditPage();
@@ -1175,7 +1197,7 @@ $(document).ready(function () {
     // Toggle between grid and list view
     $("#btn-group-view button").click(function () {
         $("#btn-group-view button").toggleClass("active");
-        if ($(this).attr("data-view") == "list") {
+        if ($(this).attr("data-view") === "list") {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
@@ -1203,7 +1225,6 @@ $(document).ready(function () {
             $("#fb-sort li[data-order]").removeClass("active");
             $(this).addClass("active");
         }
-
         onSort();
     });
 
@@ -1242,7 +1263,7 @@ $(document).ready(function () {
         var startPos = 0;
         var endPos = $("#txtZipName").val().length;
 
-        if (typeof input.selectionStart != "undefined") {
+        if (typeof input.selectionStart !== "undefined") {
             input.selectionStart = startPos;
             input.selectionEnd = endPos;
         } else if (document.selection && document.selection.createRange) {
@@ -1268,7 +1289,7 @@ $(document).ready(function () {
             endPos = $("#txtName").val().length;
         }
 
-        if (typeof input.selectionStart != "undefined") {
+        if (typeof input.selectionStart !== "undefined") {
             input.selectionStart = startPos;
             input.selectionEnd = endPos;
         } else if (document.selection && document.selection.createRange) {
@@ -1292,7 +1313,7 @@ $(document).ready(function () {
         var startPos = 0;
         var endPos = $("#txtFileURL").val().length;
 
-        if (typeof input.selectionStart != "undefined") {
+        if (typeof input.selectionStart !== "undefined") {
             input.selectionStart = startPos;
             input.selectionEnd = endPos;
         } else if (document.selection && document.selection.createRange) {
@@ -1311,7 +1332,7 @@ $(document).ready(function () {
         var startPos = 0;
         var endPos = input.val().length;
 
-        if (typeof this.selectionStart != "undefined") {
+        if (typeof this.selectionStart !== "undefined") {
             this.selectionStart = startPos;
             this.selectionEnd = endPos;
         } else if (document.selection && document.selection.createRange) {
@@ -1352,16 +1373,18 @@ $(document).ready(function () {
         pathLog.push(upPath);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, upPath);
+        sessionStorage.currentBrowsepath = upPath;
     });
 
     // Move back
     $("#fb-move-back").click(function () {
-        if (pathLogIndex > 0) {
+        if (pathLogIndex >= 2) {
             pathLogIndex--;
-            if (pathLogIndex == 0) {
+            if (pathLogIndex == 1) {
                 $("#fb-move-back").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
         }
     });
 
@@ -1373,6 +1396,7 @@ $(document).ready(function () {
                 $("#fb-move-forward").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
         }
     });
 
@@ -1408,10 +1432,10 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        targetPath = currentPath + "/" + folderName
+        targetPath = currentPath + "/" + folderName;
         
         var calls = [];
-        var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
+        var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
         calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
 
         // Wait for the asynchronous call to finish to get new folder structure
@@ -1441,7 +1465,7 @@ $(document).ready(function () {
             for (var i = 0; i < deleteList.length; i++) {
                 var pk = $(deleteList[i]).attr("data-pk");
                 if (pk) {
-                    if (filesToDelete != "") {
+                    if (filesToDelete !== "") {
                         filesToDelete += ",";
                     }
                     filesToDelete += pk;
@@ -1455,7 +1479,7 @@ $(document).ready(function () {
 
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
-                if (filesToDelete != "") {
+                if (filesToDelete !== "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
                     $("#fb-delete-files-form").submit();
                 }
@@ -1465,7 +1489,7 @@ $(document).ready(function () {
             });
 
             $.when.apply($, calls).fail(function () {
-                if (filesToDelete != "") {
+                if (filesToDelete !== "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
                     $("#fb-delete-files-form").submit();
                 }
@@ -1509,6 +1533,7 @@ $(document).ready(function () {
         });
 
         $.when.apply($, calls).fail(function () {
+            sessionStorage.currentBrowsepath = currentPath;
             refreshFileBrowser();
         });
     });
@@ -1594,7 +1619,7 @@ $(document).ready(function () {
 
     // Zip method
     $("#btn-confirm-zip").click(function () {
-        if ($("#txtZipName").val().trim() != "") {
+        if ($("#txtZipName").val().trim() !== "") {
             var currentPath = $("#hs-file-browser").attr("data-current-path");
             var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
             var fileName = $("#txtZipName").val() + ".zip";
@@ -1625,7 +1650,7 @@ $(document).ready(function () {
 
         var calls = [];
         for (var i = 0; i < files.length; i++) {
-            var fileName = $(files[i]).children(".fb-file-name").text()
+            var fileName = $(files[i]).children(".fb-file-name").text();
             calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
         }
 
@@ -1679,7 +1704,7 @@ function setFileType(fileType){
     }
     else {
         // this must be folder selection for aggregation creation
-        var folderPath = $("#fb-files-container li.ui-selected").children('span.fb-file-type').attr("data-folder-short-path");
+        folderPath = $("#fb-files-container li.ui-selected").children('span.fb-file-type').attr("data-folder-short-path");
         url = "/hsapi/_internal/" + resID + "/" + fileType + "/set-file-type/";
     }
 
@@ -1738,7 +1763,7 @@ function getCookie(name) {
     var i = 0;
     while (i < clen) {
         var j = i + alen;
-        if (document.cookie.substring(i, j) == arg) {
+        if (document.cookie.substring(i, j) === arg) {
             return getCookieVal(j)
         }
         i = document.cookie.indexOf(" ", i) + 1;
