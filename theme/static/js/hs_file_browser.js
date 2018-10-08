@@ -833,10 +833,10 @@ function setBreadCrumbs(path) {
     $("#fb-bread-crumbs li:not(.active)").click(function() {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var path = $(this).attr("data-path");
-
-        pathLog.push(path);
+        sessionStorage.currentBrowsepath = path;
+        pathLog.push(sessionStorage.currentBrowsepath);
         pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(resID, path);
+        get_irods_folder_struct_ajax_submit(resID, sessionStorage.currentBrowsepath);
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 }
