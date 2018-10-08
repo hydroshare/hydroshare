@@ -187,7 +187,7 @@
                             {% csrf_token %}
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                     id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                    title='Metadata is public but data is protected.' type="submit"
+                                    title='Metadata is public but data are protected.' type="submit"
                                     {% if cm.raccess.discoverable and not cm.raccess.public %}
                                         class="btn btn-default active"
                                     {% else %}
