@@ -4654,8 +4654,8 @@ div#resource-content {
 
 /* popover styling */
 .popover-content {
-  padding: 9px 14px;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 /* info icon to popover */
