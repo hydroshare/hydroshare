@@ -110,7 +110,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     def _validate_bounding_box(cls, box_dict):
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
             try:
-                float(box_dict[limit])
+                box_dict[limit] = float(box_dict[limit])
             except ValueError:
                 raise ValidationError("Bounding box data is not numeric")
 
