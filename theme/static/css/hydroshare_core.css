@@ -367,11 +367,11 @@ a.sign-out-inline:hover {
 }
 
 .modal-header {
-	background: rgb(255, 255, 255);
-	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
-	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
+    background: #fff;
+    background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+    background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0)
 }
 
 .modal-header > img,
@@ -2250,10 +2250,10 @@ button.loading {
 }
 
 .access-table-wrapper {
-	min-height: 100px;
-	height: 250px;
-	overflow: auto;
-	resize: vertical;
+    min-height: 100px;
+    height: 150px;
+    overflow: auto;
+    resize: vertical;
     border: 1px solid #DDD;
     padding: 12px;
     padding-bottom: 90px;
@@ -2768,7 +2768,7 @@ span.you-flag {
 }
 
 #invite-flag {
-	margin: 10px;
+    margin: 10px 0;
 }
 
 #item-selectors {
@@ -3325,7 +3325,7 @@ span.you-flag {
 
 .arrow_box:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #a2a2a2;
+    border-bottom-color: #DDD;
     border-width: 11px;
     margin-left: -11px;
 }
@@ -4247,13 +4247,13 @@ span.fb-control-square {
 }
 
 div.fb-upload-caption {
-	padding: 8px;
-	border: 1px solid #DDD;
-	border-top: 0;
-	background: #fafafa;
-	color: #555;
-	margin-bottom: 20px;
-	padding-bottom: 20px;
+    padding: 8px;
+    color: #555;
+    margin-bottom: 20px;
+    background: #f8f8f8;
+    padding-bottom: 20px;
+    border: 1px solid #DDD;
+    border-top: 0;
 }
 
 div.fb-upload-caption a {

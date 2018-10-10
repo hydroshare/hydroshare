@@ -1632,17 +1632,14 @@
                                     <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                                     {% csrf_token %}
                                     <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
-                                                                                          id="btn-discoverable"
-                                                                                          data-toggle="tooltip"
-                                                                                          data-placement="auto"
-                                                                                          title='Metadata is public but data is protected.'
-                                                                                          type="submit"
+                                              id="btn-discoverable" data-toggle="tooltip"
+                                              data-placement="auto"  type="submit"
+                                              title='Metadata is public but data are protected.'
                                             {% if cm.raccess.discoverable and not cm.raccess.public %}
-                                                                                          class="btn btn-default active"
+                                                class="btn btn-default active"
                                             {% else %}
-                                                                                          class="btn btn-default"
-                                            {% endif %}
-                                    >Discoverable
+                                                 class="btn btn-default"
+                                            {% endif %}>Discoverable
                                     </button>
                                 </form>
                                 {# -------- PRIVATE -------- #}
