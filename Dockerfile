@@ -14,7 +14,6 @@ RUN pip install \
   geopy \
   hs_restclient==1.2.12 \
   markdown \
-  django-markup \
   pyyaml
 
 ### End - HydroShare Development Image Additions ###
