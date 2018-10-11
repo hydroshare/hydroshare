@@ -15,7 +15,7 @@ def debug_harvest():
     ind = BaseResourceIndex()
     for obj in BaseResource.objects.all():
         res = get_resource_by_shortkey(obj.short_id, or_404=False)
-        print ("TESTING RESOURCE {}".format(res.metadata.title.value.encode('ascii', 'ignore')))
+        print ("TESTING RESOURCE {}".format(res.metadata.title.encode('ascii', 'ignore')))
         print('sample_medium')
         pprint(ind.prepare_sample_medium(res))
         print('creator')

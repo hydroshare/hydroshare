@@ -50,7 +50,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's: none does nothing.
+        # a list of resource id's: none means all or none.
         parser.add_argument('resource_ids', nargs='*', type=str)
 
         # Named (optional) arguments
@@ -86,13 +86,16 @@ class Command(BaseCommand):
             help='limit to resources with subfolders',
         )
 
+    def filter(self, resource, options): 
+        return (options['type'] is None or resource.resource_type == options['type']) and \
+               (options['storage'] is None or resource.storage_type == options['storage']) and \
+               (options['access'] != 'public' or resource.raccess.public) and \
+               (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
+               (options['access'] != 'private' or not resource.raccess.discoverable) and \
+               (not options['has_subfolders'] or has_subfolders(resource)):
+
     def measure_filtered_resource(self, resource, options):
-        if (options['type'] is None or resource.resource_type == options['type']) and \
-           (options['storage'] is None or resource.storage_type == options['storage']) and \
-           (options['access'] != 'public' or resource.raccess.public) and \
-           (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
-           (options['access'] != 'private' or not resource.raccess.discoverable) and \
-           (not options['has_subfolders'] or has_subfolders(resource)):
+        if self.filter(resource, options): 
             storage = resource.get_irods_storage()
             if storage.exists(resource.root_path):
                 measure_resource(resource.short_id)
@@ -102,7 +105,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
-                resource = get_resource_by_shortkey(rid)
+                try: 
+                    resource = get_resource_by_shortkey(rid, or_404=False)
+                except BaseResource.DoesNotExist: 
+                    print("resource {} does not exist".format(rid))
+                    continue
                 self.measure_filtered_resource(resource, options)
 
         else:
