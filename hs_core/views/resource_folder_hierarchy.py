@@ -1,17 +1,21 @@
 import json
 import logging
 import os
+from uuid import uuid4
+import errno
+import shutil
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError
-from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, \
+    get_resource_by_shortkey, resource_modified
 from hs_core.models import ResourceFile
 from hs_file_types.utils import set_logical_file_type
 
@@ -388,6 +392,7 @@ def data_store_add_reference(request):
         # set 'SingleFile' logical file type to this .url file
         res = get_resource_by_shortkey(res_id)
         set_logical_file_type(res, request.user, f.id, 'SingleFile', extra_data={'url': ref_url})
+        resource_modified(res, request.user, overwrite_bag=False)
     except Exception as ex:
         return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -432,32 +437,48 @@ def data_store_edit_reference_url(request):
     if not is_valid:
         return HttpResponseBadRequest(err_msg)
 
+    # temp path to hold updated url file to be written to iRODS
+    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+
+    prefix_path = 'data/contents'
+    if curr_path != prefix_path and curr_path.startswith(prefix_path):
+        curr_path = curr_path[len(prefix_path) + 1:]
+    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+        folder = None
+    else:
+        folder = curr_path[len(prefix_path) + 1:]
+
+    # update url in extra_data in url file's logical file object
+    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    extra_data = f.logical_file.extra_data
+    extra_data['url'] = new_ref_url
+    f.logical_file.extra_data = extra_data
+    f.logical_file.save()
+
     try:
-        prefix_path = 'data/contents'
-        if curr_path != prefix_path and curr_path.startswith(prefix_path):
-            curr_path = curr_path[len(prefix_path) + 1:]
-        if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-            folder = None
+        os.makedirs(temp_path)
+    except OSError as ex:
+        # TODO: there might be concurrent operations.
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
         else:
-            folder = curr_path[len(prefix_path) + 1:]
+            raise Exception(ex.message)
 
-        f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
-        f.delete()
-        f = add_url_file_to_resource(res_id, new_ref_url, ref_name, curr_path)
-
-        if not f:
-            return HttpResponseServerError('URL file failed to be updated')
-
-        # make sure the new file has logical file set and is single file aggregation
-        # set 'SingleFile' logical file type to this .url file
-        res = get_resource_by_shortkey(res_id)
-        set_logical_file_type(res, request.user, f.id, 'SingleFile',
-                              extra_data={'url': new_ref_url})
-    except ObjectDoesNotExist:
-        return HttpResponseBadRequest('Bad request - url file not found')
-    except Exception as ex:
-        return JsonResponse({'message': ex.message},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # update url file in iRODS
+    urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
+    from_file_name = os.path.join(temp_path, ref_name)
+    with open(from_file_name, 'w') as out:
+        out.write(urlstring)
+    istorage = res.get_irods_storage()
+    target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
+    try:
+        istorage.saveFile(from_file_name, target_irods_file_path)
+        shutil.rmtree(temp_path)
+        resource_modified(res, request.user, overwrite_bag=False)
+    except SessionException as ex:
+        shutil.rmtree(temp_path)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse({'status': 'success'})
 

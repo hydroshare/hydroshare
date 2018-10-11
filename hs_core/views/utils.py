@@ -103,19 +103,18 @@ def validate_url(url):
     :return: [True, ''] if url is valid,[False, 'error message'] if url is not valid
     """
     # validate url's syntax is valid
+    error_message = "The URL that you entered is not valid. Please enter a valid URL."
     try:
         validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
         validator(url)
     except ValidationError:
-        return False, 'Not a valid reference URL'
+        return False, error_message
 
     # validate url is valid, i.e., can be opened
     try:
         urlopen(url)
-    except HTTPError as ex:
-        return False, 'Reference URL does not exist - error: ' + ex.code
-    except URLError as ex:
-        return False, 'Reference URL does not exist - error: ' + ex.reason
+    except (HTTPError, URLError):
+        return False, error_message
 
     return True, ''
 
