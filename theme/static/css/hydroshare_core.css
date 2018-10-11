@@ -4657,3 +4657,15 @@ div#resource-content {
 .btn-choose-coordinates {
 	vertical-align: top;
 }
+
+/* popover styling */
+.popover-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
+}

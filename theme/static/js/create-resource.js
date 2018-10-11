@@ -20,6 +20,8 @@ $(document).ready(function () {
     var myDropzone;
     var fileIcons = getFileIcons();
 
+    $('[data-toggle="popover1"]').popover();
+
     if (sessionStorage.signininfo) {
         $("#sign-in-info").text(sessionStorage.signininfo);
         $("#btn-select-irods-file").show();
