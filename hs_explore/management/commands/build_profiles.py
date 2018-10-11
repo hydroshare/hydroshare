@@ -27,6 +27,7 @@ from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedG
     PropensityPrefToPair, PropensityPreferences, OwnershipPrefToPair, OwnershipPreferences, UserInteractedResources, UserNeighbors
 import simplejson as json
 from sklearn.metrics.pairwise import pairwise_distances
+from haystack.query import SearchQuerySet
 
 
 class Command(BaseCommand):
@@ -44,7 +45,7 @@ class Command(BaseCommand):
         users_interested_resources = {}
 
         today = date(2018,07,31)
-        beginning = today - timedelta(days=30)
+        beginning = today - timedelta(days=6)
 
         ResourcePreferences.clear()
         UserPreferences.clear()
@@ -145,20 +146,39 @@ class Command(BaseCommand):
         public_discoverable_resource_ids = set()
         public_discoverable_all_subjects = set()
         public_discoverable_resource_to_subjects = {}
+        out = SearchQuerySet()
+        #for res in BaseResource.objects.all():
+        for res in out:
+            #subjects = ind.prepare_subject(res)
+            subjects = [sub.lower() for sub in res.subject]
+            '''
+            if ind.prepare_start_date(res):
+                start_date = "start" + str(ind.prepare_start_date(res).year)
+                subjects.append(start_date)
+            
+            if ind.prepare_end_date(res):
+                end_date = "end" + str(ind.prepare_end_date(res).year)
+                subjects.append(end_date)
+            '''
+            start_date = res.start_date
+            end_date = res.end_date
+            if start_date is not None:
+                start_date_year =  str(start_date.year)
+                subjects.append(start_date_year)
 
-        for res in BaseResource.objects.all():
-            subjects = ind.prepare_subject(res)
-            subjects = [sub.lower() for sub in subjects]
-            resource_to_subjects[res.short_id] = subjects
+            if end_date is not None:
+                end_date_year = str(end_date.year)
+                subjects.append(end_date_year)
+            resource_to_subjects[res.short_id] = set(subjects)
             all_subjects.update(subjects)
             resource_ids.add(res.short_id)
+            '''
             if res.raccess.public or res.raccess.discoverable:
                 public_discoverable_resource_ids.add(res.short_id)
                 public_discoverable_all_subjects.update(subjects)
                 public_discoverable_resource_to_subjects[res.short_id] = subjects
-
+            '''
         all_subjects_list = list(all_subjects)
-
         print("------------------ build matrices ---------------------")
         m_ur = pd.DataFrame(0, index=list(user_usernames), columns=list(resource_ids))
         for k, v in propensity.iteritems():
@@ -206,7 +226,8 @@ class Command(BaseCommand):
         for k, values in group_to_resources.iteritems():
             if k in m_hr.index:
                 for v in values:
-                    m_hr.at[k, v] = 1
+                    if v in m_hr.columns:
+                        m_hr.at[k, v] = 1
         m_hr_values = m_hr.values
         m_hg_values = np.matmul(m_hr_values, m_rg_values)
         m_hg = pd.DataFrame(m_hg_values, index=list(group_names), columns=all_subjects_list)
@@ -230,6 +251,8 @@ class Command(BaseCommand):
                               index=og_jac_sim.index)
 
         matrices_elapsed_time = time.time() - matrices_start_time
+        print("m_ur shape {}".format(m_ur.shape))
+        print("m_ug shape {}".format(m_ug.shape))
         print("build matrices time cost: " + str(matrices_elapsed_time))
         print("--------- store user interacted resources  -----------")
         for key, value in users_interested_resources.iteritems():
