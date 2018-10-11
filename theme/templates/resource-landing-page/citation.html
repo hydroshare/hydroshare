@@ -17,14 +17,12 @@
             {% if is_owner_user and not cm.raccess.published %}
             <br />
 
-            <div class="alert alert-info flex">
-                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+            <div>
                 <em>
-                    <p>When permanently published, this resource will have a formal Digital Object Identifier (DOI) and
-                        will be accessible at the following URL:</p>
-                    <p>https://doi.org/10.4211/hs.{{ cm.short_id }}</p>
-                    <p>When you are ready to permanently publish, click the Publish button at the top of the page to
-                        request your DOI. <strong>Reminder:</strong> You may no longer edit your resource, once you have permanently published it.</p>
+                    When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
+                    accessible at the following URL: https://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
+                    ready to permanently publish, click the Publish button at the top of the page to request your DOI.
+                    Reminder: You may no longer edit your resource, once you have permanently published it.
                 </em>
             </div>
             {% endif %}

@@ -1,8 +1,9 @@
-{% load markup_tags %}
-
 <div class="col-xs-12 content-block">
-    <h3>ReadMe</h3>
-    <pre class="readme">
-        {{ readme|safe }}
-    </pre>
+    <h3>README</h3>
+    <div class="readme">
+        <div class="readme-header">
+            <h4><i class="fa fa-file-o" aria-hidden="true" style="margin-right: 4px;"></i> {{ readme.file_name }}</h4>
+        </div>
+        <div class="readme-content">{{ readme.content|safe }}</div>
+    </div>
 </div>

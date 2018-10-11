@@ -2245,9 +2245,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             raise ObjectDoesNotExist
         else:
             if self.readme_file.extension.lower() == '.md':
-                return markdown(self.readme_file.read().decode('utf-8'))
+                return {'content': markdown(self.readme_file.read().decode('utf-8')),
+                        'file_name': self.readme_file.file_name}
             else:
-                return self.readme_file.read()
+                return {'content': self.readme_file.read(), 'file_name': self.readme_file.file_name}
 
     @property
     def logical_files(self):
