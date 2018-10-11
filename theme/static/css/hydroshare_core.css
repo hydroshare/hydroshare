@@ -1855,6 +1855,12 @@ a.tag:hover {
   }
 }}
 
+@media(min-width: 767px) and (max-width: 991px){
+  /* Add extra padding to push down the text */
+  .page-tip {
+    padding: 50px 0px 15px;
+  }
+}
 
 
 .resource-search {
@@ -4670,4 +4676,16 @@ div#resource-content {
 
 .btn-choose-coordinates {
 	vertical-align: top;
+}
+
+/* popover styling */
+.popover-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
 }
