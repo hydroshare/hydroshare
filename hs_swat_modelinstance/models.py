@@ -355,6 +355,8 @@ class ModelInput(AbstractMetaDataElement):
 class SWATModelInstanceResource(BaseResource):
     objects = ResourceManager("SWATModelInstanceResource")
 
+    discovery_content_type = 'SWAT Model Instance'  # used during discovery
+
     class Meta:
         verbose_name = 'SWAT Model Instance Resource'
         proxy = True

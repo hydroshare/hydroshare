@@ -129,23 +129,23 @@ def create_bag_files(resource):
     resMetaFile._citoterms.documents = ag_url
     resMetaFile._ore.isAggregatedBy = ag_url
     resMetaFile._dc.format = "application/rdf+xml"
-
-    # Create a description of the content file and add it to the aggregation
-    files = ResourceFile.objects.filter(object_id=resource.id)
-    resFiles = []
-    for n, f in enumerate(files):
-        res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-            hs_url=current_site_url,
-            res_id=resource.short_id,
-            file_name=f.short_path)
-        resFiles.append(AggregatedResource(res_uri))
-        resFiles[n]._ore.isAggregatedBy = ag_url
-        resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+    a.add_resource(resMetaFile)
 
     # Add the resource files to the aggregation
-    a.add_resource(resMetaFile)
-    for f in resFiles:
-        a.add_resource(f)
+    files = ResourceFile.objects.filter(object_id=resource.id)
+
+    for f in files:
+        # only the files that are not part of file type aggregation (logical file)
+        # should be added to the resource level map xml file
+        if f.logical_file is None:
+            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url,
+                res_id=resource.short_id,
+                file_name=f.short_path)
+            ar = AggregatedResource(res_uri)
+            ar._ore.isAggregatedBy = ag_url
+            ar._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+            a.add_resource(ar)
 
     # handle collection resource type
     # save contained resource urls into resourcemap.xml
@@ -160,6 +160,21 @@ def create_bag_files(resource):
             ar._ore.isAggregatedBy = ag_url
             ar._dc.format = "application/rdf+xml"
             a.add_resource(ar)
+    elif resource.resource_type == "CompositeResource":
+        # add file type aggregations to resource aggregation
+        for logical_file in resource.logical_files:
+            aggr_uri = u'{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
+            aggr_uri = aggr_uri.format(
+                hs_url=current_site_url,
+                res_id=resource.short_id,
+                map_file_path=logical_file.map_short_file_path)
+            agg = Aggregation(aggr_uri)
+            agg._ore.isAggregatedBy = ag_url
+            agg_type_url = "{site}/terms/{aggr_type}"
+            agg_type_url = agg_type_url.format(site=current_site_url,
+                                               aggr_type=logical_file.get_aggregation_type_name())
+            agg._dcterms.type = URIRef(agg_type_url)
+            a.add_resource(agg)
 
     # Register a serializer with the aggregation, which creates a new ResourceMap that needs a URI
     serializer = RdfLibSerializer('xml')
@@ -183,6 +198,11 @@ def create_bag_files(resource):
         out.write(xml_string)
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
+
+    # if the resource is a composite resource generate aggregation metadata
+    # and map xml documents
+    if resource.resource_type == "CompositeResource":
+        resource.create_aggregation_xml_documents()
 
     res_coll = resource.root_path
     istorage.setAVU(res_coll, 'metadata_dirty', "false")

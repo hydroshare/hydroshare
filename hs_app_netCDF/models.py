@@ -305,6 +305,7 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
@@ -351,6 +352,8 @@ class NetcdfResource(BaseResource):
         from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
         if nc_res_file and txt_res_file:
             netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
+
+    discovery_content_type = 'Multidimensional (NetCDF)'  # used during discovery
 
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'

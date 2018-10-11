@@ -7,7 +7,11 @@ from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
                                     SupportedSharingStatusValidationForm, RoadmapForm, \
-                                    ShowOnOpenWithListForm
+                                    ShowOnOpenWithListForm, SupportedAggTypesValidationForm, \
+                                    SupportedFileExtensionsValidationForm, \
+                                    AppAggregationLevelUrlValidationForm, \
+                                    AppResourceLevelUrlValidationForm, \
+                                    AppFileLevelUrlValidationForm
 
 from default_icon import default_icon_data_url
 
@@ -40,15 +44,23 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
-        element_form = UrlValidationForm(data=request.POST)
+        element_form = AppResourceLevelUrlValidationForm(data=request.POST)
+    elif element_name == 'requesturlbaseaggregation':
+        element_form = AppAggregationLevelUrlValidationForm(data=request.POST)
+    elif element_name == 'requesturlbasefile':
+        element_form = AppFileLevelUrlValidationForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':
         element_form = SupportedResTypesValidationForm(data=request.POST)
+    elif element_name == 'supportedaggtypes':
+        element_form = SupportedAggTypesValidationForm(data=request.POST)
     elif element_name == 'toolicon':
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
+    elif element_name == 'supportedfileextensions':
+        element_form = SupportedFileExtensionsValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'testingprotocolurl':

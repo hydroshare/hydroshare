@@ -20,27 +20,44 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_dat
 from hs_core.hydroshare.utils import resource_modified
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
+
+from .utils import set_logical_file_type
+
+FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
+                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
+                 "NetCDFLogicalFile": NetCDFLogicalFile,
+                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
+                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile
+                 }
 
 
 @login_required
-def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
-    """Set a file (*file_id*) to a specific file type (*hs_file_type*)
+def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
+    """Set a file (*file_id*) to a specific file type - aggregation (*hs_file_type*)
     :param  request: an instance of HttpRequest
     :param  resource_id: id of the resource in which this file type needs to be set
-    :param  file_id: id of the file which needs to be set to a file type
-    :param  hs_file_type: file type to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
+    :param  file_id: id of the file which needs to be set to a file type. If file_id is not provided
+    then the request must have a file_folder key. In that case the specified folder will be used
+    for creating the logical file (aggregation)
+    :param  hs_file_type: file type to be set (e.g, SingleFile, NetCDF, GeoRaster, RefTimeseries,
+    TimeSeries and GeoFeature)
     :return an instance of JsonResponse type
     """
+
+    response_data = {'status': 'error'}
+    folder_path = None
+    if file_id is None:
+        folder_path = request.POST.get('folder_path', "")
+        if not folder_path:
+            err_msg = "Must provide id of the file or folder path for setting aggregation type."
+            response_data['message'] = err_msg
+            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-    file_type_map = {"GeoRaster": GeoRasterLogicalFile,
-                     "NetCDF": NetCDFLogicalFile,
-                     'GeoFeature': GeoFeatureLogicalFile,
-                     'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile
-                     }
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
@@ -48,21 +65,20 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
-        err_msg = "File type can be set only for files in composite resource."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    if hs_file_type not in file_type_map:
-        err_msg = "Unsupported file type. Supported file types are: {}".format(file_type_map.keys())
+        err_msg = "Aggregation type can be set only for files in composite resource."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        logical_file_type_class = file_type_map[hs_file_type]
-        logical_file_type_class.set_file_type(resource=res, file_id=file_id, user=request.user)
+        set_logical_file_type(res, request.user, file_id, hs_file_type, folder_path)
         resource_modified(res, request.user, overwrite_bag=False)
-        msg = "File was successfully set to selected file type. " \
-              "Metadata extraction was successful."
+
+        msg = "{} was successfully set to the selected aggregation type."
+        if folder_path is None:
+            msg = msg.format("Selected file")
+        else:
+            msg = msg.format("Selected folder")
+
         response_data['status'] = 'success'
         response_data['message'] = msg
         spatial_coverage_dict = get_coverage_data_dict(res)
@@ -130,30 +146,67 @@ def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs)
 
     res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     if res.resource_type != "CompositeResource":
-        err_msg = "File type can be deleted only in composite resource."
+        err_msg = "Aggregation type can be deleted only in composite resource."
         messages.error(request, err_msg)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
     if hs_file_type != "GeoRaster":
-        err_msg = "Currently only an instance of Geo Raster file type can be deleted."
+        err_msg = "Currently only an instance of Geo Raster aggregation type can be deleted."
         messages.error(request, err_msg)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     logical_file_to_delete = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
     if logical_file_to_delete is None:
-        err_msg = "No matching Geo Raster file type was found."
+        err_msg = "No matching Geo Raster aggregation type was found."
         messages.error(request, err_msg)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     if logical_file_to_delete.resource.short_id != res.short_id:
-        err_msg = "Geo Raster file type doesn't belong to the specified resource."
+        err_msg = "Geo Raster aggregation type doesn't belong to the specified resource."
         messages.error(request, err_msg)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     logical_file_to_delete.logical_delete(request.user)
     resource_modified(res, request.user, overwrite_bag=False)
-    msg = "Geo Raster file type was deleted."
+    msg = "Geo Raster aggregation type was deleted."
     messages.success(request, msg)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
+    """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
+    However, it doesn't delete resource files associated with the aggregation.
+    """
+
+    response_data = {'status': 'error'}
+
+    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if res.resource_type != "CompositeResource":
+        err_msg = "Aggregation type can be deleted only in composite resource."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if aggregation is None:
+        err_msg = "No matching aggregation was found."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    aggregation.remove_aggregation()
+    msg = "Aggregation was successfully removed."
+    response_data['status'] = 'success'
+    response_data['message'] = msg
+    spatial_coverage_dict = get_coverage_data_dict(res)
+    response_data['spatial_coverage'] = spatial_coverage_dict
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @login_required
@@ -164,7 +217,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
     logical_file_type_class = content_type.model_class()
     logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
     if logical_file is None:
-        err_msg = "No matching logical file type was found."
+        err_msg = "No matching aggregation type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -211,11 +264,16 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                 spatial_coverage_dict = get_coverage_data_dict(resource)
                 ajax_response_data['spatial_coverage'] = spatial_coverage_dict
 
-        if element_name.lower() == 'coverage':
+        elif element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
             temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
             ajax_response_data['spatial_coverage'] = spatial_coverage_dict
             ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
+        ajax_response_data['has_logical_spatial_coverage'] = \
+            resource.has_logical_spatial_coverage
+        ajax_response_data['has_logical_temporal_coverage'] = \
+            resource.has_logical_temporal_coverage
 
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
@@ -232,7 +290,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
     logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
 
     if logical_file is None:
-        err_msg = "No matching logical file type was found."
+        err_msg = "No matching aggregation type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -284,12 +342,14 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
                 ajax_response_data['spatial_coverage'] = spatial_coverage_dict
-
-        if element_name.lower() == 'coverage':
+        elif element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
             temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
             ajax_response_data['spatial_coverage'] = spatial_coverage_dict
             ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
+        ajax_response_data['has_logical_spatial_coverage'] = resource.has_logical_spatial_coverage
+        ajax_response_data['has_logical_temporal_coverage'] = resource.has_logical_temporal_coverage
 
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
@@ -685,7 +745,6 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@login_required
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
     Gets metadata html for the logical file type
@@ -702,6 +761,16 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+
+    from hs_core.views.utils import authorize
+    from rest_framework.exceptions import PermissionDenied
+    if not logical_file.resource.raccess.public:
+        if request.user.is_authenticated:
+            authorize(request, logical_file.resource.short_id,
+                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        else:
+            raise PermissionDenied()
+
     if json_response is not None:
         return json_response
 
@@ -720,9 +789,10 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
 @login_required
 def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     """
-    Gets metadata html for the logical file type
+    Gets metadata html for the aggregation type (logical file type)
     :param request:
-    :param file_type_id: id of the logical file object for which metadata in html format is needed
+    :param file_type_id: id of the aggregation (logical file) object for which metadata in html
+    format is needed
     :param  series_id: if of the time series for which metadata to be displayed
     :param resource_mode: a value of either edit or view. In resource edit mode metadata html
     form elements are returned. In view mode normal html for display of metadata is returned
@@ -760,7 +830,7 @@ def _get_logical_file(hs_file_type, file_type_id):
     logical_file_type_class = content_type.model_class()
     logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
     if logical_file is None:
-        err_msg = "No matching logical file type was found."
+        err_msg = "No matching aggregation type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return None, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 

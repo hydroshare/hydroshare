@@ -343,9 +343,12 @@ class CellInformation(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
+
+    discovery_content_type = 'Geographic Raster'  # used during discovery
 
     class Meta:
         verbose_name = 'Geographic Raster'
@@ -359,12 +362,12 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif", ".zip")
+        return (".tiff", ".tif", ".vrt", ".zip")
 
     @classmethod
     def allow_multiple_file_upload(cls):
-        # can upload only 1 file
-        return False
+        # can upload multiple files
+        return True
 
     @classmethod
     def can_have_multiple_files(cls):
