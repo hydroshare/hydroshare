@@ -132,8 +132,7 @@ def data_store_structure(request):
                                             resource_file=file_in_irods).first()
 
         if not f:
-            logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
-                         .format(file_in_irods))
+            # skip metadata files
             continue
 
         logical_file_type = ''
