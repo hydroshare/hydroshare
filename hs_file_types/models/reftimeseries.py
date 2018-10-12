@@ -744,6 +744,14 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "ReferencedTimeSeriesAggregation"
 
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Reference to Time Series"
+
     @property
     def is_single_file_aggregation(self):
         """This aggregation supports only one file"""

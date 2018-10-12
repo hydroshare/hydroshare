@@ -120,43 +120,45 @@ def data_store_structure(request):
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
                      'folder_short_path': os.path.join(store_path, d_pk)})  # this is NOT short path
 
-    for fname in store[1]:  # files
+    is_federated = resource.is_federated
+    for index, fname in enumerate(store[1]):  # files
         fname = fname.decode('utf-8')
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
-        size = istorage.size(file_in_irods)
+        size = store[2][index]
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
         if idx >= 0:
             mtype = mtype[idx + 1:]
-        f_pk = ''
-        f_url = ''
+
+        if is_federated:
+            f = ResourceFile.objects.filter(object_id=resource.id,
+                                            fed_resource_file=file_in_irods).first()
+        else:
+            f = ResourceFile.objects.filter(object_id=resource.id,
+                                            resource_file=file_in_irods).first()
+
+        if not f:
+            # skip metadata files
+            continue
+
         f_ref_url = ''
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
-        for f in ResourceFile.objects.filter(object_id=resource.id):
-            if file_in_irods == f.storage_path:
-                f_pk = f.pk
-                f_url = f.url
-                if resource.resource_type == "CompositeResource":
-                    if f.has_logical_file:
-                        logical_file_type = f.logical_file_type_name
-                        logical_file_id = f.logical_file.id
-                        aggregation_name = f.aggregation_display_name
-                        if 'url' in f.logical_file.extra_data:
-                            f_ref_url = f.logical_file.extra_data['url']
-                break
+        if resource.resource_type == "CompositeResource":
+            if f.has_logical_file:
+                logical_file_type = f.logical_file_type_name
+                logical_file_id = f.logical_file.id
+                aggregation_name = f.aggregation_display_name
+                if 'url' in f.logical_file.extra_data:
+                    f_ref_url = f.logical_file.extra_data['url']
 
-        if f_pk:  # file is found in Django
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
-                          'reference_url': f_ref_url,
-                          'aggregation_name': aggregation_name,
-                          'logical_type': logical_file_type,
-                          'logical_file_id': logical_file_id})
-        else:  # file is not found in Django
-            logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
-                         .format(file_in_irods))
+        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
+                      'reference_url': f_ref_url,
+                      'aggregation_name': aggregation_name,
+                      'logical_type': logical_file_type,
+                      'logical_file_id': logical_file_id})
 
     return_object = {'files': files,
                      'folders': dirs,

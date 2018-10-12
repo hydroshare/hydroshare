@@ -266,9 +266,13 @@ class IrodsStorage(Storage):
         except SessionException:
             return False
 
+    def ils_l(self, path):
+        # in it's own method to mock for testing
+        return self.session.run("ils", None, "-l", path)[0]
+
     def listdir(self, path):
-        stdout = self.session.run("ils", None, path)[0].split("\n")
-        listing = ([], [])
+        stdout = self.ils_l(path).split("\n")
+        listing = ([], [], [])
         directory = stdout[0][0:-1]
         directory_prefix = "  C- " + directory + "/"
         for i in range(1, len(stdout)):
@@ -276,20 +280,37 @@ class IrodsStorage(Storage):
                 dirname = stdout[i][len(directory_prefix):].strip()
                 if dirname:
                     listing[0].append(dirname)
+                    listing[2].append("-1")
             else:
-                filename = stdout[i].strip()
+                # don't use split for filename to preserve spaces in filename
+                line = stdout[i].split(None, 6)
+                if len(line) < 6:
+                    # the last line is empty
+                    continue
+                if line[1] != '0':
+                    # filter replicas
+                    continue
+                # create a seperator based off the id, date, &
+                sep = " ".join(line[3:6])
+                filename = stdout[i].split(sep)[1].strip()
+                size = line[3]
                 if filename:
                     listing[1].append(filename)
+                    listing[2].append(size)
         return listing
 
     def size(self, name):
         stdout = self.session.run("ils", None, "-l", name)[0].split()
         return int(stdout[3])
 
-    def url(self, name, url_download=False):
+    def url(self, name, url_download=False, zipped=False):
         reverse_url = reverse('django_irods.views.download', kwargs={'path': name})
-        if url_download:
+        if url_download and zipped:
+            return reverse_url + '?url_download=true&zipped=True'
+        elif url_download:
             return reverse_url + '?url_download=true'
+        elif zipped:
+            return reverse_url + '?zipped=True'
         else:
             return reverse_url
 

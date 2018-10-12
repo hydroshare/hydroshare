@@ -11,7 +11,8 @@ from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file
 
-from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData
+from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
+    RefTimeseriesLogicalFile
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
@@ -37,6 +38,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.generic_file = 'hs_composite_resource/tests/data/{}'.format(self.generic_file_name)
         self.zip_file_name = 'test.zip'
         self.zip_file = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_name)
+        self.zipped_aggregation_file_name = 'multi_sites_formatted_version1.0.refts.zip'
+        self.zipped_aggregation_file = \
+            'hs_composite_resource/tests/data/{}'.format(self.zipped_aggregation_file_name)
 
     def tearDown(self):
         super(CompositeResourceTest, self).tearDown()
@@ -1347,3 +1351,22 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # ensure files aren't overwriting name clash
         self.assertEqual(self.composite_resource.files.count(), 3)
+
+    def test_unzip_aggregation(self):
+        """Test that when a zip file gets unzipped at data/contents/ where the contents includes a
+        single file aggregation.  Testing the aggregation is recognized on unzip"""
+
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.zipped_aggregation_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 0)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_file_rel_path = os.path.join('data', 'contents', self.zipped_aggregation_file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # there should be a referenced time series now
+        self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)

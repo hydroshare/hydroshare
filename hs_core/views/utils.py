@@ -28,6 +28,7 @@ from mezzanine.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.hydroshare.utils import check_aggregations
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
@@ -549,17 +550,19 @@ def link_irods_file_to_django(resource, filepath):
     if resource:
         folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath,
                                                                 test_exists=False)
+        ret = None
         try:
-            ResourceFile.get(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.get(resource=resource, file=base, folder=folder)
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
-            ResourceFile.create(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.create(resource=resource, file=base, folder=folder)
             b_add_file = True
 
         if b_add_file:
             file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
+        return ret
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
@@ -581,16 +584,19 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
 
     if foldername:
         store = istorage.listdir(foldername)
+        res_files = []
         # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path)
+                res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
+
+        check_aggregations(resource, store[0], res_files)
 
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):

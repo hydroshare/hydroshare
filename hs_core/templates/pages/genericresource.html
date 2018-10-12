@@ -45,7 +45,7 @@
                 <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
                 <div class="col-sm-12">
                     <div id='download-status-info' class="alert alert-success">
-                        Please wait for the resource bag to be created<span id="loading">.</span>
+                        Please wait for the download to be prepared<span id="loading">.</span>
                     </div>
                 </div>
             {% endif %}
@@ -145,6 +145,10 @@
                         <li id="btn-download" data-menu-name="download" >
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
+                        </li>
+                        <li id="btn-download-zip" data-menu-name="download" >
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download Zipped</span>
                         </li>
                     {% endif %}
                     <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">

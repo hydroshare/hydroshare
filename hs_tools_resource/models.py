@@ -1,6 +1,5 @@
 import requests
 import base64
-import imghdr
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
@@ -11,13 +10,15 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
+from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices, get_image_type
 
 from hs_file_types.utils import get_SupportedAggTypes_choices
 
 
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
+
+    discovery_content_type = 'Web App'  # used during discovery
 
     class Meta:
         proxy = True
@@ -463,7 +464,7 @@ class ToolIcon(AbstractMetaDataElement):
         image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
-        image_type = imghdr.what(None, h=response.content)
+        image_type = get_image_type(h=response.content)
         if image_type not in ["png", "gif", "jpeg"]:
             raise ValidationError("Supported icon image types are png, gif and jpeg")
         base64_string = base64.b64encode(response.content)

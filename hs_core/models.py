@@ -1894,16 +1894,30 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.hydroshare.resource import update_quota_usage
+
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        self.setAVU("quotaUserName", new_holder.username)
+        attname = "quotaUserName"
+
+        if setter.username != new_holder.username:
+            # this condition check is needed to make sure attname exists as AVU before getting it
+            oldqu = self.getAVU(attname)
+            if oldqu:
+                # have to remove the old AVU first before setting to the new one in order to trigger
+                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
+                # holder will be reduced as a result of setting quota holder to a different user
+                self.removeAVU(attname, oldqu)
+        self.setAVU(attname, new_holder.username)
+        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -1921,6 +1935,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             # quotaUserName AVU does not exist, return None
             return None
+
+    def removeAVU(self, attribute, value):
+        """Remove an AVU at the resource level.
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
@@ -2759,6 +2783,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
+    class Meta:
+        index_together = [['object_id', 'resource_file'],
+                          ['object_id', 'fed_resource_file'],
+                          ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
@@ -3394,6 +3422,8 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
+    discovery_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for BaseResource model."""
 
@@ -3590,6 +3620,11 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model()._meta.verbose_name
 
     @property
+    def discovery_content_type(self):
+        """Return verbose name of content type."""
+        return self.get_content_model().discovery_content_type
+
+    @property
     def can_be_published(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
@@ -3649,6 +3684,7 @@ class BaseResource(Page, AbstractResource):
         return hs_term_dict
 
 
+# TODO Deprecated
 class GenericResource(BaseResource):
     """Define GenericResource model."""
 
@@ -3659,9 +3695,10 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
+    discovery_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for GenericResource model."""
-
         verbose_name = 'Generic'
         proxy = True
 
