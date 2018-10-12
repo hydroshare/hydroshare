@@ -231,7 +231,12 @@ class CompositeResource(BaseResource):
             :raises ObjectDoesNotExist if no matching aggregation is found
             """
             for aggregation in self.logical_files:
-                if aggregation.aggregation_name == name:
+                # remove the last slash in aggregation_name if any
+                if aggregation.aggregation_name.endswith('/'):
+                    aggregation_name = aggregation.aggregation_name[0:-1]
+                else:
+                    aggregation_name = aggregation.aggregation_name
+                if aggregation_name == name:
                     return aggregation
 
             raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))

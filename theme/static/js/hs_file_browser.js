@@ -945,10 +945,12 @@ function startDownload(zipped) {
         for (var i = 0; i < downloadList.length; i++) {
             var url = $(downloadList[i]).attr("data-url");
             var fileName = $(downloadList[i]).children(".fb-file-name").text();
-            if (fileName.toUpperCase().endsWith(".URL"))
+            if (fileName.toUpperCase().endsWith(".URL")) {
                 url += '?url_download=true';
-
-            if(zipped === true){
+                if(zipped === true)
+                    url += "&zipped=true"
+            }
+            else if(zipped === true) {
                 url += "?zipped=True"
             }
 

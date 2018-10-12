@@ -512,8 +512,8 @@ def file_download_url_mapper(request, shortkey):
     public_file_path = '/'.join(path_split)
 
     istorage = res.get_irods_storage()
-    url_download = True if request.GET.get('url_download', 'false') == 'true' else False
-    zipped = True if request.GET.get('zipped', "False") == 'True' else False
+    url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
+    zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
     return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
 
 

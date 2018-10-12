@@ -67,7 +67,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # initialize case variables
     is_bag_download = False
     is_zip_download = False
-    is_zip_request = request.GET.get('zipped', "False") == "True"
+    is_zip_request = request.GET.get('zipped', "False").lower() == "true"
     is_sf_agg_file = False
     is_sf_request = False
 
@@ -110,6 +110,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         irods_path = path
     # in many cases, path and output_path are the same.
     output_path = path
+
     irods_output_path = irods_path
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
@@ -128,29 +129,32 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             if __debug__:
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
+
+            # check for single file aggregations
+            if "data/contents/" in path:  # not a metadata file
+                for f in ResourceFile.objects.filter(object_id=res.id):
+                    if path == f.storage_path:
+                        is_sf_agg_file = True
+                        if __debug__:
+                            logger.debug(
+                                "request for single file aggregation {}".format(path))
+                        break
+
             if is_zip_request:
-                # check for single file aggregations
-                if "data/contents/" in path:  # not a metadata file
-                    for f in ResourceFile.objects.filter(object_id=res.id):
-                        if path == f.storage_path:
-                            if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-                                if 'url' in f.logical_file.extra_data:
-                                    download_url = request.GET.get('url_download', 'false')
-                                    if download_url == 'false':
-                                        # redirect to referenced url in the url file instead
-                                        redirect_url = f.logical_file.extra_data['url']
-                                        return HttpResponseRedirect(redirect_url)
-                                is_sf_agg_file = True
-                                if __debug__:
-                                    logger.debug(
-                                        "request for single file aggregation {}".format(path))
-                                break
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
                 if res.is_federated:
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
+            else:
+                if f.has_logical_file and f.logical_file.is_single_file_aggregation:
+                    if 'url' in f.logical_file.extra_data:
+                        download_url = request.GET.get('url_download', 'false').lower()
+                        if download_url == 'false':
+                            # redirect to referenced url in the url file instead
+                            redirect_url = f.logical_file.extra_data['url']
+                            return HttpResponseRedirect(redirect_url)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
@@ -401,11 +405,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         else:
             response.content = "<h1>" + content_msg + "</h1>"
         return response
-
-
-def url_download(request, path, *args, **kwargs):
-    # download the URL file rather than redirect
-    return download(request, path, url_redirect=False, *args, **kwargs)
 
 
 @api_view(['GET'])

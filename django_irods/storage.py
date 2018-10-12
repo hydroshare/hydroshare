@@ -1,6 +1,7 @@
 import os
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
+from urllib import urlencode
 
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
@@ -305,14 +306,8 @@ class IrodsStorage(Storage):
 
     def url(self, name, url_download=False, zipped=False):
         reverse_url = reverse('django_irods.views.download', kwargs={'path': name})
-        if url_download and zipped:
-            return reverse_url + '?url_download=true&zipped=True'
-        elif url_download:
-            return reverse_url + '?url_download=true'
-        elif zipped:
-            return reverse_url + '?zipped=True'
-        else:
-            return reverse_url
+        query_params = {'url_download': url_download, "zipped": zipped}
+        return reverse_url + '?' + urlencode(query_params)
 
     def get_available_name(self, name):
         """
