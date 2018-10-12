@@ -27,11 +27,13 @@ class HSRESTTestCase(APITestCase):
         self.user = users.create_account(
             'test_user@email.com',
             username='testuser',
+            password='foobar', 
             first_name='some_first_name',
             last_name='some_last_name',
             superuser=False)
 
         self.client.force_authenticate(user=self.user)
+        self.client.login(username='testuser', password='foobar') 
 
         self.resources_to_delete = []
         self.groups_to_delete = []

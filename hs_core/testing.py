@@ -236,21 +236,19 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/sub_test_dir/' + file_name_list[0])
         # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
-        with self.assertRaises(SessionException):
-            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
 
-        # Resource should still contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
+        # Resource should still contain 5 files: file3_new.txt (2), sub_test_dir.zip,
+        # and file1.txt (2)
         file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 3")
+        self.assertEqual(file_cnt, 5, msg="resource file count didn't match - " +
+                                          str(file_cnt) + " != 5")
 
-        # test unzipping the file succeeds now after deleting the existing folder
-        # TODO: this causes a multiple delete because the paths are valid now.
-        istorage = res.get_irods_storage()
-
+        # remove all files except the zippped file
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir-1')
 
-        # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
+        # Now resource should contain two files: file3_new.txt sub_test_dir.zip
         file_cnt = res.files.all().count()
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
@@ -262,27 +260,28 @@ class TestCaseCommonUtilities(object):
             updated_res_file_names.append(rf.short_path)
         self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
                          msg="resource still contains the zip file after unzipping")
-        self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[0])
-        self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[1])
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg='resource does not contain unzipped file new_' + file_name_list[2])
 
         # rename a folder
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir', 'data/contents/sub_dir')
+                                      'data/contents/sub_test_dir/sub_test_dir',
+                                      'data/contents/sub_dir')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
 
-        self.assertNotIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[0] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] +
                           ' in the new folder after renaming')
-        self.assertNotIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[1] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,

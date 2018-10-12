@@ -34,8 +34,8 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         tif_file_obj = open(self.raster_file_path, "r")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
-        resource_file_add_process(resource=self.resource,
-                                  files=(uploaded_file,), user=self.user)
+        resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
+                                  auto_aggregate=False)
 
         # resource should have one file at this point
         self.assertEqual(self.resource.files.count(), 1)
@@ -59,8 +59,8 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         tif_file_obj = open(self.raster_file_path, "r")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
-        resource_file_add_process(resource=self.resource,
-                                  files=(uploaded_file,), user=self.user)
+        resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
+                                  auto_aggregate=False)
 
         # resource should have one file at this point
         self.assertEqual(self.resource.files.count(), 1)
@@ -94,8 +94,8 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         tif_file_obj = open(self.raster_file_path, "r")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
-        resource_file_add_process(resource=self.resource,
-                                  files=(uploaded_file,), user=self.user)
+        resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
+                                  auto_aggregate=False)
         # resource should have one file at this point
         self.assertEqual(self.resource.files.count(), 1)
         res_file = self.resource.files.all().first()
@@ -119,8 +119,8 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         tif_file_obj = open(self.raster_file_path, "r")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
-        resource_file_add_process(resource=self.resource,
-                                  files=(uploaded_file,), user=self.user)
+        resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
+                                  auto_aggregate=False)
         # resource should have one file at this point
         self.assertEqual(self.resource.files.count(), 1)
         res_file = self.resource.files.all().first()

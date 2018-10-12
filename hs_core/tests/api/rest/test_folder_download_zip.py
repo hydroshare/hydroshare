@@ -54,31 +54,27 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.client.post(url3, params)
 
     def test_folder_download_rest(self):
-        date_folder = (date.today()).strftime('%Y-%m-%d')
-        zip_download_url = "/resource/{pid}/data/contents/foo".format(pid=self.pid)
-        response = self.client.get(zip_download_url, format="json")
-        # becasue of the redirect to the internal url, the status code is 301
-        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
-        zip_download_url = "/django_irods/rest_download/zips/{pid}/data/contents/foo".format(
-            pid=self.pid)
-        response = self.client.get(zip_download_url, format="json")
+        zip_download_url = "/django_irods/rest_download/{pid}/data/contents/foo"\
+                           .format(pid=self.pid)
+
+        response = self.client.get(zip_download_url, format="json", follow=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)
         task_id = response_json["task_id"]
         download_path = response_json["download_path"]
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
         download_split = download_path.split("/")
+        date_folder = (date.today()).strftime('%Y-%m-%d')
         self.assertEqual("django_irods", download_split[1])
         self.assertEqual("rest_download", download_split[2])
         self.assertEqual("zips", download_split[3])
         self.assertEqual(date_folder, download_split[4])
-        self.assertEqual(self.pid, download_split[5])
         # index 5 is the random folder
+        self.assertEqual(self.pid, download_split[6])
         self.assertEqual("data", download_split[7])
         self.assertEqual("contents", download_split[8])
         self.assertEqual("foo.zip", download_split[9])
-
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content)
-        self.assertNotEqual(((response_json["download_path"])[5]).split("/"), download_split[5])
+        self.assertNotEqual(response_json["download_path"].split("/")[5], download_split[5])
