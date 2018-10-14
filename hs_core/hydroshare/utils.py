@@ -1049,15 +1049,21 @@ def resolve_request(request):
 
     return {}
 
-
+# TODO: Pabitra - Consider making this a method of the composite resource class
 def check_aggregations(resource, folders, res_files):
+    """A helper to support creating aggregations for a given composite resource when new folders
+    or files are added to the resource
+    :param resource: an instance of a composite resource
+    :param  folders: a list of folders to look for possibly creating of aggregations
+    :param  res_files: a list of resource files to look for possibly creating aggregations
+    """
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
         # check folders for aggregations
         for fol in folders:
             folder = os.path.join(resource.file_path, fol)
             agg_type = resource.get_folder_aggregation_type_to_set(folder)
-            if agg_type:
+            if agg_type and agg_type != "FileSetLogicalFile":
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,
                                       hs_file_type=agg_type, folder_path=fol,
