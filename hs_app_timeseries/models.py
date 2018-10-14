@@ -845,6 +845,8 @@ class CVAggregationStatistic(AbstractCVLookupTable):
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
 
+    discovery_content_type = 'Time Series'  # used during discovery
+
     class Meta:
         verbose_name = 'Time Series'
         proxy = True

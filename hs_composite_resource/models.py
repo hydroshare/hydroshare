@@ -18,6 +18,8 @@ from hs_file_types.utils import update_target_temporal_coverage, update_target_s
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
+    discovery_content_type = 'Composite'  # used during discovery
+
     class Meta:
         verbose_name = 'Composite Resource'
         proxy = True

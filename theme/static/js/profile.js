@@ -263,7 +263,7 @@ $(document).ready(function () {
     });
 
     $(".btn-cancel-profile-edit").click(function () {
-        setViewMode();
+        location.reload();
     });
 
     // Abstract collapse toggle

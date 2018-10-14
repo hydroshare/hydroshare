@@ -2,7 +2,6 @@ import datetime
 import json
 import mimetypes
 import os
-# import random
 from uuid import uuid4
 
 from django.conf import settings
@@ -11,7 +10,6 @@ from django.http import HttpResponse, FileResponse, HttpResponseRedirect
 from rest_framework.decorators import api_view
 
 from django_irods import icommands
-# from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import FILE_SIZE_LIMIT
@@ -43,21 +41,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     * `output_path` is the output path to be reported in the response object.
     * `irods_output_path` is the location of `output_path` in irods
 
-    and there are seven cases:
+    and there are six cases:
 
-    1. path points to a single file that is not a single-file-aggregation
-       object in a composite resource.
-    2. path points to a single file that is a single-file-aggregation
-       object in a composite resource.
-    3. path points to a metadata object that may need updating.
-    4. path points to a bag that needs to be updated and then returned.
-    5. path points to a folder that needs to be zipped.
-    6. path points to a previously zipped file that was zipped asynchronously.
-    7. path points to a .zip file that -- when the .zip is removed -- is a file that can be zipped
+    Zipped query param signal the download should be zipped
+        - folders are always zipped regardless of this paramter
+        - single file aggregations are zipped with the aggregation metadata files
 
-    In cases 1, 3, 4, and 6 the output path is the input path.
-    In cases 2, 5, and 7, the output path is created as a result of
-    the operation of zipping the object and its metadata into a new zipfile.
+    A path may point to:
+    1. a single file
+    2. a single-file-aggregation object in a composite resource.
+    3. a folder
+    3. a metadata object that may need updating.
+    4. a bag that needs to be updated and then returned.
+    6. a previously zipped file that was zipped asynchronously.
+
     """
     if __debug__:
         logger.debug("request path is {}".format(path))
@@ -70,8 +67,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # initialize case variables
     is_bag_download = False
     is_zip_download = False
-    is_zip_request = False
+    is_zip_request = request.GET.get('zipped', "False") == "True"
     is_sf_agg_file = False
+    is_sf_request = False
 
     if split_path_strs[0] == 'bags':
         is_bag_download = True
@@ -111,7 +109,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # in many cases, path and output_path are the same.
     output_path = path
     irods_output_path = irods_path
-
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
@@ -128,86 +125,33 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         elif istorage.exists(irods_path):
             if __debug__:
                 logger.debug("request for single file {}".format(path))
-        else:  # special case: single file compression request: add .zip to existing file
-            root, ext = os.path.splitext(path)
-            irods_root, ext = os.path.splitext(irods_path)
-            if ext == '.zip' and istorage.exists(irods_root):
-                # single-file zip request invoked by ending a path in .zip
-                # (This also works for folders but is unnecessary)
-                path = root  # strip .zip suffix from request
-                irods_path = irods_root
-                daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-                output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, root)
-                if res.is_federated:
-                    irods_output_path = os.path.join(res.resource_federation_path, output_path)
-                else:
-                    irods_output_path = output_path
-
+            is_sf_request = True
+            if is_zip_request:
+                # check for single file aggregations
                 if "data/contents/" in path:  # not a metadata file
                     for f in ResourceFile.objects.filter(object_id=res.id):
                         if path == f.storage_path:
                             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
                                 is_sf_agg_file = True
-                            break
-                if not is_sf_agg_file:
-                    if __debug__:
-                        logger.debug("zipping file {} to {}".format(root, output_path))
-                    is_zip_request = True
+                                if __debug__:
+                                    logger.debug(
+                                        "request for single file aggregation {}".format(path))
+                                break
+                daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+                output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+                if res.is_federated:
+                    irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
-                    if __debug__:
-                        logger.debug("zipping single-file-aggregate {} to {}"
-                                     .format(root, output_path))
-
-                # At this point, either is_zip_request or is_sf_agg_file is True.
-                # NOTE: there is an existence check below for the final path
-                # NOTE: metadata is automatically appended if the file is a single-file-aggregation
-
-    # logger.debug("before aggregation check, bag={}, zipd={} zipr={} sfagg={}".format(
-    #     str(is_bag_download),
-    #     str(is_zip_download),
-    #     str(is_zip_request),
-    #     str(is_sf_agg_file)
-    # ))
-    # logger.debug("before aggregation check, path={}, opath={}".format(
-    #     path, output_path
-    # ))
-
-    # at this point, we've modified the output_path and irods_output_path for three cases.
-    # aggregation logic only applies if the download request isn't a bag, zipfile, or folder,
-    # and the thing to be downloaded is a "single file aggregation" object.
-    if not is_bag_download and not is_zip_download and not is_zip_request and \
-       res.resource_type == 'CompositeResource':
-        if 'data/contents/' in path:  # not a metadata file
-            for f in ResourceFile.objects.filter(object_id=res.id):
-                if path == f.storage_path:
-                    if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-                        is_sf_agg_file = True
-                        daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-                        output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                        if res.is_federated:
-                            irods_output_path = os.path.join(res.resource_federation_path,
-                                                             output_path)
-                        else:
-                            irods_output_path = output_path
-                break
+                    irods_output_path = output_path
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
-    # At most one of the following flags has also been set:
+    # * is_zip_request: signals download should be zipped, folders are always zipped
+    # * is_sf_agg_file: path is a single-file aggregation in Composite Resource
+    # * is_sf_request: path is a single-file
+    # flags for download:
     # * is_bag_download: download a bag in format bags/{rid}.zip
     # * is_zip_download: download a zipfile in format zips/{date}/{random guid}/{path}.zip
-    # * is_zip_request: path is a folder; zip before returning
-    # * is_sf_agg_file: path is a single-file aggregation in Composite Resource, return a zip
     # if none of these are set, it's a normal download
-
-    # logger.debug(" after aggregation check, bag={}, zipd={} zipr={} sfagg={}".format(
-    #     str(is_bag_download),
-    #     str(is_zip_download),
-    #     str(is_zip_request),
-    #     str(is_sf_agg_file)
-    # ))
-    # logger.debug(" after aggregation check, path={}, opath={}".format(
-    #     path, output_path
-    # ))
 
     # determine active session
     if res.is_federated:
@@ -239,18 +183,13 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     resource_cls = check_resource_type(res.resource_type)
 
-    if is_zip_download:
-        pass  # zip already created; will be handled at the end; no further action necessary
-
-    elif is_zip_request or is_sf_agg_file:
+    if is_zip_request:
 
         if use_async:
-            # TODO: Why is there a wait of 3 seconds here? Changes so far have been synchronous!
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                is_sf_agg_file), countdown=3)
-            # TODO: 20 minutes might not be enough if the zipfile is large.
+                                                is_sf_agg_file, is_sf_request))
             delete_zip.apply_async((irods_output_path, ),
-                                   countdown=(20 * 60))  # delete after 20 minutes
+                                   countdown=(60 * 60 * 24))  # delete after 24 hours
 
             if rest_call:
                 return HttpResponse(
@@ -270,10 +209,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         is_sf_agg_file)
-            # TODO: 20 minutes might not be enough if the zipfile is large.
+                                         is_sf_agg_file, is_sf_request)
             delete_zip.apply_async((irods_output_path, ),
-                                   countdown=(20 * 60))  # delete after 20 minutes
+                                   countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()

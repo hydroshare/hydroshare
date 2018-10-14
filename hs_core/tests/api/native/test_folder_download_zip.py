@@ -77,5 +77,5 @@ class TestFolderDownloadZip(TestCase):
         output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                        output_path, True))
+                                        output_path, True, sf_zip=True))
         self.assertTrue(IrodsStorage().exists(output_path))
