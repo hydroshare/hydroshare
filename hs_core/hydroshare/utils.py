@@ -1049,6 +1049,7 @@ def resolve_request(request):
 
     return {}
 
+
 # TODO: Pabitra - Consider making this a method of the composite resource class
 def check_aggregations(resource, folders, res_files):
     """A helper to support creating aggregations for a given composite resource when new folders
@@ -1070,6 +1071,6 @@ def check_aggregations(resource, folders, res_files):
                                       fail_feedback=False)
         # check files for aggregation
         for res_file in res_files:
-            if not res_file.has_logical_file:
+            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)
