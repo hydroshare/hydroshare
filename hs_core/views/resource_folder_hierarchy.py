@@ -1,28 +1,23 @@
 import json
 import logging
 import os
-from uuid import uuid4
-import errno
-import shutil
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseServerError
-from django.conf import settings
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, \
-    get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
-from hs_file_types.utils import set_logical_file_type
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, validate_url, \
-    add_url_file_to_resource
+    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
+    add_reference_url_to_resource, edit_reference_url_in_resource
+
 
 logger = logging.getLogger(__name__)
 
@@ -358,7 +353,7 @@ def data_store_add_reference(request):
     create the reference url file, add the url file to resource, and add the url to
     metadata accordingly for easy later retrieval
     :param request:
-    :return: JsonResponse on success or HttpResponse with error status code on error
+    :return: JsonResponse with status code and message
     """
 
     res_id = request.POST.get('res_id', None)
@@ -375,30 +370,20 @@ def data_store_add_reference(request):
     if not ref_url:
         return HttpResponseBadRequest('Must have ref_url included in the POST data')
 
-    # validate curr_path starts with data/contents
-    ref_name = ref_name.lower()
-    if not ref_name.endswith('.url'):
-        ref_name += '.url'
-
-    is_valid, err_msg = validate_url(ref_url)
-    if not is_valid:
-        return HttpResponseBadRequest(err_msg)
-
-    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
-
-    if not f:
-        return HttpResponseServerError('New file failed to be added to the resource')
-
-    # make sure the new file has logical file set and is single file aggregation
     try:
-        # set 'SingleFile' logical file type to this .url file
-        res = get_resource_by_shortkey(res_id)
-        set_logical_file_type(res, request.user, f.id, 'SingleFile', extra_data={'url': ref_url})
-        resource_modified(res, request.user, overwrite_bag=False)
-    except Exception as ex:
-        return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        res, _, _ = authorize(request, res_id,
+                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponseBadRequest('Bad request - resource not found')
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    return JsonResponse({'status': 'success'})
+    ret_status, msg = add_reference_url_to_resource(request.user,
+                                                    res_id, ref_url, ref_name, curr_path)
+    if ret_status == status.HTTP_200_OK:
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'message': msg}, status=ret_status)
 
 
 @api_view(['POST'])
@@ -422,11 +407,6 @@ def data_store_edit_reference_url(request):
     if not new_ref_url:
         return HttpResponseBadRequest('Must have new_ref_url included in the POST data')
 
-    # validate curr_url_file_path starts with data/contents
-    ref_name = url_filename.lower()
-    if not ref_name.endswith('.url'):
-        return HttpResponseBadRequest('url_filename must have .url extension in the POST data')
-
     try:
         res, _, _ = authorize(request, res_id,
                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -435,54 +415,12 @@ def data_store_edit_reference_url(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    is_valid, err_msg = validate_url(new_ref_url)
-    if not is_valid:
-        return HttpResponseBadRequest(err_msg)
-
-    # temp path to hold updated url file to be written to iRODS
-    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
-
-    prefix_path = 'data/contents'
-    if curr_path != prefix_path and curr_path.startswith(prefix_path):
-        curr_path = curr_path[len(prefix_path) + 1:]
-    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        folder = None
+    ret_status, msg = edit_reference_url_in_resource(request.user, res, new_ref_url,
+                                                     curr_path, url_filename)
+    if ret_status == status.HTTP_200_OK:
+        return JsonResponse({'status': 'success'})
     else:
-        folder = curr_path[len(prefix_path) + 1:]
-
-    # update url in extra_data in url file's logical file object
-    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
-    extra_data = f.logical_file.extra_data
-    extra_data['url'] = new_ref_url
-    f.logical_file.extra_data = extra_data
-    f.logical_file.save()
-
-    try:
-        os.makedirs(temp_path)
-    except OSError as ex:
-        # TODO: there might be concurrent operations.
-        if ex.errno == errno.EEXIST:
-            shutil.rmtree(temp_path)
-            os.makedirs(temp_path)
-        else:
-            raise Exception(ex.message)
-
-    # update url file in iRODS
-    urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
-    from_file_name = os.path.join(temp_path, ref_name)
-    with open(from_file_name, 'w') as out:
-        out.write(urlstring)
-    istorage = res.get_irods_storage()
-    target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
-    try:
-        istorage.saveFile(from_file_name, target_irods_file_path)
-        shutil.rmtree(temp_path)
-        resource_modified(res, request.user, overwrite_bag=False)
-    except SessionException as ex:
-        shutil.rmtree(temp_path)
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return JsonResponse({'status': 'success'})
+        return JsonResponse({'message': msg}, status=ret_status)
 
 
 def data_store_create_folder(request):

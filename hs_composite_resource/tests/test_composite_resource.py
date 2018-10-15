@@ -4,12 +4,14 @@ import os
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
+from rest_framework import status
+
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
-    unzip_file
+    unzip_file, add_reference_url_to_resource
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile
@@ -31,7 +33,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         )
 
         self.res_title = 'Testing Composite Resource'
-
+        self.invalid_url = "http://i.am.invalid"
+        self.valid_url = "https://www.google.com"
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
         self.generic_file_name = 'generic_file.txt'
@@ -90,6 +93,39 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # setting resource to None to avoid deleting resource again in tearDown() since we have
         # deleted the resource already
         self.composite_resource = None
+
+    def test_add_referened_url_to_composite_resource(self):
+        # test that referenced url can be added to composite resource as a genericlogical file
+        # type single file aggregation
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        # test invalid url fails to be added to an empty composite resource
+        self.create_composite_resource()
+        url_file_base_name = 'test_url'
+        ret_status, msg = add_reference_url_to_resource(self.user,
+                                                        self.composite_resource.short_id,
+                                                        self.invalid_url, url_file_base_name,
+                                                        'data/contents')
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST)
+
+        # test valid url can be added to an empty composite resource
+        self.create_composite_resource()
+        url_file_base_name = 'test_url'
+        ret_status, msg = add_reference_url_to_resource(self.user,
+                                                        self.composite_resource.short_id,
+                                                        self.valid_url, url_file_base_name,
+                                                        'data/contents')
+        self.assertEqual(ret_status, status.HTTP_200_OK)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # there should be one GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        res_file = self.composite_resource.files.all().first()
+        # url singlefile aggregation should have extra_data url field created
+        url_logical_file = res_file.logical_file
+        self.assertEqual(url_logical_file.extra_data['url'], self.valid_url)
+
 
     def test_add_file_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file

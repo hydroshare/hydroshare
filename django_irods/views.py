@@ -155,7 +155,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 else:
                     irods_output_path = output_path
 
-
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
     # * is_sf_agg_file: path is a single-file aggregation in Composite Resource
