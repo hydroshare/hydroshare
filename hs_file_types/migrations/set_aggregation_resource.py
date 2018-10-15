@@ -1,0 +1,61 @@
+import logging
+
+from django.db import migrations
+
+
+def get_aggregations(resource):
+    lf_list = []
+    lf_list.extend(resource.filesetlogicalfile_set.all())
+    lf_list.extend(resource.genericlogicalfile_set.all())
+    lf_list.extend(resource.geofeaturelogicalfile_set.all())
+    lf_list.extend(resource.netcdflogicalfile_set.all())
+    lf_list.extend(resource.georasterlogicalfile_set.all())
+    lf_list.extend(resource.reftimeserieslogicalfile_set.all())
+    lf_list.extend(resource.timeserieslogicalfile_set.all())
+
+    return lf_list
+
+
+def set_aggregation_resource(apps, schema_editor):
+    """Sets the new resource attribute of the aggregation object
+    for each of the aggregations in each of the existing composite resources
+    """
+
+    log = logging.getLogger()
+    CompositeResource = apps.get_model("hs_composite_resource", "CompositeResource")
+
+    log_msg_1 = "All aggregations (total of {aggr_count}) for resource (ID:{res_id}) were " \
+                "successfully assigned the resource object."
+    log_msg_2 = "There are no aggregations in resource (ID:{})."
+    for res in CompositeResource.objects.all():
+        res_aggregations = get_aggregations(res)
+        for aggregation in res_aggregations:
+            aggregation.resource = res
+            aggregation.save()
+        if res_aggregations:
+            log_msg = log_msg_1.format(aggr_count=len(res_aggregations), res_id=res.short_id)
+            if __debug__:
+                print(">>>" + log_msg)
+            log.info(log_msg)
+        else:
+            log_msg = log_msg_2.format(res.short_id)
+            if __debug__:
+                print(">>>" + log_msg)
+            log.info(log_msg)
+
+    log_msg = "A total of {} composite resources were processed.".format(
+        CompositeResource.objects.all().count())
+    if __debug__:
+        print(">>>" + log_msg)
+    log.info(log_msg)
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('hs_file_types', '0008_auto_20180812_1859'),
+    ]
+
+    operations = [
+        migrations.RunPython(code=set_aggregation_resource),
+    ]
