@@ -49,7 +49,6 @@ class CompositeResource(BaseResource):
             # url file cannot be published
             if 'url' in lf.extra_data:
                 return False
-                
         return True
 
     def set_default_logical_file(self):

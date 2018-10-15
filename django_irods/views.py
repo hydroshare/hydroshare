@@ -102,7 +102,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     # default values are changed later as needed
 
-
     istorage = res.get_irods_storage()
     if res.is_federated:
         irods_path = os.path.join(res.resource_federation_path, path)
@@ -135,6 +134,14 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 for f in ResourceFile.objects.filter(object_id=res.id):
                     if path == f.storage_path:
                         is_sf_agg_file = True
+                        if not is_zip_request and f.has_logical_file and \
+                                f.logical_file.is_single_file_aggregation:
+                            if 'url' in f.logical_file.extra_data:
+                                download_url = request.GET.get('url_download', 'false').lower()
+                                if download_url == 'false':
+                                    # redirect to referenced url in the url file instead
+                                    redirect_url = f.logical_file.extra_data['url']
+                                    return HttpResponseRedirect(redirect_url)
                         if __debug__:
                             logger.debug(
                                 "request for single file aggregation {}".format(path))
@@ -147,14 +154,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
-            else:
-                if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-                    if 'url' in f.logical_file.extra_data:
-                        download_url = request.GET.get('url_download', 'false').lower()
-                        if download_url == 'false':
-                            # redirect to referenced url in the url file instead
-                            redirect_url = f.logical_file.extra_data['url']
-                            return HttpResponseRedirect(redirect_url)
+
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped

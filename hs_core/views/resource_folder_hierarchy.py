@@ -384,7 +384,7 @@ def data_store_add_reference(request):
     if not is_valid:
         return HttpResponseBadRequest(err_msg)
 
-    f =  add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
+    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
 
     if not f:
         return HttpResponseServerError('New file failed to be added to the resource')
