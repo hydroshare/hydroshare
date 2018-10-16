@@ -11,7 +11,7 @@ from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
-    unzip_file, add_reference_url_to_resource
+    unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile
@@ -94,9 +94,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # deleted the resource already
         self.composite_resource = None
 
-    def test_add_referened_url_to_composite_resource(self):
+    def test_add_and_edit_referened_url(self):
         # test that referenced url can be added to composite resource as a genericlogical file
-        # type single file aggregation
+        # type single file aggregation, and can also be edited
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -111,7 +111,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST)
 
         # test valid url can be added to an empty composite resource
-        self.create_composite_resource()
         url_file_base_name = 'test_url'
         ret_status, msg = add_reference_url_to_resource(self.user,
                                                         self.composite_resource.short_id,
@@ -121,11 +120,43 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.count(), 1)
         # there should be one GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        res_file = self.composite_resource.files.all().first()
-        # url singlefile aggregation should have extra_data url field created
-        url_logical_file = res_file.logical_file
-        self.assertEqual(url_logical_file.extra_data['url'], self.valid_url)
+        # test valid url can be added to a subfolder of a composite resource
+        new_folder_path = os.path.join("data", "contents", "my-new-folder")
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        ret_status, msg = add_reference_url_to_resource(self.user,
+                                                        self.composite_resource.short_id,
+                                                        self.valid_url, url_file_base_name,
+                                                        new_folder_path)
+        self.assertEqual(ret_status, status.HTTP_200_OK)
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # there should be two GenericLogicalFile objects at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 2)
+        for res_file in self.composite_resource.files.all():
+            # url singlefile aggregation should have extra_data url field created
+            url_logical_file = res_file.logical_file
+            self.assertEqual(url_logical_file.extra_data['url'], self.valid_url)
 
+        # remove new_folder_path
+        remove_folder(self.user, self.composite_resource.short_id, new_folder_path)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # test edit reference url
+        new_ref_url = self.invalid_url
+        url_filename = url_file_base_name + '.url'
+        ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
+                                                         new_ref_url, 'data/contents',
+                                                         url_filename)
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST)
+
+        new_ref_url = 'https://www.yahoo.com'
+        ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
+                                                         new_ref_url, 'data/contents',
+                                                         url_filename)
+        self.assertEqual(ret_status, status.HTTP_200_OK)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        res_file = self.composite_resource.files.all().first()
+        url_logical_file = res_file.logical_file
+        self.assertEqual(url_logical_file.extra_data['url'], new_ref_url)
 
     def test_add_file_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file
@@ -741,10 +772,39 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
 
+    def test_cannot_be_published_with_refenced_url_single_file_aggregation(self):
+        """
+        test a composite resource that includes referenced url single file aggregation cannot be
+        published
+        """
+        self.create_composite_resource()
+        url_file_base_name = 'test_url'
+        ret_status, msg = add_reference_url_to_resource(self.user,
+                                                        self.composite_resource.short_id,
+                                                        self.valid_url, url_file_base_name,
+                                                        'data/contents')
+        self.assertEqual(ret_status, status.HTTP_200_OK)
+        # at this point resource can't be public or discoverable as some core metadata missing
+        self.assertFalse(self.composite_resource.can_be_public_or_discoverable)
+        missing_elements = self.composite_resource.metadata.get_required_missing_elements()
+        self.assertEqual(len(missing_elements), 2)
+        self.assertIn('Abstract', missing_elements)
+        self.assertIn('Keywords', missing_elements)
+        # add the above missing elements
+        # create abstract
+        metadata = self.composite_resource.metadata
+        # add Abstract (element name is description)
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # add keywords (element name is subject)
+        metadata.create_element('subject', value='sub-1')
+        # at this point resource can be public or discoverable, but cannot be published
+        self.assertTrue(self.composite_resource.can_be_public_or_discoverable)
+        self.assertFalse(self.composite_resource.can_be_published)
+
     def test_can_be_public_or_discoverable_with_single_file_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
         This function should return False unless we have the required metadata at the resource level
-        when the resource contains a single file aggregation (e.g., generic aggregation)
+        when the resource contains a single file aggregation (e.g., generic aggregation).
         """
 
         self.create_composite_resource()
