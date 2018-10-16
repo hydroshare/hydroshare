@@ -1046,8 +1046,7 @@ def check_aggregations(resource, folders, res_files):
         from hs_file_types.utils import set_logical_file_type
         # check folders for aggregations
         for fol in folders:
-            folder = os.path.join(resource.file_path, fol)
-            agg_type = resource.get_folder_aggregation_type_to_set(folder)
+            agg_type = resource.get_folder_aggregation_type_to_set(fol)
             if agg_type:
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,

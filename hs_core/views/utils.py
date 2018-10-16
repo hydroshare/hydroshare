@@ -540,7 +540,9 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
 
-        check_aggregations(resource, store[0], res_files)
+        if foldername.startswith(resource.root_path):
+            foldername = foldername.split(os.path.join(resource.root_path, "/data/contents/"))[1]
+        check_aggregations(resource, [foldername], res_files)
 
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
@@ -664,7 +666,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -674,6 +676,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     be unzipped
     :param bool_remove_original: a bool indicating whether original zip file will be deleted
     after unzipping.
+    :param bool overwrite: a bool indicating whether to overwrite files on unzip
     :return:
     """
     if __debug__:
@@ -687,8 +690,38 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
         raise ValidationError("Unzipping of this file is not supported.")
 
     zip_fname = os.path.basename(zip_with_rel_path)
-    unzip_path = istorage.unzip(zip_with_full_path)
-    link_irods_folder_to_django(resource, istorage, unzip_path)
+    working_dir = os.path.dirname(zip_with_full_path)
+    try:
+
+        if overwrite:
+            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder="temp-change-this")
+            unzipped_files = listfiles_recursively(istorage, unzip_path)
+            unzipped_foldername = os.path.basename(unzip_path)
+            destination_folders = []
+            for folder in listfolders(istorage, unzip_path):
+                destination_folder = os.path.join(working_dir, folder)
+                destination_folders.append(destination_folder)
+            destination_files = []
+            for file in unzipped_files:
+                split = file.split("/" + unzipped_foldername + "/", 1)
+                destination_file = os.path.join(split[0], split[1])
+                if(istorage.exists(destination_file)):
+                    istorage.delete(destination_file)
+                istorage.moveFile(file, destination_file)
+                destination_files.append(destination_file)
+            res_files = []
+            for file in destination_files:
+                res_file = link_irods_file_to_django(resource, file)
+                res_files.append(res_file)
+            istorage.delete(unzip_path)
+            check_aggregations(resource, destination_folders, res_files)
+            bool_remove_original = True
+        else:
+            unzip_path = istorage.unzip(zip_with_full_path)
+
+    except Exception:
+        istorage.delete(unzip_path)
+        raise
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
@@ -696,6 +729,20 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def listfiles_recursively(istorage, path):
+    files = []
+    listing = istorage.listdir(path)
+    for file in listing[1]:
+        files.append(os.path.join(path, file))
+    for folder in listing[0]:
+        files = files + listfiles_recursively(istorage, os.path.join(path, folder))
+    return files
+
+
+def listfolders(istorage, path):
+    return istorage.listdir(path)[0]
 
 
 def create_folder(res_id, folder_path):
