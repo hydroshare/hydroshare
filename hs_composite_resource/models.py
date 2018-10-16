@@ -231,11 +231,7 @@ class CompositeResource(BaseResource):
             """
             for aggregation in self.logical_files:
                 # remove the last slash in aggregation_name if any
-                if aggregation.aggregation_name.endswith('/'):
-                    aggregation_name = aggregation.aggregation_name[0:-1]
-                else:
-                    aggregation_name = aggregation.aggregation_name
-                if aggregation_name == name:
+                if aggregation.aggregation_name.rstrip('/') == name:
                     return aggregation
 
             raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))

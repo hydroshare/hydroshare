@@ -767,8 +767,7 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             base_dir = full_dir if full_dir is not None else ''
             dir_name = dir_name if dir_name is not None else ''
-            # Only do join if dir_name is not empty, otherwise, it results in a trailing slash
-            # which introduces a traling slash in aggregation_name which introduce bugs
+            # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         if full_dir:
             new_folders.add(full_dir)
