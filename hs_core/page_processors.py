@@ -315,9 +315,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage = temporal_coverages[0]
         start_date = parser.parse(temporal_coverage.value['start'])
         end_date = parser.parse(temporal_coverage.value['end'])
-        dt_template = '{0.year:4d}-{0.month:02d}-{0.day:02d}'
-        temporal_coverage_data_dict['start'] = format_datetime(start_date, template=dt_template)
-        temporal_coverage_data_dict['end'] = format_datetime(end_date, template=dt_template)
+        temporal_coverage_data_dict['start'] = format_datetime(start_date)
+        temporal_coverage_data_dict['end'] = format_datetime(end_date)
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:

@@ -1041,7 +1041,7 @@ def resolve_request(request):
     return {}
 
 
-def format_datetime(dt, template='{0.year:4d}-{0.month:02d}-{0.day:02d}'):
+def format_datetime(dt, template='default'):
     '''
     Function to work around the strftime limitation of not being able to handle
     pre-1900 dates. This function utilizes String.format's ability to display
@@ -1059,6 +1059,9 @@ def format_datetime(dt, template='{0.year:4d}-{0.month:02d}-{0.day:02d}'):
     '''
 
     t = template
+
+    if template is "default":
+        t = '{0.year:4d}-{0.month:02d}-{0.day:02d}'
 
     if template is "irods":
         t = '{0.year:4d}-{0.month:02d}-{0.day:02d}.{0.hour:02d}:{0.minute:02d}'
