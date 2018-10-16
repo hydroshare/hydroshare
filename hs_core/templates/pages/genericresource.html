@@ -628,22 +628,20 @@
             {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
                 {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                 {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
-                        {% if  cm|resource_type|lower != "collection resource" %}
-                            <div class="col-xs-12 content-block">
-                                <h3>Resource Specific</h3>
-                                <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
-                                     id="resourceSpecificTab">
-                                    {% if not metadata_form %}
-                                        {% block extended_metadata %}{% endblock %}
-                                    {% else %}
-                                        {% crispy metadata_form %}
-                                    {% endif %}
-                                    {% block extra_section %} {# add extra section for resource landing page #}
-                                    {% endblock %}
-                                </div>
+                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
+                        <div class="col-xs-12 content-block">
+                            <h3>Resource Specific</h3>
+                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                 id="resourceSpecificTab">
+                                {% if not metadata_form %}
+                                    {% block extended_metadata %}{% endblock %}
+                                {% else %}
+                                    {% crispy metadata_form %}
+                                {% endif %}
+                                {% block extra_section %} {# add extra section for resource landing page #}
+                                {% endblock %}
                             </div>
-                        {% endif %}
+                        </div>
                     {% endif %}
                 {% endif %}
 
