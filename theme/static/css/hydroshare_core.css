@@ -1590,6 +1590,10 @@ body > .main-container {
     color:#428bca;
 }
 
+.btn-download-zip{
+    color:#428bca;
+}
+
 .content-block {
 	display: table;
 }
@@ -4316,6 +4320,11 @@ div.fb-upload-caption a {
 	display: block;
 }
 
+.fb-view-grid .fb-aggregation-icon > img {
+	width: 30px;
+	height: 30px;
+}
+
 .fb-view-grid .fb-file-name {
 	display: block;
 	text-overflow: ellipsis;
@@ -4326,6 +4335,17 @@ div.fb-upload-caption a {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon {
+	margin-right: 10px;
+	margin-left: 10px;
+	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon > img {
+	width: 20px;
+	height: 20px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
@@ -4886,4 +4906,16 @@ a[data-toggle="modal"] {
 
 #table-stats .fa {
     font-size: 18px
+}
+
+/* popover styling */
+.popover-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
 }

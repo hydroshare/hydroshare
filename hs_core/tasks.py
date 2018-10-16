@@ -39,14 +39,32 @@ from theme.utils import get_quota_message
 logger = logging.getLogger('django')
 
 
+# Currently there are two different cleanups scheduled.
+# One is 20 minutes after creation, the other is nightly.
+# TODO Clean up zipfiles in remote federated storage as well.
 @periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
+    if __debug__:
+        logger.debug("cleaning up {}".format(zips_daily_date))
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
+    federated_prefixes = BaseResource.objects.all().values_list('resource_federation_path')\
+        .distinct()
+
+    for p in federated_prefixes:
+        prefix = p[0]  # strip tuple
+        if prefix != "":
+            zips_daily_date = "{prefix}/zips/{daily_date}"\
+                .format(prefix=prefix, daily_date=date_folder)
+            if __debug__:
+                logger.debug("cleaning up {}".format(zips_daily_date))
+            istorage = IrodsStorage("federated")
+            if istorage.exists(zips_daily_date):
+                istorage.delete(zips_daily_date)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -306,15 +324,38 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, sf_aggregation):
+def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip=False):
+    """ Create temporary zip file from input_path and store in output_path
+    :param input_path: full irods path of input starting with federation path
+    :param output_path: full irods path of output starting with federation path
+    :param sf_aggregation: if True, include logical metadata files
+    """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
-    if sf_aggregation:
-        pass
     res = get_resource_by_shortkey(resource_id)
-    full_input_path = '{root_path}/{path}'.format(root_path=res.root_path, path=input_path)
+    istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
     try:
-        IrodsStorage().zipup(full_input_path, output_path)
+        if sf_zip:
+            # input path points to single file aggregation
+            # ensure that foo.zip contains aggregation metadata
+            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+            istorage.copyFiles(input_path, out_with_folder)
+            if sf_aggregation:
+                try:
+                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                try:
+                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
+            istorage.zipup(temp_folder_name, output_path)
+            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+        else:  # regular folder to zip
+            istorage.zipup(input_path, output_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return False

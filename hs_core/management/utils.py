@@ -123,7 +123,7 @@ def __ingest_irods_directory(self,
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
-                # TODO: only works properly for generic and composite resources!
+                # TODO: does not ingest logical file structure for composite resources
                 link_irods_file_to_django(self, fullpath)
 
         for dname in listing[0]:  # directories
