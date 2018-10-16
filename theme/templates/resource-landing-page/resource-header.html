@@ -3,7 +3,7 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12 col-md-6 res-header">
-            <table class="info-table">
+            <table id="left-header-table" class="info-table">
                 <tr>
                     <th>Authors:</th>
                     {% if not metadata_form %}
@@ -66,6 +66,7 @@
                                   title='Drag and drop Authors to rearrange.'
                                   class="glyphicon glyphicon-info-sign text-muted"></span>
                         </span>
+                        <br>
                         <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
                            data-target="#add-creator-dialog">
                             <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
@@ -98,6 +99,10 @@
                         {% endif %}
                         {% include "includes/profile-card.html" %}
                     </td>
+                </tr>
+                <tr>
+                    <th>DOI:</th>
+                    <td>10.4211/hs.{{ cm.short_id }} <a href="#citation">cite</a></td>
                 </tr>
                 {% if cm.resource_type == "CompositeResource" %}
                 <tr class="info-collapsible">

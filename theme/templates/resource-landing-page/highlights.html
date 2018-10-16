@@ -1,23 +1,23 @@
 <table id="table-stats" class="info-table">
     <tr>
         {% if cm.raccess.published %}
-            <td><img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/></td>
+            <th><img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/></th>
             <td>Published</td>
         {% elif cm.raccess.public %}
-            <td><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></td>
+            <th><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></th>
             <td>Public</td>
         {% elif cm.raccess.discoverable %}
-            <td><img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/></td>
+            <th><img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/></th>
             <td>Discoverable</td>
         {% else %}
-            <td><img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/></td>
+            <th><img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/></th>
             <td>Private</td>
         {% endif %}
     </tr>
     {% if cm.raccess.published %}
         {% if "pending" in cm.doi or "failure" in cm.doi %}
             <tr>
-                <td><img src="{{ STATIC_URL }}img/pending.png" alt=""/></td>
+                <th><img src="{{ STATIC_URL }}img/pending.png" alt=""/></th>
                 <td>Pending publication</td>
             </tr>
             <tr>
@@ -32,33 +32,33 @@
     {% else %}
         <tr>
             {% if cm.raccess.shareable %}
-                <td><img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/></td>
+                <th><img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/></th>
                 <td>Shareable</td>
             {% else %}
-                <td><img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/></td>
+                <th><img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/></th>
                 <td>Not Shareable</td>
             {% endif %}
         </tr>
     {% endif %}
     <tr class="info-collapsible">
-        <td class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></td>
+        <th class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></th>
         <td><strong>Views:&nbsp;&nbsp;</strong>1,835</td>
     </tr>
     <tr class="info-collapsible">
-        <td class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></td>
+        <th class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></th>
         <td><strong>Downloads:&nbsp;&nbsp;</strong>201</td>
     </tr>
     <tr class="info-collapsible">
         {% include "resource-landing-page/ratings.html" %}
     </tr>
     <tr class="info-collapsible">
-        <td class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></td>
+        <th class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></th>
         <td>
             <span><a href="#comments">Comments:&nbsp;&nbsp;</a></span>0
         </td>
     </tr>
-    <tr class="info-collapsible">
-        <td class="text-center"><i class="fa fa-quote-right" aria-hidden="true"></i></td>
-        <td><a href="#citation">Cite this resource</a></td>
-    </tr>
+{#    <tr class="info-collapsible">#}
+{#        <td class="text-center"><i class="fa fa-quote-right" aria-hidden="true"></i></td>#}
+{#        <td><a href="#citation">Cite this resource</a></td>#}
+{#    </tr>#}
 </table>
