@@ -84,6 +84,8 @@ class MpMetadata(AbstractMetaDataElement):
 class ModelProgramResource(BaseResource):
     objects = ResourceManager("ModelProgramResource")
 
+    discovery_content_type = 'Model Program'  # used during discovery
+
     class Meta:
         verbose_name = 'Model Program Resource'
         proxy = True

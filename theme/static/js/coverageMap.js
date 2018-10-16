@@ -46,9 +46,9 @@ function drawInitialShape() {
     var resourceType = $("#resource-type").val();
     var spatialCoverageType = $("#spatial-coverage-type").val();
     // Center the map
-    if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
+    if (shapeType || resourceType === "Time Series") {
         deleteAllShapes();
-        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite Resource" && spatialCoverageType == "point")) {
+        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
             var myLatLng;
             if (shapeType == "point") {
                 // resource view mode
@@ -83,7 +83,7 @@ function drawInitialShape() {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
-        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite Resource" && spatialCoverageType == "box")) {
+        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
             var bounds;
             if (shapeType == "box") {
                 //resource view mode
@@ -175,7 +175,7 @@ function initMap() {
         // data-shape-type is set to have a value only in resource view mode
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
         resourceType = $("#resource-type").val();
-        if (resourceType === "Time Series" || resourceType === "Composite Resource"){
+        if (resourceType === "Time Series"){
             // set to view mode
             shapeType = " ";
         }
@@ -349,7 +349,7 @@ function processDrawing (coordinates, shape) {
         deleteAllShapes();
     }
     // Show save changes button
-    $("#coverage-spatial").find(".btn-primary").show();
+    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
     if (shape == "rectangle"){
         document.getElementById("id_type_1").checked = true;
         $("#div_id_north").hide();

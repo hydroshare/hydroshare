@@ -19,6 +19,7 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+from django_irods.icommands import SessionException
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -29,16 +30,36 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def update_quota_usage(res):
-    from hs_core.tasks import update_quota_usage_task
-    quser = res.get_quota_holder()
-    if quser is None:
-        # no quota holder for this resource, this should not happen, but check just in case
-        logger.error('no quota holder is found for resource' + res.short_id)
+def update_quota_usage(res=None, user=None):
+    """
+    Update quota usage as follows:
+    (1) if res is not None & user is None, quota usage of the res' quota holder will be updated
+    (2) if res is None & user is not None, quota usage of the user will be updated
+    (3) if both res and user are None, nothing is updated
+    (4) if both res and user are not None, quota usage of both res' quota holder and user will be
+    updated.
+    :param res: a resource object
+    :param user: a user object
+    :return:
+    """
+    if not res and not user:
         return
-    # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
-    # services enough time to finish before reflecting the quota usage in django DB
-    update_quota_usage_task.apply_async((quser.username,), countdown=60)
+
+    from hs_core.tasks import update_quota_usage_task
+
+    if user:
+        update_quota_usage_task.apply_async((user.username,), countdown=30)
+
+    if res:
+        quser = res.get_quota_holder()
+        if quser is None:
+            # no quota holder for this resource, this should not happen, but check just in case
+            logger.error('no quota holder is found for resource' + res.short_id)
+            return
+        # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
+        # services enough time to finish before reflecting the quota usage in django DB
+        update_quota_usage_task.apply_async((quser.username,), countdown=30)
+    return
 
 
 def get_resource(pk):
@@ -164,6 +185,66 @@ def update_resource_file(pk, filename, f):
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
+
+
+def replicate_resource_bag_to_user_zone(user, res_id):
+    """
+    Replicate resource bag to iRODS user zone
+    Args:
+        user: the requesting user
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+    # do on-demand bag creation
+
+    res = utils.get_resource_by_shortkey(res_id)
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
+    bag_modified_flag = True
+    # needs to check whether res_id collection exists before getting/setting AVU on it to
+    # accommodate the case where the very same resource gets deleted by another request when
+    # it is getting downloaded
+    if istorage.exists(res_coll):
+        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
+
+        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
+        # is False; otherwise, bag_modified_flag will take the default True value so that the
+        # bag will be created or recreated
+        if bag_modified:
+            if bag_modified.lower() == "false":
+                bag_file_name = res_id + '.zip'
+                if res.resource_federation_path:
+                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
+                                                 bag_file_name)
+                else:
+                    bag_full_path = os.path.join('bags', bag_file_name)
+
+                if istorage.exists(bag_full_path):
+                    bag_modified_flag = False
+
+        if bag_modified_flag:
+            # import here to avoid circular import issue
+            from hs_core.tasks import create_bag_by_irods
+            status = create_bag_by_irods(res_id)
+            if not status:
+                # bag fails to be created successfully
+                raise SessionException(-1, '', 'The resource bag fails to be created '
+                                               'before bag replication')
+
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        fsize = istorage.size(src_file)
+        utils.validate_user_quota(user, fsize)
+        istorage.copyFiles(src_file, tgt_file)
+        update_quota_usage(user=user)
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def get_related(pk):
@@ -308,8 +389,8 @@ def create_resource(
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
         files=(), source_names=[], fed_res_path='', move=False,
-        create_metadata=True,
-        create_bag=True, unpack_file=False, **kwargs):
+        create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
+        auto_aggregate=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -362,6 +443,10 @@ def create_resource(
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
         the unpacked contents of the zip file will be added to the resource instead of the zip file.
+    :param full_paths: Optional.  A map of paths keyed by the correlating resource file.  When
+        this parameter is provided, a file will be placed at the path specified in the map.
+    :param auto_aggregate: boolean, defaults to True.  Find and create aggregations during
+        resource creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -441,20 +526,6 @@ def create_resource(
         # quota micro-services to work
         resource.set_quota_holder(owner, owner)
 
-        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
-            # Add contents of zipfile as resource files asynchronously
-            # Note: this is done asynchronously as unzipping may take
-            # a long time (~15 seconds to many minutes).
-            add_zip_file_contents_to_resource_async(resource, files[0])
-        else:
-            # Add resource file(s) now
-            # Note: this is done synchronously as it should only take a
-            # few seconds.  We may want to add the option to do this
-            # asynchronously if the file size is large and would take
-            # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, source_names=source_names,
-                               move=move)
-
         if create_metadata:
             # prepare default metadata
             utils.prepare_resource_default_metadata(resource=resource, metadata=metadata,
@@ -471,6 +542,20 @@ def create_resource(
 
             resource.title = resource.metadata.title.value
             resource.save()
+
+        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile as resource files asynchronously
+            # Note: this is done asynchronously as unzipping may take
+            # a long time (~15 seconds to many minutes).
+            add_zip_file_contents_to_resource_async(resource, files[0])
+        else:
+            # Add resource file(s) now
+            # Note: this is done synchronously as it should only take a
+            # few seconds.  We may want to add the option to do this
+            # asynchronously if the file size is large and would take
+            # more than ~15 seconds to complete.
+            add_resource_files(resource.short_id, *files, source_names=source_names, move=move,
+                               full_paths=full_paths, auto_aggregate=auto_aggregate)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -526,7 +611,7 @@ def create_empty_resource(pk, user, action='version'):
     return new_resource
 
 
-def copy_resource(ori_res, new_res):
+def copy_resource(ori_res, new_res, user=None):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object
     as a copy of the ori_res object
@@ -534,6 +619,8 @@ def copy_resource(ori_res, new_res):
         ori_res: the original resource that is to be copied.
         new_res: the new_res to be populated with metadata and content from the original resource
         as a copy of the original resource.
+        user: requesting user for the copy action. It is optional, if being passed in, quota is
+        counted toward the user; otherwise, quota is not counted toward that user
     Returns:
         the new resource copied from the original resource
     """
@@ -554,7 +641,9 @@ def copy_resource(ori_res, new_res):
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
-
+    # need to update quota usage for new_res quota holder
+    if user:
+        update_quota_usage(user=user)
     return new_res
 
 
@@ -607,6 +696,8 @@ def create_new_version_resource(ori_res, new_res, user):
     # obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
     ori_res.raccess.save()
+    # need to update quota usage for the user
+    update_quota_usage(user=user)
     return new_res
 
 
@@ -637,6 +728,8 @@ def add_resource_files(pk, *files, **kwargs):
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
     source_names = kwargs.pop('source_names', [])
+    full_paths = kwargs.pop('full_paths', {})
+    auto_aggregate = kwargs.pop('auto_aggregate', True)
 
     if __debug__:
         assert(isinstance(source_names, list))
@@ -649,8 +742,21 @@ def add_resource_files(pk, *files, **kwargs):
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
+    new_folders = set()
     for f in files:
-        ret.append(utils.add_file_to_resource(resource, f, folder=folder))
+        full_dir = "" if folder is None else folder
+        if f in full_paths:
+            # TODO, put this in it's own method?
+            full_path = full_paths[f]
+            dir_name = os.path.dirname(full_path)
+            base_dir = full_dir if full_dir is not None else ''
+            dir_name = dir_name if dir_name is not None else ''
+            full_dir = os.path.join(base_dir, dir_name)
+        if full_dir:
+            new_folders.add(full_dir)
+            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        else:
+            ret.append(utils.add_file_to_resource(resource, f, folder=None))
 
     if len(source_names) > 0:
         for ifname in source_names:
@@ -662,8 +768,10 @@ def add_resource_files(pk, *files, **kwargs):
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
+        if resource.resource_type == "CompositeResource" and auto_aggregate:
+            utils.check_aggregations(resource, new_folders, ret)
         # some file(s) added, need to update quota usage
-        update_quota_usage(resource)
+        update_quota_usage(res=resource)
     return ret
 
 
@@ -767,7 +875,7 @@ def delete_resource(pk):
             obsolete_res.raccess.save()
 
     # need to update quota usage when a resource is deleted
-    update_quota_usage(res)
+    update_quota_usage(res=res)
 
     res.delete()
     return pk
@@ -799,7 +907,7 @@ def delete_resource_file_only(resource, f):
     short_path = f.short_path
     f.delete()
     # need to update quota usage when a file is deleted
-    update_quota_usage(resource)
+    update_quota_usage(res=resource)
     return short_path
 
 
@@ -909,7 +1017,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
 
 def get_resource_doi(res_id, flag=''):
-    doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
+    doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:

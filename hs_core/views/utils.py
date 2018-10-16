@@ -25,6 +25,7 @@ from mezzanine.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.hydroshare.utils import check_aggregations
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
@@ -117,7 +118,7 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     stdout = session.makefile('rb', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
-    logger = logging.getLogger('django')
+    logger = logging.getLogger(__name__)
     output = stdout.readlines()
     if output:
         logger.debug(output)
@@ -493,20 +494,19 @@ def link_irods_file_to_django(resource, filepath):
     if resource:
         folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath,
                                                                 test_exists=False)
+        ret = None
         try:
-            ResourceFile.get(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.get(resource=resource, file=base, folder=folder)
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
-            ResourceFile.create(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.create(resource=resource, file=base, folder=folder)
             b_add_file = True
 
         if b_add_file:
             file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
-            # this should assign a logical file object to this new file
-            # if this resource supports logical file
-            resource.set_default_logical_file()
+        return ret
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
@@ -528,16 +528,19 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
 
     if foldername:
         store = istorage.listdir(foldername)
+        res_files = []
         # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path)
+                res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
+
+        check_aggregations(resource, store[0], res_files)
 
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
@@ -629,7 +632,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
-        raise ValidationError("Folder zipping is not supported.")
+        raise ValidationError("Folder zipping is not supported. "
+                              "Folder seems to contain aggregation(s).")
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
@@ -682,10 +686,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
-    link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
+    unzip_path = istorage.unzip(zip_with_full_path)
+    link_irods_folder_to_django(resource, istorage, unzip_path)
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
@@ -712,7 +715,8 @@ def create_folder(res_id, folder_path):
     coll_path = os.path.join(resource.root_path, folder_path)
 
     if not resource.supports_folder_creation(coll_path):
-        raise ValidationError("Folder creation is not allowed here.")
+        raise ValidationError("Folder creation is not allowed here. "
+                              "The target folder seems to contain aggregation(s)")
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -788,17 +792,6 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
-
-    # ensure the target_full_path contains the file name to be moved or renamed to
-    # if we are moving to a directory, put the filename into the request.
-    # This created some confusion in the UI, so we use it only in the public REST API
-    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
-        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
-
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -806,6 +799,11 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -840,10 +838,15 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if validate_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
+            raise ValidationError("File rename is not allowed. "
+                                  "File seems to be part of an aggregation")
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -880,7 +883,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         for src_path in src_paths:
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
-                raise ValidationError("File/folder move/rename is not allowed.")
+                raise ValidationError("File/folder move is not allowed. "
+                                      "Target folder seems to contain aggregation(s).")
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
@@ -891,6 +895,10 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
 
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
+        if resource.resource_type == "CompositeResource":
+            org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
 
     # TODO: should check can_be_public_or_discoverable here
 
