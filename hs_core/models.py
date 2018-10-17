@@ -2331,13 +2331,25 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def logical_files(self):
-        """Get list of logical files for resource."""
+        """Get a list of logical files for resource."""
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
                 if res_file.logical_file not in logical_files_list:
                     logical_files_list.append(res_file.logical_file)
         return logical_files_list
+
+    @property
+    def aggregation_types(self):
+        """Gets a list of all aggregation types that currently exist in this resource"""
+        aggr_types = []
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name)
+                aggr_type = lf.get_aggregation_display_name().split(":")[0]
+                aggr_types.append(aggr_type)
+        return aggr_types
 
     @property
     def non_logical_files(self):
