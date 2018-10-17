@@ -1677,34 +1677,29 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def view_count(self):
-        if 'view_count' not in self.extra_data.keys():
-            return 0
-        else:
-            return int(self.extra_data['view_count'])
+        return int(self.extra_data.get('view_count', '0'))
 
     @property
     def download_count(self):
-        if 'download_count' not in self.extra_data.keys():
-            return 0
-        else:
-            return int(self.extra_data['download_count'])
+        return int(self.extra_data.get('download_count', '0'))
 
-    def update_view_count(self):
-        if 'view_count' in self.extra_data.keys():
-            view_count = int(self.extra_data['view_count'])
-            view_count += 1
-            self.extra_data['view_count'] = str(view_count)
+    def update_view_count(self, request):
+        resource_ids = request.session.get('resource_ids', [])
+        if resource_ids:
+            if self.short_id not in resource_ids:
+                self.__update_count('view_count')
+                request.session['resource_ids'].append(self.short_id)
         else:
-            self.extra_data['view_count'] = '1'
-        self.save()
+            self.__update_count('view_count')
+            request.session['resource_ids'] = [self.short_id]
 
     def update_download_count(self):
-        if 'download_count' in self.extra_data.keys():
-            download_count = int(self.extra_data['download_count'])
-            download_count += 1
-            self.extra_data['download_count'] = str(download_count)
-        else:
-            self.extra_data['download_count'] = '1'
+        self.__update_count('download_count')
+
+    def __update_count(self, key):
+        cur_count = self.extra_data.get(key, '0')
+        new_count = int(cur_count) + 1
+        self.extra_data[key] = str(new_count)
         self.save()
 
     # definition of resource logic
