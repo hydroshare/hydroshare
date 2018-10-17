@@ -511,6 +511,22 @@ def link_irods_file_to_django(resource, filepath):
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
+    res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
+    folders = listfolders_recursively(istorage, foldername)
+    check_aggregations(resource, folders, res_files)
+
+
+def listfolders_recursively(istorage, path):
+    folders = []
+    listing = istorage.listdir(path)
+    for folder in listing[0]:
+        folder_path = os.path.join(path, folder)
+        folders.append(folder_path)
+        folders = folders + listfolders_recursively(istorage, folder_path)
+    return folders
+
+
+def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
@@ -520,16 +536,16 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     :param foldername: the folder name, as a fully qualified path
     :param exclude: UNUSED: a tuple that includes file names to be excluded from
         linking under the folder;
-    :return:
+    :return: List of ResourceFile of newly linked files
     """
     if __debug__:
         assert(isinstance(resource, BaseResource))
     if istorage is None:
         istorage = resource.get_irods_storage()
 
+    res_files = []
     if foldername:
         store = istorage.listdir(foldername)
-        res_files = []
         # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
@@ -538,12 +554,9 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
                 res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
-            link_irods_folder_to_django(resource,
+            res_files = res_files +_link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
-
-        if foldername.startswith(resource.root_path):
-            foldername = foldername.split(os.path.join(resource.root_path, "/data/contents/"))[1]
-        check_aggregations(resource, [foldername], res_files)
+    return res_files
 
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
@@ -667,7 +680,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=True):
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -746,6 +759,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
+            link_irods_folder_to_django(resource, istorage, unzip_path)
 
     except Exception:
         logger.exception("failed to unzip")
@@ -764,6 +778,7 @@ def _get_destination_filename(file, unzipped_foldername):
     split = file.split("/" + unzipped_foldername + "/", 1)
     destination_file = os.path.join(split[0], split[1])
     return destination_file
+
 
 def listfiles_recursively(istorage, path):
     files = []
