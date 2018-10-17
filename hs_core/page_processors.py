@@ -120,6 +120,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         
     # user requested the resource in READONLY mode
     if not resource_edit:
+        content_model.update_view_count(request)
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
