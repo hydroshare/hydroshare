@@ -206,6 +206,9 @@ function updateSelectionMenuContext() {
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
             flagDisableRemoveAggregation = true;
         }
+        else{
+            flagDisableZip = true;
+        }
         if(selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")){
             var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if(logicalFileTypeToSet.length){
