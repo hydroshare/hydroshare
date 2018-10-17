@@ -1,4 +1,5 @@
 {% if not metadata_form %}
+    {# resource view mode #}
     <div class="col-xs-12 content-block">
         <h3>Resource Level Coverage</h3>
         <div class="row">
@@ -31,64 +32,65 @@
                         {% endif %}
                     </div>
 
-                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
-                        <div class="row coordinates-list-container">
-                            {% if spatial_coverage.type == 'point' %}
-                                {% if spatial_coverage.east %}
-                                    <div class="col-xs-12 col-sm-6"><small>Longitude</small>
-                                        <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.north %}
-                                    <div class="col-xs-12 col-sm-6"><small>Latitude</small>
-                                        <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
-                            {% else %}
-                                {% if spatial_coverage.northlimit %}
-                                    <div class="col-xs-12 col-sm-6 "><small>North Latitude</small>
-                                        <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.eastlimit %}
-                                    <div class="col-xs-12 col-sm-6"><small>East Longitude</small>
-                                        <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.southlimit %}
-                                    <div class="col-xs-12 col-sm-6"><small>South Latitude</small>
-                                        <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.westlimit %}
-                                    <div class="col-xs-12 col-sm-6"><small>West Longitude</small>
-                                        <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
-                                    </div>
-                                {% endif %}
+                            {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                                <div class="row coordinates-list-container">
+                                    {% if spatial_coverage.type == 'point' %}
+                                        {% if spatial_coverage.east %}
+                                            <div class="col-xs-12 col-sm-6"><strong>Longitude</strong>
+                                                <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.north %}
+                                            <div class="col-xs-12 col-sm-6"><strong>Latitude</strong>
+                                                <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if spatial_coverage.northlimit %}
+                                            <div class="col-xs-12 col-sm-6"><strong>North Latitude</strong>
+                                                <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.eastlimit %}
+                                            <div class="col-xs-12 col-sm-6"><strong>East Longitude</strong>
+                                                <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.southlimit %}
+                                            <div class="col-xs-12 col-sm-6"><strong>South Latitude</strong>
+                                                <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.westlimit %}
+                                            <div class="col-xs-12 col-sm-6"><strong>West Longitude</strong>
+                                                <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
                             {% endif %}
-                        </div>
-                    {% endif %}
-                {% endif %}
-                {% if temporal_coverage %}
-                    <br>
-                    <h4>Temporal: </h4>
-                    <table class="info-table">
-                        <tbody>
-                        <tr>
-                            <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>Start Date:</strong></td>
-                            <td><span class="format-date"
-                                        data-date="{{ temporal_coverage.start_date }}"></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>End Date:</strong></td>
-                            <td><span class="format-date"
-                                        data-date="{{ temporal_coverage.end_date }}"></span></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                {% endif %}
-            </div>
+                        {% endif %}
+
+                        {% if temporal_coverage %}
+                            <br>
+                            <h4>Temporal: </h4>
+                            <table class="info-table">
+                                <tbody>
+                                <tr>
+                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>Start Date:</strong></td>
+                                    <td><span class="format-date"
+                                                data-date="{{ temporal_coverage.start_date }}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>End Date:</strong></td>
+                                    <td><span class="format-date"
+                                                data-date="{{ temporal_coverage.end_date }}"></span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
 
             {% if spatial_coverage %}
                 <div class="col-xs-12 col-sm-8">
@@ -98,6 +100,7 @@
         </div>
     </div>
 {% else %}
+    {# resource edit mode #}
     <div class="col-xs-12">
         <div class="row">
             <div class="col-xs-12" id="coverage-spatial">
@@ -108,6 +111,13 @@
                     <div class="row">
                         <div class="col-sm-12 content-block">
                             <h3>Coverage</h3>
+                            {% if cm.resource_type == 'CompositeResource' %}
+                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible">
+                                    <label>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
+                                        feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
+                                        the content files.</label>
+                                </div>
+                            {% endif %}
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible"
                                  style="display: none;">
                                 <label>Spatial coverage for time series resources should be set by editing the
@@ -246,6 +256,18 @@
                         </fieldset>
                     </div>
                 </form>
+                {% if cm.resource_type == "CompositeResource" and cm.has_logical_spatial_coverage %}
+                     <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit">
+                         Set spatial coverage from content files
+                     </button>
+                {% else %}
+                    {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                    <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit" style="display: none">
+                         Set spatial coverage from content files
+                     </button>
+                {% endif %}
             </div>
 
             <div class="col-xs-12"><h4>Temporal:</h4></div>
@@ -334,5 +356,17 @@
                 {% endif %}
             </div>
         </div>
+    {% if cm.resource_type == "CompositeResource" and cm.has_logical_temporal_coverage %}
+         <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit">
+             Set temporal coverage from content files
+         </button>
+    {% else %}
+        {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+        <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit" style="display: none">
+             Set temporal coverage from content files
+         </button>
+    {% endif %}
     </div>
 {% endif %}

@@ -1,11 +1,66 @@
 import json
+import os
 from dateutil import parser
 from operator import lt, gt
+from hs_core.hydroshare import utils
+
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
+
+from hs_file_types.models.base import AbstractLogicalFile
+from django.apps import apps
+
+
+def get_SupportedAggTypes_choices():
+    """
+    This function harvests all existing aggregation types in system,
+    and puts them in a list:
+    [
+        ["AGGREGATION_CLASS_NAME_1", "AGGREGATION_VERBOSE_NAME_1"],
+        ["AGGREGATION_CLASS_NAME_2", "AGGREGATION_VERBOSE_NAME_2"],
+        ...
+        ["AGGREGATION_CLASS_NAME_N", "AGGREGATION_VERBOSE_NAME_N"],
+    ]
+    """
+
+    result_list = []
+    agg_types_list = get_aggregation_types()
+    for r_type in agg_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type.get_aggregation_display_name()
+        result_list.append([class_name, verbose_name])
+    return result_list
+
+
+def get_aggregation_types():
+    aggregation_types = []
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            if not getattr(model, 'archived_model', False):
+                aggregation_types.append(model)
+    return aggregation_types
 
 
 def update_resource_coverage_element(resource):
-    # update resource spatial coverage based on coverage metadata from the
-    # logical files in the resource
+    """Update resource spatial and temporal coverage based on the corresponding coverages
+    from all the contained aggregations (logical file) only if the resource coverage is not
+    already set"""
+
+    # update resource spatial coverage only if it is empty
+    if resource.metadata.spatial_coverage is None:
+        update_resource_spatial_coverage(resource)
+
+    # update resource temporal coverage only if it empty
+    if resource.metadata.temporal_coverage is None:
+        update_resource_temporal_coverage(resource)
+
+
+def update_resource_spatial_coverage(resource):
+    """Updates resource spatial coverage based on the contained spatial coverages of
+    aggregations (file type). Note: This action will overwrite any existing resource spatial
+    coverage data.
+    :param  resource: an instance of composite resource
+    """
     spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
                          if lf.metadata.spatial_coverage is not None]
 
@@ -75,7 +130,7 @@ def update_resource_coverage_element(resource):
             bbox_value['north'] = sp_cov.value['north']
             bbox_value['east'] = sp_cov.value['east']
 
-    spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+    spatial_cov = resource.metadata.spatial_coverage
     if len(spatial_coverages) > 0:
         if spatial_cov:
             spatial_cov.type = cov_type
@@ -87,12 +142,19 @@ def update_resource_coverage_element(resource):
         else:
             resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
     else:
-        # delete spatial coverage element for the resource since the content files don't have any
-        # spatial coverage
+        # delete spatial coverage element for the resource since the content files don't
+        # have any spatial coverage
         if spatial_cov:
             spatial_cov.delete()
 
-    # update resource temporal coverage
+
+def update_resource_temporal_coverage(resource):
+    """Updates resource temporal coverage based on the contained temporal coverages of
+    aggregations (file type). Note: This action will overwrite any existing resource temporal
+    coverage data.
+    :param  resource: an instance of composite resource
+    """
+
     temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
                           if lf.metadata.temporal_coverage is not None]
 
@@ -115,7 +177,7 @@ def update_resource_coverage_element(resource):
         set_date_value(date_data, temp_cov, 'start')
         set_date_value(date_data, temp_cov, 'end')
 
-    temp_cov = resource.metadata.coverages.all().filter(type='period').first()
+    temp_cov = resource.metadata.temporal_coverage
     if date_data['start'] is not None and date_data['end'] is not None:
         if temp_cov:
             temp_cov._value = json.dumps(date_data)
@@ -126,3 +188,47 @@ def update_resource_coverage_element(resource):
         # delete the temporal coverage for the resource since the content files don't have
         # temporal coverage
         temp_cov.delete()
+
+
+def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None,
+                          fail_feedback=True):
+    if hs_file_type is None:
+        res_file = utils.get_resource_file_by_id(res, file_id)
+        ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".vrt": "GeoRaster",
+                       ".nc": "NetCDF", ".shp": "GeoFeature", ".json": "RefTimeseries",
+                       ".sqlite": "TimeSeries"}
+        file_name = str(res_file)
+        root, ext = os.path.splitext(file_name)
+        ext = ext.lower()
+        if ext in ext_to_type:
+            # Check for special case of RefTimeseries having 2 extensions
+            if ext == ".json":
+                if not file_name.lower().endswith(".refts.json"):
+                    if fail_feedback:
+                        raise ValueError("Unsupported aggregation extension. Supported aggregation "
+                                         "extensions are: {}".format(ext_to_type.keys()))
+            hs_file_type = ext_to_type[ext]
+        else:
+            if fail_feedback:
+                raise ValueError("Unsupported aggregation extension. Supported aggregation "
+                                 "extensions are: {}".format(ext_to_type.keys()))
+            return
+
+    file_type_map = {"SingleFile": GenericLogicalFile,
+                     "GeoRaster": GeoRasterLogicalFile,
+                     "NetCDF": NetCDFLogicalFile,
+                     'GeoFeature': GeoFeatureLogicalFile,
+                     'RefTimeseries': RefTimeseriesLogicalFile,
+                     'TimeSeries': TimeSeriesLogicalFile}
+    if hs_file_type not in file_type_map:
+        if fail_feedback:
+            raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
+                             "}".format(ext_to_type.keys()))
+        return
+    logical_file_type_class = file_type_map[hs_file_type]
+    try:
+        logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                              folder_path=folder_path)
+    except:
+        if fail_feedback:
+            raise

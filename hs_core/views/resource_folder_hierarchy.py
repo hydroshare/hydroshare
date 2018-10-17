@@ -4,13 +4,13 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, \
-    get_resource_file_url, resolve_request
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
@@ -67,61 +67,96 @@ def data_store_structure(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
-    res_coll = os.path.join(resource.root_path, store_path)
+    directory_in_irods = resource.get_irods_path(store_path)
+
     try:
-        store = istorage.listdir(res_coll)
-        dirs = []
-        for dname in store[0]:  # directories
-            d_pk = dname.decode('utf-8')
-            name_with_full_path = os.path.join(res_coll, d_pk)
-            d_url = to_external_url(istorage.url(name_with_full_path))
-            dirs.append({'name': d_pk, 'url': d_url})
-
-        files = []
-        is_federated = resource.is_federated
-        for index, fname in enumerate(store[1]):  # files
-            fname = fname.decode('utf-8')
-            name_with_full_path = os.path.join(res_coll, fname)
-            size = store[2][index]
-            mtype = get_file_mime_type(fname)
-            idx = mtype.find('/')
-            if idx >= 0:
-                mtype = mtype[idx + 1:]
-            logical_file_type = ''
-            logical_file_id = ''
-            if is_federated:
-                f = ResourceFile.objects.filter(object_id=resource.id,
-                                                fed_resource_file=name_with_full_path).first()
-            else:
-                f = ResourceFile.objects.filter(object_id=resource.id,
-                                                resource_file=name_with_full_path).first()
-            if not f:
-                logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
-                             .format(name_with_full_path))
-                continue
-
-            f_url = to_external_url(get_resource_file_url(f))
-            if resource.resource_type == "CompositeResource":
-                f_logical = f.get_or_create_logical_file
-                logical_file_type = f.logical_file_type_name
-                logical_file_id = f_logical.id
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f_url,
-                          'logical_type': logical_file_type,
-                          'logical_file_id': logical_file_id})
-
+        store = istorage.listdir(directory_in_irods)
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    files = []
+    dirs = []
+    for dname in store[0]:     # directories
+        d_pk = dname.decode('utf-8')
+        d_store_path = os.path.join(store_path, d_pk)
+        d_url = resource.get_url_of_path(d_store_path)
+        main_file = ''
+        folder_aggregation_type = ''
+        folder_aggregation_name = ''
+        folder_aggregation_id = ''
+        folder_aggregation_type_to_set = ''
+        if resource.resource_type == "CompositeResource":
+            dir_path = resource.get_public_path(d_store_path)
+            # find if this folder *dir_path* represents (contains) an aggregation object
+            aggregation_object = resource.get_folder_aggregation_object(dir_path)
+            # folder aggregation type is not relevant for single file aggregation types - which
+            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            if aggregation_object is not None and not \
+                    aggregation_object.is_single_file_aggregation:
+                folder_aggregation_type = aggregation_object.get_aggregation_class_name()
+                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
+                folder_aggregation_id = aggregation_object.id
+                main_file = aggregation_object.get_main_file.file_name
+            else:
+                # find if any aggregation type can be created from this folder
+                folder_aggregation_type_to_set =  \
+                    resource.get_folder_aggregation_type_to_set(dir_path)
+                if folder_aggregation_type_to_set is None:
+                    folder_aggregation_type_to_set = ""
+        dirs.append({'name': d_pk,
+                     'url': d_url,
+                     'main_file': main_file,
+                     'folder_aggregation_type': folder_aggregation_type,
+                     'folder_aggregation_name': folder_aggregation_name,
+                     'folder_aggregation_id': folder_aggregation_id,
+                     'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
+                     'folder_short_path': os.path.join(store_path, d_pk)})  # this is NOT short path
+
+    is_federated = resource.is_federated
+    for index, fname in enumerate(store[1]):  # files
+        fname = fname.decode('utf-8')
+        f_store_path = os.path.join(store_path, fname)
+        file_in_irods = resource.get_irods_path(f_store_path)
+        size = store[2][index]
+        mtype = get_file_mime_type(fname)
+        idx = mtype.find('/')
+        if idx >= 0:
+            mtype = mtype[idx + 1:]
+
+        if is_federated:
+            f = ResourceFile.objects.filter(object_id=resource.id,
+                                            fed_resource_file=file_in_irods).first()
+        else:
+            f = ResourceFile.objects.filter(object_id=resource.id,
+                                            resource_file=file_in_irods).first()
+
+        if not f:
+            # skip metadata files
+            continue
+
+        logical_file_type = ''
+        logical_file_id = ''
+        aggregation_name = ''
+        if resource.resource_type == "CompositeResource":
+            if f.has_logical_file:
+                logical_file_type = f.logical_file_type_name
+                logical_file_id = f.logical_file.id
+                aggregation_name = f.aggregation_display_name
+
+        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
+                      'aggregation_name': aggregation_name,
+                      'logical_type': logical_file_type,
+                      'logical_file_id': logical_file_id})
 
     return_object = {'files': files,
                      'folders': dirs,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
-        spatial_coverage_dict = get_coverage_data_dict(resource)
-        temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
-        return_object['spatial_coverage'] = spatial_coverage_dict
-        return_object['temporal_coverage'] = temporal_coverage_dict
+        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
+        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
+                                                                    coverage_type='temporal')
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"

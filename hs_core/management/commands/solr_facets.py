@@ -4,7 +4,7 @@ It is used for debugging the faceting system.
 """
 
 from django.core.management.base import BaseCommand
-from hs_core.discovery_form import FACETED_FIELDS
+from hs_core.discovery_form import FIELDS_TO_SHOW
 from haystack.query import SearchQuerySet
 from pprint import pprint
 
@@ -30,4 +30,4 @@ class Command(BaseCommand):
             debug_facets(options['facet_fields'])
 
         else:
-            debug_facets(FACETED_FIELDS)
+            debug_facets(FIELDS_TO_SHOW)

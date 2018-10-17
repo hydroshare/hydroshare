@@ -1,6 +1,39 @@
 /**
 * Created by Mauriel on 3/18/2017.
 */
+function getFolderIcons() {
+    var folderIcons = {};
+    folderIcons.GeoRasterLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/geographicraster48x48.png' " +
+        "alt='Geographic Raster Aggregation Icon'/></span>";
+
+    folderIcons.NetCDFLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/multidimensional48x48.png' " +
+        "alt='MultiDimensional (NetCDF) Aggregation Icon'/></span>";
+
+    folderIcons.TimeSeriesLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/timeseries48x48.png' " +
+        "alt='Time Series Aggregation Icon'/></span>";
+
+    folderIcons.RefTimeseriesLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/his48x48.png' " +
+        "alt='HIS Referenced Time Series Aggregation Icon'/></span>";
+
+    folderIcons.GeoFeatureLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/geographicfeature48x48.png' " +
+        "alt='Geographic Feature Aggregation Icon'/></span>";
+
+    folderIcons.DEFAULT =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/composite48x48.png' " +
+        "alt='Default Aggregation Icon'/></span>";
+    return folderIcons;
+}
 
 function getFileIcons() {
     var fileIcons = {};
@@ -112,7 +145,8 @@ function getFileIcons() {
         "<i class='fa fa-th-large fa-stack-1x'></i>" +
         "</span>";
 
-    fileIcons.REFTS =
+    // note this is for .refts.json files
+    fileIcons.JSON =
         "<span class='fa-stack fb-stack fb-stack-refts'>" +
         "<i class='fa fa-file-o fa-stack-2x '></i>" +
         "<i class='fa fa-line-chart fa-stack-1x'></i>" +

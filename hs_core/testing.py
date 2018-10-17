@@ -236,21 +236,19 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/sub_test_dir/' + file_name_list[0])
         # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
-        with self.assertRaises(SessionException):
-            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
 
-        # Resource should still contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
+        # Resource should still contain 5 files: file3_new.txt (2), sub_test_dir.zip,
+        # and file1.txt (2)
         file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 3")
+        self.assertEqual(file_cnt, 5, msg="resource file count didn't match - " +
+                                          str(file_cnt) + " != 5")
 
-        # test unzipping the file succeeds now after deleting the existing folder
-        # TODO: this causes a multiple delete because the paths are valid now.
-        istorage = res.get_irods_storage()
-
+        # remove all files except the zippped file
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir-1')
 
-        # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
+        # Now resource should contain two files: file3_new.txt sub_test_dir.zip
         file_cnt = res.files.all().count()
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
@@ -262,27 +260,28 @@ class TestCaseCommonUtilities(object):
             updated_res_file_names.append(rf.short_path)
         self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
                          msg="resource still contains the zip file after unzipping")
-        self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[0])
-        self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[1])
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg='resource does not contain unzipped file new_' + file_name_list[2])
 
         # rename a folder
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir', 'data/contents/sub_dir')
+                                      'data/contents/sub_test_dir/sub_test_dir',
+                                      'data/contents/sub_dir')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
 
-        self.assertNotIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[0] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] +
                           ' in the new folder after renaming')
-        self.assertNotIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[1] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,
@@ -327,10 +326,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.11270614966863)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.45699925047542)
-        self.assertEqual(box_coverage.value['southlimit'], 41.66222054591102)
-        self.assertEqual(box_coverage.value['westlimit'], -111.81761887121905)
+        self.assertEqual(float(box_coverage.value['northlimit']), 42.11270614966863)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.45699925047542)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.66222054591102)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.81761887121905)
 
         # there should be 2 format elements
         self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
@@ -342,10 +341,10 @@ class TestCaseCommonUtilities(object):
         # testing extended metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEquals(ori_coverage, None)
-        self.assertEqual(ori_coverage.value['northlimit'], 4662392.446916306)
-        self.assertEqual(ori_coverage.value['eastlimit'], 461954.01909127034)
-        self.assertEqual(ori_coverage.value['southlimit'], 4612592.446916306)
-        self.assertEqual(ori_coverage.value['westlimit'], 432404.01909127034)
+        self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
+        self.assertEqual(float(ori_coverage.value['eastlimit']), 461954.01909127034)
+        self.assertEqual(float(ori_coverage.value['southlimit']), 4612592.446916306)
+        self.assertEqual(float(ori_coverage.value['westlimit']), 432404.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
         self.assertEqual(ori_coverage.value['datum'], "North_American_Datum_1983")
@@ -429,10 +428,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 41.867126409)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.505940368)
-        self.assertEqual(box_coverage.value['southlimit'], 41.8639080745)
-        self.assertEqual(box_coverage.value['westlimit'], -111.51138808)
+        self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -458,10 +457,10 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
         proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
-        self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
-        self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
-        self.assertEqual(ori_coverage.value['southlimit'], '4.63479e+06')
-        self.assertEqual(ori_coverage.value['westlimit'], '457560.0')
+        self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
+        self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
+        self.assertEqual(float(ori_coverage.value['southlimit']), 4.63479e+06)
+        self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
@@ -549,10 +548,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-        self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-        self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+        self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
 
         temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(
             type='period').first()

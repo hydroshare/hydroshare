@@ -45,7 +45,7 @@
                 <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
                 <div class="col-sm-12">
                     <div id='download-status-info' class="alert alert-success">
-                        Please wait for the resource bag to be created<span id="loading">.</span>
+                        Please wait for the download to be prepared<span id="loading">.</span>
                     </div>
                 </div>
             {% endif %}
@@ -80,13 +80,13 @@
             {% if cm.resource_type != "ToolResource" %}
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
-                    <li id="btn-open" data-menu-name="open">
-                        <span class="fa fa-folder-open icon-blue"></span>
-                        <span>Open</span>
-                    </li>
+                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
+                        <li id="btn-open" data-menu-name="open">
+                            <span class="fa fa-folder-open icon-blue"></span>
+                            <span>Open</span>
+                        </li>
 
-                    <li id="open-separator" role="separator" class="divider"></li>
+                        <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
                     {% if page.perms.change and metadata_form %}
@@ -101,7 +101,7 @@
                             </li>
                         {% endif %}
 
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
+                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
                             <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                 <span>Rename</span>
@@ -142,37 +142,70 @@
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
+                        <li id="btn-download-zip" data-menu-name="download" >
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download Zipped</span>
+                        </li>
                     {% endif %}
                     <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                        <li class="dropdown-submenu submenu-trigger">
+                         <li class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
                                 <span class="glyphicon glyphicon-check icon-blue"></span>
                                 Set file type
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu">
-                                <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
-                                    <span>Geographic Raster</span>
+                                <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip" title="Add metadata to an individual file">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Add metadata to file</span>
                                 </li>
-                                <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
-                                    <span>Multidimensional Data</span>
+                                <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype" data-toggle="tooltip" title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Convert to Geographic Raster</span>
                                 </li>
-                                <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
-                                    <span>Geographic Feature</span>
+                                <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype" data-toggle="tooltip" title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Convert to Multidimensional</span>
                                 </li>
-                                <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
-                                    <span>Reference Timeseries</span>
+                                <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype" data-toggle="tooltip" title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Convert to Geographic Feature</span>
                                 </li>
-                                <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
-                                    <span>Timeseries</span>
+                                <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip" title="Convert to a referenced time series dataset with metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Convert to Referenced Time Series</span>
+                                </li>
+                                <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype" data-toggle="tooltip" title="Convert to a time series dataset to which you can add metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Convert to Time Series</span>
+                                </li>
+                                <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">
+                                    <span class="glyphicon glyphicon-check icon-blue"></span>
+                                    <span>Remove content type</span>
                                 </li>
                             </ul>
                         </li>
                     {%  endif %}
+                    {% if relevant_tools %}
+                        {% for tool in relevant_tools.tool_list %}
+                            {% if tool.openwithlist %}
+                                {% if tool.agg_types or tool.file_extensions %}
+                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </ul>
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
@@ -628,22 +661,20 @@
             {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
                 {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                 {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
-                        {% if  cm|resource_type|lower != "collection resource" %}
-                            <div class="col-xs-12 content-block">
-                                <h3>Resource Specific</h3>
-                                <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
-                                     id="resourceSpecificTab">
-                                    {% if not metadata_form %}
-                                        {% block extended_metadata %}{% endblock %}
-                                    {% else %}
-                                        {% crispy metadata_form %}
-                                    {% endif %}
-                                    {% block extra_section %} {# add extra section for resource landing page #}
-                                    {% endblock %}
-                                </div>
+                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
+                        <div class="col-xs-12 content-block">
+                            <h3>Resource Specific</h3>
+                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                 id="resourceSpecificTab">
+                                {% if not metadata_form %}
+                                    {% block extended_metadata %}{% endblock %}
+                                {% else %}
+                                    {% crispy metadata_form %}
+                                {% endif %}
+                                {% block extra_section %} {# add extra section for resource landing page #}
+                                {% endblock %}
                             </div>
-                        {% endif %}
+                        </div>
                     {% endif %}
                 {% endif %}
 
