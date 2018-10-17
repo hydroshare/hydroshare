@@ -109,8 +109,11 @@
                     <th>Content types:</th>
                     <td>
                         {# TODO: EXPOSE CONTENT TYPES#}
-                        <span class="label label-info">Time Series</span>&nbsp;
-                        <span class="label label-info">Geographic Feature</span>&nbsp;
+                        {% for ct in cm.aggregation_types %}
+                            <span class="label label-info">{{ ct }}</span>&nbsp;
+                        {% endfor %}
+{#                        <span class="label label-info">Time Series</span>&nbsp;#}
+{#                        <span class="label label-info">Geographic Feature</span>&nbsp;#}
                     </td>
                 </tr>
                 {% endif %}
