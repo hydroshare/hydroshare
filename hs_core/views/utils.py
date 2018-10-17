@@ -43,6 +43,7 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_RESOURCE_ACCESS, '
                                'EDIT_RESOURCE_ACCESS')
 ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
+logger = logging.getLogger(__name__)
 
 
 def json_or_jsonp(r, i, code=200):
@@ -666,7 +667,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=True):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -694,32 +695,60 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     try:
 
         if overwrite:
+            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
+            # then write the new file. Aggregations are treated as single objects.  If one file is
+            # overwritten in an aggregation, the whole aggregation is deleted.
+
+            # unzip to a temporary folder
             unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder="temp-change-this")
+            # list all files to be moved into the resource
             unzipped_files = listfiles_recursively(istorage, unzip_path)
             unzipped_foldername = os.path.basename(unzip_path)
             destination_folders = []
+            # list all folders to be written into the resource
             for folder in listfolders(istorage, unzip_path):
                 destination_folder = os.path.join(working_dir, folder)
                 destination_folders.append(destination_folder)
-            destination_files = []
+            # walk through each unzipped file, delete aggregations and files if they exist
             for file in unzipped_files:
-                split = file.split("/" + unzipped_foldername + "/", 1)
-                destination_file = os.path.join(split[0], split[1])
+                destination_file = _get_destination_filename(file, unzipped_foldername)
                 if(istorage.exists(destination_file)):
-                    istorage.delete(destination_file)
+                    if resource.resource_type == "CompositeResource":
+                        aggregation_object = resource.get_file_aggregation_object(destination_file)
+                        if aggregation_object:
+                            if aggregation_object.is_single_file_aggregation:
+                                aggregation_object.logical_delete(user)
+                            else:
+                                directory = os.path.dirname(destination_file)
+                                # remove_folder expects path to start with 'data/contents'
+                                directory = directory.replace(res_id + "/", "")
+                                remove_folder(user, res_id, directory)
+                        else:
+                            logger.error("No aggregation object found for " + destination_file)
+                            istorage.delete(destination_file)
+                    else:
+                        istorage.delete(destination_file)
+            # now move each file to the destination
+            for file in unzipped_files:
+                destination_file = _get_destination_filename(file, unzipped_foldername)
                 istorage.moveFile(file, destination_file)
-                destination_files.append(destination_file)
+            # and now link them to the resource
             res_files = []
-            for file in destination_files:
-                res_file = link_irods_file_to_django(resource, file)
+            for file in unzipped_files:
+                destination_file = _get_destination_filename(file, unzipped_foldername)
+                res_file = link_irods_file_to_django(resource, destination_file)
                 res_files.append(res_file)
-            istorage.delete(unzip_path)
+
+            # scan for aggregations
             check_aggregations(resource, destination_folders, res_files)
+            # signal deletion of the original zip file
             bool_remove_original = True
+            istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
 
     except Exception:
+        logger.exception("failed to unzip")
         istorage.delete(unzip_path)
         raise
 
@@ -730,6 +759,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
+
+def _get_destination_filename(file, unzipped_foldername):
+    split = file.split("/" + unzipped_foldername + "/", 1)
+    destination_file = os.path.join(split[0], split[1])
+    return destination_file
 
 def listfiles_recursively(istorage, path):
     files = []
