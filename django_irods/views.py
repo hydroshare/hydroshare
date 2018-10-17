@@ -253,6 +253,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
         if not res.is_federated:
+            res.update_download_count()
             # invoke X-Accel-Redirect on physical vault file in nginx
             response = HttpResponse(content_type=mtype)
             response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
@@ -263,6 +264,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
         elif res.resource_federation_path == userpath:  # this guarantees a "user" resource
+            res.update_download_count()
             # invoke X-Accel-Redirect on physical vault file in nginx
             # if path is full user path; strip federation prefix
             if path.startswith(userpath):
@@ -278,6 +280,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     # if we get here, none of the above conditions are true
     if flen <= FILE_SIZE_LIMIT:
+        res.update_download_count()
         options = ('-',)  # we're redirecting to stdout.
         # this unusual way of calling works for federated or local resources
         proc = session.run_safe('iget', None, path, *options)
