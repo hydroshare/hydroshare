@@ -1671,6 +1671,38 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
+    @property
+    def view_count(self):
+        if 'view_count' not in self.extra_data.keys():
+            return 0
+        else:
+            return int(self.extra_data['view_count'])
+
+    @property
+    def download_count(self):
+        if 'download_count' not in self.extra_data.keys():
+            return 0
+        else:
+            return int(self.extra_data['download_count'])
+
+    def update_view_count(self):
+        if 'view_count' in self.extra_data.keys():
+            view_count = int(self.extra_data['view_count'])
+            view_count += 1
+            self.extra_data['view_count'] = str(view_count)
+        else:
+            self.extra_data['view_count'] = '1'
+        self.save()
+
+    def update_download_count(self):
+        if 'download_count' in self.extra_data.keys():
+            download_count = int(self.extra_data['download_count'])
+            download_count += 1
+            self.extra_data['download_count'] = str(download_count)
+        else:
+            self.extra_data['download_count'] = '1'
+        self.save()
+
     # definition of resource logic
     @property
     def supports_folders(self):
