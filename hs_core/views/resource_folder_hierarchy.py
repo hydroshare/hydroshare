@@ -305,8 +305,10 @@ def data_store_folder_unzip(request, **kwargs):
         if remove_original == 'false':
             bool_remove_original = False
 
+    overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
+
     try:
-        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
+        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=overwrite)
     except SessionException as ex:
         specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                        "protection from overwriting existing files. Unzip in a different " \
@@ -337,8 +339,9 @@ def data_store_folder_unzip_public(request, pk, pathname):
     :return HttpResponse:
     """
 
+    overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     sys_pathname = 'data/contents/%s' % pathname
-    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname, overwrite=overwrite)
 
 
 def data_store_create_folder(request):
