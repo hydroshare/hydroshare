@@ -105,6 +105,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     margin-right: 0;
 }
 
+.profile-card table .fa {
+	margin-right: 4px;
+}
+
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
 	color: #333;
 	-webkit-transition: color 100ms linear;
@@ -944,11 +948,15 @@ li.account p{
 }
 
 .authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child) a::before,
-.owners-wrapper > a:not(:first-child)::before {
-    content: "·";
-    color: #333;
+.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+    content: "";
+    width: 1px;
     display: inline-block;
+    background-color: #999;
+    height: 18px;
     margin: 0 4px;
+    position: relative;
+    top: 4px;
 }
 
 .authors-wrapper.sortable span:last-child a {
@@ -1087,7 +1095,7 @@ div.readme .readme-content {
 }
 
 div.readme .readme-header {
-	border-bottom: 1px solid #DDD;
+	padding-left: 2em;
 }
 
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
@@ -2885,7 +2893,6 @@ span.you-flag {
 }
 
 #btn-add-new-author {
-	height: 25px;
 	margin-top: 4px;
 }
 
@@ -4174,8 +4181,8 @@ ul#fb-files-container {
 }
 
 .selection-menu li:not(.divider) {
-    padding: 4px 8px;
-    cursor: pointer;
+	padding: 6px 16px;
+	cursor: pointer;
 }
 
 .selection-menu li:hover {
@@ -4357,14 +4364,17 @@ div.fb-upload-caption a {
   outline: none;
 }
 
-#fb-inner-buttons, div.readme .readme-header  {
-	padding: 8px;
+#fb-inner-buttons, div.readme .readme-header {
 	border-bottom: 1px solid #DDD;
 	background: rgb(255, 255, 255);
 	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
 	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
 	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
+}
+
+#fb-inner-buttons {
+	padding: 8px;
 }
 
 div#fb-inner-controls {
@@ -4753,7 +4763,7 @@ div#resource-content {
 	cursor: default;
 }
 
-#dropdown-resource-type .dropdown-menu .resource-type-icon {
+#dropdown-resource-type .dropdown-menu .resource-type-icon, #right-click-menu .resource-type-icon {
 	height: 26px;
 }
 
@@ -4784,6 +4794,14 @@ div#resource-content {
 /* Tooltip on right */
 .tooltip.right > .tooltip-arrow {
 	border-right: 5px solid #535353;
+}
+
+#right-click-menu .tooltip.right {
+	min-width: 210px;
+}
+
+#right-click-menu .dropdown-menu {
+	width: 220px;
 }
 
 #dropdown-resource-type div.tooltip-inner {

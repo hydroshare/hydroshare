@@ -245,11 +245,6 @@ $(document).ready(function () {
             $(".org-wrapper").show();
         }
 
-        // Show a separator if both Organization and Title are listed
-        if ((data["organization"] && data["organization"] != "Unspecified") && (data["title"] && data["title"] != "Unspecified")) {
-            data["organization"] += " | ";
-        }
-
         // Rest of the fields
         for (var item in data) {
             if ($.inArray(item, fields) != -1) {

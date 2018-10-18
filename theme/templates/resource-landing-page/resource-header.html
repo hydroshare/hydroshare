@@ -62,12 +62,12 @@
                                     </form>
                                  </span>
                             {% endfor %}
-                            <span data-toggle="tooltip" data-placement="auto"
-                                  title='Drag and drop Authors to rearrange.'
-                                  class="glyphicon glyphicon-info-sign text-muted"></span>
                         </span>
+                        <span data-toggle="tooltip" data-placement="auto"
+                              title='Drag and drop Authors to rearrange.'
+                              class="glyphicon glyphicon-info-sign text-muted"></span>
                         <br>
-                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
+                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-sm" data-toggle="modal"
                            data-target="#add-creator-dialog">
                             <span class="glyphicon glyphicon-plus"></span><span class="button-label"> Add Author</span>
                         </a>
@@ -104,16 +104,13 @@
                     <th>DOI:</th>
                     <td>10.4211/hs.{{ cm.short_id }} <a href="#citation">cite</a></td>
                 </tr>
-                {% if cm.resource_type == "CompositeResource" %}
+                {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
                 <tr class="info-collapsible">
                     <th>Content types:</th>
                     <td>
-                        {# TODO: EXPOSE CONTENT TYPES#}
                         {% for ct in cm.aggregation_types %}
                             <span class="label label-info">{{ ct }}</span>&nbsp;
                         {% endfor %}
-{#                        <span class="label label-info">Time Series</span>&nbsp;#}
-{#                        <span class="label label-info">Geographic Feature</span>&nbsp;#}
                     </td>
                 </tr>
                 {% endif %}

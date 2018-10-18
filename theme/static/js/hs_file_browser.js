@@ -1100,7 +1100,7 @@ $(document).ready(function () {
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
                         var currentPath = $("#hs-file-browser").attr("data-current-path");
-                        previewNode.find("#upload-folder-path").text(currentPath);
+                        previewNode.find("#upload-folder-path").text(currentPath.replace("data/", ""));
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
