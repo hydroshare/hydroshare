@@ -2562,7 +2562,7 @@ div.affiliation {
     margin-left: 10px;
 }
 
-#div_id_abstract textarea, #id_statement {
+#div_id_abstract textarea, #id_statement, #id_comment {
     resize: vertical;
 }
 
@@ -4183,6 +4183,10 @@ ul#fb-files-container {
 .selection-menu li:not(.divider) {
 	padding: 6px 16px;
 	cursor: pointer;
+}
+
+.fb-dropdown .divider:last-child, .fb-dropdown .divider:first-child {
+	display: none;
 }
 
 .selection-menu li:hover {

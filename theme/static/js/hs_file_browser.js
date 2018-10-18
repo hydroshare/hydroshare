@@ -374,7 +374,6 @@ function updateSelectionMenuContext() {
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
     menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
-    $("#delete-separator").toggleClass("hidden", flagDisableUnzip && flagDisableZip);
 }
 
 function bindFileBrowserItemEvents() {
