@@ -1048,7 +1048,6 @@ def check_aggregations(resource, folders, res_files):
         for fol in folders:
             agg_type = resource.get_folder_aggregation_type_to_set(fol)
             if agg_type:
-                fol = fol.split(os.path.join(resource.root_path, "/data/contents/"))[1]
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,
                                       hs_file_type=agg_type, folder_path=fol,

@@ -705,6 +705,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
     zip_fname = os.path.basename(zip_with_rel_path)
     working_dir = os.path.dirname(zip_with_full_path)
+    unzip_path = None
     try:
 
         if overwrite:
@@ -763,7 +764,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
     except Exception:
         logger.exception("failed to unzip")
-        istorage.delete(unzip_path)
+        if unzip_path and istorage.exists:
+            istorage.delete(unzip_path)
         raise
 
     if bool_remove_original:
