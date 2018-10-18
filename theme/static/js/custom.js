@@ -252,9 +252,11 @@ $(document).ready(function () {
                 var field = profileCard.find("[data-" + item + "]");
                 if (content && content != "Unspecified") {
                     field.text(content);
+                    field.show();
                 }
                 else {
                     profileCard.find("." + item + "-wrapper").hide();
+                    field.hide();
                 }
             }
             else if ($.inArray(item, identifiers) != -1) {
