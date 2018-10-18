@@ -255,8 +255,11 @@
                             </td>
                             {# First Author #}
                             {% if res.first_creator.description %}
+{#                                <td>#}
+{#                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
+{#                                </td>#}
                                 <td>
-                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+                                   {% include "includes/author-link.html" with author=res.first_creator %}
                                 </td>
                             {% else %}
                                 <td>{{ res.first_creator.name }}</td>
@@ -358,81 +361,85 @@
     </div>
 </div>
 
+{% block modal %}
+    {% include "includes/author-preview.html" %}
+    <!-- Manage Labels Modal -->
+    <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="table-user-labels" class="table">
+                        <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if user.ulabels.saved_labels %}
+                            {% for label in user.ulabels.saved_labels %}
+                                <tr>
+                                    <td class="user-label" data-label="{{ label }}">{{ label }}</td>
+                                    <td>
+                                        <form class="hidden-form" data-id="form-delete-label-{{ label }}"
+                                              action="/hsapi/_internal/label-resource-action/"
+                                              method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="label" value="{{ label }}">
+                                            <input type="hidden" name="label_type" value="SAVEDLABEL">
+                                            <input type="hidden" name="action" value="DELETE">
+                                        </form>
+                                        <span data-label="{{ label }}" data-form-type="delete-label"
+                                              class="btn-label-remove glyphicon glyphicon-remove"
+                                              data-form-id="form-delete-label-{{ label }}"></span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="no-items-found">
+                                <td>No labels found.</td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Resource Modal -->
+    <div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
+                </div>
+                <div class="modal-body">
+                    <div>Select resources to delete</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="btn-delete-multiple-resources" class="btn btn-danger" data-dismiss="modal">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
 {#    To be used for querying the tabla in javascrip    t#}
 <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
 <span id="csrf">{% csrf_token %}</span>
-
-<!-- Manage Labels Modal -->
-<div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
-            </div>
-            <div class="modal-body">
-                <table id="table-user-labels" class="table">
-                    <thead>
-                    <tr>
-                        <th>Label</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% if user.ulabels.saved_labels %}
-                        {% for label in user.ulabels.saved_labels %}
-                            <tr>
-                                <td class="user-label" data-label="{{ label }}">{{ label }}</td>
-                                <td>
-                                    <form class="hidden-form" data-id="form-delete-label-{{ label }}"
-                                          action="/hsapi/_internal/label-resource-action/"
-                                          method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="label" value="{{ label }}">
-                                        <input type="hidden" name="label_type" value="SAVEDLABEL">
-                                        <input type="hidden" name="action" value="DELETE">
-                                    </form>
-                                    <span data-label="{{ label }}" data-form-type="delete-label"
-                                          class="btn-label-remove glyphicon glyphicon-remove"
-                                          data-form-id="form-delete-label-{{ label }}"></span>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr class="no-items-found">
-                            <td>No labels found.</td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Resource Modal -->
-<div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
-            </div>
-            <div class="modal-body">
-                <div>Select resources to delete</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button id="btn-delete-multiple-resources" class="btn btn-danger" data-dismiss="modal">Confirm</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
 
