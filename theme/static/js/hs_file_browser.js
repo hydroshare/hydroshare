@@ -84,61 +84,82 @@ function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
     var resourceType = $("#resource-type").val();
 
-    var flagDisableOpen = false;
-    var flagDisableDownload = false;
-    var flagDisableRename = false;
-    var flagDisablePaste = false;
-    var flagDisableZip = false;
-    var flagDisableUnzip = false;
-    var flagDisableCut = false;
-    var flagDisableDelete = false;
-    var flagDisableSetGenericFileType = false;
-    var flagDisableSetGeoRasterFileType = false;
-    var flagDisableSetNetCDFFileType = false;
-    var flagDisableSetGeoFeatureFileType = false;
-    var flagDisableSetRefTimeseriesFileType = false;
-    var flagDisableSetTimeseriesFileType = false;
-    var flagDisableRemoveAggregation = false;
-    var flagDisableGetLink = false;
-    var flagDisableCreateFolder = false;
+    var UIState = {
+            Open: true,
+            download: true,
+            rename: true,
+            paste: true,
+            zip: true,
+            unzip: true,
+            cut: true,
+            delete: true,
+            setGenericFileType: true,
+            setGeoRasterFileType: true,
+            setNetCDFFileType: true,
+            setGeoFeatureFileType: true,
+            setRefTimeseriesFileType: true,
+            setTimeseriesFileType: true,
+            removeAggregation: true,
+            getLink: true,
+            createFolder: true,
+        }
+
+    // var UIState.Open = false;
+    // var UIState.Download = false;
+    // var UIState.Rename = false;
+    // var UIState.Paste = false;
+    // var UIState.Zip = false;
+    // var UIState.Unzip = false;
+    // var UIState.Cut = false;
+    // var UIState.Delete = false;
+    // var UIState.SetGenericFileType = false;
+    // var UIState.SetGeoRasterFileType = false;
+    // var UIState.SetNetCDFFileType = false;
+    // var UIState.SetGeoFeatureFileType = false;
+    // var UIState.SetRefTimeseriesFileType = false;
+    // var UIState.SetTimeseriesFileType = false;
+    // var UIState.RemoveAggregation = false;
+    // var UIState.GetLink = false;
+    // var UIState.CreateFolder = false;
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {          // Multiple files selected
-        flagDisableRename = true;
-        flagDisableOpen = true;
-        flagDisablePaste = true;
-        flagDisableZip = true;
-        flagDisableSetGenericFileType = true;
-        flagDisableSetGeoRasterFileType = true;
-        flagDisableSetNetCDFFileType = true;
-        flagDisableSetGeoFeatureFileType = true;
-        flagDisableSetRefTimeseriesFileType = true;
-        flagDisableSetTimeseriesFileType = true;
-        flagDisableRemoveAggregation = true;
-        flagDisableGetLink = true;
+        UIState.rename = false;
+        UIState.open = false;
+        UIState.paste = false;
+        UIState.zip = false;
+        UIState.setGenericFileType = false;
+        UIState.setGeoRasterFileType = false;
+        UIState.setNetCDFFileType = false;
+        UIState.setGeoFeatureFileType = false;
+        UIState.setRefTimeseriesFileType = false;
+        UIState.setTimeseriesFileType = false;
+        UIState.removeAggregation = false;
+        UIState.getLink = false;
 
-        for (var i = 0; i < selected.length; i++) {
-            var size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
+        for (let i = 0; i < selected.length; i++) {
+            const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
             if (size > maxSize) {
-                flagDisableDownload = true;
+                UIState.download = false;
+                break;
             }
         }
-        $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
+        $("#fb-download-help").toggleClass("hidden", !UIState.download);
 
-        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
+        const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
-            flagDisableRemoveAggregation = true;
+            UIState.removeAggregation = false;
         }
         if(resourceType !== 'Composite Resource') {
-            flagDisableRemoveAggregation = true;
+            UIState.removeAggregation = false;
         }
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     }
     else if (selected.length == 1) {    // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
-            flagDisableDownload = true;
+            UIState.download = false;
             $("#fb-download-help").toggleClass("hidden", false);
         }
         else {
@@ -146,22 +167,22 @@ function updateSelectionMenuContext() {
         }
     }
     else {                              // No files selected
-        flagDisableCut = true;
-        flagDisableRename = true;
-        flagDisableUnzip = true;
-        flagDisableZip = true;
-        flagDisableDelete = true;
-        flagDisableDownload = true;
-        flagDisableGetLink = true;
-        flagDisableSetGenericFileType = true;
-        flagDisableSetNetCDFFileType = true;
-        flagDisableSetGeoRasterFileType = true;
-        flagDisableSetGeoFeatureFileType = true;
-        flagDisableSetTimeseriesFileType = true;
+        UIState.cut = false;
+        UIState.rename = false;
+        UIState.unzip = false;
+        UIState.zip = false;
+        UIState.delete = false;
+        UIState.download = false;
+        UIState.getLink = false;
+        UIState.setGenericFileType = false;
+        UIState.setNetCDFFileType = false;
+        UIState.setGeoRasterFileType = false;
+        UIState.setGeoFeatureFileType = false;
+        UIState.setTimeseriesFileType = false;
 
         var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 0) {
-            flagDisableDelete = false;
+            UIState.delete = true;
         }
         if(resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function() {
@@ -171,7 +192,7 @@ function updateSelectionMenuContext() {
                 if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                     logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile"){
                     if($(this).parent().hasClass("fb-file")){
-                        flagDisableCreateFolder = true;
+                        UIState.createFolder = false;
                     }
                 }
             });
@@ -182,102 +203,104 @@ function updateSelectionMenuContext() {
     }
 
     if (selected.hasClass("fb-file")) {
-        flagDisableOpen = true;
-        flagDisablePaste = true;
-        flagDisableZip = true;
+        UIState.open = false;
+        UIState.paste = false;
+        UIState.zip = false;
         if (!selected.children('span').hasClass('fb-logical-file-type')){
-            flagDisableRemoveAggregation = true;
+            UIState.removeAggregation = false;
         }
         else {
             var logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
             // if the selected file is part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation) we
             // want the remove aggregation option not to show up
             if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
-                flagDisableRemoveAggregation = true;
+                UIState.removeAggregation = false;
             }
         }
     }
     var isFolderSelected = false;
     if (selected.hasClass("fb-folder")) {
-        flagDisableDownload = false;
-        flagDisableUnzip = true;
-        flagDisableGetLink = false;
+        UIState.download = true;
+        UIState.unzip = false;
+        UIState.getLink = true;
+        UIState.setGenericFileType = false;
+        UIState.setRefTimeseriesFileType = false;
         isFolderSelected = true;
-        flagDisableSetGenericFileType = true;
-        flagDisableSetRefTimeseriesFileType = true;
+
         if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
-            flagDisableRemoveAggregation = true;
+            UIState.removeAggregation = false;
         }
+
         if(selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")){
             var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
-            if(logicalFileTypeToSet.length){
-                if(logicalFileTypeToSet !== "NetCDFLogicalFile"){
-                    flagDisableSetNetCDFFileType = true;
+            if (logicalFileTypeToSet.length) {
+                if (logicalFileTypeToSet !== "NetCDFLogicalFile") {
+                    UIState.setNetCDFFileType = false;
                 }
-                if(logicalFileTypeToSet !== "GeoRasterLogicalFile"){
-                    flagDisableSetGeoRasterFileType = true;
+                if (logicalFileTypeToSet !== "GeoRasterLogicalFile") {
+                    UIState.setGeoRasterFileType = false;
                 }
-                if(logicalFileTypeToSet !== "GeoFeatureLogicalFile"){
-                    flagDisableSetGeoFeatureFileType = true;
+                if (logicalFileTypeToSet !== "GeoFeatureLogicalFile") {
+                    UIState.setGeoFeatureFileType = false;
                 }
-                if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
-                    flagDisableSetTimeseriesFileType = true;
+                if (logicalFileTypeToSet !== "TimeSeriesLogicalFile") {
+                    UIState.setTimeseriesFileType = false;
                 }
             }
             else {
-                flagDisableSetNetCDFFileType = true;
-                flagDisableSetGeoRasterFileType = true;
-                flagDisableSetGeoFeatureFileType = true;
-                flagDisableSetTimeseriesFileType = true;
+                UIState.setNetCDFFileType = false;
+                UIState.setGeoRasterFileType = false;
+                UIState.setGeoFeatureFileType = false;
+                UIState.setTimeseriesFileType = false;
             }
         }
         else {
-            flagDisableSetNetCDFFileType = true;
-            flagDisableSetGeoRasterFileType = true;
-            flagDisableSetGeoFeatureFileType = true;
-            flagDisableSetTimeseriesFileType = true;
+            UIState.setNetCDFFileType = false;
+            UIState.setGeoRasterFileType = false;
+            UIState.setGeoFeatureFileType = false;
+            UIState.setTimeseriesFileType = false;
         }
     }
 
     if (!sourcePaths.length) {
-        flagDisablePaste = true;
+        UIState.paste = false;
     }
 
     if(!isFolderSelected){
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
             var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
-            var currentPath = $("#hs-file-browser").attr("data-current-path");
+            // var currentPath = $("#hs-file-browser").attr("data-current-path");
 
             if(logicalFileType != "") {
-                flagDisableSetGenericFileType = true;
+                UIState.setGenericFileType = false;
             }
             if (!fileName.toUpperCase().endsWith("ZIP")) {
-                flagDisableUnzip = true;
+                UIState.unzip = false;
             }
             if ((!fileName.toUpperCase().endsWith("TIF")) || logicalFileType != "") {
-                flagDisableSetGeoRasterFileType = true;
+                UIState.setGeoRasterFileType = false;
             }
 
             if (!fileName.toUpperCase().endsWith("NC")  || logicalFileType != "") {
-                flagDisableSetNetCDFFileType = true;
+                UIState.setNetCDFFileType = false;
             }
 
             if ((!fileName.toUpperCase().endsWith("SHP")) || logicalFileType != "") {
-                flagDisableSetGeoFeatureFileType = true;
+                UIState.setGeoFeatureFileType = false;
             }
             if (!fileName.toUpperCase().endsWith("REFTS.JSON")  || logicalFileType != "") {
-                flagDisableSetRefTimeseriesFileType = true;
+                UIState.setRefTimeseriesFileType = false;
             }
             if ((!fileName.toUpperCase().endsWith("SQLITE") && !fileName.toUpperCase().endsWith("CSV")) || logicalFileType != "") {
-                flagDisableSetTimeseriesFileType = true;
+                UIState.setTimeseriesFileType = false;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                flagDisableCut = true;
-                flagDisablePaste = true;
-                flagDisableCreateFolder = true;
+                UIState.cut = false;
+                UIState.paste = false;
+                UIState.createFolder = false;
             }
         }
     }
@@ -287,93 +310,94 @@ function updateSelectionMenuContext() {
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            flagDisableCreateFolder = true;
-            flagDisableRename = true;
+            UIState.createFolder = false;
+            UIState.rename = false;
             if(isFolderSelected){
-                flagDisableDelete = false;
+                UIState.delete = true;
             }
             else {
-                flagDisableDelete = true;
+                UIState.delete = false;
             }
 
-            flagDisableCut = true;
-            flagDisableSetGenericFileType = true;
+            UIState.cut = false;
+            UIState.setGenericFileType = false;
         }
+
     // set Create folder toolbar option
-    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+    $("#fb-create-folder").toggleClass("disabled", !UIState.createFolder);
 
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
 
     // Open
-    menu.children("li[data-menu-name='open']").toggleClass("hidden", flagDisableOpen);
-    $("#open-separator").toggleClass("hidden", flagDisableOpen);
+    menu.children("li[data-menu-name='open']").toggleClass("hidden", !UIState.open);
+    $("#open-separator").toggleClass("hidden", !UIState.open);
     if (!menu.children("li[data-menu-name='delete']").length) {
         $("#open-separator").toggleClass("hidden", true);
     }
 
     // Download
-    menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
-    $("#fb-download").toggleClass("disabled", flagDisableDownload);
+    menu.children("li[data-menu-name='download']").toggleClass("disabled", !UIState.download);
+    $("#fb-download").toggleClass("disabled", !UIState.download);
 
     // Get file URL
-    menu.children("li[data-menu-name='get-link']").toggleClass("disabled", flagDisableGetLink);
-    $("#fb-get-link").toggleClass("disabled", flagDisableGetLink);
+    menu.children("li[data-menu-name='get-link']").toggleClass("disabled", !UIState.getLink);
+    $("#fb-get-link").toggleClass("disabled", !UIState.getLink);
 
     // set Generic file type
-    menu.children("li[data-menu-name='setgenericfiletype']").toggleClass("disabled", flagDisableSetGenericFileType);
-    $("#fb-generic-file-type").toggleClass("disabled", flagDisableSetGenericFileType);
+    menu.children("li[data-menu-name='setgenericfiletype']").toggleClass("disabled", !UIState.setGenericFileType);
+    $("#fb-generic-file-type").toggleClass("disabled", !UIState.setGenericFileType);
 
     // set Geo Raster file type
-    menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
-    $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+    menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", !UIState.setGeoRasterFileType);
+    $("#fb-geo-file-type").toggleClass("disabled", !UIState.setGeoRasterFileType);
 
     // set NetCDF file type
-    menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
-    $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
+    menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", !UIState.setNetCDFFileType);
+    $("#fb-set-netcdf-file-type").toggleClass("disabled", !UIState.setNetCDFFileType);
 
     // set GeoFeature file type
-    menu.children("li[data-menu-name='setgeofeaturefiletype']").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
-    $("#fb-set-geofeature-file-type").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
+    menu.children("li[data-menu-name='setgeofeaturefiletype']").toggleClass("disabled", !UIState.setGeoFeatureFileType);
+    $("#fb-set-geofeature-file-type").toggleClass("disabled", !UIState.setGeoFeatureFileType);
 
     // set RefTimeseries file type
-    menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
-    $("#fb-set-refts-file-type").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
+    menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", !UIState.setRefTimeseriesFileType);
+    $("#fb-set-refts-file-type").toggleClass("disabled", !UIState.setRefTimeseriesFileType);
 
     // set Timeseries file type
-    menu.children("li[data-menu-name='settimeseriesfiletype']").toggleClass("disabled", flagDisableSetTimeseriesFileType);
-    $("#fb-set-timeseries-file-type").toggleClass("disabled", flagDisableSetTimeseriesFileType);
+    menu.children("li[data-menu-name='settimeseriesfiletype']").toggleClass("disabled", !UIState.setTimeseriesFileType);
+    $("#fb-set-timeseries-file-type").toggleClass("disabled", !UIState.setTimeseriesFileType);
 
     // set Remove aggregation (file type)
-    menu.children("li[data-menu-name='removeaggregation']").toggleClass("disabled", flagDisableRemoveAggregation);
+    menu.children("li[data-menu-name='removeaggregation']").toggleClass("disabled", !UIState.removeAggregation);
 
     // Rename
-    menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
-    $("#fb-rename").toggleClass("disabled", flagDisableRename);
+    menu.children("li[data-menu-name='rename']").toggleClass("disabled", !UIState.rename);
+    $("#fb-rename").toggleClass("disabled", !UIState.rename);
 
     // Zip
-    menu.children("li[data-menu-name='zip']").toggleClass("hidden", flagDisableZip);
-    $("#fb-zip").toggleClass("disabled", flagDisableZip);
+    menu.children("li[data-menu-name='zip']").toggleClass("hidden", !UIState.zip);
+    $("#fb-zip").toggleClass("disabled", !UIState.zip);
 
     // Unzip
-    menu.children("li[data-menu-name='unzip']").toggleClass("hidden", flagDisableUnzip);
-    $("#fb-unzip").toggleClass("disabled", flagDisableUnzip);
+    menu.children("li[data-menu-name='unzip']").toggleClass("hidden", !UIState.unzip);
+    $("#fb-unzip").toggleClass("disabled", !UIState.unzip);
 
     // Cut
-    menu.children("li[data-menu-name='cut']").toggleClass("disabled", flagDisableCut);
-    $("#fb-cut").toggleClass("disabled", flagDisableCut);
+    menu.children("li[data-menu-name='cut']").toggleClass("disabled", !UIState.cut);
+    $("#fb-cut").toggleClass("disabled", !UIState.cut);
 
     // Paste
-    menu.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
-    menu2.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
-    $("#fb-paste").toggleClass("disabled", flagDisablePaste);
+    menu.children("li[data-menu-name='paste']").toggleClass("disabled", !UIState.paste);
+    menu2.children("li[data-menu-name='paste']").toggleClass("disabled", !UIState.paste);
+    $("#fb-paste").toggleClass("disabled", !UIState.paste);
 
     // set create folder right click menu option
-    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolder);
+    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", !UIState.createFolder);
 
     // Delete
-    $("#fb-delete").toggleClass("disabled", flagDisableDelete);
-    menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
+    $("#fb-delete").toggleClass("disabled", !UIState.delete);
+    menu.children("li[data-menu-name='delete']").toggleClass("disabled", !UIState.delete);
 }
 
 function bindFileBrowserItemEvents() {
@@ -939,7 +963,7 @@ function onOpenFolder() {
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
 
-    var flagDisableCreateFolder = false;
+    var allowCreateFolder = true;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
@@ -954,15 +978,15 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        if (logicalFileType.length > 0){
-            flagDisableCreateFolder = true;
+        if (logicalFileType.length > 0) {
+            allowCreateFolder = false;
         }
         else {
-            flagDisableCreateFolder = false;
+            allowCreateFolder = true;
         }
 
         // Set Create folder toolbar option
-        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+        $("#fb-create-folder").toggleClass("disabled", !allowCreateFolder);
     });
 
     $.when.apply($, calls).fail(function () {
