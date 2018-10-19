@@ -341,7 +341,8 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     sys_pathname = 'data/contents/%s' % pathname
-    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname, overwrite=overwrite)
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname,
+                                   overwrite=overwrite)
 
 
 def data_store_create_folder(request):

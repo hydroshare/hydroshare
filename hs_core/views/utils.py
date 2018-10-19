@@ -554,8 +554,9 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
                 res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
-            res_files = res_files +_link_irods_folder_to_django(resource,
-                                        istorage, os.path.join(foldername, folder), exclude)
+            res_files = res_files + \
+                        _link_irods_folder_to_django(resource, istorage,
+                                                     os.path.join(foldername, folder), exclude)
     return res_files
 
 
