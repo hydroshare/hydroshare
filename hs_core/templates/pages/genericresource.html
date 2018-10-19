@@ -80,8 +80,8 @@
             {% if cm.resource_type != "ToolResource" %}
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
-                        <li id="btn-open" data-menu-name="open">
+                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
+                        <li id="btn-open" data-menu-name="open" data-fb-action="open">
                             <span class="fa fa-folder-open icon-blue"></span>
                             <span>Open</span>
                         </li>
@@ -90,25 +90,27 @@
                     {% endif %}
 
                     {% if page.perms.change and metadata_form %}
-                        {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
-                            <li id="btn-cut" data-menu-name="cut">
+                        {% if cm.resource_type == "CompositeResource" %}
+                            <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                                 <span class="fa fa-scissors icon-blue"></span>
                                 <span>Cut</span>
                             </li>
-                            <li data-menu-name="paste">
+                            <li data-menu-name="paste" data-fb-action="paste">
                                 <span class="fa fa-clipboard icon-blue"></span>
                                 <span>Paste</span>
                             </li>
                         {% endif %}
 
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
-                            <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
+                        {% if cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
+                            <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                 <span>Rename</span>
                             </li>
                         {% endif %}
 
-                        <li data-menu-name="delete" class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
+                        <li data-menu-name="delete" class="fb-files-remove"
+                            data-fb-action="delete" data-toggle="modal"
+                            data-target="#confirm-delete-dialog">
                             <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             <span>Delete</span>
                         </li>
@@ -116,13 +118,13 @@
                         <li role="separator" class="divider"></li>
 
                         {% if cm|resource_type == "Generic" %}
-                            <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                            <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
                                 data-target="#zip-folder-dialog">
                                 <span class="glyphicon glyphicon-compressed icon-blue"></span>
                                 <span>Zip Folder...</span>
                             </li>
 
-                            <li id="btn-unzip" data-menu-name="unzip">
+                            <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
                                 <span class="fa fa-file-archive-o icon-blue"></span>
                                 <span>Unzip here</span>
                             </li>
@@ -131,22 +133,24 @@
                         {% endif %}
                     {% endif %}
                     {% if cm.raccess.require_download_agreement %}
-                        <li id="btn-download-with-agreement" data-menu-name="download"
+                        <li id="btn-download-with-agreement" data-menu-name="download" data-fb-action="download"
                             data-toggle="modal" data-target="#license-agree-dialog-file">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
                     {% else %}
-                        <li id="btn-download" data-menu-name="download" >
+                        <li id="btn-download" data-menu-name="download" data-fb-action="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
-                        <li id="btn-download-zip" data-menu-name="download" >
+                        <li id="btn-download-zip" data-menu-name="download" data-fb-action="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download Zipped</span>
                         </li>
                     {% endif %}
-                    <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
+                    <li id="btn-get-link" data-menu-name="get-link"
+                        data-fb-action="getLink" data-toggle="modal"
+                        data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
@@ -160,35 +164,35 @@
                             </span>
                             <ul class="dropdown-menu">
                                 <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
-                                    data-toggle="tooltip" data-placement="right"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setGeorasterFileType"
                                     title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
                                      alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
                                     <span>Geographic Raster</span>
                                 </li>
                                 <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype"
-                                    data-toggle="tooltip" data-placement="right"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setNetCDFFileType"
                                     title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                      alt="Multidimensional Resource Icon" class="resource-type-icon"/>
                                     <span>Multidimensional</span>
                                 </li>
                                 <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype"
-                                    data-toggle="tooltip" data-placement="right"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setGeoFeatureFileType"
                                     title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
                                      alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
                                     <span>Geographic Feature</span>
                                 </li>
                                 <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip"
-                                    data-placement="right"
+                                    data-placement="right" data-fb-action="setRefTimeseriesFileType"
                                     title="Convert to a referenced time series dataset with metadata">
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
                                      alt="Time Series Resource Icon" class="resource-type-icon"/>
                                     <span>Referenced Time Series</span>
                                 </li>
                                 <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype"
-                                    data-toggle="tooltip" data-placement="right"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setTimeseriesFileType"
                                     title="Convert to a time series dataset to which you can add metadata">
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
                                      alt="Time Series Resource Icon" class="resource-type-icon"/>
@@ -196,12 +200,12 @@
                                 </li>
                             </ul>
                         </li>
-                        <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip"
+                        <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType" data-toggle="tooltip"
                             title="Add metadata to an individual file" data-placement="right">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Add metadata to file</span>
                         </li>
-                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="tooltip"
+                        <li id="btn-remove-aggregation" data-fb-action="removeAggregation" data-toggle="tooltip"
                             title="Remove the content type association and delete content-level metadata"
                             data-placement="right">
                             <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
@@ -230,8 +234,9 @@
                 {# POPUP MENU - Right clicking empty space in file browser #}
                 <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
                     {% if page.perms.change and metadata_form %}
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                        {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                             <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
+                                data-fb-action="createFolder"
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder icon-blue"></span>
                                 <span>New Folder</span>
@@ -249,10 +254,8 @@
                         <span class="fa fa-check-square icon-blue"></span>
                         <span>Select All</span>
                     </li>
-                    {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
-
+                    {% if page.perms.change and metadata_form and cm|resource_type == "CompositeResource"%}
                         <li role="separator" class="divider"></li>
-
                         <li data-menu-name="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
                             <span>Paste</span>
@@ -345,7 +348,7 @@
                              data-supported-files="{{ cm.get_supported_upload_file_types }}"
                              data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                              data-initial-file-count="{{ cm.files.all.count }}"
-                             {% if cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
+                             {% if cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
                              class="file-browser"
                         >
 
@@ -353,7 +356,7 @@
                                 <div id="fb-inner-controls">
                                     <div id="fb-inner-buttons">
                                         <div class="row">
-                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                            {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                             <div class="col-xs-6 col-sm-3 col-md-3">
                                                 <button id="fb-move-back"
                                                         class="btn btn-default fb-control-round disabled"
@@ -374,7 +377,7 @@
                                             </div>
                                             {% endif %}
 
-                                            <div class="{% if cm|resource_type == "Generic" %}col-xs-6{% else %}col-xs-12{% endif %} col-sm-4 col-md-3 pull-right text-right">
+                                            <div class="col-xs-12 col-sm-4 col-md-3 pull-right text-right">
                                                 <div id="btn-group-view" class="btn-group" role="group">
                                                     <button data-view="list" data-toggle="tooltip"
                                                             data-placement="auto"
@@ -432,30 +435,27 @@
                                         <div class="row">
                                             <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                 {% if page.perms.change and metadata_form %}
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-create-folder" class="fb-space-right disabled"
-                                                                data-toggle="modal"
+                                                                data-fb-action="createFolder" data-toggle="modal"
                                                                 data-target="#create-folder-dialog"
-                                                            title="Create new folder">
-                                                        <span class="fa fa-folder icon-blue"></span>
-                                                    </button>
+                                                                title="Create new folder">
+                                                            <span class="fa fa-folder icon-blue"></span>
+                                                        </button>
+                                                        <button id="fb-cut" data-fb-action="cut"
+                                                                class="disabled"
+                                                                title="Cut">
+                                                            <span class="fa fa-scissors icon-blue"></span>
+                                                        </button>
+                                                        <button id="fb-paste" data-fb-action="paste"
+                                                                class="disabled fb-space-right"
+                                                                title="Paste">
+                                                            <span class="fa fa-clipboard icon-blue"></span>
+                                                        </button>
                                                     {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
-                                                            <button id="fb-cut"
-                                                                    class="disabled"
-                                                                    title="Cut">
-                                                                <span class="fa fa-scissors icon-blue"></span>
-                                                            </button>
-                                                            <button id="fb-paste"
-                                                                    class="disabled fb-space-right"
-                                                                    title="Paste">
-                                                                <span class="fa fa-clipboard icon-blue"></span>
-                                                            </button>
-                                                        {% endif %}
-
                                                     {% if cm|resource_type != "Web App Resource" and cm|resource_type != "Geographic Raster"  and cm|resource_type != "HIS Referenced Time Series"  and cm|resource_type != "Geographic Feature (ESRI Shapefiles)" %}
-                                                        <button id="fb-rename"
+                                                        <button id="fb-rename" data-fb-action="rename"
                                                                 class="disabled fb-space-right"
                                                                 title="Rename" data-toggle="modal"
                                                                 data-target="#rename-dialog">
@@ -463,15 +463,15 @@
                                                         </button>
                                                     {% endif %}
 
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-zip"
+                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-zip" data-fb-action="zip"
                                                                 class="disabled"
                                                                 title="Zip Folder" data-toggle="modal"
                                                                 data-target="#zip-folder-dialog">
                                                             <span class="glyphicon glyphicon-compressed icon-blue"></span>
                                                         </button>
 
-                                                        <button id="fb-unzip"
+                                                        <button id="fb-unzip" data-fb-action="unzip"
                                                                 class="disabled fb-space-right"
                                                                 title="Unzip here">
                                                             <span class="fa fa-file-archive-o icon-blue"></span>
@@ -490,19 +490,19 @@
                                                 </button>
 
                                                 <button id="fb-download"
-                                                        class="disabled"
+                                                        class="disabled" data-fb-action="download"
                                                         title="Download">
                                                     <span class="glyphicon glyphicon-download icon-blue"></span>
                                                 </button>
 
-                                                <button id="fb-get-link" data-toggle="modal"
+                                                <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
                                                         class="disabled" data-target="#get-file-url-dialog"
                                                         title="Get file URL">
                                                     <span class="fa fa-link icon-blue"></span>
                                                 </button>
 
                                                 {% if page.perms.change and metadata_form %}
-                                                    <button id="fb-delete"
+                                                    <button id="fb-delete" data-fb-action="delete"
                                                             class="disabled"
                                                             title="Delete" data-toggle="modal"
                                                             data-target="#confirm-delete-dialog">
@@ -557,10 +557,10 @@
                                     </div>
                                     <div id="fb-metadata-helper">
                                         <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
-                                           data-action="hide"
+                                           data-fb-action="hide"
                                            data-toggle="tooltip" data-placement="left" title="Hide"></i>
                                         <i class="fa fa-caret-square-o-left fb-metadata-collapse hidden" aria-hidden="true"
-                                           data-action="show"
+                                           data-fb-action="show"
                                            data-toggle="tooltip" data-placement="left" title="Show"></i>
 
                                         <span class="ui-icon ui-icon-grip-dotted-vertical"></span>
@@ -704,7 +704,7 @@
             {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
                 {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                 {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
+                    {% if cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
                         <div class="col-xs-12 content-block">
                             <h3>Resource Specific</h3>
                             <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"

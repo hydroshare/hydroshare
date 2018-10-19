@@ -85,7 +85,7 @@ function updateSelectionMenuContext() {
     var resourceType = $("#resource-type").val();
 
     var UIState = {
-            Open: true,
+            open: true,
             download: true,
             rename: true,
             paste: true,
@@ -102,25 +102,7 @@ function updateSelectionMenuContext() {
             removeAggregation: true,
             getLink: true,
             createFolder: true,
-        }
-
-    // var UIState.Open = false;
-    // var UIState.Download = false;
-    // var UIState.Rename = false;
-    // var UIState.Paste = false;
-    // var UIState.Zip = false;
-    // var UIState.Unzip = false;
-    // var UIState.Cut = false;
-    // var UIState.Delete = false;
-    // var UIState.SetGenericFileType = false;
-    // var UIState.SetGeoRasterFileType = false;
-    // var UIState.SetNetCDFFileType = false;
-    // var UIState.SetGeoFeatureFileType = false;
-    // var UIState.SetRefTimeseriesFileType = false;
-    // var UIState.SetTimeseriesFileType = false;
-    // var UIState.RemoveAggregation = false;
-    // var UIState.GetLink = false;
-    // var UIState.CreateFolder = false;
+        };
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
@@ -166,7 +148,8 @@ function updateSelectionMenuContext() {
             $("#fb-download-help").toggleClass("hidden", true);
         }
     }
-    else {                              // No files selected
+    else {
+        // No files selected
         UIState.cut = false;
         UIState.rename = false;
         UIState.unzip = false;
@@ -184,6 +167,7 @@ function updateSelectionMenuContext() {
         if(resourceType === 'Composite Resource' && foldersSelected.length > 0) {
             UIState.delete = true;
         }
+
         if(resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function() {
                 var logicalFileType = $(this).attr("data-logical-file-type");
@@ -270,30 +254,28 @@ function updateSelectionMenuContext() {
     if(!isFolderSelected){
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
-            var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
-            // var currentPath = $("#hs-file-browser").attr("data-current-path");
+            let logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
+            var currentPath = $("#hs-file-browser").attr("data-current-path");
 
             if(logicalFileType != "") {
                 UIState.setGenericFileType = false;
             }
-            if (!fileName.toUpperCase().endsWith("ZIP")) {
-                UIState.unzip = false;
+            if (!fileName.toUpperCase().endsWith(".ZIP")) {
+                UIState.unzip = true;
             }
-            if ((!fileName.toUpperCase().endsWith("TIF")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType != "") {
                 UIState.setGeoRasterFileType = false;
             }
-
-            if (!fileName.toUpperCase().endsWith("NC")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType != "") {
                 UIState.setNetCDFFileType = false;
             }
-
-            if ((!fileName.toUpperCase().endsWith("SHP")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType != "") {
                 UIState.setGeoFeatureFileType = false;
             }
-            if (!fileName.toUpperCase().endsWith("REFTS.JSON")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  || logicalFileType != "") {
                 UIState.setRefTimeseriesFileType = false;
             }
-            if ((!fileName.toUpperCase().endsWith("SQLITE") && !fileName.toUpperCase().endsWith("CSV")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType != "") {
                 UIState.setTimeseriesFileType = false;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -305,20 +287,13 @@ function updateSelectionMenuContext() {
         }
     }
 
-
-    var logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    let logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             UIState.createFolder = false;
             UIState.rename = false;
-            if(isFolderSelected){
-                UIState.delete = true;
-            }
-            else {
-                UIState.delete = false;
-            }
-
+            UIState.delete = isFolderSelected;
             UIState.cut = false;
             UIState.setGenericFileType = false;
         }
@@ -327,77 +302,25 @@ function updateSelectionMenuContext() {
     $("#fb-create-folder").toggleClass("disabled", !UIState.createFolder);
 
     var menu = $("#right-click-menu");
-    var menu2 = $("#right-click-container-menu");
 
-    // Open
-    menu.children("li[data-menu-name='open']").toggleClass("hidden", !UIState.open);
-    $("#open-separator").toggleClass("hidden", !UIState.open);
-    if (!menu.children("li[data-menu-name='delete']").length) {
-        $("#open-separator").toggleClass("hidden", true);
-    }
-
-    // Download
-    menu.children("li[data-menu-name='download']").toggleClass("disabled", !UIState.download);
-    $("#fb-download").toggleClass("disabled", !UIState.download);
-
-    // Get file URL
-    menu.children("li[data-menu-name='get-link']").toggleClass("disabled", !UIState.getLink);
-    $("#fb-get-link").toggleClass("disabled", !UIState.getLink);
-
-    // set Generic file type
-    menu.children("li[data-menu-name='setgenericfiletype']").toggleClass("disabled", !UIState.setGenericFileType);
-    $("#fb-generic-file-type").toggleClass("disabled", !UIState.setGenericFileType);
-
-    // set Geo Raster file type
-    menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", !UIState.setGeoRasterFileType);
-    $("#fb-geo-file-type").toggleClass("disabled", !UIState.setGeoRasterFileType);
-
-    // set NetCDF file type
-    menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", !UIState.setNetCDFFileType);
-    $("#fb-set-netcdf-file-type").toggleClass("disabled", !UIState.setNetCDFFileType);
-
-    // set GeoFeature file type
-    menu.children("li[data-menu-name='setgeofeaturefiletype']").toggleClass("disabled", !UIState.setGeoFeatureFileType);
-    $("#fb-set-geofeature-file-type").toggleClass("disabled", !UIState.setGeoFeatureFileType);
-
-    // set RefTimeseries file type
-    menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", !UIState.setRefTimeseriesFileType);
-    $("#fb-set-refts-file-type").toggleClass("disabled", !UIState.setRefTimeseriesFileType);
-
-    // set Timeseries file type
-    menu.children("li[data-menu-name='settimeseriesfiletype']").toggleClass("disabled", !UIState.setTimeseriesFileType);
-    $("#fb-set-timeseries-file-type").toggleClass("disabled", !UIState.setTimeseriesFileType);
-
-    // set Remove aggregation (file type)
-    menu.children("li[data-menu-name='removeaggregation']").toggleClass("disabled", !UIState.removeAggregation);
-
-    // Rename
-    menu.children("li[data-menu-name='rename']").toggleClass("disabled", !UIState.rename);
-    $("#fb-rename").toggleClass("disabled", !UIState.rename);
+    // Toggle disabled property
+    $.each(UIState, function (key, value) {
+        $("[data-fb-action='" + key + "']").toggleClass("disabled", !value);
+    });
 
     // Zip
     menu.children("li[data-menu-name='zip']").toggleClass("hidden", !UIState.zip);
-    $("#fb-zip").toggleClass("disabled", !UIState.zip);
 
     // Unzip
     menu.children("li[data-menu-name='unzip']").toggleClass("hidden", !UIState.unzip);
-    $("#fb-unzip").toggleClass("disabled", !UIState.unzip);
 
-    // Cut
-    menu.children("li[data-menu-name='cut']").toggleClass("disabled", !UIState.cut);
-    $("#fb-cut").toggleClass("disabled", !UIState.cut);
+    // Open
+    menu.children("[data-fb-action='open']").toggleClass("hidden", !UIState.open);
 
-    // Paste
-    menu.children("li[data-menu-name='paste']").toggleClass("disabled", !UIState.paste);
-    menu2.children("li[data-menu-name='paste']").toggleClass("disabled", !UIState.paste);
-    $("#fb-paste").toggleClass("disabled", !UIState.paste);
-
-    // set create folder right click menu option
-    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", !UIState.createFolder);
-
-    // Delete
-    $("#fb-delete").toggleClass("disabled", !UIState.delete);
-    menu.children("li[data-menu-name='delete']").toggleClass("disabled", !UIState.delete);
+    $("#open-separator").toggleClass("hidden", !UIState.open);
+    if (!menu.children("li[data-action='delete']").length) {
+        $("#open-separator").toggleClass("hidden", true);
+    }
 }
 
 function bindFileBrowserItemEvents() {
@@ -1430,10 +1353,10 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        targetPath = currentPath + "/" + folderName
+        targetPath = currentPath + "/" + folderName;
         
         var calls = [];
-        var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
+        var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
         calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
 
         // Wait for the asynchronous call to finish to get new folder structure
