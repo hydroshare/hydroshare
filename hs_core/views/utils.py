@@ -756,8 +756,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
             # scan for aggregations
             check_aggregations(resource, destination_folders, res_files)
-            # signal deletion of the original zip file
-            bool_remove_original = True
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
