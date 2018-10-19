@@ -560,36 +560,45 @@
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                                 <br>
                                 <div class="fb-footer {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
-                                    <div id="log-into-irods">
-                                        <h4>Add files from an iRODS server</h4>
-                                        <a id="btn-signin-irods" type="button" class="btn btn-info"
-                                           data-toggle="modal"
-                                           data-target="#irodsSignin">
-                                            <span class="glyphicon glyphicon-log-in"></span>
-                                            &nbsp;&nbsp;Log in to iRODS
-                                        </a>
-                                    </div>
+                                    <h4>Add files from an iRODS server</h4>
 
-                                    <div><a id="btn-select-irods-file" type="button"
-                                       class="btn btn-success row-selector hidden" data-toggle="modal"
-                                       data-target="#irodsContent">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label">
-                                            Add files from iRODS...</span></span>
-                                    </a></div>
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div id="log-into-irods">
+                                                <a id="btn-signin-irods" type="button" class="btn btn-info"
+                                                   data-toggle="modal"
+                                                   data-target="#irodsSignin">
+                                                    <span class="glyphicon glyphicon-log-in"></span>
+                                                    &nbsp;&nbsp;Log in to iRODS
+                                                </a>
+                                            </div>
+                                            <a id="btn-select-irods-file" type="button"
+                                               class="btn btn-success row-selector hidden" data-toggle="modal"
+                                               data-target="#irodsContent">
+                                                <span class="glyphicon glyphicon-plus">
+                                                    <span class="button-label">Add files from iRODS...</span>
+                                                </span>
+                                            </a>
+                                        </div>
 
-                                    <div id="sign-in-info">
-                                        <div id="sign-in-name"></div>
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div id="sign-in-info" >
+                                                <p id="sign-in-name"></p>
+                                                <br>
+                                                <a id="btn-signout-irods" type="button"
+                                                   class="btn btn-default hidden-form">
+                                                    <span class="glyphicon glyphicon-log-out"></span>
+                                                    &nbsp;&nbsp;Log out of iRODS
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <a id="btn-signout-irods" type="button"
-                                       class="btn btn-default hidden-form">
-                                        <span class="glyphicon glyphicon-log-out"></span>
-                                        &nbsp;&nbsp;Log out of iRODS
-                                    </a>
                                 </div>
                             {% endif %}
                         </div>
 
                         {% for b in cm.bags.all %}
+                            <hr>
                             <div>
                                 <a id="btn-download-all" type="button"
                                    class="btn btn-default row-selector"
