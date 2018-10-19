@@ -546,11 +546,14 @@
                                                 </li>
                                             </ul>
                                         </form>
-                                        <div class="fb-upload-caption ">
-                                            <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                            smaller than 1GB in size by dragging & dropping, or click <a
-                                                id="upload-toggle" class="dz-clickable">here</a> to select them.
-                                        </div>
+
+                                        {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
+                                            <div class="fb-upload-caption ">
+                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                smaller than 1GB in size by dragging & dropping, or click <a
+                                                    id="upload-toggle" class="dz-clickable">here</a> to select them.
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     <div id="fb-metadata-helper">
                                         <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"

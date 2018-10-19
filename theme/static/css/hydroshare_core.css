@@ -4283,6 +4283,11 @@ div.fb-upload-caption {
 	padding: 1em;
 }
 
+div.fb-footer {
+	border: 1px solid #DDD;
+	padding: 1em;
+}
+
 div.fb-upload-caption a {
 	cursor: pointer;
 }
