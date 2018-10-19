@@ -1127,10 +1127,12 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 if (!allowMultiple && files.length > 0) {
                     $('.dz-input').hide();
                     $(".fb-upload-caption").toggleClass("hidden", true);
+                    $(".fb-footer").toggleClass("hidden", true);
                 }
                 else {
                     $('.dz-input').show();
                     $(".fb-upload-caption").toggleClass("hidden", false);
+                    $(".fb-footer").toggleClass("hidden", false);
                     Dropzone.forElement("#hsDropzone").files = [];
                 }
             }

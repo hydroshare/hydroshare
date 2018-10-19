@@ -4276,13 +4276,11 @@ span.fb-control-square {
 }
 
 div.fb-upload-caption {
-    padding: 8px;
-    color: #555;
-    margin-bottom: 20px;
-    background: #f8f8f8;
-    padding-bottom: 20px;
-    border: 1px solid #DDD;
-    border-top: 0;
+	position: absolute;
+	bottom: 0;
+	border-top: 1px dashed #DDD;
+	width: 100%;
+	padding: 1em;
 }
 
 div.fb-upload-caption a {
