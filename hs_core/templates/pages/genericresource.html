@@ -278,6 +278,36 @@
                                 </em>
                             </div>
                         </div>
+
+                        <div id="fb-alerts">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>
+                                        <strong>Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </em>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if page.perms.change and metadata_form %}
+                        {% if file_type_error %}
+                            <div class="alert alert-danger alert-dismissible" role="alert">
+                                <button id="validation-error-close" type="button" class="close"
+                                        data-dismiss="alert"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     {% if show_content_files %}
                         {# ======= Modal window begins =======#}
@@ -584,13 +614,12 @@
                                         <div class="col-xs-12 col-sm-6">
                                             <div id="sign-in-info" >
                                                 <p id="sign-in-name"></p>
-                                                <br>
-                                                <a id="btn-signout-irods" type="button"
-                                                   class="btn btn-default hidden-form">
-                                                    <span class="glyphicon glyphicon-log-out"></span>
-                                                    &nbsp;&nbsp;Log out of iRODS
-                                                </a>
                                             </div>
+                                            <a id="btn-signout-irods" type="button"
+                                               class="btn btn-default hidden-form">
+                                                <span class="glyphicon glyphicon-log-out"></span>
+                                                &nbsp;&nbsp;Log out of iRODS
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -598,7 +627,8 @@
                         </div>
 
                         {% for b in cm.bags.all %}
-                            <hr>
+                            <br>
+                            <h4>Download all content</h4>
                             <div>
                                 <a id="btn-download-all" type="button"
                                    class="btn btn-default row-selector"
@@ -608,57 +638,31 @@
                                         {% else %}
                                    href="{{ cm.bag_url }}"
                                         {% endif %}>
-                                    <span class="glyphicon glyphicon-download-alt">
-                                    <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label"> Download All Content as Zipped BagIt Archive
-                                    </span>
-                                    </span>
+                                        <span class="glyphicon glyphicon-download-alt">
+                                        <span title='Download All Content as Zipped BagIt Archive'
+                                              class="button-label"> Download as Zipped BagIt Archive
+                                        </span>
+                                        </span>
                                 </a>
                             </div>
                             <div>
                                 <a target="_blank" href="https://en.wikipedia.org/wiki/BagIt">Learn more
                                     about the Bagit archive format</a>
                             </div>
+                            <br>
                         {% endfor %}
 
                         <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
-                            <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large
-                                Files</strong>
-                            <ul>
-                                <li><span>To learn how to download files larger than 1 GB see <a
-                                        href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
-                                        target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                            <div id="fb-alerts">
-                                <div class="alert alert-warning alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-
-                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Uploading</strong>
-                                    <ul>
-                                        <li><span id="file-types"></span></li>
-                                        <li><span id="file-multiple"></span></li>
-                                        {% block upload_message %}{% endblock %}
-                                    </ul>
-                                </div>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    <p><strong>Downloading LargeFiles</strong></p>
+                                    <p>To learn how to download files larger than 1 GB see <a
+                                            href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
+                                            target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</p>
+                                </em>
                             </div>
-                        {% endif %}
-
-                        {% if page.perms.change and metadata_form %}
-                            {% if file_type_error %}
-                                <div class="alert alert-danger alert-dismissible" role="alert">
-                                    <button id="validation-error-close" type="button" class="close"
-                                            data-dismiss="alert"
-                                            aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                    <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
-                                </div>
-                            {% endif %}
-                        {% endif %}
+                        </div>
 
                         <div class="files" id="previews"></div>
                             {% block download_bag %}
