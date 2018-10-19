@@ -1042,6 +1042,13 @@ def resolve_request(request):
 
 
 def check_aggregations(resource, folders, res_files):
+    """
+    Checks for aggregations in each folder first, then checks for aggregations in each file
+    :param resource: resource object
+    :param folders: list of folders as strings to check for aggregations in
+    :param res_file: list of ResourceFile objects to be check for aggregations in
+    :return:
+    """
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
         # check folders for aggregations

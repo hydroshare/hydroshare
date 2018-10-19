@@ -710,9 +710,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     try:
 
         if overwrite:
-            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
-            # then write the new file. Aggregations are treated as single objects.  If one file is
-            # overwritten in an aggregation, the whole aggregation is deleted.
+            # Aggregations are treated as single objects.  If one file is overwritten in an
+            # aggregation, the whole aggregation is deleted.
 
             # unzip to a temporary folder
             unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder="temp-change-this")
@@ -724,11 +723,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             for folder in listfolders(istorage, unzip_path):
                 destination_folder = os.path.join(working_dir, folder)
                 destination_folders.append(destination_folder)
-            # walk through each unzipped file, delete aggregations and files if they exist
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                if(istorage.exists(destination_file)):
-                    if resource.resource_type == "CompositeResource":
+            # walk through each unzipped file, delete aggregations if they exist
+            if resource.resource_type == "CompositeResource":
+                for file in unzipped_files:
+                    destination_file = _get_destination_filename(file, unzipped_foldername)
+                    if(istorage.exists(destination_file)):
                         aggregation_object = resource.get_file_aggregation_object(destination_file)
                         if aggregation_object:
                             if aggregation_object.is_single_file_aggregation:
@@ -738,11 +737,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                                 # remove_folder expects path to start with 'data/contents'
                                 directory = directory.replace(res_id + "/", "")
                                 remove_folder(user, res_id, directory)
-                        else:
-                            logger.error("No aggregation object found for " + destination_file)
-                            istorage.delete(destination_file)
-                    else:
-                        istorage.delete(destination_file)
             # now move each file to the destination
             for file in unzipped_files:
                 destination_file = _get_destination_filename(file, unzipped_foldername)
