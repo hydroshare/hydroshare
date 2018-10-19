@@ -170,7 +170,7 @@ function updateSelectionMenuContext() {
 
         if(resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function() {
-                var logicalFileType = $(this).attr("data-logical-file-type");
+                const logicalFileType = $(this).attr("data-logical-file-type");
                 //disable folder creation in aggregation folders
                 //TODO this needs to be updated when new aggregations are added...
                 if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -194,7 +194,7 @@ function updateSelectionMenuContext() {
             UIState.removeAggregation = false;
         }
         else {
-            var logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
+            const logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
             // if the selected file is part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation) we
             // want the remove aggregation option not to show up
             if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
@@ -254,14 +254,13 @@ function updateSelectionMenuContext() {
     if(!isFolderSelected){
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
-            let logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
-            var currentPath = $("#hs-file-browser").attr("data-current-path");
+            const logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
 
             if(logicalFileType != "") {
                 UIState.setGenericFileType = false;
             }
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
-                UIState.unzip = true;
+                UIState.unzip = false;
             }
             if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType != "") {
                 UIState.setGeoRasterFileType = false;
@@ -287,26 +286,23 @@ function updateSelectionMenuContext() {
         }
     }
 
-    let logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    const logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            UIState.createFolder = false;
-            UIState.rename = false;
-            UIState.delete = isFolderSelected;
-            UIState.cut = false;
-            UIState.setGenericFileType = false;
-        }
-
-    // set Create folder toolbar option
-    $("#fb-create-folder").toggleClass("disabled", !UIState.createFolder);
-
-    var menu = $("#right-click-menu");
+        UIState.createFolder = false;
+        UIState.rename = false;
+        UIState.delete = isFolderSelected;
+        UIState.cut = false;
+        UIState.setGenericFileType = false;
+    }
 
     // Toggle disabled property
     $.each(UIState, function (key, value) {
         $("[data-fb-action='" + key + "']").toggleClass("disabled", !value);
     });
+
+    let menu = $("#right-click-menu");
 
     // Zip
     menu.children("li[data-menu-name='zip']").toggleClass("hidden", !UIState.zip);
@@ -901,12 +897,7 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        if (logicalFileType.length > 0) {
-            allowCreateFolder = false;
-        }
-        else {
-            allowCreateFolder = true;
-        }
+        allowCreateFolder = logicalFileType.length === 0;
 
         // Set Create folder toolbar option
         $("#fb-create-folder").toggleClass("disabled", !allowCreateFolder);
