@@ -9,7 +9,7 @@
    data-email="{{ user.email }}"
    data-organization="{{ user.userprofile.organization|default:"" }}"
    data-title="{{ user.userprofile.title|default:"" }}"
-   data-contributions="{{ user.contributions }}"
+   data-contributions="{{ user.uaccess.owned_resources.count|default:"" }}"
    data-subjectareas="{{ user.userprofile.subject_areas|default:"" }}"
         {% for name, link in user.userprofile.identifiers.items %}
    data-{{ name }}="{{ link }}"
