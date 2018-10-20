@@ -4276,8 +4276,6 @@ span.fb-control-square {
 }
 
 div.fb-upload-caption {
-	position: absolute;
-	bottom: 0;
 	border-top: 1px dashed #DDD;
 	width: 100%;
 	padding: 1em;
@@ -4340,14 +4338,16 @@ div.fb-upload-caption a {
 }
 
 .fb-view-grid .fb-aggregation-icon > img {
-	width: 30px;
-	height: 30px;
+	width: 40px;
 }
 
 .fb-view-grid .fb-file-name {
-	display: block;
-	text-overflow: ellipsis;
+    display: block;
+    text-overflow: ellipsis;
     overflow: hidden;
+    margin-top: 6px;
+    line-height: 1.5em;
+    max-height: 3em;
 }
 
 .fb-view-list .fb-file-icon {
@@ -4357,8 +4357,7 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list .fb-aggregation-icon {
-	margin-right: 10px;
-	margin-left: 10px;
+	margin: 0 6px;
 	font-size: 18px;
 }
 
@@ -4456,7 +4455,9 @@ span.caption-file-type {
     border-right: 1px solid #DDD;
     max-width: 800px;
     min-height: 200px;
-    width: 80%
+    width: 80%;
+	display: flex;
+	flex-direction: column;
 }
 
 .fb-dropzone-wrapper.fb-collapsed {

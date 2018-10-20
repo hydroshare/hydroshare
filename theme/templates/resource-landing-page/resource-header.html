@@ -100,10 +100,12 @@
                         {% include "includes/profile-card.html" %}
                     </td>
                 </tr>
+                {% if cm.raccess.published %}
                 <tr>
                     <th>DOI:</th>
-                    <td>10.4211/hs.{{ cm.short_id }} <a href="#citation">cite</a></td>
+                    <td>10.4211/hs.{{ cm.short_id }}<br><a href="#citation">How to Cite</a></td>
                 </tr>
+                {% endif %}
                 {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
                 <tr class="info-collapsible">
                     <th>Content types:</th>
