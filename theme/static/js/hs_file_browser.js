@@ -163,11 +163,6 @@ function updateSelectionMenuContext() {
         UIState.setGeoFeatureFileType = false;
         UIState.setTimeseriesFileType = false;
 
-        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-        if(resourceType === 'Composite Resource' && foldersSelected.length > 0) {
-            UIState.delete = true;
-        }
-
         if(resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function() {
                 const logicalFileType = $(this).attr("data-logical-file-type");
@@ -202,14 +197,11 @@ function updateSelectionMenuContext() {
             }
         }
     }
-    var isFolderSelected = false;
+
     if (selected.hasClass("fb-folder")) {
-        UIState.download = true;
         UIState.unzip = false;
-        UIState.getLink = true;
         UIState.setGenericFileType = false;
         UIState.setRefTimeseriesFileType = false;
-        isFolderSelected = true;
 
         if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
@@ -246,17 +238,12 @@ function updateSelectionMenuContext() {
             UIState.setTimeseriesFileType = false;
         }
     }
-
-    if (!sourcePaths.length) {
-        UIState.paste = false;
-    }
-
-    if(!isFolderSelected){
+    else {
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
             const logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
 
-            if(logicalFileType != "") {
+            if (logicalFileType != "") {
                 UIState.setGenericFileType = false;
             }
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
@@ -265,19 +252,19 @@ function updateSelectionMenuContext() {
             if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType != "") {
                 UIState.setGeoRasterFileType = false;
             }
-            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".NC") || logicalFileType != "") {
                 UIState.setNetCDFFileType = false;
             }
             if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType != "") {
                 UIState.setGeoFeatureFileType = false;
             }
-            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".REFTS.JSON") || logicalFileType != "") {
                 UIState.setRefTimeseriesFileType = false;
             }
             if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType != "") {
                 UIState.setTimeseriesFileType = false;
             }
-            if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+            if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                 UIState.cut = false;
                 UIState.paste = false;
@@ -286,13 +273,17 @@ function updateSelectionMenuContext() {
         }
     }
 
+    if (!sourcePaths.length) {
+        UIState.paste = false;
+    }
+
     const logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
         UIState.createFolder = false;
         UIState.rename = false;
-        UIState.delete = isFolderSelected;
+        UIState.delete = selected.hasClass("fb-folder");
         UIState.cut = false;
         UIState.setGenericFileType = false;
     }
@@ -314,7 +305,7 @@ function updateSelectionMenuContext() {
     menu.children("[data-fb-action='open']").toggleClass("hidden", !UIState.open);
 
     $("#open-separator").toggleClass("hidden", !UIState.open);
-    if (!menu.children("li[data-action='delete']").length) {
+    if (!menu.children("li[data-fb-action='delete']").length) {
         $("#open-separator").toggleClass("hidden", true);
     }
 }
