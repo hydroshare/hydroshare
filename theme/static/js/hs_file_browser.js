@@ -106,7 +106,8 @@ function updateSelectionMenuContext() {
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
-    if (selected.length > 1) {          // Multiple files selected
+    if (selected.length > 1) {
+        // Multiple files selected
         UIState.rename = false;
         UIState.open = false;
         UIState.paste = false;
@@ -123,11 +124,12 @@ function updateSelectionMenuContext() {
         for (let i = 0; i < selected.length; i++) {
             const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
             if (size > maxSize) {
+                // Some file is too large for direct download
                 UIState.download = false;
+                $("#fb-download-help").toggleClass("hidden", true);
                 break;
             }
         }
-        $("#fb-download-help").toggleClass("hidden", !UIState.download);
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
@@ -138,7 +140,8 @@ function updateSelectionMenuContext() {
         }
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     }
-    else if (selected.length == 1) {    // Exactly one file selected
+    else if (selected.length == 1) {
+        // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
             UIState.download = false;
@@ -239,7 +242,7 @@ function updateSelectionMenuContext() {
         }
     }
     else {
-        for (var i = 0; i < selected.length; i++) {
+        for (let i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
             const logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
 
