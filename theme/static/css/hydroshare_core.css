@@ -4137,7 +4137,6 @@ ul#fb-files-container {
 
 .fb-file-name {
 	color: #555;
-	max-height: 50px;
 	font-size: 12px;
 	cursor: default;
 }
@@ -4224,7 +4223,7 @@ ul#fb-files-container {
 #fb-files-container.fb-view-list .fb-file-type, #fb-files-container.fb-view-list .fb-file-size, #fb-files-container.fb-view-list .fb-logical-file-type {
     float: right;
     display: inline-block;
-    width: 15%;
+    width: 20%;
     color: #777;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -4326,6 +4325,32 @@ div.fb-upload-caption a {
 	border: 1px solid transparent;
 	padding: 6px 0;
 	margin: 4px 0;
+	display: flex;
+}
+
+.fb-view-list > li > span {
+    width: 20%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 0 10px;
+}
+
+.fb-view-list > li > span:nth-child(1) {
+	width: 40px;
+}
+
+.fb-view-list > li > span:nth-child(2) {
+	width: calc(40% - 40px);
+}
+
+.fb-view-list > li > span:nth-child(3), .fb-view-list > li > span:nth-child(4), .fb-view-list > li > span:nth-child(5) {
+	width: 15%;
+	border-left: 1px solid #DDD;
+	font-size: 12px;
+}
+
+.fb-view-list > li > span:nth-child(5) {
+	text-align: right;
 }
 
 .fb-view-grid > li {
@@ -4357,13 +4382,12 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list .fb-aggregation-icon {
-	margin: 0 6px;
-	font-size: 18px;
+    margin-left: 7px;
+    margin-right: 12px;
 }
 
 .fb-view-list .fb-aggregation-icon > img {
-	width: 20px;
-	height: 20px;
+	width: 24px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
@@ -4385,7 +4409,6 @@ div.fb-upload-caption a {
 
 div#fb-inner-controls {
 	padding: 0;
-	padding-bottom: 0;
     border-bottom: 1px solid #DDD;
     min-height: 34px
 }
