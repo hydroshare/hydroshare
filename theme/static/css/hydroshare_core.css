@@ -4147,7 +4147,9 @@ ul#fb-files-container {
 
 .fb-view-list .fb-file-name {
 	font-size: 14px;
+	white-space: nowrap;
 }
+
 .fb-view-grid .fb-file-icon, .dz-details .fb-file-icon {
     font-size: 32px;
 }
