@@ -354,41 +354,45 @@
                             <div class="file-browser-container">
                                 <div id="fb-inner-controls">
                                     <div id="fb-inner-buttons">
-                                        <div class="row">
+                                        <div class="flex">
+                                            {# FOLDER NAVIGATION #}
                                             {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                            <div class="col-xs-6 col-sm-3 col-md-3">
-                                                <button id="fb-move-back"
-                                                        class="btn btn-default fb-control-round disabled"
-                                                        title="Click to go back"><span
-                                                        class="glyphicon glyphicon-arrow-left"></span>
-                                                </button>
+                                                <div>
+                                                    <button id="fb-move-back"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go back"><span
+                                                            class="glyphicon glyphicon-arrow-left"></span>
+                                                    </button>
 
-                                                <button id="fb-move-forward"
-                                                        class="btn btn-default fb-control-round disabled"
-                                                        title="Click to go forward"><span
-                                                        class="glyphicon glyphicon-arrow-right"></span>
-                                                </button>
+                                                    <button id="fb-move-forward"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go forward"><span
+                                                            class="glyphicon glyphicon-arrow-right"></span>
+                                                    </button>
 
-                                                <button id="fb-move-up"
-                                                        class="btn btn-default fb-control-squared disabled"
-                                                        title="Click to go to parent directory"><span
-                                                        class="fa fa-level-up"></span></button>
-                                            </div>
+                                                    <button id="fb-move-up"
+                                                            class="btn btn-default fb-control-squared disabled"
+                                                            title="Click to go to parent directory"><span
+                                                            class="fa fa-level-up"></span></button>
+                                                </div>
                                             {% endif %}
 
-                                            <div class="col-xs-12 col-sm-4 col-md-3 pull-right text-right">
+                                            {# SORT AND VIEW CONTROLS #}
+                                            <div>
                                                 <div id="btn-group-view" class="btn-group" role="group">
                                                     <button data-view="list" data-toggle="tooltip"
                                                             data-placement="auto"
                                                             title='List'
                                                             type="button"
-                                                            class="btn btn-default"><i class='fa fa-list' aria-hidden='true'></i>
+                                                            class="btn btn-default"><i class='fa fa-list'
+                                                                                       aria-hidden='true'></i>
                                                     </button>
 
                                                     <button data-view="grid" data-toggle="tooltip"
                                                             data-placement="auto" type="button"
                                                             title='Grid'
-                                                            class="btn btn-default active"><i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
+                                                            class="btn btn-default active"><i
+                                                            class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
                                                     </button>
                                                 </div>
 
@@ -416,20 +420,20 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6" style="display: inline-block;">
+                                            {# SEARCH FOR CURRENT DIRECTORY #}
+                                            <div class="text-center fb-search-directory">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
-                                                <span id="btn-clear-search-input"
-                                                      class="glyphicon glyphicon-remove-sign btn-clear-search"
-                                                      data-toggle="tooltip"
-                                                      data-placement="auto"
-                                                      title="Clear search"></span>
+                                                    <span id="btn-clear-search-input"
+                                                          class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                          data-toggle="tooltip"
+                                                          data-placement="auto"
+                                                          title="Clear search"></span>
                                                     <input type="text" id="txtDirSearch"
                                                            class="form-control fb-input-search"
                                                            placeholder="Search current directory">
                                                 </div>
                                             </div>
-
                                         </div>
                                         <div class="row">
                                             <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">

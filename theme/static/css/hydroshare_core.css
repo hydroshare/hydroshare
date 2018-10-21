@@ -1619,10 +1619,6 @@ body > .main-container {
     color:#428bca;
 }
 
-.content-block {
-	display: table;
-}
-
 #comment, .comment-reply-form {
 	width: 100%;
 }
@@ -1960,7 +1956,6 @@ a.tag:hover {
     padding: 50px 0px 15px;
   }
 }
-
 
 .resource-search {
 	position: relative;
@@ -4074,6 +4069,10 @@ form#covereage-search-fields {
 	user-select: none;
 }
 
+.fb-search-directory {
+	flex-grow: 1;
+}
+
 #fb-sort a {
 	cursor: pointer;
 	padding: 8px;
@@ -4244,9 +4243,6 @@ ul#fb-files-container {
     display: inline-block;
     width: 20%;
     color: #777;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden
 }
 
 .fb-input-search {
@@ -4350,8 +4346,9 @@ div.fb-upload-caption a {
 .fb-view-list > li > span {
     width: 18%;
     text-overflow: ellipsis;
-    overflow: hidden;
     padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .fb-view-list > li > span:nth-child(1) {
@@ -4423,6 +4420,14 @@ div.fb-upload-caption a {
 
 #fb-inner-buttons {
 	padding: 8px;
+}
+
+#fb-inner-buttons > .flex {
+	flex-wrap: wrap;
+}
+
+#fb-inner-buttons > .flex > div:not(last-child) {
+	padding-right: 20px;
 }
 
 div#fb-inner-controls {
