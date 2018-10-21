@@ -416,6 +416,7 @@ $(document).ready(function () {
     }
 
     $('.authors-wrapper.sortable').sortable({
+        placeholder: "ui-state-highlight",
         axis: "x",
         stop: function( event, ui ) {
             var forms = $(".authors-wrapper.sortable form");

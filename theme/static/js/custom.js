@@ -235,11 +235,6 @@ $(document).ready(function () {
             $(".location-wrapper").show();
         }
 
-        // Show a comma if both State and Country are listed
-        if ((data["country"] && data["country"] != "Unspecified") && (data["state"] && data["state"] != "Unspecified")) {
-            data["state"] += " ,";
-        }
-
         // Organization and Title
         if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
             $(".org-wrapper").show();

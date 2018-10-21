@@ -109,6 +109,19 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	margin-right: 4px;
 }
 
+.profile-card .location-wrapper span:not(:first-child)::before {
+	content: ", ";
+}
+
+.ui-state-highlight {
+    width: 150px;
+    display: inline-block;
+    height: 1.5em;
+    top: 0.25em;
+    position: relative;
+    border: 1px dashed #fcefa1;
+}
+
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
 	color: #333;
 	-webkit-transition: color 100ms linear;
@@ -947,16 +960,16 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child) a::before,
+.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
 .owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
     background-color: #999;
-    height: 18px;
+    height: 1em;
     margin: 0 4px;
     position: relative;
-    top: 4px;
+    top: 2px;
 }
 
 .authors-wrapper.sortable span:last-child a {
