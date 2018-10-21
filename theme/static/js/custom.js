@@ -198,13 +198,12 @@ $(document).ready(function () {
         // Move the profile card below the clicked item
         var profileCard = $(this).parent().find(".profile-card");
         profileCard.css("top", ($(this).position().top + 30) + "px");
-        profileCard.css("left", ($(this).position().left - 200 + $(this).width()/2) + "px");
+        profileCard.css("left", ($(this).position().left - 175 + $(this).width()/2) + "px");
 
         var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
 
         resetProfilePreview(profileCard);
-        // var data = $(this).data().clone();
         var data = jQuery.extend({}, $(this).data());
 
         // Populate subject areas
@@ -257,11 +256,8 @@ $(document).ready(function () {
             else if ($.inArray(item, identifiers) != -1) {
                 var ident = profileCard.find("[data-" + item + "]");
                 ident.show();
-                var wrapper = profileCard.find(".externalprofiles-wrapper");
+                profileCard.find(".externalprofiles-wrapper").show();
                 ident.attr("href", data[item]);
-                if (wrapper.hasClass("hidden")) {
-                    profileCard.find(".externalprofiles-wrapper").show();
-                }
             }
         }
     });

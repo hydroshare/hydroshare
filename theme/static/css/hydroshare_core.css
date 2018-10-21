@@ -87,7 +87,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .dropdown-menu.profile-card {
-    width: 400px;
+    width: 350px;
     height: unset;
     margin: unset;
 }
@@ -97,8 +97,9 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .profile-card .flex > div:first-child {
-    background: #f8f8f8;
-    border-right: 1px solid #DDD;
+	background: #f8f8f8;
+	border-right: 1px solid #DDD;
+	width: 110px;
 }
 
 .profile-card .dropdown-profile-pic-thumbnail{
@@ -111,6 +112,18 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .profile-card .location-wrapper span:not(:first-child)::before {
 	content: ", ";
+}
+
+.profile-card [data-name] {
+	line-height: 1.5em;
+}
+
+.org-wrapper, .subjectareas-wrapper, .externalprofiles-wrapper {
+	margin-top: 10px;
+}
+
+.contributions-wrapper, .joined-wrapper {
+	margin-top: 10px;
 }
 
 .ui-state-highlight {
