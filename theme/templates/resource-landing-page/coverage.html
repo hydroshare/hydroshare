@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col-xs-12 col-sm-4">
                 {% if spatial_coverage %}
-                    <h4>Spatial:</h4>
+                    <h4>Spatial</h4>
                     {% if spatial_coverage.projection %}
                         <div>
                             <i class="fa fa-globe" aria-hidden="true"></i>
@@ -73,7 +73,7 @@
 
                         {% if temporal_coverage %}
                             <br>
-                            <h4>Temporal: </h4>
+                            <h4>Temporal</h4>
                             <table class="info-table">
                                 <tbody>
                                 <tr>
@@ -133,10 +133,10 @@
                         </div>
 
                         <br>
-                        <div class="col-xs-12"><h4>Spatial: </h4></div>
+                        <div class="col-xs-12"><h4>Spatial</h4></div>
 
                         <fieldset>
-                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
                                 <div id="div_id_name">
                                     <label for="id_name" class="control-label">Place/Area Name</label>
 
@@ -227,22 +227,33 @@
                                               class="input-group-addon">°</span>
                                     </div>
                                 </div>
+                                <br>
+                                {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                                <button id="btn-update-resource-spatial-coverage"
+                                        type="button" class="btn btn-info"
+                                        {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_spatial_coverage %}
+                                        style="display: none"
+                                        {% endif %}>
+                                    <i class="fa fa-calculator" aria-hidden="true"></i> Set spatial coverage from content files
+                                </button>
                             </div>
-                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-9" id="coverage-header">
+
+                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-8" id="coverage-header">
                                 <div id="div_id_type">
-                                <label class="radio-inline">
+                                    <label class="radio-inline">
                                         <input type="radio"
                                                {% if coverage_spatial_form.initial.type == "point" %}checked="checked"{% endif %}
                                                name="type" id="id_type_2"
-                                               value="point">Point</label>
+                                               value="point">Point
+                                    </label>
                                     <label class="radio-inline">
                                         <input type="radio"
                                                {% if coverage_spatial_form.initial.type == "box" %}checked="checked"{% endif %}
                                                name="type" id="id_type_1"
-                                               value="box">Box</label>
-
-
+                                               value="box">Box
+                                    </label>
                                 </div>
+
                                 <div id="coverageMap"></div>
 
                                 <br>
@@ -253,21 +264,11 @@
                         </fieldset>
                     </div>
                 </form>
-                {% if cm.resource_type == "CompositeResource" and cm.has_logical_spatial_coverage %}
-                     <button id="btn-update-resource-spatial-coverage"
-                             type="button" class="btn btn-primary btn-form-submit">
-                         Set spatial coverage from content files
-                     </button>
-                {% else %}
-                    {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
-                    <button id="btn-update-resource-spatial-coverage"
-                             type="button" class="btn btn-primary btn-form-submit" style="display: none">
-                         Set spatial coverage from content files
-                     </button>
-                {% endif %}
             </div>
 
-            <div class="col-xs-12"><h4>Temporal:</h4></div>
+            <br>
+
+            <div class="col-xs-12"><h4>Temporal</h4></div>
 
             <div class="form-group col-xs-12 col-sm-6 content-block" id="coverage-temporal">
                 {% if not coverage_temporal_form.initial.start %}
@@ -353,17 +354,14 @@
                 {% endif %}
             </div>
         </div>
-    {% if cm.resource_type == "CompositeResource" and cm.has_logical_temporal_coverage %}
-         <button id="btn-update-resource-temporal-coverage"
-                 type="button" class="btn btn-primary btn-form-submit">
-             Set temporal coverage from content files
-         </button>
-    {% else %}
+
         {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
         <button id="btn-update-resource-temporal-coverage"
-                 type="button" class="btn btn-primary btn-form-submit" style="display: none">
-             Set temporal coverage from content files
-         </button>
-    {% endif %}
+                type="button" class="btn btn-info"
+                {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_temporal_coverage %}
+                style="display: none"
+                {% endif %}>
+            <i class="fa fa-calculator" aria-hidden="true"></i> Set temporal coverage from content files
+        </button>
     </div>
 {% endif %}

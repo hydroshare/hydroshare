@@ -2353,6 +2353,10 @@ div#coverage-spatial .coordinates-label-addon {
 	text-align: left;
 }
 
+#coverage-header {
+	margin-top: 20px;
+}
+
 .sharing-status-container > div {
 	margin-bottom: 20px;
 }
@@ -4329,7 +4333,7 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list > li > span {
-    width: 20%;
+    width: 18%;
     text-overflow: ellipsis;
     overflow: hidden;
     padding: 0 10px;
@@ -4344,8 +4348,6 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list > li > span:nth-child(3), .fb-view-list > li > span:nth-child(4), .fb-view-list > li > span:nth-child(5) {
-	width: 15%;
-	border-left: 1px solid #DDD;
 	font-size: 12px;
 }
 
@@ -4363,7 +4365,8 @@ div.fb-upload-caption a {
 }
 
 .fb-view-grid .fb-aggregation-icon > img {
-	width: 40px;
+    height: 38px;
+    margin-top: -3px;
 }
 
 .fb-view-grid .fb-file-name {
