@@ -250,24 +250,24 @@ function updateSelectionMenuContext() {
             if(logicalFileType != "") {
                 flagDisableSetGenericFileType = true;
             }
-            if (!fileName.toUpperCase().endsWith("ZIP")) {
+            if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 flagDisableUnzip = true;
             }
-            if ((!fileName.toUpperCase().endsWith("TIF")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType != "") {
                 flagDisableSetGeoRasterFileType = true;
             }
 
-            if (!fileName.toUpperCase().endsWith("NC")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType != "") {
                 flagDisableSetNetCDFFileType = true;
             }
 
-            if ((!fileName.toUpperCase().endsWith("SHP")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType != "") {
                 flagDisableSetGeoFeatureFileType = true;
             }
             if (!fileName.toUpperCase().endsWith("REFTS.JSON")  || logicalFileType != "") {
                 flagDisableSetRefTimeseriesFileType = true;
             }
-            if ((!fileName.toUpperCase().endsWith("SQLITE") && !fileName.toUpperCase().endsWith("CSV")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType != "") {
                 flagDisableSetTimeseriesFileType = true;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
