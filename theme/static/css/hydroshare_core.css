@@ -1633,7 +1633,8 @@ body > .main-container {
 .content-block > h3, #comments > h3 {
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
-    margin-top: 40px
+    margin-top: 40px;
+    color: #4BB5C1;
 }
 
 .sharing-public{

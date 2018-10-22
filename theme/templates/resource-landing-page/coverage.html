@@ -112,7 +112,7 @@
                         <div class="col-sm-12 content-block">
                             <h3>Coverage</h3>
                             {% if cm.resource_type == 'CompositeResource' %}
-                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible" role="alert">
+                                <div id="readonly-coverage-notice" class="alert alert-info alert-dismissible" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -124,10 +124,14 @@
                                     </div>
                                 </div>
                             {% endif %}
-                            <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible"
+                            {#  TODO: UPDATE THIS TEXT BASED ON NEW UI  #}
+                            <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible" role="alert"
                                  style="display: none;">
-                                <span>Spatial coverage for time series resources should be set by editing the
-                                    coordinates of the monitoring sites on the "Resource Specific" metadata tab.</span>
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>Spatial coverage for time series resources should be set by editing the
+                                    coordinates of the monitoring sites on the "Resource Specific" metadata tab.</em>
+                                </div>
                             </div>
 
                             <input id="id_projection" maxlength="100" name="projection"
