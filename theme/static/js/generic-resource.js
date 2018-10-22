@@ -797,6 +797,6 @@ $(document).ready(function () {
     });
 
     $(window).resize(function () {
-        toolbar_offset = $(".custom-btn-toolbar").offset().top - $("#hs-nav-bar").height() - 22;
+        toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - 22;
     });
 });
