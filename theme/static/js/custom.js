@@ -288,7 +288,6 @@ $(document).ready(function () {
         // Populate profile url
         if (data["profileurl"]) {
             preview.find("[data-profileurl]").attr("href", data["profileurl"]);
-            preview.find("[data-profileurl]").text(data["profileurl"])
         }
         delete data["profileurl"];
 
