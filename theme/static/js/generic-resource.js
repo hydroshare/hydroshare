@@ -778,4 +778,25 @@ $(document).ready(function () {
         var formID = $(this).closest("form").attr("id");
         deleteFileTypeExtraMetadata(formID);
     });
+
+    // Fix buttons toolbar when scrolling down
+    // ========================================
+    var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - 22;
+
+    $(window).bind('scroll', function () {
+        let toolbar = $(".custom-btn-toolbar");
+        if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
+            toolbar.parent().height(toolbar.parent().height());
+            toolbar.addClass('toolbar-fixed');
+            toolbar.css("right", $(".custom-btn-toolbar").parent().offset().left + 4);
+        }
+        else if ($(window).scrollTop() <= toolbar_offset && toolbar.hasClass('toolbar-fixed')) {
+            toolbar.parent().height("initial");
+            toolbar.removeClass('toolbar-fixed');
+        }
+    });
+
+    $(window).resize(function () {
+        toolbar_offset = $(".custom-btn-toolbar").offset().top - $("#hs-nav-bar").height() - 22;
+    });
 });
