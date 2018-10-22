@@ -787,11 +787,13 @@ $(document).ready(function () {
         let toolbar = $(".custom-btn-toolbar");
         if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());
+            toolbar.css("top", $("#hs-nav-bar").height() + 11);
             toolbar.addClass('toolbar-fixed');
             toolbar.css("right", $(".custom-btn-toolbar").parent().offset().left + 4);
         }
         else if ($(window).scrollTop() <= toolbar_offset && toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height("initial");
+            toolbar.css("top", "initial");
             toolbar.removeClass('toolbar-fixed');
         }
     });
