@@ -2860,9 +2860,10 @@ span.you-flag {
 }
 
 #item-selectors tr > td[data-col='actions'] {
-	padding-right: 0;
-    max-width: 70px;
-	min-width: 70px;
+    /*Fixes label dropdown shifting the table left and right*/
+    min-width: 90px;
+    max-width: 90px;
+    padding-right: 0;
 }
 
 #item-selectors tr > td[data-col='resource-type'], #items-discovered tr > td[data-col='resource-type'] {
