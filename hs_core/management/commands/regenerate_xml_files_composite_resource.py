@@ -65,9 +65,14 @@ class Command(BaseCommand):
         else:  # check all composite resources and create bag files
             print("> GENERATING BAG FILES FOR ALL COMPOSITE RESOURCES")
             for r in CompositeResource.objects.all():
-                resource_counter += 1
-                generate_bag_files(r)
-                resource_counter_success += 1
+                try:
+                    resource_counter += 1
+                    generate_bag_files(r)
+                    resource_counter_success += 1
+                except:
+                    msg = "Error processing {}".format(r.short_id)
+                    print(msg)
+                    continue
 
         print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
         print(">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(resource_counter_success))
