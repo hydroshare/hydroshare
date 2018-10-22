@@ -111,7 +111,7 @@
                     <th>Content types:</th>
                     <td>
                         {% for ct in cm.aggregation_types %}
-                            <span class="label label-info">{{ ct }}</span>&nbsp;
+                            <span class="label label-info agg-{{ ct|display_name_to_class }}">{{ ct }}</span>&nbsp;
                         {% endfor %}
                     </td>
                 </tr>

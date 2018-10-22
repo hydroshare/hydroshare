@@ -1056,6 +1056,22 @@ table.info-table > tbody > tr > td {
     padding-bottom: 8px;
 }
 
+.res-header .agg-multidimensional_content {
+    background-color: #9625aa;
+}
+
+.res-header .agg-time_series_content, .res-header .agg-referenced_time_series_content {
+    background-color: #009688;
+}
+
+.res-header .agg-geographic_feature_content {
+    background-color: #795548;
+}
+
+.res-header .agg-geographic_raster_content {
+    background-color: #708a97;
+}
+
 table.info-table {
     margin-bottom: 20px
 }
@@ -1453,9 +1469,15 @@ body > .main-container {
 	color: #D9534F;
 }
 
+.custom-btn-toolbar {
+    display: flex;
+    justify-content: flex-end;
+}
+
 .custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
 	border: 0;
 	outline: 0;
+    float: unset;
 }
 
 .custom-btn-toolbar .disabled > span {

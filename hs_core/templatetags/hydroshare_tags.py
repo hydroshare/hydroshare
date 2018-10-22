@@ -174,3 +174,9 @@ def five_options_around(page):
 def normalize_human_name(name):
     """ Normalize 'First M. Last' to 'Last, First M.'"""
     return normalize_name(name)
+
+
+@register.filter
+def display_name_to_class(value):
+    """ Converts an aggregation display name to a string that is usable as a CSS class name """
+    return value.replace(" ", "_").lower()
