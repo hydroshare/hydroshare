@@ -1,11 +1,11 @@
 from haystack.generic_views import FacetedSearchView
 from haystack.generic_views import FacetedSearchMixin
-from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
+from hs_core.discovery_form import DiscoveryForm, FACETS_TO_SHOW
 from haystack.query import SearchQuerySet
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = FACETED_FIELDS  # interpreted by FacetedSearchView; must be attribute
+    facet_fields = FACETS_TO_SHOW  # interpreted by FacetedSearchView; must be attribute
     form_class = DiscoveryForm
 
     def form_valid(self, form):

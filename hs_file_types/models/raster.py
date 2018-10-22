@@ -208,7 +208,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         for bandinfo in self.bandInformations:
             bandinfo.add_to_xml_container(container_to_add_to)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
@@ -238,6 +239,14 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_type_name():
         return "GeographicRasterAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Geographic Raster"
 
     @classmethod
     def create(cls):

@@ -692,7 +692,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         for series in self.time_series_list:
             series.add_to_xml_container(container_to_add_to)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
@@ -742,6 +743,14 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_type_name():
         return "ReferencedTimeSeriesAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Reference to Time Series"
 
     @property
     def is_single_file_aggregation(self):

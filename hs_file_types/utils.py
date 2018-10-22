@@ -197,7 +197,7 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
         res_file = utils.get_resource_file_by_id(res, file_id)
         ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".vrt": "GeoRaster",
                        ".nc": "NetCDF", ".shp": "GeoFeature", ".json": "RefTimeseries",
-                       ".sqlite": "TimeSeries", ".csv": "TimeSeries"}
+                       ".sqlite": "TimeSeries"}
         file_name = str(res_file)
         root, ext = os.path.splitext(file_name)
         ext = ext.lower()
@@ -215,7 +215,7 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                                  "extensions are: {}".format(ext_to_type.keys()))
             return None
 
-    file_type_map = {"Generic": GenericLogicalFile,
+    file_type_map = {"SingleFile": GenericLogicalFile,
                      "GeoRaster": GeoRasterLogicalFile,
                      "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
@@ -237,6 +237,8 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                                                     folder_path, fail_feedback)
 
     try:
+        # Some aggregations use the folder name for the aggregation name
+        folder_path = folder_path.rstrip('/') if folder_path else folder_path
         logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
                                               folder_path=folder_path)
     except:

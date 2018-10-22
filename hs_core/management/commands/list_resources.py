@@ -10,6 +10,13 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
+def has_subfolders(resource):
+    for f in resource.files.all():
+        if '/' in f.short_path:
+            return True
+    return False
+
+
 def measure_resource(short_id):
     """ Print size and sharing status of a resource """
 
@@ -30,9 +37,13 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print("{} {} {} {}".format(resource.size, short_id, status, resource.storage_type))
+        print("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
+                                         resource.resource_type, resource.title))
     else:
-        print("{} {} {} {} NO IRODS FILES".format(0, short_id, status, resource.storage_type))
+        print("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
+                                                        resource.storage_type,
+                                                        resource.resource_type,
+                                                        resource.title))
 
 
 class Command(BaseCommand):
@@ -63,24 +74,38 @@ class Command(BaseCommand):
             help='limit to specific storage medium (local, user, federated)'
         )
 
+        parser.add_argument(
+            '--access',
+            dest='access',
+            help='limit to specific access class (public, discoverable, private)'
+        )
+
+        parser.add_argument(
+            '--has_subfolders',
+            action='store_true',  # True for presence, False for absence
+            dest='has_subfolders',  # value is options['has_subfolders']
+            help='limit to resources with subfolders',
+        )
+
+    def measure_filtered_resource(self, resource, options):
+        if (options['type'] is None or resource.resource_type == options['type']) and \
+           (options['storage'] is None or resource.storage_type == options['storage']) and \
+           (options['access'] != 'public' or resource.raccess.public) and \
+           (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
+           (options['access'] != 'private' or not resource.raccess.discoverable) and \
+           (not options['has_subfolders'] or has_subfolders(resource)):
+            storage = resource.get_irods_storage()
+            if storage.exists(resource.root_path):
+                measure_resource(resource.short_id)
+            else:
+                print("{} does not exist in iRODS".format(resource.short_id))
+
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 resource = get_resource_by_shortkey(rid)
-                if (options['type'] is None or resource.resource_type == options['type']) and \
-                   (options['storage'] is None or resource.storage_type == options['storage']):
-                    storage = resource.get_irods_storage()
-                    if storage.exists(resource.root_path):
-                        measure_resource(rid)
-                    else:
-                        print("{} does not exist in iRODS".format(rid))
+                self.measure_filtered_resource(resource, options)
 
         else:
             for resource in BaseResource.objects.all():
-                if (options['type'] is None or resource.resource_type == options['type']) and \
-                   (options['storage'] is None or resource.storage_type == options['storage']):
-                    storage = resource.get_irods_storage()
-                    if storage.exists(resource.root_path):
-                        measure_resource(resource.short_id)
-                    else:
-                        print("{} does not exist in iRODS".format(resource.short_id))
+                self.measure_filtered_resource(resource, options)

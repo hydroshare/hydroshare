@@ -75,8 +75,9 @@ class Command(BaseCommand):
 
                 # ingest any dangling iRODS files that you can
                 # Do this before check because otherwise, errors get printed twice
-                if resource.resource_type == 'CompositeResource' or \
-                   resource.resource_type == 'GenericResource' or \
+                # TODO: This does not currently work properly for composite resources
+                # if resource.resource_type == 'CompositeResource' or \
+                if resource.resource_type == 'GenericResource' or \
                    resource.resource_type == 'ModelInstanceResource' or \
                    resource.resource_type == 'ModelProgramResource':
                     _, count = ingest_irods_files(resource,
@@ -99,14 +100,15 @@ class Command(BaseCommand):
                     print("... affected resource {} has type {}, title '{}'"
                           .format(resource.short_id, resource.resource_type, resource.title))
 
-            if resource.resource_type == 'CompositeResource':
-                count = 0
-                for res_file in resource.files.all():
-                    if not res_file.has_logical_file:
-                        count += 1
-                        print("Logical file missing for file {} (CREATING)"
-                              .format(res_file.short_path))
-                resource.set_default_logical_file()
+            # NOT NEEDED after composite resource phase II
+            # if resource.resource_type == 'CompositeResource':
+            #     count = 0
+            #     for res_file in resource.files.all():
+            #         if not res_file.has_logical_file:
+            #             count += 1
+            #             print("Logical file missing for file {} (CREATING)"
+            #                   .format(res_file.short_path))
+            #     resource.set_default_logical_file()
             if count:
                 print("... affected resource {} has type {}, title '{}'"
                       .format(resource.short_id, resource.resource_type, resource.title))
@@ -132,8 +134,9 @@ class Command(BaseCommand):
 
                 # ingest any dangling iRODS files that you can
                 # Do this before check because otherwise, errors get printed twice
-                if resource.resource_type == 'CompositeResource' or \
-                   resource.resource_type == 'GenericResource' or \
+                # TODO: This does not currently work properly for composite resources
+                # if resource.resource_type == 'CompositeResource' or \
+                if resource.resource_type == 'GenericResource' or \
                    resource.resource_type == 'ModelInstanceResource' or \
                    resource.resource_type == 'ModelProgramResource':
                     _, count = ingest_irods_files(resource,
@@ -158,15 +161,15 @@ class Command(BaseCommand):
                     print("... affected resource {} has type {}, title '{}'"
                           .format(resource.short_id, resource.resource_type, resource.title))
 
-                # create missing logical files
-                if resource.resource_type == 'CompositeResource':
-                    count = 0
-                    for res_file in resource.files.all():
-                        if not res_file.has_logical_file:
-                            count += 1
-                            print("Resource {}: logical file missing for file {} (CREATING)"
-                                  .format(resource.short_id, res_file.short_path))
-                    resource.set_default_logical_file()
+                # NOT NEEDED after composite resource phase II
+                # if resource.resource_type == 'CompositeResource':
+                #     count = 0
+                #     for res_file in resource.files.all():
+                #         if not res_file.has_logical_file:
+                #             count += 1
+                #             print("Resource {}: logical file missing for file {} (CREATING)"
+                #                   .format(resource.short_id, res_file.short_path))
+                #     resource.set_default_logical_file()
 
                 if count:
                     print("... affected resource {} has type {}, title '{}'"

@@ -1,14 +1,14 @@
 import json
 from django.http import HttpResponse
 from haystack.generic_views import FacetedSearchView
-from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
+from hs_core.discovery_form import DiscoveryForm, FACETS_TO_SHOW
 
 
 # View class for generating JSON data format from Haystack
 # returned JSON objects array is used for building the map view
 class DiscoveryJsonView(FacetedSearchView):
     # declare form class to use in this view
-    facet_fields = FACETED_FIELDS
+    facet_fields = FACETS_TO_SHOW
     form_class = DiscoveryForm
 
     # overwrite Haystack generic_view.py form_valid() function to generate JSON response

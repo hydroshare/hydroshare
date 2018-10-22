@@ -1,5 +1,5 @@
-FROM mjstealey/hs_docker_base:1.9.5
-MAINTAINER Michael J. Stealey <stealey@renci.org>
+FROM hydroshare/hs_docker_base:4.2.x
+MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 ### Begin - HydroShare Development Image Additions ###
 RUN pip install --upgrade pip && pip install djangorestframework==3.6.4
@@ -12,7 +12,8 @@ RUN pip install \
   nameparser \
   probablepeople \
   geopy \
-  hs_restclient==1.2.12
+  hs_restclient==1.2.12 \
+  pyyaml
 
 ### End - HydroShare Development Image Additions ###
 

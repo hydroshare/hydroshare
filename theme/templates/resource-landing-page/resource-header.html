@@ -27,6 +27,9 @@
                 <span>{{ u|contact }}</span>
             {% endfor %}
         </td></tr>
+        {% if cm.raccess.published %}
+            <tr><th>DOI:</th><td>10.4211/hs.{{ cm.short_id }}  <a href="#howToCite">How to Cite</a></td></tr>
+        {% endif %}
         <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
         <tr><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
         <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>

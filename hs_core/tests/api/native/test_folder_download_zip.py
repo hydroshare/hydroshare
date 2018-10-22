@@ -64,7 +64,7 @@ class TestFolderDownloadZip(TestCase):
             istorage.delete("zips")
 
     def test_create_temp_zip(self):
-        input_path = "/data/contents/foo"
+        input_path = "{}/data/contents/foo".format(self.res.short_id)
         output_path = "zips/rand/foo.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
@@ -72,9 +72,10 @@ class TestFolderDownloadZip(TestCase):
         self.assertTrue(IrodsStorage().exists(output_path))
 
         # test aggregation
-        input_path = "/data/contents/multi_sites_formatted_version1.0.refts.json"
+        input_path = "{}/data/contents/multi_sites_formatted_version1.0.refts.json"\
+                     .format(self.res.short_id)
         output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                        output_path, True))
+                                        output_path, True, sf_zip=True))
         self.assertTrue(IrodsStorage().exists(output_path))

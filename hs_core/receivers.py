@@ -140,6 +140,4 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        # TODO: need to return form errors
-        return {'is_valid': False, 'element_data_dict': None,
-                'errors': element_form.errors.as_json()}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}

@@ -17,6 +17,8 @@ from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoR
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
+    discovery_content_type = 'Composite'  # used during discovery
+
     class Meta:
         verbose_name = 'Composite Resource'
         proxy = True
@@ -77,7 +79,10 @@ class CompositeResource(BaseResource):
             return None
 
         istorage = self.get_irods_storage()
-        store = istorage.listdir(dir_path)
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+        store = istorage.listdir(irods_path)
         if store[0]:
             # seems there are folders under dir_path - no aggregation type can be set if the target
             # folder contains other folders
@@ -210,7 +215,8 @@ class CompositeResource(BaseResource):
             :raises ObjectDoesNotExist if no matching aggregation is found
             """
             for aggregation in self.logical_files:
-                if aggregation.aggregation_name == name:
+                # remove the last slash in aggregation_name if any
+                if aggregation.aggregation_name.rstrip('/') == name:
                     return aggregation
 
             raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
@@ -266,14 +272,15 @@ class CompositeResource(BaseResource):
                 pass
 
     def is_aggregation_xml_file(self, file_path):
+        """ determine whether a given file in the file hierarchy is metadata.
+
+        This is true if it is listed as metadata in any logical file.
+        """
         if not (file_path.endswith('_meta.xml') or file_path.endswith('_resmap.xml')):
             return False
-
         for logical_file in self.logical_files:
-            if file_path.endswith('_meta.xml'):
-                if logical_file.metadata_file_path == file_path:
-                    return True
-            elif logical_file.map_file_path == file_path:
+            if logical_file.metadata_file_path == file_path or \
+                    logical_file.map_file_path == file_path:
                 return True
         return False
 
