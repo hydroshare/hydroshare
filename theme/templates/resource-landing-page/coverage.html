@@ -112,10 +112,16 @@
                         <div class="col-sm-12 content-block">
                             <h3>Coverage</h3>
                             {% if cm.resource_type == 'CompositeResource' %}
-                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible">
-                                    <em>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
+                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <div class="flex">
+                                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                        <em>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
                                         feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
                                         the content files.</em>
+                                    </div>
                                 </div>
                             {% endif %}
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible"

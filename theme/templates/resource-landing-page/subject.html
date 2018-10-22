@@ -15,39 +15,46 @@
 {% else %}
     <div class="col-xs-12 content-block">
         <h3>Subject Keywords</h3>
-        <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
-              method="post">
-            {% csrf_token %}
-            <div class="tags">
-                <div id="add-keyword-wrapper" class="input-group">
-                    <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
-                    <span class="input-group-btn">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="tags">
+                        <div id="add-keyword-wrapper" class="input-group">
+                            <input id="txt-keyword" type="text" class="form-control" placeholder="e.g., keyword1, keyword2, keyword3">
+                            <span class="input-group-btn">
                         <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
                     </span>
-                </div>
-                <ul id="lst-tags" class="custom-well tag-list">
-                </ul>
-            </div>
-
-            <span class="alert alert-info   group-title" role="alert">
-                <div class="flex">
-                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                    <em style="padding-right:20px;">
-                        <strong>Note:</strong> Deleting all keywords will set the resource sharing status to private.
-                    </em>
-                </div>
-            </span>
-            <div>
-                <p class="text-danger small" id="id-keywords-msg" style="display: none;"> Duplicate. Keyword not added.</p>
-            </div>
-            <fieldset>
-                <div id="div_id_value" class="control-group">
-                    <div class="controls">
-                        <input class="form-control input-sm textInput" id="id_value" maxlength="500" name="value"
-                               type="text" style="display: none;">{{ cm.keywords_string }}
+                        </div>
+                        <ul id="lst-tags" class="custom-well tag-list">
+                        </ul>
                     </div>
-                </div>
-            </fieldset>
-        </form>
+                    <div>
+                        <p class="text-danger small" id="id-keywords-msg" style="display: none;"> Duplicate. Keyword not
+                            added.</p>
+                    </div>
+                    <fieldset>
+                        <div id="div_id_value" class="control-group">
+                            <div class="controls">
+                                <input class="form-control input-sm textInput" id="id_value" maxlength="500"
+                                       name="value"
+                                       type="text" style="display: none;">{{ cm.keywords_string }}
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <span class="alert alert-warning group-title" role="alert">
+                    <div class="flex">
+                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                        <em style="padding-right:20px;">
+                            Deleting all keywords will set the resource sharing status to <strong>private</strong>.
+                        </em>
+                    </div>
+                </span>
+            </div>
+        </div>
     </div>
 {% endif %}

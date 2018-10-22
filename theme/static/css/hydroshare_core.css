@@ -1202,12 +1202,6 @@ span.remove {
 	margin-bottom: 10px;
 }
 
-#add-keyword-wrapper {
-	width: 200px;
-	display: inline-flex;
-}
-
-
 /* ===== Resource UI changes ===== */
 
 
@@ -1733,6 +1727,7 @@ div#sharing-status .col-sm-12{
 .tag-list li {
     display: inline-block;
     margin-right: 5px;
+    height: 2em;
 }
 
 a.tag:hover {
