@@ -11,7 +11,6 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
-import os
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
@@ -105,7 +104,7 @@ def __ingest_irods_directory(self,
     try:
         listing = istorage.listdir(dir)
         for fname in listing[1]:  # files
-            fullpath = os.path.join(dir, fname)
+            fullpath = dir + '/' + fname
             found = False
             for res_file in self.files.all():
                 if res_file.storage_path == fullpath:
@@ -114,7 +113,7 @@ def __ingest_irods_directory(self,
             if not found and not self.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
-                    .format(fullpath)
+                    .format(fullpath.encode('string-escape'))
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -146,7 +145,8 @@ def __ingest_irods_directory(self,
                     elif res_file.has_logical_file and file_type is not None and \
                             not isinstance(res_file.logical_file, file_type):
                         msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
-                            .format(res_file.storage_path, type(res_file.logical_file).__name__,
+                            .format(res_file.storage_path.encode('string-escape'),
+                                    type(res_file.logical_file).__name__,
                                     file_type.__name__)
                         if echo_errors:
                             print(msg)
@@ -171,7 +171,7 @@ def __ingest_irods_directory(self,
 
         for dname in listing[0]:  # directories
             error2, ecount2 = __ingest_irods_directory(self,
-                                                       os.path.join(dir, dname),
+                                                       dir + '/' + dname,
                                                        logger,
                                                        stop_on_error=stop_on_error,
                                                        echo_errors=echo_errors,

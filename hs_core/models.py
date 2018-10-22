@@ -2687,7 +2687,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         try:
             listing = istorage.listdir(dir)
             for fname in listing[1]:  # files
-                fullpath = os.path.join(dir, fname)
+                fullpath = dir + '/' + fname
                 found = False
                 for f in self.files.all():
                     if f.storage_path == fullpath:
@@ -2714,7 +2714,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                         raise ValidationError(msg)
 
             for dname in listing[0]:  # directories
-                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                # do not use os.path.join because paths might contain unicode characters!
+                error2, ecount2 = self.__check_irods_directory(dir + '/' + dname, logger,
                                                                stop_on_error=stop_on_error,
                                                                echo_errors=echo_errors,
                                                                log_errors=log_errors,
@@ -2778,10 +2779,11 @@ def get_resource_file_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return os.path.join(resource.file_path, folder, filename)
+        return resource.file_path + '/' + folder + '/' + filename
+
     else:
         # use root folder
-        return os.path.join(resource.file_path, filename)
+        return resource.file_path + '/' + filename
 
 
 def path_is_allowed(path):
