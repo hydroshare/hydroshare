@@ -1711,8 +1711,8 @@ body > .main-container {
 	display: flex;
 }
 
-#citation-text a, .rights-url a{
-    word-break: break-word;
+#citation-text a, .citation-description, .rights-url a {
+	word-break: break-word;
 }
 
 #btn-download-all, #btn-select-irods-file, #rep-res-bag {

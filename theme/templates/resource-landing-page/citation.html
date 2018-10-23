@@ -15,9 +15,9 @@
             </div>
 
             {% if is_owner_user and not cm.raccess.published %}
-            <br />
+            <br>
 
-            <div>
+            <div class="citation-description">
                 <em>
                     When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
                     accessible at the following URL: https://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
@@ -27,7 +27,7 @@
             </div>
             {% endif %}
 
-            <br />
+            <br>
 
             {# ======= Sharing ======= #}
             {% if not metadata_form %}
