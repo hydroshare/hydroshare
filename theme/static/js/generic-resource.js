@@ -779,26 +779,31 @@ $(document).ready(function () {
         deleteFileTypeExtraMetadata(formID);
     });
 
+
+    const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
+    var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
+
     // Fix buttons toolbar when scrolling down
     // ========================================
-    var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - 22;
-
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
         if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());
             toolbar.css("top", $("#hs-nav-bar").height() + 11);
             toolbar.addClass('toolbar-fixed');
-            toolbar.css("right", $(".custom-btn-toolbar").parent().offset().left + 4);
+            toolbar.css("right", toolbar.parent().offset().left + 4);
         }
         else if ($(window).scrollTop() <= toolbar_offset && toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height("initial");
             toolbar.css("top", "initial");
             toolbar.removeClass('toolbar-fixed');
+            // Recalculate in case UI elements were added/removed
+            toolbar_offset = toolbar.parent().offset().top - $("#hs-nav-bar").height() - SPACING;
         }
     });
 
     $(window).resize(function () {
-        toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - 22;
+        // Recalculate on window re-size
+        toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
     });
 });
