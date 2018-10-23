@@ -250,8 +250,8 @@ class TestCreateResource(HSRESTTestCase):
         title = 'My Test resource'
         metadata = []
         # originalcover
-        value = {"northlimit": '12', "projection": "transverse_mercator", "units": "meter",
-                 "southlimit": '10', "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": 12, "projection": "transverse_mercator", "units": "meter",
+                 "southlimit": 10, "eastlimit": 23, "westlimit": 2}
 
         metadata.append({'originalcoverage': {'value': value,
                                               'projection_string_text': '+proj=tmerc +lon_0=-111.0 '

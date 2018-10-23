@@ -45,11 +45,15 @@
             </div>
 
             <div class="col-xs-12">
-                <h2 class="page-title">Create Resource</h2>
-            </div>
-
-            <div class="col-xs-12 height-fix">
-                <span class="btn btn-primary btn-create-resource pull-right">Create Resource</span>
+                <h2 class="page-title">Create Resource
+                    <small class="text-muted">
+                        <em>A DOI is reserved for the resource. </em>
+                        <span class="glyphicon glyphicon-info-sign info-popover-glypn"
+                              data-toggle="popover1" data-placement="bottom"
+                              data-content="A Digital Object Identifier (DOI) is reserved for the resource.
+                              It remains inactive until the resource is published."></span>
+                    </small>
+                </h2>
             </div>
 
             <div class="col-xs-12">
@@ -76,15 +80,6 @@
                         </li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
-                               title="An arbitrary file or collection of files that are logically grouped together as a resource."
-                               data-value="GenericResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                     alt="Generic Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Generic</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
                                title="A resource that holds a list of other resources in HydroShare."
                                data-value="CollectionResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
@@ -99,37 +94,6 @@
                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                      alt="Web App Resource Icon" class="resource-type-icon"/>
                                 <div class="resource-type-name">&nbsp;Web App</div>
-                            </a>
-                        </li>
-
-                        {# GEOGRAPHIC RESOURCES #}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Geographic</li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A set of point, line, or polygon features stored in ESRI Shapefile format. "
-                               data-value="GeographicFeatureResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                     alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Feature (ESRI Shapefiles)</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Commonly used for representing and managing imagery, digital elevation, and other phenomena which is widely used in hydrological research."
-                               data-value="RasterResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                     alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Raster</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
-                               data-value="NetcdfResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
                             </a>
                         </li>
 
@@ -170,29 +134,6 @@
                                 <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
                                      alt="Collection Resource Icon" class="resource-type-icon"/>
                                 <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </a>
-                        </li>
-
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
-                               data-value="ScriptResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                     alt="Script Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Script</div>
-                            </a>
-                        </li>
-
-                        {# TIME SERIES RESOURCES #}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Time Series</li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A sequence of individual data values that are ordered in time to record the changing trend of a certain phenomenon."
-                               data-value="TimeSeriesResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                     alt="Time Series Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Time Series</div>
                             </a>
                         </li>
                     </ul>
@@ -401,14 +342,13 @@
                         </ul>
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col-xs-12">
-                        <span class="btn btn-primary btn-create-resource pull-right">Create Resource</span>
-                        <span class="btn btn-primary btn-cancel-create-resource pull-left">Cancel</span>
-                    </div>
-                </div>
             </div>
+            
+            <div class="col-xs-12">
+                    <span class="btn btn-primary btn-create-resource pull-right">Create Resource</span>
+                    <span class="btn btn-default btn-cancel-create-resource pull-left">Cancel</span>
+            </div>
+            
         </div>
     </div>
 
