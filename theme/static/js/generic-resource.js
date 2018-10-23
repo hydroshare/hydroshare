@@ -417,7 +417,6 @@ $(document).ready(function () {
 
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
-        axis: "x",
         stop: function( event, ui ) {
             var forms = $(".authors-wrapper.sortable form");
 
@@ -427,7 +426,7 @@ $(document).ready(function () {
                 $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
             }
 
-            $form = $(ui.item.find("form"));
+            let $form = $(ui.item.find("form"));
             var url = $form.attr('action');
             var datastring = $form.serialize();
             $("html").css("cursor", "progress");
