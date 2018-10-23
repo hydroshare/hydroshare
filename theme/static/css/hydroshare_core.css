@@ -1140,6 +1140,16 @@ div.readme .readme-header {
 	padding-left: 2em;
 }
 
+div.readme .readme-header i {
+	margin-right: 4px;
+	background-color: #FFF;
+	border-top-right-radius: 50%;
+}
+
+div.readme .readme-header h4 > span {
+	color: #555;
+}
+
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
 	box-shadow: none;
 }
