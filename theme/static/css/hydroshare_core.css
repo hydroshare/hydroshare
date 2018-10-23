@@ -126,7 +126,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	margin-top: 10px;
 }
 
-.ui-state-highlight {
+.authors-wrapper .ui-state-highlight {
     width: 150px;
     display: inline-block;
     height: 1.5em;
