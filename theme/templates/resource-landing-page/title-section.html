@@ -92,11 +92,11 @@
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
 
-                <span>The following file level metadata are still required to
-                      make the resource public or discoverable:</span>
+                <span>The following aggregation level metadata are still required to
+                      make this resource public or discoverable:</span>
                 {% for item in file_type_missing_metadata %}
                     <ul>
-                        <li>File path: {{ item.file_path }}
+                        <li>Aggregation name: {{ item.file_path }}
                             <ul>
                                 {% for element in item.missing_elements %}
                                     <li>{{ element }}</li>
@@ -154,13 +154,13 @@
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
-        {% if relevant_tools and relevant_tools.open_with_app_counter > 0 %}
+        {% if relevant_tools and relevant_tools.resource_level_app_counter > 0 %}
             <span id="apps-dropdown"/>
             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
                 <span class="caret"></span></button>
             <ul class="dropdown-menu">
                 {% for tool in relevant_tools.tool_list %}
-                    {% if tool.openwithlist  %}
+                    {% if tool.openwithlist and tool.url %}
                         <li title="{{ tool.title }}">
                                 <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{ tool.title }};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank">
                                 <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">

@@ -841,8 +841,11 @@ class CVAggregationStatistic(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_aggregation_statistics")
 
 
+# TODO Deprecated
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
+
+    discovery_content_type = 'Time Series'  # used during discovery
 
     class Meta:
         verbose_name = 'Time Series'
@@ -2037,16 +2040,8 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
 
 def _update_resource_coverage_element(site_element):
-    if not isinstance(site_element.metadata, TimeSeriesMetaData):
-        # metadata must be an instance of TimeSeriesFileMetaData
-        # which means the above update was for file level coverage update
-        # and we have to do another update at the resource level
-        logical_file = site_element.metadata.logical_file
-        if logical_file.resource is None:
-            # this condition is true if site element is getting created for copied
-            # or new version of a composite resource in which case there is no need to
-            # update resource level coverage
-            return
+    """A helper to create/update the coverage element for TimeSeriesResource or
+    TimeSeriesLogicalFile based on changes to the Site element"""
 
     point_value = {'east': site_element.longitude, 'north': site_element.latitude,
                    'units': "Decimal degrees"}
@@ -2075,7 +2070,8 @@ def _update_resource_coverage_element(site_element):
         bbox_value = compute_bounding_box(site_element.metadata.sites.all())
 
     spatial_cov = site_element.metadata.coverages.all().exclude(type='period').first()
-    if spatial_cov:
+    # coverage update/create for Time Series Resource
+    if spatial_cov and isinstance(site_element.metadata, TimeSeriesMetaData):
         spatial_cov.type = cov_type
         if cov_type == 'point':
             point_value['projection'] = spatial_cov.value['projection']
@@ -2084,30 +2080,23 @@ def _update_resource_coverage_element(site_element):
             bbox_value['projection'] = spatial_cov.value['projection']
             spatial_cov._value = json.dumps(bbox_value)
         spatial_cov.save()
-    else:
+    elif isinstance(site_element.metadata, TimeSeriesMetaData):
         if cov_type == 'point':
             value_dict = point_value
         else:
             value_dict = bbox_value
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
-    if not isinstance(site_element.metadata, TimeSeriesMetaData):
-        # metadata must be an instance of TimeSeriesFileMetaData
-        # which means the above update was for file level coverage update
-        # and we have to do another update at the resource level
-        logical_file = site_element.metadata.logical_file
-        resource = logical_file.resource
-        sites = []
-        for logical_file in resource.logical_files:
-            if logical_file.type_name() == "TimeSeriesLogicalFile":
-                if logical_file.metadata.sites:
-                    sites.extend(logical_file.metadata.sites.all())
-        if len(sites) > 1:
+    else:
+        # Need to do the coverage update for timeseries aggregation
+        logical_metadata = site_element.metadata
+        if logical_metadata.sites.count() > 1:
             cov_type = 'box'
-            bbox_value = compute_bounding_box(sites)
+            bbox_value = compute_bounding_box(logical_metadata.sites.all())
 
-        spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+        spatial_cov = logical_metadata.coverages.all().exclude(type='period').first()
         if spatial_cov:
+            # need to update aggregation level coverage
             spatial_cov.type = cov_type
             if cov_type == 'point':
                 point_value['projection'] = spatial_cov.value['projection']
@@ -2117,11 +2106,12 @@ def _update_resource_coverage_element(site_element):
                 spatial_cov._value = json.dumps(bbox_value)
             spatial_cov.save()
         else:
+            # need to create aggregation level coverage
             if cov_type == 'point':
                 value_dict = point_value
             else:
                 value_dict = bbox_value
-            resource.metadata.create_element("coverage", type=cov_type, value=value_dict)
+            logical_metadata.create_element("coverage", type=cov_type, value=value_dict)
 
 
 def _create_site_related_cv_terms(element, data_dict):

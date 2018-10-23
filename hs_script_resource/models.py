@@ -10,8 +10,11 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
     AbstractMetaDataElement
 
 
+# TODO Deprecated
 class ScriptResource(BaseResource):
     objects = ResourceManager('ScriptResource')
+
+    discovery_content_type = 'Script'  # used during discovery
 
     class Meta:
         proxy = True

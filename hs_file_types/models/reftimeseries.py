@@ -10,13 +10,11 @@ from lxml import etree
 from django.utils import timezone
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 
@@ -667,13 +665,11 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         return json_file_content_div
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
 
-        container_to_add_to = super(RefTimeseriesFileMetaData, self).add_to_xml_container(container)
-
-        # create the abstract element
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(RefTimeseriesFileMetaData, self)._get_xml_containers()
         NAMESPACES = CoreMetaData.NAMESPACES
         if self.abstract:
             dc_description = etree.SubElement(container_to_add_to,
@@ -696,6 +692,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         for series in self.time_series_list:
             series.add_to_xml_container(container_to_add_to)
 
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
+
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
 
@@ -708,13 +707,18 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        """only .refts file can be set to this logical file group"""
-        return [".refts"]
+        """only .json file can be set to this logical file group"""
+        return [".json"]
+
+    @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".json"
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        """file type allowed in this logical file group is: .refts"""
-        return [".refts"]
+        """file type allowed in this logical file group is: .json"""
+        return [".json"]
 
     @classmethod
     def get_allowed_ref_types(cls):
@@ -731,6 +735,28 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         """returns a list of serviceType controlled vocabulary terms"""
         return ['SOAP', 'REST']
 
+    @staticmethod
+    def get_aggregation_display_name():
+        return 'Referenced Time Series Content: A reference to one or more time series served ' \
+               'from HydroServers outside of HydroShare in WaterML format'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "ReferencedTimeSeriesAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Reference to Time Series"
+
+    @property
+    def is_single_file_aggregation(self):
+        """This aggregation supports only one file"""
+        return True
+
     @classmethod
     def create(cls):
         # this custom method MUST be used to create an instance of this class
@@ -738,16 +764,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return cls.objects.create(metadata=rf_ts_metadata)
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+        """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)
         """
-            Sets a json resource file to RefTimeseriesFile type
-            :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as RefTimeSeriesFile type
-            :param user: user who is setting the file type
-            :return:
-            """
 
         log = logging.getLogger()
+        if file_id is None:
+            raise ValueError("Must specify id of the file to be set as an aggregation type")
 
         # get the the selected resource file object
         res_file = utils.get_resource_file_by_id(resource, file_id)
@@ -755,72 +778,52 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         if res_file is None:
             raise ValidationError("File not found.")
 
-        if res_file.extension != '.refts':
-            raise ValidationError("Not a Ref Time Series file.")
+        if not res_file.file_name.lower().endswith('.refts.json'):
+            raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
+                res_file.file_name))
 
-        files_to_add_to_resource = []
-        if res_file.has_generic_logical_file:
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file '{}' is already part of an aggregation".format(
+                res_file.file_name))
+
+        try:
+            json_file_content = _validate_json_file(res_file)
+        except Exception as ex:
+            raise ValidationError(ex.message)
+
+        # get the file from irods to temp dir
+        temp_file = utils.get_file_from_irods(res_file)
+        temp_dir = os.path.dirname(temp_file)
+
+        with transaction.atomic():
+            # create a reftiemseries logical file object to be associated with
+            # resource files
+            logical_file = cls.create()
+            logical_file.metadata.json_file_content = json_file_content
+            logical_file.metadata.save()
+
             try:
-                json_file_content = _validate_json_file(res_file)
+                # make the json file part of the aggregation
+                logical_file.add_resource_file(res_file)
+                logical_file.dataset_name = logical_file.metadata.get_title_from_json()
+                logical_file.save()
+                # extract metadata
+                _extract_metadata(resource, logical_file)
+                log.info("RefTimeseries aggregation type - json file was added to the resource.")
+                logical_file._finalize(user, resource, folder_created=False,
+                                       res_files_to_delete=[])
+
+                log.info("RefTimeseries aggregation type was created.")
             except Exception as ex:
-                raise ValidationError(ex.message)
-
-            # get the file from irods to temp dir
-            temp_file = utils.get_file_from_irods(res_file)
-            temp_dir = os.path.dirname(temp_file)
-            files_to_add_to_resource.append(temp_file)
-            file_folder = res_file.file_folder
-            with transaction.atomic():
-                # first delete the json file that we retrieved from irods
-                # for setting it to reftimeseries file type
-                delete_resource_file(resource.short_id, res_file.id, user)
-
-                # create a reftiemseries logical file object to be associated with
-                # resource files
-                logical_file = cls.create()
-
-                logical_file.metadata.json_file_content = json_file_content
-                logical_file.metadata.save()
-
-                try:
-                    # add the json file back to the resource
-                    uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
-                                                 name=os.path.basename(temp_file))
-                    # the added resource file will be part of a new generic logical file by default
-                    new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=file_folder
-                    )
-
-                    # delete the generic logical file object
-                    if new_res_file.logical_file is not None:
-                        # deleting the file level metadata object will delete the associated
-                        # logical file object
-                        new_res_file.logical_file.metadata.delete()
-
-                    # make the resource file we added as part of the logical file
-                    logical_file.add_resource_file(new_res_file)
-                    logical_file.metadata.save()
-                    logical_file.dataset_name = logical_file.metadata.get_title_from_json()
-                    logical_file.save()
-                    # extract metadata
-                    _extract_metadata(resource, logical_file)
-                    log.info("RefTimeseries file type - json file was added to the resource.")
-                except Exception as ex:
-                    msg = "RefTimeseries file type. Error when setting file type. Error:{}"
-                    msg = msg.format(ex.message)
-                    log.exception(msg)
-                    raise ValidationError(msg)
-                finally:
-                    # remove temp dir
-                    if os.path.isdir(temp_dir):
-                        shutil.rmtree(temp_dir)
-
-                log.info("RefTimeseries file type was created.")
-
-        else:
-            err_msg = "Selected file is not part of a GenericLogical file."
-            log.error(err_msg)
-            raise ValidationError(err_msg)
+                msg = "RefTimeseries aggregation type. Error when setting aggregation " \
+                      "type. Error:{}"
+                msg = msg.format(ex.message)
+                log.exception(msg)
+                raise ValidationError(msg)
+            finally:
+                # remove temp dir
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
 
     def get_copy(self):
         """Overrides the base class method"""
@@ -830,6 +833,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.save()
         return copy_of_logical_file
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(RefTimeseriesLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
 
 
 def _extract_metadata(resource, logical_file):

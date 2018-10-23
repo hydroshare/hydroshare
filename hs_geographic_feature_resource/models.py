@@ -222,6 +222,7 @@ class GeometryInformation(AbstractMetaDataElement):
         add_metadata_element_to_xml(container, self, md_fields)
 
 
+# TODO Deprecated
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")
 
@@ -255,6 +256,8 @@ class GeographicFeatureResource(BaseResource):
         else:
             hs_term_dict["HS_GFR_FEATURE_COUNT"] = 0
         return hs_term_dict
+
+    discovery_content_type = 'Geographic Feature (ESRI Shapefiles)'  # used during discovery
 
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'

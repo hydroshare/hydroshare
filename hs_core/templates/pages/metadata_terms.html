@@ -1468,10 +1468,25 @@
             <li><strong>Label: </strong>App-launching URL Pattern</li>
             <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, HydroShare supports the following parameters:
             <ul>
-                <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
-                <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
-                <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
-                <li> <strong>${HS_FILE_NAME}</strong>: Fullname of a file in a resource. For example, full name of the '.nc' file in a NetCDF resource or full name of the '.vrt' file in a raster resource.</li>
+                <li>Keys available in all launching patterns</li>
+                <ul>
+                    <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
+                    <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
+                    <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
+                </ul>
+                <li>Keys only available within App-launching URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_FILE_NAME}</strong>: Fullname of a file in a resource. For example, full name of the '.nc' file in a NetCDF resource or full name of the '.vrt' file in a raster resource.</li>
+                </ul>
+                <li>Keys only available within App-launching File Level URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_FILE_PATH}</strong>: Path of a file in HydroShare</li>
+                </ul>
+                <li>Keys only available within App-launching Aggregation Level URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_AGG_PATH}</strong>: Path of an aggregation in HydroShare</li>
+                    <li> <strong>${HS_MAIN_FILE}</strong>: The main file name of an aggregation</li>
+                </ul>
             </ul>
                 An example:<br>
  <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>HydroShare will replace ${HS_RES_ID} with the real resource id.

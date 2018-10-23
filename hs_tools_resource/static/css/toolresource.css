@@ -26,6 +26,13 @@
     margin: 5px;
 }
 
+.file-options-webapp-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    margin: 2px;
+}
+
 .dropdown-default-webapp-icon {
     width: 50px;
     height: 50px;
