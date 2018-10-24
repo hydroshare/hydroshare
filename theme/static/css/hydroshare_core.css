@@ -1048,10 +1048,6 @@ table.info-table > tbody > tr > td {
     vertical-align: top;
 }
 
-#left-header-table > tbody > tr > th {
-	text-align: right;
-}
-
 .res-header table.info-table > tbody > tr > td {
     padding-bottom: 8px;
 }
@@ -4571,7 +4567,9 @@ span.caption-file-type {
 	border-right: 1px solid #DDD;
 	width: 80%;
 	max-width: 800px;
+	min-width: 200px;
 	min-height: 200px;
+	height: 200px;
 	display: flex;
 	flex-direction: column;
 }
