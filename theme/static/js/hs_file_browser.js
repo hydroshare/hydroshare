@@ -1598,15 +1598,14 @@ $(document).ready(function () {
 
     updateSelectionMenuContext();
 
-    $(".fb-dropzone-wrapper").resizable({
+    $(".fb-dropzone-wrapper.ui-resizable").resizable({
         resize: function (event, ui) {
             $("#fb-metadata").height(ui.size.height);
         },
         handles: "e, s, se",
-        maxWidth: 800,
-        minWidth: 300,
         minHeight: 200,
     });
+
     $("#fb-metadata").resizable({
         resize: function (event, ui) {
             $(".fb-dropzone-wrapper").height(ui.size.height);

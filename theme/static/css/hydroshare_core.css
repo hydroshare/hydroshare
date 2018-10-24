@@ -994,8 +994,8 @@ li.account p{
 }
 
 .hs-table {
-	border: 1px solid #DDD;
 	border-collapse: collapse !important;
+	overflow: auto;
 }
 
 .hs-table tr {
@@ -4553,10 +4553,25 @@ span.caption-file-type {
 }
 
 .fb-dropzone-wrapper {
-    border-right: 1px solid #DDD;
-    max-width: 800px;
-    min-height: 200px;
-    width: 80%;
+    width: 100%;
+}
+
+.fb-dropzone-wrapper:not(.ui-resizable) #hsDropzone {
+	resize: vertical;
+	min-height: 200px;
+	overflow: hidden auto;
+	border: 0;
+}
+
+.fb-dropzone-wrapper:not(.ui-resizable) {
+	border: 0;
+}
+
+.fb-dropzone-wrapper.ui-resizable {
+	border-right: 1px solid #DDD;
+	width: 80%;
+	max-width: 800px;
+	min-height: 200px;
 	display: flex;
 	flex-direction: column;
 }
@@ -4586,7 +4601,6 @@ span.caption-file-type {
 #fileTypeMetaDataTab {
     overflow: auto;
     height: 100%;
-    padding: 2em;
     background-color: #FFF
 }
 
@@ -5050,4 +5064,10 @@ a[data-toggle="modal"] {
 .info-popover-glypn {
   font-size:15px;
   color:lightblue;
+}
+/*====================================
+	UTILITY CLASSES
+====================================*/
+.d-block {
+	display: block;
 }

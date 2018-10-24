@@ -523,7 +523,7 @@
                                     </div>
                                 </div>
                                 <div class="fb-content-wrapper">
-                                    <div class="fb-dropzone-wrapper">
+                                    <div class="fb-dropzone-wrapper{% if cm|resource_type|lower == "composite resource" %} ui-resizable{% endif %}">
                                         <form id="hsDropzone"
                                               class="files-container h-100 ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
                                               action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
@@ -558,7 +558,7 @@
                                             </div>
                                         {% endif %}
                                     </div>
-                                    {% if cm|resource_type|lower == "collection resource" %}
+                                    {% if cm|resource_type|lower == "composite resource" %}
                                     <div id="fb-metadata-helper">
                                         <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
                                            data-fb-action="hide"
@@ -587,12 +587,14 @@
                                     {% endif %}
                                 </div>
 
-                                <form id="fb-delete-files-form" class="hidden"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                      method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="file_ids" value=""/>
-                                </form>
+                                {% if page.perms.change and metadata_form %}
+                                    <form id="fb-delete-files-form" class="hidden"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
+                                          method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                {% endif %}
                             </div>
 
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
