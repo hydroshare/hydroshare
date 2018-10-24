@@ -758,15 +758,20 @@ def add_resource_files(pk, *files, **kwargs):
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
+    prefix_path = 'data/contents'
+    if folder is None or folder == prefix_path:
+        base_dir = ""
+    elif folder.startswith(prefix_path):
+        base_dir = folder[len(prefix_path) + 1:]
+    else:
+        base_dir = folder
     new_folders = set()
     for f in files:
-        full_dir = "" if folder is None else folder
+        full_dir = base_dir
         if f in full_paths:
             # TODO, put this in it's own method?
             full_path = full_paths[f]
             dir_name = os.path.dirname(full_path)
-            base_dir = full_dir if full_dir is not None else ''
-            dir_name = dir_name if dir_name is not None else ''
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         if full_dir:

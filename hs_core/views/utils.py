@@ -144,13 +144,7 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     urltempfile.write(urlstring)
     fileobj = File(file=urltempfile, name=ref_file_name)
 
-    prefix_path = 'data/contents'
-    filelist = []
-    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        filelist = add_resource_files(res_id, fileobj)
-    else:
-        curr_path = curr_path[len(prefix_path) + 1:]
-        filelist = add_resource_files(res_id, fileobj, folder=curr_path)
+    filelist = add_resource_files(res_id, fileobj, folder=curr_path)
 
     if filelist:
         return filelist[0]
