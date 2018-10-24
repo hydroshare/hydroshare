@@ -38,6 +38,35 @@
                 {% endif %}
             {% endif %}
 
+                        {# "add to open with list" for WebApp resource only #}
+            {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
+                {% if cm|app_on_open_with_list:user %}
+                    <form data-id="form-add-open-with-app"
+                          id="form-add-open-with-app"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="label_type" value="OPENWITHAPP">
+                        <input type="hidden" name="action" value="DELETE">
+                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
+                                title="Remove WebApp from OpenWith list" data-form-id="form-add-open-with-app"
+                                class="glyphicon glyphicon-th icon-button btn-resource-remove"></button>
+                    </form>
+                {% else %}
+                    <form data-id="form-add-open-with-app"
+                          id="form-add-open-with-app"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="label_type" value="OPENWITHAPP">
+                        <input type="hidden" name="action" value="CREATE">
+                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
+                                title="Add WebApp to OpenWith list" data-form-id="form-add-open-with-app"
+                                class="glyphicon glyphicon-th icon-button btn-resource-add"></button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
             {% if not is_replaced_by %}
                 {% if user.is_authenticated and rights.statement %}
                     {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
@@ -89,35 +118,6 @@
                                       class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             </a>
                         {% endif %}
-                    </form>
-                {% endif %}
-            {% endif %}
-
-            {# "add to open with list" for WebApp resource only #}
-            {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
-                {% if cm|app_on_open_with_list:user %}
-                    <form data-id="form-add-open-with-app"
-                          id="form-add-open-with-app"
-                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="label_type" value="OPENWITHAPP">
-                        <input type="hidden" name="action" value="DELETE">
-                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Remove WebApp from OpenWith list" data-form-id="form-add-open-with-app"
-                                class="glyphicon glyphicon-th icon-button btn-resource-remove"></button>
-                    </form>
-                {% else %}
-                    <form data-id="form-add-open-with-app"
-                          id="form-add-open-with-app"
-                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="label_type" value="OPENWITHAPP">
-                        <input type="hidden" name="action" value="CREATE">
-                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Add WebApp to OpenWith list" data-form-id="form-add-open-with-app"
-                                class="glyphicon glyphicon-th icon-button btn-resource-add"></button>
                     </form>
                 {% endif %}
             {% endif %}

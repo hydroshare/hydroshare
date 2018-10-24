@@ -175,7 +175,7 @@
                                 <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_north" name="north"
                                                value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -186,7 +186,7 @@
                                 <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_east" name="east"
                                                value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -197,7 +197,7 @@
                                 <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">North Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_northlimit" name="northlimit"
                                                value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -208,7 +208,7 @@
                                 <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">East Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_eastlimit" name="eastlimit"
                                                value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -219,7 +219,7 @@
                                 <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">South Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_southlimit" name="southlimit"
                                                value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -230,7 +230,7 @@
                                 <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">West Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_westlimit" name="westlimit"
                                                value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"

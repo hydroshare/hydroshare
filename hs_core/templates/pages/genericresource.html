@@ -558,6 +558,7 @@
                                             </div>
                                         {% endif %}
                                     </div>
+                                    {% if cm|resource_type|lower == "collection resource" %}
                                     <div id="fb-metadata-helper">
                                         <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
                                            data-fb-action="hide"
@@ -583,6 +584,7 @@
                                             </div>
                                         {% endif %}
                                     </div>
+                                    {% endif %}
                                 </div>
 
                                 <form id="fb-delete-files-form" class="hidden"

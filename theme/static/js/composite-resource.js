@@ -3,7 +3,6 @@
  */
 
 $(document).ready(function () {
-
     // Submit for resource spatial coverage update
     $("#btn-update-resource-spatial-coverage").click(function () {
         var resourceID = $("#short-id").val();

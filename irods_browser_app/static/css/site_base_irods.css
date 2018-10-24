@@ -83,5 +83,6 @@
 }
 
 #btn-signout-irods {
+    display: inline-block;
     margin-top: 10px;
 }

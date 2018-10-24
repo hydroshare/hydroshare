@@ -39,7 +39,7 @@ $('#btn-signout-irods').on('click', function() {
     $("#irods-sel-file").text('');
     $("#btn-select-irods-file").toggleClass("hidden", true);
     $("#log-into-irods").show();
-    $("#btn-signout-irods").hide();
+    $("#btn-signout-irods").toggleClass("hidden", true);
     $('#irods-copy-move').hide();
 });
 
@@ -63,7 +63,7 @@ function irods_login() {
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
                 $("#log-into-irods").hide();
-                $("#btn-signout-irods").show();
+                $("#btn-signout-irods").toggleClass("hidden", false);
                 $("#btn-select-irods-file").toggleClass("hidden", false);
                 $("#irods-sel-file").text("No file selected.");
                 sessionStorage.IRODS_signininfo = signInStr;

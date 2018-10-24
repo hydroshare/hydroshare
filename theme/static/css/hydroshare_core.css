@@ -1622,6 +1622,10 @@ body > .main-container {
     width: 180px;
 }
 
+.btn-cancel-create-resource {
+	margin-right: 10px;
+}
+
 .access-panel-title{
     color: #FFF;
     background-color: #337ab7;
@@ -2221,14 +2225,14 @@ table.user-scope tr {
 }
 
 .custom-dropdown .dropdown-menu > li a {
-    font-size: 14px;
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: 400;
-    line-height: 1.428571429;
-    color: #333;
-    white-space: nowrap
+	font-size: 14px;
+	display: block;
+	padding: 8px 20px;
+	clear: both;
+	font-weight: 400;
+	line-height: 1.428571429;
+	color: #333;
+	white-space: nowrap
 }
 
 .custom-dropdown .dropdown-menu > li a:hover, .custom-dropdown .dropdown-menu > li a:focus {
@@ -4477,7 +4481,7 @@ div.fb-upload-caption a {
 	flex-wrap: wrap;
 }
 
-#fb-inner-buttons > .flex > div:not(last-child) {
+#fb-inner-buttons > .flex > div:not(:last-child) {
 	padding-right: 20px;
 }
 
