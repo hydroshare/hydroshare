@@ -229,6 +229,8 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
         return
     logical_file_type_class = file_type_map[hs_file_type]
     try:
+        # Some aggregations use the folder name for the aggregation name
+        folder_path = folder_path.rstrip('/') if folder_path else folder_path
         logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
                                               folder_path=folder_path)
     except:
