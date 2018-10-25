@@ -5,13 +5,10 @@ import tempfile
 import mimetypes
 import zipfile
 
-from uuid import uuid4
-
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
-from mezzanine.conf import settings
 from hs_core.models import Bags, ResourceFile
 
 
@@ -63,7 +60,7 @@ def create_bag_files(resource):
     # to accommodate asynchronous multiple file move operations for the same resource
 
     # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+    temp_path = istorage.getUniqueTmpPath
 
     try:
         os.makedirs(temp_path)

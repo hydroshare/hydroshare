@@ -381,29 +381,17 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
     # OR the user specifically requested a non-proxied download.
-    if flen <= FILE_SIZE_LIMIT:
-        options = ('-',)  # we're redirecting to stdout.
-        # this unusual way of calling works for streaming federated or local resources
-        if __debug__:
-            logger.debug("Locally streaming {}".format(output_path))
-        proc = session.run_safe('iget', None, irods_output_path, *options)
-        response = FileResponse(proc.stdout, content_type=mtype)
-        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-            name=output_path.split('/')[-1])
-        response['Content-Length'] = flen
-        return response
 
-    else:
-        if __debug__:
-            logger.debug("Rejecting download of > 1GB file {}".format(output_path))
-        content_msg = "File larger than 1GB cannot be downloaded directly via HTTP. " \
-                      "Please download the large file via iRODS clients."
-        response = HttpResponse(status=403)
-        if rest_call:
-            response.content = content_msg
-        else:
-            response.content = "<h1>" + content_msg + "</h1>"
-        return response
+    options = ('-',)  # we're redirecting to stdout.
+    # this unusual way of calling works for streaming federated or local resources
+    if __debug__:
+        logger.debug("Locally streaming {}".format(output_path))
+    proc = session.run_safe('iget', None, irods_output_path, *options)
+    response = FileResponse(proc.stdout, content_type=mtype)
+    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
+        name=output_path.split('/')[-1])
+    response['Content-Length'] = flen
+    return response
 
 
 @api_view(['GET'])

@@ -24,6 +24,11 @@ class IrodsStorage(Storage):
             self.environment = GLOBAL_ENVIRONMENT
             icommands.ACTIVE_SESSION = self.session
 
+    @property
+    def getUniqueTmpPath(self):
+        # return a unique temporary path under IRODS_ROOT directory
+        return os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+
     def set_user_session(self, username=None, password=None, host=settings.IRODS_HOST,
                          port=settings.IRODS_PORT, def_res=None, zone=settings.IRODS_ZONE,
                          userid=0, sess_id=None):

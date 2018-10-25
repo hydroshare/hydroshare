@@ -4,7 +4,6 @@ import json
 import os
 import string
 
-from uuid import uuid4
 import errno
 import shutil
 
@@ -208,8 +207,9 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     if not is_valid:
         return status.HTTP_400_BAD_REQUEST, err_msg
 
+    istorage = res.get_irods_storage()
     # temp path to hold updated url file to be written to iRODS
-    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+    temp_path = istorage.getUniqueTmpPath
 
     prefix_path = 'data/contents'
     if curr_path != prefix_path and curr_path.startswith(prefix_path):
@@ -240,7 +240,6 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     from_file_name = os.path.join(temp_path, ref_name)
     with open(from_file_name, 'w') as out:
         out.write(urlstring)
-    istorage = res.get_irods_storage()
     target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
     try:
         istorage.saveFile(from_file_name, target_irods_file_path)
