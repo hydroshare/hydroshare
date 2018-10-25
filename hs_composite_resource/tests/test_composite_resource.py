@@ -104,18 +104,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test invalid url fails to be added to an empty composite resource
         self.create_composite_resource()
         url_file_base_name = 'test_url'
-        ret_status, msg = add_reference_url_to_resource(self.user,
-                                                        self.composite_resource.short_id,
-                                                        self.invalid_url, url_file_base_name,
-                                                        'data/contents')
-        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST)
+        ret_status, msg, _ = add_reference_url_to_resource(self.user,
+                                                           self.composite_resource.short_id,
+                                                           self.invalid_url, url_file_base_name,
+                                                           'data/contents')
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST, msg='Input referenced URL is '
+                                                                      'invalid')
 
         # test valid url can be added to an empty composite resource
         url_file_base_name = 'test_url'
-        ret_status, msg = add_reference_url_to_resource(self.user,
-                                                        self.composite_resource.short_id,
-                                                        self.valid_url, url_file_base_name,
-                                                        'data/contents')
+        ret_status, msg, _ = add_reference_url_to_resource(self.user,
+                                                           self.composite_resource.short_id,
+                                                           self.valid_url, url_file_base_name,
+                                                           'data/contents')
         self.assertEqual(ret_status, status.HTTP_200_OK)
         self.assertEqual(self.composite_resource.files.count(), 1)
         # there should be one GenericLogicalFile object at this point
@@ -123,10 +124,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test valid url can be added to a subfolder of a composite resource
         new_folder_path = os.path.join("data", "contents", "my-new-folder")
         create_folder(self.composite_resource.short_id, new_folder_path)
-        ret_status, msg = add_reference_url_to_resource(self.user,
-                                                        self.composite_resource.short_id,
-                                                        self.valid_url, url_file_base_name,
-                                                        new_folder_path)
+        ret_status, msg, _ = add_reference_url_to_resource(self.user,
+                                                           self.composite_resource.short_id,
+                                                           self.valid_url, url_file_base_name,
+                                                           new_folder_path)
         self.assertEqual(ret_status, status.HTTP_200_OK)
         self.assertEqual(self.composite_resource.files.count(), 2)
         # there should be two GenericLogicalFile objects at this point
@@ -145,7 +146,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
                                                          new_ref_url, 'data/contents',
                                                          url_filename)
-        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST, msg='Edited referenced URL is '
+                                                                      'invalid')
 
         new_ref_url = 'https://www.yahoo.com'
         ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
@@ -779,10 +781,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """
         self.create_composite_resource()
         url_file_base_name = 'test_url'
-        ret_status, msg = add_reference_url_to_resource(self.user,
-                                                        self.composite_resource.short_id,
-                                                        self.valid_url, url_file_base_name,
-                                                        'data/contents')
+        ret_status, msg, _ = add_reference_url_to_resource(self.user,
+                                                           self.composite_resource.short_id,
+                                                           self.valid_url, url_file_base_name,
+                                                           'data/contents')
         self.assertEqual(ret_status, status.HTTP_200_OK)
         # at this point resource can't be public or discoverable as some core metadata missing
         self.assertFalse(self.composite_resource.can_be_public_or_discoverable)

@@ -136,11 +136,11 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                         is_sf_agg_file = True
                         if not is_zip_request and f.has_logical_file and \
                                 f.logical_file.is_single_file_aggregation:
-                            if 'url' in f.logical_file.extra_data:
-                                download_url = request.GET.get('url_download', 'false').lower()
-                                if download_url == 'false':
-                                    # redirect to referenced url in the url file instead
-                                    redirect_url = f.logical_file.extra_data['url']
+                            download_url = request.GET.get('url_download', 'false').lower()
+                            if download_url == 'false':
+                                # redirect to referenced url in the url file instead
+                                redirect_url = f.logical_file.redirect_url
+                                if redirect_url:
                                     return HttpResponseRedirect(redirect_url)
                         if __debug__:
                             logger.debug(

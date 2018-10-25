@@ -1131,8 +1131,8 @@ def publish_resource(user, pk):
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files or this resource type is not allowed "
-                              "for publication.")
+                              "metadata or content files, or this resource contains referenced "
+                              "content, or this resource type is not allowed for publication.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field

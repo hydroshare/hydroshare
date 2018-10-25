@@ -113,7 +113,8 @@ def validate_url(url):
     :return: [True, ''] if url is valid,[False, 'error message'] if url is not valid
     """
     # validate url's syntax is valid
-    error_message = "The URL that you entered is not valid. Please enter a valid URL."
+    error_message = "The URL that you entered is not valid. Please enter a valid http, https, " \
+                    "ftp, or ftps URL."
     try:
         validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
         validator(url)
@@ -160,8 +161,8 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     :param ref_url: reference url to be added to the resource
     :param ref_name: file name of the referenced url in internet shortcut format
     :param curr_path: the folder path in the resource to add the referenced url to
-    :return: 200 status code and 'success' message if it succeeds, otherwise, return error status
-    code and error message
+    :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
+    return error status code, error message, and None (for file_id).
     """
     ref_name = ref_name.lower()
     if not ref_name.endswith('.url'):
@@ -169,13 +170,13 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
 
     is_valid, err_msg = validate_url(ref_url)
     if not is_valid:
-        return status.HTTP_400_BAD_REQUEST, err_msg
+        return status.HTTP_400_BAD_REQUEST, err_msg, None
 
     f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
 
     if not f:
         return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
-                                                      'resource'
+                                                      'resource', None
 
     # make sure the new file has logical file set and is single file aggregation
     try:
@@ -184,9 +185,9 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
         set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
         hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
     except Exception as ex:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message, None
 
-    return status.HTTP_200_OK, 'success'
+    return status.HTTP_200_OK, 'success', f.id
 
 
 def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename):

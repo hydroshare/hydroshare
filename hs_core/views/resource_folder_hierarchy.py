@@ -378,10 +378,10 @@ def data_store_add_reference(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    ret_status, msg = add_reference_url_to_resource(request.user,
-                                                    res_id, ref_url, ref_name, curr_path)
+    ret_status, msg, file_id = add_reference_url_to_resource(request.user, res_id, ref_url,
+                                                             ref_name, curr_path)
     if ret_status == status.HTTP_200_OK:
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'success', 'file_id': file_id})
     else:
         return JsonResponse({'message': msg}, status=ret_status)
 
