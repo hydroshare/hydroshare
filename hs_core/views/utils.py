@@ -499,7 +499,7 @@ def link_irods_file_to_django(resource, filepath, overwrite=False):
         try:
             ret = ResourceFile.get(resource=resource, file=base, folder=folder)
             if overwrite:
-                ret.delete();
+                ret.delete()
                 b_add_file = True
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
