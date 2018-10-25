@@ -3,6 +3,7 @@ import os
 from dateutil import parser
 from operator import lt, gt
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.utils import format_datetime
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile
@@ -39,8 +40,6 @@ def get_aggregation_types():
             if not getattr(model, 'archived_model', False):
                 aggregation_types.append(model)
     return aggregation_types
-
-from hs_core.hydroshare.utils import format_datetime
 
 
 def update_resource_coverage_element(resource):
@@ -233,6 +232,6 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
         folder_path = folder_path.rstrip('/') if folder_path else folder_path
         logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
                                               folder_path=folder_path)
-    except:
+    except Exception:
         if fail_feedback:
             raise

@@ -917,6 +917,7 @@ class TimeSeriesResource(BaseResource):
         # sqlite file is the required content file
         return self.has_sqlite_file
 
+
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(TimeSeriesResource)(resource_processor)

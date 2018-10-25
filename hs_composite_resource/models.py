@@ -643,6 +643,7 @@ class CompositeResource(BaseResource):
             else:
                 self.metadata.create_element("coverage", type='period', value=date_data)
 
+
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(CompositeResource)(resource_processor)

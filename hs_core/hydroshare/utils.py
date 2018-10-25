@@ -1079,6 +1079,7 @@ def format_datetime(dt, template='default'):
 
     return t.format(dt)
 
+
 def check_aggregations(resource, folders, res_files):
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type

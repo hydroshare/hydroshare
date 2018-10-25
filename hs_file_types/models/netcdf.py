@@ -941,7 +941,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                             dt = np.dtype(dataset_variable.datatype.name)
                             missing_value = np.fromstring(variable.missing_value + ' ',
                                                           dtype=dt.type, sep=" ")
-                        except:
+                        except Exception:
                             pass
 
                         if missing_value:

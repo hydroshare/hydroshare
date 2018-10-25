@@ -253,42 +253,42 @@ def add_metadata_from_dis_file(dis_file, res):
     total_x_length = None
     study_area_info = dict()
     stress_period_info = dict()
-    for l in lines:
-        l = l.strip()
-        l = l.split()
-        first_char = l[0].strip()
-        l = [c.lower() for c in l]
+    for line in lines:
+        line = line.strip()
+        line = line.split()
+        first_char = line[0].strip()
+        line = [c.lower() for c in line]
         if not first_char.startswith('#'):
             if first_line:
                 grid_dimension_info = dict(
-                    numberOfLayers=l[0],
-                    numberOfRows=l[1],
-                    numberOfColumns=l[2],
+                    numberOfLayers=line[0],
+                    numberOfRows=line[1],
+                    numberOfColumns=line[2],
                 )
-                lenuni = l[5]
+                lenuni = line[5]
                 first_line = False
             unit_con_factor = get_unit_conversion_factor(int(lenuni))
-            if 'delr' in l:
-                if 'constant' in l:
+            if 'delr' in line:
+                if 'constant' in line:
                     grid_dimension_info['typeOfRows'] = 'Regular'
-                    row_len = l[1]
+                    row_len = line[1]
                     if int(lenuni) > 0:
                         total_y_length = float(row_len) * float(
                             grid_dimension_info['numberOfRows']) * unit_con_factor
-                elif 'internal' in l:
+                elif 'internal' in line:
                     grid_dimension_info['typeOfRows'] = 'Irregular'
-            if 'delc' in l:
-                if 'constant' in l:
+            if 'delc' in line:
+                if 'constant' in line:
                     grid_dimension_info['typeOfColumns'] = 'Regular'
-                    col_len = l[1]
+                    col_len = line[1]
                     if int(lenuni) > 0:
                         total_x_length = float(col_len) * float(
                             grid_dimension_info['numberOfColumns']) * unit_con_factor
-                elif 'internal' in l:
+                elif 'internal' in line:
                     grid_dimension_info['typeOfColumns'] = 'Irregular'
-            if 'ss' in l:
+            if 'ss' in line:
                 ss = True
-            if 'tr' in l:
+            if 'tr' in line:
                 tr = True
             if total_y_length and total_x_length:
                 study_area_info['totalLength'] = max(total_y_length, total_x_length)

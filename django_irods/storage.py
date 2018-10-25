@@ -227,7 +227,7 @@ class IrodsStorage(Storage):
                     self.session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
                 else:
                     self.session.run("iput", None, '-f', from_name, to_name)
-            except:
+            except Exception:
                 if data_type_str:
                     self.session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
                 else:
@@ -250,7 +250,7 @@ class IrodsStorage(Storage):
             f.close()
             try:
                 self.session.run("iput", None, '-f', f.name, name)
-            except:
+            except Exception:
                 # IRODS 4.0.2, sometimes iput fails on the first try. A second try seems to fix it.
                 self.session.run("iput", None, '-f', f.name, name)
             os.unlink(f.name)

@@ -387,6 +387,7 @@ class RasterResource(BaseResource):
                 break
         return hs_term_dict
 
+
 # this would allow us to pick up additional form elements for the template
 # before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
