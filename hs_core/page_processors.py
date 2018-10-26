@@ -10,6 +10,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import GenericResource, Relation
 from hs_core import languages_iso
+
+from django.conf import settings
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
     MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
@@ -164,6 +166,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             content_model.metadata.description else None
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
                    'resource_edit_mode': resource_edit,
@@ -200,7 +203,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
-                   'current_user': user
+                   'current_user': user,
+                   'maps_key': maps_key
         }
 
         if 'task_id' in request.session:
@@ -360,6 +364,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
                                          extended_metadata_layout=extended_metadata_layout)
 
+    maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+
     context = {
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
@@ -398,7 +404,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               type_value != 'isVersionOf' and
                                               type_value != 'hasPart'),
                'is_resource_specific_tab_active': False,
-               'belongs_to_collections': belongs_to_collections
+               'belongs_to_collections': belongs_to_collections,
+                'maps_key': maps_key
     }
 
     return context

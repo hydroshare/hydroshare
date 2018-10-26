@@ -199,6 +199,9 @@ RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
 
+# insert a google maps key here when in production
+MAPS_KEY=''
+
 with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
         EXTERNAL_CONFIG = yaml.load(stream)
