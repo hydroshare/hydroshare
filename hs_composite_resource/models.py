@@ -95,13 +95,16 @@ class CompositeResource(BaseResource):
             return None
 
         istorage = self.get_irods_storage()
-        store = istorage.listdir(dir_path)
-        files_in_folder = ResourceFile.list_folder(self, folder=dir_path, sub_folders=False)
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+        store = istorage.listdir(irods_path)
+        files_in_folder = ResourceFile.list_folder(self, folder=irods_path, sub_folders=False)
 
         if not files_in_folder:
             # folder is empty
             # check sub folders for files - if file exist we can set FileSet aggregation
-            files_in_sub_folders = ResourceFile.list_folder(self, folder=dir_path,
+            files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
                                                             sub_folders=True)
             if files_in_sub_folders:
                 return FileSetLogicalFile.__name__
@@ -233,7 +236,8 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         for aggregation in self.logical_files:
-            if aggregation.aggregation_name == name:
+            # remove the last slash in aggregation_name if any
+            if aggregation.aggregation_name.rstrip('/') == name:
                 return aggregation
 
         raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))

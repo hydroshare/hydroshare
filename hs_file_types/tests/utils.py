@@ -111,18 +111,18 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 42.0500269597691)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.57773718106195)
-    self.assertEqual(box_coverage.value['southlimit'], 41.98722286029891)
-    self.assertEqual(box_coverage.value['westlimit'], -111.69756293084055)
+    self.assertEqual(float(box_coverage.value['northlimit']), 42.0500269597691)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.57773718106195)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.98722286029891)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.69756293084055)
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
-    self.assertEqual(ori_coverage.value['northlimit'], 4655492.446916306)
-    self.assertEqual(ori_coverage.value['eastlimit'], 452144.01909127034)
-    self.assertEqual(ori_coverage.value['southlimit'], 4648592.446916306)
-    self.assertEqual(ori_coverage.value['westlimit'], 442274.01909127034)
+    self.assertEqual(float(ori_coverage.value['northlimit']), 4655492.446916306)
+    self.assertEqual(float(ori_coverage.value['eastlimit']), 452144.01909127034)
+    self.assertEqual(float(ori_coverage.value['southlimit']), 4648592.446916306)
+    self.assertEqual(float(ori_coverage.value['westlimit']), 442274.01909127034)
     self.assertEqual(ori_coverage.value['units'], 'meter')
     self.assertEqual(ori_coverage.value['projection'],
                      'NAD83 / UTM zone 12N')
@@ -208,10 +208,10 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.867126409)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.505940368)
-    self.assertEqual(box_coverage.value['southlimit'], 41.8639080745)
-    self.assertEqual(box_coverage.value['westlimit'], -111.51138808)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -244,10 +244,10 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
     proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
-    self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
-    self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
-    self.assertEqual(ori_coverage.value['southlimit'], '4.63479e+06')
-    self.assertEqual(ori_coverage.value['westlimit'], '457560.0')
+    self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
+    self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
+    self.assertEqual(float(ori_coverage.value['southlimit']), 4.63479e+06)
+    self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
@@ -337,10 +337,10 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
                      'unknown')
     self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
     self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
-    self.assertEqual(logical_file.metadata.originalcoverage.eastlimit, -66.9692712587578)
-    self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
-    self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
-    self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.eastlimit), -66.9692712587578)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.northlimit), 71.406235393967)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.southlimit), 18.921786345087)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.westlimit), -178.217598362366)
 
 
 def assert_ref_time_series_file_type_metadata(self):
@@ -373,10 +373,10 @@ def assert_ref_time_series_file_type_metadata(self):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 40.48498)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.46245)
-    self.assertEqual(box_coverage.value['southlimit'], 40.1788719)
-    self.assertEqual(box_coverage.value['westlimit'], -111.639338)
+    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
+    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -394,10 +394,10 @@ def assert_ref_time_series_file_type_metadata(self):
     box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'Unknown')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 40.48498)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.46245)
-    self.assertEqual(box_coverage.value['southlimit'], 40.1788719)
-    self.assertEqual(box_coverage.value['westlimit'], -111.639338)
+    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
+    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
     temporal_coverage = logical_file.metadata.coverages.all().filter(
         type='period').first()
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -493,10 +493,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -547,10 +547,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
 
     # test temporal coverage
     temporal_coverage = logical_file.metadata.temporal_coverage
