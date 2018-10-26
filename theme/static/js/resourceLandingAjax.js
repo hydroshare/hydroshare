@@ -1096,12 +1096,16 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['aggregation_name'], v['logical_type'], v['logical_file_id'], v['size'], v['pk'], v['url']));
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
+                        v['aggregation_name'], v['logical_type'], v['logical_file_id'],
+                        v['size'], v['pk'], v['url'], v['reference_url']));
                 });
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'], v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'], v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
+                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
+                        v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
+                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
                 });
             }
             if (!files.length && !folders.length) {
@@ -1219,6 +1223,50 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
         },
         error: function(xhr, errmsg, err){
             display_error_message('Folder Creation Failed', xhr.responseText);
+        }
+    });
+}
+
+function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-add-reference/',
+        async: true,
+        data: {
+            res_id: res_id,
+            curr_path: curr_path,
+            ref_name: ref_name,
+            ref_url: ref_url
+        },
+        success: function (result) {
+            $('#add-reference-url-dialog').modal('hide');
+            $("#txtRefName").val("");
+            $("#txtRefURL").val("");
+            $("#ref_file_note").show();
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Add reference content Failed', xhr.responseText);
+        }
+    });
+}
+
+function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-edit-reference-url/',
+        async: true,
+        data: {
+            res_id: res_id,
+            curr_path: curr_path,
+            url_filename: url_filename,
+            new_ref_url: new_ref_url
+        },
+        success: function (result) {
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Edit reference url Failed', xhr.responseText);
         }
     });
 }

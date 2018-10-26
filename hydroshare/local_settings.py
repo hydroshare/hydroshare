@@ -5,7 +5,6 @@
 
 import redis
 import os
-import yaml
 from kombu import Queue, Exchange
 from kombu.common import Broadcast
 
@@ -201,9 +200,3 @@ RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
 
 # insert a google maps key here when in production
 MAPS_KEY=''
-
-with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
-    try:
-        EXTERNAL_CONFIG = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        print(exc)
