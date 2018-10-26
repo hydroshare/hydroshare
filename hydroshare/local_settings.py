@@ -204,4 +204,4 @@ with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-c
     except yaml.YAMLError as exc:
         print(exc)
 # insert a google maps key here when in production
-MAPS_KEY='AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0'
+MAPS_KEY=''
