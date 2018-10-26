@@ -1,6 +1,7 @@
 import os
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
+from urllib import urlencode
 
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
@@ -22,6 +23,11 @@ class IrodsStorage(Storage):
             self.session = GLOBAL_SESSION
             self.environment = GLOBAL_ENVIRONMENT
             icommands.ACTIVE_SESSION = self.session
+
+    @property
+    def getUniqueTmpPath(self):
+        # return a unique temporary path under IRODS_ROOT directory
+        return os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     def set_user_session(self, username=None, password=None, host=settings.IRODS_HOST,
                          port=settings.IRODS_PORT, def_res=None, zone=settings.IRODS_ZONE,
@@ -303,8 +309,10 @@ class IrodsStorage(Storage):
         stdout = self.session.run("ils", None, "-l", name)[0].split()
         return int(stdout[3])
 
-    def url(self, name):
-        return reverse('django_irods.views.download', kwargs={'path': name})
+    def url(self, name, url_download=False, zipped=False):
+        reverse_url = reverse('django_irods.views.download', kwargs={'path': name})
+        query_params = {'url_download': url_download, "zipped": zipped}
+        return reverse_url + '?' + urlencode(query_params)
 
     def get_available_name(self, name):
         """

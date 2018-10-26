@@ -15,7 +15,8 @@ from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, Rela
     MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    res_has_web_reference
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 
@@ -114,6 +115,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     qholder = content_model.get_quota_holder()
 
+    has_web_ref = res_has_web_reference(content_model)
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -200,6 +203,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
+                   'show_web_reference_note': has_web_ref,
                    'current_user': user
         }
 
@@ -398,6 +402,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               type_value != 'isVersionOf' and
                                               type_value != 'hasPart'),
                'is_resource_specific_tab_active': False,
+               'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections
     }
 
