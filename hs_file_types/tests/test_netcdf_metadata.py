@@ -275,12 +275,14 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_aggregation_metadata_CRUD(self):
-        # here we are using a valid nc file for setting it
-        # to NetCDF file type which includes metadata extraction
-        # then testing with metadata CRUD actions
+        # here we are using a valid nc file for creating a NetCDF file type (aggregation)
+        # then testing with metadata CRUD actions for the  aggregation
 
-        self.create_composite_resource(self.netcdf_file)
-
+        self.create_composite_resource()
+        new_folder = 'nc_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         # make the netcdf file part of the NetCDFLogicalFile
         res_file = self.composite_resource.files.first()
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)

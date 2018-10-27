@@ -41,7 +41,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         base_data_file_path = 'hs_file_types/tests/data/{}'
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
-        self.sqlite_file_name = 'ODM2_Multi_Site_one_variable.sqlite'
+        self.sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         self.sqlite_file = base_data_file_path.format(self.sqlite_file_name)
 
         self.states_prj_file_name = 'states.prj'
