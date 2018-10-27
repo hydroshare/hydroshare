@@ -1815,6 +1815,43 @@
     </div>
 </div>
 
+<div class="modal fade in" id="add-reference-url-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="add-reference" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="create-folder">Add content from the web</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <fieldset>
+                    {# Reference Name #}
+                        <label class="col-sm-12">Create a name for the referenced content. This name will be displayed in the file content area of the resource</label>
+                        <label for="txtRefName" class="col-sm-2 control-label">Name: *</label>
+                        <input id="txtRefName" class="col-sm-10 modal-only-required" placeholder="Untitled">
+                    </fieldset>
+                </div>
+                {# Reference URL #}
+                <div class="form-group">
+                    <fieldset>
+                        <label class="col-sm-12">Specify the HTTP or FTP URL of a file or website</label>
+                        <label for="txtRefURL" class="col-sm-2 control-label">URL: *</label>
+                        <input id="txtRefURL" class="col-sm-10 modal-only-required" placeholder="HTTP or FTP URL">
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="btn-add-reference-url" class="btn btn-primary disabled" data-dismiss="modal">Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade in" id="rename-dialog" tabindex="-1" role="dialog"
      aria-labelledby="rename" aria-hidden="false">
     <div class="modal-dialog">
@@ -1871,6 +1908,48 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" id="btn-confirm-zip" class="btn btn-primary" data-dismiss="modal">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="redirect-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="redirect-referenced-url-title">Redirecting to the referenced web URL</h4>
+            </div>
+            <div class="modal-body">
+                The content you have requested to access is not stored in HydroShare, and we can’t guarantee its availability,
+                quality, security, or size. If the externally linked content is large, access may take time.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a id="file_redirect_url" type="button" class="btn btn-primary" href="#" target="_blank">Redirect</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="edit-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="edit-ref-label" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="edit-referenced-url-title">Edit the referenced URL</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <fieldset class="col-sm-12">
+                        <label>Reference URL *</label>
+                        <input id="txtNewRefURL" class="form-control modal-only-required">
+                    </fieldset>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="btn-edit-url" class="btn btn-primary" data-dismiss="modal">Save Changes</button>
             </div>
         </div>
     </div>

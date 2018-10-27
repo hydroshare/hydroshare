@@ -193,11 +193,28 @@ class GenericLogicalFile(AbstractLogicalFile):
         """This aggregation supports only one file"""
         return True
 
+    @property
+    def redirect_url(self):
+        """
+        return redirect_url if this logical file is a referenced web url file, None otherwise
+        """
+        if 'url' in self.extra_data:
+            return self.extra_data['url']
+        else:
+            return None
+
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """Makes any physical file part of a generic  aggregation type. The physical file must
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None, extra_data={}):
+        """
+        Makes any physical file part of a generic aggregation type. The physical file must
         not already be a part of any aggregation.
-        Note: parameter folder_path is ignored here and a value for file_id is required
+        :param resource:
+        :param user:
+        :param file_id: id of the resource file to set logical file type
+        :param folder_path: ignored here and a value for file_id is required
+        :param extra_data: a dict that, if not empty, will be passed on to extra_data of
+        corresponding logical file of the resource file
+        :return:
         """
 
         log = logging.getLogger()
@@ -212,6 +229,8 @@ class GenericLogicalFile(AbstractLogicalFile):
         logical_file = GenericLogicalFile.create(resource)
         dataset_name, _ = os.path.splitext(res_file.file_name)
         logical_file.dataset_name = dataset_name
+        if extra_data:
+            logical_file.extra_data = extra_data
         logical_file.save()
         res_file.logical_file_content_object = logical_file
         res_file.save()

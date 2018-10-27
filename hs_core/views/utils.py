@@ -3,10 +3,16 @@ from __future__ import absolute_import
 import json
 import os
 import string
+
+import errno
+import shutil
+
 from collections import namedtuple
 import paramiko
 import logging
 from dateutil import parser
+from urllib2 import urlopen, HTTPError, URLError
+from tempfile import NamedTemporaryFile
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -16,8 +22,10 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse, QueryDict
+from django.core.validators import URLValidator
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework import status
 
 from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
 from mezzanine.utils.urls import next_url
@@ -30,8 +38,12 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare.utils import get_file_mime_type
+from hs_file_types.utils import set_logical_file_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare import add_resource_files
+from django_irods.icommands import SessionException
+
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -91,6 +103,153 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
 
     # delete the user session after iRODS file operations are done
     irods_storage.delete_user_session()
+
+
+def validate_url(url):
+    """
+    Validate URL
+    :param url: input url to be validated
+    :return: [True, ''] if url is valid,[False, 'error message'] if url is not valid
+    """
+    # validate url's syntax is valid
+    error_message = "The URL that you entered is not valid. Please enter a valid http, https, " \
+                    "ftp, or ftps URL."
+    try:
+        validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
+        validator(url)
+    except ValidationError:
+        return False, error_message
+
+    # validate url is valid, i.e., can be opened
+    try:
+        urlopen(url)
+    except (HTTPError, URLError):
+        return False, error_message
+
+    return True, ''
+
+
+def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
+    """
+    Create URL file and add it to resource
+    :param res_id: resource id to add url file to
+    :param ref_url: referenced url to create the url file
+    :param ref_file_name: referenced url file name to be created
+    :param curr_path: the folder path in the resource to add url file to
+    :return: file object being added into resource if successful, otherwise, return None
+    """
+    # create URL file
+    urltempfile = NamedTemporaryFile()
+    urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
+    urltempfile.write(urlstring)
+    fileobj = File(file=urltempfile, name=ref_file_name)
+
+    filelist = add_resource_files(res_id, fileobj, folder=curr_path)
+
+    if filelist:
+        return filelist[0]
+    else:
+        return None
+
+
+def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
+    """
+    Add a reference URL to a composite resource if URL is valid, otherwise, return error message
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param ref_url: reference url to be added to the resource
+    :param ref_name: file name of the referenced url in internet shortcut format
+    :param curr_path: the folder path in the resource to add the referenced url to
+    :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
+    return error status code, error message, and None (for file_id).
+    """
+    ref_name = ref_name.lower()
+    if not ref_name.endswith('.url'):
+        ref_name += '.url'
+
+    is_valid, err_msg = validate_url(ref_url)
+    if not is_valid:
+        return status.HTTP_400_BAD_REQUEST, err_msg, None
+
+    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
+
+    if not f:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
+                                                      'resource', None
+
+    # make sure the new file has logical file set and is single file aggregation
+    try:
+        # set 'SingleFile' logical file type to this .url file
+        res = hydroshare.utils.get_resource_by_shortkey(res_id)
+        set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
+        hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
+    except Exception as ex:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message, None
+
+    return status.HTTP_200_OK, 'success', f.id
+
+
+def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename):
+    """
+    edit the referenced url in an url file
+    :param user: requesting user
+    :param res: resource object that includes the url file
+    :param new_ref_url: new url to replace the old url
+    :param curr_path: the folder path of the url file in the resource
+    :param url_filename: the url file name in the resource
+    :return: 200 status code and 'success' message if it succeeds, otherwise, return error status
+    code and error message
+    """
+    ref_name = url_filename.lower()
+    if not ref_name.endswith('.url'):
+        return status.HTTP_400_BAD_REQUEST, 'url_filename in the request must have .url extension'
+    is_valid, err_msg = validate_url(new_ref_url)
+    if not is_valid:
+        return status.HTTP_400_BAD_REQUEST, err_msg
+
+    istorage = res.get_irods_storage()
+    # temp path to hold updated url file to be written to iRODS
+    temp_path = istorage.getUniqueTmpPath
+
+    prefix_path = 'data/contents'
+    if curr_path != prefix_path and curr_path.startswith(prefix_path):
+        curr_path = curr_path[len(prefix_path) + 1:]
+    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+        folder = None
+    else:
+        folder = curr_path[len(prefix_path) + 1:]
+
+    # update url in extra_data in url file's logical file object
+    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    extra_data = f.logical_file.extra_data
+    extra_data['url'] = new_ref_url
+    f.logical_file.extra_data = extra_data
+    f.logical_file.save()
+
+    try:
+        os.makedirs(temp_path)
+    except OSError as ex:
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
+        else:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message
+
+    # update url file in iRODS
+    urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
+    from_file_name = os.path.join(temp_path, ref_name)
+    with open(from_file_name, 'w') as out:
+        out.write(urlstring)
+    target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
+    try:
+        istorage.saveFile(from_file_name, target_irods_file_path)
+        shutil.rmtree(temp_path)
+        hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
+    except SessionException as ex:
+        shutil.rmtree(temp_path)
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.stderr
+
+    return status.HTTP_200_OK, 'success'
 
 
 def run_ssh_command(host, uname, pwd, exec_cmd):

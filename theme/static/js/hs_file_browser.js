@@ -40,7 +40,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
 
     var iconTemplate;
@@ -63,7 +63,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
+    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
@@ -82,7 +82,8 @@ function formatBytes(bytes) {
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
     var resourceType = $("#resource-type").val();
-
+    var mode = $("#hs-file-browser").attr("data-mode");
+    var selectedFileName = selected.children(".fb-file-name").text().toUpperCase();
     var flagDisableOpen = false;
     var flagDisableDownload = false;
     var flagDisableRename = false;
@@ -100,7 +101,7 @@ function updateSelectionMenuContext() {
     var flagDisableSetTimeseriesFileType = false;
     var flagDisableRemoveAggregation = false;
     var flagDisableGetLink = false;
-    var flagDisableCreateFolder = false;
+    var flagDisableCreateFolderOrFile = false;
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
@@ -174,10 +175,10 @@ function updateSelectionMenuContext() {
                 if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                     logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile"){
                     if($(this).parent().hasClass("fb-file")){
-                        flagDisableCreateFolder = true;
+                        flagDisableCreateFolderOrFile = true;
                     }
                 }
-            });
+            })
         }
 
         $("#fb-download-help").toggleClass("hidden", true);
@@ -192,9 +193,16 @@ function updateSelectionMenuContext() {
         }
         else {
             var logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
-            // if the selected file is part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation) we
-            // want the remove aggregation option not to show up
-            if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
+            if (selectedFileName.endsWith('.URL')) {
+                // disable remove aggregation option if it is URL file
+                flagDisableRemoveAggregation = true;
+                $('#btn-get-referenced-url').show();
+                if (mode == "edit")
+                    $('#btn-edit-referenced-url').show();
+            }
+            else if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
+                // if the selected file is not part of the RefTimeseriesLogical or
+                // GenericLogicalFile file (aggregation) we want the remove aggregation option not to show up
                 flagDisableRemoveAggregation = true;
             }
         }
@@ -227,7 +235,6 @@ function updateSelectionMenuContext() {
                 if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
                     flagDisableSetTimeseriesFileType = true;
                 }
-                
             }
             else {
                 flagDisableSetNetCDFFileType = true;
@@ -283,7 +290,7 @@ function updateSelectionMenuContext() {
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                 flagDisableCut = true;
                 flagDisablePaste = true;
-                flagDisableCreateFolder = true;
+                flagDisableCreateFolderOrFile = true;
             }
         }
     }
@@ -293,7 +300,7 @@ function updateSelectionMenuContext() {
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            flagDisableCreateFolder = true;
+            flagDisableCreateFolderOrFile = true;
             flagDisableRename = true;
             if(isFolderSelected){
                 flagDisableDelete = false;
@@ -306,7 +313,10 @@ function updateSelectionMenuContext() {
             flagDisableSetGenericFileType = true;
         }
     // set Create folder toolbar option
-    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolderOrFile);
+
+    // set Add reference content toolbar option
+    $("#fb-add-reference").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
@@ -379,7 +389,10 @@ function updateSelectionMenuContext() {
     $("#fb-paste").toggleClass("disabled", flagDisablePaste);
 
     // set create folder right click menu option
-    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolder);
+    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolderOrFile);
+
+    // set add reference content right click menu option
+    menu2.children("li[data-menu-name='add-reference']").toggleClass("disabled", flagDisableCreateFolderOrFile);
 
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
@@ -930,7 +943,16 @@ function onSort() {
 
 
 function onOpenFile() {
-    startDownload();
+    // Check to see if it is .url web referenced file, if yes, do redirect rather than download
+    var file = $("#fb-files-container li.ui-selected");
+    var fileName = file.children(".fb-file-name").text();
+    if (fileName.toUpperCase().endsWith('.URL')) {
+        // do redirect
+        $('#redirect-referenced-url-dialog').modal('show');
+    }
+    else {
+        startDownload();
+    }
 }
 
 function startDownload(zipped) {
@@ -943,9 +965,16 @@ function startDownload(zipped) {
         // Workaround for Firefox and IE
         for (var i = 0; i < downloadList.length; i++) {
             var url = $(downloadList[i]).attr("data-url");
-            if(zipped === true){
+            var fileName = $(downloadList[i]).children(".fb-file-name").text();
+            if (fileName.toUpperCase().endsWith(".URL")) {
+                url += '?url_download=true';
+                if(zipped === true)
+                    url += "&zipped=true"
+            }
+            else if(zipped === true) {
                 url += "?zipped=True"
             }
+
             var frameID = "download-frame-" + i;
             $("body").append("<iframe class='temp-download-frame' id='"
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");
@@ -959,7 +988,7 @@ function onOpenFolder() {
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
     sessionStorage.currentBrowsepath = targetPath;
-    var flagDisableCreateFolder = false;
+    var flagDisableCreateFolderOrFile = false;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
@@ -974,15 +1003,17 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        if (logicalFileType.length > 0){
-            flagDisableCreateFolder = true;
+        if (typeof logicalFileType != "undefined" && logicalFileType.length > 0) {
+            flagDisableCreateFolderOrFile = true;
         }
         else {
-            flagDisableCreateFolder = false;
+            flagDisableCreateFolderOrFile = false;
         }
 
         // Set Create folder toolbar option
-        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolderOrFile);
+        // set Add reference content toolbar option
+        $("#fb-add-reference").toggleClass("disabled", flagDisableCreateFolderOrFile);
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1045,6 +1076,9 @@ $(document).ready(function () {
         }
     }
 
+    $('#file_redirect_url').click(function() {
+        $('#redirect-referenced-url-dialog').modal('hide');
+    });
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
@@ -1063,7 +1097,7 @@ $(document).ready(function () {
             path += "/" + currentPaths[i];
             pathLog.push(path);
         }
-        
+
         pathLogIndex = pathLog.length - 1;
         updateNavigationState();
 
@@ -1273,6 +1307,20 @@ $(document).ready(function () {
         $('#txtFolderName').focus();
     });
 
+    $('#add-reference-url-dialog').on('shown.bs.modal', function () {
+        $('#txtRefName').val("");
+        $('#txtRefName').closest(".modal-content").find(".btn-primary").toggleClass("disabled", true);
+        $('#txtRefName').focus();
+    });
+
+    $('#redirect-referenced-url-dialog').on('shown.bs.modal', function () {
+        var file = $("#fb-files-container li.ui-selected");
+        var fileName = file.children(".fb-file-name").text();
+        // do redirect
+        var ref_url = file.attr("data-ref-url");
+        $('#file_redirect_url').prop('href', ref_url);
+    });
+
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
         $('#txtFolderName').focus();
 
@@ -1293,6 +1341,34 @@ $(document).ready(function () {
             range.moveStart("character", startPos);
             range.select();
         }
+    });
+
+    $('#edit-referenced-url-dialog').on('shown.bs.modal', function () {
+        var file = $("#fb-files-container li.ui-selected");
+        var fileName = file.children(".fb-file-name").text();
+        var ref_url = file.attr("data-ref-url");
+        $('#txtNewRefURL').val(ref_url);
+        $('#txtNewRefURL').focus();
+
+        // Select the reference url by default
+        var input = document.getElementById("txtNewRefURL");
+        var startPos = 0;
+        var endPos = $("#txtNewRefURL").val().length;
+
+        if (typeof input.selectionStart != "undefined") {
+            input.selectionStart = startPos;
+            input.selectionEnd = endPos;
+        } else if (document.selection && document.selection.createRange) {
+            // IE branch
+            input.select();
+            var range = document.selection.createRange();
+            range.collapse(true);
+            range.moveEnd("character", endPos);
+            range.moveStart("character", startPos);
+            range.select();
+        }
+
+        $('#txtNewRefURL').closest(".modal-content").find(".btn-primary").toggleClass("disabled", false);
     });
 
     $('#rename-dialog').on('shown.bs.modal', function () {
@@ -1382,6 +1458,49 @@ $(document).ready(function () {
             });
         }
         return false;
+    });
+
+    // Add web url reference content at current directory
+    $("#btn-add-reference-url").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var refName = $("#txtRefName").val();
+        var refURL = $("#txtRefURL").val();
+        if (refName && refURL) {
+            var calls = [];
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
+
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+            });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
+        }
+        return false;
+    });
+
+    // Update reference URL method
+    $("#btn-edit-url").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var file = $("#fb-files-container li.ui-selected");
+        var oldurl = file.attr("data-ref-url");
+        var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        var newurl = $("#txtNewRefURL").val().trim();
+        if (oldurl != newurl) {
+            var calls = [];
+            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl));
+
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+            });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
+        }
     });
 
     // Move up one directory

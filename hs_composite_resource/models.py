@@ -52,6 +52,21 @@ class CompositeResource(BaseResource):
 
         return lf_list
 
+    @property
+    def can_be_published(self):
+        # resource level metadata check
+        if not super(CompositeResource, self).can_be_published:
+            return False
+
+        # filetype level metadata check
+        for lf in self.logical_files:
+            if not lf.metadata.has_all_required_elements():
+                return False
+            # url file cannot be published
+            if 'url' in lf.extra_data:
+                return False
+        return True
+
     def set_default_logical_file(self):
         """sets an instance of GenericLogicalFile to any resource file objects of this instance
         of the resource that is not already associated with a logical file. """
