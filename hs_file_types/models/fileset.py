@@ -177,4 +177,3 @@ class FileSetLogicalFile(AbstractLogicalFile):
                 child_aggregations.append(aggr)
 
         return child_aggregations
-

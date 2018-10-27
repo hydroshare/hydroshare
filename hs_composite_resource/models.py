@@ -1,7 +1,4 @@
 import os
-import json
-from operator import lt, gt
-from dateutil import parser
 
 from django.core.exceptions import ObjectDoesNotExist
 
