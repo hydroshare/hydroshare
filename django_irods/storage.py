@@ -109,11 +109,13 @@ class IrodsStorage(Storage):
         """
         run iRODS ibun command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
+        :param unzipped_folder: Optional defaults to the basename of zip_file_path when not
+        provided.  The folder to unzip to.
         :return: the folder files were unzipped to
         """
 
         abs_path = os.path.dirname(zip_file_path)
-        if(unzipped_folder is None):
+        if not unzipped_folder:
             unzipped_folder = os.path.splitext(os.path.basename(zip_file_path))[0].strip()
 
         unzipped_folder = self._get_nonexistant_path(os.path.join(abs_path, unzipped_folder))

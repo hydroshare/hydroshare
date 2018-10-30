@@ -43,6 +43,7 @@ from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare import add_resource_files
 from django_irods.icommands import SessionException
+from uuid import uuid4
 
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
@@ -877,7 +878,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             # overwritten in an aggregation, the whole aggregation is deleted.
 
             # unzip to a temporary folder
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder="temp-change-this")
+            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
             # list all files to be moved into the resource
             unzipped_files = listfiles_recursively(istorage, unzip_path)
             unzipped_foldername = os.path.basename(unzip_path)

@@ -1457,7 +1457,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # add a zip file that contains only one file
         self.add_file_to_resource(file_to_add=self.zip_file)
-        # resource should have 2 files now
+
         self.assertEqual(self.composite_resource.files.count(), 1)
         # unzip the above zip file  which should add one more file to the resource
         zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
@@ -1526,10 +1526,5 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should still be a referenced time series
         self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
 
-        self.assertEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
-                         "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), "
-                         "phycocyanin data collected from 2016-04-06 to 2017-02-09 created on "
-                         "Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the "
-                         "following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and "
-                         "Provo River at Charleston Advanced Aquatic. Data created by CUAHSI "
-                         "HydroClient: http://data.cuahsi.org/#.")
+        self.assertNotEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
+                         "overwritten")
