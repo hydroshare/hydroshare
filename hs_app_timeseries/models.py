@@ -114,7 +114,7 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
     site_code = models.CharField(max_length=200)
-    site_name = models.CharField(max_length=255)
+    site_name = models.CharField(max_length=255, null=True, blank=True)
     elevation_m = models.FloatField(null=True, blank=True)
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
@@ -137,9 +137,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
                     with tr():
                         get_th('Code')
                         td(self.site_code)
-                    with tr():
-                        get_th('Name')
-                        td(self.site_name, style="word-break: normal;")
+                    if self.site_name:
+                        with tr():
+                            get_th('Name')
+                            td(self.site_name, style="word-break: normal;")
                     if self.elevation_m:
                         with tr():
                             get_th('Elevation M')
@@ -229,7 +230,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+        element_fields = [('site_code', 'SiteCode')]
+
+        if self.site_name:
+            element_fields.append(('site_name', 'SiteName'))
 
         if self.elevation_m:
             element_fields.append(('elevation_m', 'Elevation_m'))
@@ -251,7 +255,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
 
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
-    variable_code = models.CharField(max_length=20)
+    variable_code = models.CharField(max_length=50)
     variable_name = models.CharField(max_length=100)
     variable_type = models.CharField(max_length=100)
     no_data_value = models.IntegerField()
@@ -503,7 +507,7 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
-    processing_level_code = models.IntegerField()
+    processing_level_code = models.CharField(max_length=50)
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
 
@@ -611,7 +615,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     units_type = models.CharField(max_length=255)
     units_name = models.CharField(max_length=255)
     units_abbreviation = models.CharField(max_length=20)
-    status = models.CharField(max_length=255)
+    status = models.CharField(max_length=255, blank=True, null=True)
     sample_medium = models.CharField(max_length=255)
     value_count = models.IntegerField()
     aggregation_statistics = models.CharField(max_length=255)
@@ -683,9 +687,10 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
                     with tr():
                         get_th('Units Abbreviation')
                         td(self.units_abbreviation)
-                    with tr():
-                        get_th('Status')
-                        td(self.status)
+                    if self.status:
+                        with tr():
+                            get_th('Status')
+                            td(self.status)
                     with tr():
                         get_th('Sample Medium')
                         td(self.sample_medium)
@@ -731,9 +736,10 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
             hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % NAMESPACES['hsterms'])
         hsterms_units_abbv.text = self.units_abbreviation
 
-        hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                          '{%s}Status' % NAMESPACES['hsterms'])
-        hsterms_status.text = self.status
+        if self.status:
+            hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
+                                              '{%s}Status' % NAMESPACES['hsterms'])
+            hsterms_status.text = self.status
 
         hsterms_sample_medium = etree.SubElement(
             hsterms_time_series_result_rdf_Description, '{%s}SampleMedium' %
@@ -835,8 +841,11 @@ class CVAggregationStatistic(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_aggregation_statistics")
 
 
+# TODO Deprecated
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
+
+    discovery_content_type = 'Time Series'  # used during discovery
 
     class Meta:
         verbose_name = 'Time Series'
@@ -2031,16 +2040,8 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
 
 def _update_resource_coverage_element(site_element):
-    if not isinstance(site_element.metadata, TimeSeriesMetaData):
-        # metadata must be an instance of TimeSeriesFileMetaData
-        # which means the above update was for file level coverage update
-        # and we have to do another update at the resource level
-        logical_file = site_element.metadata.logical_file
-        if logical_file.resource is None:
-            # this condition is true if site element is getting created for copied
-            # or new version of a composite resource in which case there is no need to
-            # update resource level coverage
-            return
+    """A helper to create/update the coverage element for TimeSeriesResource or
+    TimeSeriesLogicalFile based on changes to the Site element"""
 
     point_value = {'east': site_element.longitude, 'north': site_element.latitude,
                    'units': "Decimal degrees"}
@@ -2069,7 +2070,8 @@ def _update_resource_coverage_element(site_element):
         bbox_value = compute_bounding_box(site_element.metadata.sites.all())
 
     spatial_cov = site_element.metadata.coverages.all().exclude(type='period').first()
-    if spatial_cov:
+    # coverage update/create for Time Series Resource
+    if spatial_cov and isinstance(site_element.metadata, TimeSeriesMetaData):
         spatial_cov.type = cov_type
         if cov_type == 'point':
             point_value['projection'] = spatial_cov.value['projection']
@@ -2078,30 +2080,23 @@ def _update_resource_coverage_element(site_element):
             bbox_value['projection'] = spatial_cov.value['projection']
             spatial_cov._value = json.dumps(bbox_value)
         spatial_cov.save()
-    else:
+    elif isinstance(site_element.metadata, TimeSeriesMetaData):
         if cov_type == 'point':
             value_dict = point_value
         else:
             value_dict = bbox_value
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
-    if not isinstance(site_element.metadata, TimeSeriesMetaData):
-        # metadata must be an instance of TimeSeriesFileMetaData
-        # which means the above update was for file level coverage update
-        # and we have to do another update at the resource level
-        logical_file = site_element.metadata.logical_file
-        resource = logical_file.resource
-        sites = []
-        for logical_file in resource.logical_files:
-            if logical_file.type_name() == "TimeSeriesLogicalFile":
-                if logical_file.metadata.sites:
-                    sites.extend(logical_file.metadata.sites.all())
-        if len(sites) > 1:
+    else:
+        # Need to do the coverage update for timeseries aggregation
+        logical_metadata = site_element.metadata
+        if logical_metadata.sites.count() > 1:
             cov_type = 'box'
-            bbox_value = compute_bounding_box(sites)
+            bbox_value = compute_bounding_box(logical_metadata.sites.all())
 
-        spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+        spatial_cov = logical_metadata.coverages.all().exclude(type='period').first()
         if spatial_cov:
+            # need to update aggregation level coverage
             spatial_cov.type = cov_type
             if cov_type == 'point':
                 point_value['projection'] = spatial_cov.value['projection']
@@ -2111,11 +2106,12 @@ def _update_resource_coverage_element(site_element):
                 spatial_cov._value = json.dumps(bbox_value)
             spatial_cov.save()
         else:
+            # need to create aggregation level coverage
             if cov_type == 'point':
                 value_dict = point_value
             else:
                 value_dict = bbox_value
-            resource.metadata.create_element("coverage", type=cov_type, value=value_dict)
+            logical_metadata.create_element("coverage", type=cov_type, value=value_dict)
 
 
 def _create_site_related_cv_terms(element, data_dict):

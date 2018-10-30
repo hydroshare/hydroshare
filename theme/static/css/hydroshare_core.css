@@ -1492,7 +1492,7 @@ body > .main-container {
 	outline: none;
 }
 
-.btn-create-resource {
+.btn-create-resource .btn-cancel-create-resource {
     height: 40px;
     line-height: 26px;
     width: 180px;
@@ -1532,6 +1532,10 @@ body > .main-container {
 }
 
 .btn-download{
+    color:#428bca;
+}
+
+.btn-download-zip{
     color:#428bca;
 }
 
@@ -1852,6 +1856,12 @@ a.tag:hover {
   }
 }}
 
+@media(min-width: 767px) and (max-width: 991px){
+  /* Add extra padding to push down the text */
+  .page-tip {
+    padding: 50px 0px 15px;
+  }
+}
 
 
 .resource-search {
@@ -4256,6 +4266,11 @@ div.fb-upload-caption a {
 	display: block;
 }
 
+.fb-view-grid .fb-aggregation-icon > img {
+	width: 30px;
+	height: 30px;
+}
+
 .fb-view-grid .fb-file-name {
 	display: block;
 	text-overflow: ellipsis;
@@ -4266,6 +4281,17 @@ div.fb-upload-caption a {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon {
+	margin-right: 10px;
+	margin-left: 10px;
+	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon > img {
+	width: 20px;
+	height: 20px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
@@ -4652,4 +4678,16 @@ div#resource-content {
 
 .btn-choose-coordinates {
 	vertical-align: top;
+}
+
+/* popover styling */
+.popover-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
 }

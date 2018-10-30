@@ -21,10 +21,40 @@
                 </div>
                 <div>
                     {% if url_base %}
-                        <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <h4><strong>App-launching Resource Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
                         <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ url_base.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if url_base_aggregation %}
+                        <h4><strong>App-launching Aggregation Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ url_base_aggregation.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if url_base_file %}
+                        <h4><strong>App-launching File Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ url_base_file.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if supported_file_extensions %}
+                        <h4><strong>Supported File Extensions:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_file_extensions.value }}</div>
                         </div>
                         <hr style="border:0">
                     {%  endif %}
@@ -35,6 +65,16 @@
                         <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if supported_agg_types %}
+                        <h4><strong>Supported Aggregation Types:</strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_agg_types }}</div>
                         </div>
                         <hr style="border:0">
                     {% endif %}

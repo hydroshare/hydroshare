@@ -3,10 +3,16 @@ from __future__ import absolute_import
 import json
 import os
 import string
+
+import errno
+import shutil
+
 from collections import namedtuple
 import paramiko
 import logging
 from dateutil import parser
+from urllib2 import urlopen, HTTPError, URLError
+from tempfile import NamedTemporaryFile
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -16,8 +22,10 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse, QueryDict
+from django.core.validators import URLValidator
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework import status
 
 from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
 from mezzanine.utils.urls import next_url
@@ -25,12 +33,17 @@ from mezzanine.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.hydroshare.utils import check_aggregations
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare.utils import get_file_mime_type
+from hs_file_types.utils import set_logical_file_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare import add_resource_files
+from django_irods.icommands import SessionException
+
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -92,6 +105,153 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     irods_storage.delete_user_session()
 
 
+def validate_url(url):
+    """
+    Validate URL
+    :param url: input url to be validated
+    :return: [True, ''] if url is valid,[False, 'error message'] if url is not valid
+    """
+    # validate url's syntax is valid
+    error_message = "The URL that you entered is not valid. Please enter a valid http, https, " \
+                    "ftp, or ftps URL."
+    try:
+        validator = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
+        validator(url)
+    except ValidationError:
+        return False, error_message
+
+    # validate url is valid, i.e., can be opened
+    try:
+        urlopen(url)
+    except (HTTPError, URLError):
+        return False, error_message
+
+    return True, ''
+
+
+def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
+    """
+    Create URL file and add it to resource
+    :param res_id: resource id to add url file to
+    :param ref_url: referenced url to create the url file
+    :param ref_file_name: referenced url file name to be created
+    :param curr_path: the folder path in the resource to add url file to
+    :return: file object being added into resource if successful, otherwise, return None
+    """
+    # create URL file
+    urltempfile = NamedTemporaryFile()
+    urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
+    urltempfile.write(urlstring)
+    fileobj = File(file=urltempfile, name=ref_file_name)
+
+    filelist = add_resource_files(res_id, fileobj, folder=curr_path)
+
+    if filelist:
+        return filelist[0]
+    else:
+        return None
+
+
+def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
+    """
+    Add a reference URL to a composite resource if URL is valid, otherwise, return error message
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param ref_url: reference url to be added to the resource
+    :param ref_name: file name of the referenced url in internet shortcut format
+    :param curr_path: the folder path in the resource to add the referenced url to
+    :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
+    return error status code, error message, and None (for file_id).
+    """
+    ref_name = ref_name.lower()
+    if not ref_name.endswith('.url'):
+        ref_name += '.url'
+
+    is_valid, err_msg = validate_url(ref_url)
+    if not is_valid:
+        return status.HTTP_400_BAD_REQUEST, err_msg, None
+
+    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
+
+    if not f:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
+                                                      'resource', None
+
+    # make sure the new file has logical file set and is single file aggregation
+    try:
+        # set 'SingleFile' logical file type to this .url file
+        res = hydroshare.utils.get_resource_by_shortkey(res_id)
+        set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
+        hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
+    except Exception as ex:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message, None
+
+    return status.HTTP_200_OK, 'success', f.id
+
+
+def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename):
+    """
+    edit the referenced url in an url file
+    :param user: requesting user
+    :param res: resource object that includes the url file
+    :param new_ref_url: new url to replace the old url
+    :param curr_path: the folder path of the url file in the resource
+    :param url_filename: the url file name in the resource
+    :return: 200 status code and 'success' message if it succeeds, otherwise, return error status
+    code and error message
+    """
+    ref_name = url_filename.lower()
+    if not ref_name.endswith('.url'):
+        return status.HTTP_400_BAD_REQUEST, 'url_filename in the request must have .url extension'
+    is_valid, err_msg = validate_url(new_ref_url)
+    if not is_valid:
+        return status.HTTP_400_BAD_REQUEST, err_msg
+
+    istorage = res.get_irods_storage()
+    # temp path to hold updated url file to be written to iRODS
+    temp_path = istorage.getUniqueTmpPath
+
+    prefix_path = 'data/contents'
+    if curr_path != prefix_path and curr_path.startswith(prefix_path):
+        curr_path = curr_path[len(prefix_path) + 1:]
+    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+        folder = None
+    else:
+        folder = curr_path[len(prefix_path) + 1:]
+
+    # update url in extra_data in url file's logical file object
+    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    extra_data = f.logical_file.extra_data
+    extra_data['url'] = new_ref_url
+    f.logical_file.extra_data = extra_data
+    f.logical_file.save()
+
+    try:
+        os.makedirs(temp_path)
+    except OSError as ex:
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
+        else:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message
+
+    # update url file in iRODS
+    urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
+    from_file_name = os.path.join(temp_path, ref_name)
+    with open(from_file_name, 'w') as out:
+        out.write(urlstring)
+    target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
+    try:
+        istorage.saveFile(from_file_name, target_irods_file_path)
+        shutil.rmtree(temp_path)
+        hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
+    except SessionException as ex:
+        shutil.rmtree(temp_path)
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.stderr
+
+    return status.HTTP_200_OK, 'success'
+
+
 def run_ssh_command(host, uname, pwd, exec_cmd):
     """
     run ssh client to ssh to a remote host and run a command on the remote host
@@ -117,7 +277,7 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     stdout = session.makefile('rb', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
-    logger = logging.getLogger('django')
+    logger = logging.getLogger(__name__)
     output = stdout.readlines()
     if output:
         logger.debug(output)
@@ -493,20 +653,19 @@ def link_irods_file_to_django(resource, filepath):
     if resource:
         folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath,
                                                                 test_exists=False)
+        ret = None
         try:
-            ResourceFile.get(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.get(resource=resource, file=base, folder=folder)
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
-            ResourceFile.create(resource=resource, file=base, folder=folder)
+            ret = ResourceFile.create(resource=resource, file=base, folder=folder)
             b_add_file = True
 
         if b_add_file:
             file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
-            # this should assign a logical file object to this new file
-            # if this resource supports logical file
-            resource.set_default_logical_file()
+        return ret
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
@@ -528,16 +687,19 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
 
     if foldername:
         store = istorage.listdir(foldername)
+        res_files = []
         # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path)
+                res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
+
+        check_aggregations(resource, store[0], res_files)
 
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
@@ -629,7 +791,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
-        raise ValidationError("Folder zipping is not supported.")
+        raise ValidationError("Folder zipping is not supported. "
+                              "Folder seems to contain aggregation(s).")
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
@@ -682,10 +845,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
-    link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
+    unzip_path = istorage.unzip(zip_with_full_path)
+    link_irods_folder_to_django(resource, istorage, unzip_path)
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
@@ -712,7 +874,8 @@ def create_folder(res_id, folder_path):
     coll_path = os.path.join(resource.root_path, folder_path)
 
     if not resource.supports_folder_creation(coll_path):
-        raise ValidationError("Folder creation is not allowed here.")
+        raise ValidationError("Folder creation is not allowed here. "
+                              "The target folder seems to contain aggregation(s)")
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -788,17 +951,6 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
-
-    # ensure the target_full_path contains the file name to be moved or renamed to
-    # if we are moving to a directory, put the filename into the request.
-    # This created some confusion in the UI, so we use it only in the public REST API
-    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
-        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
-
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -806,6 +958,11 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -840,10 +997,15 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if validate_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
+            raise ValidationError("File rename is not allowed. "
+                                  "File seems to be part of an aggregation")
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -880,7 +1042,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         for src_path in src_paths:
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
-                raise ValidationError("File/folder move/rename is not allowed.")
+                raise ValidationError("File/folder move is not allowed. "
+                                      "Target folder seems to contain aggregation(s).")
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
@@ -891,6 +1054,10 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
 
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
+        if resource.resource_type == "CompositeResource":
+            org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
+            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
 
     # TODO: should check can_be_public_or_discoverable here
 

@@ -54,7 +54,7 @@ class TestResourceTypeFileTypes(TestCase):
 
         # test for RasterResource
         resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['allow_multiple_file'], False)
+        self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for GeographicFeatureResource
         resp_json = self._make_request("GeographicFeatureResource")

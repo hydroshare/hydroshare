@@ -8,6 +8,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
+from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
@@ -38,6 +39,8 @@ logger = logging.getLogger(__name__)
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
         site_url = hydroshare.utils.current_site_url()
         bag_url = site_url + r.bag_url
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
@@ -71,6 +74,8 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
@@ -278,15 +283,14 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         """
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        site_url = hydroshare.utils.current_site_url()
         if res.resource_type.lower() == "reftimeseriesresource":
 
             # if res is RefTimeSeriesResource
-            bag_url = site_url + reverse('rest_download_refts_resource_bag',
-                                         kwargs={'shortkey': pk})
+            bag_url = reverse('rest_download_refts_resource_bag',
+                              kwargs={'shortkey': pk})
         else:
-            bag_url = site_url + reverse('rest_download',
-                                         kwargs={'path': 'bags/{}.zip'.format(pk)})
+            bag_url = reverse('rest_download',
+                              kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
@@ -496,17 +500,17 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
         try:
             resource = hydroshare.create_resource(
-                    resource_type=resource_type,
-                    owner=request.user,
-                    title=res_title,
-                    edit_users=validated_request_data.get('edit_users', None),
-                    view_users=validated_request_data.get('view_users', None),
-                    edit_groups=validated_request_data.get('edit_groups', None),
-                    view_groups=validated_request_data.get('view_groups', None),
-                    keywords=keywords,
-                    metadata=metadata,
-                    extra_metadata=extra_metadata,
-                    files=files
+                resource_type=resource_type,
+                owner=request.user,
+                title=res_title,
+                edit_users=validated_request_data.get('edit_users', None),
+                view_users=validated_request_data.get('view_users', None),
+                edit_groups=validated_request_data.get('edit_groups', None),
+                view_groups=validated_request_data.get('view_groups', None),
+                keywords=keywords,
+                metadata=metadata,
+                extra_metadata=extra_metadata,
+                files=files
             )
             if abstract:
                 resource.metadata.create_element('description', abstract=abstract)
@@ -639,7 +643,7 @@ class AccessRulesUpdate(APIView):
         res = get_resource_by_shortkey(pk)
         try:
             res.set_public(validated_request_data['public'], request.user)
-        except ValidationError:
+        except CoreValidationError:
             return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
@@ -684,7 +688,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-        scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
+        scimeta_url = AbstractResource.scimeta_url(pk)
         return redirect(scimeta_url)
 
     def put(self, request, pk):
@@ -784,7 +788,7 @@ class ResourceMapRetrieve(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-        resmap_url = hydroshare.utils.current_site_url() + AbstractResource.resmap_url(pk)
+        resmap_url = AbstractResource.resmap_url(pk)
         return redirect(resmap_url)
 
 
@@ -867,8 +871,8 @@ class ResourceFileCRUD(APIView):
 
     def get(self, request, pk, pathname):
         resource, _, _ = view_utils.authorize(
-                request, pk,
-                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+            request, pk,
+            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         if not resource.supports_folders and '/' in pathname:
             return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
@@ -1045,7 +1049,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileListCreate, self).initialize_request(
-                                request, *args, **kwargs)
+                request, *args, **kwargs)
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request

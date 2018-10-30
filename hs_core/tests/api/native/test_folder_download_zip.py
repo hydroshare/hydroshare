@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
@@ -13,7 +14,6 @@ class TestFolderDownloadZip(TestCase):
 
     def setUp(self):
         super(TestFolderDownloadZip, self).setUp()
-        self.output_path = "zips/rand/foo.zip"
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = create_account(
             'shauntheta@gmail.com',
@@ -24,39 +24,58 @@ class TestFolderDownloadZip(TestCase):
             groups=[]
         )
 
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[])
+
+        ResourceFile.create_folder(self.res, 'foo')
+
         # create files
         self.n1 = "test1.txt"
-
         test_file = open(self.n1, 'w')
         test_file.write("Test text file in test1.txt")
         test_file.close()
 
-        test_file = open(self.n1, "r")
+        self.test_file = open(self.n1, "r")
+        add_resource_files(self.res.short_id, self.test_file, folder='foo')
 
-        self.res = create_resource(resource_type='GenericResource',
-                                   owner=self.user,
-                                   title='Test Resource',
-                                   metadata=[], )
+        # copy refts file into new file to be added to the resource as an aggregation
+        reft_data_file = open('hs_core/tests/data/multi_sites_formatted_version1.0.refts.json', 'r')
+        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'w')
+        refts_file.writelines(reft_data_file.readlines())
+        refts_file.close()
+        self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'r')
 
-        ResourceFile.create_folder(self.res, 'foo')
-
-        # add one file to the resource
-        add_resource_files(self.res.short_id, test_file, folder='foo')
+        add_resource_files(self.res.short_id, self.refts_file)
+        self.res.create_aggregation_xml_documents()
 
     def tearDown(self):
         super(TestFolderDownloadZip, self).tearDown()
         if self.res:
             self.res.delete()
+        if self.test_file:
+            os.remove(self.test_file.name)
+        if self.refts_file:
+            os.remove(self.refts_file.name)
         GenericResource.objects.all().delete()
         istorage = IrodsStorage()
-        if istorage.exists(self.output_path):
-            istorage.delete(self.output_path)
+        if istorage.exists("zips"):
+            istorage.delete("zips")
 
     def test_create_temp_zip(self):
-        input_path = "/data/contents/foo"
-        try:
-            self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                            self.output_path))
-            self.assertTrue(IrodsStorage().exists(self.output_path))
-        except Exception as ex:
-            self.fail("create_temp_zip() raised exception.{}".format(ex.message))
+        input_path = "{}/data/contents/foo".format(self.res.short_id)
+        output_path = "zips/rand/foo.zip"
+
+        self.assertTrue(create_temp_zip(self.res.short_id, input_path,
+                                        output_path, False))
+        self.assertTrue(IrodsStorage().exists(output_path))
+
+        # test aggregation
+        input_path = "{}/data/contents/multi_sites_formatted_version1.0.refts.json"\
+                     .format(self.res.short_id)
+        output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
+
+        self.assertTrue(create_temp_zip(self.res.short_id, input_path,
+                                        output_path, True, sf_zip=True))
+        self.assertTrue(IrodsStorage().exists(output_path))

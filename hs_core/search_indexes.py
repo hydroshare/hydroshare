@@ -95,6 +95,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
+    storage_type = indexes.CharField()
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
@@ -107,6 +108,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     source = indexes.MultiValueField()
     relation = indexes.MultiValueField()
     resource_type = indexes.CharField(faceted=True)
+    content_type = indexes.MultiValueField(faceted=True)
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owner_login = indexes.MultiValueField(faceted=True)
@@ -429,7 +431,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
                     except ValueError:
-                        logger = logging.getLogger('django')
+                        logger = logging.getLogger(__name__)
                         logger.error("invalid start date {} in resource {}".format(obj.short_id,
                                                                                    start_date))
                         return None
@@ -456,13 +458,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
                     except ValueError:
-                        logger = logging.getLogger('django')
+                        logger = logging.getLogger(__name__)
                         logger.error("invalid end date {} in resource {}".format(end_date,
                                                                                  obj.short_id))
                         return None
                     return end_date_object
         else:
             return None
+
+    def prepare_storage_type(self, obj):
+        return obj.storage_type
 
     # # TODO: SOLR extension needs to be installed for these to work
     # def prepare_coverage_point(self, obj):
@@ -530,6 +535,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_resource_type(self, obj):
         """Resource type is verbose_name attribute of obj argument."""
         return obj.verbose_name
+
+    def prepare_content_type(self, obj):
+        if obj.verbose_name != 'Composite Resource':
+            return [obj.discovery_content_type]
+        else:
+            output = []
+            for f in obj.logical_files:
+                output.append(f.get_discovery_content_type())
+            return output
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""

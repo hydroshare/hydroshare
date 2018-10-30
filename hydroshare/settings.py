@@ -4,7 +4,8 @@ TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
-import importlib
+import sys
+# import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
 
@@ -166,7 +167,7 @@ AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -464,7 +465,6 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-
 ####################
 # DYNAMIC SETTINGS #
 ####################
@@ -509,13 +509,14 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
 
 
-# customized value for password reset token, email verification and group invitation link token to expire in 7 days
+# customized value for password reset token, email verification and group invitation link token
+# to expire in 7 days
 PASSWORD_RESET_TIMEOUT_DAYS = 7
 
-#
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
+RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
+# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# extraction
 TEMP_FILE_DIR = '/hs_tmp'
 
 ####################
@@ -523,8 +524,7 @@ TEMP_FILE_DIR = '/hs_tmp'
 ####################
 
 OAUTH2_PROVIDER = {
-   # 30 days
-   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
 }
 
 ####################
@@ -536,12 +536,12 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
             'format': '[%(asctime)s] %(levelname)s %(message)s',
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
     },
     'handlers': {
@@ -550,7 +550,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/system.log',
             'formatter': 'simple',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'djangolog': {
@@ -558,7 +558,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'hydrosharelog': {
@@ -566,7 +566,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
     },
@@ -604,8 +604,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # sha256-* strings are hashes of inline scripts and styles
 
 CSP_DICT = {
-    "default-src" : ["none",],
-    "script-src" : [
+    "default-src": ["none", ],
+    "script-src": [
         "self",
         "*.google.com",
         "*.googleapis.com",
@@ -657,7 +657,7 @@ CSP_DICT = {
         "'sha256-fUjKhLcjxDsHY0YkuZGJ9RcBu+3nIlSqpSUI9biHAJw='",
         "'sha256-7ydyyMhpPIo0fTHZtxmllQ+MJpMVM299EkUKAf0K1hs='"
     ],
-    "style-src" : [
+    "style-src": [
         "self",
         "unsafe-inline",
         "*.googleapis.com",
@@ -670,7 +670,7 @@ CSP_DICT = {
         # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
         # "'sha256-qxBJozwM44kf1mKAeiT/XkAwReBZ/To9FXKNw3bdVwk='"
     ],
-    "img-src" : [
+    "img-src": [
         "self",
         "data:",
         "*.datatables.net",
@@ -678,21 +678,20 @@ CSP_DICT = {
         "*.gstatic.com",
         "*.google.com"
     ],
-    "connect-src" : [
+    "connect-src": [
         "self",
         "*.github.com"
     ],
-    "font-src" : [
+    "font-src": [
         "self",
         "*.gstatic.com",
         "*.bootstrapcdn.com"
     ],
-    "frame-src" : [
+    "frame-src": [
         "self",
         "*.hydroshare.org"
     ]
 }
-
 
 
 X_FRAME_OPTIONS = "deny"
@@ -707,3 +706,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 SWAGGER_SETTINGS = {
     "VALIDATOR_URL": False
 }
+
+# detect test mode to turn off some features
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'

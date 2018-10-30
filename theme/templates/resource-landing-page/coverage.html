@@ -1,4 +1,5 @@
 {% if not metadata_form %}
+    {# resource view mode #}
     <div class="col-xs-12 content-block">
         <div class="row">
             <div class="col-xs-12">
@@ -83,6 +84,7 @@
                                 </div>
                             {% endif %}
                         {% endif %}
+
                         {% if temporal_coverage %}
                             <br>
                             <h4>Temporal: </h4>
@@ -116,6 +118,7 @@
         </div>
     </div>
 {% else %}
+    {# resource edit mode #}
     <div class="col-xs-12">
         <div class="row">
             <div class="col-xs-12 content-block" id="coverage-spatial">
@@ -126,6 +129,13 @@
                         {% csrf_token %}
                         <div class="col-sm-12">
                             <h3>Coverage</h3>
+                            {% if cm.resource_type == 'CompositeResource' %}
+                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible">
+                                    <label>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
+                                        feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
+                                        the content files.</label>
+                                </div>
+                            {% endif %}
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible"
                                  style="display: none;">
                                 <label>Spatial coverage for time series resources should be set by editing the
@@ -267,6 +277,18 @@
                         </fieldset>
                     </form>
                 </div>
+                {% if cm.resource_type == "CompositeResource" and cm.has_logical_spatial_coverage %}
+                     <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit">
+                         Set spatial coverage from content files
+                     </button>
+                {% else %}
+                    {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                    <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit" style="display: none">
+                         Set spatial coverage from content files
+                     </button>
+                {% endif %}
             </div>
 
             <div class="col-xs-12"><h4>Temporal:</h4></div>
@@ -355,5 +377,17 @@
                 {% endif %}
             </div>
         </div>
+    {% if cm.resource_type == "CompositeResource" and cm.has_logical_temporal_coverage %}
+         <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit">
+             Set temporal coverage from content files
+         </button>
+    {% else %}
+        {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+        <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit" style="display: none">
+             Set temporal coverage from content files
+         </button>
+    {% endif %}
     </div>
 {% endif %}

@@ -41,6 +41,55 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+import unicodedata
+
+
+def clean_for_xml(s):
+    """
+    Remove all control characters from a unicode string in preparation for XML inclusion
+
+    * Convert \n\n+ to unicode paragraph
+    * Convert \n alone to unicode RETURN (return SYMBOL)
+    * Convert control characters to spaces if last character is not space.
+    * Space-pad paragraph and NL symbols as necessary
+
+    """
+    CR = unichr(0x23CE)  # carriage return unicode SYMBOL
+    PARA = unichr(0xB6)  # paragraph mark unicode SYMBOL
+    output = ''
+    next = None
+    last = None
+    for ch in s:
+        cat = unicodedata.category(ch)
+        ISCONTROL = cat[0] == 'C'
+        ISSPACE = cat[0] == 'Z'
+        ISNEWLINE = (ord(ch) == 10)
+        if next:
+            if ISNEWLINE:  # linux '\n'
+                next = PARA  # upgrade to two+ returns
+            elif ISSPACE or ISCONTROL:
+                pass  # ignore spaces in newline sequence
+            else:
+                if last != ' ':
+                    output += ' '
+                output += next + ' ' + ch
+                next = None
+                last = ch
+        else:
+            if ISNEWLINE:
+                next = CR
+            elif ISSPACE:
+                if last != ' ':
+                    output += ch
+                    last = ch
+            elif ISCONTROL:
+                if last != ' ':
+                    output += ' '
+                    last = ' '
+            else:
+                output += ch
+                last = ch
+    return output
 
 
 class GroupOwnership(models.Model):
@@ -1280,10 +1329,6 @@ class Coverage(AbstractMetaDataElement):
                             raise ValidationError("Value for '{}' must be numeric"
                                                   .format(value_item))
 
-            if value_dict['northlimit'] < value_dict['southlimit']:
-                raise ValidationError("Value for North latitude must be greater than or equal to "
-                                      "that of South latitude.")
-
             if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1292,9 +1337,11 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for South latitude should be "
                                       "in the range of -90 to 90")
 
-            if value_dict['eastlimit'] < value_dict['westlimit']:
-                raise ValidationError("Value for East longitude must be greater than or equal to "
-                                      "that of West longitude.")
+            if (value_dict['northlimit'] < 0 and value_dict['southlimit'] < 0) or (
+                    value_dict['northlimit'] > 0 and value_dict['southlimit'] > 0):
+                if value_dict['northlimit'] < value_dict['southlimit']:
+                    raise ValidationError("Value for North latitude must be greater than or "
+                                          "equal to that of South latitude.")
 
             if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
                 raise ValidationError("Value for East longitude should be "
@@ -1303,6 +1350,12 @@ class Coverage(AbstractMetaDataElement):
             if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
+
+            if (value_dict['eastlimit'] < 0 and value_dict['westlimit'] < 0) or (
+                    value_dict['eastlimit'] > 0 and value_dict['westlimit'] > 0):
+                if value_dict['eastlimit'] < value_dict['westlimit']:
+                    raise ValidationError("Value for East longitude must be greater than or "
+                                          "equal to that of West longitude.")
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
@@ -1648,7 +1701,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         and False otherwise
         """
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         has_metadata = self.has_required_metadata
         return has_files and has_metadata
 
@@ -1679,7 +1732,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
@@ -1731,7 +1784,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
@@ -1797,22 +1850,74 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def get_url_of_path(self, path):
+        """Return the URL of an arbtrary path in this resource.
+
+        A GET of this URL simply returns the contents of the path.
+        This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+        path includes data/contents/
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.short_id, path)
+
+    def get_public_path(self, path):
+        """Return the public path for a specific path within the resource.
+           This is the path that appears in public URLs.
+           The input path includes data/contents/ as needed.
+        """
+        return os.path.join(self.short_id, path)
+
+    def get_irods_path(self, path):
+        """Return the irods path by which the given path is accessed.
+           The input path includes data/contents/ as needed.
+        """
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        else:
+            return self.get_public_path(path)
+
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
 
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.hydroshare.resource import update_quota_usage
+
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        self.setAVU("quotaUserName", new_holder.username)
+        attname = "quotaUserName"
+
+        if setter.username != new_holder.username:
+            # this condition check is needed to make sure attname exists as AVU before getting it
+            oldqu = self.getAVU(attname)
+            if oldqu:
+                # have to remove the old AVU first before setting to the new one in order to trigger
+                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
+                # holder will be reduced as a result of setting quota holder to a different user
+                self.removeAVU(attname, oldqu)
+        self.setAVU(attname, new_holder.username)
+        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -1830,6 +1935,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             # quotaUserName AVU does not exist, return None
             return None
+
+    def removeAVU(self, attribute, value):
+        """Remove an AVU at the resource level.
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
@@ -1962,6 +2077,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.object_id = metatdata_obj.id
             self.save()
             return metatdata_obj
+
+    def is_aggregation_xml_file(self, file_path):
+        """Checks if the file path *file_path* is one of the aggregation related xml file paths
+
+        :param  file_path: full file path starting with resource short_id
+        :return True if file_path is one of the aggregation xml file paths else False
+
+        This function is overridden for Composite Resource.
+        """
+        return False
 
     def extra_capabilites(self):
         """Return None. No-op method.
@@ -2164,14 +2289,24 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return generic_logical_files_list
 
     def get_logical_files(self, logical_file_class_name):
-        """Get list of logical files for a specified class name."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file_type_name == logical_file_class_name:
-                    if res_file.logical_file not in logical_files_list:
-                        logical_files_list.append(res_file.logical_file)
+        """Get a list of logical files (aggregations) for a specified logical file class name."""
+
+        logical_files_list = [lf for lf in self.logical_files if
+                              lf.type_name() == logical_file_class_name]
+
         return logical_files_list
+
+    @property
+    def has_logical_spatial_coverage(self):
+        """Checks if any of the logical files has spatial coverage"""
+
+        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+
+    @property
+    def has_logical_temporal_coverage(self):
+        """Checks if any of the logical files has temporal coverage"""
+
+        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
     def supports_logical_file(self):
@@ -2207,6 +2342,40 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def supports_delete_folder_on_zip(self, original_folder):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
+
+    @property
+    def storage_type(self):
+        if not self.is_federated:
+            return 'local'
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+        if self.resource_federation_path == userpath:
+            return 'user'
+        else:
+            return 'federated'
+
+    def is_folder(self, folder_path):
+        """Determine whether a given path (relative to resource root, including /data/contents/)
+           is a folder or not. Returns False if the path does not exist.
+        """
+        path_split = folder_path.split('/')
+        while path_split[-1] == '':
+            path_split.pop()
+        dir_path = u'/'.join(path_split[0:-1])
+
+        # handles federation
+        irods_path = os.path.join(self.root_path, dir_path)
+        istorage = self.get_irods_storage()
+        try:
+            listing = istorage.listdir(irods_path)
+        except SessionException:
+            return False
+        if path_split[-1] in listing[0]:  # folders
+            return True
+        else:
+            return False
 
     class Meta:
         """Define meta properties for AbstractResource class."""
@@ -2495,7 +2664,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                     if f.storage_path == fullpath:
                         found = True
                         break
-                if not found:
+                if not found and not self.is_aggregation_xml_file(fullpath):
                     ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
@@ -2614,6 +2783,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
+    class Meta:
+        index_together = [['object_id', 'resource_file'],
+                          ['object_id', 'fed_resource_file'],
+                          ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
@@ -2771,17 +2944,27 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def size(self):
-        """Retturn file size for federated or non-federated files."""
+        """Return file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
-            return self.fed_resource_file.size
+            try:
+                return self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
-            return self.resource_file.size
+            try:
+                return self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
 
     # TODO: write unit test
     @property
@@ -3009,24 +3192,34 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # TODO: move to BaseResource as instance method
     @classmethod
-    def list_folder(cls, resource, folder):
-        """List a given folder.
+    def list_folder(cls, resource, folder, sub_folders=True):
+        """List files (instances of ResourceFile) in a given folder.
 
         :param resource: resource for which to list the folder
         :param folder: folder listed as either short_path or fully qualified path
+        :param sub_folders: if true files from sub folders of *folder* will be included in the list
         """
+        file_folder_to_match = folder
         if folder is None:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
-        if resource.is_federated:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                fed_resource_file__startswith=folder)
+        else:
+            file_folder_to_match = folder[len(resource.file_path) + 1:]
+
+        if sub_folders:
+            if resource.is_federated:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    fed_resource_file__startswith=folder)
+            else:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    resource_file__startswith=folder)
         else:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
-                resource_file__startswith=folder)
+                file_folder=file_folder_to_match)
 
     # TODO: move to BaseResource as instance method
     @classmethod
@@ -3081,8 +3274,13 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def logical_file_type_name(self):
-        """Return classname of logical file's content object."""
+        """Return class name of logical file's content object."""
         return self.logical_file_content_object.__class__.__name__
+
+    @property
+    def aggregation_display_name(self):
+        """Return a name for the logical file type (aggregation)- used in UI"""
+        return self.logical_file.get_aggregation_display_name()
 
     @property
     def has_generic_logical_file(self):
@@ -3124,12 +3322,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         return os.path.basename(self.storage_path)
 
     @property
-    def can_set_file_type(self):
-        """Check if file type can be set for this resource file instance."""
-        return self.extension in ('.tif', '.zip', '.nc', '.shp', '.refts') and \
-            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
-
-    @property
     def url(self):
         """Return the URL of the file contained in this ResourceFile.
 
@@ -3146,23 +3338,27 @@ class ResourceFile(ResourceFileIRODSMixin):
                 views.file_download_url_mapper,
                 name='get_resource_file')
 
+        This url does NOT depend upon federation status.
         """
-        # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.resource.short_id,
-                                  'data', 'contents', self.short_path)
+        return '/' + os.path.join('resource', self.public_path)
 
     @property
-    def irods_url(self):
-        """Return the iRODS URL of the file.
-
-        This is a direct link and independent of the Django path in ResourceFile.url
+    def public_path(self):
+        """ return the public path (unqualified iRODS path) for a resource.
+            This corresponds to the iRODS path if the resource isn't federated.
         """
-        if self.resource_file:
-            return self.resource_file.url
-        elif self.fed_resource_file:
-            return self.fed_resource_file.url
+        return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
+
+    @property
+    def irods_path(self):
+        """ Return the irods path for accessing a file, including possible federation information.
+            This consists of the resource id, /data/contents/, and the file path.
+        """
+
+        if self.resource.is_federated:
+            return os.path.join(self.resource.resource_federation_path, self.public_path)
         else:
-            return None
+            return self.public_path
 
 
 class Bags(models.Model):
@@ -3225,6 +3421,8 @@ class BaseResource(Page, AbstractResource):
     discoverable_resources = DiscoverableResourceManager()
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
+
+    discovery_content_type = 'Generic'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3422,6 +3620,11 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model()._meta.verbose_name
 
     @property
+    def discovery_content_type(self):
+        """Return verbose name of content type."""
+        return self.get_content_model().discovery_content_type
+
+    @property
     def can_be_published(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
@@ -3481,6 +3684,7 @@ class BaseResource(Page, AbstractResource):
         return hs_term_dict
 
 
+# TODO Deprecated
 class GenericResource(BaseResource):
     """Define GenericResource model."""
 
@@ -3491,9 +3695,10 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
+    discovery_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for GenericResource model."""
-
         verbose_name = 'Generic'
         proxy = True
 
@@ -3581,6 +3786,14 @@ class CoreMetaData(models.Model):
     def publisher(self):
         """Return the first _publisher object from metadata."""
         return self._publisher.all().first()
+
+    @property
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
 
     @property
     def serializer(self):
@@ -3933,7 +4146,7 @@ class CoreMetaData(models.Model):
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
                                                 '{%s}abstract' % self.NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.description.abstract
+            dcterms_abstract.text = clean_for_xml(self.description.abstract)
 
         for agency in self.funding_agencies.all():
             hsterms_agency = etree.SubElement(rdf_Description,
@@ -3942,18 +4155,18 @@ class CoreMetaData(models.Model):
                                                               self.NAMESPACES['rdf'])
             hsterms_name = etree.SubElement(hsterms_agency_rdf_Description,
                                             '{%s}fundingAgencyName' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = agency.agency_name
+            hsterms_name.text = clean_for_xml(agency.agency_name)
             if agency.agency_url:
                 hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                                    agency.agency_url)
             if agency.award_title:
                 hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
                                                  self.NAMESPACES['hsterms'])
-                hsterms_title.text = agency.award_title
+                hsterms_title.text = clean_for_xml(agency.award_title)
             if agency.award_number:
                 hsterms_number = etree.SubElement(hsterms_agency_rdf_Description,
                                                   '{%s}awardNumber' % self.NAMESPACES['hsterms'])
-                hsterms_number.text = agency.award_number
+                hsterms_number.text = clean_for_xml(agency.award_number)
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -4047,7 +4260,7 @@ class CoreMetaData(models.Model):
                                                          '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
                                                  '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
-            hsterms_statement.text = self.rights.statement
+            hsterms_statement.text = clean_for_xml(self.rights.statement)
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description,
                                                '{%s}URL' % self.NAMESPACES['hsterms'])
