@@ -942,6 +942,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
 
 def _get_destination_filename(file, unzipped_foldername):
+    """
+    Returns the destination file path by removing the temp unzipped_foldername from the file path.
+    Useful for moving files from a temporary unzipped folder to the resource outside of the
+    temporary folder.
+    :param file: path to a file
+    :param unzipped_foldername: the name of the
+    :return:
+    """
     split = file.split("/" + unzipped_foldername + "/", 1)
     destination_file = os.path.join(split[0], split[1])
     return destination_file
