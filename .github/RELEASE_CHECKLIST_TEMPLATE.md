@@ -21,6 +21,7 @@ Add the issues included in the release and update this document as release tasks
 <!-- Update the checklist as items are completed -->
 ### Production Deployment
 - [ ] Deployed to Production
+- [ ] Maps API key is correct and maps are displaying correctly
 - [ ] check_resource www results match pre-deployment www results
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile
