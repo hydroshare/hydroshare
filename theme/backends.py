@@ -5,6 +5,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Q
 from django.utils.http import base36_to_int
+from django.core.exceptions import MultipleObjectsReturned
 
 
 User = get_user_model()
@@ -31,6 +32,9 @@ class CaseInsensitiveMezzanineBackend(ModelBackend):
                 try:
                     user = User.objects.get(username_or_email, **kwargs)
                 except User.DoesNotExist:
+                    pass
+                except MultipleObjectsReturned:
+                    # TODO remove after conflicting users have been removed
                     pass
                 else:
                     if user.check_password(password):
