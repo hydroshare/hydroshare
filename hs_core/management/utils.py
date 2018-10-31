@@ -124,7 +124,7 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
     if ecount > 0:  # print information about the affected resource (not really an error)
         msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
-                    resource.metadata.title.value.encode('string-escape'))
+                    resource.title.encode('string-escape'))
         if log_actions:
             logger.info(msg)
         if echo_actions:
@@ -308,7 +308,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     if ecount > 0:  # print information about the affected resource (not really an error)
         msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
-                    resource.metadata.title.value.encode('string-escape'))
+                    resource.title.encode('string-escape'))
         if log_errors:
             logger.error(msg)
         if echo_errors:
