@@ -312,6 +312,16 @@ class CompositeResource(BaseResource):
 
         if is_new_aggr_a_folder:
             delete_old_xml_files(folder=new_aggr_name)
+            try:
+                # in case of fileset aggregation need to update aggregation folder attribute to the
+                # new folder name
+                aggregation = self.get_aggregation_by_name(orig_aggr_name)
+                if aggregation.is_fileset:
+                    aggregation.folder = new_aggr_name
+                    aggregation.save()
+            except ObjectDoesNotExist:
+                # not renaming a fileset aggregation folder
+                pass
             self._recreate_xml_docs_for_folder(new_aggr_name)
         else:
             # check if there is a matching single file aggregation

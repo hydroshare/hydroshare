@@ -103,7 +103,7 @@ def data_store_structure(request):
                 if not aggregation_object.is_fileset:
                     main_file = aggregation_object.get_main_file.file_name
             else:
-                # find if any aggregation type can be created from this folder
+                # find if any aggregation type that can be created from this folder
                 folder_aggregation_type_to_set =  \
                     resource.get_folder_aggregation_type_to_set(dir_path)
                 if folder_aggregation_type_to_set is None:
