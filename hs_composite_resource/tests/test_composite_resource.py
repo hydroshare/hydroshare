@@ -1527,4 +1527,4 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
 
         self.assertNotEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
-                         "overwritten")
+                            "overwritten")
