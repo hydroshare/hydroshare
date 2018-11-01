@@ -775,7 +775,7 @@ def add_resource_files(pk, *files, **kwargs):
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         if full_dir:
-            new_folders.add(full_dir)
+            new_folders.add(os.path.join(resource.file_path, full_dir))
             ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
         else:
             ret.append(utils.add_file_to_resource(resource, f, folder=None))

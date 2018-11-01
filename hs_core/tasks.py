@@ -334,6 +334,13 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip
     res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
+    if res.resource_type == "CompositeResource":
+        if '/data/contents/' in input_path:
+            short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+            res.create_aggregation_xml_documents(aggregation_name=short_path)
+        else:  # all metadata included, e.g., /data/*
+            res.create_aggregation_xml_documents()
+
     try:
         if sf_zip:
             # input path points to single file aggregation
