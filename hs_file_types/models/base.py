@@ -143,7 +143,7 @@ class AbstractFileMetaData(models.Model):
                 if self.logical_file.has_children_temporal_data:
                     with self.get_temporal_coverage_html_form():
                         with div():
-                            button("Set temporal coverage from contained aggregations",
+                            button("Set temporal coverage from folder contents",
                                    type="button",
                                    cls="btn btn-primary",
                                    id="btn-update-aggregation-temporal-coverage")

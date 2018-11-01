@@ -82,11 +82,11 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
                 # for aggregation that contains other aggregations with spatial data,
                 # show option to update spatial coverage from contained aggregations
                 if self.logical_file.has_children_spatial_data:
-                    with div(cls="col-md-offset-6 col-xs-offset-2 "
-                                 "col-md-2 col-xs-6"):
-                        button("Set spatial coverage from contained aggregations", type="button",
-                               cls="btn btn-primary pull-right",
-                               id="btn-update-aggregation-spatial-coverage")
+                    with div(style="margin-top:20px;"):
+                        with div():
+                            button("Set spatial coverage from folder contents", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   id="btn-update-aggregation-spatial-coverage")
 
         template = Template(root_div.render())
         context_dict = dict()
