@@ -92,7 +92,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in iRODS'))
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
@@ -100,9 +100,9 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # now try to clean it up
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
-                                               clean_irods=True, clean_django=True)
+                                           clean_irods=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
@@ -161,7 +161,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in iRODS'))
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
@@ -171,7 +171,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
                                            clean_irods=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
