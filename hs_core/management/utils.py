@@ -74,7 +74,7 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
         'home',
         getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
 
-    msg = "fix_irods_user_paths: user path is {}".format(userpath.encode('string-escape'))
+    msg = "fix_irods_user_paths: user path is {}".format(userpath.encode('ascii', 'replace'))
     if echo_actions:
         print(msg)
     if log_actions:
@@ -85,7 +85,7 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
     # only take action if you find a path that is a default user path and not in production
     if resource.resource_federation_path == defaultpath and userpath != defaultpath:
         msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
-              .format(resource.resource_federation_path, userpath.encode('string-escape'))
+              .format(resource.resource_federation_path, userpath.encode('ascii', 'replace'))
         if echo_actions:
             print(msg)
         if log_actions:
@@ -102,8 +102,8 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
                 f.set_storage_path(newpath, test_exists=False)  # does implicit save
                 ecount += 1
                 msg = "fix_irods_user_paths: rewriting {} to {}"\
-                    .format(path.encode('string-escape'),
-                            newpath.encode('string-escape'))
+                    .format(path.encode('ascii', 'replace'),
+                            newpath.encode('ascii', 'replace'))
                 if echo_actions:
                     print(msg)
                 if log_actions:
@@ -113,7 +113,7 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
             else:
                 msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
                        " {} should start with {}; cannot convert")\
-                    .format(path.encode('string-escape'), resource.short_id, defaultpath)
+                    .format(path.encode('ascii', 'replace'), resource.short_id, defaultpath)
                 if echo_actions:
                     print(msg)
                 if log_actions:
@@ -124,7 +124,7 @@ def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_
     if ecount > 0:  # print information about the affected resource (not really an error)
         msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
-                    resource.title.encode('string-escape'))
+                    resource.title.encode('ascii', 'replace'))
         if log_actions:
             logger.info(msg)
         if echo_actions:
@@ -308,7 +308,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     if ecount > 0:  # print information about the affected resource (not really an error)
         msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
-                    resource.title.encode('string-escape'))
+                    resource.title.encode('ascii', 'replace'))
         if log_errors:
             logger.error(msg)
         if echo_errors:
@@ -347,7 +347,7 @@ def __check_irods_directory(resource, dir, logger,
             if not found and not resource.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
-                    .format(fullpath.encode('string-escape'))
+                    .format(fullpath.encode('ascii', 'replace'))
                 if clean:
                     try:
                         istorage.delete(fullpath)
@@ -469,7 +469,7 @@ def __ingest_irods_directory(resource,
             if not found and not resource.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
-                    .format(fullpath.encode('string-escape'))
+                    .format(fullpath.encode('ascii', 'replace'))
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -501,7 +501,7 @@ def __ingest_irods_directory(resource,
                     elif res_file.has_logical_file and file_type is not None and \
                             not isinstance(res_file.logical_file, file_type):
                         msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
-                            .format(res_file.storage_path.encode('string-escape'),
+                            .format(res_file.storage_path.encode('ascii', 'replace'),
                                     type(res_file.logical_file).__name__,
                                     file_type.__name__)
                         if echo_errors:
@@ -633,7 +633,7 @@ def repair_resource(resource, logger, stop_on_error=False,
         if count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
-                          resource.title.encode('string-escape')))
+                          resource.title.encode('ascii', 'replace')))
 
     _, count = check_irods_files(resource,
                                  stop_on_error=False,
@@ -646,7 +646,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     if count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
-                      resource.title.encode('string-escape')))
+                      resource.title.encode('ascii', 'replace')))
 
 
 class CheckResource(object):
@@ -698,18 +698,20 @@ class CheckResource(object):
             print("  ... resource {} has type {} and title {}"
                   .format(self.resource.short_id,
                           self.resource.resource_type,
-                          self.resource.title.encode('string-escape')))
+                          self.resource.title.encode('ascii', 'replace')))
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):
             value = self.check_avu(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
-                print("  AVU resourceType is {}, should be {}".format(value.encode('string-escape'),
+                print("  AVU resourceType is {}, should be {}".format(value.encode('ascii',
+                                                                                   'replace'),
                                                                       self.resource.resource_type))
             if a == 'isPublic' and value is not None and value != self.resource.raccess.public:
                 self.label()
-                print("  AVU isPublic is {}, but public is {}".format(value.encode('string-escape'),
+                print("  AVU isPublic is {}, but public is {}".format(value.encode('ascii',
+                                                                                   'replace'),
                                                                       self.resource.raccess.public))
 
         irods_issues, irods_errors = check_irods_files(self.resource,
@@ -730,18 +732,18 @@ class CheckResource(object):
                                                   file_id=res_file.pk, fail_feedback=False)
                 if not res_file.has_logical_file and file_type is not None:
                     msg = "check_resource: file {} does not have required logical file {}"\
-                          .format(res_file.storage_path.encode('string-escape'),
+                          .format(res_file.storage_path.encode('ascii', 'replace'),
                                   file_type.__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is None:
                     msg = "check_resource: logical file for {} has type {}, not needed"\
-                          .format(res_file.storage_path.encode('string-escape'),
+                          .format(res_file.storage_path.encode('ascii', 'replace'),
                                   type(res_file.logical_file).__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is not None and \
                         not isinstance(res_file.logical_file, file_type):
                     msg = "check_resource: logical file for {} has type {}, should be {}"\
-                          .format(res_file.storage_path.encode('string-escape'),
+                          .format(res_file.storage_path.encode('ascii', 'replace'),
                                   type(res_file.logical_file).__name__,
                                   file_type.__name__)
                     logical_issues.append(msg)

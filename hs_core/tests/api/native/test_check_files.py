@@ -99,7 +99,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
             "type is GenericResource, title is 'My Test Resource'"))
 
         # now try to clean it up
-        errors, ecount = res.check_irods_files(self.res, return_errors=True, log_errors=False,
+        errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
                                                clean_irods=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
              'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
