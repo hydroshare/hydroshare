@@ -728,8 +728,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                  return false;
              }
          });
-
-         $(".icon-remove").click(onRemoveKeywordFileType);
+         $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
          $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
          showMetadataFormSaveChangesButton();

@@ -879,7 +879,7 @@ function filetype_keywords_update_ajax_submit() {
                     li.find('span').text(keywords[i]);
                     li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
                     $("#lst-tags-filetype").append(li);
-                    $(".icon-remove").click(onRemoveKeywordFileType);
+                    $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
                 }
                 // Refresh keywords field for the resource
                 var resKeywords = json_response.resource_keywords;
@@ -890,6 +890,7 @@ function filetype_keywords_update_ajax_submit() {
                         li.find('span').text(resKeywords[i]);
                         li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
                         $("#lst-tags").append(li);
+                        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
                     }
                 }
                 // show update netcdf file update option for NetCDFLogicalFile
