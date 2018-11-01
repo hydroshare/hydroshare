@@ -13,6 +13,7 @@ Notes:
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.management.utils import CheckResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
@@ -31,10 +32,27 @@ class Command(BaseCommand):
             help='log errors to system log',
         )
 
+        parser.add_argument(
+            '--type',
+            dest='type',
+            help='limit to resources of a particular type'
+        )
+
+        parser.add_argument(
+            '--storage',
+            dest='storage',
+            help='limit to specific storage medium (local, user, federated)'
+        )
+
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
-                CheckResource(rid).test()
+                resource = get_resource_by_shortkey(rid)
+                if (options['type'] is None or resource.resource_type == options['type']) and \
+                   (options['storage'] is None or resource.storage_type == options['storage']):
+                    CheckResource(rid).test()
         else:
-            for r in BaseResource.objects.all():
-                CheckResource(r.short_id).test()
+            for resource in BaseResource.objects.all():
+                if (options['type'] is None or resource.resource_type == options['type']) and \
+                   (options['storage'] is None or resource.storage_type == options['storage']):
+                    CheckResource(resource.short_id).test()
