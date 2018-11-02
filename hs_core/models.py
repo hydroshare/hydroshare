@@ -2884,6 +2884,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param sub_folders: if true files from sub folders of *folder* will be included in the list
         """
         file_folder_to_match = folder
+
         if folder is None:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
@@ -2892,6 +2893,9 @@ class ResourceFile(ResourceFileIRODSMixin):
             file_folder_to_match = folder[len(resource.file_path) + 1:]
 
         if sub_folders:
+            # append trailing slash to match only this folder
+            if not folder.endswith("/"):
+                folder += "/"
             if resource.is_federated:
                 return ResourceFile.objects.filter(
                     object_id=resource.id,
