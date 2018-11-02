@@ -1425,6 +1425,33 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertFalse(res_file.file_name.endswith('_mata.xml'))
             self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
 
+    def test_unzip_rename(self):
+        """Test that when a zip file gets unzipped at data/contents/ and the unzipped folder may be
+         renamed without error (testing bug fix renaming a folder where a file exists that starts
+         with the same name."""
+
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.zip_file)
+        # resource should have 1 file now
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
+        zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        unzipped_folder = zip_file_rel_path.replace(".zip", "")
+        renamed_folder = os.path.join('data', 'contents', "renamed")
+        try:
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                          unzipped_folder, renamed_folder)
+        except:
+            self.fail("Exception thrown while renaming a folder.")
+
     def test_unzip_folder_clash(self):
         """Test that when a zip file gets unzipped a folder with the same
         name already exists, the existing folder is not overwritten """
