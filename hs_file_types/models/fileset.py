@@ -37,6 +37,15 @@ class FileSetLogicalFile(AbstractLogicalFile):
     def get_aggregation_type_name():
         return "FileSetAggregation"
 
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types (there is no equivalent native type
+        for File Set).
+        """
+        return "File Set"
+
     @property
     def can_contain_folders(self):
         """This aggregation can contain folders"""
