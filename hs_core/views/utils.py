@@ -167,7 +167,7 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     """
     # replace space with underline char
     ref_name = ref_name.strip().lower().replace(' ', '_')
-    #strip out non-standard chars from ref_name
+    # strip out non-standard chars from ref_name
     valid_chars_in_file_name = '-_.{}{}'.format(string.ascii_letters, string.digits)
     ref_name = ''.join(c for c in ref_name if c in valid_chars_in_file_name)
 
