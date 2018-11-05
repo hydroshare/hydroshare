@@ -510,15 +510,11 @@ def file_download_url_mapper(request, shortkey):
         logger.debug("request path is {}".format(request.path))
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
-    # logger.debug("public_file_path is {}".format(public_file_path))
+
     istorage = res.get_irods_storage()
-    if request.GET.get('zipped', "False") == "True":
-        file_download_url = istorage.url(public_file_path) + "?zipped=True"
-    else:
-        file_download_url = istorage.url(public_file_path)
-    if __debug__:
-        logger.debug("redirect is {}".format(file_download_url))
-    return HttpResponseRedirect(file_download_url)
+    url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
+    zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):

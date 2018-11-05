@@ -36,6 +36,21 @@ class CompositeResource(BaseResource):
 
         return True
 
+    @property
+    def can_be_published(self):
+        # resource level metadata check
+        if not super(CompositeResource, self).can_be_published:
+            return False
+
+        # filetype level metadata check
+        for lf in self.logical_files:
+            if not lf.metadata.has_all_required_elements():
+                return False
+            # url file cannot be published
+            if 'url' in lf.extra_data:
+                return False
+        return True
+
     def set_default_logical_file(self):
         """sets an instance of GenericLogicalFile to any resource file objects of this instance
         of the resource that is not already associated with a logical file. """
@@ -58,6 +73,19 @@ class CompositeResource(BaseResource):
         for fl in files_in_folder:
             if fl.has_logical_file:
                 return fl.logical_file
+        return None
+
+    def get_file_aggregation_object(self, file_path):
+        """Returns an aggregation (file type) object if the specified file *file_path* represents a
+         file type aggregation (logical file), otherwise None.
+
+         :param file_path: Resource file path (full file path starting with resource id)
+         for which the aggregation object to be retrieved
+        """
+        for res_file in self.files.all():
+            if res_file.full_path == file_path:
+                if res_file.has_logical_file:
+                    return res_file.logical_file
         return None
 
     def get_folder_aggregation_type_to_set(self, dir_path):
@@ -215,7 +243,8 @@ class CompositeResource(BaseResource):
             :raises ObjectDoesNotExist if no matching aggregation is found
             """
             for aggregation in self.logical_files:
-                if aggregation.aggregation_name == name:
+                # remove the last slash in aggregation_name if any
+                if aggregation.aggregation_name.rstrip('/') == name:
                     return aggregation
 
             raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))

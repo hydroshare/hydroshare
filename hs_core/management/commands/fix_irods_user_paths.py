@@ -16,6 +16,7 @@ This checks that:
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from hs_core.models import BaseResource
+from hs_core.management.utils import fix_irods_user_paths
 
 
 class Command(BaseCommand):
@@ -49,9 +50,10 @@ class Command(BaseCommand):
 
                 if resource.resource_federation_path == defaultpath:
                     print("REMAPPING RESOURCE {} TO LOCAL USERSPACE".format(rid))
-                    resource.fix_irods_user_paths(echo_actions=not options['log'],
-                                                  log_actions=options['log'],
-                                                  return_actions=False)
+                    fix_irods_user_paths(resource,
+                                         echo_actions=not options['log'],
+                                         log_actions=options['log'],
+                                         return_actions=False)
                 else:
                     print("Resource with id {} is not a default userspace resource".format(rid))
 
@@ -59,6 +61,7 @@ class Command(BaseCommand):
             print("REMAPPING ALL USERSPACE RESOURCES TO LOCAL USERSPACE")
             # only for resources with default federation paths in userspace
             for r in BaseResource.objects.filter(resource_federation_path=defaultpath):
-                r.fix_irods_user_paths(echo_actions=not options['log'],  # Don't both log and echo
-                                       log_actions=options['log'],
-                                       return_actions=False)
+                fix_irods_user_paths(r,
+                                     echo_actions=not options['log'],  # Don't both log and echo
+                                     log_actions=options['log'],
+                                     return_actions=False)

@@ -387,10 +387,10 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # there should be original coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.original_coverage, None)
         orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(orig_coverage.value['northlimit'], '4635150.0')
+        self.assertEqual(float(orig_coverage.value['northlimit']), 4.63515e+06)
 
-        coverage_data = {'northlimit': '111.333', 'southlimit': '42.678', 'eastlimit': '123.789',
-                         'westlimit': '40.789', 'units': 'meters'}
+        coverage_data = {'northlimit': 111.333, 'southlimit': 42.678, 'eastlimit': 123.789,
+                         'westlimit': 40.789, 'units': 'meters'}
         url_params['element_name'] = 'originalcoverage'
         url_params['element_id'] = logical_file.metadata.original_coverage.id
         url = reverse('update_file_metadata', kwargs=url_params)
@@ -405,18 +405,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response_dict = json.loads(response.content)
         self.assertEqual('success', response_dict['status'])
         orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(orig_coverage.value['northlimit'], '111.333')
+        self.assertEqual(float(orig_coverage.value['northlimit']), 111.333)
 
         # test updating spatial coverage
         # there should be spatial coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_coverage.value['northlimit'], 41.867126409)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.867126409)
 
-        coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': '41.87',
-                         'southlimit': '41.863',
-                         'eastlimit': '-111.505',
-                         'westlimit': '-111.511', 'units': 'meters'}
+        coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
+                         'southlimit': 41.863,
+                         'eastlimit': -111.505,
+                         'westlimit': -111.511, 'units': 'meters'}
 
         url_params['element_name'] = 'coverage'
         url_params['element_id'] = spatial_coverage.id
@@ -432,7 +432,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response_dict = json.loads(response.content)
         self.assertEqual('success', response_dict['status'])
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_coverage.value['northlimit'], 41.87)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87)
 
         # test update Variable element
         variable = logical_file.metadata.variables.first()

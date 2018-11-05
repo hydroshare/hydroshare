@@ -154,7 +154,9 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
+# TODO remove MezzanineBackend after conflicting users have been removed
+AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",
+                           "mezzanine.core.auth_backends.MezzanineBackend")
 
 # List of finder classes that know how to find static files in
 # various locations.
