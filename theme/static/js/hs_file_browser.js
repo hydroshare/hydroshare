@@ -1619,6 +1619,10 @@ $(document).ready(function () {
             newName = newName + $("#file-type-addon").text();
         }
 
+        // make sure .url file has .url extension after renaming
+        if (oldName.endsWith('.url') && !newName.endsWith('.url'))
+            newName = newName + '.url';
+
         var calls = [];
         calls.push(rename_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
 

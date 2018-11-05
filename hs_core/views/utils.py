@@ -165,7 +165,12 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
     return error status code, error message, and None (for file_id).
     """
-    ref_name = ref_name.lower()
+    # replace space with underline char
+    ref_name = ref_name.strip().lower().replace(' ', '_')
+    # strip out non-standard chars from ref_name
+    valid_chars_in_file_name = '-_.{}{}'.format(string.ascii_letters, string.digits)
+    ref_name = ''.join(c for c in ref_name if c in valid_chars_in_file_name)
+
     if not ref_name.endswith('.url'):
         ref_name += '.url'
 
