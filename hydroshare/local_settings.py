@@ -7,7 +7,6 @@ import redis
 import os
 import yaml
 from kombu import Queue, Exchange
-from kombu.common import Broadcast
 
 DEBUG = True
 
@@ -204,3 +203,5 @@ with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-c
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
+# insert a google maps key here when in production
+MAPS_KEY=''
