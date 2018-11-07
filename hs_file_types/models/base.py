@@ -250,6 +250,8 @@ class AbstractFileMetaData(models.Model):
         with root_div:
             with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                       method="post", enctype="multipart/form-data"):
+                with a(id="id-btn-delete-temporal-filetype", type="button", cls="pull-left"):
+                    span(cls="glyphicon glyphicon-trash icon-button btn-remove")
                 div("{% crispy temp_form %}")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 "

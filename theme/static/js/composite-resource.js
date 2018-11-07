@@ -68,18 +68,19 @@ function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
         async: true,
         success: function (result) {
             var json_response = JSON.parse(result);
+            var logicalFileType = json_response.logical_file_type;
+            var coverageElementID = json_response.element_id;
+                var logicalFileID = json_response.logical_file_id;
             if(coverageType === 'spatial'){
                 var spatialCoverage = json_response.spatial_coverage;
-                var coverageElementID = json_response.element_id;
-                var logicalFileID = json_response.logical_file_id;
-                var logicalFileType = json_response.logical_file_type;
                 updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, coverageElementID);
                 var bindCoordinatesPicker = false;
                 setFileTypeSpatialCoverageFormFields(logicalFileType, bindCoordinatesPicker);
             }
             else {
                 var temporalCoverage = json_response.temporal_coverage;
-                updateAggregationTemporalCoverage(temporalCoverage);
+                updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, coverageElementID);
+                showFileTypeTemporalCoverageDeleteOption(logicalFileType);
             }
             $("#fb-inner-controls").after($alert_success);
             $(".alert-success").fadeTo(3000, 500).slideUp(1000, function(){

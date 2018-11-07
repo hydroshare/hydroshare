@@ -678,7 +678,9 @@ function metadata_update_ajax_submit(form_id){
                     (json_response.logical_file_type === "FileSetLogicalFile" ||
                     json_response.logical_file_type === "GenericLogicalFile")) {
                     var bindCoordinatesPicker = false;
-                    setFileTypeSpatialCoverageFormFields(json_response.logical_file_type, bindCoordinatesPicker);
+                    var logical_type = json_response.logical_file_type;
+                    setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
+                    showFileTypeTemporalCoverageDeleteOption(logical_type);
                 }
 
                 if (json_response.element_exists == false){
@@ -1523,6 +1525,33 @@ function deleteFileTypeSpatialCoverage(url, deleteButton) {
         }
     });
 }
+
+function deleteFileTypeTemporalCoverage(url, deleteButton) {
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            var json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                deleteButton.hide();
+                // set the temporal coverage form url to add metadata
+                var $form = deleteButton.closest('form');
+                var logicalFileType = json_response.logical_file_type;
+                var logicalFileID = json_response.logical_file_id;
+                var addMetadataURL = "/hsapi/_internal/" + logicalFileType + "/" + logicalFileID +  "/coverage/add-file-metadata/";
+                $form.attr('action', addMetadataURL);
+                // remove coverage data from the coverage text fields
+                $("#id_start_filetype").val("");
+                $("#id_end_filetype").val("");
+            }
+            else {
+                display_error_message("Failed to delete temporal coverage for content type.", json_response.message);
+            }
+        }
+    });
+}
+
 function BindKeyValueFileTypeClickHandlers(){
     // bind key value add modal form OK button click event
     var keyvalue_add_modal_form = $("#fileTypeMetaDataTab").find('#add-keyvalue-filetype-metadata');
@@ -1772,6 +1801,28 @@ function updateResourceSpatialCoverage(spatialCoverage) {
     }
 }
 
+function showFileTypeTemporalCoverageDeleteOption(logicalFileType) {
+    var $btnDeleteTemporalCoverage = $("#id-btn-delete-temporal-filetype");
+    var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
+    if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile') {
+
+        var url = $formTemporalCoverage.attr('action');
+        if(url.indexOf('update-file-metadata') !== -1) {
+            url = url.replace('update-file-metadata', 'delete-file-coverage');
+            $btnDeleteTemporalCoverage.unbind('click');
+            $btnDeleteTemporalCoverage.show();
+            $btnDeleteTemporalCoverage.click(function () {
+                deleteFileTypeTemporalCoverage(url, $btnDeleteTemporalCoverage);
+            })
+        }
+        else {
+            $btnDeleteTemporalCoverage.hide()
+        }
+    }
+    else {
+            $btnDeleteTemporalCoverage.hide()
+    }
+}
 // updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
@@ -1827,11 +1878,17 @@ function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elem
 }
 
 // updates the UI temporal coverage elements for the aggregation
-function updateAggregationTemporalCoverage(temporalCoverage) {
+function updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, coverageElementID) {
     $("#id_start_filetype").val(temporalCoverage.start);
     $("#id_end_filetype").val(temporalCoverage.end);
 
     $("#id-coverage-temporal").find("button.btn-primary").hide();
+    var updateAction = "/hsapi/_internal/FileSetLogicalFile/" + logicalFileID + "/coverage/" + coverageElementID + "/update-file-metadata/";
+    var $btnDeleteTemporalCoverage = $("#id-btn-delete-temporal-filetype");
+    var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
+    $formTemporalCoverage.attr('action', updateAction);
+    showFileTypeTemporalCoverageDeleteOption('FileSetLogicalFile');
+
     initializeDatePickers();
 }
 

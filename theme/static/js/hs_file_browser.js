@@ -734,6 +734,8 @@ function showFileTypeMetadata(file_type_time_series, url){
          initializeDatePickers();
          var bindCoordinatesPicker = true;
          setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
+         // set temporal data delete option
+         showFileTypeTemporalCoverageDeleteOption(logical_type);
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
