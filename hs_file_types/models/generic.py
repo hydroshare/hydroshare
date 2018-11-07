@@ -5,7 +5,7 @@ from django.db import models
 from django.template import Template, Context
 from django.core.exceptions import ValidationError
 
-from dominate.tags import div, form, button, h4
+from dominate.tags import div, form, button, h4, span, a
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
@@ -24,6 +24,15 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         element = super(GenericFileMetaDataMixin, self).create_element(element_model_name, **kwargs)
         self.is_dirty = True
         return element
+
+    def delete_element(self, element_model_name, element_id):
+        """Overriding the base class method to allow deleting any metadata element that's part of
+        generic aggregation (single file aggregation or file set aggregation) metadata"""
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        meta_element = model_type.model_class().objects.get(id=element_id)
+        meta_element.delete()
+        self.is_dirty = True
+        self.save()
 
     @property
     def has_modified_metadata(self):
@@ -72,6 +81,8 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
+                    with a(id="id-btn-delete-spatial-filetype", type="button", cls="pull-left"):
+                        span(cls="glyphicon glyphicon-trash icon-button btn-remove")
                     div("{% crispy spatial_form %}")
                     with div(cls="row", style="margin-top:10px;"):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "

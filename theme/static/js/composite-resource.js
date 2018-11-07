@@ -70,7 +70,12 @@ function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
             var json_response = JSON.parse(result);
             if(coverageType === 'spatial'){
                 var spatialCoverage = json_response.spatial_coverage;
-                updateAggregationSpatialCoverageUI(spatialCoverage);
+                var coverageElementID = json_response.element_id;
+                var logicalFileID = json_response.logical_file_id;
+                var logicalFileType = json_response.logical_file_type;
+                updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, coverageElementID);
+                var bindCoordinatesPicker = false;
+                setFileTypeSpatialCoverageFormFields(logicalFileType, bindCoordinatesPicker);
             }
             else {
                 var temporalCoverage = json_response.temporal_coverage;
@@ -83,7 +88,7 @@ function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
         },
         error: function (xhr, textStatus, errorThrown) {
             var jsonResponse = JSON.parse(xhr.responseText);
-            display_error_message('Failed to update resource coverage', jsonResponse.message);
+            display_error_message('Failed to update aggregation coverage', jsonResponse.message);
             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         }
     });

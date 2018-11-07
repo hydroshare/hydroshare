@@ -490,8 +490,7 @@ function bindFileBrowserItemEvents() {
                     $("#id_east_filetype").attr("data-map-item", "longitude");
                     $("#id_north_filetype").attr("data-map-item", "latitude");
 
-                    updateEditCoverageState();
-
+                    updateEditCoverageStateFileType();
                     $("#id-coverage-spatial-filetype").coordinatesPicker();
                 }
             }
@@ -733,7 +732,8 @@ function showFileTypeMetadata(file_type_time_series, url){
          $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
-         setFileTypeSpatialCoverageFormFields(logical_type);
+         var bindCoordinatesPicker = true;
+         setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
@@ -777,7 +777,7 @@ function showFileTypeMetadata(file_type_time_series, url){
              $spatial_type_radio_button_2.attr('onclick', 'return false');
          }
          else {
-             if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
+             if ($spatial_type_radio_button_1.attr('checked') === 'checked'){
                  $spatial_type_radio_button_1.prop("checked", true);
              }
              else {
@@ -794,7 +794,6 @@ function showFileTypeMetadata(file_type_time_series, url){
                 fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
              });
          }
-         $("#div_id_type_filetype input:radio").trigger("change");
     });
 }
 

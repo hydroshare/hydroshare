@@ -239,8 +239,10 @@ def update_aggregation_coverage(request, file_type_id, coverage_type):
 
     if coverage_type.lower() == 'spatial':
         fs_aggr.update_spatial_coverage()
+        coverage_element = fs_aggr.metadata.spatial_coverage
     else:
         fs_aggr.update_temporal_coverage()
+        coverage_element = fs_aggr.metadata.temporal_coverage
 
     msg = "Aggregation {} coverage was updated successfully.".format(coverage_type.lower())
     response_data['status'] = 'success'
@@ -249,7 +251,9 @@ def update_aggregation_coverage(request, file_type_id, coverage_type):
         response_data['spatial_coverage'] = get_coverage_data_dict(fs_aggr)
     else:
         response_data['temporal_coverage'] = get_coverage_data_dict(fs_aggr, 'temporal')
-
+    response_data['element_id'] = coverage_element.id
+    response_data['logical_file_id'] = fs_aggr.id
+    response_data['logical_file_type'] = fs_aggr.type_name()
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
@@ -400,6 +404,70 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         ajax_response_data = {'status': 'error', 'message': err_msg}
         # need to return http status 200 to show form errors
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def delete_coverage_element(request, hs_file_type, file_type_id,
+                            element_id, **kwargs):
+    """This function is to delete coverage metadata for single file aggregation or file set
+    aggregation"""
+
+    element_type = 'coverage'
+    if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile'):
+        err_msg = "Coverage can be deleted only for single file content or file set content."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if logical_file is None:
+        err_msg = "No matching aggregation type was found."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': element_type, 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    coverage_element = logical_file.metadata.coverages.filter(id=element_id).first()
+    if coverage_element is None:
+        ajax_response_data = {'status': 'error',
+                              'logical_file_type': logical_file.type_name(),
+                              'element_name': element_type,
+                              'message': "No matching coverage was found"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # delete the coverage element
+    logical_file.metadata.delete_element(element_type, element_id)
+
+    if resource.can_be_public_or_discoverable:
+        metadata_status = METADATA_STATUS_SUFFICIENT
+    else:
+        metadata_status = METADATA_STATUS_INSUFFICIENT
+
+    ajax_response_data = {'status': 'success', 'element_name': element_type,
+                          'metadata_status': metadata_status,
+                          'logical_file_type': logical_file.type_name(),
+                          'logical_file_id': logical_file.id
+                          }
+
+    spatial_coverage_dict = get_coverage_data_dict(resource)
+    temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
+    ajax_response_data['spatial_coverage'] = spatial_coverage_dict
+    ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
+    ajax_response_data['has_logical_spatial_coverage'] = \
+        resource.has_logical_spatial_coverage
+    ajax_response_data['has_logical_temporal_coverage'] = \
+        resource.has_logical_temporal_coverage
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
 @login_required

@@ -32,6 +32,11 @@ urlpatterns = patterns(
         views.add_metadata_element,
         name="add_file_metadata"),
 
+    url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/coverage/'
+        r'(?P<element_id>[0-9]+)/delete-file-coverage/$',
+        views.delete_coverage_element,
+        name="delete_file_coverage"),
+
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/'
         r'update-file-keyvalue-metadata/$',
         views.update_key_value_metadata,
