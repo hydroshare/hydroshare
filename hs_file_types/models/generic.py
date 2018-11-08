@@ -5,7 +5,7 @@ from django.db import models
 from django.template import Template, Context
 from django.core.exceptions import ValidationError
 
-from dominate.tags import div, form, button, h4
+from dominate.tags import div, form, button, h4, span, a
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
@@ -24,6 +24,15 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         element = super(GenericFileMetaDataMixin, self).create_element(element_model_name, **kwargs)
         self.is_dirty = True
         return element
+
+    def delete_element(self, element_model_name, element_id):
+        """Overriding the base class method to allow deleting any metadata element that's part of
+        generic aggregation (single file aggregation or file set aggregation) metadata"""
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        meta_element = model_type.model_class().objects.get(id=element_id)
+        meta_element.delete()
+        self.is_dirty = True
+        self.save()
 
     @property
     def has_modified_metadata(self):
@@ -72,6 +81,8 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
+                    with a(id="id-btn-delete-spatial-filetype", type="button", cls="pull-left"):
+                        span(cls="glyphicon glyphicon-trash icon-button btn-remove")
                     div("{% crispy spatial_form %}")
                     with div(cls="row", style="margin-top:10px;"):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "
@@ -82,11 +93,11 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
                 # for aggregation that contains other aggregations with spatial data,
                 # show option to update spatial coverage from contained aggregations
                 if self.logical_file.has_children_spatial_data:
-                    with div(cls="col-md-offset-6 col-xs-offset-2 "
-                                 "col-md-2 col-xs-6"):
-                        button("Set spatial coverage from contained aggregations", type="button",
-                               cls="btn btn-primary pull-right",
-                               id="btn-update-aggregation-spatial-coverage")
+                    with div(style="margin-top:20px;"):
+                        with div():
+                            button("Set spatial coverage from folder contents", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   id="btn-update-aggregation-spatial-coverage")
 
         template = Template(root_div.render())
         context_dict = dict()
@@ -193,11 +204,28 @@ class GenericLogicalFile(AbstractLogicalFile):
         """This aggregation supports only one file"""
         return True
 
+    @property
+    def redirect_url(self):
+        """
+        return redirect_url if this logical file is a referenced web url file, None otherwise
+        """
+        if 'url' in self.extra_data:
+            return self.extra_data['url']
+        else:
+            return None
+
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """Makes any physical file part of a generic  aggregation type. The physical file must
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None, extra_data={}):
+        """
+        Makes any physical file part of a generic aggregation type. The physical file must
         not already be a part of any aggregation.
-        Note: parameter folder_path is ignored here and a value for file_id is required
+        :param resource:
+        :param user:
+        :param file_id: id of the resource file to set logical file type
+        :param folder_path: ignored here and a value for file_id is required
+        :param extra_data: a dict that, if not empty, will be passed on to extra_data of
+        corresponding logical file of the resource file
+        :return:
         """
 
         log = logging.getLogger()
@@ -212,6 +240,8 @@ class GenericLogicalFile(AbstractLogicalFile):
         logical_file = GenericLogicalFile.create(resource)
         dataset_name, _ = os.path.splitext(res_file.file_name)
         logical_file.dataset_name = dataset_name
+        if extra_data:
+            logical_file.extra_data = extra_data
         logical_file.save()
         res_file.logical_file_content_object = logical_file
         res_file.save()

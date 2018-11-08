@@ -41,7 +41,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         base_data_file_path = 'hs_file_types/tests/data/{}'
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
-        self.sqlite_file_name = 'ODM2_Multi_Site_one_variable.sqlite'
+        self.sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         self.sqlite_file = base_data_file_path.format(self.sqlite_file_name)
 
         self.states_prj_file_name = 'states.prj'
@@ -762,12 +762,82 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_rename_aggregation_1(self):
+        """Testing that we can rename a folder that represents a fileset aggregation"""
+        self._create_fileset_aggregation()
+        # There should be now one fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggr.folder, 'fileset_folder')
+        # rename fileset aggregation name
+        new_folder = 'fileset_folder_1'
+        src_path = 'data/contents/{}'.format(fs_aggr.folder)
+        tgt_path = 'data/contents/{}'.format(new_folder)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(fs_aggr.folder, new_folder)
+        self.composite_resource.delete()
+
+    def test_rename_aggregation_2(self):
+        """Testing that we can rename a folder that represents a fileset aggregation that
+        exists within another fileset aggregation - nested fileset aggregation"""
+
+        self._create_nested_fileset_aggregations()
+
+        parent_fs_folder = 'parent_fileset_folder'
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        # There should be 2 fileset aggregations
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        fs_aggr_child = FileSetLogicalFile.objects.filter(folder=child_fs_folder).first()
+
+        # rename fileset aggregation name for the child fileset aggregation
+        new_child_fs_folder = '{}/child_fileset_folder_1'.format(parent_fs_folder)
+        src_path = 'data/contents/{}'.format(fs_aggr_child.folder)
+        tgt_path = 'data/contents/{}'.format(new_child_fs_folder)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=parent_fs_folder).count(), 1)
+
+        self.composite_resource.delete()
+
+    def test_rename_aggregation_3(self):
+        """Testing that we can rename a folder that represents a fileset aggregation that
+        contains another fileset aggregation - nested fileset aggregation"""
+
+        self._create_nested_fileset_aggregations()
+
+        # remove the nested fileset aggregation
+        parent_fs_folder = 'parent_fileset_folder'
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        # There should be 2 fileset aggregations
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        fs_aggr_parent = FileSetLogicalFile.objects.filter(folder=parent_fs_folder).first()
+
+        # rename fileset aggregation name for the parent fileset aggregation
+        new_parent_fs_folder = parent_fs_folder + '_1'
+        src_path = 'data/contents/{}'.format(fs_aggr_parent.folder)
+        tgt_path = 'data/contents/{}'.format(new_parent_fs_folder)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_parent_fs_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=child_fs_folder).count(), 1)
+
+        self.composite_resource.delete()
+
     def test_remove_aggregation(self):
         """Test that we can remove fileset aggregation that lives at the root"""
 
         # no fileset aggregation at this point
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
-        # create a filset aggregation at the the root
+        # create a fileset aggregation at the the root
         self._create_fileset_aggregation()
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)

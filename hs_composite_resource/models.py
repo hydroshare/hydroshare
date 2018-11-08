@@ -1,7 +1,4 @@
 import os
-import json
-from operator import lt, gt
-from dateutil import parser
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -52,6 +49,21 @@ class CompositeResource(BaseResource):
 
         return lf_list
 
+    @property
+    def can_be_published(self):
+        # resource level metadata check
+        if not super(CompositeResource, self).can_be_published:
+            return False
+
+        # filetype level metadata check
+        for lf in self.logical_files:
+            if not lf.metadata.has_all_required_elements():
+                return False
+            # url file cannot be published
+            if 'url' in lf.extra_data:
+                return False
+        return True
+
     def set_default_logical_file(self):
         """sets an instance of GenericLogicalFile to any resource file objects of this instance
         of the resource that is not already associated with a logical file. """
@@ -95,13 +107,16 @@ class CompositeResource(BaseResource):
             return None
 
         istorage = self.get_irods_storage()
-        store = istorage.listdir(dir_path)
-        files_in_folder = ResourceFile.list_folder(self, folder=dir_path, sub_folders=False)
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+        store = istorage.listdir(irods_path)
+        files_in_folder = ResourceFile.list_folder(self, folder=irods_path, sub_folders=False)
 
         if not files_in_folder:
             # folder is empty
             # check sub folders for files - if file exist we can set FileSet aggregation
-            files_in_sub_folders = ResourceFile.list_folder(self, folder=dir_path,
+            files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
                                                             sub_folders=True)
             if files_in_sub_folders:
                 return FileSetLogicalFile.__name__
@@ -233,7 +248,8 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         for aggregation in self.logical_files:
-            if aggregation.aggregation_name == name:
+            # remove the last slash in aggregation_name if any
+            if aggregation.aggregation_name.rstrip('/') == name:
                 return aggregation
 
         raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
@@ -296,6 +312,16 @@ class CompositeResource(BaseResource):
 
         if is_new_aggr_a_folder:
             delete_old_xml_files(folder=new_aggr_name)
+            try:
+                # in case of fileset aggregation need to update aggregation folder attribute to the
+                # new folder name
+                aggregation = self.get_aggregation_by_name(orig_aggr_name)
+                if aggregation.is_fileset:
+                    aggregation.folder = new_aggr_name
+                    aggregation.save()
+            except ObjectDoesNotExist:
+                # not renaming a fileset aggregation folder
+                pass
             self._recreate_xml_docs_for_folder(new_aggr_name)
         else:
             # check if there is a matching single file aggregation

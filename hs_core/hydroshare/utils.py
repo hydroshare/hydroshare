@@ -387,7 +387,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
     map_logical_files = {}
     for src_logical_file in src_logical_files:
-        map_logical_files[src_logical_file] = src_logical_file.get_copy()
+        map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
@@ -397,6 +397,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
             tgt_logical_file = map_logical_files[f.logical_file]
+            if f.logical_file.extra_data:
+                tgt_logical_file.extra_data = copy.deepcopy(f.logical_file.extra_data)
+                tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
     if src_res.resource_type.lower() == "collectionresource":

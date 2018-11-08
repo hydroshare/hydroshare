@@ -24,7 +24,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_resource_by_shortkey
+    set_dirty_bag_flag, add_file_to_resource, resource_modified
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 
@@ -36,6 +36,7 @@ class AbstractFileMetaData(models.Model):
     coverages = GenericRelation(Coverage)
     # key/value metadata
     extra_metadata = HStoreField(default={})
+
     # keywords
     keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
     # to track if any metadata element has been modified to trigger file update
@@ -142,7 +143,7 @@ class AbstractFileMetaData(models.Model):
                 if self.logical_file.has_children_temporal_data:
                     with self.get_temporal_coverage_html_form():
                         with div():
-                            button("Set temporal coverage from contained aggregations",
+                            button("Set temporal coverage from folder contents",
                                    type="button",
                                    cls="btn btn-primary",
                                    id="btn-update-aggregation-temporal-coverage")
@@ -249,6 +250,8 @@ class AbstractFileMetaData(models.Model):
         with root_div:
             with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                       method="post", enctype="multipart/form-data"):
+                with a(id="id-btn-delete-temporal-filetype", type="button", cls="pull-left"):
+                    span(cls="glyphicon glyphicon-trash icon-button btn-remove")
                 div("{% crispy temp_form %}")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 "
@@ -387,22 +390,23 @@ class AbstractFileMetaData(models.Model):
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
         if element_model_name.lower() == "coverage":
-            resource = element.metadata.logical_file.resource
-            # resource will be None in case of coverage element being
+            aggr = element.metadata.logical_file
+            # aggregation won't have resource files in case of coverage element being
             # created as part of copying a resource that supports logical file
-            # types
-            if resource is not None:
-                # get the typed resource - CompositeResource
-                resource = get_resource_by_shortkey(resource.short_id)
+            # types - in that case no need for updating resource lever coverage
+            if aggr.files.all().count() > 0:
+                resource = aggr.resource
                 resource.update_coverage()
 
             # if the aggregation (logical file) for which coverage data is created
             # has a parent aggregation then coverage needs to be updated for that
-            # parent aggregation
-            aggr = element.metadata.logical_file
-            parent_aggr = aggr.get_parent()
-            if parent_aggr is not None:
-                parent_aggr.update_coverage()
+            # parent aggregation except in the case of metadata element being created as
+            # part of copying a resource.
+            # aggregation won't have resource files when copying a resource
+            if aggr.files.all().count() > 0:
+                parent_aggr = aggr.get_parent()
+                if parent_aggr is not None:
+                    parent_aggr.update_coverage()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -414,8 +418,6 @@ class AbstractFileMetaData(models.Model):
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
-            # get the typed resource - CompositeResource
-            resource = get_resource_by_shortkey(resource.short_id)
             resource.update_coverage()
 
             # if the aggregation (logical file) for which coverage data is updated
@@ -664,6 +666,11 @@ class AbstractLogicalFile(models.Model):
     # each specific logical type needs to reset this field
     # also this data type needs to be defined in in terms.html page
     data_type = "Generic"
+
+    # this field is for logical file to store extra key:value pairs, e.g., currently for .url
+    # file to store url value for easy redirection when opening the file
+    # for internal use only - won't get recorded in bag and shouldn't be used for storing metadata
+    extra_data = HStoreField(default={})
 
     class Meta:
         abstract = True
@@ -1123,12 +1130,14 @@ class AbstractLogicalFile(models.Model):
             # make the copied file as part of the aggregation/file type
             self.add_resource_file(copied_res_file)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """creates a copy of this logical file object with associated metadata needed to support
         resource copy.
+        :param  copied_resource: a copy of the resource for which a copy of aggregation needs to be
+        created
         Note: This copied logical file however does not have any association with resource files
         """
-        copy_of_logical_file = type(self).create()
+        copy_of_logical_file = type(self).create(copied_resource)
         copy_of_logical_file.dataset_name = self.dataset_name
         copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
         copy_of_logical_file.metadata.keywords = self.metadata.keywords

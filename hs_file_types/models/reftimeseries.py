@@ -829,10 +829,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
-        copy_of_logical_file = super(RefTimeseriesLogicalFile, self).get_copy()
+        copy_of_logical_file = super(RefTimeseriesLogicalFile, self).get_copy(copied_resource)
         copy_of_logical_file.metadata.json_file_content = self.metadata.json_file_content
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.save()

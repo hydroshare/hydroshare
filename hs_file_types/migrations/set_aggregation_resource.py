@@ -53,7 +53,7 @@ def set_aggregation_resource(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0008_auto_20180812_1859'),
+        ('hs_file_types', '0009_auto_20181028_1554'),
     ]
 
     operations = [

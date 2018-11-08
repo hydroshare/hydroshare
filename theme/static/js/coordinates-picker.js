@@ -4,8 +4,8 @@
 
 var coordinatesPicker;
 var currentInstance;   // Keeps track of the instance to work with
-var allOverlays = [];
-var drawingManager;
+var allOverlaysFileType = [];
+var drawingManagerFileType;
 
 (function( $ ){
     $.fn.coordinatesPicker = function () {
@@ -42,11 +42,11 @@ var drawingManager;
 
             item.toggleClass("form-control", true);
             // Delete previous drawings
-            for (var i = 0; i < allOverlays.length; i++) {
-                allOverlays[i].overlay.setMap(null);
+            for (var i = 0; i < allOverlaysFileType.length; i++) {
+                allOverlaysFileType[i].overlay.setMap(null);
             }
 
-            allOverlays = [];
+            allOverlaysFileType = [];
 
             // Map trigger event handler
             item.parent().find(".btn-choose-coordinates").click(function () {
@@ -58,17 +58,17 @@ var drawingManager;
                     allShapes[i].setMap(null);
                 }
                 allShapes = [];
-                for (var i = 0; i < allOverlays.length; i++) {
-                    allOverlays[i].overlay.setMap(null);
+                for (var i = 0; i < allOverlaysFileType.length; i++) {
+                    allOverlaysFileType[i].overlay.setMap(null);
                 }
-                allOverlays = [];
+                allOverlaysFileType = [];
                 // Set the type of controls
                 if (type === "point") {
-                    drawingManager.drawingControlOptions.drawingModes = [
+                    drawingManagerFileType.drawingControlOptions.drawingModes = [
                         google.maps.drawing.OverlayType.MARKER
                     ];
-                    drawingManager.drawingMode = null;  // Set the default hand control
-                    drawingManager.setMap(coordinatesPicker);
+                    drawingManagerFileType.drawingMode = null;  // Set the default hand control
+                    drawingManagerFileType.setMap(coordinatesPicker);
                     var lat_field;
                     var lon_field;
                     if(logical_type === "TimeSeriesLogicalFile") {
@@ -91,6 +91,7 @@ var drawingManager;
                         });
                         allShapes.push(marker);
                         var coordinates = (marker.getPosition());
+                        marker.setMap(coordinatesPicker);
                         // Set onClick event for recenter button
                         processDrawingFileType(coordinates, "marker");
                         // Center map at new market
@@ -101,11 +102,11 @@ var drawingManager;
                     }
                 }
                 else if (type === "rectangle") {
-                    drawingManager.drawingControlOptions.drawingModes = [
+                    drawingManagerFileType.drawingControlOptions.drawingModes = [
                         google.maps.drawing.OverlayType.RECTANGLE
                     ];
-                    drawingManager.drawingMode = null;  // Set the default hand control
-                    drawingManager.setMap(coordinatesPicker);
+                    drawingManagerFileType.drawingMode = null;  // Set the default hand control
+                    drawingManagerFileType.setMap(coordinatesPicker);
                     var bounds = {
                         north: parseFloat(spatial_form.find("#id_northlimit_filetype").val()),
                         south: parseFloat(spatial_form.find("#id_southlimit_filetype").val()),
@@ -169,10 +170,10 @@ function initMapFileType() {
         }
     });
 
-    drawingManager = new google.maps.drawing.DrawingManager({
+    drawingManagerFileType = new google.maps.drawing.DrawingManager({
         drawingControl: true,
         drawingControlOptions: {
-            position: google.maps.ControlPosition.TOP_CENTER,
+            position: google.maps.ControlPosition.TOP_CENTER
         },
         rectangleOptions: {
             editable: true,
@@ -180,10 +181,10 @@ function initMapFileType() {
         }
     });
 
-    drawingManager.setMap(coordinatesPicker);
+    drawingManagerFileType.setMap(coordinatesPicker);
 
     // When a rectangle is drawn
-    google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
+    google.maps.event.addListener(drawingManagerFileType, 'rectanglecomplete', function (rectangle) {
         var coordinates = (rectangle.getBounds());
         processDrawingFileType(coordinates, "rectangle");
 
@@ -195,13 +196,13 @@ function initMapFileType() {
     });
 
     // When a point is selected
-    google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
+    google.maps.event.addListener(drawingManagerFileType, 'markercomplete', function (marker) {
         var coordinates = (marker.getPosition());
             processDrawingFileType(coordinates, "marker");
     });
 
-    google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
-        allOverlays.push(e);
+    google.maps.event.addListener(drawingManagerFileType, 'overlaycomplete', function (e) {
+        allOverlaysFileType.push(e);
     });
 
 
@@ -213,13 +214,13 @@ function initMapFileType() {
 
 function processDrawingFileType(coordinates, shape) {
     // Delete previous drawings
-    if (allOverlays.length > 1) {
-        for (var i = 1; i < allOverlays.length; i++) {
-            allOverlays[i - 1].overlay.setMap(null);
+    if (allOverlaysFileType.length > 1) {
+        for (var i = 1; i < allOverlaysFileType.length; i++) {
+            allOverlaysFileType[i - 1].overlay.setMap(null);
         }
-        allOverlays.shift();
+        allOverlaysFileType.shift();
     }
-    if (allOverlays.length > 0) {
+    if (allOverlaysFileType.length > 0) {
         for (var i = 0; i < allShapes.length; i++) {
             allShapes[i].setMap(null);
         }

@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('hs_composite_resource', '0001_initial'),
-        ('hs_file_types', '0007_timeseriesfilemetadata_abstract'),
+        ('hs_file_types', '0008_auto_20180910_1731'),
     ]
 
     operations = [
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('dataset_name', models.CharField(max_length=255, null=True, blank=True)),
+                ('extra_data', django.contrib.postgres.fields.hstore.HStoreField(default={})),
                 ('folder', models.CharField(max_length=4096)),
             ],
             options={

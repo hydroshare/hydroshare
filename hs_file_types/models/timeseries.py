@@ -644,10 +644,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                                                        file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
-        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy()
+        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy(copied_resource)
         copy_of_logical_file.metadata.abstract = self.metadata.abstract
         copy_of_logical_file.metadata.value_counts = self.metadata.value_counts
         copy_of_logical_file.metadata.is_dirty = self.metadata.is_dirty

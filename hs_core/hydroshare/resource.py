@@ -62,6 +62,22 @@ def update_quota_usage(res=None, user=None):
     return
 
 
+def res_has_web_reference(res):
+    """
+    Check whether a resource includes web reference url file.
+    :param res: resource object
+    :return: True if yes, False otherwise
+    """
+    if res.resource_type != "CompositeResource":
+        return False
+
+    for f in ResourceFile.objects.filter(object_id=res.id):
+        if f.has_logical_file:
+            if 'url' in f.logical_file.extra_data:
+                return True
+    return False
+
+
 def get_resource(pk):
     """
     Retrieve an instance of type Bags associated with the resource identified by **pk**
@@ -742,19 +758,22 @@ def add_resource_files(pk, *files, **kwargs):
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
+    prefix_path = 'data/contents'
+    if folder is None or folder == prefix_path:
+        base_dir = ""
+    elif folder.startswith(prefix_path):
+        base_dir = folder[len(prefix_path) + 1:]
+    else:
+        base_dir = folder
     new_folders = set()
     for f in files:
-        full_dir = "" if folder is None else folder
+        full_dir = base_dir
         if f in full_paths:
             # TODO, put this in it's own method?
             full_path = full_paths[f]
             dir_name = os.path.dirname(full_path)
-            base_dir = full_dir if full_dir is not None else ''
-            dir_name = dir_name if dir_name is not None else ''
-            if dir_name:
-                full_dir = os.path.join(base_dir, dir_name)
-            else:
-                full_dir = base_dir
+            # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
+            full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         if full_dir:
             new_folders.add(full_dir)
             ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
@@ -1117,8 +1136,8 @@ def publish_resource(user, pk):
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files or this resource type is not allowed "
-                              "for publication.")
+                              "metadata or content files, or this resource contains referenced "
+                              "content, or this resource type is not allowed for publication.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
