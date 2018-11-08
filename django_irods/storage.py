@@ -314,11 +314,11 @@ class IrodsStorage(Storage):
         return int(stdout[3])
 
     def url(self, name, url_download=False, zipped=False):
-        reverse_url = reverse('django_irods.views.download', kwargs={'path': name})
+        reverse_url = reverse('django_irods_download', kwargs={'path': name})
         query_params = {'url_download': url_download, "zipped": zipped}
         return reverse_url + '?' + urlencode(query_params)
 
-    def get_available_name(self, name):
+    def get_available_name(self, name, max_length=None):
         """
         Reject duplicate file names rather than renaming them.
         """
