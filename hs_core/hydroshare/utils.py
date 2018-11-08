@@ -397,6 +397,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
             tgt_logical_file = map_logical_files[f.logical_file]
+            if f.logical_file.extra_data:
+                tgt_logical_file.extra_data = copy.deepcopy(f.logical_file.extra_data)
+                tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
     if src_res.resource_type.lower() == "collectionresource":
@@ -1042,12 +1045,18 @@ def resolve_request(request):
 
 
 def check_aggregations(resource, folders, res_files):
+    """
+    Checks for aggregations in each folder first, then checks for aggregations in each file
+    :param resource: resource object
+    :param folders: list of folders as strings to check for aggregations in
+    :param res_file: list of ResourceFile objects to be check for aggregations in
+    :return:
+    """
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
         # check folders for aggregations
         for fol in folders:
-            folder = os.path.join(resource.file_path, fol)
-            agg_type = resource.get_folder_aggregation_type_to_set(folder)
+            agg_type = resource.get_folder_aggregation_type_to_set(fol)
             if agg_type:
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,
