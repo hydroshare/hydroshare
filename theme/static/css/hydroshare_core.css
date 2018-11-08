@@ -4265,6 +4265,21 @@ div.fb-upload-caption a {
 	display: block;
 }
 
+.fb-view-grid .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -3px;
+	left: -12px;
+}
+
+.fb-view-list .fb-folder i.fa-tag {
+    transform: rotate(90deg);
+    color: #FF9800;
+    top: -8px;
+    left: 2px;
+    font-size: 9px;
+}
+
 .fb-view-grid .fb-aggregation-icon > img {
 	width: 30px;
 	height: 30px;
@@ -4280,6 +4295,14 @@ div.fb-upload-caption a {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 18px;
+}
+
+.fb-view-list .fb-folder-aggregation {
+	margin-left: 0;
+}
+
+.fb-folder-aggregation {
+	color: #45911c;
 }
 
 .fb-view-list .fb-aggregation-icon {
