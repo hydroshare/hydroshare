@@ -85,11 +85,11 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoFeatureFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="content-block"):
                 div("{% crispy geometry_information_form %}")
-            with div(cls="col-lg-6 col-xs-12 col-md-pull-6", style="margin-top:40px;"):
+            with div(cls="content-block"):
                 div("{% crispy spatial_coverage_form %}")
-            with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="content-block"):
                 div("{% crispy original_coverage_form %}")
 
         template = Template(root_div.render())

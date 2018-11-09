@@ -235,7 +235,7 @@ class AbstractFileMetaData(models.Model):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(id="temporal-coverage-filetype")
+        root_div = div(id="temporal-coverage-filetype", cls='content-block')
         with root_div:
             with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                       method="post", enctype="multipart/form-data"):
