@@ -81,7 +81,7 @@ class AbstractFileMetaData(models.Model):
     def get_dataset_name_html(self):
         """generates html for viewing dataset name (title)"""
         if self.logical_file.dataset_name:
-            dataset_name_div = div(cls="col-xs-12 content-block")
+            dataset_name_div = div(cls="content-block")
             with dataset_name_div:
                 legend("Title")
                 p(self.logical_file.dataset_name)
@@ -89,9 +89,8 @@ class AbstractFileMetaData(models.Model):
 
     def get_keywords_html(self):
         """generates html for viewing keywords"""
-        keywords_div = div()
+        keywords_div = div(cls='content-block')
         if self.keywords:
-            keywords_div = div(cls="col-sm-12 content-block")
             with keywords_div:
                 legend('Keywords')
                 with div(cls="tags"):
@@ -105,7 +104,7 @@ class AbstractFileMetaData(models.Model):
         """generates html for viewing key/vale extra metadata"""
         extra_metadata_div = div()
         if self.extra_metadata:
-            extra_metadata_div = div(cls="col-sm-12 content-block")
+            extra_metadata_div = div(cls="content-block")
             with extra_metadata_div:
                 legend('Extended Metadata')
                 with table(cls="hs-table table dataTable no-footer", style="width: 100%"):

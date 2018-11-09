@@ -4604,6 +4604,10 @@ span.caption-file-type {
 	padding: 15px;
 }
 
+#fileTypeMetaData .content-block {
+	margin-bottom: 20px;
+}
+
 .fb-content-wrapper {
     display: flex;
 }

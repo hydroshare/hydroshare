@@ -39,7 +39,7 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4, br
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 import unicodedata
@@ -1364,7 +1364,7 @@ class Coverage(AbstractMetaDataElement):
         This function should be used for displaying one spatial coverage element
         or one temporal coverage element
         """
-        root_div = div()
+        root_div = div(cls='content-block')
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -1372,15 +1372,12 @@ class Coverage(AbstractMetaDataElement):
         with root_div:
             if self.type == 'box' or self.type == 'point':
                 legend('Spatial Coverage')
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            get_th('Coordinate Reference System')
-                            td(self.value['projection'])
-                        with tr():
-                            get_th('Coordinate Reference System Unit')
-                            td(self.value['units'])
-
+                div('Coordinate Reference System', cls='text-muted')
+                div(self.value['projection'])
+                br()
+                div('Coordinate Reference System Unit', cls='text-muted')
+                div(self.value['units'])
+                br()
                 h4('Extent')
                 with table(cls='custom-table'):
                     if self.type == 'box':
