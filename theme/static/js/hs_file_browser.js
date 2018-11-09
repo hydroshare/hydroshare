@@ -541,13 +541,8 @@ function bindFileBrowserItemEvents() {
                 }
                 $(this).toggle(agg_app || extension_app);
             });
-            menu.find("li#btn-download").each(function() {
-                if(isFolder){
-                    $(this).toggle(false);
-                }
-                else{
-                    $(this).toggle(true);
-                }
+            menu.find("li#btn-download").each(function () {
+                $(this).toggle(!isFolder);
             });
         }
         else {
@@ -1444,21 +1439,18 @@ $(document).ready(function () {
     });
 
     // Download method
-    $(" #btn-download, #download-file-btn, #fb-download").click(function (e) {
-        if(e.currentTarget.id === "download-file-btn"){
-            $("#license-agree-dialog-file").modal('hide');
+    $("[data-fb-action='download']").click(function () {
+        let data = $(this).data();
+        if (data.target === "#license-agree-dialog-file") {
+            return;
         }
 
-        startDownload();
+        startDownload(!!data.zipped);
     });
 
-    // Download method
-    $(" #btn-download-zip").click(function (e) {
-        if(e.currentTarget.id === "download-file-btn"){
-            $("#license-agree-dialog-file").modal('hide');
-        }
-
-        startDownload(true);
+    $("#download-file-btn").click(function() {
+        $("#license-agree-dialog-file").modal('hide');
+        startDownload();
     });
 
     // Get file URL method

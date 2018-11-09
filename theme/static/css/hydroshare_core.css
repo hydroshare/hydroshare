@@ -4338,6 +4338,7 @@ span.fb-control-square {
 .selection-menu .fa, .selection-menu .glyphicon {
 	font-size: 18px;
 	margin-right: 10px;
+	width: 18px;
 }
 
 div.fb-upload-caption {
