@@ -542,7 +542,7 @@ function bindFileBrowserItemEvents() {
                 $(this).toggle(agg_app || extension_app);
             });
             menu.find("li#btn-download").each(function () {
-                $(this).toggle(!isFolder);
+                $(this).toggleClass("disabled", isFolder);
             });
         }
         else {
