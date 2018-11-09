@@ -5,7 +5,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, br
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
@@ -32,24 +32,22 @@ class OriginalCoverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
         with root_div:
             legend('Spatial Reference')
-            with table(cls='custom-table'):
-                with tbody():
-                    with tr():
-                        get_th('Coordinate Reference System')
-                        td(self.projection_name)
-                    with tr():
-                        get_th('Datum')
-                        td(self.datum)
-                    with tr():
-                        get_th('Coordinate String Text')
-                        td(self.projection_string)
+            div('Coordinate Reference System', cls='text-muted')
+            div(self.projection_name)
+            br()
+            div('Datum', cls='text-muted')
+            div(self.datum)
+            br()
+            div('Coordinate String Text', cls='text-muted')
+            div(self.projection_string)
+            br()
             h4('Extent')
             with table(cls='custom-table'):
                 with tbody():
@@ -173,7 +171,7 @@ class GeometryInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 col-sm-12", style="margin-bottom:40px;")
+        root_div = div(cls="content-block", style="margin-bottom:40px;")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")

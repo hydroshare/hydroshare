@@ -1948,11 +1948,12 @@ a.tag:hover {
         overflow: auto !important;
     }
 
-    #fb-metadata {
-        border-top: 1px solid #DDD;
-        max-height: 400px;
-        overflow: auto;
-    }
+	#fb-metadata {
+		border-top: 1px solid #DDD;
+		max-height: 400px;
+		overflow: auto;
+		width: 100%;
+	}
 
     #fb-metadata-helper, .fb-dropzone-wrapper .ui-resizable-handle {
         display: none !important;
@@ -4615,6 +4616,7 @@ span.caption-file-type {
 .fb-metadata {
     flex-grow: 1;
     height: 200px;
+	width: 200px;
 }
 
 #fb-metadata-helper {

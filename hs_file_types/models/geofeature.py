@@ -63,7 +63,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         return template.render(context)
 
     def _get_field_informations_html(self):
-        root_div = div(cls="col-md-12 col-sm-12 pull-left", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
         with root_div:
             legend('Field Information')
             with table(style="width: 100%;"):
