@@ -107,7 +107,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
         with series_selection_div:
-            div_meta_row = div()
+            div_meta_row = div(cls='custom-well')
             with div_meta_row:
                 # create 1st column of the row
                 with div(cls="content-block"):
@@ -181,80 +181,81 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
             series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
             with series_selection_div:
-                with div(cls="content-block time-series-forms hs-coordinates-picker",
-                         id="site-filetype", data_coordinates_type="point"):
-                    with form(id="id-site-file-type",
-                              action="{{ site_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy site_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
-                with div(cls="content-block time-series-forms",
-                         id="processinglevel-filetype"):
-                    with form(id="id-processinglevel-file-type",
-                              action="{{ processinglevel_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy processinglevel_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
-
-                with div(cls="content-block time-series-forms", id="variable-filetype"):
-                    with form(id="id-variable-file-type",
-                              action="{{ variable_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy variable_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
-
-                with div(cls="content-block time-series-forms",
-                         id="timeseriesresult-filetype"):
-                    with form(id="id-timeseriesresult-file-type",
-                              action="{{ timeseriesresult_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy timeseriesresult_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
-
-                with div(cls="content-block time-series-forms", id="method-filetype"):
-                    with form(id="id-method-file-type",
-                              action="{{ method_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy method_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
-                if self.logical_file.has_csv_file:
-                    with div(cls="content-block time-series-forms",
-                             id="utcoffset-filetype"):
-                        with form(id="id-utcoffset-file-type",
-                                  action="{{ utcoffset_form.action }}",
+                with div(cls='custom-well'):
+                    with div(cls="content-block time-series-forms hs-coordinates-picker",
+                             id="site-filetype", data_coordinates_type="point"):
+                        with form(id="id-site-file-type",
+                                  action="{{ site_form.action }}",
                                   method="post", enctype="multipart/form-data"):
-                            div("{% crispy utcoffset_form %}")
+                            div("{% crispy site_form %}")
                             with div(cls="row", style="margin-top:10px;"):
                                 with div(cls="col-md-offset-10 col-xs-offset-6 "
                                              "col-md-2 col-xs-6"):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
+                    with div(cls="content-block time-series-forms",
+                             id="processinglevel-filetype"):
+                        with form(id="id-processinglevel-file-type",
+                                  action="{{ processinglevel_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy processinglevel_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
+                    with div(cls="content-block time-series-forms", id="variable-filetype"):
+                        with form(id="id-variable-file-type",
+                                  action="{{ variable_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy variable_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
+                    with div(cls="content-block time-series-forms",
+                             id="timeseriesresult-filetype"):
+                        with form(id="id-timeseriesresult-file-type",
+                                  action="{{ timeseriesresult_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy timeseriesresult_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
+                    with div(cls="content-block time-series-forms", id="method-filetype"):
+                        with form(id="id-method-file-type",
+                                  action="{{ method_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy method_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+                    if self.logical_file.has_csv_file:
+                        with div(cls="content-block time-series-forms",
+                                 id="utcoffset-filetype"):
+                            with form(id="id-utcoffset-file-type",
+                                      action="{{ utcoffset_form.action }}",
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% crispy utcoffset_form %}")
+                                with div(cls="row", style="margin-top:10px;"):
+                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                 "col-md-2 col-xs-6"):
+                                        button("Save changes", type="button",
+                                               cls="btn btn-primary pull-right",
+                                               style="display: none;")
 
         template = Template(root_div.render(pretty=True))
         context_dict = dict()
@@ -295,7 +296,6 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                             option(display_text, value=series_id, selected="selected", title=label)
                         else:
                             option(display_text, value=series_id, title=label)
-            hr()
         return root_div
 
     def get_update_sqlite_file_html_form(self):
