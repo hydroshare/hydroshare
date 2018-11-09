@@ -319,6 +319,8 @@ function updateSelectionMenuContext() {
     menu.children("[data-fb-action='open']").toggleClass("hidden", !UIState.open);
 
     $("#open-separator").toggleClass("hidden", !UIState.open);
+    $("#zip-separator").toggleClass("hidden", !UIState.zip);
+
     if (!menu.children("li[data-fb-action='delete']").length) {
         $("#open-separator").toggleClass("hidden", true);
     }
@@ -403,23 +405,6 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container").on("mouseup", "li", function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            // check if this is a left mouse button click
-            if (e.which == 1) {
-                // $("#fileTypeMetaData").html(file_metadata_alert);
-                // showFileTypeMetadata(false, "");
-                // $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
-                // $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
-                // $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
-                // $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
-                // $("#id_east_filetype").attr("data-map-item", "longitude");
-                // $("#id_north_filetype").attr("data-map-item", "latitude");
-                //
-                // updateEditCoverageState();
-                //
-                // $("#id-coverage-spatial-filetype").coordinatesPicker();
-            }
-
-
             if (!isDragging && e.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
