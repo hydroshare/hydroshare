@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:django-1.11
+FROM hydroshare/hs_docker_base:release-1.9
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 # inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
