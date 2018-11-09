@@ -383,7 +383,7 @@ function bindFileBrowserItemEvents() {
     }
 
     // Handle "select" of clicked elements - Mouse Down
-    $("#fb-files-container li").mousedown(function (e) {
+    $("#fb-files-container").on("mousedown", "li", function (e) {
         if (e.ctrlKey) {
             $(this).toggleClass("ui-selected");
         }
@@ -400,28 +400,25 @@ function bindFileBrowserItemEvents() {
         }
     });
 
-    $("#fb-files-container li").mouseup(function (e) {
+    $("#fb-files-container").on("mouseup", "li", function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if ($(this).hasClass("fb-folder")) {
-                // check if this is a left mouse button click
-                if(e.which == 1) {
-                    // showFileTypeMetadata(false, "");
-                    $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
-                    $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
-                    $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
-                    $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
-                    $("#id_east_filetype").attr("data-map-item", "longitude");
-                    $("#id_north_filetype").attr("data-map-item", "latitude");
-
-                    updateEditCoverageState();
-
-                    $("#id-coverage-spatial-filetype").coordinatesPicker();
-                }
+            // check if this is a left mouse button click
+            if (e.which == 1) {
+                // $("#fileTypeMetaData").html(file_metadata_alert);
+                // showFileTypeMetadata(false, "");
+                // $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
+                // $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
+                // $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
+                // $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
+                // $("#id_east_filetype").attr("data-map-item", "longitude");
+                // $("#id_north_filetype").attr("data-map-item", "latitude");
+                //
+                // updateEditCoverageState();
+                //
+                // $("#id-coverage-spatial-filetype").coordinatesPicker();
             }
-            else{
-                $("#fileTypeMetaData").html(file_metadata_alert);
-            }
+
 
             if (!isDragging && e.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
@@ -684,10 +681,6 @@ function showFileTypeMetadata(file_type_time_series, url){
              if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
                  $("#div-sqlite-file-update").hide();
              }
-             $(".hs-coordinates-picker").each(function() {
-                    const instance = $(this);
-                    instance.coordinatesPicker();
-             });
              InitializeTimeSeriesFileTypeForms();
          }
          if (logical_type === "GeoRasterLogicalFile"){
@@ -704,6 +697,20 @@ function showFileTypeMetadata(file_type_time_series, url){
                  $spatial_type_radio_button_2.prop("checked", true);
              }
          }
+
+         $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
+         $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
+         $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
+         $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
+         $("#id_east_filetype").attr("data-map-item", "longitude");
+         $("#id_north_filetype").attr("data-map-item", "latitude");
+
+         $(".hs-coordinates-picker").each(function () {
+             const instance = $(this);
+             instance.coordinatesPicker();
+         });
+
+         updateEditCoverageState();
 
          $("#div_id_type_filetype input:radio").trigger("change");
     });

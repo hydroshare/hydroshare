@@ -195,6 +195,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
+
                     with div(cls="content-block time-series-forms",
                              id="processinglevel-filetype"):
                         with form(id="id-processinglevel-file-type",

@@ -1555,14 +1555,13 @@ function initializeDatePickers(){
 
 function updateEditCoverageState() {
     // Set state for composite resource file metadata editing
-    chkBox = $("#id-coverage-spatial-filetype #id_type_1");
-    chkPoint = $("#id-coverage-spatial-filetype #id_type_2");
+    let chkBox = $("#id_type_filetype input:first-child");
 
-    if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
-        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
+    if (chkBox.prop("checked")) {
+        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
     }
     else {
-        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
+        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
     }
 
     if (chkBox.prop("checked")) {
