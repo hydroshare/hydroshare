@@ -6,6 +6,7 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.management.utils import check_irods_files
 
 
 def debug_resource(short_id):
@@ -19,7 +20,7 @@ def debug_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    irods_issues, irods_errors = resource.check_irods_files(log_errors=False, return_errors=True)
+    irods_issues, irods_errors = check_irods_files(resource, log_errors=False, return_errors=True)
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
@@ -38,9 +39,7 @@ def debug_resource(short_id):
     if resource.resource_type == 'CompositeResource':
         print("Resource file logical files:")
         for res_file in resource.files.all():
-            if not res_file.has_logical_file:
-                print("    {} logical file NOT SPECIFIED".format(res_file.short_path))
-            else:
+            if res_file.has_logical_file:
                 print("    {} logical file {} is [{}]".format(res_file.short_path,
                                                               str(type(res_file.logical_file)),
                                                               str(res_file.logical_file.id)))

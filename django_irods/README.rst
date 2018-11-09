@@ -39,6 +39,6 @@ things in an example view like so in your views.py::
             # redirect to allow the user to select from his/her environments
         else:
             stdout, stderr = itasks.ils.delay(request.GET['path']).get()
-            return render_to_response('mytemplate.html', lsresults=stdout)
+            return render(request, 'mytemplate.html', lsresults=stdout)
 
 For more information on icommands see the project documentation.

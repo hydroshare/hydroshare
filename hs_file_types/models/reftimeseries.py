@@ -789,6 +789,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         try:
             json_file_content = _validate_json_file(res_file)
         except Exception as ex:
+            log.exception("failed json validation")
             raise ValidationError(ex.message)
 
         # get the file from irods to temp dir

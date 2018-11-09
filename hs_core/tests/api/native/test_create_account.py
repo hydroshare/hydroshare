@@ -9,6 +9,7 @@ import unittest
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from theme.models import UserProfile
+from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
 from hs_dictionary.models import UncategorizedTerm
@@ -113,6 +114,92 @@ class CreateAccountTest(TestCase):
         self.assertEqual(3, terms.count())
         for term in terms:
             self.assertTrue(term.name in organizations)
+
+    def test_case_in_username(self):
+        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        user = hydroshare.create_account(
+            'shaun@gmail.com',
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            superuser=False,
+            password=password,
+            active=True
+            )
+
+        users_in_db = User.objects.all()
+        db_user = users_in_db[0]
+        self.assertEqual(user.email, db_user.email)
+        self.assertEqual(user.username, db_user.username)
+        self.assertEqual(user.first_name, db_user.first_name)
+        self.assertEqual(user.last_name, db_user.last_name)
+        self.assertEqual(user.password, db_user.password)
+        self.assertEqual(user.is_superuser, db_user.is_superuser)
+        self.assertEqual(user.is_active, db_user.is_active)
+        self.assertTrue(db_user.is_active)
+        self.assertTrue(user.is_active)
+        self.assertFalse(db_user.is_superuser)
+        self.assertFalse(user.is_superuser)
+
+        username, first_name, last_name, password = 'sHaUnJl', 'shaun', 'joseph', 'mypass'
+        try:
+            user = hydroshare.create_account(
+                'other@gmail.com',
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                superuser=False,
+                password=password,
+                active=True
+            )
+            self.fail("Should not be able to create an account with case insensitivie matching "
+                      "usernames")
+        except ValidationError as v:
+            self.assertEqual("User with provided username already exists.", v.message)
+            pass
+
+    def test_case_in_email(self):
+        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        user = hydroshare.create_account(
+            'shaun@gmail.com',
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            superuser=False,
+            password=password,
+            active=True
+            )
+
+        users_in_db = User.objects.all()
+        db_user = users_in_db[0]
+        self.assertEqual(user.email, db_user.email)
+        self.assertEqual(user.username, db_user.username)
+        self.assertEqual(user.first_name, db_user.first_name)
+        self.assertEqual(user.last_name, db_user.last_name)
+        self.assertEqual(user.password, db_user.password)
+        self.assertEqual(user.is_superuser, db_user.is_superuser)
+        self.assertEqual(user.is_active, db_user.is_active)
+        self.assertTrue(db_user.is_active)
+        self.assertTrue(user.is_active)
+        self.assertFalse(db_user.is_superuser)
+        self.assertFalse(user.is_superuser)
+
+        username, first_name, last_name, password = 'other', 'shaun', 'joseph', 'mypass'
+        try:
+            user = hydroshare.create_account(
+                'ShAuN@gmail.com',
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                superuser=False,
+                password=password,
+                active=True
+            )
+            self.fail("Should not be able to create an account with case insensitive matching "
+                      "emails")
+        except ValidationError as v:
+            self.assertEqual("User with provided email already exists.", v.message)
+            pass
 
     @unittest.skip
     def test_email_function(self):

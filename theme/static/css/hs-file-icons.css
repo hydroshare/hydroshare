@@ -82,6 +82,10 @@
 	color: #e76f00;
 }
 
+.fb-stack-url {
+    color: #607D8B;
+}
+
 .fb-view-grid .fb-stack {
 	height: 32px;
 }
@@ -170,6 +174,16 @@
 .fb-view-list .fb-stack-py [data-icon] {
 	font-size: 10px;
 	top: -4px;
+}
+
+.fb-view-grid .fb-stack-url .fa-external-link, .dz-details .fb-stack-url .fa-external-link {
+    top: 4px;
+    font-size: 19px;
+}
+
+.fb-view-list .fb-stack-url .fa-external-link {
+    top: -4px;
+    font-size: 11px;
 }
 
 .fb-view-grid .fb-stack-css [data-icon], .dz-details .fb-stack-css [data-icon] {

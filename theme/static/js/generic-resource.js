@@ -326,7 +326,7 @@ function saveExtraMetadata() {
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
     t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-        var extra_meta_name = this.data()[0].trim();
+        var extra_meta_name = $("<div/>").html(this.data()[0].trim()).text();
         var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
         json_obj[extra_meta_name] = extra_meta_value;
     });

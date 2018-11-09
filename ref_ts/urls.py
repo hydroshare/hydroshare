@@ -1,7 +1,7 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from ref_ts import views
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^_internal/get-his-urls/$', views.get_his_urls),
     url(r'^_internal/create-ref-time-series/$', views.create_ref_time_series),
     url(r'^_internal/search-sites/$', views.search_sites),
@@ -15,4 +15,4 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/rest-download-refts-resource-bag/$',
         views.rest_download_refts_resource_bag,
         name="rest_download_refts_resource_bag"),
-    )
+]
