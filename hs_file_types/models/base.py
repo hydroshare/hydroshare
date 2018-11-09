@@ -142,7 +142,7 @@ class AbstractFileMetaData(models.Model):
         return root_div
 
     def get_keywords_html_form(self):
-        keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
+        keywords_div = div(cls="content-block", id="filetype-keywords")
         action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
         action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
         delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
@@ -190,7 +190,7 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div(cls="col-xs-12", id="filetype-extra-metadata")
+            root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
                 legend('Extended Metadata')
                 get_add_keyvalue_button()
@@ -226,7 +226,7 @@ class AbstractFileMetaData(models.Model):
                 self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
-            root_div_extra = div(id="filetype-extra-metadata", cls="col-xs-12 content-block")
+            root_div_extra = div(id="filetype-extra-metadata", cls="content-block")
             with root_div_extra:
                 legend('Extended Metadata')
                 get_add_keyvalue_button()
@@ -236,7 +236,7 @@ class AbstractFileMetaData(models.Model):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(cls="col-lg-6 col-xs-12", id="temporal-coverage-filetype")
+        root_div = div(id="temporal-coverage-filetype")
         with root_div:
             with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                       method="post", enctype="multipart/form-data"):
@@ -444,7 +444,7 @@ class AbstractFileMetaData(models.Model):
     def get_dataset_name_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-filetype-dataset-name/"
         form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-        root_div = div(cls="col-xs-12")
+        root_div = div()
         dataset_name = self.logical_file.dataset_name if self.logical_file.dataset_name else ""
         with root_div:
             with form(action=form_action, id="filetype-dataset-name",

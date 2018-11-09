@@ -139,7 +139,7 @@ function updateSelectionMenuContext() {
         if(resourceType !== 'Composite Resource') {
             UIState.removeAggregation = false;
         }
-        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+        $("#fileTypeMetaData").html(file_metadata_alert);
     }
     else if (selected.length == 1) {
         // Exactly one file selected
@@ -182,7 +182,7 @@ function updateSelectionMenuContext() {
         }
 
         $("#fb-download-help").toggleClass("hidden", true);
-        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+        $("#fileTypeMetaData").html(file_metadata_alert);
     }
 
     if (selected.hasClass("fb-file")) {
@@ -420,7 +420,7 @@ function bindFileBrowserItemEvents() {
                 }
             }
             else{
-                $("#fileTypeMetaDataTab").html(file_metadata_alert);
+                $("#fileTypeMetaData").html(file_metadata_alert);
             }
 
             if (!isDragging && e.which == 1) {
@@ -580,7 +580,7 @@ function showFileTypeMetadata(file_type_time_series, url){
     // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
     // set to true and the *url* must be set
     // remove anything displayed currently for the aggregation metadata
-     $("#fileTypeMetaDataTab").html(file_metadata_alert);
+     $("#fileTypeMetaData").html(file_metadata_alert);
 
      var selectedItem = $("#fb-files-container li.ui-selected");
      var logical_file_id = selectedItem.attr("data-logical-file-id");
@@ -631,12 +631,12 @@ function showFileTypeMetadata(file_type_time_series, url){
                                     '<span>' + json_response.message + '</span>' +
                                 '</div>'+
                             '</div>';
-             $("#fileTypeMetaDataTab").html(error_html);
+             $("#fileTypeMetaData").html(error_html);
              $(".file-browser-container, #fb-files-container").css("cursor", "auto");
              return;
          }
 
-         $("#fileTypeMetaDataTab").html(json_response.metadata);
+         $("#fileTypeMetaData").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
 
@@ -775,7 +775,7 @@ function setBreadCrumbs(path) {
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, path);
-        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+        $("#fileTypeMetaData").html(file_metadata_alert);
     });
 }
 
@@ -905,7 +905,7 @@ function onOpenFolder() {
     pathLog.push(targetPath);
     pathLogIndex = pathLog.length - 1;
     // remove any aggregation metadata display
-    $("#fileTypeMetaDataTab").html(file_metadata_alert);
+    $("#fileTypeMetaData").html(file_metadata_alert);
 
     var calls = [];
     calls.push(get_irods_folder_struct_ajax_submit(resID, targetPath));
@@ -948,7 +948,7 @@ function refreshFileBrowser() {
         $(".selection-menu").hide();
         sourcePaths = [];
         updateSelectionMenuContext();
-        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+        $("#fileTypeMetaData").html(file_metadata_alert);
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1763,7 +1763,7 @@ function setFileType(fileType){
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
-       $("#fileTypeMetaDataTab").html(file_metadata_alert);
+       $("#fileTypeMetaData").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
            refreshResourceEditPage();
@@ -1784,7 +1784,7 @@ function removeAggregation(){
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
-       $("#fileTypeMetaDataTab").html(file_metadata_alert);
+       $("#fileTypeMetaData").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
            refreshResourceEditPage();

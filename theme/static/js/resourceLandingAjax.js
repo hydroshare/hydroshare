@@ -1490,13 +1490,13 @@ function deleteFileTypeExtraMetadata(form_id){
 
 function BindKeyValueFileTypeClickHandlers(){
     // bind key value add modal form OK button click event
-    var keyvalue_add_modal_form = $("#fileTypeMetaDataTab").find('#add-keyvalue-filetype-metadata');
+    var keyvalue_add_modal_form = $("#fileTypeMetaData").find('#add-keyvalue-filetype-metadata');
     keyvalue_add_modal_form.find("button.btn-primary").click(function () {
         addFileTypeExtraMetadata();
     });
 
     // bind all key value edit modal forms OK button click event
-    $("#fileTypeMetaDataTab").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
+    $("#fileTypeMetaData").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-primary").click(function (){
             updateFileTypeExtraMetadata(formId);
@@ -1504,7 +1504,7 @@ function BindKeyValueFileTypeClickHandlers(){
     });
 
     // bind all key value delete modal forms Delete button click event
-    $("#fileTypeMetaDataTab").find('[id^=delete-keyvalue-filetype-metadata]').each(function(){
+    $("#fileTypeMetaData").find('[id^=delete-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-danger").click(function (){
             deleteFileTypeExtraMetadata(formId);
@@ -1698,7 +1698,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 }
 
 function setFileTypeMetadataFormsClickHandlers(){
-    $("#fileTypeMetaDataTab").find('form').each(function () {
+    $("#fileTypeMetaData").find('form').each(function () {
         var formId = $(this).attr('id');
         if (formId !== "update-netcdf-file" && formId !== "update-sqlite-file"&& formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {

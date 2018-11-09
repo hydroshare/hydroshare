@@ -248,6 +248,7 @@
                                 <span>New Folder</span>
                             </li>
                             <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-fb-action="createFolder"
                                 data-target="#add-reference-url-dialog">
                                 <span class="fa fa-external-link icon-blue"></span>
                                 <span>Add content from the web</span>
@@ -602,8 +603,9 @@
                                     </div>
                                     <div id="fb-metadata" class="fb-metadata h-100">
                                         {% if cm.resource_type == "CompositeResource" %}
-                                            <div id="fileTypeMetaDataTab">
-                                                <div id="#fb-metadata-default" class="text-center text-muted" role="alert">
+                                            <div id="fileTypeMetaData">
+                                                <div id="#fb-metadata-default" class="text-center text-muted"
+                                                     role="alert">
                                                     <div>Select a file to see file type metadata.</div>
                                                     <hr>
                                                     <span class="fa-stack fa-lg text-center">

@@ -66,7 +66,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GenericFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
+            with div():
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
                     div("{% crispy spatial_form %}")
