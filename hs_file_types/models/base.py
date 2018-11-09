@@ -97,7 +97,7 @@ class AbstractFileMetaData(models.Model):
                     with ul(id="list-keywords-file-type", cls="tag-list custom-well"):
                         for kw in self.keywords:
                             with li():
-                                a(kw, cls="tag")
+                                a(kw, cls="tag", href="/search/?q=&selected_facets=subject_exact:" + kw)
         return keywords_div
 
     def get_key_value_metadata_html(self):
