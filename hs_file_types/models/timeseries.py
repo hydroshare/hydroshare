@@ -106,6 +106,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             html_string += self.temporal_coverage.get_html()
 
         series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
+        legend("Corresponding Metadata")
         with series_selection_div:
             div_meta_row = div(cls='custom-well')
             with div_meta_row:
@@ -283,6 +284,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             time_series_count = self.time_series_results.count()
         heading = heading.format(str(time_series_count))
         with root_div:
+            legend("Corresponding Metadata")
             span(heading)
             action_url = "/hsapi/_internal/{logical_file_id}/series_id/resource_mode/"
             action_url += "get-timeseries-file-metadata/"
