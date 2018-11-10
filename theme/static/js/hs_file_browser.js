@@ -6,10 +6,32 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
-var file_metadata_alert = '<div id="#fb-metadata-default" class="text-center text-muted" role="alert">' +
-    '<div>Select a file to see file type metadata.</div>' +
-    '<hr><span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>' +
-    '<i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"style="top: 14px;"></i></span></div>';
+var file_metadata_alert = `
+    <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
+        <div>Select a file to see file type metadata.</div>
+        <hr>
+        <span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
+            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"style="top: 14px;"></i>
+        </span>
+    </div>
+`;
+
+var no_metadata_alert = `
+    <div class="alert alert-warning text-center" role="alert">
+        <div>No file type metadata exists for this file.</div>
+        <hr>
+        <i class="fa fa-eye-slash fa-3x" aria-hidden="true"></i>
+    </div>
+`;
+
+var loading_metadata_alert = `
+    <div class="text-center" role="alert">
+        <br>
+        <i class="fa fa-spinner fa-spin fa-3x fa-fw icon-blue"></i>
+        <span class="sr-only">Loading...</span>
+    </div>
+`;
+
 
 const MAX_FILE_SIZE = 1024; // MB
 
@@ -485,12 +507,13 @@ function bindFileBrowserItemEvents() {
         onOpenFolder();
     });
     $("#hs-file-browser li.fb-folder, #hs-file-browser li.fb-file").click(function () {
-         timer = setTimeout(function() {
-             if(!prevent){
-                 showFileTypeMetadata(false, "");
-             }
-             prevent = false;
-         }, delay)
+        $("#fileTypeMetaData").html(loading_metadata_alert);
+        timer = setTimeout(function () {
+            if (!prevent) {
+                showFileTypeMetadata(false, "");
+            }
+            prevent = false;
+        }, delay)
     });
     $("#hs-file-browser li.fb-file").dblclick(onOpenFile);
 
@@ -562,45 +585,45 @@ function showFileTypeMetadata(file_type_time_series, url){
     // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
     // set to true and the *url* must be set
     // remove anything displayed currently for the aggregation metadata
-     $("#fileTypeMetaData").html(file_metadata_alert);
 
-     var selectedItem = $("#fb-files-container li.ui-selected");
-     var logical_file_id = selectedItem.attr("data-logical-file-id");
-     if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
-         return;
-     }
+    var selectedItem = $("#fb-files-container li.ui-selected");
+    var logical_file_id = selectedItem.attr("data-logical-file-id");
+    if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
+        $("#fileTypeMetaData").html(no_metadata_alert);
+        return;
+    }
 
-     var logical_type = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type");
-     if (!logical_type){
-        return; 
-     }
-     if(selectedItem.hasClass("fb-file")){
-         // only in the case Ref TimeSeries file type or generic file type we need to show
-         // file type metadata when a file is selected
-         if(logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile"){
-             return;
-         }
-     }
-     var resource_mode = $("#resource-mode").val();
-     if (!resource_mode){ 
-        return; 
-     } 
-     resource_mode = resource_mode.toLowerCase();
-     var $url;
-     if (file_type_time_series) {
-         $url = url;
-     }
-     else {
-         $url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
-     }
+    var logical_type = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type");
+    if (!logical_type) {
+        return;
+    }
+    if (selectedItem.hasClass("fb-file")) {
+        // only in the case Ref TimeSeries file type or generic file type we need to show
+        // file type metadata when a file is selected
+        if (logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile") {
+            return;
+        }
+    }
+    var resource_mode = $("#resource-mode").val();
+    if (!resource_mode) {
+        return;
+    }
+    resource_mode = resource_mode.toLowerCase();
+    var $url;
+    if (file_type_time_series) {
+        $url = url;
+    }
+    else {
+        $url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+    }
 
-     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
-     var calls = [];
-     calls.push(get_file_type_metadata_ajax_submit($url));
+    var calls = [];
+    calls.push(get_file_type_metadata_ajax_submit($url));
 
-     // Wait for the asynchronous calls to finish to get new folder structure
-     $.when.apply($, calls).done(function (result) {
+    // Wait for the asynchronous calls to finish to get new folder structure
+    $.when.apply($, calls).done(function (result) {
          var json_response = JSON.parse(result);
          if(json_response.status === 'error') {
              var error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
