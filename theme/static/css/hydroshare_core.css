@@ -1153,6 +1153,7 @@ div.readme .readme-header h4 > span {
 	font-size: 18px;
 	border-bottom: 0;
 	display: block;
+	margin-bottom: 10px;
 }
 
 .custom-table th {
