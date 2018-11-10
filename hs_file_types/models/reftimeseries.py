@@ -53,7 +53,7 @@ class TimeSeries(object):
             return th(heading_name, cls="text-muted")
 
         with root_div:
-            with div(cls="custom-well panel panel-default"):
+            with div(cls="panel panel-default"):
                 with div(cls="panel-heading"):
                     with h4(cls="panel-title"):
                         a(self.site_name, data_toggle="collapse", data_parent="#accordion",
@@ -501,20 +501,20 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                           '<i class="fa fa-eye-slash fa-2x" aria-hidden="true"></i></div>'
         else:
             if self.abstract:
-                abstract_div = div(cls="col-xs-12 content-block")
+                abstract_div = div(cls="content-block")
                 with abstract_div:
                     legend("Abstract")
                     p(self.abstract)
 
                 html_string += abstract_div.render()
             if self.file_version:
-                file_ver_div = div(cls="col-xs-12 content-block")
+                file_ver_div = div(cls="content-block")
                 with file_ver_div:
                     legend("File Version")
                     p(self.file_version)
                 html_string += file_ver_div.render()
             if self.symbol:
-                symbol_div = div(cls="col-xs-12 content-block")
+                symbol_div = div(cls="content-block")
                 with symbol_div:
                     legend("Symbol")
                     if self.symbol.startswith('http'):
@@ -538,12 +538,12 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def get_ts_series_html(self):
         """Generates html for all time series """
 
-        root_div = div(cls="col-xs-12")
+        root_div = div()
         with root_div:
-            legend("Reference Time Series", cls="pull-left", style="margin-top:20px;")
+            legend("Reference Time Series")
             panel_group_div = div(cls="panel-group", id="accordion")
             panel_group_div.add(p("Note: Time series are listed below by site name. "
-                                  "Click on a site name to see details.", cls="col-xs-12"))
+                                  "Click on a site name to see details."))
             for index, series in enumerate(self.time_series_list):
                 panel_group_div.add(series.get_html(index + 1))
 
@@ -565,7 +565,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 self.get_keywords_html_form()
 
             self.get_extra_metadata_html_form()
-            abstract_div = div(cls="col-xs-12 content-block")
+            abstract_div = div(cls="content-block")
             with abstract_div:
                 if self.has_abstract_in_json:
                     legend("Abstract")
@@ -573,13 +573,13 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 else:
                     self.get_abstract_form()
             if self.file_version:
-                file_ver_div = div(cls="col-xs-12 content-block")
+                file_ver_div = div(cls="content-block")
                 with file_ver_div:
                     legend("File Version")
                     p(self.file_version)
 
             if self.symbol:
-                symbol_div = div(cls="col-xs-12 content-block")
+                symbol_div = div(cls="content-block")
                 with symbol_div:
                     legend("Symbol")
                     if self.symbol.startswith('http'):
@@ -589,7 +589,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                         p(self.symbol)
 
             self.get_temporal_coverage_html_form()
-            with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="content-block"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
                     div("{% crispy spatial_form %}")
@@ -652,16 +652,16 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """
 
         json_res_file = self.logical_file.files.first()
-        json_file_content_div = div(style="clear:both;", cls="col-xs-12 content-block")
+        json_file_content_div = div(cls="content-block")
         with json_file_content_div:
-            legend("Reference Time Series JSON File Content", style="margin-top:20px;")
+            legend("Reference Time Series JSON File Content")
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
                 header_info = unicode(header_info, 'utf-8')
 
             textarea(header_info, readonly="", rows="15",
-                     cls="input-xlarge", style="min-width: 100%")
+                     cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return json_file_content_div
 

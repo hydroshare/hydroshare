@@ -222,7 +222,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 p(nc_dump_res_file.full_path[33:])
                 header_info = nc_dump_res_file.resource_file.read()
                 header_info = header_info.decode('utf-8')
-                pre(header_info)
+                textarea(header_info, readonly="", rows="15",
+                         cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return nc_dump_div
 

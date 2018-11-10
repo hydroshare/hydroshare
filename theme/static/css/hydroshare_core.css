@@ -4616,6 +4616,10 @@ span.caption-file-type {
 	margin-bottom: 20px;
 }
 
+#fileTypeMetaData legend {
+	font-size: 18px;
+}
+
 .fb-content-wrapper {
     display: flex;
 }
