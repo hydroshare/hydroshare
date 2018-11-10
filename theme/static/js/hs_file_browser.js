@@ -639,8 +639,10 @@ function showFileTypeMetadata(file_type_time_series, url){
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
-         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("input[value='box']");
-         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("input[value='point']");
+         let divFileType = $("#div_id_type_filetype");
+
+         var $spatial_type_radio_button_1 = divFileType.find("input[value='box']");
+         var $spatial_type_radio_button_2 = divFileType.find("input[value='point']");
          if (logical_type === "NetCDFLogicalFile") {
              // don't let the user open the Projection String Type dropdown list
              // when editing Oroginal Coverage element
@@ -683,12 +685,14 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
          }
 
-         $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
-         $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
-         $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
-         $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
-         $("#id_east_filetype").attr("data-map-item", "longitude");
-         $("#id_north_filetype").attr("data-map-item", "latitude");
+         let divMetadata = $("#fileTypeMetaData");
+
+         divMetadata.find("[name='northlimit']").attr("data-map-item", "northlimit");
+         divMetadata.find("[name='eastlimit']").attr("data-map-item", "eastlimit");
+         divMetadata.find("[name='southlimit']").attr("data-map-item", "southlimit");
+         divMetadata.find("[name='westlimit']").attr("data-map-item", "westlimit");
+         divMetadata.find("[name='longitude']").attr("data-map-item", "longitude");
+         divMetadata.find("[name='latitude']").attr("data-map-item", "latitude");
 
          $(".hs-coordinates-picker").each(function () {
              const instance = $(this);

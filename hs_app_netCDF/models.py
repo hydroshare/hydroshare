@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input, span, br
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
@@ -579,7 +579,8 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    strong("NetCDF file needs to be synced with metadata changes.")
+                    div("NetCDF file needs to be synced with metadata changes.")
+                    br()
 
                     input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
                     with form(action=form_action, method="post", id="update-netcdf-file",):

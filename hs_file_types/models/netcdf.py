@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 from django.forms.models import formset_factory, BaseFormSet
 
-from dominate.tags import div, legend, form, button, p, textarea, strong, input
+from dominate.tags import div, legend, form, button, p, textarea, strong, input, br, pre
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -80,47 +80,49 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with root_div:
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
-            with div(cls="row"):
-                with div(cls="col-lg-6 col-xs-12", id="original-coverage-filetype"):
-                    with form(id="id-origcoverage-file-type",
-                              action="{{ orig_coverage_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy orig_coverage_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
 
-                with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
-                    with form(id="id-spatial-coverage-file-type",
-                              action="{{ spatial_coverage_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy spatial_coverage_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
+            with div(cls="content-block", id="original-coverage-filetype"):
+                with form(id="id-origcoverage-file-type",
+                          action="{{ orig_coverage_form.action }}",
+                          method="post", enctype="multipart/form-data",
+                          cls='hs-coordinates-picker', data_coordinates_type="box"):
+                    div("{% crispy orig_coverage_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;")
 
-            with div(cls="pull-left col-sm-12"):
+            with div(cls="content-block", id="spatial-coverage-filetype"):
+                with form(id="id-spatial-coverage-file-type",
+                          cls='hs-coordinates-picker', data_coordinates_type="box",
+                          action="{{ spatial_coverage_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy spatial_coverage_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;")
+
+            with div():
+                legend("Variables")
                 # id has to be variables to get the vertical scrollbar
-                with div(cls="well", id="variables"):
-                    with div(cls="row"):
-                        with div("{% for form in variable_formset_forms %}"):
-                            with div(cls="col-sm-6 col-xs-12"):
-                                with form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                          method="post", enctype="multipart/form-data"):
-                                    div("{% crispy form %}")
-                                    with div(cls="row", style="margin-top:10px;"):
-                                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                                     "col-md-2 col-xs-6"):
-                                            button("Save changes", type="button",
-                                                   cls="btn btn-primary pull-right",
-                                                   style="display: none;")
-                        div("{% endfor %}")
+                with div(id="variables"):
+                    with div("{% for form in variable_formset_forms %}"):
+                        with form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                  method="post", enctype="multipart/form-data",
+                                  cls="well"):
+                            div("{% crispy form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+                    div("{% endfor %}")
 
             self.get_ncdump_html()
 
@@ -172,7 +174,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    strong("NetCDF file needs to be synced with metadata changes.")
+                    div("NetCDF file needs to be synced with metadata changes.")
+                    br()
                     input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
@@ -213,14 +216,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 nc_dump_res_file = f
                 break
         if nc_dump_res_file is not None:
-            nc_dump_div = div(style="clear: both", cls="col-xs-12")
+            nc_dump_div = div(style="clear: both", cls="content-block")
             with nc_dump_div:
                 legend("NetCDF Header Information")
                 p(nc_dump_res_file.full_path[33:])
                 header_info = nc_dump_res_file.resource_file.read()
                 header_info = header_info.decode('utf-8')
-                textarea(header_info, readonly="", rows="15",
-                         cls="input-xlarge", style="min-width: 100%")
+                pre(header_info)
 
         return nc_dump_div
 
