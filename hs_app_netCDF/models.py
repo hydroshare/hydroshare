@@ -170,27 +170,30 @@ class OriginalCoverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls='content-block')
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
         with root_div:
             legend('Spatial Reference')
-            with table(cls='custom-table'):
-                with tbody():
-                    with tr():
-                        get_th('Coordinate Reference System')
-                        td(self.value.get('projection', ''))
-                    with tr():
-                        get_th('Datum')
-                        td(self.datum)
-                    with tr():
-                        get_th('Coordinate String Type')
-                        td(self.projection_string_type)
-                    with tr():
-                        get_th('Coordinate String Text')
-                        td(self.projection_string_text)
+            if self.value.get('projection', ''):
+                div('Coordinate Reference System', cls='text-muted')
+                div(self.value.get('projection', ''))
+                br()
+            if self.datum:
+                div('Datum', cls='text-muted')
+                div(self.datum)
+                br()
+            if self.projection_string_type:
+                div('Coordinate String Type', cls='text-muted')
+                div(self.projection_string_type)
+                br()
+            if self.projection_string_text:
+                div('Coordinate String Text', cls='text-muted')
+                div(self.projection_string_text)
+                br()
+
             h4('Extent')
             with table(cls='custom-table'):
                 with tbody():
@@ -270,7 +273,7 @@ class Variable(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")

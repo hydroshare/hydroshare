@@ -62,7 +62,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             html_string += self.originalCoverage.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
-        variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
+        variable_legend = legend("Variables")
         html_string += variable_legend.render()
         for variable in self.variables.all():
             html_string += variable.get_html()
