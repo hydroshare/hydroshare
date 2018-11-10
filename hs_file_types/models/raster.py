@@ -64,7 +64,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         html_string += self.cellInformation.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
-        band_legend = legend("Band Information", cls="pull-left", style="margin-left:10px;")
+        band_legend = legend("Band Information")
         html_string += band_legend.render()
         for band_info in self.bandInformations:
             html_string += band_info.get_html()
@@ -79,8 +79,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
+            with div(id="spatial-coverage-filetype"):
                 with form(id="id-spatial-coverage-file-type",
+                          cls='hs-coordinates-picker', data_coordinates_type="point",
                           action="{{ coverage_form.action }}",
                           method="post", enctype="multipart/form-data"):
                     div("{% crispy coverage_form %}")
@@ -91,26 +92,22 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                    cls="btn btn-primary pull-right",
                                    style="display: none;")
 
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy orig_coverage_form %}")
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy cellinfo_form %}")
+                div("{% crispy orig_coverage_form %}", cls="content-block")
 
-            with div(cls="pull-left col-sm-12"):
-                with div(cls="well", id="variables"):
-                    with div(cls="row"):
-                        div("{% for form in bandinfo_formset_forms %}")
-                        with div(cls="col-sm-6 col-xs-12"):
-                            with form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                      method="post", enctype="multipart/form-data"):
-                                div("{% crispy form %}")
-                                with div(cls="row", style="margin-top:10px;"):
-                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                                 "col-md-2 col-xs-6"):
-                                        button("Save changes", type="button",
-                                               cls="btn btn-primary pull-right btn-form-submit",
-                                               style="display: none;")
-                        div("{% endfor %}")
+                div("{% crispy cellinfo_form %}", cls='content-block')
+
+                with div(id="variables", cls="content-block"):
+                    div("{% for form in bandinfo_formset_forms %}")
+                    with form(id="{{ form.form_id }}", action="{{ form.action }}",
+                              method="post", enctype="multipart/form-data", cls='well'):
+                        div("{% crispy form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right btn-form-submit",
+                                       style="display: none;")
+                    div("{% endfor %}")
 
         template = Template(root_div.render())
         context_dict = dict()

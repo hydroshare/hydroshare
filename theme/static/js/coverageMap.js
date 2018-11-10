@@ -18,7 +18,6 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-
     // Set initial coverage fields state
     if ($("#id_type_1").is(':checked')) { //box type coverage
         $("#div_id_north").hide();

@@ -1592,21 +1592,20 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     if (logical_type !== "GenericLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
-        $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
-        $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+        $id_type_filetype_div.find("input[value='box']").attr('onclick', 'return false');
+        $id_type_filetype_div.find("input[value='point']").attr('onclick', 'return false');
         if (logical_type !== "RefTimeseriesLogicalFile"){
-            $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+            $id_type_filetype_div.find("input[value='box']").attr('checked', 'checked');
         }
-        $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
-        $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
+        $id_type_filetype_div.find("input[value='point']").attr('disabled', true);
+        $id_type_filetype_div.find("input[value='point']").parent().closest("label").addClass("text-muted");
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
     }
 
-    // #id_type_1 is the box radio button
-    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
+    if ($id_type_filetype_div.find("input[value='box']").attr("checked") == "checked" ||
         (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile')) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
@@ -1637,8 +1636,8 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         }
         $form.attr('action', update_url);
         var $id_type_div = $("#div_id_type");
-        var $point_radio = $id_type_div.find("#id_type_2");
-        var $box_radio = $id_type_div.find("#id_type_1");
+        var $point_radio = $id_type_div.find("input[value='point']");
+        var $box_radio = $id_type_div.find("input[value='box']");
         var resourceType = $("#resource-type").val();
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');

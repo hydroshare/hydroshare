@@ -1096,8 +1096,7 @@ table.info-table {
 }
 
 #variables {
-	max-height: 600px;
-	overflow:auto;
+	overflow: auto;
 	border-radius: 0;
 }
 

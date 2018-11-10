@@ -639,8 +639,8 @@ function showFileTypeMetadata(file_type_time_series, url){
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
-         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
-         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("input[value='box']");
+         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("input[value='point']");
          if (logical_type === "NetCDFLogicalFile") {
              // don't let the user open the Projection String Type dropdown list
              // when editing Oroginal Coverage element
