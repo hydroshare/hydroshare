@@ -641,92 +641,94 @@ function showFileTypeMetadata(file_type_time_series, url){
              return;
          }
 
-         $("#fileTypeMetaData").html(json_response.metadata);
-         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+        $("#fileTypeMetaData").html(json_response.metadata);
+        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+        $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
 
-         $("#txt-keyword-filetype").keypress(function (e) {
-             e.which = e.which || e.keyCode;
-             if (e.which == 13) {
-                 onAddKeywordFileType();
-                 return false;
-             }
-         });
+        $("#txt-keyword-filetype").keypress(function (e) {
+            e.which = e.which || e.keyCode;
+            if (e.which == 13) {
+                onAddKeywordFileType();
+                return false;
+            }
+        });
 
-         $(".icon-remove").click(onRemoveKeywordFileType);
-         $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
-         $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
-         showMetadataFormSaveChangesButton();
-         initializeDatePickers();
-         setFileTypeSpatialCoverageFormFields(logical_type);
-         // Bind event handler for submit button
-         setFileTypeMetadataFormsClickHandlers();
+        $(".icon-remove").click(onRemoveKeywordFileType);
+        $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
+        $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
+        showMetadataFormSaveChangesButton();
+        initializeDatePickers();
+        setFileTypeSpatialCoverageFormFields(logical_type);
+        // Bind event handler for submit button
+        setFileTypeMetadataFormsClickHandlers();
 
-         let divFileType = $("#div_id_type_filetype");
+        let divFileType = $("#div_id_type_filetype");
 
-         var $spatial_type_radio_button_1 = divFileType.find("input[value='box']");
-         var $spatial_type_radio_button_2 = divFileType.find("input[value='point']");
-         if (logical_type === "NetCDFLogicalFile") {
-             // don't let the user open the Projection String Type dropdown list
-             // when editing Oroginal Coverage element
-             $("#id_projection_string_type_filetype").css('pointer-events', 'none');
-             // don't let the user open the Variable type dropdown list when editing
-             // Variable elements
-             $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
-         }
-         if (logical_type === "RefTimeseriesLogicalFile"){
-             var $startDateElement = $("#id_start_filetype");
-             var $endDateElement = $("#id_end_filetype");
-             $startDateElement.css('pointer-events', 'none');
-             $endDateElement.css('pointer-events', 'none');
-         }
-         if (logical_type === 'TimeSeriesLogicalFile') {
-             $("#series_id_file_type").change(function () {
-                 var $url = $(this.form).attr('action');
-                 $url = $url.replace('series_id', $(this).val());
-                 $url = $url.replace('resource_mode', resource_mode);
-                 // make a recursive call to this function
-                 showFileTypeMetadata(true, $url);
-             });
-             if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
-                 $("#div-sqlite-file-update").hide();
-             }
-             InitializeTimeSeriesFileTypeForms();
-         }
-         if (logical_type === "GeoRasterLogicalFile"){
-             $spatial_type_radio_button_1.prop("checked", true);
-             $("#div_id_type_filetype input:radio").trigger("change");
-             $spatial_type_radio_button_1.attr('onclick', 'return false');
-             $spatial_type_radio_button_2.attr('onclick', 'return false');
-         }
-         else {
-             if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
-                 $spatial_type_radio_button_1.prop("checked", true);
-             }
-             else {
-                 $spatial_type_radio_button_2.prop("checked", true);
-             }
-         }
+        var $spatial_type_radio_button_1 = divFileType.find("input[value='box']");
+        var $spatial_type_radio_button_2 = divFileType.find("input[value='point']");
+        if (logical_type === "NetCDFLogicalFile") {
+            // don't let the user open the Projection String Type dropdown list
+            // when editing Oroginal Coverage element
+            $("#id_projection_string_type_filetype").css('pointer-events', 'none');
+            // don't let the user open the Variable type dropdown list when editing
+            // Variable elements
+            $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
+        }
+        if (logical_type === "RefTimeseriesLogicalFile") {
+            var $startDateElement = $("#id_start_filetype");
+            var $endDateElement = $("#id_end_filetype");
+            $startDateElement.css('pointer-events', 'none');
+            $endDateElement.css('pointer-events', 'none');
+        }
+        if (logical_type === 'TimeSeriesLogicalFile') {
+            $("#series_id_file_type").change(function () {
+                var $url = $(this.form).attr('action');
+                $url = $url.replace('series_id', $(this).val());
+                $url = $url.replace('resource_mode', resource_mode);
+                // make a recursive call to this function
+                showFileTypeMetadata(true, $url);
+            });
+            if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True') {
+                $("#div-sqlite-file-update").hide();
+            }
+            InitializeTimeSeriesFileTypeForms();
+        }
+        if (logical_type === "GeoRasterLogicalFile") {
+            $spatial_type_radio_button_1.prop("checked", true);
+            $("#div_id_type_filetype input:radio").trigger("change");
+            $spatial_type_radio_button_1.attr('onclick', 'return false');
+            $spatial_type_radio_button_2.attr('onclick', 'return false');
+        }
+        else {
+            if ($spatial_type_radio_button_1.attr('checked') == 'checked') {
+                $spatial_type_radio_button_1.prop("checked", true);
+            }
+            else {
+                $spatial_type_radio_button_2.prop("checked", true);
+            }
+        }
 
-         let divMetadata = $("#fileTypeMetaData");
+        let divMetadata = $("#fileTypeMetaData");
 
-         divMetadata.find("[name='northlimit']").attr("data-map-item", "northlimit");
-         divMetadata.find("[name='eastlimit']").attr("data-map-item", "eastlimit");
-         divMetadata.find("[name='southlimit']").attr("data-map-item", "southlimit");
-         divMetadata.find("[name='westlimit']").attr("data-map-item", "westlimit");
-         divMetadata.find("[name='longitude']").attr("data-map-item", "longitude");
-         divMetadata.find("[name='latitude']").attr("data-map-item", "latitude");
-         divMetadata.find("[name='east']").attr("data-map-item", "longitude");
-         divMetadata.find("[name='north']").attr("data-map-item", "latitude");
+        divMetadata.find("[name='northlimit']").attr("data-map-item", "northlimit");
+        divMetadata.find("[name='eastlimit']").attr("data-map-item", "eastlimit");
+        divMetadata.find("[name='southlimit']").attr("data-map-item", "southlimit");
+        divMetadata.find("[name='westlimit']").attr("data-map-item", "westlimit");
+        divMetadata.find("[name='longitude']").attr("data-map-item", "longitude");
+        divMetadata.find("[name='latitude']").attr("data-map-item", "latitude");
 
-         $(".hs-coordinates-picker").each(function () {
-             const instance = $(this);
-             instance.coordinatesPicker();
-         });
+        // Some forms use name attributs as follows for point coordinates
+        divMetadata.find("[name='east']").attr("data-map-item", "longitude");
+        divMetadata.find("[name='north']").attr("data-map-item", "latitude");
 
-         updateEditCoverageState();
+        $(".hs-coordinates-picker").each(function () {
+            const instance = $(this);
+            instance.coordinatesPicker();
+        });
 
-         $("#div_id_type_filetype input:radio").trigger("change");
+        updateEditCoverageState();
+
+        $("#div_id_type_filetype input:radio").trigger("change");
     });
 }
 
@@ -759,6 +761,7 @@ function InitializeTimeSeriesFileTypeForms() {
     processMethodMetadataElement();
     processProcessingLevelMetadataElement();
 }
+
 function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
