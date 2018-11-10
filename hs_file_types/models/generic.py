@@ -68,7 +68,8 @@ class GenericFileMetaData(AbstractFileMetaData):
             super(GenericFileMetaData, self).get_html_forms()
             with div():
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
-                          method="post", enctype="multipart/form-data", cls='hs-coordinates-picker', data_coordinates_type="point"):
+                          method="post", enctype="multipart/form-data", cls='hs-coordinates-picker',
+                          data_coordinates_type="point"):
                     div("{% crispy spatial_form %}")
                     with div(cls="row", style="margin-top:10px;"):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "

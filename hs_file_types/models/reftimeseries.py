@@ -47,7 +47,7 @@ class TimeSeries(object):
     def get_html(self, site_number):
         """generates html code for viewing site related data"""
 
-        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")

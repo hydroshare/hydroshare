@@ -693,6 +693,8 @@ function showFileTypeMetadata(file_type_time_series, url){
          divMetadata.find("[name='westlimit']").attr("data-map-item", "westlimit");
          divMetadata.find("[name='longitude']").attr("data-map-item", "longitude");
          divMetadata.find("[name='latitude']").attr("data-map-item", "latitude");
+         divMetadata.find("[name='east']").attr("data-map-item", "longitude");
+         divMetadata.find("[name='north']").attr("data-map-item", "latitude");
 
          $(".hs-coordinates-picker").each(function () {
              const instance = $(this);
@@ -1195,10 +1197,9 @@ $(document).ready(function () {
     });
 
     $('#redirect-referenced-url-dialog').on('shown.bs.modal', function () {
-        var file = $("#fb-files-container li.ui-selected");
-        var fileName = file.children(".fb-file-name").text();
+        let file = $("#fb-files-container li.ui-selected");
         // do redirect
-        var ref_url = file.attr("data-ref-url");
+        let ref_url = file.attr("data-ref-url");
         $('#file_redirect_url').prop('href', ref_url);
     });
 
