@@ -563,6 +563,20 @@ class CompositeResource(BaseResource):
                                               'missing_elements': missing_elements})
         return metadata_missing_info
 
+    def delete_coverage(self, coverage_type):
+        """Deletes coverage data for the resource
+        :param coverage_type: A value of either 'spatial' or 'temporal
+        :return:
+        """
+        if coverage_type.lower() == 'spatial' and self.metadata.spatial_coverage:
+            self.metadata.spatial_coverage.delete()
+            self.metadata.is_dirty = True
+            self.metadata.save()
+        elif coverage_type.lower() == 'temporal' and self.metadata.temporal_coverage:
+            self.metadata.temporal_coverage.delete()
+            self.metadata.is_dirty = True
+            self.metadata.save()
+
     def update_coverage(self):
         """Update resource spatial and temporal coverage based on the corresponding coverages
         from all the contained aggregations (logical file) only if the resource coverage is not

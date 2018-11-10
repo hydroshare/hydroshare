@@ -624,6 +624,9 @@ function metadata_update_ajax_submit(form_id){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
+                        // show/hide delete option for resource temporal coverage
+                        setResourceTemporalCoverageDeleteOption();
+
                         if(resourceType === 'Composite Resource' && json_response.has_logical_temporal_coverage) {
                              $("#btn-update-resource-temporal-coverage").show();
                         }
@@ -640,6 +643,10 @@ function metadata_update_ajax_submit(form_id){
                         }
                         else {
                            $("#btn-update-resource-spatial-coverage").hide();
+                        }
+                        if(resourceType === 'Composite Resource') {
+                            // show/hide spatial coverage delete option for resource
+                            setResourceSpatialCoverageDeleteOption();
                         }
                     }
                 }
@@ -680,7 +687,7 @@ function metadata_update_ajax_submit(form_id){
                     var bindCoordinatesPicker = false;
                     var logical_type = json_response.logical_file_type;
                     setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
-                    showFileTypeTemporalCoverageDeleteOption(logical_type);
+                    setFileTypeTemporalCoverageDeleteOption(logical_type);
                 }
 
                 if (json_response.element_exists == false){
@@ -1755,6 +1762,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $point_radio = $id_type_div.find("#id_type_2");
         var $box_radio = $id_type_div.find("#id_type_1");
         var resourceType = $("#resource-type").val();
+        $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
             if(resourceType !== "Composite Resource"){
@@ -1801,11 +1809,11 @@ function updateResourceSpatialCoverage(spatialCoverage) {
     }
 }
 
-function showFileTypeTemporalCoverageDeleteOption(logicalFileType) {
+function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
+    // show/hide delete option for temporal coverage at aggregation level
     var $btnDeleteTemporalCoverage = $("#id-btn-delete-temporal-filetype");
     var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
     if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile') {
-
         var url = $formTemporalCoverage.attr('action');
         if(url.indexOf('update-file-metadata') !== -1) {
             url = url.replace('update-file-metadata', 'delete-file-coverage');
@@ -1825,10 +1833,26 @@ function showFileTypeTemporalCoverageDeleteOption(logicalFileType) {
 }
 // updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
-    $("#id_start").val(temporalCoverage.start);
-    $("#id_start").attr('data-date', temporalCoverage.start);
-    $("#id_end").val(temporalCoverage.end);
-    $("#id_end").attr('data-date', temporalCoverage.end);
+    var $form = $("#id-coverage-temporal");
+    var form_update_action = $form.attr('action');
+    var res_short_id = form_update_action.split('/')[3];
+    var update_url;
+    if($.isEmptyObject(temporalCoverage)) {
+        $("#id_start").val("");
+        $("#id_start").attr('data-date', "");
+        $("#id_end").val("");
+        $("#id_end").attr('data-date', "");
+        update_url = "/hsapi/_internal/" + res_short_id + "/coverage/add-metadata/";
+    }
+    else {
+        $("#id_start").val(temporalCoverage.start);
+        $("#id_start").attr('data-date', temporalCoverage.start);
+        $("#id_end").val(temporalCoverage.end);
+        $("#id_end").attr('data-date', temporalCoverage.end);
+        update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + temporalCoverage.element_id + "/update-metadata/";
+    }
+    $form.attr('action', update_url);
+
     $("#id-coverage-temporal").find("button.btn-primary").hide();
     initializeDatePickers();
 }
@@ -1887,7 +1911,7 @@ function updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, cove
     var $btnDeleteTemporalCoverage = $("#id-btn-delete-temporal-filetype");
     var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
     $formTemporalCoverage.attr('action', updateAction);
-    showFileTypeTemporalCoverageDeleteOption('FileSetLogicalFile');
+    setFileTypeTemporalCoverageDeleteOption('FileSetLogicalFile');
 
     initializeDatePickers();
 }

@@ -733,9 +733,11 @@ function showFileTypeMetadata(file_type_time_series, url){
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
          var bindCoordinatesPicker = true;
+         // show/hide spatial delete option for aggregation in addition to other settings for
+         // aggregation spatial coverage form
          setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
-         // set temporal data delete option
-         showFileTypeTemporalCoverageDeleteOption(logical_type);
+         // show/hide temporal data delete option for the aggregation
+         setFileTypeTemporalCoverageDeleteOption(logical_type);
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
