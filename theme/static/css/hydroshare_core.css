@@ -4562,6 +4562,7 @@ span.caption-file-type {
 .fb-dropzone-wrapper:not(.ui-resizable) #hsDropzone {
 	resize: vertical;
 	min-height: 200px;
+	height: 200px;
 	overflow: hidden auto;
 	border: 0;
 }
