@@ -1056,8 +1056,12 @@ table.info-table > tbody > tr > td {
     background-color: #9625aa;
 }
 
-.res-header .agg-time_series_content, .res-header .agg-referenced_time_series_content {
+.res-header .agg-time_series_content {
     background-color: #009688;
+}
+
+.res-header .agg-referenced_time_series_content {
+    background-color: #4caf50;
 }
 
 .res-header .agg-geographic_feature_content {
