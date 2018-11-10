@@ -1149,6 +1149,12 @@ div.readme .readme-header h4 > span {
 	box-shadow: none;
 }
 
+#resourceSpecificTab legend {
+	font-size: 18px;
+	border-bottom: 0;
+	display: block;
+}
+
 .custom-table th {
     padding-right: 40px;
     font-weight: 400

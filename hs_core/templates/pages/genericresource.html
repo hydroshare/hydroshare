@@ -753,13 +753,15 @@
                             <h3>Resource Specific</h3>
                             <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
                                  id="resourceSpecificTab">
-                                {% if not metadata_form %}
-                                    {% block extended_metadata %}{% endblock %}
-                                {% else %}
-                                    {% crispy metadata_form %}
-                                {% endif %}
-                                {% block extra_section %} {# add extra section for resource landing page #}
-                                {% endblock %}
+                                <div class="row">
+                                    {% if not metadata_form %}
+                                        {% block extended_metadata %}{% endblock %}
+                                    {% else %}
+                                        {% crispy metadata_form %}
+                                    {% endif %}
+                                    {% block extra_section %} {# add extra section for resource landing page #}
+                                    {% endblock %}
+                                </div>
                             </div>
                         </div>
                     {% endif %}

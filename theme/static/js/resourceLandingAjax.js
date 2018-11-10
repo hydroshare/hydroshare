@@ -33,7 +33,7 @@ function label_ajax_submit() {
                     {
                         $("#btnOpenWithApp").removeClass("btn-resource-add");
                         $("#btnOpenWithApp").addClass("btn-resource-remove");
-                        $("#btnOpenWithApp").attr("data-original-title", "Remove WebApp from OpenWith list");
+                        $("#btnOpenWithApp").attr("data-original-title", "Remove WebApp from 'Open With' list");
                     }
                 }
                 else
@@ -48,7 +48,7 @@ function label_ajax_submit() {
                     {
                          $("#btnOpenWithApp").addClass("btn-resource-add");
                          $("#btnOpenWithApp").removeClass("btn-resource-remove");
-                         $("#btnOpenWithApp").attr("data-original-title", "Add WebApp to OpenWith list");
+                         $("#btnOpenWithApp").attr("data-original-title", "Add WebApp to 'Open With' list");
                     }
                 }
                 $("#btnMyResources").tooltip('show')
