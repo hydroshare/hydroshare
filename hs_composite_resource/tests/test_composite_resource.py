@@ -1425,6 +1425,33 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertFalse(res_file.file_name.endswith('_mata.xml'))
             self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
 
+    def test_unzip_rename(self):
+        """Test that when a zip file gets unzipped at data/contents/ and the unzipped folder may be
+         renamed without error (testing bug fix renaming a folder where a file exists that starts
+         with the same name."""
+
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.zip_file)
+        # resource should have 1 file now
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
+        zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        unzipped_folder = zip_file_rel_path.replace(".zip", "")
+        renamed_folder = os.path.join('data', 'contents', "renamed")
+        try:
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                          unzipped_folder, renamed_folder)
+        except:
+            self.fail("Exception thrown while renaming a folder.")
+
     def test_unzip_folder_clash(self):
         """Test that when a zip file gets unzipped a folder with the same
         name already exists, the existing folder is not overwritten """
@@ -1450,6 +1477,31 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # ensure files aren't overwriting name clash
         self.assertEqual(self.composite_resource.files.count(), 3)
 
+    def test_unzip_folder_clash_overwrite(self):
+        """Test that when a zip file gets unzipped a folder with the same
+        name already exists and overwrite is True, the existing folder is overwritten """
+
+        self.create_composite_resource()
+        # add a zip file that contains only one file
+        self.add_file_to_resource(file_to_add=self.zip_file)
+
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
+        zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, overwrite=True)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
+        # unzip again
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, overwrite=True)
+
+        # ensure files are overwriting
+        self.assertEqual(self.composite_resource.files.count(), 2)
+
     def test_unzip_aggregation(self):
         """Test that when a zip file gets unzipped at data/contents/ where the contents includes a
         single file aggregation.  Testing the aggregation is recognized on unzip"""
@@ -1468,3 +1520,38 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.count(), 2)
         # there should be a referenced time series now
         self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
+
+    def test_unzip_aggregation_overwrite(self):
+        """Test that when a zip file gets unzipped at data/contents/ where the contents includes a
+        single file aggregation.  Testing aggregation is overwritten when overwrite is True"""
+
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.zipped_aggregation_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 0)
+        # unzip the above zip file  which should add one more file to the resource
+        zip_file_rel_path = os.path.join('data', 'contents', self.zipped_aggregation_file_name)
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, overwrite=True)
+
+        # resource should have 2 files now
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # there should be a referenced time series now
+        self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
+        ref_time = RefTimeseriesLogicalFile.objects.first()
+        ref_time.metadata.abstract = "overwritten"
+        ref_time.metadata.save()
+
+        self.assertEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract, "overwritten")
+
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, overwrite=True)
+
+        # resource should still have 2 files
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # there should still be a referenced time series
+        self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
+
+        self.assertNotEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
+                            "overwritten")

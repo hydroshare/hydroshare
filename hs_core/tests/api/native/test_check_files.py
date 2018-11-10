@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_core.management.utils import check_irods_files
 
 from hs_core.models import ResourceFile
 
@@ -53,17 +54,17 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        self.res.check_irods_files(stop_on_error=True)
+        check_irods_files(self.res, stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
 
         # should succeed without errors
-        self.res.check_irods_files(stop_on_error=True)
+        check_irods_files(self.res, stop_on_error=True)
 
         # cleaning should not change anything
-        self.res.check_irods_files(stop_on_error=True, log_errors=False, return_errors=True,
-                                   clean_irods=True, clean_django=True, sync_ispublic=True)
+        check_irods_files(self.res, stop_on_error=True, log_errors=False, return_errors=True,
+                          clean_irods=True, clean_django=True, sync_ispublic=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -85,23 +86,23 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            self.res.check_irods_files(stop_on_error=True)
+            check_irods_files(self.res, stop_on_error=True)
 
         # now don't raise exception and read error
-        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False)
+        errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in iRODS'))
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
             "type is GenericResource, title is 'My Test Resource'"))
 
         # now try to clean it up
-        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False,
-                                                    clean_irods=True, clean_django=True)
+        errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
+                                           clean_irods=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
@@ -112,7 +113,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         # now check should succeed
-        errors, ecount = self.res.check_irods_files(stop_on_error=True, log_errors=False)
+        errors, ecount = check_irods_files(self.res, stop_on_error=True, log_errors=False)
         self.assertEqual(ecount, 0)
 
         # delete resources to clean up
@@ -127,13 +128,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         ResourceFile.create_folder(self.res, 'foo')
 
         # should succeed without errors
-        self.res.check_irods_files(stop_on_error=True)
+        check_irods_files(self.res, stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
 
         # should succeed without errors
-        self.res.check_irods_files(stop_on_error=True)
+        check_irods_files(self.res, stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -154,23 +155,23 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            self.res.check_irods_files(stop_on_error=True)
+            check_irods_files(self.res, stop_on_error=True)
 
         # now don't raise exception and read error
-        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False)
+        errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in iRODS'))
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
             "type is GenericResource, title is 'My Test Resource'"))
 
         # now try to clean it up
-        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False,
-                                                    clean_irods=True, clean_django=True)
+        errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
+                                           clean_irods=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-             'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
@@ -181,7 +182,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         # now check should succeed
-        errors, ecount = self.res.check_irods_files(stop_on_error=True, log_errors=False)
+        errors, ecount = check_irods_files(self.res, stop_on_error=True, log_errors=False)
         self.assertEqual(ecount, 0)
 
         # delete resources to clean up

@@ -88,6 +88,19 @@ class CompositeResource(BaseResource):
         except ObjectDoesNotExist:
             return None
 
+    def get_file_aggregation_object(self, file_path):
+        """Returns an aggregation (file type) object if the specified file *file_path* represents a
+         file type aggregation (logical file), otherwise None.
+
+         :param file_path: Resource file path (full file path starting with resource id)
+         for which the aggregation object to be retrieved
+        """
+        for res_file in self.files.all():
+            if res_file.full_path == file_path:
+                if res_file.has_logical_file:
+                    return res_file.logical_file
+        return None
+
     def get_folder_aggregation_type_to_set(self, dir_path):
         """Returns an aggregation (file type) type that the specified folder *dir_path* can
         possibly be set to.

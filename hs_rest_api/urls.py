@@ -1,21 +1,37 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 from hs_core.views.resource_folder_hierarchy import data_store_add_reference, \
     data_store_edit_reference_url
-from rest_framework_swagger.views import get_swagger_view
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
-schema_view = get_swagger_view(title='Hydroshare API')
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
 
-urlpatterns = patterns(
-    '',
+schema_view_yasg = get_schema_view(
+   openapi.Info(
+      title="Hydroshare API",
+      default_version='v1',
+      description="Hydroshare Rest API",
+      terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
+      contact=openapi.Contact(email="help@cuahsi.org"),
+   ),
+   validators=[],
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
 
+urlpatterns = [
     # Swagger Docs View
-    url(r'^$', schema_view),
+    url(r'^(?P<format>\.json|\.yaml)$', schema_view_yasg.without_ui(cache_timeout=None),
+        name='schema-json'),
+    url(r'^$', schema_view_yasg.with_ui('swagger', cache_timeout=None),
+        name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view_yasg.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
 
     # resource API
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),
@@ -163,4 +179,4 @@ urlpatterns = patterns(
         name='get_update_delete_resource_access'),
 
 
-)
+]

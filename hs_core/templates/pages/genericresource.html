@@ -119,21 +119,18 @@
 
                         <li id="delete-separator" role="separator" class="divider"></li>
 
-                        {% if cm|resource_type == "Generic" %}
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip Folder...</span>
+                        </li>
 
-                            <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
-                                data-target="#zip-folder-dialog">
-                                <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                <span>Zip Folder...</span>
-                            </li>
+                        <li id="btn-unzip" data-menu-name="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                            <li id="btn-unzip" data-menu-name="unzip">
-                                <span class="fa fa-file-archive-o icon-blue"></span>
-                                <span>Unzip here</span>
-                            </li>
-
-                            <li id="zip-separator" role="separator" class="divider"></li>
-                        {% endif %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
                     {% endif %}
                     {% if cm.raccess.require_download_agreement %}
@@ -1295,7 +1292,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>

@@ -186,8 +186,9 @@ def update_target_temporal_coverage(target):
             target.metadata.create_element("coverage", type='period', value=date_data)
 
 
-def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None, extra_data={},
+def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None,
                           fail_feedback=True):
+    """ Return the logical file type associated with a new file """
     if hs_file_type is None:
         res_file = utils.get_resource_file_by_id(res, file_id)
         ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".vrt": "GeoRaster",
@@ -208,7 +209,7 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
             if fail_feedback:
                 raise ValueError("Unsupported aggregation extension. Supported aggregation "
                                  "extensions are: {}".format(ext_to_type.keys()))
-            return
+            return None
 
     file_type_map = {"SingleFile": GenericLogicalFile,
                      "FileSet": FileSetLogicalFile,
@@ -221,8 +222,17 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
         if fail_feedback:
             raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
                              "}".format(ext_to_type.keys()))
-        return
+        return None
     logical_file_type_class = file_type_map[hs_file_type]
+    return logical_file_type_class
+
+
+def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None, extra_data={},
+                          fail_feedback=True):
+    """ set the logical file type for a new file """
+    logical_file_type_class = get_logical_file_type(res, user, file_id, hs_file_type,
+                                                    folder_path, fail_feedback)
+
     try:
         # Some aggregations use the folder name for the aggregation name
         folder_path = folder_path.rstrip('/') if folder_path else folder_path

@@ -220,6 +220,9 @@ function updateSelectionMenuContext() {
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
             flagDisableRemoveAggregation = true;
         }
+        else{
+            flagDisableZip = true;
+        }
         if(selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")){
             var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if(logicalFileTypeToSet.length){
@@ -1662,6 +1665,10 @@ $(document).ready(function () {
         if ($("#file-type-addon").length) {
             newName = newName + $("#file-type-addon").text();
         }
+
+        // make sure .url file has .url extension after renaming
+        if (oldName.endsWith('.url') && !newName.endsWith('.url'))
+            newName = newName + '.url';
 
         var calls = [];
         calls.push(rename_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));

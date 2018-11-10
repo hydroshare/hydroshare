@@ -4,7 +4,6 @@ import copy
 
 from django.forms import ModelForm, BaseFormSet
 from django.contrib.admin.widgets import forms
-from django.utils.safestring import mark_safe
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
@@ -13,14 +12,6 @@ from crispy_forms.bootstrap import Field
 from hydroshare import utils
 from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
     FundingAgency, Description
-
-
-class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-    """Return a horizontal list of radio buttons."""
-
-    def render(self):
-        """Return a newline separated list of radio button elements."""
-        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
 class Helper(object):
@@ -950,7 +941,7 @@ class CoverageSpatialForm(forms.Form):
     )
 
     type = forms.ChoiceField(choices=TYPE_CHOICES,
-                             widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
+                             widget=forms.RadioSelect(attrs={'class': 'inline'}), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
     projection = forms.CharField(max_length=100, required=False,
                                  label='Coordinate System/Geographic Projection')

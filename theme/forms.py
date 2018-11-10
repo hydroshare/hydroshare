@@ -208,7 +208,7 @@ class RatingForm(CommentSecurityForm):
                 rating_instance = rating_manager.get(user=user)
             except Rating.DoesNotExist:
                 rating_instance = Rating(user=user, value=rating_value)
-                rating_manager.add(rating_instance)
+                rating_manager.add(rating_instance, bulk=False)
             else:
                 if rating_instance.value != int(rating_value):
                     rating_instance.value = rating_value
@@ -219,7 +219,7 @@ class RatingForm(CommentSecurityForm):
                     rating_instance.delete()
         else:
             rating_instance = Rating(value=rating_value)
-            rating_manager.add(rating_instance)
+            rating_manager.add(rating_instance, bulk=False)
         return rating_instance
 
 

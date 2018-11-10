@@ -146,12 +146,6 @@ USE_I18N = False
 #   * Receive x-headers
 INTERNAL_IPS = ("127.0.0.1",)
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    "django.template.loaders.filesystem.Loader",
-    "django.template.loaders.app_directories.Loader",
-)
-
 # make django file uploader to always write uploaded file to a temporary directory
 # rather than holding uploaded file in memory for small files. This is due to
 # the difficulty of metadata extraction from an uploaded file being held in memory
@@ -160,7 +154,9 @@ TEMPLATE_LOADERS = (
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
+# TODO remove MezzanineBackend after conflicting users have been removed
+AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",
+                           "mezzanine.core.auth_backends.MezzanineBackend")
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -243,12 +239,6 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 
-# Put strings here, like "/home/html/django_templates"
-# or "C:/www/django/templates".
-# Always use forward slashes, even on Windows.
-# Don't forget to use absolute paths, not relative paths.
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
-
 ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
 INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
@@ -271,10 +261,10 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "rest_framework_swagger",
     "inplaceeditform",
     "django_nose",
     "django_irods",
+    "drf_yasg",
     "theme",
     "theme.blog_mods",
     "heartbeat",
@@ -288,7 +278,6 @@ INSTALLED_APPS = (
     "mezzanine.galleries",
     "crispy_forms",
     "mezzanine.accounts",
-    "mezzanine.mobile",
     "haystack",
     "jquery_ui",
     "rest_framework",
@@ -350,18 +339,35 @@ APPS_TO_NOT_RUN = (
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.contrib.messages.context_processors.messages",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.static",
-    "django.core.context_processors.media",
-    "django.core.context_processors.request",
-    "django.core.context_processors.tz",
-    "mezzanine.conf.context_processors.settings",
-    "mezzanine.pages.context_processors.page",
-)
+#TEMPLATE_CONTEXT_PROCESSORS = ()
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            (os.path.join(PROJECT_ROOT, "templates"),)
+        ],
+        'OPTIONS': {
+            'context_processors': [
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
+                "django.template.context_processors.static",
+                "django.template.context_processors.media",
+                "django.template.context_processors.request",
+                "django.template.context_processors.tz",
+                "mezzanine.conf.context_processors.settings",
+                "mezzanine.pages.context_processors.page",
+            ],
+            "loaders": [
+                "mezzanine.template.loaders.host_themes.Loader",
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ]
+        },
+    },
+]
 
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
@@ -377,8 +383,6 @@ MIDDLEWARE_CLASSES = (
     "django.contrib.messages.middleware.MessageMiddleware",
     "mezzanine.core.request.CurrentRequestMiddleware",
     "mezzanine.core.middleware.RedirectFallbackMiddleware",
-    "mezzanine.core.middleware.TemplateForDeviceMiddleware",
-    "mezzanine.core.middleware.TemplateForHostMiddleware",
     "mezzanine.core.middleware.AdminLoginInterfaceSelectorMiddleware",
     "mezzanine.core.middleware.SitePermissionMiddleware",
     # Uncomment the following if using any of the SSL settings:
@@ -481,7 +485,7 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-AUTH_PROFILE_MODULE = "theme.UserProfile"
+ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -491,7 +495,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
 }
 
@@ -500,7 +504,8 @@ SOLR_PORT = '8983'
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr'.format(**globals()),
+        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1'.format(**globals()),
+        'ADMIN_URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores'.format(**globals()),
         # ...or for multicore...
         # 'URL': 'http://127.0.0.1:8983/solr/mysite',
     },

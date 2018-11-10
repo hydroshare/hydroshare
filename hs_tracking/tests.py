@@ -388,4 +388,7 @@ class UtilsTests(TestCase):
         visitor.user = self.user
         session = Session.objects.create(visitor=visitor)
         usrtype = utils.get_user_type(session)
-        self.assertTrue(usrtype is None)
+        # https://docs.djangoproject.com/en/2.1/releases/1.10/
+        # Accessing a deleted field on a model instance reloads the field's value
+        # instead of raising AttributeError
+        self.assertTrue(usrtype == "Unspecified")

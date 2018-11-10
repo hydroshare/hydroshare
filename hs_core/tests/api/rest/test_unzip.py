@@ -58,15 +58,77 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
     def test_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
-        response = self.client.post(unzip_url, {}, format='json')
+        response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        list_url = "/hsapi/resource/%s/folders/test/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # second run should unzip to another folder
+        list_url = "/hsapi/resource/%s/folders/test-1/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unzip_overwrite(self):
+        unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={"overwrite": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        list_url = "/hsapi/resource/%s/folders/test/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # overwrite shouldn't write to a new folder
+        list_url = "/hsapi/resource/%s/folders/test-1/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_deep_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
-        response = self.client.post(unzip_url, {}, format='json')
+        response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        list_url = "/hsapi/resource/%s/folders/foo/test/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # second run should unzip to another folder
+        list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_deep_unzip_overwrite(self):
+        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={"overwrite": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        list_url = "/hsapi/resource/%s/folders/foo/test/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # overwrite shouldn't write to a new folder
+        list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
+        response = self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_unzip_unsuccessful(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/badpath/" % self.pid
-        response = self.client.post(unzip_url, {}, format='json')
+        response = self.client.post(unzip_url, data={})
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -10,7 +10,7 @@ rabbitmq:
   image: rabbitmq:3.5
   container_name: rabbitmq
 solr:
-  image: makuk66/docker-solr:4.10.4
+  image: solr:6.6
   container_name: solr
   volumes:
     # hydroshare repository
