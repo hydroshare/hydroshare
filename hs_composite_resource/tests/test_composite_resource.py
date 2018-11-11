@@ -94,7 +94,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # deleted the resource already
         self.composite_resource = None
 
-    def test_add_and_edit_referened_url(self):
+    def test_add_and_edit_referenced_url(self):
         # test that referenced url can be added to composite resource as a genericlogical file
         # type single file aggregation, and can also be edited
 
