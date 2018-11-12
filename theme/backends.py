@@ -33,9 +33,6 @@ class CaseInsensitiveMezzanineBackend(ModelBackend):
                     user = User.objects.get(username_or_email, **kwargs)
                 except User.DoesNotExist:
                     pass
-                except MultipleObjectsReturned:
-                    # TODO remove after conflicting users have been removed
-                    pass
                 else:
                     if user.check_password(password):
                         return user
