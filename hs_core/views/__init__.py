@@ -128,6 +128,7 @@ def change_quota_holder(request, shortkey):
     return HttpResponseRedirect(res.get_absolute_url())
 
 
+@api_view(['GET'])
 def update_quota_usage(request, username):
     req_user = request.user
     if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
