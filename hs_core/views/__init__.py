@@ -15,7 +15,7 @@ from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response, render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
@@ -30,7 +30,7 @@ from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
-import autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
@@ -170,9 +170,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
     res_files, full_paths = extract_files_with_paths(request)
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
-    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    extract_metadata = request.GET.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
     if file_folder is not None:
@@ -1018,7 +1019,7 @@ def verify_account(request, *args, **kwargs):
             'username' : request.GET['username'],
             'email' : request.GET['email']
         }
-    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+    return render(request, 'pages/verify-account.html', context)
 
 
 @processor_for('resend-verification-email')
@@ -1039,7 +1040,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
         context = {
             'is_email_sent' : True
         }
-        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+        return render(request, 'pages/verify-account.html', context)
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -1147,7 +1148,7 @@ def add_generic_context(request, page):
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
-    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+    return render(request, 'pages/create-resource.html')
 
 
 @login_required
