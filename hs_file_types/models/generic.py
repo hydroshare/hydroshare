@@ -81,8 +81,6 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
-                    with a(id="id-btn-delete-spatial-filetype", type="button", cls="pull-left"):
-                        span(cls="glyphicon glyphicon-trash icon-button btn-remove")
                     div("{% crispy spatial_form %}")
                     with div(cls="row", style="margin-top:10px;"):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "
