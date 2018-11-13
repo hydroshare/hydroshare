@@ -18,14 +18,15 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-
+    var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+    var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
     // Set initial coverage fields state
-    if ($("#id_type_1").is(':checked')) { //box type coverage
+    if ($radioBox.is(':checked')) { //box type coverage
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
     }
-    if ($("#id_type_2").is(':checked')) { // point type coverage
+    if ($radioPoint.is(':checked')) { // point type coverage
         $("#div_id_northlimit").hide();
         $("#div_id_eastlimit").hide();
         $("#div_id_southlimit").hide();
@@ -125,7 +126,8 @@ function drawInitialShape() {
         }
     }
     else {
-        if ($("#id_type_1").is(":checked")) {
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        if ($radioBox.is(":checked")) {
             drawRectangleOnTextChange();
         }
         else {
@@ -351,7 +353,8 @@ function processDrawing (coordinates, shape) {
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
     if (shape == "rectangle"){
-        document.getElementById("id_type_1").checked = true;
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        $radioBox.checked = true;
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
@@ -382,7 +385,8 @@ function processDrawing (coordinates, shape) {
         });
     }
     else {
-        document.getElementById("id_type_2").checked = true;
+        var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+        $radioPoint.checked = true;
         $("#div_id_north").show();
         $("#div_id_east").show();
         $("#div_id_elevation").show();

@@ -2,6 +2,9 @@
  * Created by Mauriel on 2/9/2016.
  */
 
+var radioPointSelector = 'input[type="radio"][value="point"]';
+var radioBoxSelector = 'input[type="radio"][value="box"]';
+
 function label_ajax_submit() {
     var el = $(this);
     var dataFormID = el.attr("data-form-id");
@@ -1551,19 +1554,18 @@ function initializeDatePickers(){
     });
 }
 
-function updateEditCoverageState() {
-    // Set state for composite resource file metadata editing
-    chkBox = $("#id-coverage-spatial-filetype #id_type_1");
-    chkPoint = $("#id-coverage-spatial-filetype #id_type_2");
+function updateEditCoverageStateFileType() {
+    // Set state for file type/aggregation spatial coverage metadata editing
+    var $radioBox = $("#id-coverage-spatial-filetype").find(radioBoxSelector);
 
-    if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
+    if ($radioBox.prop("checked")) {
         $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
     }
     else {
         $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
     }
 
-    if (chkBox.prop("checked")) {
+    if ($radioBox.prop("checked")) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
@@ -1591,23 +1593,42 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     if (logical_type !== "GenericLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
-        $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
-        $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+        $id_type_filetype_div.find(radioBoxSelector).attr('onclick', 'return false');
+        $id_type_filetype_div.find(radioPointSelector).attr('onclick', 'return false');
         if (logical_type !== "RefTimeseriesLogicalFile"){
-            $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+            $id_type_filetype_div.find(radioBoxSelector).attr('checked', 'checked');
         }
-        $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
-        $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
+        $id_type_filetype_div.find(radioPointSelector).attr('disabled', true);
+        $id_type_filetype_div.find(radioPointSelector).parent().closest("label").addClass("text-muted");
     }
     else {
-        // file type is "GenericLogicalFile" - allow changing coverage type
-        $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
+        // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
+        $id_type_filetype_div.find("input:radio").change(updateEditCoverageStateFileType);
+
+        $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'point');
+        $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
+        if(!$btnDeleteSpatialCoverage.length) {
+            $btnDeleteSpatialCoverage = addSpatialCoverageLink();
+        }
+        formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
+        url = formSpatialCoverage.attr('action');
+        if(url.indexOf('update-file-metadata') !== -1) {
+            onSpatialCoverageDelete();
+        }
+        else {
+            $btnDeleteSpatialCoverage.hide()
+        }
+
+        if(bindCoordinatesPicker){
+            $("#id-coverage-spatial-filetype").coordinatesPicker();
+        }
     }
 
     // #id_type_1 is the box radio button
-    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
-        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile')) {
-        // coverage type is box
+    if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
+        (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile' &&
+            logical_type !== 'GenericLogicalFile')) {
+        // coverage type is box or logical file type is either NetCDF or TimeSeries
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
     }
@@ -1685,7 +1706,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
     }
 }
 
-// updates the UI temporal coverage elements
+// updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
     $("#id_start").attr('data-date', temporalCoverage.start);
