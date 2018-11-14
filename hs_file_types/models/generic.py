@@ -5,7 +5,7 @@ from django.db import models
 from django.template import Template, Context
 from django.core.exceptions import ValidationError
 
-from dominate.tags import div, form, button, h4, span, a
+from dominate.tags import div, form, button, h4
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
