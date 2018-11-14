@@ -434,6 +434,26 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         contributor = self.composite_resource.metadata.contributors.first()
         self.assertEqual(contributor.email, 'LSmith@gmail.com')
 
+    def test_delete_coverage(self):
+        """Here we are testing deleting of temporal and coverage metadata for composite resource"""
+
+        self.create_composite_resource()
+        # test deleting spatial coverage
+        self.assertEqual(self.composite_resource.metadata.spatial_coverage, None)
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        self.composite_resource.metadata.create_element('coverage', type='point', value=value_dict)
+        self.assertNotEqual(self.composite_resource.metadata.spatial_coverage, None)
+        self.composite_resource.delete_coverage(coverage_type='spatial')
+        self.assertEqual(self.composite_resource.metadata.spatial_coverage, None)
+
+        # test deleting temporal coverage
+        self.assertEqual(self.composite_resource.metadata.temporal_coverage, None)
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        self.composite_resource.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertNotEqual(self.composite_resource.metadata.temporal_coverage, None)
+        self.composite_resource.delete_coverage(coverage_type='temporal')
+        self.assertEqual(self.composite_resource.metadata.temporal_coverage, None)
+
     def test_metadata_xml(self):
         """Test that the call to resource.get_metadata_xml() doesn't raise exception
         for composite resource type get_metadata_xml()
