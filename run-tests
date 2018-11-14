@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test --parallel 4 $*
+coverage run manage.py test --parallel 2 $*
 coverage report
 
 exit 0;
