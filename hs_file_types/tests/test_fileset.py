@@ -1085,6 +1085,39 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_delete_aggregation_coverage(self):
+        """Here we are testing deleting of temporal and spatial coverage for a file set aggregation
+        """
+
+        self._create_fileset_aggregation()
+        fs_aggr = FileSetLogicalFile.objects.first()
+
+        # test deleting spatial coverage
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        fs_aggr.metadata.create_element('coverage', type='point', value=value_dict)
+        self.assertTrue(fs_aggr.metadata.is_dirty)
+        fs_aggr.metadata.is_dirty = False
+        fs_aggr.metadata.save()
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+        fs_aggr.metadata.delete_element('coverage', fs_aggr.metadata.spatial_coverage.id)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        self.assertTrue(fs_aggr.metadata.is_dirty)
+
+        # test deleting temporal coverage
+        self.assertEqual(fs_aggr.metadata.temporal_coverage, None)
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        fs_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertNotEqual(fs_aggr.metadata.temporal_coverage, None)
+        self.assertTrue(fs_aggr.metadata.is_dirty)
+        fs_aggr.metadata.is_dirty = False
+        fs_aggr.metadata.save()
+        fs_aggr.metadata.delete_element('coverage', fs_aggr.metadata.temporal_coverage.id)
+        self.assertEqual(fs_aggr.metadata.temporal_coverage, None)
+        self.assertTrue(fs_aggr.metadata.is_dirty)
+
+        self.composite_resource.delete()
+
     def _create_fileset_aggregation(self):
         self.create_composite_resource()
         new_folder = 'fileset_folder'
