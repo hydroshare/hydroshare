@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-coverage run manage.py --parallel 2 test --verbosity=3 --nomigrations --with-fixture-bundling --with-xunit $1
+coverage run manage.py --parallel test --verbosity=3 --nomigrations --with-fixture-bundling --with-xunit $1
 coverage xml
 
 exit 0;
