@@ -958,6 +958,73 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_auto_update_temporal_coverage_from_children_1(self):
+        """Here we are testing fileset level temporal coverage auto update when
+        a contained aggregation temporal coverage gets created as part of that aggregation creation
+        provided the fileset aggregation has no temporal coverage prior to the child aggregation
+        creation
+        """
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # fileset aggregation should not have any temporal coverage at this point
+        self.assertEqual(fs_aggr.metadata.temporal_coverage, None)
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # upload a netcdf file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
+        # netcdf child aggregation should have been created
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+        self.assertTrue(nc_aggr.has_parent)
+        # netcdf aggregation should have temporal coverage
+        self.assertNotEqual(nc_aggr.metadata.temporal_coverage, None)
+
+        # fileset aggregation should now have temporal coverage
+        self.assertNotEqual(fs_aggr.metadata.temporal_coverage, None)
+        # temporal coverage of the fileset aggregation should match with that of the contained
+        # netcdf aggregation
+        for temp_date in ('start', 'end'):
+            self.assertEqual(fs_aggr.metadata.temporal_coverage.value[temp_date],
+                             nc_aggr.metadata.temporal_coverage.value[temp_date])
+        self.composite_resource.delete()
+
+    def test_auto_update_temporal_coverage_from_children_2(self):
+        """Here we are testing fileset level temporal coverage auto update does not happen when
+        a contained aggregation temporal coverage gets created as part of that aggregation creation
+        provided the fileset aggregation has temporal coverage prior to the child aggregation
+        creation
+        """
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # fileset aggregation should not have any temporal coverage at this point
+        self.assertEqual(fs_aggr.metadata.temporal_coverage, None)
+        # create temporal coverage for file set
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2018', 'end': '12/12/2018'}
+        fs_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+        # fileset aggregation should temporal coverage at this point
+        self.assertNotEqual(fs_aggr.metadata.temporal_coverage, None)
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # upload a netcdf file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
+        # netcdf child aggregation should have been created
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+        self.assertTrue(nc_aggr.has_parent)
+        # netcdf aggregation should have temporal coverage
+        self.assertNotEqual(nc_aggr.metadata.temporal_coverage, None)
+
+        # temporal coverage of the fileset aggregation should NOT match with that of the contained
+        # netcdf aggregation
+        for temp_date in ('start', 'end'):
+            self.assertNotEqual(fs_aggr.metadata.temporal_coverage.value[temp_date],
+                             nc_aggr.metadata.temporal_coverage.value[temp_date])
+        self.composite_resource.delete()
+
     def test_auto_update_spatial_coverage_from_children_1(self):
         """Here we are testing fileset level spatial coverage auto update when
         a contained aggregation spatial coverage gets created as part of that aggregation creation
