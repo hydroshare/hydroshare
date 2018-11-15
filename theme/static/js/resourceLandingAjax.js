@@ -1604,24 +1604,6 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     else {
         // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageStateFileType);
-
-        $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'point');
-        $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
-        if(!$btnDeleteSpatialCoverage.length) {
-            $btnDeleteSpatialCoverage = addSpatialCoverageLink();
-        }
-        formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
-        url = formSpatialCoverage.attr('action');
-        if(url.indexOf('update-file-metadata') !== -1) {
-            onSpatialCoverageDelete();
-        }
-        else {
-            $btnDeleteSpatialCoverage.hide()
-        }
-
-        if(bindCoordinatesPicker){
-            $("#id-coverage-spatial-filetype").coordinatesPicker();
-        }
     }
 
     // #id_type_1 is the box radio button
