@@ -1022,7 +1022,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # netcdf aggregation
         for temp_date in ('start', 'end'):
             self.assertNotEqual(fs_aggr.metadata.temporal_coverage.value[temp_date],
-                             nc_aggr.metadata.temporal_coverage.value[temp_date])
+                                nc_aggr.metadata.temporal_coverage.value[temp_date])
         self.composite_resource.delete()
 
     def test_auto_update_spatial_coverage_from_children_1(self):
