@@ -757,6 +757,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 if aggregation.is_fileset:
                     # remove aggregation form the file
                     res_file_obj.logical_file_content_object = None
+                    res_file_obj.save()
             except ObjectDoesNotExist:
                 pass
 

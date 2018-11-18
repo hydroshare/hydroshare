@@ -1004,7 +1004,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(filename_or_id, f):
             if delete_logical_file:
-                if f.logical_file is not None:
+                if f.has_logical_file:
                     # delete logical file if any resource file that belongs to logical file
                     # gets deleted for any logical file other than fileset logical file -
                     # delete fileset logical file only when the last resource file under the
@@ -1018,11 +1018,6 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
-            # Pabitra: better to use f.delete() here and get rid of the
-            # delete_resource_file_only() util function
-            # Hong: now that I am adding update_quota_usage() call in delete_resource_file_only(),
-            # there is merit to keep file deletion call in a util function so that some action
-            # can be bundled together with a file deletion operation
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django

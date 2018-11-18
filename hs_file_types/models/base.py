@@ -1190,6 +1190,7 @@ class AbstractLogicalFile(models.Model):
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
+        :param  user    user who is deleting file type/aggregation
         :param delete_res_files If True all resource files that are part of this logical file will
         be deleted
         """
