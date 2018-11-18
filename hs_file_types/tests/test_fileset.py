@@ -783,7 +783,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_rename_aggregation_2(self):
         """Testing that we can rename a folder that represents a fileset aggregation that
-        exists within another fileset aggregation - nested fileset aggregation"""
+        exists within another fileset aggregation - nested fileset aggregation
+        """
 
         self._create_nested_fileset_aggregations()
 
@@ -808,7 +809,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_rename_aggregation_3(self):
         """Testing that we can rename a folder that represents a fileset aggregation that
-        contains another fileset aggregation - nested fileset aggregation"""
+        contains another fileset aggregation - nested fileset aggregation
+        Also changing the folder name for a parent fileset aggregation should update the
+        folder path for the nested fileset aggregation
+        """
 
         self._create_nested_fileset_aggregations()
 
@@ -818,6 +822,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # There should be 2 fileset aggregations
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         fs_aggr_parent = FileSetLogicalFile.objects.filter(folder=parent_fs_folder).first()
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=child_fs_folder).count(), 1)
 
         # rename fileset aggregation name for the parent fileset aggregation
         new_parent_fs_folder = parent_fs_folder + '_1'
@@ -826,9 +831,12 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
+
+        # new expected folder path of the child fileset aggregation
+        new_child_fs_folder = '{}/child_fileset_folder'.format(new_parent_fs_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_parent_fs_folder).count(), 1)
-        self.assertEqual(FileSetLogicalFile.objects.filter(folder=child_fs_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
 
         self.composite_resource.delete()
 

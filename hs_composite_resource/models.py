@@ -330,8 +330,9 @@ class CompositeResource(BaseResource):
                 # new folder name
                 aggregation = self.get_aggregation_by_name(orig_aggr_name)
                 if aggregation.is_fileset:
-                    aggregation.folder = new_aggr_name
-                    aggregation.save()
+                    # update folder attribute of this fileset aggregation and all nested
+                    # fileset aggregations of this aggregation
+                    aggregation.update_folder(new_folder=new_aggr_name)
             except ObjectDoesNotExist:
                 # not renaming a fileset aggregation folder
                 pass
