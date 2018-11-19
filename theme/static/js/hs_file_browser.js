@@ -197,7 +197,7 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 flagDisableRemoveAggregation = true;
                 $('#btn-get-referenced-url').show();
-                if (mode == "edit")
+                if (mode === "edit")
                     $('#btn-edit-referenced-url').show();
             }
             else if(logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"){
@@ -263,30 +263,30 @@ function updateSelectionMenuContext() {
     if(!isFolderSelected){
         for (var i = 0; i < selected.length; i++) {
             var fileName = $(selected[i]).children(".fb-file-name").text();
-            var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
+            var logicalFileType = $(selected[i]).children(".fb-logical-file-type").attr("data-logical-file-type");
             var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-            if(logicalFileType != "") {
+            if(logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
                 flagDisableSetGenericFileType = true;
             }
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 flagDisableUnzip = true;
             }
-            if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType !== "") {
                 flagDisableSetGeoRasterFileType = true;
             }
 
-            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType !== "") {
                 flagDisableSetNetCDFFileType = true;
             }
 
-            if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType !== "") {
                 flagDisableSetGeoFeatureFileType = true;
             }
-            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  || logicalFileType != "") {
+            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  || logicalFileType !== "") {
                 flagDisableSetRefTimeseriesFileType = true;
             }
-            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType != "") {
+            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType !== "") {
                 flagDisableSetTimeseriesFileType = true;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -299,7 +299,7 @@ function updateSelectionMenuContext() {
     }
 
 
-    var logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
 
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
@@ -345,7 +345,6 @@ function updateSelectionMenuContext() {
 
     // set FileSet file type
     menu.children("li[data-menu-name='setfilesetfiletype']").toggleClass("disabled", flagDisableSetFileSetFileType);
-    //$("#fb-fileset-file-type").toggleClass("disabled", flagDisableSetFileSetFileType);
 
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);

@@ -229,9 +229,11 @@ class GenericLogicalFile(AbstractLogicalFile):
         log = logging.getLogger()
         if file_id is None:
             raise ValueError("Must specify id of the file to be set as an aggregation type")
-        # get the resource file
+
         res_file = utils.get_resource_file_by_id(resource, file_id)
-        if res_file.has_logical_file:
+        # resource file that is not part of an aggregation or part of a fileset aggregation
+        # can be used for creating a single file aggregation
+        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
             raise ValidationError("Selected file '{}' is already part of an aggregation".format(
                 res_file.file_name))
 

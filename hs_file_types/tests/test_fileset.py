@@ -642,6 +642,26 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_create_single_file_type_in_fileset(self):
+        """Test that we can create a single file aggregation from a file that is part of a
+        fileset aggregation """
+
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # no single file aggregation at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        res_file = self.composite_resource.files.first()
+        # test that the resoure file is part of the fileset aggregation
+        self.assertEqual(res_file.logical_file_type_name, 'FileSetLogicalFile')
+        # create a single file aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        # there should be one single file aggregation at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # test that the resoucre file is now part of the single file aggregation
+        self.assertEqual(res_file.logical_file_type_name, 'GenericLogicalFile')
+        self.composite_resource.delete()
+
     def test_auto_netcdf_aggregation_creation(self):
         """Test that when a netcdf file is uploaded to a folder that represents a fileset,
         a netcdf aggregation is created automatically"""
