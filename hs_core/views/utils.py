@@ -750,16 +750,16 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
         # if the source file is part of a FileSet, we need to remove it from that FileSet in the
         # case file being moved
-        if file_move and res_file_obj.file_folder is not None and \
-                resource.resource_type == 'CompositeResource':
-            try:
-                aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                if aggregation.is_fileset:
-                    # remove aggregation form the file
-                    res_file_obj.logical_file_content_object = None
-                    res_file_obj.save()
-            except ObjectDoesNotExist:
-                pass
+        if file_move and resource.resource_type == 'CompositeResource':
+            if res_file_obj.has_logical_file and res_file_obj.logical_file.is_fileset:
+                try:
+                    aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
+                    if aggregation.is_fileset:
+                        # remove aggregation form the file
+                        res_file_obj.logical_file_content_object = None
+                        res_file_obj.save()
+                except ObjectDoesNotExist:
+                    pass
 
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
