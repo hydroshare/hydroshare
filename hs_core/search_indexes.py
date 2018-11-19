@@ -184,8 +184,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None:
+            if first_creator.name:
                 return first_creator.name.lstrip()
+            elif first_creator.organization:
+                return first_creator.organization.strip()
             else:
                 return 'none'
         else:
@@ -200,9 +202,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None and first_creator.name != '':
+            if first_creator.name:
                 normalized = normalize_name(first_creator.name)
                 return normalized
+            elif first_creator.organization:
+                return first_creator.organization.strip()
             else:
                 return 'none'
         else:
