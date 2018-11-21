@@ -814,6 +814,19 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
+        # if the folder getting deleted is a fileset folder then delete the fileset aggregation
+        # record.
+        # note: for other types of aggregation the aggregation gets deleted as part of deleting
+        # the resource file
+        if resource.resource_type == 'CompositeResource':
+            fs_aggr_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
+            try:
+                aggr = resource.get_aggregation_by_name(fs_aggr_folder_path)
+                if aggr.is_fileset:
+                    aggr.logical_delete(user, delete_res_files=True)
+            except ObjectDoesNotExist:
+                pass
+
         # send the post-delete signal
         post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
 
