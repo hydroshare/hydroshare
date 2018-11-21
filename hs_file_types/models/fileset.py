@@ -55,22 +55,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
     def supports_nested_aggregations(self):
         """This aggregation type can contain other aggregations"""
         return True
-
-    @property
-    def must_delete(self):
-        """
-        A helper to decide if the aggregation needs to be deleted when a resource file that is part
-        part of the aggregation gets deleted.
-        :return True if there is no more than one resource file in the folder (including
-        any sub-folders) that represent the aggregation
-        """
-
-        # get all res files that exist under the folder that represents this aggregation and under
-        # any sub-folders of this aggregation
-        res_files = ResourceFile.list_folder(self.resource, folder=self.aggregation_name,
-                                             sub_folders=True)
-        return len(res_files) < 2
-
+    
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""
