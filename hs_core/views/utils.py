@@ -805,8 +805,9 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
             filename = f.storage_path
             if filename.startswith(folderpath):
                 # TODO: integrate deletion of logical file with ResourceFile.delete
-                # delete the logical file object if the resource file has one
-                if f.has_logical_file:
+                # delete the logical file (if it's not a fileset) object if the resource file
+                # has one
+                if f.has_logical_file and not f.logical_file.is_fileset:
                     # this should delete the logical file and any associated metadata
                     # but does not delete the resource files that are part of the logical file
                     f.logical_file.logical_delete(user, delete_res_files=False)

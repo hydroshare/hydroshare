@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
 from utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile
@@ -642,6 +642,29 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_delete_folder_in_fileset(self):
+        """Test that we can delete a folder (contains a file) that is part of a fileset
+        aggregation"""
+
+        self._create_fileset_aggregation()
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        fileset_folder = self.composite_resource.files.first().file_folder
+        new_folder = '{}/normal_folder'.format(fileset_folder)
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # delete the folder new_folder
+        folder_path = "data/contents/{}".format(new_folder)
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        # there should be still the fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        self.composite_resource.get_aggregation_by_name(fileset_folder)
+        self.composite_resource.delete()
+
     def test_create_single_file_type_in_fileset(self):
         """Test that we can create a single file aggregation from a file that is part of a
         fileset aggregation """
@@ -658,7 +681,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         # there should be one single file aggregation at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        # test that the resoucre file is now part of the single file aggregation
+        # test that the resource file is now part of the single file aggregation
         self.assertEqual(res_file.logical_file_type_name, 'GenericLogicalFile')
         self.composite_resource.delete()
 
