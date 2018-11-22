@@ -55,7 +55,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
     def supports_nested_aggregations(self):
         """This aggregation type can contain other aggregations"""
         return True
-    
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""

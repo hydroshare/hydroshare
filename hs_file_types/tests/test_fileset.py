@@ -559,7 +559,6 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self._create_fileset_aggregation()
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
-        txt_res_file = self.composite_resource.files.first()
         # there should be one fileset aggregation
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fs_aggr = FileSetLogicalFile.objects.first()
