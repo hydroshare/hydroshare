@@ -272,21 +272,26 @@ function updateSelectionMenuContext() {
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 flagDisableUnzip = true;
             }
-            if ((!fileName.toUpperCase().endsWith(".TIF")) || logicalFileType !== "") {
+            if ((!fileName.toUpperCase().endsWith(".TIF") && !fileName.toUpperCase().endsWith(".TIFF")) ||
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
                 flagDisableSetGeoRasterFileType = true;
             }
 
-            if (!fileName.toUpperCase().endsWith(".NC")  || logicalFileType !== "") {
+            if (!fileName.toUpperCase().endsWith(".NC")  ||
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
                 flagDisableSetNetCDFFileType = true;
             }
 
-            if ((!fileName.toUpperCase().endsWith(".SHP")) || logicalFileType !== "") {
+            if ((!fileName.toUpperCase().endsWith(".SHP")) ||
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
                 flagDisableSetGeoFeatureFileType = true;
             }
-            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  || logicalFileType !== "") {
+            if (!fileName.toUpperCase().endsWith(".REFTS.JSON")  ||
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
                 flagDisableSetRefTimeseriesFileType = true;
             }
-            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) || logicalFileType !== "") {
+            if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) ||
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
                 flagDisableSetTimeseriesFileType = true;
             }
             if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -297,7 +302,6 @@ function updateSelectionMenuContext() {
             }
         }
     }
-
 
     logicalFileType = $("#fb-files-container li.fb-file.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
 
