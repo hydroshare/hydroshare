@@ -471,9 +471,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_delete_file_in_aggregation_1(self):
+    def test_empty_fileset(self):
         """Test that when we delete the only resource file of a fileset aggregation,
-        the aggregation doesn't get deleted - leaves an aggregation without any content files
+        the aggregation doesn't get deleted - leaves an aggregation without any content
+        files (empty fileset)
         """
 
         self.create_composite_resource()
@@ -508,7 +509,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(fs_aggr.files.count(), 0)
         self.composite_resource.delete()
 
-    def test_delete_file_in_aggregation_2(self):
+    def test_delete_file_in_aggregation(self):
         """Test that we can delete one of the files of a fileset aggregation"""
 
         self.create_composite_resource()
