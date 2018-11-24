@@ -189,9 +189,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Convert to Time Series</span>
                         </li>
-                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">
+                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="modal"
+                                data-target="#remove-aggregation-dialog">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Remove content type</span>
+                            <span data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">Remove content type</span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}

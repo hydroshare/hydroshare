@@ -1771,7 +1771,7 @@ $(document).ready(function () {
      });
 
      // set remove aggregation (file type) method
-     $("#btn-remove-aggregation").click(function () {
+     $("#btnRemoveAggregation").click(function () {
          removeAggregation();
      });
 
