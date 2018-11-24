@@ -1528,6 +1528,12 @@ function deleteFileTypeSpatialCoverage(url, deleteButton) {
                 $("#id_westlimit_filetype").val("");
                 $("#id_north_filetype").val("");
                 $("#id_east_filetype").val("");
+                if(json_response.has_logical_spatial_coverage) {
+                    $("#btn-update-resource-spatial-coverage").show();
+                }
+                else {
+                   $("#btn-update-resource-spatial-coverage").hide();
+                }
             }
             else {
                 display_error_message("Failed to delete spatial coverage for content type.", json_response.message);
@@ -1554,6 +1560,13 @@ function deleteFileTypeTemporalCoverage(url, deleteButton) {
                 // remove coverage data from the coverage text fields
                 $("#id_start_filetype").val("");
                 $("#id_end_filetype").val("");
+
+                if(json_response.has_logical_temporal_coverage) {
+                     $("#btn-update-resource-temporal-coverage").show();
+                }
+                else {
+                   $("#btn-update-resource-temporal-coverage").hide();
+                }
             }
             else {
                 display_error_message("Failed to delete temporal coverage for content type.", json_response.message);
