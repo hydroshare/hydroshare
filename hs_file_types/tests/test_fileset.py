@@ -665,7 +665,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_delete_folder_in_fileset(self):
         """Test that we can delete a folder (contains a file) that is part of a fileset
-        aggregation"""
+        aggregation - test that the fileset aggregation doesn't get deleted"""
 
         self._create_fileset_aggregation()
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
@@ -684,6 +684,33 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be still the fileset aggregation
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         self.composite_resource.get_aggregation_by_name(fileset_folder)
+        self.composite_resource.delete()
+
+    def test_delete_folder_containing_fileset(self):
+        """Test that we can delete a folder that contains a fileset
+        aggregation - test that the fileset aggregation gets deleted"""
+
+        self.create_composite_resource()
+        # there should be no resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+        normal_folder = 'normal_folder'
+        fileset_folder = '{}/fileset_folder'.format(normal_folder)
+        ResourceFile.create_folder(self.composite_resource, fileset_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fileset_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # create a fileset aggregation using the fileset_folder
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=fileset_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # delete the folder normal_folder (contains the fileset aggregation)
+        folder_path = "data/contents/{}".format(normal_folder)
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        # there should be no fileset aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+        # there should be no resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
         self.composite_resource.delete()
 
     def test_create_single_file_type_in_fileset(self):
