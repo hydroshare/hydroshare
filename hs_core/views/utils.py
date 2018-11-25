@@ -788,6 +788,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
+    If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
     :param foldername: the folder name that has been removed from iRODS
@@ -814,18 +815,16 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
-        # if the folder getting deleted is a fileset folder then delete the fileset aggregation
-        # record.
+        # if the folder getting deleted contains any fileset aggregation those aggregations need to
+        # be deleted
         # note: for other types of aggregation the aggregation gets deleted as part of deleting
-        # the resource file
+        # the resource file - see above for resource file delete
         if resource.resource_type == 'CompositeResource':
-            fs_aggr_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
-            try:
-                aggr = resource.get_aggregation_by_name(fs_aggr_folder_path)
-                if aggr.is_fileset:
-                    aggr.logical_delete(user, delete_res_files=True)
-            except ObjectDoesNotExist:
-                pass
+            rel_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
+            filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
+            for fileset in filesets:
+                if fileset.folder.startswith(rel_folder_path):
+                    fileset.logical_delete(user, delete_res_files=True)
 
         # send the post-delete signal
         post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
