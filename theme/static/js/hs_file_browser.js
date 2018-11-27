@@ -728,9 +728,9 @@ function showFileTypeMetadata(file_type_time_series, url){
          setFileTypeSpatialCoverageFormFields(logical_type);
          // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
-
-         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
-         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         
+         var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
+         var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
          if (logical_type === "NetCDFLogicalFile") {
              // don't let the user open the Projection String Type dropdown list
              // when editing Oroginal Coverage element
@@ -763,17 +763,17 @@ function showFileTypeMetadata(file_type_time_series, url){
              InitializeTimeSeriesFileTypeForms();
          }
          if (logical_type === "GeoRasterLogicalFile"){
-             $spatial_type_radio_button_1.prop("checked", true);
-             $("#div_id_type_filetype input:radio").trigger("change");
-             $spatial_type_radio_button_1.attr('onclick', 'return false');
-             $spatial_type_radio_button_2.attr('onclick', 'return false');
+             $spatialRadioBox.prop("checked", true);
+             $("#id_type_filetype input:radio").trigger("change");
+             $spatialRadioBox.attr('onclick', 'return false');
+             $spatialRadioPoint.attr('onclick', 'return false');
          }
          else {
-             if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
-                 $spatial_type_radio_button_1.prop("checked", true);
+             if ($spatialRadioBox.attr('checked') === 'checked'){
+                 $spatialRadioBox.prop("checked", true);
              }
              else {
-                 $spatial_type_radio_button_2.prop("checked", true);
+                 $spatialRadioPoint.prop("checked", true);
              }
          }
 
