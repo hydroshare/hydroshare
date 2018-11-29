@@ -273,7 +273,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
     def test_put_scimeta_timeseries_resource_with_core_metadata(self):
