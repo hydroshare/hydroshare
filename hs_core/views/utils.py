@@ -648,7 +648,7 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath, overwrite=False):
+def link_irods_file_to_django(resource, filepath):
     """
     Link a newly created irods file to Django resource model
 
@@ -663,9 +663,6 @@ def link_irods_file_to_django(resource, filepath, overwrite=False):
         ret = None
         try:
             ret = ResourceFile.get(resource=resource, file=base, folder=folder)
-            if overwrite:
-                ret.delete()
-                b_add_file = True
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
             b_add_file = True
@@ -922,7 +919,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 destination_file = _get_destination_filename(file, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
-                res_file = link_irods_file_to_django(resource, destination_file, overwrite=True)
+                res_file = link_irods_file_to_django(resource, destination_file)
                 res_files.append(res_file)
 
             # scan for aggregations
