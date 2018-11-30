@@ -216,7 +216,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
-    def test_put_scimeta_composite_resource_with_core_metadata_failure(self):
+    def test_put_scimeta_composite_resource_with_core_metadata_and_coverage(self):
         # testing bulk metadata update with only core metadata that includes coverage metadata
 
         # create a composite resource
