@@ -45,7 +45,7 @@ class QuotaAdmin(admin.ModelAdmin):
             return super(QuotaAdmin, self).get_form(request, obj, **kwargs)
 
 
-admin.site.unregister(HomePage)
+admin.site.register(HomePage)
 admin.site.register(SiteConfiguration, SingletonAdmin)
 admin.site.register(UserQuota, QuotaAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
