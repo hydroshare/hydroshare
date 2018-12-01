@@ -1030,7 +1030,7 @@ function onOpenFolder() {
 }
 
 function updateNavigationState() {
-    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 1);
+    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 1); // we are at the root: data/contents
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
 
     var upPath = $("#hs-file-browser").attr("data-current-path");
@@ -1523,9 +1523,10 @@ $(document).ready(function () {
 
     // Move back
     $("#fb-move-back").click(function () {
-        if (pathLogIndex >= 2) {
+        if (pathLogIndex > 1) {
             pathLogIndex--;
             if (pathLogIndex == 1) {
+                // we are at the root: data/contents
                 $("#fb-move-back").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);

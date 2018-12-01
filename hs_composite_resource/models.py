@@ -272,20 +272,22 @@ class CompositeResource(BaseResource):
         :param  path: directory path in which to search for a fileset aggregation
         :return a fileset aggregation object if found, otherwise None
         """
-        while True:
+
+        def get_fileset(path):
             try:
                 aggregation = self.get_aggregation_by_name(path)
                 if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
-                pass
+                return None
 
-            if '/' in path:
-                path = os.path.dirname(path)
-            else:
-                break
-
-        return None
+        while '/' in path:
+            fileset = get_fileset(path)
+            if fileset is not None:
+                return fileset
+            path = os.path.dirname(path)
+        else:
+            return get_fileset(path)
 
     def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
         """

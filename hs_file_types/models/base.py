@@ -957,11 +957,6 @@ class AbstractLogicalFile(models.Model):
         return False
 
     @property
-    def supports_nested_aggregations(self):
-        """By default an aggregation can't contain other aggregations"""
-        return False
-
-    @property
     def supports_resource_file_move(self):
         """allows a resource file that is part of this logical file type to be moved"""
         return True

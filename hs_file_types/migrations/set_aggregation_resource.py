@@ -35,18 +35,18 @@ def set_aggregation_resource(apps, schema_editor):
         if res_aggregations:
             log_msg = log_msg_1.format(aggr_count=len(res_aggregations), res_id=res.short_id)
             if __debug__:
-                print(">>>" + log_msg)
+                log.debug(log_msg)
             log.info(log_msg)
         else:
             log_msg = log_msg_2.format(res.short_id)
             if __debug__:
-                print(">>>" + log_msg)
+                log.debug(log_msg)
             log.info(log_msg)
 
     log_msg = "A total of {} composite resources were processed.".format(
         CompositeResource.objects.all().count())
     if __debug__:
-        print(">>>" + log_msg)
+        log.debug(log_msg)
     log.info(log_msg)
 
 
