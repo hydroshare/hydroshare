@@ -1872,5 +1872,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should still be a referenced time series
         self.assertEqual(RefTimeseriesLogicalFile.objects.all().count(), 1)
 
+        # check the file exists on disk after being overwritten
+        for file in self.composite_resource.files.all():
+            self.assertTrue(file.exists)
+
         self.assertNotEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
                             "overwritten")

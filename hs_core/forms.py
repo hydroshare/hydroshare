@@ -838,7 +838,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         fields will be displayed
         """
         file_type = kwargs.pop('file_type', False)
-        form_field_names = ['type', 'start', 'end']
+        form_field_names = ['start', 'end']
         crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 

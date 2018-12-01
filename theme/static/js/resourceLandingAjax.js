@@ -1677,7 +1677,7 @@ function updateEditCoverageStateFileType() {
 function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker){
     // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
-       
+
     if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
