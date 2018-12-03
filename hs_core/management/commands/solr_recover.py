@@ -1,6 +1,4 @@
-"""This lists all the large resources and their statuses.
-   This helps in checking that they download properly.
-
+"""This re-indexes resources in SOLR to fix problems during SOLR builds.
 * By default, prints errors on stdout.
 * Optional argument --log: logs output to system log.
 """
@@ -21,7 +19,7 @@ def has_subfolders(resource):
 
 
 def repair_solr(short_id):
-    """ Print size and sharing status of a resource """
+    """ Repair SOLR index content for a resource """
 
     logger = logging.getLogger(__name__)
     try:
@@ -61,7 +59,7 @@ def repair_solr(short_id):
 
 
 class Command(BaseCommand):
-    help = "Print size information."
+    help = "Repair SOLR index for a set of resources"
 
     def add_arguments(self, parser):
 
