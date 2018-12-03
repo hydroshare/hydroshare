@@ -74,7 +74,7 @@
                     </td>
                     {% endif %}
                 </tr>
-                <tr class="info-collapsible">
+                <tr>
                     <th>Owners:</th>
                     <td class="owners-wrapper">
                         {% for u in owners %}
@@ -83,15 +83,15 @@
                         {% include "includes/profile-card.html" %}
                     </td>
                 </tr>
-                <tr class="info-collapsible">
+                <tr>
                     <th>Resource type:</th>
                     <td>{{ cm|resource_type }}</td>
                 </tr>
-                <tr class="info-collapsible">
+                <tr>
                     <th>Created:</th>
                     <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
                 </tr>
-                <tr class="info-collapsible">
+                <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
                         {% if cm.last_changed_by %} by
@@ -107,7 +107,7 @@
                 </tr>
                 {% endif %}
                 {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
-                <tr class="info-collapsible">
+                <tr>
                     <th>Content types:</th>
                     <td>
                         {% for ct in cm.aggregation_types %}
@@ -120,13 +120,6 @@
         </div>
         <div class="col-sm-12 col-md-6 res-header">
             {% include "resource-landing-page/highlights.html" %}
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-sm-12 col-md-12">
-            <a id="stats-toggle" href="#" class="show-more-btn btn-default"
-               title="Show less" style="text-decoration: none;">▲</a>
         </div>
     </div>
 </div>

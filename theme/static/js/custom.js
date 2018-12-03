@@ -356,11 +356,6 @@ $(document).ready(function () {
         $(this).text(caption[current]);
         $(this).attr("title", titles[current]);
     });
-
-    // Toggle for resource header
-    $("#stats-toggle").click(function () {
-        $(".info-collapsible").toggleClass("hidden");
-    });
 });
 
 function showUniversalMessage(type, message, timeout) {
