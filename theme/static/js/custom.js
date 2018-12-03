@@ -334,12 +334,10 @@ $(document).ready(function () {
     });
 
     // Toggle for stats button
-    $(".show-more-btn").click(function() {
-        var caption = ["▲", "···"];
-        var titles = ["Show less", "Show more"];
+    $(".btn-show-more").click(function() {
+        var caption = ["Show Less", "Show More"];
         var current = $(this).text() == caption[0] ? 1 : 0;
         $(this).text(caption[current]);
-        $(this).attr("title", titles[current]);
     });
 });
 

@@ -2626,20 +2626,7 @@ div.affiliation {
     padding-top:0;
 }
 
-.show-more-btn {
-    width: 50px;
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
-    text-align: center;
-    color: #AAA;
-    border: 1px solid #ddd;
-    font-size: 12px;
-    cursor: pointer;
-    float: left
-}
-
-.show-more-btn.toggle-abstract {
+.btn-show-more.toggle-abstract {
     margin-left: 10px;
 }
 
