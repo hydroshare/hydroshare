@@ -1584,10 +1584,6 @@ body > .main-container {
 	width: 100%;
 }
 
-#btn-add-new-entry {
-	margin-bottom: 20px;
-}
-
 #invite-to-group .btn-add-access {
 	height: 34px;
 	width: 135px;
@@ -2959,10 +2955,6 @@ span.you-flag {
 
 #input-author, #input-subject {
     padding-right: 25px
-}
-
-#btn-add-new-author {
-	margin-top: 4px;
 }
 
 #resource-search-input, #id_q {

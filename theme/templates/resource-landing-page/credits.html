@@ -89,7 +89,12 @@
     </div>
 
     <div class="col-xs-12 content-block">
-        <h4>Contributors</h4>
+        <h4>Contributors
+            <a type="button" class="btn btn-success btn-xs" data-toggle="modal" title="Add Contributor"
+               data-target="#add-contributor-dialog" multiple="multiple">
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+        </h4>
         <p><i>People or
             organizations that contributed technically, materially,
             financially, or provided general support for the
@@ -146,16 +151,15 @@
         {% else %}
             <p>No contributors have been added.</p>
         {% endif %}
-
-        <a type="button" class="btn btn-success" data-toggle="modal"
-           data-target="#add-contributor-dialog" multiple="multiple">
-            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
-        </a>
-        <br><br>
     </div>
 
     <div class="col-sm-12 content-block">
-        <h4>Funding Agencies</h4>
+        <h4>Funding Agencies
+            <a id="btn-add-funding-agency" type="button" class="btn btn-success btn-xs" data-toggle="modal"
+               title="Add Funding Agency" data-target="#add-funding-agency">
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+        </h4>
         <p><i>This resource was created using funding from the following sources:</i></p>
         {% if fundingagnency_formset.initial|length > 0 %}
             <table class="table hs-table table-striped funding-agencies-table">
@@ -194,11 +198,6 @@
         {% else %}
             <p>No funding agencies have been added.</p>
         {% endif %}
-
-        <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
-           data-target="#add-funding-agency">
-            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
-        </a>
     </div>
 {% endif %}
 
