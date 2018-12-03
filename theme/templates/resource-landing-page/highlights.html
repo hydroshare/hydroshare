@@ -1,60 +1,47 @@
 <table id="table-stats" class="info-table">
     <tr>
         {% if cm.raccess.published %}
-            <th><img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/></th>
+            <td><strong>Sharing Status: </strong></td>
             <td>Published</td>
         {% elif cm.raccess.public %}
-            <th><img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/></th>
+            <td><strong>Sharing Status: </strong></td>
             <td>Public</td>
         {% elif cm.raccess.discoverable %}
-            <th><img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/></th>
+            <td><strong>Sharing Status: </strong></td>
             <td>Discoverable</td>
         {% else %}
-            <th><img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/></th>
+            <td><strong>Sharing Status: </strong></td>
             <td>Private</td>
         {% endif %}
     </tr>
     {% if cm.raccess.published %}
         {% if "pending" in cm.doi or "failure" in cm.doi %}
             <tr>
-                <th><img src="{{ STATIC_URL }}img/pending.png" alt=""/></th>
-                <td>Pending publication</td>
-            </tr>
-            <tr>
-                <td></td>
+                <td><strong>Publication Status: </strong></td>
                 <td>
-                <span class="small text-muted">
-                    Note that the DOI will not be available until it has been registered and activated.
-                </span>
+                    <div>Pending publication</div>
+                    <div class="small text-muted">
+                        Note that the DOI will not be available until it has been registered and activated.
+                    </div>
                 </td>
             </tr>
         {% endif %}
-    {% else %}
-        <tr>
-            {% if cm.raccess.shareable %}
-                <th><img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/></th>
-                <td>Shareable</td>
-            {% else %}
-                <th><img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/></th>
-                <td>Not Shareable</td>
-            {% endif %}
-        </tr>
     {% endif %}
-    <tr class="info-collapsible">
-        <th class="text-center"><i class="fa fa-eye" aria-hidden="true"></i></th>
-        <td><strong>Views:&nbsp;&nbsp;</strong>{{ cm.view_count }}</td>
+    <tr>
+        <td><strong>Views:</strong></td>
+        <td>{{ cm.view_count }}</td>
     </tr>
-    <tr class="info-collapsible">
-        <th class="text-center"><i class="fa fa-cloud-download" aria-hidden="true"></i></th>
-        <td><strong>Downloads:&nbsp;&nbsp;</strong>{{ cm.download_count }}</td>
+    <tr>
+        <td><strong>Downloads:</strong></td>
+        <td>{{ cm.download_count }}</td>
     </tr>
-    <tr class="info-collapsible">
+    <tr>
         {% include "resource-landing-page/ratings.html" %}
     </tr>
-    <tr class="info-collapsible">
-        <th class="text-center"><i class="fa fa-comments-o" aria-hidden="true"></i></th>
+    <tr>
+        <td><strong>Comments:</strong></td>
         <td>
-            <span><a href="#comments">Comments</a>:&nbsp;&nbsp;{{ cm.comments_count }}</span>
+            <a href="#comments">{{ cm.comments_count }} comments</a>
         </td>
     </tr>
 </table>

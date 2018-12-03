@@ -1,10 +1,7 @@
 {% load mezzanine_tags rating_tags i18n %}
 
-<th class="text-center">
-    <i class="fa fa-thumbs-o-up {% if you_rated %}icon-green{% endif %}" aria-hidden="true"></i>
-</th>
+<td><strong>+1 Votes:</strong></td>
 <td>
-    <strong>+1 Votes:&nbsp;&nbsp;</strong>
     <span id="rating-{{ rating_object.id }}">
     {% if rating_sum > 0 %}
         {% if you_rated %}
