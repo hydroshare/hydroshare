@@ -4587,7 +4587,7 @@ span.caption-file-type {
 	max-width: 800px;
 	min-width: 200px;
 	min-height: 200px;
-	height: 200px;
+	height: 300px;
 	display: flex;
 	flex-direction: column;
 }

@@ -1749,14 +1749,14 @@ $(document).ready(function () {
             $("#fb-metadata").height(ui.size.height);
         },
         handles: "e, s, se",
-        minHeight: 200,
+        minHeight: 300,
     });
 
     $("#fb-metadata").resizable({
         resize: function (event, ui) {
             $(".fb-dropzone-wrapper").height(ui.size.height);
         },
-        minHeight: 200,
+        minHeight: 300,
         handles: "s",
     });
 
