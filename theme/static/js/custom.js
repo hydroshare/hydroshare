@@ -144,6 +144,7 @@ $(document).ready(function () {
         if (keywords[i]) {
             var li = $("<li><a class='tag'></a></li>");
             li.find('a').attr("href", "/search/?q=&selected_facets=subject_exact:" + keywords[i]);
+            li.find('a').attr("target", "_blank");
             li.find('a').text(keywords[i]);
             list.append(li);
         }
