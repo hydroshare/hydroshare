@@ -41,7 +41,7 @@
     <tr>
         <td><strong>Comments:</strong></td>
         <td>
-            <a href="#comments">{{ cm.comments_count }} comments</a>
+            <a href="#comments">{{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}</a>
         </td>
     </tr>
 </table>

@@ -23,6 +23,14 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     text-transform: none;
 }
 
+/*  Offset compensation for anchor tags due to fixed navbar  */
+.page-anchor {
+	display: block;
+	position: relative;
+	top: -60px;
+	visibility: hidden;
+}
+
 /* ===== Navbar ===== */
 
 .navbar-brand {

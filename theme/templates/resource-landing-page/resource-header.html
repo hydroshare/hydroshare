@@ -103,9 +103,13 @@
                 {% if cm.raccess.published %}
                 <tr>
                     <th>DOI:</th>
-                    <td>10.4211/hs.{{ cm.short_id }}<br><a href="#citation">How to Cite</a></td>
+                    <td>10.4211/hs.{{ cm.short_id }}</td>
                 </tr>
                 {% endif %}
+                <tr>
+                    <th>Citation:</th>
+                    <td><a href="#citation">See how to cite this resource</a></td>
+                </tr>
                 {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
                 <tr>
                     <th>Content types:</th>
