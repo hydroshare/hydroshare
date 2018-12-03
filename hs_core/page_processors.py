@@ -165,7 +165,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         else:
             spatial_coverage_data_dict = None
 
-        keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
+        keywords = [sub.value for sub in content_model.metadata.subjects.all()]
         languages_dict = dict(languages_iso.languages)
         language = languages_dict[content_model.metadata.language.code] if \
             content_model.metadata.language else None

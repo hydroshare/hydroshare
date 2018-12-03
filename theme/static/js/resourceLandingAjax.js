@@ -592,8 +592,7 @@ function metadata_update_ajax_submit(form_id){
             /* The div contains now the updated form */
             //$('#' + form_id).html(result);
             json_response = JSON.parse(result);
-            if (json_response.status === 'success')
-            {
+            if (json_response.status === 'success') {
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
@@ -761,8 +760,7 @@ function metadata_update_ajax_submit(form_id){
                 });
             }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown)
-        {
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-error").alert('close');
@@ -862,7 +860,13 @@ function get_file_type_metadata_ajax_submit(url) {
 }
 
 function filetype_keywords_update_ajax_submit() {
+    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
     $form = $('#id-keywords-filetype');
+    // Data pre processing: trim keywords
+    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
+        return d.trim()
+    }).join(",");
+    $("#txt-keyword-filetype").val(subjects);
     var datastring = $form.serialize();
     $.ajax({
         type: "POST",
@@ -897,6 +901,7 @@ function filetype_keywords_update_ajax_submit() {
                     $("#div-netcdf-file-update").show();
                 }
             }
+            $("#btn-add-keyword-filetype").toggleClass("disabled", false);
         }
     });
 }

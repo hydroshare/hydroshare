@@ -136,22 +136,6 @@ $(document).ready(function () {
         return false;
     });
 
-    // Restyle keywords field
-    //===================
-    var keywords = $("#keywords").text().split(",");
-    var list = $("#list-keywords");
-    for (var i = 0; i < keywords.length; i++) {
-        if (keywords[i]) {
-            var li = $("<li><a class='tag'></a></li>");
-            li.find('a').attr("href", "/search/?q=&selected_facets=subject_exact:" + keywords[i]);
-            li.find('a').attr("target", "_blank");
-            li.find('a').text(keywords[i]);
-            list.append(li);
-        }
-    }
-
-    $("#keywords").remove();
-
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 

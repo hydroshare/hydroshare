@@ -4,10 +4,13 @@
     <div class="col-xs-12 content-block">
         <h3>Subject Keywords</h3>
 
-        <p id="keywords" class="hidden">{{ keywords }}</p>
-
         <div class="tags">
             <ul id="list-keywords" class="tag-list custom-well">
+                {% for k in keywords %}
+                <li>
+                    <a class='tag' target="_blank" href="/search/?q=&selected_facets=subject_exact:{{ k }}">{{ k }}</a>
+                </li>
+                {% endfor %}
             </ul>
         </div>
     </div>
