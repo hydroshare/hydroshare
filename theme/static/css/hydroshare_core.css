@@ -4395,6 +4395,7 @@ div.fb-upload-caption a {
 .fb-view-list {
     padding: 10px;
 	margin: 0;
+	min-width: 600px;
 }
 
 .fb-view-list > li {
@@ -4557,7 +4558,7 @@ span.caption-file-type {
 #hsDropzone {
     border: 0;
     height: 100%;
-    overflow: auto
+    overflow: auto;
 }
 
 .fb-dropzone-wrapper {
