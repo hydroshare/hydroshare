@@ -359,6 +359,9 @@
                              {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
                              data-supported-files="{{ cm.get_supported_upload_file_types }}"
                              data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
+                             {% if cm.raccess.require_download_agreement %}
+                                 data-agreement="true"
+                             {% endif %}
                              data-initial-file-count="{{ cm.files.all.count }}"
                              {% if cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
                              class="file-browser">

@@ -885,7 +885,15 @@ function onOpenFile() {
         $('#redirect-referenced-url-dialog').modal('show');
     }
     else {
-        startDownload();
+        // Check for download agreement
+        if ($("#hs-file-browser").attr("data-agreement") == "true") {
+            // Proceed to download through confirmation agreement
+            $("#license-agree-dialog-file").modal('show');
+        }
+        else {
+            // Direct download
+            startDownload();
+        }
     }
 }
 
