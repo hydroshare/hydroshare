@@ -88,6 +88,10 @@
                     <td>{{ cm|resource_type }}</td>
                 </tr>
                 <tr>
+                    <th>Storage:</th>
+                    <td>The size of this resource is {{ cm.size|filesizeformat }}</td>
+                </tr>
+                <tr>
                     <th>Created:</th>
                     <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
                 </tr>
