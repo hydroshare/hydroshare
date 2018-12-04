@@ -1351,12 +1351,6 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
 
-            if (value_dict['eastlimit'] < 0 and value_dict['westlimit'] < 0) or (
-                    value_dict['eastlimit'] > 0 and value_dict['westlimit'] > 0):
-                if value_dict['eastlimit'] < value_dict['westlimit']:
-                    raise ValidationError("Value for East longitude must be greater than or "
-                                          "equal to that of West longitude.")
-
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
 
