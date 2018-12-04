@@ -11,7 +11,7 @@
             {% include "includes/profile-card.html" %}
         </span>
 
-{#        {% if metadata_form and owners|length > 1 %}#}
+        {% if metadata_form and owners|length > 1 %}
             <button id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
                     style="margin-left: 5px;"
                 data-toggle="collapse" data-target="#form-quota-holder">
@@ -46,7 +46,7 @@
                 <button type="submit" class="btn btn-primary btn-change-quota-holder"
                 style="margin-left: 5px;">Save Changes</button>
             </form>
-    {#    {% endif %}#}
+        {% endif %}
         </div>
     </div>
 {% endif %}
