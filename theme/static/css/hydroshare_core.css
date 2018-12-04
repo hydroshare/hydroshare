@@ -1739,19 +1739,13 @@ body > .main-container {
 	word-break: break-word;
 }
 
-#btn-download-all, #btn-select-irods-file, #rep-res-bag {
+#btn-select-irods-file, #rep-res-bag {
 	margin: 10px 0;
 	max-width: 100%;
 }
 
 #btn-download-all > span {
     height:16px;
-}
-
-#btn-download-all span {
-    text-overflow: ellipsis;
-    max-width: 100%;
-    overflow: hidden;
 }
 
 div#sharing-status .col-sm-12{
