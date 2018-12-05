@@ -596,9 +596,10 @@ function bindFileBrowserItemEvents() {
             }
             menu = $("#right-click-menu");
 
-            var fileAggType = [];
-            if ($(event.target).closest("li").attr("main-file")){
-                fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            fileAggType = [];
+            // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
+            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("data-pk") === "1"){
+                var fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
             var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
