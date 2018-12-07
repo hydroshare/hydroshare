@@ -116,6 +116,7 @@ function updateSelectionMenuContext() {
             unzip: true,
             cut: true,
             delete: true,
+            contentTypeOperations: true,
             setGenericFileType: true,
             setGeoRasterFileType: true,
             setNetCDFFileType: true,
@@ -211,6 +212,7 @@ function updateSelectionMenuContext() {
         UIState.open = false;
         UIState.paste = false;
         UIState.zip = false;
+        UIState.contentTypeOperations  = false;
         if (!selected.children('span').hasClass('fb-logical-file-type')){
             UIState.removeAggregation = false;
         }
@@ -339,6 +341,10 @@ function updateSelectionMenuContext() {
 
     // Open
     menu.children("[data-fb-action='open']").toggleClass("hidden", !UIState.open);
+
+    // Content Type operations
+    menu.children("[data-menu-name='content-type']").toggleClass("hidden", !UIState.contentTypeOperations);
+
 
     $("#open-separator").toggleClass("hidden", !UIState.open);
     $("#zip-separator").toggleClass("hidden", !UIState.zip);
