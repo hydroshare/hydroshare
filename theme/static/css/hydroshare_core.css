@@ -1330,7 +1330,7 @@ a[data-toggle='tab']{
 }
 
 #invite-to-group #id_user-wrapper {
-    width: calc(100% - 142px);
+    width: calc(100% - 144px);
 }
 
 #permission-panel .panel-body{
@@ -2586,7 +2586,6 @@ div.affiliation {
 }
 
 .activity-description {
-    float: left;
     border-left: 3px solid #CCC;
     max-height: 50px;
     overflow: hidden;

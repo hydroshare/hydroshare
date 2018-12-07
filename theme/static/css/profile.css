@@ -96,15 +96,6 @@ div.affiliation {
     margin: 2px 0;
 }
 
-.activity-description {
-    float: left;
-    border-left: 3px solid #CCC;
-    max-height: 50px;
-    overflow: hidden;
-    margin-bottom: 5px;
-    margin-top: 10px;
-}
-
 .contribution .activity-description {
     margin-left: 15px;
 }
