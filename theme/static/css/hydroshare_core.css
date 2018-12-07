@@ -2341,15 +2341,11 @@ button.loading {
 	}
 }
 
-.access-table-wrapper {
+.panel-access {
     min-height: 100px;
     height: 150px;
     overflow: auto;
     resize: vertical;
-    border: 1px solid #DDD;
-    padding: 12px;
-    padding-bottom: 90px;
-    background: #f8f8f8;
 }
 
 table.table.access-table {
