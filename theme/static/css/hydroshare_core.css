@@ -1683,7 +1683,8 @@ body > .main-container {
 
 #btn-download-all {
 	text-decoration: none;
-	padding: 6px;
+	padding: 0px 6px;
+	display: inline-block;
 }
 
 #comment, .comment-reply-form {
@@ -4465,7 +4466,7 @@ div#fb-inner-controls button, .file-browser-search {
 	margin-bottom: 8px;
 }
 
-#fb-file-operations-controls > button {
+#fb-file-operations-controls > button, #btn-download-all {
 	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
@@ -4479,7 +4480,7 @@ div#fb-inner-controls button, .file-browser-search {
 	pointer-events: none;
 }
 
-#fb-file-operations-controls > button {
+#fb-file-operations-controls > button, #btn-download-all {
 	margin-top: 8px;
 	text-shadow: 0 1px 0 #fff;
 	border: 1px solid transparent;
@@ -4493,7 +4494,7 @@ span.caption-file-type {
     font-size: 12px;
 }
 
-#fb-file-operations-controls > button:not(.disabled):hover {
+#fb-file-operations-controls > button:not(.disabled):hover, #btn-download-all:hover {
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 3px #e2e2e2;
 	-webkit-box-shadow: 1px 1px 3px #e2e2e2;
