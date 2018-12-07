@@ -908,7 +908,7 @@ function filetype_keywords_update_ajax_submit() {
                     if (resKeywords[i] != "") {
                         var li = $("<li class='tag'><span></span></li>");
                         li.find('span').text(resKeywords[i]);
-                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
                         $("#lst-tags").append(li);
                         $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
                     }

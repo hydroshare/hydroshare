@@ -16,12 +16,31 @@ $(document).ready(function () {
         resource_coverage_update_ajax_submit(resourceID, 'temporal');
     });
 
+    bindResourceSpatialDeleteOption();
+    bindResourceTemporalDeleteOption();
     // show/hide spatial coverage delete option
     setResourceSpatialCoverageDeleteOption();
     // show/hide temporal coverage delete option
     setResourceTemporalCoverageDeleteOption();
 });
 
+function bindResourceSpatialDeleteOption() {
+    var $deleteSpatialCoverageResource = $("#id-delete-spatial-resource");
+    $deleteSpatialCoverageResource.unbind('click');
+    $deleteSpatialCoverageResource.click(function () {
+        var resourceID = $("#short-id").val();
+        resource_coverage_delete_ajax_submit(resourceID, 'spatial');
+    })
+}
+
+function bindResourceTemporalDeleteOption() {
+    var $deleteTemporalCoverageResource = $("#id-delete-temporal-resource");
+    $deleteTemporalCoverageResource.unbind('click');
+    $deleteTemporalCoverageResource.click(function () {
+        var resourceID = $("#short-id").val();
+        resource_coverage_delete_ajax_submit(resourceID, 'temporal');
+    })
+}
 function setResourceSpatialCoverageDeleteOption() {
     // show/hide spatial coverage delete option at the resource level
     var $deleteSpatialCoverageResource = $("#id-delete-spatial-resource");
@@ -30,11 +49,6 @@ function setResourceSpatialCoverageDeleteOption() {
     if($box_radio.prop("checked")) {
         if ($("#id_northlimit").val().length > 0) {
             $deleteSpatialCoverageResource.show();
-            $deleteSpatialCoverageResource.unbind('click');
-            $deleteSpatialCoverageResource.click(function () {
-                var resourceID = $("#short-id").val();
-                resource_coverage_delete_ajax_submit(resourceID, 'spatial');
-            })
         }
         else {
             $deleteSpatialCoverageResource.hide();
@@ -44,11 +58,6 @@ function setResourceSpatialCoverageDeleteOption() {
         // coverage is a point
         if ($("#id_north").val().length > 0) {
             $deleteSpatialCoverageResource.show();
-            $deleteSpatialCoverageResource.unbind('click');
-            $deleteSpatialCoverageResource.click(function () {
-                var resourceID = $("#short-id").val();
-                resource_coverage_delete_ajax_submit(resourceID, 'spatial');
-            })
         }
         else {
             $deleteSpatialCoverageResource.hide();
@@ -61,11 +70,6 @@ function setResourceTemporalCoverageDeleteOption() {
     var $deleteTemporalCoverageResource = $("#id-delete-temporal-resource");
     if ($("#id_start").val().length > 0) {
         $deleteTemporalCoverageResource.show();
-        $deleteTemporalCoverageResource.unbind('click');
-        $deleteTemporalCoverageResource.click(function () {
-            var resourceID = $("#short-id").val();
-            resource_coverage_delete_ajax_submit(resourceID, 'temporal');
-        })
     }
     else {
         $deleteTemporalCoverageResource.hide();
