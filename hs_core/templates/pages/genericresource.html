@@ -131,17 +131,11 @@
                         <li role="separator" class="divider"></li>
                     {% endif %}
 
-                    <li id="btn-download" data-menu-name="download" data-fb-action="download"
-                            {% if cm.raccess.require_download_agreement %}
-                        data-toggle="modal" data-target="#license-agree-dialog-file"
-                            {% endif %}>
+                    <li id="btn-download" data-menu-name="download" data-fb-action="download">
                         <span class="glyphicon glyphicon-download icon-blue"></span>
                         <span>Download</span>
                     </li>
-                    <li data-menu-name="download" data-fb-action="download" data-zipped="true"
-                            {% if cm.raccess.require_download_agreement %}
-                        data-toggle="modal" data-target="#license-agree-dialog-file"
-                            {% endif %}>
+                    <li data-menu-name="download" data-fb-action="download" data-zipped="true">
                         <span class="fa fa-download icon-blue"></span>
                         <span>Download Zipped</span>
                     </li>
@@ -517,19 +511,13 @@
 
                                                 <button id="fb-download"
                                                         class="disabled" data-fb-action="download"
-                                                        title="Download"
-                                                        {% if cm.raccess.require_download_agreement %}
-                                                        data-toggle="modal" data-target="#license-agree-dialog-file"
-                                                        {% endif %}>
+                                                        title="Download">
 
                                                     <span class="glyphicon glyphicon-download icon-blue"></span>
                                                 </button>
 
                                                 <button class="disabled" data-fb-action="download" data-zipped="true"
-                                                        title="Download Zipped"
-                                                        {% if cm.raccess.require_download_agreement %}
-                                                        data-toggle="modal" data-target="#license-agree-dialog-file"
-                                                        {% endif %}>
+                                                        title="Download Zipped">
                                                     <span class="fa fa-download icon-blue"></span>
                                                 </button>
 

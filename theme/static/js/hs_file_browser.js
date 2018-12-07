@@ -1598,19 +1598,22 @@ $(document).ready(function () {
         });
     });
 
+    var downloadData;
+
     // Download method
     $("[data-fb-action='download']").click(function () {
-        let data = $(this).data();
-        if (data.target === "#license-agree-dialog-file") {
+        downloadData = $(this).data();
+        if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            $("#license-agree-dialog-file").modal('show');
             return;
         }
 
-        startDownload(!!data.zipped);
+        startDownload(!!downloadData.zipped);
     });
 
     $("#download-file-btn").click(function() {
         $("#license-agree-dialog-file").modal('hide');
-        startDownload();
+        startDownload(!!downloadData.zipped);
     });
 
     // Get file URL method

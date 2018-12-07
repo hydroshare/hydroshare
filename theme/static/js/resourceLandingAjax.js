@@ -116,13 +116,22 @@ function license_agreement_ajax_submit(event) {
             element.attr("disabled", false);
             if (action == "make_not_require_lic_agreement") {
                 element.closest("form").find("input[name='flag']").val("make_require_lic_agreement");
+                $("#hs-file-browser").attr("data-agreement", "false");
+                $("#btn-download-all").attr("href", $("#download-bag-btn").attr("href"));
+                $("#btn-download-all"). removeAttr("data-toggle");
+
             }
             else {
                 element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");
+                $("#hs-file-browser").attr("data-agreement", "true");
+                $("#btn-download-all").removeAttr("href");
+                $("#btn-download-all").attr("data-toggle", "modal");
+                $("#btn-download-all").attr("data-target", "#license-agree-dialog-bag");
+                $("#btn-download-all").attr("data-placement", "auto");
             }
             // page refresh is needed to update if license agreement popup to show or not prior
             // to download of files/bag
-            window.location = window.location.href;
+            // window.location = window.location.href;
         },
         error: function () {
             element.attr("disabled", false);
