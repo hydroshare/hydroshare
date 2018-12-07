@@ -1678,7 +1678,12 @@ body > .main-container {
 }
 
 .btn-download-zip{
-    color:#428bca;
+	color: #428bca;
+}
+
+#btn-download-all {
+	text-decoration: none;
+	padding: 6px;
 }
 
 #comment, .comment-reply-form {
@@ -1742,10 +1747,6 @@ body > .main-container {
 #btn-select-irods-file, #rep-res-bag {
 	margin: 10px 0;
 	max-width: 100%;
-}
-
-#btn-download-all > span {
-    height:16px;
 }
 
 div#sharing-status .col-sm-12{
