@@ -422,24 +422,5 @@ function deleteAllShapes(){
 }
 
 function zoomCoverageMap(bounds) {
-    // Zoom in on the shape
-    var GLOBE_WIDTH = 256; // a constant in Google maps projection
-    var c_west = bounds.west * 8;    // Zooms out on the shape a little so that we can see it
-    var c_east = bounds.east * 8;
-    var angle = c_east - c_west;
-    var pixelWidth = parseInt($("#coverageMap").width());
-    if (angle < 0) {
-        angle += 360;
-    }
-    var zoom = Math.round(Math.log(pixelWidth * 360 / angle / GLOBE_WIDTH) / Math.LN2);
-    if (!isNaN(zoom)){
-        coverageMap.setZoom(Math.max(3, zoom)); // Allow minumum zoom level of 3
-    }
-    else{
-        return;
-    }
-    // Center map at new rectangle
-    var latCenter = (bounds.north + bounds.south) / 2;
-    var lngCenter = (bounds.west + bounds.east) / 2;
-    coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+    coverageMap.fitBounds(bounds);
 }

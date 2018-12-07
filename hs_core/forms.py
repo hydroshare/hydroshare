@@ -1037,7 +1037,8 @@ class CoverageSpatialForm(forms.Form):
 
             for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
                 limit_data = temp_cleaned_data.get(limit, None)
-                if not limit_data:
+                # allow value of 0 to go through
+                if not limit_data and limit_data != 0:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
                     del self.cleaned_data[limit]
