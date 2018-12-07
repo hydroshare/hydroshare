@@ -1443,11 +1443,11 @@
                     <br>
                 </div>
 
-                <div class="panel-access panel panel-default">
+                <div class="panel panel-default">
                     <div class="panel-heading">
                         <h3 class="panel-title">Who has access</h3>
                     </div>
-                    <div class="panel-body">
+                    <div class="panel-body panel-access ">
                         <table class="table access-table">
                             <tbody>
                                 {# Empty row used as template to generate subsequent rows #}
@@ -1610,6 +1610,20 @@
                             <h3 class="panel-title">Sharing status</h3>
                         </div>
                         <div class="panel-body">
+                            {% if is_owner_user %}
+                                <div class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i>
+                                    You are the owner of this resource.
+                                </div>
+                            {% elif is_edit_user %}
+                                <div class="alert alert-info" role="alert">You have been given specific permission to
+                                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
+                                </div>
+                            {% elif is_view_user %}
+                                <div class="alert alert-info" role="alert">You have been given specific permission to
+                                    view this resource.
+                                </div>
+                            {% endif %}
+
                             {% if can_change_resource_flags %}
                                 <div class="btn-group" role="group">
                                     {# -------- PUBLIC -------- #}
@@ -1679,45 +1693,30 @@
                                 {% endif %}
 
                                 {% if is_owner_user %}
-                                    <div id="shareable-container" class="height-fix">
+                                    <div id="shareable-container">
                                         {#   Shareable flag    #}
-                                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                                               method="POST">
                                             {% csrf_token %}
+
+                                            <div class="checkbox">
+                                                <label>
+                                                    <input id="btn-shareable" type="checkbox"
+                                                           {% if cm.raccess.shareable %}checked{% endif %}>
+                                                    Shareable
+                                                </label>
+                                            </div>
+                                            <p id="shareable-description" class="text-muted small">Allows others to share the
+                                                resource without owner’s permission.</p>
 
                                             <input name="flag" type="hidden"
                                                    {% if cm.raccess.shareable %}value="make_not_shareable"
                                                    {% else %}value="make_shareable"{% endif %}/>
-
-                                            <br>
-                                            <div class="input-group" data-toggle="tooltip"
-                                                 title="When checked, users other than owners may grant access to the resource.">
-                                              <span class="input-group-addon">
-                                                <input id="btn-shareable" type="checkbox"
-                                                       {% if cm.raccess.shareable %}checked{% endif %}>
-                                              </span>
-                                                <span class="form-control">Shareable</span>
-                                            </div><!-- /input-group -->
                                         </form>
                                     </div>
                                     <br>
                                 {% endif %}
                             {% endif %}
-                            <div id="user-permission-msg">
-                                {% if is_owner_user %}
-                                    <div class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i> You
-                                        are the owner of this resource.
-                                    </div>
-                                {% elif is_edit_user %}
-                                    <div class="alert alert-info" role="alert">You have been given specific permission to
-                                        {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
-                                    </div>
-                                {% elif is_view_user %}
-                                    <div class="alert alert-info" role="alert">You have been given specific permission to view
-                                        this resource.
-                                    </div>
-                                {% endif %}
-                            </div>
                          </div>
                     </div>
                 </div>

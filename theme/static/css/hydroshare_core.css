@@ -3,7 +3,7 @@ theme core
 -------------------------------------------------------------------*/
 
 html, body {
-    font-family: 'Lato', sans-serif;
+    font-family: 'Roboto', sans-serif;
     position: relative;
     height: 100%;
 }
@@ -2262,14 +2262,6 @@ table.user-scope tr {
 
 .user-roles.no-caret .caret{
 	display:none;
-}
-
-#user-permission-msg {
-
-}
-
-#shareable-container {
-
 }
 
 button.loading {
