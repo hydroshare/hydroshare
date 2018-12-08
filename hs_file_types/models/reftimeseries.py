@@ -195,9 +195,10 @@ class TimeSeries(object):
         hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
                                           % NAMESPACES['hsterms'])
         hs_method_desc.text = self.method_description
-        hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
-                                          % NAMESPACES['hsterms'])
-        hs_method_link.text = self.method_link
+        if self.method_link:
+            hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
+                                              % NAMESPACES['hsterms'])
+            hs_method_link.text = self.method_link
 
 
 class Site(object):
