@@ -596,7 +596,11 @@ function bindFileBrowserItemEvents() {
             }
             menu = $("#right-click-menu");
 
-            var fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            var fileAggType = [];
+            // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
+            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("data-pk") === "1"){
+                fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            }
             var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
             var isFolder = $(event.target).closest("li").hasClass("fb-folder");
@@ -604,11 +608,11 @@ function bindFileBrowserItemEvents() {
             // toggle apps by file extension and aggregations
             menu.find("li.btn-open-with").each(function() {
                 var agg_app = false;
-                if ($(this).attr("agg-types").trim() !== ""){
+                if ($(this).attr("agg-types")){
                     agg_app = $.inArray(fileAggType, $(this).attr("agg-types").split(",")) !== -1;
                 }
                 var extension_app = false;
-                if ($(this).attr("file-extensions").trim() !== ""){
+                if ($(this).attr("file-extensions")){
                     var extensions = $(this).attr("file-extensions").split(",")
                     for (var i = 0; i < extensions.length; ++i) {
                         if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
@@ -1669,7 +1673,7 @@ $(document).ready(function () {
         // only need that path after /data/contents/
         var path = file.attr("data-url").split('/data/contents/')[1];
         var fullURL;
-        if (~$(this).attr("url_aggregation").indexOf("HS_JS_AGG_KEY")) {
+        if ($(this).attr("url_aggregation")) {
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
             if (file.children('span.fb-file-type').text() === 'File Folder') {
                 fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
