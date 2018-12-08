@@ -101,8 +101,13 @@ class TimeSeries(object):
                                     td(self.method_description)
                                 with tr():
                                     get_th('Method Link')
-                                    with td():
-                                        a(self.method_link, href=self.method_link, target="_blank")
+                                    if self.method_link \
+                                            and self.method_link.lower() != 'unknown':
+                                        with td():
+                                            a(self.method_link, href=self.method_link,
+                                              target="_blank")
+                                    else:
+                                        td(self.method_link)
                                 with tr():
                                     get_th('Sample Medium')
                                     td(self.sample_medium)
@@ -931,7 +936,7 @@ def _validate_json_file(res_json_file):
 def _validate_json_data(series_data):
     # 1. here we need to test that the date values are actually date type data
     # the beginDate <= endDate
-    # 2. the url is valid and live
+    # 2. the url is valid and live if the url value is not empty or 'unknown'
     # 3. 'sampleMedium' key is present in each series
     # 4. 'valueCount' key is present in each series
 
@@ -963,7 +968,7 @@ def _validate_json_data(series_data):
         if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
 
-        # chek that sampleMedium key is there
+        # check that sampleMedium key is there
         if 'sampleMedium' not in series:
             raise ValidationError("sampleMedium is missing")
         # check  that valueCount key is there
@@ -979,13 +984,15 @@ def _validate_json_data(series_data):
                 raise Exception(err_msg.format("Invalid web service URL found"))
 
         if 'method' in series:
-            url = Request(series['method']['methodLink'])
-            if url not in urls:
-                urls.append(url)
-                try:
-                    urlopen(url)
-                except URLError:
-                    raise Exception(err_msg.format("Invalid method link found"))
+            url = series['method']['methodLink'].strip()
+            if url and url.lower() != 'unknown':
+                url = Request(url)
+                if url not in urls:
+                    urls.append(url)
+                    try:
+                        urlopen(url)
+                    except URLError:
+                        raise Exception(err_msg.format("Invalid method link found"))
 
 
 TS_SCHEMA = {

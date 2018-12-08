@@ -344,6 +344,27 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self._test_invalid_file()
         self.composite_resource.delete()
 
+    def test_create_aggregation_with_empty_method_link(self):
+        # here we are using a valid time series json file with methodLink set to empty string
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_method_link('refts_method_link_empty.refts.json')
+
+    def test_create_aggregation_with_unknown_method_link(self):
+        # here we are using a valid time series json file with methodLink set to 'unknown'
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_method_link('refts_method_link_unknown_lc.refts.json')
+
+    def test_create_aggregation_with_UNKNOWN_method_link(self):
+        # here we are using a valid time series json file with methodLink set to 'UNKNOWN'
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_method_link('refts_method_link_unknown_uc.refts.json')
+
     def test_create_aggregation_with_invalid_date_value(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
@@ -515,6 +536,31 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_main_file(self):
+        self.create_composite_resource(self.refts_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
+        self.assertEqual(".json", RefTimeseriesLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.refts_file_name,
+                         RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
+
+    def _test_valid_method_link(self, json_file_name):
+        refts_mlink_file = 'hs_file_types/tests/{}'.format(json_file_name)
+
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
+        self.create_composite_resource(refts_mlink_file)
+        json_res_file = self.composite_resource.files.first()
+        # set the json file to RefTimeseries file type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, json_res_file.id)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        json_res_file = self.composite_resource.files.first()
+        self.assertTrue(json_res_file.has_logical_file)
+        self.composite_resource.delete()
+
     def _test_invalid_file(self):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -554,14 +600,3 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
         self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
 
-    def test_main_file(self):
-        self.create_composite_resource(self.refts_file)
-
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-
-        self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
-        self.assertEqual(".json", RefTimeseriesLogicalFile.objects.first().get_main_file_type())
-        self.assertEqual(self.refts_file_name,
-                         RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
