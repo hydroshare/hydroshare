@@ -120,7 +120,7 @@
                         <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
                             data-target="#zip-folder-dialog">
                             <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                            <span>Zip Folder...</span>
+                            <span>Zip folder...</span>
                         </li>
 
                         <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
@@ -159,7 +159,7 @@
                         <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType" data-toggle="tooltip"
                             title="Add metadata to an individual file" data-placement="right">
                             <i class="fa fa-plus icon-green" aria-hidden="true"></i>
-                            <span>Add Metadata</span>
+                            <span>Add metadata</span>
                         </li>
                         <li data-menu-name="content-type" class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
@@ -410,7 +410,7 @@
                                                             class="btn btn-default dropdown-toggle"
                                                             data-toggle="dropdown" aria-haspopup="true"
                                                             aria-expanded="false">
-                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort by</span>&nbsp;<span
                                                             class="caret"></span>
                                                     </button>
 
@@ -448,9 +448,8 @@
                                             <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                                 {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                                                     <a type="button"
-                                                       class="btn btn-success btn-xs dz-clickable upload-toggle"
-                                                       title="Add files...">
-                                                        <i class="fa fa-plus"></i>
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle">
+                                                        <i class="fa fa-plus"></i> Add files
                                                     </a>
 
                                                     <div id="irods-group" class="btn-group">
@@ -530,7 +529,7 @@
                                                     {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-zip" data-fb-action="zip"
                                                                 class="disabled"
-                                                                title="Zip Folder" data-toggle="modal"
+                                                                title="Zip folder" data-toggle="modal"
                                                                 data-target="#zip-folder-dialog">
                                                             <span class="glyphicon glyphicon-compressed icon-blue"></span>
                                                         </button>
