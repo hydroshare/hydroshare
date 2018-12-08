@@ -986,6 +986,15 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
             self.fields['units'].widget.attrs['readonly'] = True
+            if file_type:
+                # add the 'data-map-item' attribute so that map interface can be used for editing
+                # these fields
+                self.fields['north'].widget.attrs['data-map-item'] = 'latitude'
+                self.fields['east'].widget.attrs['data-map-item'] = 'longitude'
+                self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
+                self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
+                self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
+                self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
 
     def clean(self):
         """Modify the form's cleaned_data dictionary."""

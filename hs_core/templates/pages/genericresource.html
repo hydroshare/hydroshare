@@ -165,6 +165,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Add metadata to file</span>
                         </li>
+                        <li id="btn-set-fileset-file-type" data-menu-name="setfilesetfiletype" data-toggle="tooltip" title="Add metadata to a folder">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Add metadata to folder</span>
+                        </li>
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype" data-toggle="tooltip" title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Convert to Geographic Raster</span>
@@ -185,9 +189,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Convert to Time Series</span>
                         </li>
-                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">
+                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="modal"
+                                data-target="#remove-aggregation-dialog">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Remove content type</span>
+                            <span data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">Remove content type</span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}

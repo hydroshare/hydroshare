@@ -352,9 +352,9 @@ function processDrawing (coordinates, shape) {
     }
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
-    if (shape == "rectangle"){
+    if (shape === "rectangle"){
         var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
-        $radioBox.checked = true;
+        $radioBox.prop("checked", true);
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
@@ -386,7 +386,7 @@ function processDrawing (coordinates, shape) {
     }
     else {
         var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
-        $radioPoint.checked = true;
+        $radioPoint.prop("checked", true);
         $("#div_id_north").show();
         $("#div_id_east").show();
         $("#div_id_elevation").show();

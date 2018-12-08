@@ -5,7 +5,7 @@ from dateutil import parser
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
-from hs_core.hydroshare import create_resource
+from hs_core.hydroshare import create_resource, add_resource_files
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
     NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
     TimeSeriesLogicalFile, TimeSeriesFileMetaData
@@ -21,6 +21,15 @@ class CompositeResourceTestMixin(object):
             self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
         )
         return new_res_file
+
+    def add_files_to_resource(self, files_to_add, upload_folder=None):
+        files_to_upload = []
+        for fl in files_to_add:
+            file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
+            files_to_upload.append(file_to_upload)
+        added_resource_files = add_resource_files(self.composite_resource.short_id,
+                                                  *files_to_upload, folder=upload_folder)
+        return added_resource_files
 
     def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=None):
         if isinstance(file_to_upload, str):
