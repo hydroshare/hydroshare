@@ -599,4 +599,3 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
         self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
-
