@@ -4097,13 +4097,13 @@ form#covereage-search-fields {
 	flex-grow: 1;
 }
 
-#fb-sort a {
+#fb-sort a, #irods-group a {
 	cursor: pointer;
 	padding: 8px;
 	font-size: 12px;
 }
 
-#fb-sort ul {
+#fb-sort ul, #irods-group ul {
 	background :#FFF;
 	padding: 1px;
 }
@@ -4320,13 +4320,13 @@ div.fb-upload-caption {
 	padding: 1em;
 }
 
-div.fb-footer {
-	border: 1px solid #DDD;
-	padding: 1em;
-}
-
 div.fb-upload-caption a {
 	cursor: pointer;
+}
+
+.upload-toggle {
+	margin-top: -4px;
+	margin-right: 6px;
 }
 
 .dropzone {

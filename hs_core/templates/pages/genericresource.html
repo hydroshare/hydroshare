@@ -137,13 +137,13 @@
                     </li>
                     <li data-menu-name="download" data-fb-action="download" data-zipped="true">
                         <span class="fa fa-download icon-blue"></span>
-                        <span>Download Zipped</span>
+                        <span>Download zipped</span>
                     </li>
                     <li id="btn-get-link" data-menu-name="get-link"
                         data-fb-action="getLink" data-toggle="modal"
                         data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
-                        <span>Get File URL</span>
+                        <span>Get file URL</span>
                     </li>
                     <li id="btn-get-referenced-url" data-menu-name="get-ref-url"
                         data-toggle="modal" data-target="#redirect-referenced-url-dialog" hidden>
@@ -164,7 +164,7 @@
                         <li data-menu-name="content-type" class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
                                 <i class="fa fa-exchange icon-blue" aria-hidden="true"></i>
-                                Set Content Type
+                                Set content type
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu">
@@ -209,7 +209,7 @@
                             title="Remove the content type association and delete content-level metadata"
                             data-placement="right">
                             <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
-                            <span>Remove Content Type</span>
+                            <span>Remove content type</span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}
@@ -239,7 +239,7 @@
                                 data-fb-action="createFolder"
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder icon-blue"></span>
-                                <span>New Folder</span>
+                                <span>New folder</span>
                             </li>
                             <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
                                 data-fb-action="createFolder"
@@ -258,7 +258,7 @@
 
                     <li data-menu-name="select-all">
                         <span class="fa fa-th-large icon-blue"></span>
-                        <span>Select All</span>
+                        <span>Select all</span>
                     </li>
                     {% if page.perms.change and metadata_form and cm|resource_type == "CompositeResource"%}
                         <li role="separator" class="divider"></li>
@@ -445,7 +445,51 @@
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
+                                            <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
+                                                {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
+                                                    <a type="button"
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle"
+                                                       title="Add files...">
+                                                        <i class="fa fa-plus"></i>
+                                                    </a>
+
+                                                    <div id="irods-group" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default btn-xs dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                title="Add files from an iRODS server"
+                                                                aria-expanded="false">
+                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
+                                                        </button>
+
+                                                        <ul class="dropdown-menu text-left">
+                                                            <li id="btn-signin-irods" data-toggle="modal"
+                                                                data-target="#irodsSignin">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
+                                                                    in to iRODS
+                                                                </a>
+                                                            </li>
+
+                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                                data-toggle="modal" data-target="#irodsContent">
+                                                                <a>
+                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
+                                                                    files from iRODS...
+                                                                </a>
+                                                            </li>
+
+                                                            <li role="separator" class="divider hidden"></li>
+                                                            <li id="btn-signout-irods" class="hidden">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
+                                                                    out of iRODS
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+
                                                 {% if page.perms.change and metadata_form %}
                                                     {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-create-folder" class="fb-space-right disabled"
@@ -500,7 +544,7 @@
                                                 {% endif %}
 
                                                 <button id="fb-select-all"
-                                                        title="Select All">
+                                                        title="Select all">
                                                     <span class="fa fa-th-large icon-blue"></span>
                                                 </button>
 
@@ -517,13 +561,13 @@
                                                 </button>
 
                                                 <button class="disabled" data-fb-action="download" data-zipped="true"
-                                                        title="Download Zipped">
+                                                        title="Download zipped">
                                                     <span class="fa fa-download icon-blue"></span>
                                                 </button>
 
                                                 {% for b in cm.bags.all %}
                                                     <a id="btn-download-all" type="button"
-                                                       title="Download All Content as Zipped BagIt Archive"
+                                                       title="Download all content as Zipped BagIt Archive"
                                                             {% if cm.raccess.require_download_agreement %}
                                                        data-target="#license-agree-dialog-bag" data-toggle="modal"
                                                        data-placement="auto"
@@ -590,7 +634,7 @@
                                             <div class="fb-upload-caption ">
                                                 <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
                                                 smaller than 1GB in size by dragging & dropping, or click <a
-                                                    id="upload-toggle" class="dz-clickable">here</a> to select them.
+                                                    class="dz-clickable upload-toggle">here</a> to select them.
                                             </div>
                                         {% endif %}
                                     </div>
@@ -638,43 +682,6 @@
                             Please note: This resource contains links to external content. Linked content is NOT stored in
                             HydroShare, and we can't guarantee its availability, quality, or security.
                             </div>
-                            {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                                <br>
-                                <div class="fb-footer {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
-                                    <h4>Add files from an iRODS server</h4>
-
-                                    <div class="row">
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div id="log-into-irods">
-                                                <a id="btn-signin-irods" type="button" class="btn btn-info"
-                                                   data-toggle="modal"
-                                                   data-target="#irodsSignin">
-                                                    <span class="glyphicon glyphicon-log-in"></span>
-                                                    &nbsp;&nbsp;Log in to iRODS
-                                                </a>
-                                            </div>
-                                            <a id="btn-select-irods-file" type="button"
-                                               class="btn btn-success row-selector hidden" data-toggle="modal"
-                                               data-target="#irodsContent">
-                                                <span class="glyphicon glyphicon-plus">
-                                                    <span class="button-label">Add files from iRODS...</span>
-                                                </span>
-                                            </a>
-                                        </div>
-
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div id="sign-in-info" >
-                                                <p id="sign-in-name"></p>
-                                            </div>
-                                            <a id="btn-signout-irods" type="button"
-                                               class="btn btn-default hidden">
-                                                <span class="glyphicon glyphicon-log-out"></span>
-                                                &nbsp;&nbsp;Log out of iRODS
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
                         </div>
 
                         <div id="fb-download-help" class="alert alert-warning hidden" role="alert">

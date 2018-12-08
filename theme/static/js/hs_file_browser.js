@@ -1047,7 +1047,7 @@ $(document).ready(function () {
 
         Dropzone.options.hsDropzone = {
             paramName: "files", // The name that will be used to transfer the file
-            clickable: "#upload-toggle",
+            clickable: ".upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
             maxFilesize: MAX_FILE_SIZE, // MB
             acceptedFiles: acceptedFiles,
