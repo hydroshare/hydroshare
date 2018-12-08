@@ -190,6 +190,47 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no GenericFileMetaData object at this point
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
 
+    def test_delete_aggregation_coverage(self):
+        """Here we are testing deleting of temporal and spatial coverage for a single file
+        aggregation
+        """
+
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type - single file aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        sf_aggr = GenericLogicalFile.objects.first()
+
+        # test deleting spatial coverage
+        self.assertEqual(sf_aggr.metadata.spatial_coverage, None)
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        sf_aggr.metadata.create_element('coverage', type='point', value=value_dict)
+        self.assertNotEqual(sf_aggr.metadata.spatial_coverage, None)
+        self.assertTrue(sf_aggr.metadata.is_dirty)
+        sf_aggr.metadata.is_dirty = False
+        sf_aggr.metadata.save()
+        sf_aggr.metadata.delete_element('coverage', sf_aggr.metadata.spatial_coverage.id)
+        self.assertEqual(sf_aggr.metadata.spatial_coverage, None)
+        self.assertTrue(sf_aggr.metadata.is_dirty)
+
+        # test deleting temporal coverage
+        self.assertEqual(sf_aggr.metadata.temporal_coverage, None)
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        sf_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertTrue(sf_aggr.metadata.is_dirty)
+        sf_aggr.metadata.is_dirty = False
+        sf_aggr.metadata.save()
+        self.assertNotEqual(sf_aggr.metadata.temporal_coverage, None)
+        sf_aggr.metadata.delete_element('coverage', sf_aggr.metadata.temporal_coverage.id)
+        self.assertEqual(sf_aggr.metadata.temporal_coverage, None)
+        self.assertTrue(sf_aggr.metadata.is_dirty)
+
+        self.composite_resource.delete()
+
     def test_aggregation_name(self):
         # test the aggregation_name property for the generic aggregation (logical file)
 

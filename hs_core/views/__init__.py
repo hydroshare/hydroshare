@@ -394,11 +394,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                # get the spatial coverage element
-                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
-                                      'spatial_coverage': spatial_coverage_dict,
+                                      'spatial_coverage': get_coverage_data_dict(res),
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -408,6 +406,12 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
+                                      'spatial_coverage': get_coverage_data_dict(res),
+                                      'temporal_coverage': get_coverage_data_dict(res, 'temporal'),
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -487,6 +491,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
