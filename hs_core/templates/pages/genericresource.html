@@ -543,6 +543,15 @@
                                                     {% endif %}
                                                 {% endif %}
 
+                                                {% if page.perms.change and metadata_form %}
+                                                    <button id="fb-delete" data-fb-action="delete"
+                                                            class="disabled fb-space-right"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                    </button>
+                                                {% endif %}
+
                                                 <button id="fb-select-all"
                                                         title="Select all">
                                                     <span class="fa fa-th-large icon-blue"></span>
@@ -551,6 +560,12 @@
                                                 <button id="fb-refresh" class="fb-space-right"
                                                         title="Refresh">
                                                     <span class="fa fa-refresh icon-blue"></span>
+                                                </button>
+
+                                                <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
+                                                        class="disabled" data-target="#get-file-url-dialog"
+                                                        title="Get file URL">
+                                                    <span class="fa fa-link icon-blue"></span>
                                                 </button>
 
                                                 <button id="fb-download"
@@ -577,21 +592,6 @@
                                                     <a class="small" target="_blank"
                                                        href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
                                                 {% endfor %}
-
-                                                <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
-                                                        class="disabled" data-target="#get-file-url-dialog"
-                                                        title="Get file URL">
-                                                    <span class="fa fa-link icon-blue"></span>
-                                                </button>
-
-                                                {% if page.perms.change and metadata_form %}
-                                                    <button id="fb-delete" data-fb-action="delete"
-                                                            class="disabled"
-                                                            title="Delete" data-toggle="modal"
-                                                            data-target="#confirm-delete-dialog">
-                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                    </button>
-                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>
