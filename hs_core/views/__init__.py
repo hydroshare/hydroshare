@@ -765,9 +765,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 def set_resource_flag_public(request, pk):
     http_request = request._request
     http_request.data = request.data.copy()
-    response = set_resource_flag(http_request, pk)
-    if response['status'] == 'error':
-        return HttpResponse(response['message'], status=400)
+    js_response = set_resource_flag(http_request, pk)
+    data = json.loads(js_response.content)
+    if data['status'] == 'error':
+        return HttpResponse(data['message'], status=400)
     return HttpResponse(status=202)
 
 
