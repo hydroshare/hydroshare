@@ -41,37 +41,37 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='genericlogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='geofeaturelogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='georasterlogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='netcdflogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='reftimeserieslogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='timeserieslogicalfile',
             name='resource',
-            field=models.ForeignKey(default=None, to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -82,6 +82,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='filesetlogicalfile',
             name='resource',
-            field=models.ForeignKey(to='hs_composite_resource.CompositeResource'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
         ),
     ]
