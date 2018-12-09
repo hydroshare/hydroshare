@@ -454,7 +454,7 @@
 
                                                     <div id="irods-group" class="btn-group">
                                                         <button type="button"
-                                                                class="btn btn-default btn-xs dropdown-toggle"
+                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
                                                                 aria-expanded="false">
@@ -491,7 +491,7 @@
 
                                                 {% if page.perms.change and metadata_form %}
                                                     {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-create-folder" class="fb-space-right disabled"
+                                                        <button id="fb-create-folder" class="disabled"
                                                                 data-fb-action="createFolder" data-toggle="modal"
                                                                 data-target="#create-folder-dialog"
                                                                 title="Create new folder">
