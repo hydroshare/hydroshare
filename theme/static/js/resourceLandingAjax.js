@@ -80,13 +80,20 @@ function shareable_ajax_submit(event) {
         url: url,
         dataType: 'html',
         data: datastring,
-        success: function () {
-            element.attr("disabled", false);
-            if (action == "make_not_shareable") {
-                element.closest("form").find("input[name='t']").val("make_shareable");
+        success: function (result) {
+            var json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                element.attr("disabled", false);
+                if (action === "make_not_shareable") {
+                    element.closest("form").find("input[name='t']").val("make_shareable");
+                }
+                else {
+                    element.closest("form").find("input[name='t']").val("make_not_shareable");
+                }
             }
             else {
-                element.closest("form").find("input[name='t']").val("make_not_shareable");
+              element.attr("disabled", false);
+              element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
             }
         },
         error: function () {
@@ -112,22 +119,29 @@ function license_agreement_ajax_submit(event) {
         url: url,
         dataType: 'html',
         data: datastring,
-        success: function () {
-            element.attr("disabled", false);
-            if (action == "make_not_require_lic_agreement") {
-                element.closest("form").find("input[name='flag']").val("make_require_lic_agreement");
-                $("#hs-file-browser").attr("data-agreement", "false");
-                $("#btn-download-all").attr("href", $("#download-bag-btn").attr("href"));
-                $("#btn-download-all"). removeAttr("data-toggle");
+        success: function (result) {
+            var json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                element.attr("disabled", false);
+                if (action === "make_not_require_lic_agreement") {
+                    element.closest("form").find("input[name='flag']").val("make_require_lic_agreement");
+                    $("#hs-file-browser").attr("data-agreement", "false");
+                    $("#btn-download-all").attr("href", $("#download-bag-btn").attr("href"));
+                    $("#btn-download-all").removeAttr("data-toggle");
 
+                }
+                else {
+                    element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");
+                    $("#hs-file-browser").attr("data-agreement", "true");
+                    $("#btn-download-all").removeAttr("href");
+                    $("#btn-download-all").attr("data-toggle", "modal");
+                    $("#btn-download-all").attr("data-target", "#license-agree-dialog-bag");
+                    $("#btn-download-all").attr("data-placement", "auto");
+                }
             }
             else {
-                element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");
-                $("#hs-file-browser").attr("data-agreement", "true");
-                $("#btn-download-all").removeAttr("href");
-                $("#btn-download-all").attr("data-toggle", "modal");
-                $("#btn-download-all").attr("data-target", "#license-agree-dialog-bag");
-                $("#btn-download-all").attr("data-placement", "auto");
+                element.attr("disabled", false);
+                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
             }
             // page refresh is needed to update if license agreement popup to show or not prior
             // to download of files/bag
@@ -229,23 +243,23 @@ function undo_share_ajax_submit(form_id) {
                 return;
             }
 
-            if (json_response.status == "success") {
+            if (json_response.status === "success") {
                 // Set the new permission level in the interface
                 var userRoles = $form.closest("tr").find(".user-roles");
 
                 userRoles.find("li").removeClass("active");
 
-                if (json_response.undo_user_privilege == "view" || json_response.undo_group_privilege == "view") {
+                if (json_response.undo_user_privilege === "view" || json_response.undo_group_privilege === "view") {
                     userRoles.find(".dropdown-toggle").text("Can view");
                     userRoles.find("li[data-access-type='" + "Can view"
                         + "']").addClass("active");
                 }
-                else if (json_response.undo_user_privilege == "change" || json_response.undo_group_privilege == "change") {
+                else if (json_response.undo_user_privilege === "change" || json_response.undo_group_privilege === "change") {
                     userRoles.find(".dropdown-toggle").text("Can edit");
                     userRoles.find("li[data-access-type='" + "Can edit"
                         + "']").addClass("active");
                 }
-                else if (json_response.undo_user_privilege == "owner" || json_response.undo_group_privilege == "owner") {
+                else if (json_response.undo_user_privilege === "owner" || json_response.undo_group_privilege === "owner") {
                     userRoles.find(".dropdown-toggle").text("Is owner");
                     userRoles.find("li[data-access-type='" + "Is owner"
                         + "']").addClass("active");
