@@ -62,12 +62,15 @@ function label_ajax_submit() {
     return false;
 }
 
-function change_access_ajax_submit(event) {
+function change_access_ajax_submit() {
     let form = $(this).closest("form");
     let element = $(this);  // The access button that was pressed
-    let action = element.attr("data-flag").trim();
-    form.find("button").toggleClass("disabled", true);  // Disable buttons while request is being made
-    form.find("input[name='flag']").val(action);
+    form.find("input[name='flag']").val(element.attr("data-flag").trim());
+
+    // Disable buttons while request is being made
+    form.find("button").toggleClass("disabled", true);
+    form.css("cursor", "progress");
+
     let datastring = form.serialize();
     let url = form.attr('action');
 
@@ -85,13 +88,15 @@ function change_access_ajax_submit(event) {
                 element.attr("disabled", true);
             }
             form.find("button").toggleClass("disabled", false);
+            form.css("cursor", "auto");
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);
+            form.css("cursor", "auto");
         }
     });
-    //don't submit the form
-    return false;
+
+    return false;   //don't submit the form
 }
 
 function shareable_ajax_submit(event) {
