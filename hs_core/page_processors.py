@@ -441,7 +441,10 @@ def check_resource_mode(request):
         if edit_resource:
             del request.session['resource-mode']
         else:
-            edit_resource = request.GET.get('resource-mode', None) == 'edit'
+            if request.session.get('just_created', False):
+                edit_resource = True
+            else:
+                edit_resource = request.GET.get('resource-mode', None) == 'edit'
     else:
         edit_resource = True
 
