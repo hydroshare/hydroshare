@@ -1622,7 +1622,7 @@ body > .main-container {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-.btn-add-access:focus,#btn-discoverable:focus, #btn-public:focus, #btn-private:focus {
+.btn-add-access:focus, #form-change-access button:focus {
 	outline: none;
 }
 
