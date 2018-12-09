@@ -487,17 +487,16 @@ function bindFileBrowserItemEvents() {
     }
 
     // Provides selection by drawing a rectangular area
-    $("#fb-files-container")
-        .selectable({
-            filter: "li", cancel: ".ui-selected",
-            stop: function (event, ui) {
-                $(".selection-menu").hide();
-                updateSelectionMenuContext();
+    $("#fb-files-container").selectable({
+        filter: "li", cancel: ".ui-selected",
+        stop: function (event, ui) {
+            $(".selection-menu").hide();
+            updateSelectionMenuContext();
 
-                $("#fb-files-container li").removeClass("ui-last-selected");
-                $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
-            }
-        });
+            $("#fb-files-container li").removeClass("ui-last-selected");
+            $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
+        }
+    });
 
     // Dismiss right click menu when mouse down outside of it
     $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {

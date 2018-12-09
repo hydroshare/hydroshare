@@ -1128,7 +1128,24 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 });
             }
             if (!files.length && !folders.length) {
-                $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
+                let mode = $("#hs-file-browser").attr("data-mode");
+                if (mode == "edit") {
+                    $('#fb-files-container').append(`
+                        <div>
+                            <span class="text-muted fb-empty-dir">This directory is empty</span>
+                            <br><br>
+                            <div class="hs-upload-indicator text-center">
+                                <i class="fa fa-file" aria-hidden="true"></i>
+                                <h3>Drop files here or click "Add files" to upload</h3>
+                            </div>
+                        </div>
+                    `);
+                }
+                else {
+                    $('#fb-files-container').append(`
+                        <span class="text-muted fb-empty-dir">This directory is empty</span>
+                    `);
+                }
             }
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();

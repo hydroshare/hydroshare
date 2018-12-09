@@ -4170,6 +4170,10 @@ ul#fb-files-container {
     min-height: 100%;
 }
 
+ul#fb-files-container .hs-upload-indicator {
+	position: static;
+}
+
 .fb-file span.fb-file-icon::before, .fb-stack .fa-file-o {
     background-color: #FFF;
     border-top-right-radius: 50%;
