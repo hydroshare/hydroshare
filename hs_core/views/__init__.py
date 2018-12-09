@@ -733,28 +733,32 @@ def publish(request, shortkey, *args, **kwargs):
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
+    ajax_response_data = {'status': 'error', 'message': ''}
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     flag = resolve_request(request).get('flag', None)
+    message = None
     if flag == 'make_public':
-        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
+        message = _set_resource_sharing_status(user, res, flag_to_set='public', flag_value=True)
     elif flag == 'make_private' or flag == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
+        message = _set_resource_sharing_status(user, res, flag_to_set='discoverable', flag_value=False)
     elif flag == 'make_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
+        message = _set_resource_sharing_status(user, res, flag_to_set='discoverable', flag_value=True)
     elif flag == 'make_not_shareable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
+        message = _set_resource_sharing_status(user, res, flag_to_set='shareable', flag_value=False)
     elif flag == 'make_shareable':
-       _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
+        message = _set_resource_sharing_status(user, res, flag_to_set='shareable', flag_value=True)
     elif flag == 'make_require_lic_agreement':
         res.set_require_download_agreement(user, value=True)
     elif flag == 'make_not_require_lic_agreement':
         res.set_require_download_agreement(user, value=False)
+    else:
+        message = "Invalid resource flag"
+    if message is not None:
+        ajax_response_data['message'] = message
+    else:
+        ajax_response_data['status'] = 'success'
 
-    if request.META.get('HTTP_REFERER', None):
-        request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
-
-    return HttpResponse(status=202)
+    return JsonResponse(ajax_response_data)
 
 
 @api_view(['POST'])
@@ -762,12 +766,10 @@ def set_resource_flag_public(request, pk):
     http_request = request._request
     http_request.data = request.data.copy()
     response = set_resource_flag(http_request, pk)
+    if response['status'] == 'error':
+        return HttpResponse(response['message'], status=400)
+    return HttpResponse(status=202)
 
-    messages = get_messages(request)
-    for message in messages:
-        if(message.tags == "error"):
-            return HttpResponse(message, status=400)
-    return response
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""
@@ -1633,7 +1635,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
+def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     """
     Set flags 'public', 'discoverable', 'shareable'
 
@@ -1644,41 +1646,26 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
     if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
         # access control is separate from validation logic
         if not user.uaccess.can_change_resource_flags(resource):
-            messages.error(request, "You don't have permission to change resource sharing status")
-            return
+            return "You don't have permission to change resource sharing status"
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()
-            return
+            return None
 
     elif flag_to_set == 'discoverable':
         try:
             resource.set_discoverable(flag_value, user)  # checks access control
         except ValidationError as v:
-            messages.error(request, v.message)
+            return v.message
 
     elif flag_to_set == 'public':
         try:
             resource.set_public(flag_value, user)  # checks access control
         except ValidationError as v:
-            messages.error(request, v.message)
-
+            return v.message
     else:
-        messages.error(request,
-                       "unrecognized resource flag {}".format(flag_to_set))
-
-
-def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
-    msg = ''
-    if not has_metadata and not has_files:
-        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
-              flag=resource_flag)
-    elif not has_metadata:
-        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
-    elif not has_files:
-        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
-
-    return msg
+        return "Unrecognized resource flag {}".format(flag_to_set)
+    return None
 
 
 class MyGroupsView(TemplateView):
