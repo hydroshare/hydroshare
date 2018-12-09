@@ -241,7 +241,7 @@
                                 <span class="fa fa-folder icon-blue"></span>
                                 <span>New folder</span>
                             </li>
-                            <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                            <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
                                 data-fb-action="createFolder"
                                 data-target="#add-reference-url-dialog">
                                 <span class="fa fa-external-link icon-blue"></span>
@@ -498,7 +498,8 @@
                                                             <span class="fa fa-folder icon-blue"></span>
                                                         </button>
                                                         {% if cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-add-reference" class="fb-space-right disabled"
+                                                        <button id="fb-add-reference" class="fb-space-right"
+                                                                data-fb-action="createFolder"
                                                                 data-toggle="modal"
                                                                 data-target="#add-reference-url-dialog"
                                                             title="Add content from the web">

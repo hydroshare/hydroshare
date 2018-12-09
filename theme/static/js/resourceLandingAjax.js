@@ -1163,6 +1163,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
 
             updateNavigationState();
+            updateSelectionMenuContext();
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
@@ -1182,6 +1183,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             setBreadCrumbs(store_path);
             $("#fb-files-container").prepend("<span>No files to display.</span>")
+            updateSelectionMenuContext();
         }
     });
 }

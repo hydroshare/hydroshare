@@ -345,7 +345,6 @@ function updateSelectionMenuContext() {
     // Content Type operations
     menu.children("[data-menu-name='content-type']").toggleClass("hidden", !UIState.contentTypeOperations);
 
-
     $("#open-separator").toggleClass("hidden", !UIState.open);
     $("#zip-separator").toggleClass("hidden", !UIState.zip);
 
@@ -952,11 +951,6 @@ function onOpenFolder() {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
         allowCreateFolder = logicalFileType.length === 0;
-
-        // Set Create folder toolbar option
-        $("#fb-create-folder").toggleClass("disabled", !allowCreateFolder);
-        // set Add reference content toolbar option
-        $("#fb-add-reference").toggleClass("disabled", !allowCreateFolder);
     });
 
     $.when.apply($, calls).fail(function () {
