@@ -1,23 +1,23 @@
 <table id="table-stats" class="info-table">
     <tr>
         {% if cm.raccess.published %}
-            <td><strong>Sharing Status: </strong></td>
+            <th>Sharing Status: </th>
             <td>Published</td>
         {% elif cm.raccess.public %}
-            <td><strong>Sharing Status: </strong></td>
+            <th>Sharing Status: </th>
             <td>Public</td>
         {% elif cm.raccess.discoverable %}
-            <td><strong>Sharing Status: </strong></td>
+            <th>Sharing Status: </th>
             <td>Discoverable</td>
         {% else %}
-            <td><strong>Sharing Status: </strong></td>
+            <th>Sharing Status: </th>
             <td>Private</td>
         {% endif %}
     </tr>
     {% if cm.raccess.published %}
         {% if "pending" in cm.doi or "failure" in cm.doi %}
             <tr>
-                <td><strong>Publication Status: </strong></td>
+                <th>Publication Status: </th>
                 <td>
                     <div>Pending publication</div>
                     <div class="small text-muted">
@@ -28,18 +28,18 @@
         {% endif %}
     {% endif %}
     <tr>
-        <td><strong>Views:</strong></td>
+        <th>Views: </th>
         <td>{{ cm.view_count }}</td>
     </tr>
     <tr>
-        <td><strong>Downloads:</strong></td>
+        <th>Downloads: </th>
         <td>{{ cm.download_count }}</td>
     </tr>
     <tr>
         {% include "resource-landing-page/ratings.html" %}
     </tr>
     <tr>
-        <td><strong>Comments:</strong></td>
+        <th>Comments: </th>
         <td>
             <a href="#comments">{{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}</a>
         </td>

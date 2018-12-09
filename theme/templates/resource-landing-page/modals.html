@@ -1626,7 +1626,7 @@
                             {% if can_change_resource_flags %}
                                 <div class="btn-group" role="group">
                                     {# -------- PUBLIC -------- #}
-                                    <form class="pull-left"
+                                    <form class="group-title" style="margin-right: -3px;"
                                           action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                                           method="POST">
                                         {% csrf_token %}
@@ -1645,7 +1645,7 @@
                                         </button>
                                     </form>
                                     {# -------- DISCOVERABLE -------- #}
-                                    <form class="pull-left"
+                                    <form class="group-title" style="margin-right: -2px;"
                                           action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                                           method="POST">
                                         <input name="flag" type="hidden" value="make_discoverable"/>
@@ -1663,7 +1663,7 @@
                                         </button>
                                     </form>
                                     {# -------- PRIVATE -------- #}
-                                    <form class="pull-left"
+                                    <form class="group-title"
                                           action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                                           method="POST">
                                         <input name="flag" type="hidden" value="make_private"/>
@@ -1719,6 +1719,7 @@
                          </div>
                     </div>
                 </div>
+
                 <div>
                     {# ======= Change quota holder ======= #}
                     {% include "resource-landing-page/quota.html" %}
