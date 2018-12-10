@@ -246,10 +246,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return "Geographic Raster"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=raster_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=raster_metadata, resource=resource)
 
     @property
     def supports_resource_file_move(self):
@@ -343,7 +345,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
             with transaction.atomic():
                 # create a geo raster logical file object to be associated with resource files
-                logical_file = cls.initialize(base_file_name)
+                logical_file = cls.initialize(base_file_name, resource)
 
                 try:
                     if not folder_path:
@@ -358,6 +360,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         else:
                             upload_folder = file_folder
 
+                        # create logical file record in DB
+                        logical_file.save()
                         if res_file.extension.lower() in [".tiff", ".tif"]:
                             if aggregation_folder_created:
                                 tgt_folder = upload_folder
@@ -378,6 +382,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             # selected file must be a zip file
                             res_files_to_delete.append(res_file)
                     else:
+                        # create logical file record in DB
+                        logical_file.save()
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
 

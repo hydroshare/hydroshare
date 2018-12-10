@@ -595,15 +595,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
-        # value for 'eastlimit' must be greater than 'westlimit'
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+        # now create with all valid data including west > east and limits set to zero
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '0', 'southlimit': '0',
                       'westlimit': '130.6789', 'units': 'decimal deg' }
-        with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
-
-        # now create with all valid data
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '110.6789', 'units': 'decimal deg' }
         resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         self.assertEqual(self.res.metadata.coverages.filter(type='box').count(), 1)

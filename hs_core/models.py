@@ -1352,12 +1352,6 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
 
-            if (value_dict['eastlimit'] < 0 and value_dict['westlimit'] < 0) or (
-                    value_dict['eastlimit'] > 0 and value_dict['westlimit'] > 0):
-                if value_dict['eastlimit'] < value_dict['westlimit']:
-                    raise ValidationError("Value for East longitude must be greater than or "
-                                          "equal to that of West longitude.")
-
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
 
@@ -3808,10 +3802,8 @@ class CoreMetaData(models.Model):
                             subjects.append(dict_item['subject']['value'])
                             continue
                         if element_name == 'coverage':
-                            # coverage metadata is not allowed for update for composite
-                            # and time series resource
-                            if self.resource.resource_type in ("CompositeResource",
-                                                               "TimeSeriesResource"):
+                            # coverage metadata is not allowed for update for time series resource
+                            if self.resource.resource_type == "TimeSeriesResource":
                                 err_msg = "Coverage metadata can't be updated for {} resource"
                                 err_msg = err_msg.format(self.resource.resource_type)
                                 raise ValidationError(err_msg)

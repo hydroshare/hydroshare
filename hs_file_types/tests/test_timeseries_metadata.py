@@ -682,7 +682,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         base_file_name, ext = os.path.splitext(res_file.file_name)
         expected_folder_name = base_file_name
         self.assertEqual(res_file.file_folder, expected_folder_name)
-        src_path = 'data/contents/{0}/{1}.{2}'.format(expected_folder_name, base_file_name, ext)
+        src_path = 'data/contents/{0}/{1}{2}'.format(expected_folder_name, base_file_name, ext)
         new_file_name = 'some_raster.{}'.format(ext)
         self.assertNotEqual(res_file.file_name, new_file_name)
         tgt_path = 'data/contents/{}/{}'.format(expected_folder_name, new_file_name)

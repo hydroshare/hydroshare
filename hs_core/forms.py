@@ -838,7 +838,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         fields will be displayed
         """
         file_type = kwargs.pop('file_type', False)
-        form_field_names = ['type', 'start', 'end']
+        form_field_names = ['start', 'end']
         crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 
@@ -986,6 +986,15 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
             self.fields['units'].widget.attrs['readonly'] = True
+            if file_type:
+                # add the 'data-map-item' attribute so that map interface can be used for editing
+                # these fields
+                self.fields['north'].widget.attrs['data-map-item'] = 'latitude'
+                self.fields['east'].widget.attrs['data-map-item'] = 'longitude'
+                self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
+                self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
+                self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
+                self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
 
     def clean(self):
         """Modify the form's cleaned_data dictionary."""
@@ -1037,7 +1046,8 @@ class CoverageSpatialForm(forms.Form):
 
             for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
                 limit_data = temp_cleaned_data.get(limit, None)
-                if not limit_data:
+                # allow value of 0 to go through
+                if not limit_data and limit_data != 0:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
                     del self.cleaned_data[limit]

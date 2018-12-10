@@ -18,13 +18,15 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
+    var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+    var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
     // Set initial coverage fields state
-    if ($("#id_type_1").is(':checked')) { //box type coverage
+    if ($radioBox.is(':checked')) { //box type coverage
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
     }
-    if ($("#id_type_2").is(':checked')) { // point type coverage
+    if ($radioPoint.is(':checked')) { // point type coverage
         $("#div_id_northlimit").hide();
         $("#div_id_eastlimit").hide();
         $("#div_id_southlimit").hide();
@@ -124,7 +126,8 @@ function drawInitialShape() {
         }
     }
     else {
-        if ($("#id_type_1").is(":checked")) {
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        if ($radioBox.is(":checked")) {
             drawRectangleOnTextChange();
         }
         else {
@@ -374,8 +377,9 @@ function processDrawing (coordinates, shape) {
     }
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
-    if (shape == "rectangle"){
-        document.getElementById("id_type_1").checked = true;
+    if (shape === "rectangle"){
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        $radioBox.prop("checked", true);
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
@@ -406,7 +410,8 @@ function processDrawing (coordinates, shape) {
         });
     }
     else {
-        document.getElementById("id_type_2").checked = true;
+        var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+        $radioPoint.prop("checked", true);
         $("#div_id_north").show();
         $("#div_id_east").show();
         $("#div_id_elevation").show();
@@ -442,24 +447,5 @@ function deleteAllShapes(){
 }
 
 function zoomCoverageMap(bounds) {
-    // Zoom in on the shape
-    var GLOBE_WIDTH = 256; // a constant in Google maps projection
-    var c_west = bounds.west * 8;    // Zooms out on the shape a little so that we can see it
-    var c_east = bounds.east * 8;
-    var angle = c_east - c_west;
-    var pixelWidth = parseInt($("#coverageMap").width());
-    if (angle < 0) {
-        angle += 360;
-    }
-    var zoom = Math.round(Math.log(pixelWidth * 360 / angle / GLOBE_WIDTH) / Math.LN2);
-    if (!isNaN(zoom)){
-        coverageMap.setZoom(Math.max(3, zoom)); // Allow minumum zoom level of 3
-    }
-    else{
-        return;
-    }
-    // Center map at new rectangle
-    var latCenter = (bounds.north + bounds.south) / 2;
-    var lngCenter = (bounds.west + bounds.east) / 2;
-    coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+    coverageMap.fitBounds(bounds);
 }

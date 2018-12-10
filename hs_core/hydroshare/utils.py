@@ -387,7 +387,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
     map_logical_files = {}
     for src_logical_file in src_logical_files:
-        map_logical_files[src_logical_file] = src_logical_file.get_copy()
+        map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
@@ -869,7 +869,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False, check_target_folder=False):
+                         move=False, check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -891,6 +891,9 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
 
     :param  check_target_folder: if true and the resource is a composite resource then uploading
     a file to the specified folder will be validated before adding the file to the resource
+    :param  add_to_aggregation: if true and the resource is a composite resource then the file
+    being added to the resource also will be added to a fileset aggregation if such an aggregation
+    exists in the file path
     :return: The identifier of the ResourceFile added.
     """
 
@@ -906,6 +909,12 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                     raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
+        if add_to_aggregation:
+            if folder is not None and resource.resource_type == 'CompositeResource':
+                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                if aggregation is not None:
+                    # make the added file part of the fileset aggregation
+                    aggregation.add_resource_file(ret)
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
@@ -1046,24 +1055,33 @@ def resolve_request(request):
 
 def check_aggregations(resource, folders, res_files):
     """
+    A helper to support creating aggregations for a given composite resource when new folders
+    or files are added to the resource
     Checks for aggregations in each folder first, then checks for aggregations in each file
     :param resource: resource object
-    :param folders: list of folders as strings to check for aggregations in
-    :param res_file: list of ResourceFile objects to be check for aggregations in
+    :param folders: list of folders as strings to check for aggregations creation
+    :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
         # check folders for aggregations
         for fol in folders:
-            agg_type = resource.get_folder_aggregation_type_to_set(fol)
-            if agg_type:
+            folder = fol
+            if not fol.startswith(resource.file_path):
+                # need absolute folder path to check if folder can be set to aggregation
+                folder = os.path.join(resource.file_path, fol)
+            else:
+                # need relative folder path for creating aggregation from folder
+                fol = fol[len(resource.file_path) + 1:]
+            agg_type = resource.get_folder_aggregation_type_to_set(folder)
+            if agg_type and agg_type != "FileSetLogicalFile":
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,
                                       hs_file_type=agg_type, folder_path=fol,
                                       fail_feedback=False)
         # check files for aggregation
         for res_file in res_files:
-            if not res_file.has_logical_file:
+            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)

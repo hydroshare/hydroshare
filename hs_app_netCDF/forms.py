@@ -63,6 +63,12 @@ class OriginalCoverageForm(forms.Form):
         self.fields['datum'].widget.attrs['readonly'] = True
         self.fields['projection_string_type'].widget.attrs['readonly'] = True
         self.fields['projection_string_text'].widget.attrs['readonly'] = True
+        # add the 'data-map-item' attribute so that map interface can be used for
+        # editing these fields
+        self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
+        self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
+        self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
+        self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
 
     @property
     def form_id(self):

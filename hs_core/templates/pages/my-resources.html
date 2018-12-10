@@ -255,11 +255,8 @@
                             </td>
                             {# First Author #}
                             {% if res.first_creator.description %}
-{#                                <td>#}
-{#                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
-{#                                </td>#}
                                 <td>
-                                   {% include "includes/author-link.html" with author=res.first_creator %}
+                                   {% include "includes/author-link.html" with author=res|resource_first_author %}
                                 </td>
                             {% else %}
                                 <td>{{ res.first_creator.name }}</td>

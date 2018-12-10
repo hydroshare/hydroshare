@@ -93,4 +93,6 @@ urlpatterns = [
         views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
+    url(r'^_internal/update_quota_usage/(?P<username>[A-z0-9_]+)/$',
+        views.update_quota_usage, name='update_quota_usage'),
 ]

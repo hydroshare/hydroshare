@@ -648,7 +648,7 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath, overwrite=False):
+def link_irods_file_to_django(resource, filepath):
     """
     Link a newly created irods file to Django resource model
 
@@ -663,9 +663,6 @@ def link_irods_file_to_django(resource, filepath, overwrite=False):
         ret = None
         try:
             ret = ResourceFile.get(resource=resource, file=base, folder=folder)
-            if overwrite:
-                ret.delete()
-                b_add_file = True
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
             b_add_file = True
@@ -742,14 +739,37 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     relationships are preserved and no longer need adjustment.
     """
     # checks src_name as a side effect.
-    folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
-                                                            test_exists=False)
+    src_folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
+                                                                test_exists=False)
+    tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
+    file_move = src_folder != tgt_folder
     try:
-        res_file_obj = ResourceFile.get(resource=resource, file=base, folder=folder)
+        res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
+        # if the source file is part of a FileSet, we need to remove it from that FileSet in the
+        # case file being moved
+        if file_move and resource.resource_type == 'CompositeResource':
+            if res_file_obj.has_logical_file and res_file_obj.logical_file.is_fileset:
+                try:
+                    aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
+                    if aggregation.is_fileset:
+                        # remove aggregation form the file
+                        res_file_obj.logical_file_content_object = None
+                        res_file_obj.save()
+                except ObjectDoesNotExist:
+                    pass
+
         # checks tgt_name as a side effect.
-        ResourceFile.resource_path_is_acceptable(resource, tgt_name,
-                                                 test_exists=True)
+        ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
+        # if the file is getting moved into a folder that represents a FileSet or to a folder
+        # inside a fileset folder, then make the file part of that FileSet
+        if file_move and res_file_obj.file_folder is not None and \
+                resource.resource_type == 'CompositeResource':
+            aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
+            if aggregation is not None and not res_file_obj.has_logical_file:
+                # make the moved file part of the fileset aggregation unless the file is
+                # already part of another aggregation (single file aggregation)
+                aggregation.add_resource_file(res_file_obj)
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
@@ -765,6 +785,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
+    If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
     :param foldername: the folder name that has been removed from iRODS
@@ -782,13 +803,25 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
             filename = f.storage_path
             if filename.startswith(folderpath):
                 # TODO: integrate deletion of logical file with ResourceFile.delete
-                # delete the logical file object if the resource file has one
-                if f.has_logical_file:
+                # delete the logical file (if it's not a fileset) object if the resource file
+                # has one
+                if f.has_logical_file and not f.logical_file.is_fileset:
                     # this should delete the logical file and any associated metadata
                     # but does not delete the resource files that are part of the logical file
                     f.logical_file.logical_delete(user, delete_res_files=False)
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+
+        # if the folder getting deleted contains any fileset aggregation those aggregations need to
+        # be deleted
+        # note: for other types of aggregation the aggregation gets deleted as part of deleting
+        # the resource file - see above for resource file delete
+        if resource.resource_type == 'CompositeResource':
+            rel_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
+            filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
+            for fileset in filesets:
+                if fileset.folder.startswith(rel_folder_path):
+                    fileset.logical_delete(user, delete_res_files=True)
 
         # send the post-delete signal
         post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
@@ -922,7 +955,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 destination_file = _get_destination_filename(file, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
-                res_file = link_irods_file_to_django(resource, destination_file, overwrite=True)
+                res_file = link_irods_file_to_django(resource, destination_file)
                 res_files.append(res_file)
 
             # scan for aggregations
@@ -1198,14 +1231,15 @@ def irods_path_is_directory(istorage, path):
     return base in listing[0]
 
 
-def get_coverage_data_dict(resource, coverage_type='spatial'):
+def get_coverage_data_dict(source, coverage_type='spatial'):
     """Get coverage data as a dict for the specified resource
-    :param  resource: An instance of BaseResource for which coverage data is needed
+    :param  source: An instance of BaseResource or FileSet aggregation for which coverage data is
+    needed
     :param  coverage_type: Type of coverage data needed. Default is spatial otherwise temporal
     :return A dict of coverage data
     """
     if coverage_type.lower() == 'spatial':
-        spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+        spatial_coverage = source.metadata.spatial_coverage
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
@@ -1221,7 +1255,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
                 spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
         return spatial_coverage_dict
     else:
-        temporal_coverage = resource.metadata.coverages.filter(type='period').first()
+        temporal_coverage = source.metadata.temporal_coverage
         temporal_coverage_dict = {}
         if temporal_coverage:
             temporal_coverage_dict['element_id'] = temporal_coverage.id

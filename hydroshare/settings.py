@@ -155,8 +155,7 @@ INTERNAL_IPS = ("127.0.0.1",)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 # TODO remove MezzanineBackend after conflicting users have been removed
-AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",
-                           "mezzanine.core.auth_backends.MezzanineBackend")
+AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -580,6 +579,12 @@ LOGGING = {
             'handlers': ['syslog', 'djangolog'],
             'propagate': True,
             'level': 'DEBUG',
+        },
+        # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
+        'django.template': {
+            'handlers': ['syslog', 'djangolog'],
+            'level': 'INFO',
+            'propagate': True,
         },
         'django.db.backends': {
             'handlers': ['syslog'],

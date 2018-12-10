@@ -346,7 +346,7 @@ class TestCopyResource(TestCase):
         # add some key value metadata
         orig_geo_raster_lfo.metadata.extra_metadata = {'key-1': 'value-1', 'key-2': 'value-2'}
 
-        # create a copy fo the composite resource
+        # create a copy of the composite resource
         new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
                                                                   self.nonowner,
                                                                   action='copy')

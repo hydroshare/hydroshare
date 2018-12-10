@@ -80,19 +80,18 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with root_div:
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
-
-            with div(cls="content-block", id="original-coverage-filetype"):
-                with form(id="id-origcoverage-file-type",
-                          action="{{ orig_coverage_form.action }}",
-                          method="post", enctype="multipart/form-data",
-                          cls='hs-coordinates-picker', data_coordinates_type="box"):
-                    div("{% crispy orig_coverage_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+            with div():
+                with div(cls="content-block", id="original-coverage-filetype"):
+                    with form(id="id-origcoverage-file-type",
+                              action="{{ orig_coverage_form.action }}",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% crispy orig_coverage_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       style="display: none;")
 
             with div(cls="content-block", id="spatial-coverage-filetype"):
                 with form(id="id-spatial-coverage-file-type",
@@ -316,10 +315,12 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         return "Multidimensional (NetCDF)"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=netcdf_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=netcdf_metadata, resource=resource)
 
     @property
     def supports_resource_file_move(self):
@@ -428,7 +429,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # create a netcdf logical file object to be associated with
                 # resource files
                 dataset_title = res_dublin_core_meta.get('title', nc_file_name)
-                logical_file = cls.initialize(dataset_title)
+                logical_file = cls.initialize(dataset_title, resource)
 
                 try:
                     if folder_path is None:
@@ -446,6 +447,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             # selected nc file is already in a folder
                             upload_folder = file_folder
 
+                        # create logical file record in DB
+                        logical_file.save()
                         if aggregation_folder_created:
                             # copy the nc file to the new aggregation folder and make it part
                             # of the logical file
@@ -459,6 +462,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             logical_file.add_resource_file(res_file)
 
                     else:
+                        # logical file record gets created in DB
+                        logical_file.save()
                         # folder has been selected to create aggregation
                         upload_folder = folder_path
                         # make the .nc file part of the aggregation
@@ -469,7 +474,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                                  name=os.path.basename(dump_file))
 
                     new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=upload_folder
+                        resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
                     )
 
                     # make this new resource file we added part of the logical file

@@ -41,7 +41,7 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    replicate_resource_bag_to_user_zone
+    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -126,6 +126,25 @@ def change_quota_holder(request, shortkey):
         request.session['validation_error'] = msg
 
     return HttpResponseRedirect(res.get_absolute_url())
+
+
+@api_view(['POST'])
+def update_quota_usage(request, username):
+    req_user = request.user
+    if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
+        return HttpResponseForbidden('only iRODS service account is authorized to '
+                                     'perform this action')
+    if not req_user.is_authenticated():
+        return HttpResponseForbidden('You are not authenticated to perform this action')
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest('user to update quota for is not valid')
+
+    update_quota_usage_utility(user=user)
+
+    return HttpResponse('quota for user ' + user.username + ' has been updated', status=200)
 
 
 def extract_files_with_paths(request):
@@ -375,11 +394,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                # get the spatial coverage element
-                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
-                                      'spatial_coverage': spatial_coverage_dict,
+                                      'spatial_coverage': get_coverage_data_dict(res),
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -389,6 +406,12 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
+                                      'spatial_coverage': get_coverage_data_dict(res),
+                                      'temporal_coverage': get_coverage_data_dict(res, 'temporal'),
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -468,6 +491,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
