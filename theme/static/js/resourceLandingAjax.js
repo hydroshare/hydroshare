@@ -650,6 +650,12 @@ function metadata_update_ajax_submit(form_id){
     var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
     var datastring = $form.serialize();
+
+    // Disable button while request is being made
+    var defaultBtnText = $form.find(".btn-form-submit").text();
+    $form.find(".btn-form-submit").text("Saving changes...");
+    $form.find(".btn-form-submit").addClass("disabled");
+
     $.ajax({
         type: "POST",
         url: $form.attr('action'),
@@ -844,12 +850,20 @@ function metadata_update_ajax_submit(form_id){
                     $(".alert-error").alert('close');
                 });
             }
+
+            // Restore button
+            $form.find(".btn-form-submit").text(defaultBtnText);
+            $form.find(".btn-form-submit").removeClass("disabled");
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-error").alert('close');
             });
+
+            // Restore button
+            $form.find(".btn-form-submit").text(defaultBtnText);
+            $form.find(".btn-form-submit").removeClass("disabled");
         }
     });
     //don't submit the form
