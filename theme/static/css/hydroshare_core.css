@@ -1450,7 +1450,6 @@ body > .main-container {
 .icon-button {
     font-size: 22px;
     cursor: pointer;
-    float: right;
     margin: 0 4px;
     padding: 5px;
     background-color: transparent;
@@ -1507,10 +1506,14 @@ body > .main-container {
     justify-content: flex-end;
 }
 
+.custom-btn-toolbar a {
+	text-decoration: none;
+	display: inline-block;
+}
+
 .custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
 	border: 0;
 	outline: 0;
-    float: unset;
 }
 
 .custom-btn-toolbar .disabled > span {
@@ -1622,7 +1625,7 @@ body > .main-container {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-.btn-add-access:focus,#btn-discoverable:focus, #btn-public:focus, #btn-private:focus {
+.btn-add-access:focus, #form-change-access button:focus {
 	outline: none;
 }
 
@@ -1669,7 +1672,7 @@ body > .main-container {
     color: #10ae10
 }
 
-#delete > span {
+#delete {
 	margin-left: 20px;
 }
 

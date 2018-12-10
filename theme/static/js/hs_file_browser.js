@@ -1100,7 +1100,7 @@ $(document).ready(function () {
                 this.on("queuecomplete", function () {
                     if ($("#hs-file-browser").attr("data-refresh-on-upload") == "true") {
                         // Page refresh is needed to show updated metadata
-                        location.reload(true);
+                        window.location.reload(true);
                     }
                     else {
                         var resourceType = $("#resource-type").val();
