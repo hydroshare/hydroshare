@@ -1187,7 +1187,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                             <br><br>
                             <div class="hs-upload-indicator text-center">
                                 <i class="fa fa-file" aria-hidden="true"></i>
-                                <h3>Drop files here or click "Add files" to upload</h3>
+                                <h4>Drop files here or click "Add files" to upload</h4>
                             </div>
                         </div>
                     `);
