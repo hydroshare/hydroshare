@@ -1428,6 +1428,27 @@
         </div>
     </div>
 
+    <div class="modal fade in" id="remove-aggregation-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="remove-aggregation" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title">Remove content type</h4></div>
+                <div class="modal-body"><strong>Removing the content type will remove the metadata associated with this
+                    content. Are you sure you want to do this?</strong>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnCancelRemoveAggregation" class="btn btn-default" data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" id="btnRemoveAggregation" class="btn btn-danger" data-dismiss="modal">Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% include "irods_signin.html" %}
     {% include "irods_upload_add.html" %}
 

@@ -209,11 +209,15 @@
                                 </li>
                             </ul>
                         </li>
-                        <li id="btn-remove-aggregation" data-fb-action="removeAggregation" data-toggle="tooltip"
-                            title="Remove the content type association and delete content-level metadata"
+                        <li data-fb-action="removeAggregation"
+                            data-toggle="modal"
+                            data-target="#remove-aggregation-dialog"
                             data-placement="right">
-                            <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
-                            <span>Remove content type</span>
+                            <span data-toggle="tooltip" data-placement="right"
+                                  title="Remove the content type association and delete content-level metadata">
+                                <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
+                                <span>Remove content type</span>
+                            </span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}
