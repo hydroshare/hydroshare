@@ -46,7 +46,7 @@
                                 {% endif %}
                             </div>
 
-                            {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                            {% if spatial_coverage.north is not None or spatial_coverage.northlimit is not None %}
                                 <div class="row coordinates-list-container">
                                     {% if spatial_coverage.type == 'point' %}
                                         {% if spatial_coverage.east %}
@@ -60,22 +60,22 @@
                                             </div>
                                         {% endif %}
                                     {% else %}
-                                        {% if spatial_coverage.northlimit %}
+                                        {% if spatial_coverage.northlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>North Latitude</strong>
                                                 <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.eastlimit %}
+                                        {% if spatial_coverage.eastlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>East Longitude</strong>
                                                 <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.southlimit %}
+                                        {% if spatial_coverage.southlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>South Latitude</strong>
                                                 <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.westlimit %}
+                                        {% if spatial_coverage.westlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>West Longitude</strong>
                                                 <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
                                             </div>
