@@ -189,7 +189,7 @@ $(document).ready(function () {
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
 
         resetProfilePreview(profileCard);
-        var data = jQuery.extend({}, $(this).data());
+        var data = jQuery.extend(true, {}, $(this).data());
 
         // Populate subject areas
         var areas = data.subjectareas.split(",");
@@ -262,7 +262,7 @@ $(document).ready(function () {
     $(".author-preview").click(function() {
         resetAuthorPreview();
         var preview = $("#view-author-modal");
-        var data = jQuery.extend({}, $(this).data());
+        var data = jQuery.extend(true, {}, $(this).data());
         var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
         var fields = ["name", "organization", "email", "address", "phone"];
 

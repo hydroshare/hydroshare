@@ -135,7 +135,7 @@
                         <span class="glyphicon glyphicon-download icon-blue"></span>
                         <span>Download</span>
                     </li>
-                    <li data-menu-name="download" data-fb-action="download" data-zipped="true">
+                    <li data-menu-name="download" data-fb-action="downloadZipped" data-zipped="true">
                         <span class="fa fa-download icon-blue"></span>
                         <span>Download zipped</span>
                     </li>
@@ -164,7 +164,8 @@
                             <i class="fa fa-plus icon-green" aria-hidden="true"></i>
                             <span>Add metadata</span>
                         </li>
-                        <li data-menu-name="content-type" class="dropdown-submenu submenu-trigger">
+                        <li data-menu-name="content-type" data-fb-action="subMenuSetContentType"
+                            class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
                                 <i class="fa fa-exchange icon-blue" aria-hidden="true"></i>
                                 Set content type
@@ -588,7 +589,7 @@
                                                     <span class="glyphicon glyphicon-download icon-blue"></span>
                                                 </button>
 
-                                                <button class="disabled" data-fb-action="download" data-zipped="true"
+                                                <button class="disabled" data-fb-action="downloadZipped"
                                                         title="Download zipped">
                                                     <span class="fa fa-download icon-blue"></span>
                                                 </button>
