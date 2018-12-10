@@ -266,3 +266,26 @@
 .fb-view-grid .fb-stack .fa-file-o {
 	font-size: 32px;
 }
+
+.fb-view-grid .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -3px;
+	left: -12px;
+}
+
+.fb-view-list .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -8px;
+	left: -7px;
+	font-size: 9px;
+}
+
+.fb-view-list .fb-folder-aggregation {
+	margin-left: 0;
+}
+
+.fb-folder-aggregation {
+	color: #45911c;
+}

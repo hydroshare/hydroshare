@@ -117,6 +117,7 @@ function updateSelectionMenuContext() {
             cut: true,
             delete: true,
             contentTypeOperations: true,
+            setFileSetFileType: true,
             setGenericFileType: true,
             setGeoRasterFileType: true,
             setNetCDFFileType: true,
@@ -137,7 +138,7 @@ function updateSelectionMenuContext() {
         UIState.paste = false;
         UIState.zip = false;
         UIState.setGenericFileType = false;
-        UIState.setFileSetFileType = true;
+        UIState.setFileSetFileType = false;
         UIState.setGeoRasterFileType = false;
         UIState.setNetCDFFileType = false;
         UIState.setGeoFeatureFileType = false;
@@ -167,8 +168,7 @@ function updateSelectionMenuContext() {
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
     else if (selected.length == 1) {
-        // Exactly one file selected
-        UIState.setFileSetFileType = false;
+        // Exactly one file or folder selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
             UIState.download = false;
@@ -217,6 +217,7 @@ function updateSelectionMenuContext() {
         UIState.paste = false;
         UIState.zip = false;
         UIState.contentTypeOperations  = false;
+        UIState.setFileSetFileType = false;
         if (!selected.children('span').hasClass('fb-logical-file-type')){
             UIState.removeAggregation = false;
         }
@@ -239,12 +240,9 @@ function updateSelectionMenuContext() {
     }
 
     if (selected.hasClass("fb-folder")) {
-        UIState.download = true;
         UIState.unzip = false;
-        UIState.getLink = true;
         UIState.setGenericFileType = false;
         UIState.setRefTimeseriesFileType = false;
-        UIState.setFileSetFileType = true;
         if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
             selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
             UIState.removeAggregation = false;
@@ -359,6 +357,10 @@ function updateSelectionMenuContext() {
 
     // Content Type operations
     menu.children("[data-menu-name='content-type']").toggleClass("hidden", !UIState.contentTypeOperations);
+
+    // Add metadata
+    $("#btn-set-generic-file-type").toggleClass("hidden", !UIState.setGenericFileType);
+    $("#btn-set-fileset-file-type").toggleClass("hidden", !UIState.setFileSetFileType);
 
     $("#open-separator").toggleClass("hidden", !UIState.open);
     $("#zip-separator").toggleClass("hidden", !UIState.zip);
@@ -1714,7 +1716,7 @@ $(document).ready(function () {
      });
 
      // set remove aggregation (file type) method
-     $("#btnRemoveAggregation").click(function () {
+     $("#btn-remove-aggregation").click(function () {
          removeAggregation();
      });
 
