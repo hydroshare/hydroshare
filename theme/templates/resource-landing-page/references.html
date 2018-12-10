@@ -12,7 +12,7 @@
             <table class="info-table">
                 {% for source in sources %}
                     <tr>
-                        <th class="dataset-label"><strong>Derived From:</strong></th>
+                        <td class="dataset-label">Derived From:</td>
                         <td class="dataset-details">{{ source.derived_from|urlize }}</td>
                     </tr>
                 {% endfor %}
@@ -26,7 +26,29 @@
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" %}
                         <tr>
-                            <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
+                            <td class="dataset-label">
+                                {% if relation.type == "isHostedBy" %}
+                                    The content of this resource is hosted by:
+                                {% elif relation.type == "isCopiedFrom" %}
+                                    The content of this resource was copied from:
+                                {% elif relation.type == "isPartOf" %}
+                                    The content of this resource is part of:
+                                {% elif relation.type == "isExecutedBy" %}
+                                    The content of this resource can be executed by:
+                                {% elif relation.type == "isCreatedBy" %}
+                                    The content of this resource was created by:
+                                {% elif relation.type == "isDataFor" %}
+                                    The content of this resource serves as the data for:
+                                {% elif relation.type == "cites" %}
+                                    This resource cites:
+                                {% elif relation.type == "isDescribedBy" %}
+                                    This resource is described by:
+                                {% elif relation.type == "IsReferencedBy" %}
+                                    This resource is referenced by:
+                                {% else %}
+                                    {{ relation.type }}
+                                {% endif %}
+                            </td>
                             <td class="dataset-details">{{ relation.value|urlize }}</td>
                         </tr>
                     {% endif %}
@@ -66,16 +88,16 @@ If this resource was derived from another resource, click this button to create 
             <tbody>
             {% for source in source_formset.initial %}
                 <tr>
-                    <th scope="row" class="dataset-label">Derived From:</th>
+                    <td scope="row" class="dataset-label">Derived From:</td>
                     <td class="dataset-details">{{ source.derived_from|urlize }}</td>
                     <td>
-                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                           data-target="#edit-source-dialog{{ source.id }}"></a>
-                         <a data-toggle="modal" data-placement="auto"
-                           title="Remove"
-                           class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                           data-target="#delete-source-element-dialog{{ source.id }}"></a>
+                        <span data-toggle="modal" data-placement="auto" title="Edit"
+                              class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                              data-target="#edit-source-dialog{{ source.id }}"></span>
+                        <span data-toggle="modal" data-placement="auto"
+                              title="Remove"
+                              class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                              data-target="#delete-source-element-dialog{{ source.id }}"></span>
                     </td>
                 </tr>
             {% endfor %}
@@ -115,9 +137,31 @@ Click this button to add a relationship to another resource, external website, o
             {% for relation in relation_formset.initial %}
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
-                        <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                        <td scope="row" class="dataset-label">
+                            {% if relation.type == "isHostedBy" %}
+                                The content of this resource is hosted by:
+                            {% elif relation.type == "isCopiedFrom" %}
+                                The content of this resource was copied from:
+                            {% elif relation.type == "isPartOf" %}
+                                The content of this resource is part of:
+                            {% elif relation.type == "isExecutedBy" %}
+                                The content of this resource can be executed by:
+                            {% elif relation.type == "isCreatedBy" %}
+                                The content of this resource was created by:
+                            {% elif relation.type == "isDataFor" %}
+                                The content of this resource serves as the data for:
+                            {% elif relation.type == "cites" %}
+                                This resource cites:
+                            {% elif relation.type == "isDescribedBy" %}
+                                This resource is described by:
+                            {% elif relation.type == "IsReferencedBy" %}
+                                This resource is referenced by:
+                            {% else %}
+                                {{ relation.type }}
+                            {% endif %}
+                        </td>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
-                        <td>
+                        <td style="min-width: 120px;">
                             <span data-toggle="modal" data-placement="auto" title="Edit"
                                class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
                                data-target="#edit-relation-dialog_{{ relation.id }}">

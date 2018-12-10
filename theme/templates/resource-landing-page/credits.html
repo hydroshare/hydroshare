@@ -126,7 +126,7 @@
                             {{ contributor.address }}{% endif %}</td>
                         <td>{% if  contributor.phone %}
                             {{ contributor.phone }}{% endif %}</td>
-                       <td>
+                        <td>
                             {% for name, link in contributor.identifiers.items %}
                                 {{ identif.name }}
                                 <a href="{{ link }}"
@@ -134,14 +134,14 @@
                                 {% if not forloop.last %}, {% endif %}
                             {% endfor %}
                         </td>
-                        <td>
+                        <td style="min-width: 120px;">
                             <span data-toggle="modal" data-placement="auto" title="Edit"
-                               class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                               data-target="#edit-contributor-dialog{{ contributor.id }}">
+                                  class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                                  data-target="#edit-contributor-dialog{{ contributor.id }}">
                             </span>
                             <span data-toggle="modal" data-placement="auto" title="Remove"
-                               class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                               data-target="#delete-contributor-dialog{{ contributor.id }}">
+                                  class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                  data-target="#delete-contributor-dialog{{ contributor.id }}">
                             </span>
                         </td>
                     </tr>
@@ -166,7 +166,7 @@
             <table class="table hs-table table-striped funding-agencies-table">
                 <tbody>
                 <tr class="header-row">
-                    <th><strong>Agency Name</strong></th>
+                    <th>Agency Name</th>
                     <th>Award Title</th>
                     <th>Award Number</th>
                     <th></th>

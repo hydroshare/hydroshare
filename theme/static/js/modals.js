@@ -55,8 +55,15 @@ $(document).ready(function() {
         $("#license-agree-dialog-bag").modal('hide');
     });
 
-    $("#btn-add-author, #btn-add-hydroshare-user").click(function() {
+    $("#btn-add-author, #btn-add-hydroshare-user").click(function () {
+        $(this).text("Saving Changes...");
+        $(this).addClass("disabled");
         get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)
+    });
+
+    $("#btn-add-relation, #btn-edit-relation, #btn-add-source, #btn-edit-source, #btn-edit-contributor, .btn-save-funding-agency").click(function () {
+        $(this).text("Saving Changes...");
+        $(this).addClass("disabled");
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);

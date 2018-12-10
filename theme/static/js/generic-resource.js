@@ -732,7 +732,6 @@ $(document).ready(function () {
             $("#invite-flag button[data-value='groups']").addClass("btn-default");
             $("#invite-flag button[data-value='users']").removeClass("btn-default");
             $("#invite-flag button[data-value='users']").addClass("btn-primary");
-
         }
         else {
             $(".add-view-group-form").show();
