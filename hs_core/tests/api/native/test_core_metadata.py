@@ -538,7 +538,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
         # now create coverage of type 'point' with all valid data
-        value_dict = {'east': '120.45678', 'north': '80.60', 'units': 'decimal deg'}
+        value_dict = {'east': '120.45678', 'north': '0.0', 'units': 'decimal deg'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
         self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1)
 

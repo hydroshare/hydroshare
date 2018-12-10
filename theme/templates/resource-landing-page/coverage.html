@@ -49,12 +49,12 @@
                             {% if spatial_coverage.north is not None or spatial_coverage.northlimit is not None %}
                                 <div class="row coordinates-list-container">
                                     {% if spatial_coverage.type == 'point' %}
-                                        {% if spatial_coverage.east %}
+                                        {% if spatial_coverage.east is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>Longitude</strong>
                                                 <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.north %}
+                                        {% if spatial_coverage.north is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>Latitude</strong>
                                                 <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
                                             </div>
