@@ -409,6 +409,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
                'quota_holder': qholder,
+               'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and
