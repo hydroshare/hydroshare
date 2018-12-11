@@ -143,13 +143,13 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
-        single_file = ''
+        is_single_file_aggregation = ''
         if resource.resource_type == "CompositeResource":
             if f.has_logical_file:
                 logical_file_type = f.logical_file_type_name
                 logical_file_id = f.logical_file.id
                 aggregation_name = f.aggregation_display_name
-                single_file = f.logical_file.is_single_file_aggregation
+                is_single_file_aggregation = f.logical_file.is_single_file_aggregation
                 if 'url' in f.logical_file.extra_data:
                     f_ref_url = f.logical_file.extra_data['url']
 
@@ -158,7 +158,7 @@ def data_store_structure(request):
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
                       'logical_file_id': logical_file_id,
-                      'single_file': single_file})
+                      'is_single_file_aggregation': is_single_file_aggregation})
 
     return_object = {'files': files,
                      'folders': dirs,
