@@ -1007,12 +1007,12 @@ class CoverageSpatialForm(forms.Form):
         if spatial_coverage_type == 'point':
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
-            if not north:
+            if not north and north != 0:
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
                 del self.cleaned_data['north']
 
-            if not east:
+            if not east and east != 0:
                 self._errors['east'] = ["Data for east is missing"]
                 is_form_errors = True
                 del self.cleaned_data['east']

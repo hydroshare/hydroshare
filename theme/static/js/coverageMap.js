@@ -108,7 +108,7 @@ function drawInitialShape() {
                 }
             }
 
-            if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+            if (bounds.north === null || bounds.south === null || bounds.east === null || bounds.west === null) {
                 return;
             }
             // Define the rectangle and set its editable property to true.
