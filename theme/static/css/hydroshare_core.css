@@ -5056,6 +5056,16 @@ a[data-toggle="modal"] {
   font-size:15px;
   color:lightblue;
 }
+
+#coverage-spatial input[type=number]::-webkit-inner-spin-button,
+#coverage-spatial input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+#coverage-spatial input[type=number] {
+	-moz-appearance: textfield;
+}
+
 /*====================================
 	UTILITY CLASSES
 ====================================*/
