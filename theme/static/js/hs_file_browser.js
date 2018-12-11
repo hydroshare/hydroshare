@@ -442,7 +442,10 @@ function updateSelectionMenuContext() {
     if (selected.hasClass("fb-file")) {
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
+
         uiActionStates.paste.disabled = true;
+        uiActionStates.paste.fileMenu.hidden = true;
+
         uiActionStates.zip.disabled = true;
         uiActionStates.zip.fileMenu.hidden = true;
     }

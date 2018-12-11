@@ -1393,8 +1393,9 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
         },
         success: function (result) {
         },
-        error: function(xhr, errmsg, err){
-            display_error_message('Edit reference url Failed', xhr.responseText);
+        error: function (xhr, errmsg, err) {
+            // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
+            display_error_message('Error: failed to edit reference URL.');
         }
     });
 }
