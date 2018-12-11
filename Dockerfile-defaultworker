@@ -1,0 +1,38 @@
+FROM hydroshare/hs_docker_base:release-1.9.1
+MAINTAINER Phuong Doan pdoan@cuahsi.org
+
+# inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
+RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355defedf769a5f06edc8fc079a6e982ec
+
+#USER root
+WORKDIR /hydroshare
+
+#ADD hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
+## TODO PARAMETERIZE
+#RUN usermod -u 1000 hydro-service
+## TODO PARAMETERIZE
+#RUN groupmod -g 1000 storage-hydro
+#RUN mkdir /hs_tmp
+#RUN mkdir /shared_tmp
+#RUN chown -R hydro-service:storage-hydro /etc/ssh
+#RUN chown -R hydro-service:storage-hydro /hs_tmp
+#RUN chown -R hydro-service:storage-hydro /shared_tmp
+
+RUN mkdir /hydroshare/celery
+# TODO add message or log so when hydroshare is down explain that this fails likely because of that
+# TODO move celerybeat sched to logdir
+RUN celery beat -A hydroshare -s /hydroshare/celery/celerybeat-schedule &
+RUN cd /hydroshare
+CMD celery worker -A hydroshare -E -Q default
+
+#CMD ["runuser", "-p", "-u", "hydro-service", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+
+
+#
+#cd /hydroshare
+#usermod -u HS_SERVICE_UID hydro-service
+#groupmod -g HS_SERVICE_GID storage-hydro
+#
+#celery beat -A hydroshare -s /hydroshare/celery/celerybeat-schedule &
+#celery worker -A hydroshare -E -Q default

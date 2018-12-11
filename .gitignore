@@ -1,3 +1,5 @@
+.pgdata/**
+.pgdata
 *.pyc
 *.pyo
 *.db
