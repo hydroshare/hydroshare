@@ -40,7 +40,7 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url) {
+function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url, is_single_file_aggregation) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
 
     var iconTemplate;
@@ -63,7 +63,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
+    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" + is_single_file_aggregation + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
@@ -612,7 +612,7 @@ function bindFileBrowserItemEvents() {
 
             var fileAggType = [];
             // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
-            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("data-pk") === "1"){
+            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("is-single-file-aggregation") === "true"){
                 fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
             var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
