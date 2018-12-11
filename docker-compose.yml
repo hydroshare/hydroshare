@@ -1,92 +1,116 @@
-postgis:
-  image: hydroshare/hs_postgres:9.4.7
-  container_name: postgis
-  volumes:
-    - ./.pgdata:/var/lib/postgresql/data
-  ports:
-    - "54322:5432"
-redis:
-  image: redis:2.8
-  container_name: redis
-rabbitmq:
-  image: rabbitmq:3.5
-  container_name: rabbitmq
-solr:
-  image: solr:6.6
-  container_name: solr
-  volumes:
-    # hydroshare repository
-    - "${SOURCEDIR}:/hydroshare"
-  # ports:
-  # - "8983"
-  command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
-hydroshare:
-  build: .
-  container_name: hydroshare
-  cap_add:
-    - SYS_ADMIN
-  devices:
-    - "/dev/fuse"
-  privileged: true
-  environment:
-    POSTGIS_HOST: postgis
-    POSTGIS_PORT: 5432
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
-    POSTGIS_PASSWORD: postgres
-    POSTGIS_DB: postgres
-    POSTGIS_USER: postgres
-    PGPASSWORD: postgres
-    SOLR_HOST: solr
-    TMP: /hs_tmp
-    HS_PATH: ${PWD}
-    PYTHONPATH: /hydroshare
-    DJANGO_SETTINGS_MODULE: hydroshare.settings
-  volumes:
-    # hydroshare repository
-    - "${SOURCEDIR}:/hydroshare"
-    # log files
-    - "${LOGDIR}:/hydroshare/log"
-    # shared location for gunicorn.sock between containers
-    - "/hs_tmp"
-    # temp directory shared with celery workers
-    - "/shared_tmp"
-    ## Large File download support (two lines below):
-    #- "/irods/hydroshare:/irods/hydroshare"
-    #- "/irods/hydroshare_vault:/irods/hydroshare_vault"
-  ports:
-    - "1338:2022"
-    - "8000:8000"
-    - "15001:15001"
-  links:
-    - postgis:postgis
-    - redis:redis
-    - rabbitmq:rabbitmq
-    - solr:solr
-  stdin_open: true
-  tty: true
-defaultworker:
-  build: .
-  dockerfile: Dockerfile-defaultworker
-  container_name: defaultworker
-  environment:
-    POSTGIS_HOST: postgis
-    POSTGIS_PORT: 5432
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
-    POSTGIS_PASSWORD: postgres
-    POSTGIS_DB: postgres
-    PGPASSWORD: postgres
-    C_FORCE_ROOT: 1
-    PYTHONPATH: /hydroshare
-    DJANGO_SETTINGS_MODULE: hydroshare.settings
-  volumes_from:
-    - hydroshare
-  volumes:
-    - "/var/run/docker.sock:/docker.sock"
-  links:
-    - postgis:postgis
-    - redis:redis
-    - rabbitmq:rabbitmq
-  stdin_open: true
-  tty: true
+version: '3'
+services:
+  postgis:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgis
+    container_name: postgis
+    hostname: postgis
+    volumes:
+      - "./.pgdata:/var/lib/postgresql/data"
+    ports:
+      - "54322:5432"
+    stdin_open: true
+    tty: true
+  redis:
+    image: redis:2.8
+    container_name: redis
+    stdin_open: true
+    tty: true
+  rabbitmq:
+    image: rabbitmq:3.5
+    container_name: rabbitmq
+  solr:
+    image: solr:6.6
+    container_name: solr
+    volumes:
+      - "${SOURCEDIR}:/hydroshare"
+    # ports:
+    # - "8983"
+    stdin_open: true
+    tty: true
+    command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+  hydroshare:
+    build:
+      context: .
+      dockerfile: Dockerfile-hydroshare
+    container_name: hydroshare
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/fuse"
+    privileged: true
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      SOLR_HOST: solr
+      TMP: /hs_tmp
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+    volumes:
+      # hydroshare repository
+      - ".:/hydroshare"
+      # log files
+      - "${LOGDIR}:/hydroshare/log"
+      # shared location for gunicorn.sock between containers
+      - "/hs_tmp"
+      # temp directory shared with celery workers
+      - "/shared_tmp"
+      ## Large File download support (two lines below):
+      #- "/irods/hydroshare:/irods/hydroshare"
+      #- "/irods/hydroshare_vault:/irods/hydroshare_vault"
+    ports:
+      - "1338:2022"
+      - "8000:8000"
+      - "15001:15001"
+    links:
+      - postgis:postgis
+      - redis:redis
+      - rabbitmq:rabbitmq
+      - solr:solr
+    depends_on:
+      - postgis
+      - redis
+      - solr
+    stdin_open: true
+    tty: true
+  defaultworker:
+    build:
+      context: .
+      dockerfile: Dockerfile-defaultworker
+    container_name: defaultworker
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+#    volumes_from:
+#      - hydroshare
+    volumes:
+      - ".:/hydroshare"
+      - "/var/run/docker.sock:/docker.sock"
+    links:
+      - postgis:postgis
+      - redis:redis
+      - rabbitmq:rabbitmq
+    depends_on:
+      - hydroshare
+      - postgis
+    stdin_open: true
+    tty: true
