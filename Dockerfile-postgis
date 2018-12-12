@@ -42,7 +42,9 @@ RUN chown -R postgres /var/lib/postgresql/data
 
 
 
-
+#WARNING: enabling "trust" authentication for local connections
+#You can change this by editing pg_hba.conf or using the option -A, or
+#--auth-local and --auth-host, the next time you run initdb.
 
 
 

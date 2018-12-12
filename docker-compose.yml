@@ -1,5 +1,6 @@
 version: '3'
 #TODO clocks and timezones
+#TODO add devops admin network tools
 services:
   postgis:
     build:
@@ -8,7 +9,7 @@ services:
     container_name: postgis
     hostname: postgis
     volumes:
-      - "./.pgdata:/var/lib/postgresql/data"
+      - "pgdatavol:/var/lib/postgresql/data"
     ports:
       - "54322:5432"
     stdin_open: true
@@ -29,15 +30,11 @@ services:
       - "8983:8983"
     stdin_open: true
     tty: true
-    cap_add:
-      - SYS_ADMIN
   hydroshare:
     build:
       context: .
       dockerfile: Dockerfile-hydroshare
     container_name: hydroshare
-    cap_add:
-      - SYS_ADMIN
     devices:
       - "/dev/fuse"
     privileged: true
@@ -77,7 +74,6 @@ services:
       - postgis:postgis
       - redis:redis
       - solr:solr
-    # TODO wait for service not container. postgres needs to be up and ready
     depends_on:
       - postgis
       - redis
@@ -119,3 +115,6 @@ services:
       - redis
     stdin_open: true
     tty: true
+
+volumes:
+  pgdatavol:
