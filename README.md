@@ -26,14 +26,16 @@ Supported Operating Systems: macOS 10.12+, Windows 10 Professional and Enterpris
 ### first build
 docker-compose up --build
 
-### (optional) db teardown will stop all connections and drop the database, losing all local data permanently
-docker exec postgis psql -U postgres -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
-docker exec postgis psql -U postgres -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
-docker exec postgis dropdb -U postgres postgres
+_Note that hydroshare and defaultworker will complain about the database not listening on port 5432 this is normal_ 
+
+###
+(open another terminal or shell window since the other one is in interactive logging mode for all containers)
 
 ### db options
-docker exec postgis yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
-docker exec postgis yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
+docker exec postgis echo "listen_addresses = '*' >> /var/lib/postgresql/data/postgresql.conf"
+
+SKIP THIS STEP FOR NOW docker exec postgis yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
+SKIP THIS STEP FOR NOW docker exec postgis yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
 
 ### db create
 docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION postgis;'
@@ -42,13 +44,13 @@ docker exec postgis createdb -U postgres postgres --encoding UNICODE --template=
 docker exec postgis psql -U postgres -f /app/pg.development.sql
 docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages TO WARNING;'
 
+### restart everything
+<Ctrl-C> (in original docker-compose window where containers are logging to console)
+docker-compose up
+
 ### db migrate
 docker exec -u hydro-service hydroshare python manage.py migrate
 docker exec -u hydro-service hydroshare python manage.py fix_permissions
-
-### restart everything
-<Ctrl-C>
-docker-compose up
 
 ### static assets
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
@@ -58,7 +60,15 @@ docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
 docker exec hydroshare python manage.py rebuild_index --noinput
 docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
+## Troubleshooting and Advanced Operations
+Customizing environment and redoing containers involves knowledge of docker
 
+Some useful commands that you may need as a part of custom setups or partial environment rebuilds
+
+### (optional) db teardown will stop all connections and drop the database, losing all local data permanently
+docker exec postgis psql -U postgres -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+docker exec postgis psql -U postgres -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+docker exec postgis dropdb -U postgres postgres
 
 ## Contribute
 

@@ -1,5 +1,6 @@
 FROM postgres:9.4.7
 
+USER root
 #WORKDIR /app
 
 ADD ./conf_postgres/pg.development.sql /app/pg.development.sql
@@ -20,6 +21,10 @@ RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN cp /docker-entrypoint.sh /usr/local/bin/
 
+USER postgres
+
+RUN echo "listen_addresses = '*' >> /var/lib/postgresql/data/postgresql.conf"
+
 # TODO does not work
 #RUN yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
 #RUN yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
@@ -30,4 +35,4 @@ RUN cp /docker-entrypoint.sh /usr/local/bin/
 #EXPOSE 5432
 #ENTRYPOINT ["docker-entrypoint.sh"]
 #
-#CMD ["postgres"]
+CMD ["/usr/lib/postgresql/9.4/bin/postgres", "-c", "config_file=/app/postgresql.conf"]
