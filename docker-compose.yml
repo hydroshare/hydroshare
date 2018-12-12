@@ -9,7 +9,7 @@ services:
     container_name: postgis
     hostname: postgis
     volumes:
-      - "pgdatavol:/var/lib/postgresql/data"
+      - "./.pgdata:/var/lib/postgresql/data"
     ports:
       - "54322:5432"
     stdin_open: true
@@ -115,11 +115,3 @@ services:
       - redis
     stdin_open: true
     tty: true
-
-volumes:
-  pgdatavol:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/.pgdata
-      o: bind

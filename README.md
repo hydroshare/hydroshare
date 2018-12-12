@@ -22,9 +22,11 @@ Supported Operating Systems: macOS 10.12+, Windows 10 Professional and Enterpris
 
 ### Environment Variables
 - Set LOGDIR to local directory for log outputs
+- (Windows users only) set the user environment variable PWD to <directory where hydroshare repo was cloned to> for me this is `C:\Users\<username>\repo\hydroshare`
 
 ### first build
-docker-compose up --build
+- (Windows users only) edit `docker-compose.yml` postgis `volumes` line to read "- pgdatavol:/var/lib/postgresql/data" meaning there will be no persistence for now
+- docker-compose up --build
 
 _Note that hydroshare and defaultworker will complain about the database not listening on port 5432 this is normal_ 
 
