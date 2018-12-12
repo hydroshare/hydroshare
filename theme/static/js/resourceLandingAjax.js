@@ -1203,7 +1203,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 $.each(files, function(i, v) {
                     $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
                         v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-                        v['size'], v['pk'], v['url'], v['reference_url']));
+                        v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
                 });
             }
             if (folders.length > 0) {
