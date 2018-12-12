@@ -399,6 +399,7 @@ function updateSelectionMenuContext() {
         uiActionStates.zip.disabled = true;
         uiActionStates.delete.disabled = true;
         uiActionStates.download.disabled = true;
+        uiActionStates.downloadZipped.disabled = true;
         uiActionStates.getLink.disabled = true;
         uiActionStates.setGenericFileType.disabled = true;
         uiActionStates.setFileSetFileType.disabled = true;
