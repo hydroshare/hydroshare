@@ -58,7 +58,11 @@ $(document).ready(function() {
     $("#btn-add-author, #btn-add-hydroshare-user").click(function () {
         $(this).text("Saving Changes...");
         $(this).addClass("disabled");
-        get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)
+        var response = get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this);
+        if (!response) {
+            $(this).text("Save Changes");
+            $(this).removeClass("disabled");
+        }
     });
 
     $("#btn-add-relation, #btn-edit-relation, #btn-add-source, #btn-edit-source, #btn-edit-contributor, .btn-save-funding-agency").click(function () {

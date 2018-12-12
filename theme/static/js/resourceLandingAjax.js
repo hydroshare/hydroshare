@@ -1098,7 +1098,7 @@ function get_user_info_ajax_submit(url, obj) {
         is_group = true;
     }
     if (entry.length < 1) {
-        return;
+        return false;
     }
 
     var userID = entry[0].getAttribute("data-value");
@@ -1144,6 +1144,8 @@ function get_user_info_ajax_submit(url, obj) {
 
         }
     });
+
+    return true;
 }
 
 function display_error_message(title, err_msg) {
