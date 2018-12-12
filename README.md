@@ -53,6 +53,8 @@ docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages 
 <Ctrl-C> (in original docker-compose window where containers are logging to console)
 docker-compose up
 TODO will get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/
+<Ctrl-C>
+docker-compose up
 
 ### db migrate
 docker exec -u hydro-service hydroshare python manage.py migrate
