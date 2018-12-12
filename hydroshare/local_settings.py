@@ -22,8 +22,8 @@ COMMENTS_ACCOUNT_REQUIRED = True
 RATINGS_ACCOUNT_REQUIRED = True
 COMMENTS_USE_RATINGS = True
 
-RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
-RABBITMQ_PORT = '5672'
+# RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
+# RABBITMQ_PORT = '5672'
 
 REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
 REDIS_PORT = 6379
@@ -41,15 +41,14 @@ WMS_CACHE_DB = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     db=5)
-PERMISSIONS_DB= redis.Redis(
+PERMISSIONS_DB = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     db=6)
 
-
-IPYTHON_SETTINGS=[]
-IPYTHON_BASE='/hydroshare/static/media/ipython-notebook'
-IPYTHON_HOST='127.0.0.1'
+IPYTHON_SETTINGS = []
+IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
+IPYTHON_HOST = '127.0.0.1'
 
 # celery settings
 # customizations: we need a special queue for broadcast signals to all
@@ -60,7 +59,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_DEFAULT_QUEUE = 'default'
-DEFAULT_EXCHANGE=Exchange('default', type='topic')
+DEFAULT_EXCHANGE = Exchange('default', type='topic')
 
 CELERY_QUEUES = (
     Queue('default', DEFAULT_EXCHANGE, routing_key='task.default'),
@@ -73,16 +72,13 @@ CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
-
 # CartoCSS
-CARTO_HOME='/hs_tmp/node_modules/carto'
-
+CARTO_HOME = '/hs_tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
 
 #############
 # DATABASES #
@@ -104,7 +100,7 @@ DATABASES = {
         "PORT": POSTGIS_PORT,
     }
 }
-POSTGIS_VERSION=(2,1,1)
+POSTGIS_VERSION = (2, 1, 1)
 
 # Local resource iRODS configuration
 USE_IRODS = True
@@ -124,7 +120,7 @@ IRODS_GLOBAL_SESSION = True
 REMOTE_USE_IRODS = False
 
 # iRODS customized bagit rule path
-IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
+IRODS_BAGIT_RULE = 'hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
@@ -173,19 +169,19 @@ HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-#EMAIL_HOST_USER = ''
-#EMAIL_HOST_PASSWORD = ''
-#EMAIL_HOST = ''
-#EMAIL_PORT = ''
-#EMAIL_USE_TLS = True
-#DEFAULT_FROM_EMAIL = ''
-#DEFAULT_SUPPORT_EMAIL=''
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_HOST = ''
+# EMAIL_PORT = ''
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = ''
+# DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
 TIME_ZONE = "Etc/UTC"
 
-#used by the mailchimp subscription job in hs_core/tasks.py
+# used by the mailchimp subscription job in hs_core/tasks.py
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
@@ -196,15 +192,15 @@ IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
 
-RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
 # TODO see if this can be refactored removed
-with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
 # insert a google maps key here when in production
-MAPS_KEY=''
+MAPS_KEY = ''
