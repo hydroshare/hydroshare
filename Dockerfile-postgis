@@ -2,10 +2,10 @@ FROM postgres:9.4.7
 
 #WORKDIR /app
 
-ADD pg.development.sql /app/pg.development.sql
+ADD ./conf_postgres/pg.development.sql /app/pg.development.sql
+ADD ./conf_postgres/pg_hba.conf /app/pg_hba.conf
+ADD ./conf_postgres/postgresql.conf /app/postgresql.conf
 
-
-#TODO when mkdir use -p to be more reliable
 RUN mkdir -p /app
 RUN apt-get update && apt-get install -y \
     sudo \
@@ -18,44 +18,16 @@ RUN apt-get update && apt-get install -y \
     postgresql-contrib-9.4
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN cp /docker-entrypoint.sh /usr/local/bin/
+
+# TODO does not work
+#RUN yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
+#RUN yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
+
 #RUN useradd postgres
-RUN chown -R postgres /var/lib/postgresql/data
-
-
-#TODO this is broken
-#RUN echo "listen_addresses = '*' >> /var/lib/postgresql/data/postgresql.conf"
-
-
-
-
-
-
-#RUN psql -U postgres -f /app/pg.development.sql
-
-#RUN cp /docker-entrypoint.sh /usr/local/bin/
+#RUN chown -R postgres /var/lib/postgresql/data
 
 #EXPOSE 5432
 #ENTRYPOINT ["docker-entrypoint.sh"]
-
-
-#CMD ["postgres"]
-
-
-
-#WARNING: enabling "trust" authentication for local connections
-#You can change this by editing pg_hba.conf or using the option -A, or
-#--auth-local and --auth-host, the next time you run initdb.
-
-
-
-
-
-#RUN echo "listen_addresses = '*'" >> /var/lib/postgresql/data/postgresql.conf
-
-
-
-
-#ENTRYPOINT ["/docker-entrypoint.sh"]
 #
-#EXPOSE 5432
 #CMD ["postgres"]

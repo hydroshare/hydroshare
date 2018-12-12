@@ -118,3 +118,8 @@ services:
 
 volumes:
   pgdatavol:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/.pgdata
+      o: bind
