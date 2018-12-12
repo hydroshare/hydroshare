@@ -18,9 +18,14 @@ This README file is for developers interested in working on the Hydroshare code 
 
 If you want to install and run the source code of application locally and/or contribute to development, read on.
 
+Supported Operating Systems: macOS 10.12+, Windows 10 Professional and Enterprise, CentOS 7 (many others will work but haven't been officially tested)
+
 ### Environment Variables
 - Set LOGDIR to local directory for log outputs
 - Set SOURCEDIR to path where the repo was cloned to, such as `/User/<account>/hydroshare`
+
+### first build
+docker-compose up --build
 
 ### (optional) db teardown will stop all connections and drop the database, losing all local data permanently
 docker exec postgis psql -U postgres -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
@@ -41,12 +46,14 @@ docker exec -u hydro-service hydroshare python manage.py fix_permissions
 ### static assets
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
-docker restart hydroshare
 
 ### rebuild solr index
 docker exec hydroshare python manage.py rebuild_index --noinput
 docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
+### restart everything
+<Ctrl-C>
+docker-compose up
 
 ## Contribute
 

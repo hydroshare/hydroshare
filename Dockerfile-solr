@@ -9,8 +9,8 @@ RUN ["mkdir", "/opt/solr/server/solr/collection1"]
 RUN ["mkdir", "/opt/solr/server/solr/collection1/conf"]
 RUN ["mkdir", "/opt/solr/server/solr/index"]
 
-# TODO Is a reload required here?
-RUN rm /opt/solr/server/solr/collection1/conf/managed-schema
+# TODO Is a reload required here? Is this even necessary?
+#RUN rm /opt/solr/server/solr/collection1/conf/managed-schema
 
 ADD ./solr/core.properties /opt/solr/server/solr/collection1/core.properties
 ADD ./solr/schema.xml /opt/solr/server/solr/collection1/schema.xml
