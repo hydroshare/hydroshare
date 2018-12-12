@@ -25,7 +25,6 @@ Supported Operating Systems: macOS 10.12+, Windows 10 Professional and Enterpris
 - (Windows users only) set the user environment variable PWD to <directory where hydroshare repo was cloned to> for me this is `C:\Users\<username>\repo\hydroshare`
 
 ### first build
-- (Windows users only) edit `docker-compose.yml` postgis `volumes` line to read "- pgdatavol:/var/lib/postgresql/data" meaning there will be no persistence for now
 - docker-compose up --build
 
 _Note that hydroshare and defaultworker will complain about the database not listening on port 5432 this is normal_ 
@@ -34,12 +33,16 @@ _Note that hydroshare and defaultworker will complain about the database not lis
 (open another terminal or shell window since the other one is in interactive logging mode for all containers)
 
 ### db options
-docker exec postgis echo "listen_addresses = '*' >> /var/lib/postgresql/data/postgresql.conf"
+- MANUALLY LOG INTO POSTGIS AND COPY CONFIGS:
+- docker exec -it postgis /bin/bash
+- yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
+- cat app/postgresql.conf | grep listen_addresses
+_Note: make sure it's listening on all ports_
 
-SKIP THIS STEP FOR NOW docker exec postgis yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
-SKIP THIS STEP FOR NOW docker exec postgis yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
+SKIP THIS BROKEN docker exec postgis yes | cp -f /app/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
+SKIP THIS BROKEN docker exec postgis yes | cp -f /app/postgresql.conf /var/lib/postgresql/data/postgresql.conf
 
-### db create
+### db create (back to a local laptop terminal/shell)
 docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION postgis;'
 docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION hstore;'
 docker exec postgis createdb -U postgres postgres --encoding UNICODE --template=template1
@@ -49,6 +52,7 @@ docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages 
 ### restart everything
 <Ctrl-C> (in original docker-compose window where containers are logging to console)
 docker-compose up
+TODO will get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/
 
 ### db migrate
 docker exec -u hydro-service hydroshare python manage.py migrate
@@ -61,6 +65,8 @@ docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
 ### rebuild solr index
 docker exec hydroshare python manage.py rebuild_index --noinput
 docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+
+DONE!
 
 ## Troubleshooting and Advanced Operations
 Customizing environment and redoing containers involves knowledge of docker
