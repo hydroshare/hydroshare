@@ -17,9 +17,9 @@ services:
     container_name: redis
     stdin_open: true
     tty: true
-  rabbitmq:
-    image: rabbitmq:3.5
-    container_name: rabbitmq
+#  rabbitmq:
+#    image: rabbitmq:3.5
+#    container_name: rabbitmq
   solr:
     image: solr:6.6
     container_name: solr
@@ -74,19 +74,23 @@ services:
     links:
       - postgis:postgis
       - redis:redis
-      - rabbitmq:rabbitmq
+#      - rabbitmq:rabbitmq
       - solr:solr
+    # TODO wait for service not container. postgres needs to be up and ready
     depends_on:
       - postgis
       - redis
       - solr
+#      - rabbitmq
     stdin_open: true
     tty: true
+# defaultworker amq is trying to connet to guest@
   defaultworker:
     build:
       context: .
       dockerfile: Dockerfile-defaultworker
     container_name: defaultworker
+    hostname: defaultworker
     environment:
       POSTGIS_HOST: postgis
       POSTGIS_PORT: 5432
@@ -96,6 +100,7 @@ services:
       POSTGIS_DB: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
+      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: postgis
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
@@ -104,13 +109,17 @@ services:
 #      - hydroshare
     volumes:
       - ".:/hydroshare"
-      - "/var/run/docker.sock:/docker.sock"
+      - "${LOGDIR}:/log"
+#      - "/var/run/docker.sock:/docker.sock"
     links:
       - postgis:postgis
       - redis:redis
-      - rabbitmq:rabbitmq
+#      - rabbitmq:rabbitmq
     depends_on:
       - hydroshare
       - postgis
+      - solr
+      - redis
+#      - rabbitmq
     stdin_open: true
     tty: true
