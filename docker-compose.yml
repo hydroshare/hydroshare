@@ -18,30 +18,12 @@ services:
     container_name: redis
     stdin_open: true
     tty: true
-#  rabbitmq:
-#    image: rabbitmq:3.5
-#    container_name: rabbitmq
-#  solr:
-#    image: solr:6.6
-#    container_name: solr
-#    volumes:
-#      - "${SOURCEDIR}:/hydroshare"
-#    ports:
-#      - "8983:8983"
-#    stdin_open: true
-#    tty: true
-#    command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
   solr:
     build:
       context: .
       dockerfile: Dockerfile-solr
     container_name: solr
     hostname: solr
-#    environment:
-#      SOLR_USER: "solr"
-#      SOLR_UID: "8983"
-#      SOLR_GROUP: "solr"
-#      SOLR_GID: "8983"
     ports:
       - "8983:8983"
     stdin_open: true
@@ -93,14 +75,12 @@ services:
     links:
       - postgis:postgis
       - redis:redis
-#      - rabbitmq:rabbitmq
       - solr:solr
     # TODO wait for service not container. postgres needs to be up and ready
     depends_on:
       - postgis
       - redis
       - solr
-#      - rabbitmq
     stdin_open: true
     tty: true
   defaultworker:
@@ -125,21 +105,16 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
-#    volumes_from:
-#      - hydroshare
     volumes:
       - ".:/hydroshare"
       - "${LOGDIR}:/hydroshare/log"
-#      - "/var/run/docker.sock:/docker.sock"
     links:
       - postgis:postgis
       - redis:redis
-#      - rabbitmq:rabbitmq
     depends_on:
       - hydroshare
       - postgis
       - solr
       - redis
-#      - rabbitmq
     stdin_open: true
     tty: true

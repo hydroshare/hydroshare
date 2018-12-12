@@ -18,32 +18,32 @@ This README file is for developers interested in working on the Hydroshare code 
 
 If you want to install and run the source code of application locally and/or contribute to development, read on.
 
+### Environment Variables
+- Set LOGDIR to local directory for log outputs
+- Set SOURCEDIR to path where the repo was cloned to, such as `/User/<account>/hydroshare`
 
-
-# db teardown
+### (optional) db teardown will stop all connections and drop the database, losing all local data permanently
 docker exec postgis psql -U postgres -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
 docker exec postgis psql -U postgres -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
 docker exec postgis dropdb -U postgres postgres
 
-# db create
+### db create
 docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION postgis;'
 docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION hstore;'
 docker exec postgis createdb -U postgres postgres --encoding UNICODE --template=template1
 docker exec postgis psql -U postgres -f /app/pg.development.sql
 docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages TO WARNING;'
 
-# db migrate
+### db migrate
 docker exec -u hydro-service hydroshare python manage.py migrate
 docker exec -u hydro-service hydroshare python manage.py fix_permissions
 
-
-# static assets
+### static assets
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
 docker restart hydroshare
 
-
-# rebuild solr index
+### rebuild solr index
 docker exec hydroshare python manage.py rebuild_index --noinput
 docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 

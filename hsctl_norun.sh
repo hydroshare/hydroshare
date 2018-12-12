@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# DO NOT USE THIS FILE IT IS A REFERENCE AND WILL BE REMOVED AFTER TESTING
 #git submodule init && git submodule update
 
 # db teardown
