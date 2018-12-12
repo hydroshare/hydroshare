@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -y \
     postgresql-contrib-9.4
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
+#RUN useradd postgres
+RUN chown -R postgres /var/lib/postgresql/data
 
 
 #TODO this is broken

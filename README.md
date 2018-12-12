@@ -22,7 +22,6 @@ Supported Operating Systems: macOS 10.12+, Windows 10 Professional and Enterpris
 
 ### Environment Variables
 - Set LOGDIR to local directory for log outputs
-- Set SOURCEDIR to path where the repo was cloned to, such as `/User/<account>/hydroshare`
 
 ### first build
 docker-compose up --build
