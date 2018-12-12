@@ -1,4 +1,5 @@
 version: '3'
+#TODO clocks and timezones
 services:
   postgis:
     build:
@@ -20,16 +21,33 @@ services:
 #  rabbitmq:
 #    image: rabbitmq:3.5
 #    container_name: rabbitmq
+#  solr:
+#    image: solr:6.6
+#    container_name: solr
+#    volumes:
+#      - "${SOURCEDIR}:/hydroshare"
+#    ports:
+#      - "8983:8983"
+#    stdin_open: true
+#    tty: true
+#    command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
   solr:
-    image: solr:6.6
+    build:
+      context: .
+      dockerfile: Dockerfile-solr
     container_name: solr
-    volumes:
-      - "${SOURCEDIR}:/hydroshare"
-    # ports:
-    # - "8983"
+    hostname: solr
+#    environment:
+#      SOLR_USER: "solr"
+#      SOLR_UID: "8983"
+#      SOLR_GROUP: "solr"
+#      SOLR_GID: "8983"
+    ports:
+      - "8983:8983"
     stdin_open: true
     tty: true
-    command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+    cap_add:
+      - SYS_ADMIN
   hydroshare:
     build:
       context: .
@@ -49,6 +67,7 @@ services:
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
+      SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /hs_tmp
       POSTGIS_PORT_5432_TCP_ADDR: postgis
@@ -84,8 +103,8 @@ services:
 #      - rabbitmq
     stdin_open: true
     tty: true
-# defaultworker amq is trying to connet to guest@
   defaultworker:
+    # TODO https://docs.docker.com/compose/startup-order/
     build:
       context: .
       dockerfile: Dockerfile-defaultworker
@@ -100,6 +119,7 @@ services:
       POSTGIS_DB: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
+      SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: postgis
       HS_PATH: ${PWD}
@@ -109,7 +129,7 @@ services:
 #      - hydroshare
     volumes:
       - ".:/hydroshare"
-      - "${LOGDIR}:/log"
+      - "${LOGDIR}:/hydroshare/log"
 #      - "/var/run/docker.sock:/docker.sock"
     links:
       - postgis:postgis

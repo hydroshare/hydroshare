@@ -18,75 +18,35 @@ This README file is for developers interested in working on the Hydroshare code 
 
 If you want to install and run the source code of application locally and/or contribute to development, read on.
 
-### [VirtualBox](https://www.virtualbox.org/wiki/Downloads) development environment
 
-To quickly get started developing we offer a preconfigured development environment encapsulated within a virtual box Virtual Machine (VM). This includes the appropriate version of Ubuntu, Python, Docker, and other key dependencies and development tools.
 
-### Simplified Installation Instructions 
-1. Download the [latest OVA file here](http://distribution.hydroshare.org/public_html/)
-2. Open the .OVA file with VirtualBox, this will create a guest VM
-3. Follow the instructions here to share a local hydroshare folder with your guest VM
-4. Start the guest VM
-5. Log into the guest VM with either ssh or the GUI. The default username/password is hydro:hydro
-6. From the root directory `/home/hydro`, clone this repository into the hydroshare folder
-7. `cd` into the hydroshare folder and run `./hsctl rebuild --db` to build the application and run it
-8. If all goes well, your local version of Hydroshare should be running at http://192.168.56.101:8000
+# db teardown
+docker exec postgis psql -U postgres -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+docker exec postgis psql -U postgres -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+docker exec postgis dropdb -U postgres postgres
 
-For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+# db create
+docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION postgis;'
+docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION hstore;'
+docker exec postgis createdb -U postgres postgres --encoding UNICODE --template=template1
+docker exec postgis psql -U postgres -f /app/pg.development.sql
+docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages TO WARNING;'
 
-## Usage
+# db migrate
+docker exec -u hydro-service hydroshare python manage.py migrate
+docker exec -u hydro-service hydroshare python manage.py fix_permissions
 
-For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
-- SOLR for searching
-- Redis for caching
-- RabbitMQ for concurrency and serialization
-- iRODS for a federated file system
-- PostgreSQL for the database backend
 
-#### The `hsctl` Script
+# static assets
+docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
+docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
+docker restart hydroshare
 
-The `hsctl` script is your primary tool in interacting with and running tasks against your Hydroshare install. It has the syntax `./hsccl [command]` where `[command]` is one of:
 
-- `loaddb`: Deletes existing database and reloads the database specified in the `hydroshare-config.yaml` file.
-- `managepy [args]`: Executes a `python manage.py [args]` call on the running hydroshare container.
-- `maint_off`: Removes the maintenance page from view (only if NGINX is being used).
-- `maint_on`: Displays the maintenance page in the browser (only if NGINX is being used).
-- `rebuild`: Stops, removes and deletes only the hydroshare docker containers and images while retaining the database contents on the subsequent build as defined in the `hydroshare-config.yaml` file
-- `rebuild --db`: Fully stops, removes and deletes any prior hydroshare docker containers, images and database contents prior to installing a clean copy of the hydroshare codebase as defined in the `hydroshare-config.yaml` file.
-- `rebuild_index`: Rebuilds the solr/haystack index in a non-interactive way.
-- `restart`: Restarts the django server only (and nginx if applicable).
-- `start`: Starts all containers as defined in the `docker-compose.yml` file (and nginx if applicable).
-- `stop`: Stops all containers as defined in the `docker-compose.yml` file.
-- `update_index`: Updates the solr/haystack index in a non-interactive way.
+# rebuild solr index
+docker exec hydroshare python manage.py rebuild_index --noinput
+docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
-## Testing and Debugging
-
-### Testing
-
-Tests are run via normal Django tools and conventions. However, you should use the `hsctl` script mentioned abouve with the `managepy` command. For example: `./hsctl managepy test hs_core.tests.api.rest.test_resmap --keepdb`.
-
-There are currently over 600 tests in the system, so it is highly recommended that you run the test suites separately from one another.
-
-### Debugging
-
-You can debug via PyCharm by following the instructions [here](https://github.com/hydroshare/hydroshare/wiki/pycharm-configuration).
-
-## Other Configuration Options
-
-### Local iRODS
-
-Local iRODS is _not_ required for development unless you are specifically working on the iRODS integration. However,if you want to work with iRODS or you simply want to learn about it, you can enable it locally.
-
-### Local HTTPS
-
-To enable HTTPS locally:
-1. edit `config/hydroshare-config.template` and change the two values under `### Deployment Options ###` to `true` like so:
-```
-### Deployment Options ###
-USE_NGINX: true
-USE_SSL: true
-```
-2. Run `./hsctl rebuild`
 
 ## Contribute
 
