@@ -62,8 +62,11 @@ $(document).ready(function() {
     });
 
     $("#btn-add-relation, #btn-edit-relation, #btn-add-source, #btn-edit-source, #btn-edit-contributor, .btn-save-funding-agency").click(function () {
-        $(this).text("Saving Changes...");
-        $(this).addClass("disabled");
+        let form = $(this).closest("form");
+        if (form[0].checkValidity()) {
+            $(this).text("Saving Changes...");
+            $(this).addClass("disabled");
+        }
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
