@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
-from django.contrib.messages import get_messages
+from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
@@ -182,19 +182,18 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         elif file_folder.startswith("data/contents/"):
             file_folder = file_folder[len("data/contents/"):]
 
-
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata,
                                             folder=file_folder)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        msg = 'file_size_error: ' + ex.message
-        return HttpResponse(msg, status=500)
+        msg = {'file_size_error': ex.message}
+        return JsonResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = 'validation_error: ' + ex.message
-        return HttpResponse(msg, status=500)
+        msg = {'validation_error': ex.message}
+        return JsonResponse(msg, status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
@@ -204,10 +203,24 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
                                                    auto_aggregate=auto_aggregate)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = 'validation_error: ' + ex.message
-        return HttpResponse(msg, status=500)
+        msg = {'validation_error': ex.message}
+        return JsonResponse(msg, status=500)
 
-    return HttpResponse(status=200)
+    # for composite resource, return resource level metadata so that the UI can be updated
+    if resource.resource_type == 'CompositeResource':
+        res_metadata = dict()
+        res_metadata['title'] = resource.metadata.title.value
+        res_metadata['abstract'] = resource.metadata.description.abstract
+        creators = []
+        for creator in resource.metadata.creators.all():
+            creators.append(model_to_dict(creator))
+        res_metadata['creators'] = creators
+        res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
+        res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
+        res_metadata['temporal_coverage'] = get_coverage_data_dict(resource,
+                                                                   coverage_type='temporal')
+        return JsonResponse(res_metadata, status=200)
+    return JsonResponse(status=200)
 
 
 def _get_resource_sender(element_name, resource):
