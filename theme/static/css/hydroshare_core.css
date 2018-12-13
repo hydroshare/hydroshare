@@ -2401,7 +2401,7 @@ table.table.access-table {
 	cursor: pointer;
 }
 
-.glyphicon-info-sign {
+.alert .glyphicon-info-sign {
     top: 2px;
     margin-left: 10px
 }
