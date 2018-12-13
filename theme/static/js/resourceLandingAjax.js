@@ -1114,6 +1114,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             var files = result.files;
             var folders = result.folders;
             var can_be_public = result.can_be_public;
+            const mode = $("#hs-file-browser").attr("data-mode");
+
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
@@ -1164,11 +1166,11 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-            if (result.hasOwnProperty('spatial_coverage')){
+            if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
-            if (result.hasOwnProperty('temporal_coverage')){
+            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
                 var temporalCoverage = result.temporal_coverage;
                 updateResourceTemporalCoverage(temporalCoverage);
             }

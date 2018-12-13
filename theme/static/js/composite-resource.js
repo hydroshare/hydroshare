@@ -3,6 +3,7 @@
  */
 
 $(document).ready(function () {
+    const mode = $("#hs-file-browser").attr("data-mode");
 
     // Submit for resource spatial coverage update
     $("#btn-update-resource-spatial-coverage").click(function () {
@@ -16,12 +17,14 @@ $(document).ready(function () {
         resource_coverage_update_ajax_submit(resourceID, 'temporal');
     });
 
-    bindResourceSpatialDeleteOption();
-    bindResourceTemporalDeleteOption();
-    // show/hide spatial coverage delete option
-    setResourceSpatialCoverageDeleteOption();
-    // show/hide temporal coverage delete option
-    setResourceTemporalCoverageDeleteOption();
+    if (mode == "edit") {
+        bindResourceSpatialDeleteOption();
+        bindResourceTemporalDeleteOption();
+        // show/hide spatial coverage delete option
+        setResourceSpatialCoverageDeleteOption();
+        // show/hide temporal coverage delete option
+        setResourceTemporalCoverageDeleteOption();
+    }
 });
 
 function bindResourceSpatialDeleteOption() {
