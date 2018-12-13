@@ -35,6 +35,7 @@ services:
       context: .
       dockerfile: Dockerfile-hydroshare
     container_name: hydroshare
+    hostname: hydroshare
     devices:
       - "/dev/fuse"
     privileged: true
