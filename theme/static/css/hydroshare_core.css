@@ -1081,7 +1081,8 @@ table.info-table > tbody > tr > td {
 }
 
 table.info-table {
-    margin-bottom: 20px
+	margin-bottom: 20px;
+	word-break: break-word;
 }
 
 .res-header .collapsing {
