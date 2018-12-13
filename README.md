@@ -34,6 +34,11 @@ _in the context, where you will execute docker-compose:_
 - Set LOGDIR to local directory for log outputs
 - (Windows shell users only): set the user environment variable PWD to <directory where hydroshare repo was cloned to> for example `C:\Users\username\repo\hydroshare`
 
+### Understand enough about docker volumes
+- postgis container (postgres) data is psersisted in a docker volume
+- to fully delete the postgres instance, you may perform it in the postgis container or by deleting the docker volume
+- do delete the docker volume an example command might be `docker volume rm hydroshare_pgdatavol`
+
 ### launch postgis only
 `
 docker-compose up -d --build postgis
