@@ -7,6 +7,18 @@ HydroShare is a website and hydrologic information system for sharing hydrologic
 
 More information can be found in our [Wiki Pages](https://github.com/hydroshare/hydroshare/wiki)
 
+## Special Consideration for HydroShare Developers December 2018
+- Restart docker
+- delete any host folders containing pgdata volumes
+- delete containers with conflicting names
+- manually remove all docker images related to hydroshare_postgis
+
+## Impossible Error
+- Comment second section of Dockerfile-postgis
+- Run `docker-compose up -d --build postgis`
+- Uncomment second section of Dockerfile-postgis
+- Follow the rest of the "One-Time Install" instructions below
+
 ## One-Time Install
 
 This README file is for people interested in working with the HydroShare source code.

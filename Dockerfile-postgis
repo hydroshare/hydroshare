@@ -10,11 +10,6 @@ ADD ./conf_postgres/pg_hba.conf /app/pg_hba.conf
 # listen_addresses = '*' set in postgresql.conf
 ADD ./conf_postgres/postgresql.conf /app/postgresql.conf
 
-#RUN chmod -R 755 /app
-
-# postgres will not start with global read permissions set
-#RUN chmod -R 700 /var/lib/postgresql/data
-
 # add keys may no longer be necessary but keeping in for now
 RUN apt-get update && apt-get install -y \
     sudo \
@@ -29,29 +24,21 @@ RUN apt-get install -y \
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN cp /docker-entrypoint.sh /usr/local/bin/
-
-#RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
-
-RUN /etc/init.d/postgresql start
-
 EXPOSE 5432/tcp
 
+### TODO find permanent solution to reconcile mutually exclisive first-run setup and subsequently necessary docker-entrypoint.sh
+### COMMENT EVERYTHING BELOW THIS LINE FOR FIRST RUN TO INITIALIZE PGDATA THEN UNCOMMENT
+RUN cp /docker-entrypoint.sh /usr/local/bin/
+
 # enables USER postgres - https://success.docker.com/article/use-a-script-to-initialize-stateful-container-data
+# potential bug with native intended script??? https://github.com/docker-library/postgres/issues/269
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 ## open up listening to be most permissive
 RUN echo "host all  all    0.0.0.0/0  md5" >> /var/lib/postgresql/data/pg_hba.conf
 
-#
-## And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
-#RUN echo "listen_addresses='*'" >> /var/lib/postgresql/data/postgresql.conf
-#
-## Add VOLUMEs to allow backup of config, logs and databases
-#VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
-#
-## Set the default command to run when starting the container
+### Set the default command to run when starting the container
 USER postgres
 
-# /var/lib/postgresql/data/postgresql.conf and pg_hba.conf seem to regenerate so copying over them does not work
+## /var/lib/postgresql/data/postgresql.conf and pg_hba.conf seem to regenerate so copying over them does not work
 CMD ["/usr/lib/postgresql/9.4/bin/postgres", "-D", "/var/lib/postgresql/data", "-c", "config_file=/app/postgresql.conf"]
