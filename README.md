@@ -34,6 +34,10 @@ _in the context, where you will execute docker-compose:_
 - Set LOGDIR to local directory for log outputs
 - (Windows shell users only): set the user environment variable PWD to <directory where hydroshare repo was cloned to> for example `C:\Users\username\repo\hydroshare`
 
+### Considerations for Win10 docker file sharing
+- Until a more clever way is found, in Docker Desktop, share C with credentials that you use to log into the laptop (AD or local)
+- WSL not needed but can perhaps smooth out your experience if you have already configured
+
 ### Understand enough about docker volumes
 - postgis container (postgres) data is psersisted in a docker volume
 - to fully delete the postgres instance, you may perform it in the postgis container or by deleting the docker volume
@@ -73,7 +77,6 @@ docker exec -u hydro-service hydroshare python manage.py fix_permissions
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
 `
-
 
 ### rebuild solr index (in a separate terminal/shell window)
 `
