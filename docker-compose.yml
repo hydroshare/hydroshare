@@ -118,5 +118,9 @@ services:
     stdin_open: true
     tty: true
 
+# Docker Volumes https://docs.docker.com/storage/volumes/
+# tldr;
+# docker volume ps | grep pgdatavol
+# docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
