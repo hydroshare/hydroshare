@@ -52,8 +52,8 @@ docker-compose up -d --build postgis
 ### db create (back to a local laptop terminal/shell)
 _if anyone makes changes, be aware of smart punctuation, smart single and double quotes also note a Windows single vs double quote issue with SET in some cases_
 `
-docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION postgis;'
-docker exec postgis psql -U postgres -d template1 -w -c 'CREATE EXTENSION hstore;'
+docker exec postgis psql -U postgres -d template1 -w -c "CREATE EXTENSION postgis;"
+docker exec postgis psql -U postgres -d template1 -w -c "CREATE EXTENSION hstore;"
 docker exec postgis createdb -U postgres postgres --encoding UNICODE --template=template1
 docker exec postgis psql -U postgres -f /app/pg.development.sql
 docker exec postgis psql -U postgres -d postgres -w -c "SET client_min_messages TO WARNING;"
