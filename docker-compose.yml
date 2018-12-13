@@ -8,8 +8,9 @@ services:
       dockerfile: Dockerfile-postgis
     container_name: postgis
     hostname: postgis
+    # Win10 docker volume issue - https://github.com/docker-library/postgres/issues/435
     volumes:
-      - "./.pgdata:/var/lib/postgresql/data"
+      - "pgdatavol:/var/lib/postgresql/data"
     ports:
       - "54322:5432"
     stdin_open: true
@@ -116,3 +117,6 @@ services:
       - redis
     stdin_open: true
     tty: true
+
+volumes:
+  pgdatavol:
