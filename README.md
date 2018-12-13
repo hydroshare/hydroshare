@@ -8,15 +8,16 @@ HydroShare is a website and hydrologic information system for sharing hydrologic
 More information can be found in our [Wiki Pages](https://github.com/hydroshare/hydroshare/wiki)
 
 ## Special Consideration for HydroShare Developers December 2018
-- Restart docker
-- delete any host folders containing pgdata volumes
-- delete containers with conflicting names
-- manually remove all docker images related to hydroshare_postgis
+- Delete any host folders containing pgdata volumes
+- Delete containers with conflicting names
+- Manually remove all docker images related to hydroshare_postgis
+- Finally, restart docker to be sure
 
 ## Impossible Error
 - Comment second section of Dockerfile-postgis
 - Run `docker-compose up -d --build postgis`
 - Uncomment second section of Dockerfile-postgis
+- Kill any docker-compose processes with `<Ctrl-C>`
 - Follow the rest of the "One-Time Install" instructions below
 
 ## One-Time Install
@@ -53,18 +54,12 @@ docker exec postgis psql -U postgres -d postgres -w -c 'SET client_min_messages 
 docker-compose down
 docker-compose up -d --build
 `
-TODO may get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/
-
-
-???
-`
-docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
-docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
-`
+_TODO may get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/_
 
 ### db migrate
 `
-docker exec -u hydro-service hydroshare python manage.py migrate
+docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
+docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
 docker exec -u hydro-service hydroshare python manage.py fix_permissions
 `
 
@@ -82,7 +77,7 @@ docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=colle
 `
 
 ### restart all services
-_will use interactive terminal/shell logging that does not allow further input_
+_will use interactive terminal/shell logging that does not allow further input because -d flag is not used_
 `
 docker-compose down
 docker-compose up
