@@ -63,11 +63,11 @@ docker exec postgis psql -U postgres -d postgres -w -c "SET client_min_messages 
 ### restart everything
 `
 docker-compose down
-docker-compose up -d --build
+docker-compose up --build
 `
 _TODO may get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/_
 
-### db migrate
+### db migrate (separate console)
 _Windows Note: errors here may tie back to Docker Desktop cached credentials for sharing C drive with containers to glitch. Re-establish credentials and try launch docker-compose up --build again_
 `
 docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
