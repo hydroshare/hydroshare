@@ -5,13 +5,10 @@ from django.db import migrations
 
 def get_aggregations(resource):
     lf_list = []
-    lf_list.extend(resource.filesetlogicalfile_set.all())
-    lf_list.extend(resource.genericlogicalfile_set.all())
-    lf_list.extend(resource.geofeaturelogicalfile_set.all())
-    lf_list.extend(resource.netcdflogicalfile_set.all())
-    lf_list.extend(resource.georasterlogicalfile_set.all())
-    lf_list.extend(resource.reftimeserieslogicalfile_set.all())
-    lf_list.extend(resource.timeserieslogicalfile_set.all())
+    for file in resource.files.all():
+        if file.has_logical_file:
+            if not hasattr(file.logical_file, 'resource'):
+                lf_list.append(file.logical_file)
 
     return lf_list
 
