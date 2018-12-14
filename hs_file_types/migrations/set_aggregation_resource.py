@@ -5,7 +5,7 @@ from django.db import migrations
 
 def get_aggregations(resource):
     lf_list = []
-    if resource.has_files():
+    if resource.has_required_content_files():
         for file in resource.files.all():
             if file.has_logical_file:
                 if not hasattr(file.logical_file, 'resource'):
