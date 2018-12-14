@@ -1,17 +1,7 @@
 import logging
 
 from django.db import migrations
-
-
-def get_aggregations(resource):
-    lf_list = []
-    if resource.has_required_content_files():
-        for file in resource.files.all():
-            if file.has_logical_file:
-                if not hasattr(file.logical_file, 'resource'):
-                    lf_list.append(file.logical_file)
-
-    return lf_list
+from hs_composite_resource.models import CompositeResource
 
 
 def set_aggregation_resource(apps, schema_editor):
@@ -20,31 +10,16 @@ def set_aggregation_resource(apps, schema_editor):
     """
 
     log = logging.getLogger()
-    CompositeResource = apps.get_model("hs_composite_resource", "CompositeResource")
-
-    log_msg_1 = "All aggregations (total of {aggr_count}) for resource (ID:{res_id}) were " \
-                "successfully assigned the resource object."
-    log_msg_2 = "There are no aggregations in resource (ID:{})."
+    count = 0
     for res in CompositeResource.objects.all():
-        res_aggregations = get_aggregations(res)
-        for aggregation in res_aggregations:
-            aggregation.resource = res
-            aggregation.save()
-        if res_aggregations:
-            log_msg = log_msg_1.format(aggr_count=len(res_aggregations), res_id=res.short_id)
-            if __debug__:
-                log.debug(log_msg)
-            log.info(log_msg)
-        else:
-            log_msg = log_msg_2.format(res.short_id)
-            if __debug__:
-                log.debug(log_msg)
-            log.info(log_msg)
+        for file in res.files.all():
+            if file.has_logical_file:
+                log.info("Setting resource attribute as {} for file {}".format(res.short_id, str(file)))
+                file.logical_file.resource = res
+                file.logical_file.save()
+                count = count + 1
 
-    log_msg = "A total of {} composite resources were processed.".format(
-        CompositeResource.objects.all().count())
-    if __debug__:
-        log.debug(log_msg)
+    log_msg = "A total of {} composite resources were processed.".format(count)
     log.info(log_msg)
 
 
