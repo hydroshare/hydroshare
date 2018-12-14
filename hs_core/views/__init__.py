@@ -206,22 +206,22 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {'validation_error': ex.message}
         return JsonResponse(msg, status=500)
 
-    # for composite resource, return resource level metadata so that the UI can be updated
-    if resource.resource_type == 'CompositeResource':
-        res_metadata = dict()
-        res_metadata['title'] = resource.metadata.title.value
+    # return resource level metadata so that the UI can be updated
+    res_metadata = dict()
+    res_metadata['title'] = resource.metadata.title.value
+    if resource.metadata.description:
         res_metadata['abstract'] = resource.metadata.description.abstract
-        creators = []
-        for creator in resource.metadata.creators.all():
-            creators.append(model_to_dict(creator))
-        res_metadata['creators'] = creators
-        res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
-        res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
-        res_metadata['temporal_coverage'] = get_coverage_data_dict(resource,
-                                                                   coverage_type='temporal')
-        return JsonResponse(res_metadata, status=200)
-    return JsonResponse(status=200)
-
+    else:
+        res_metadata['abstract'] = None
+    creators = []
+    for creator in resource.metadata.creators.all():
+        creators.append(model_to_dict(creator))
+    res_metadata['creators'] = creators
+    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
+    res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
+    res_metadata['temporal_coverage'] = get_coverage_data_dict(resource, coverage_type='temporal')
+    return JsonResponse(res_metadata, status=200)
+    
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
