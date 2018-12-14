@@ -12,6 +12,7 @@ More information can be found in our [Wiki Pages](https://github.com/hydroshare/
 - Delete containers with conflicting names
 - Manually remove all docker images related to hydroshare_postgis
 - Finally, restart docker to be sure
+- Re-establish sharing C drive and credentials (TODO for tips see wiki)
 
 ## Impossible Error
 - Comment second section of Dockerfile-postgis
@@ -67,6 +68,7 @@ docker-compose up -d --build
 _TODO may get startup error until complex waits are implemented - https://docs.docker.com/compose/startup-order/_
 
 ### db migrate
+_Windows Note: errors here may tie back to Docker Desktop cached credentials for sharing C drive with containers to glitch. Re-establish credentials and try launch docker-compose up --build again_
 `
 docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
 docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput

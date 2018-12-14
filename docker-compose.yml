@@ -26,7 +26,6 @@ services:
       dockerfile: Dockerfile-solr
     container_name: solr
     hostname: solr
-    # TODO confirm that not mapping to local files doesn't break the ADD commands in dockerfile
     ports:
       - "8983:8983"
     stdin_open: true
