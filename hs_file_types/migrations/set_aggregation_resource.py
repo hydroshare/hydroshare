@@ -5,10 +5,11 @@ from django.db import migrations
 
 def get_aggregations(resource):
     lf_list = []
-    for file in resource.files.all():
-        if file.has_logical_file:
-            if not hasattr(file.logical_file, 'resource'):
-                lf_list.append(file.logical_file)
+    if resource.has_files():
+        for file in resource.files.all():
+            if file.has_logical_file:
+                if not hasattr(file.logical_file, 'resource'):
+                    lf_list.append(file.logical_file)
 
     return lf_list
 
