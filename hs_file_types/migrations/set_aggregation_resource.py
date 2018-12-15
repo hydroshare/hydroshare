@@ -19,7 +19,7 @@ def set_aggregation_resource(apps, schema_editor):
                 file.logical_file.save()
                 count = count + 1
 
-    log_msg = "A total of {} composite resources were processed.".format(count)
+    log_msg = "A total of {} logical files were processed.".format(count)
     log.info(log_msg)
 
 
