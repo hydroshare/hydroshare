@@ -16,7 +16,8 @@ from rest_framework.response import Response
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     ResourceFile, utils
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict, \
+    get_resource_metadata
 from hs_core.hydroshare.utils import resource_modified
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
@@ -82,8 +83,8 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
 
         response_data['status'] = 'success'
         response_data['message'] = msg
-        spatial_coverage_dict = get_coverage_data_dict(res)
-        response_data['spatial_coverage'] = spatial_coverage_dict
+        resource_metadata = get_resource_metadata(res)
+        response_data.update(resource_metadata)
         return JsonResponse(response_data, status=status.HTTP_201_CREATED)
 
     except ValidationError as ex:
