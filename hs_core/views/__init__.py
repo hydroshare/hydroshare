@@ -10,7 +10,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
-from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
@@ -38,7 +37,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict, get_resource_metadata
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
@@ -207,19 +206,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     # return resource level metadata so that the UI can be updated
-    res_metadata = dict()
-    res_metadata['title'] = resource.metadata.title.value
-    if resource.metadata.description:
-        res_metadata['abstract'] = resource.metadata.description.abstract
-    else:
-        res_metadata['abstract'] = None
-    creators = []
-    for creator in resource.metadata.creators.all():
-        creators.append(model_to_dict(creator))
-    res_metadata['creators'] = creators
-    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
-    res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
-    res_metadata['temporal_coverage'] = get_coverage_data_dict(resource, coverage_type='temporal')
+    res_metadata = get_resource_metadata(resource)
     return JsonResponse(res_metadata, status=200)
     
 
