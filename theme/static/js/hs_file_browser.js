@@ -1233,7 +1233,7 @@ $(document).ready(function () {
                         var currentPath = $("#hs-file-browser").attr("data-current-path");
                         sessionStorage.currentBrowsepath = currentPath;
                         // Page refresh is needed to show updated metadata
-                        window.location.reload(true);
+                        // window.location.reload(true);
                     }
                     else {
                         var resourceType = $("#resource-type").val();
@@ -1247,8 +1247,12 @@ $(document).ready(function () {
                             var currentPath = $("#hs-file-browser").attr("data-current-path");
                             sessionStorage.currentBrowsepath = currentPath;
                             // uploaded files can affect metadata in composite resource.
-                            // a full refresh is needed to reflect those changes
-                            refreshResourceEditPage();
+                            // TODO: use the json data returned from backend to update UI
+                            // for resource level metadata
+
+                            // a full refresh is no more needed to reflect those changes
+                            //refreshResourceEditPage();
+                            refreshFileBrowser();
                         }
                         else {
                             refreshFileBrowser();
@@ -1950,7 +1954,10 @@ function setFileType(fileType){
        $("#fileTypeMetaData").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
-           refreshResourceEditPage();
+           //refreshResourceEditPage();
+           // TODO: use resource level metadata in json_response to update resource level UI for
+           // metadata
+           refreshFileBrowser();
        }
     });
 }
@@ -1969,9 +1976,8 @@ function removeAggregation(){
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
        $("#fileTypeMetaData").html(file_metadata_alert);
-       // page refresh is needed to show any extracted metadata used at the resource level
        if (json_response.status === 'success'){
-           refreshResourceEditPage();
+           refreshFileBrowser();
        }
     });
 }
