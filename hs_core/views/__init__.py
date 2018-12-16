@@ -79,7 +79,7 @@ class HydroshareWebServices():
         rest_url = str(self.services_url) + "/update-services/?res_id=" + str(res_id)
         try:
             return self.session.post(rest_url, timeout=self.timeout)
-        except requests.exceptions.RequestExceptionas as requests_exception:
+        except requests.exceptions.RequestExceptions as requests_exception:
             return requests_exception
         except ValueError as requests_exception:
             return requests_exception
