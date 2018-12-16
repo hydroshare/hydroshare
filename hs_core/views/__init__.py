@@ -5,9 +5,6 @@ import pytz
 import logging
 import requests
 
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -68,23 +65,30 @@ from hs_collection_resource.models import CollectionDeletedResource
 logger = logging.getLogger(__name__)
 
 
-class WebServicesApi():
+class HydroshareWebServices():
 
-    def __init__(self, base_url, api_token):
-        self.base_url = base_url
-        token_string = 'Token ' + api_token
+    def __init__(self, services_url, api_token, timeout):
+        self.services_url = services_url
+        self.timeout = timeout
         self.session = requests.Session()
-        self.session.headers.update({'Authorization': token_string})
+        self.session.headers.update(
+            {"Authorization": " ".join(("Token", str(api_token)))}
+        )
 
-    def update_services(self, res_id):
-        rest_url = self.base_url + "update-services/?res_id=" + res_id
-        response = self.session.post(rest_url)
-        return response
+    def update(self, res_id):
+        rest_url = str(self.services_url) + "/update-services/?res_id=" + str(res_id)
+        try:
+            return self.session.post(rest_url, timeout=self.timeout)
+        except requests.exceptions.RequestExceptionas as requests_exception:
+            return requests_exception
+        except ValueError as requests_exception:
+            return requests_exception
 
 
-web_services = WebServicesApi(
-    base_url='http://localhost:8080/apps/hydroshare-web-services-manager/api/',
-    api_token='932aebc70b5924dd31da63f8d80e7c62db18c02c'
+web_services = HydroshareWebServices(
+    services_url="http://localhost:8080/apps/hydroshare-web-services-manager/api",
+    api_token="932aebc70b5924dd31da63f8d80e7c62db18c02c",
+    timeout=20
 )
 
 
@@ -231,10 +235,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = 'validation_error: ' + ex.message
         return HttpResponse(msg, status=500)
 
-    try:
-        web_services.update_services(shortkey)
-    except:
-        print "Web services error"
+    web_services.update(shortkey)
 
     return HttpResponse(status=200)
 
@@ -586,10 +587,8 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
-    try:
-        web_services.update_services(shortkey)
-    except:
-        print "Web services error"
+
+    web_services.update(shortkey)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -612,10 +611,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             continue
     request.session['resource-mode'] = 'edit'
 
-    try:
-        web_services.update_services(shortkey)
-    except:
-        print "Web services error"
+    web_services.update(shortkey)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -656,10 +652,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
     post_delete_resource.send(sender=type(res), request=request, user=user,
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
-    try:
-        web_services.update_services(shortkey)
-    except:
-        print "Web services error"
+
+    web_services.update(shortkey)
 
     if request.is_ajax():
         return JsonResponse(ajax_response_data)
@@ -824,17 +818,11 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if request.META.get('HTTP_REFERER', None):
         request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
 
-        try:
-            web_services.update_services(shortkey)
-        except:
-            print "Web services error"
+        web_services.update(shortkey)
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
 
-    try:
-        web_services.update_services(shortkey)
-    except:
-        print "Web services error"
+    web_services.update(shortkey)
 
     return HttpResponse(status=202)
 
@@ -1309,10 +1297,7 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['status'] = 'success'
         ajax_response_data['resource_url'] = resource.get_absolute_url()
 
-    try:
-        web_services.update_services(resource.short_id)
-    except:
-        print "Web services error."
+    web_services.update(resource.short_id)
 
     return JsonResponse(ajax_response_data)
 
