@@ -1,3 +1,8 @@
+# Temporary for alternate dev setup
+conf_postgres
+conf_solr
+
+# HydroShare Custom
 *.pyc
 *.pyo
 *.db
