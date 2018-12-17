@@ -1,11 +1,9 @@
-"""Removes unmodified GenericLogicalFiles found in composite resources.   This functionality is
-to remove unused GenericLogicalFiles that were created by an earlier iteration of CompositeResource
-that created an aggregation for every file added to a resource.
+"""Removes hanging LogicalFiles in composite resources.   Hanging LogicalFiles do not have a
+Resource nor reference any files.
 """
 
 from django.core.management.base import BaseCommand
 
-from hs_composite_resource.models import CompositeResource
 from hs_file_types.models.generic import GenericLogicalFile
 from hs_file_types.models.geofeature import GeoFeatureLogicalFile
 from hs_file_types.models.netcdf import NetCDFLogicalFile
@@ -21,6 +19,7 @@ def delete_hanging_logical_files(logical_files):
             file.delete()
             count = count + 1
     return count
+
 
 class Command(BaseCommand):
     help = "Removes Logical Files without a resource and a file"
