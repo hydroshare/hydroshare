@@ -4180,6 +4180,7 @@ ul#fb-files-container {
 
 ul#fb-files-container .hs-upload-indicator {
 	position: static;
+	color: #b3b3b3;
 }
 
 .fb-file span.fb-file-icon::before, .fb-stack .fa-file-o {
