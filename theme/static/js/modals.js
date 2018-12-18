@@ -95,10 +95,19 @@ $(document).ready(function() {
         let shortID = $("#short-id").val();
         let form = dialog.find("form");
 
-        form.attr("action", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/update-metadata/");
+        // The resource must have at least one author.
+        if (!$(".author-modal-trigger").length > 1) {
+            // Disable delete of author if only one exists
+            dialog.find("modal-body--delete").hide();
+            form.removeAttr("action");
+        }
+        else {
+            dialog.find("modal-body--delete").show();
+            // Set delete author link
+            $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/delete-metadata/");
+        }
 
-        // Set delete author link
-        $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/delete-metadata/");
+        form.attr("action", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/update-metadata/");
 
         data.order -= 1;    // The value we use in the back end is 0 based and in the UI it is not
 
@@ -162,5 +171,10 @@ $(document).ready(function() {
         let homepage = dialog.find(".control-group--homepage");
         homepage.find("input").attr("name", "creator-" + data.order + "-homepage");
         homepage.find("input").val(data.homepage != null ? data.homepage : "");
+
+        // ORDER
+        let order = dialog.find(".input-order");
+        order.attr("name", "creator-" + data.order + "-order");
+        order.val(data.order != null ? data.order : "");
     });
 });

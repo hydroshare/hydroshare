@@ -416,9 +416,9 @@ $(document).ready(function () {
             var forms = $(".authors-wrapper.sortable form");
 
             // Set the new order value in the form items
-            for (var i = 0; i < forms.length; i++) {
-                $(forms[i]).find("input.order-input").attr("value", i + 1);
-                $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
+            for (let i = 0; i < forms.length; i++) {
+                $(forms[i]).find("input.input-order").val(i + 1);
+                $(forms[i]).find("input.input-order").attr("value", i + 1);
             }
 
             let $form = $(ui.item.find("form"));

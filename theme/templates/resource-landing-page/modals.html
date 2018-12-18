@@ -1195,7 +1195,7 @@
                 </div>
 
 {#                {% if creator_formset.initial|length > 1 %}#}
-                <div class="modal-body">
+                <div class="modal-body modal-body--delete">
                     <span title="Remove"
                        data-toggle="collapse" data-target="#confirm-delete-author"
                        class="glyphicon glyphicon-trash icon-button table-icon btn-remove"></span>
@@ -1287,7 +1287,7 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm urlinput"
-                                               id="creator-homepage" maxlength="200" ype="url">
+                                               id="creator-homepage" maxlength="200" type="url">
                                     </div>
                                 </div>
                             </fieldset>
@@ -1300,8 +1300,7 @@
                     </div>
 
                     {# Hidden in replacement for drag and drop, but still needed for form submission here #}
-                    <input class="hidden-form" id="id_creator-{{ author.order|add:"-1" }}-order"
-                           name="creator-{{ author.order|add:"-1" }}-order" value="">
+                    <input class="hidden-form input-order" type="number">
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

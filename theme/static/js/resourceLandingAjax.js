@@ -2105,3 +2105,52 @@ function updateResourceKeywords(keywordString) {
         }
     }
 }
+
+function updateResourceAuthors(authors) {
+    let container = $("#left-header-table .authors-wrapper");
+    container.empty();
+    authors.forEach(function (author) {
+        const shortID = $("#short-id").val();
+
+        // Could be cleaner using template literals, but those are currently not supported by IE 11
+        // https://kangax.github.io/compat-table/es6/
+        let authorTemplate = '<span> \
+            <a title="Edit ' + author.name + '" \
+               class="author-modal-trigger" data-id="' + author.id + '" \
+               data-name="' + author.name + '" data-order="' + author.order + '" \
+               data-description="' + author.description + '" \
+               data-organization="' + author.organization + '" \
+               data-email="' + author.email + '" \
+               data-address="' + author.address + '" \
+               data-phone="' + author.phone + '" \
+               data-homepage="' + author.homepage + '">' + (author.name ? author.name : author.organization) + ' \
+            </a> \
+            <form class="hidden-form" \
+                  action="/hsapi/_internal/' + shortID + '/creator/' + author.id + '/update-metadata/" \
+                  enctype="multipart/form-data"> \
+                ' + $(".main-container > input[name='csrfmiddlewaretoken']").outerHTML() +' \
+                <input name="resource-mode" type="hidden" value="edit"> \
+                <input name="creator-' + (author.order - 1) + '-name" \
+                       value="' + author.name + '"> \
+                <input name="creator-' + (author.order - 1) + '-description" \
+                       value="' + author.description + '"> \
+                <input name="creator-' + (author.order - 1) + '-organization" \
+                       value="' + author.organization + '"> \
+                <input name="creator-' + (author.order - 1) + '-email" \
+                       value="' + author.email + '"> \
+                <input name="creator-' + (author.order - 1) + '-address" \
+                       value="' + author.address + '"> \
+                <input name="creator-' + (author.order - 1) + '-phone" \
+                       type="text" value="' + author.phone + '"> \
+                <input name="creator-' + (author.order - 1) + '-homepage" type="url" \
+                       value="' + author.homepage + '"> \
+                <input class="input-order" \
+                       name="creator-' + (author.order - 1) + '-order" \
+                       type="number" value="' + author.order + '"> \
+            </form> \
+         </span>';
+
+        container.append(authorTemplate);
+    });
+
+}

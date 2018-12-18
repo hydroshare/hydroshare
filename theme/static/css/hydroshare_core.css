@@ -997,6 +997,10 @@ li.account p{
     margin-right: 10px;
 }
 
+.authors-wrapper a {
+	cursor: pointer;
+}
+
 .contact-table td:last-child{
     width: calc(20% - 20px);
 }

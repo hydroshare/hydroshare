@@ -1188,16 +1188,13 @@ $(document).ready(function () {
             successmultiple: function (files, response) {
                 // uploaded files can affect metadata in composite resource.
                 // Use the json data returned from backend to update UI
-                console.log(response);
+
                 const resourceType = $("#resource-type").val();
 
                 if (resourceType === 'Composite Resource') {
                     $("#id_abstract").val(response.abstract);
 
-                    // TODO: populate form items dynamically for creators.
-                    if (response.creators.length) {
-
-                    }
+                    updateResourceAuthors(response.creators);
 
                     updateResourceKeywords(response.keywords.join(","));
 

@@ -23,6 +23,9 @@
         <input type="hidden" id="keywords-string" value="{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}">
         <input type="hidden" id="short-id" value="{{ page.get_content_model.short_id }}">
         <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
+        {% if page.perms.change and resource_edit_mode %}
+        {% csrf_token %}
+        {% endif %}
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
             {% block error %}
