@@ -1193,16 +1193,11 @@ $(document).ready(function () {
 
                 if (resourceType === 'Composite Resource') {
                     $("#id_abstract").val(response.abstract);
-
-                    updateResourceAuthors(response.creators);
-
-                    updateResourceKeywords(response.keywords.join(","));
-
-                    updateResourceSpatialCoverage(response.spatial_coverage);
-
-                    updateResourceTemporalCoverage(response.temporal_coverage);
-
                     $("#txt-title").val(response.title);
+                    updateResourceAuthors(response.creators);
+                    updateResourceKeywords(response.keywords.join(","));
+                    updateResourceSpatialCoverage(response.spatial_coverage);
+                    updateResourceTemporalCoverage(response.temporal_coverage);
                 }
 
             },
@@ -1967,11 +1962,17 @@ function setFileType(fileType){
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
        $("#fileTypeMetaData").html(file_metadata_alert);
-       // page refresh is needed to show any extracted metadata used at the resource level
+
        if (json_response.status === 'success'){
-           //refreshResourceEditPage();
-           // TODO: use resource level metadata in json_response to update resource level UI for
-           // metadata
+           // Use resource level metadata in json_response to update resource level UI
+           $("#id_abstract").val(json_response.abstract);
+           $("#txt-title").val(json_response.title);
+           updateResourceAuthors(json_response.creators);
+           updateResourceKeywords(json_response.keywords.join(","));
+           updateResourceSpatialCoverage(json_response.spatial_coverage);
+           updateResourceTemporalCoverage(json_response.temporal_coverage);
+
+           customAlert("Resource Status:", json_response.message, "success", 5000);
            refreshFileBrowser();
        }
     });
@@ -1992,6 +1993,8 @@ function removeAggregation(){
        var json_response = JSON.parse(result);
        $("#fileTypeMetaData").html(file_metadata_alert);
        if (json_response.status === 'success'){
+           updateResourceSpatialCoverage(json_response.spatial_coverage);
+           customAlert("Resource Status:", json_response.message, "success", 5000);
            refreshFileBrowser();
        }
     });
