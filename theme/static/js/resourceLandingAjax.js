@@ -108,13 +108,16 @@ function shareable_ajax_submit(event) {
     var url = form.attr('action');
     var element = $(this);
     var action = $(this).closest("form").find("input[name='t']").val();
+
     element.attr("disabled", true);
+
     if (element.prop("checked")) {
-        $("#shareable-description").text("Allows others to share the resource without owner’s permission.");
+        $("#shareable-description").text("Uncheck the box to prevent others from sharing the resource without the owner's permission.");
     }
     else {
-        $("#shareable-description").text("Prevents others from sharing the resource without owner’s permission.");
+        $("#shareable-description").text("Check this box to allow others to share the resource without the owner's permission.");
     }
+
     $.ajax({
         type: "POST",
         url: url,
