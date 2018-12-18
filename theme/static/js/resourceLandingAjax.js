@@ -135,8 +135,8 @@ function shareable_ajax_submit(event) {
                 }
             }
             else {
-              element.attr("disabled", false);
-              element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
+                element.attr("disabled", false);
+                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
             }
         },
         error: function () {
@@ -1477,11 +1477,6 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             display_error_message('File/Folder Renaming Failed', xhr.responseText);
         }
     });
-}
-
-function refreshResourceEditPage() {
-    var form = $("#frm_refresh_page_edit_mode");
-    form.submit();
 }
 
 function addFileTypeExtraMetadata(){

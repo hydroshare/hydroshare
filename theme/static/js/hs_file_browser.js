@@ -1267,12 +1267,6 @@ $(document).ready(function () {
                         if(resourceType === 'Composite Resource') {
                             var currentPath = $("#hs-file-browser").attr("data-current-path");
                             sessionStorage.currentBrowsepath = currentPath;
-                            // uploaded files can affect metadata in composite resource.
-                            // TODO: use the json data returned from backend to update UI
-                            // for resource level metadata
-
-                            // a full refresh is no more needed to reflect those changes
-                            //refreshResourceEditPage();
                             refreshFileBrowser();
                         }
                         else {
