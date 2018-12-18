@@ -21,22 +21,21 @@
                         <span class="authors-wrapper sortable">
                             {% for author in creator_formset.initial %}
                                 <span>
-                                    {% if author.name %}
-                                        <a style="cursor: pointer;" title="Edit {{ author.name }}"
-                                              class="author-modal-trigger" data-id="{{ author.id }}"
-                                              data-name="{{ author.name }}" data-order="{{ author.order }}"
-                                              data-description="{{ author.description|default:"" }}"
-                                              data-organization="{{ author.organization|default:"" }}"
-                                              data-email="{{ author.email|default:"" }}" data-address="{{ author.address|default:"" }}"
-                                              data-phone="{{ author.phone|default:"" }}" data-homepage="{{ author.homepage|default:"" }}">
+                                        <a title="Edit {{ author.name }}"
+                                           class="author-modal-trigger" data-id="{{ author.id }}"
+                                           data-name="{{ author.name }}" data-order="{{ author.order }}"
+                                           data-description="{{ author.description|default:"" }}"
+                                           data-organization="{{ author.organization|default:"" }}"
+                                           data-email="{{ author.email|default:"" }}"
+                                           data-address="{{ author.address|default:"" }}"
+                                           data-phone="{{ author.phone|default:"" }}"
+                                           data-homepage="{{ author.homepage|default:"" }}">
+                                        {% if author.name %}
                                             {{ author.name }}
-                                        </a>
-                                    {% else %}
-                                        <a data-toggle="modal" data-placement="auto" title="Edit {{ author.organization }}"
-                                           data-target="#edit-creator-dialog">
+                                        {% else %}
                                             {{ author.organization }}
+                                        {% endif %}
                                         </a>
-                                    {% endif %}
 
                                     <form class="hidden-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
