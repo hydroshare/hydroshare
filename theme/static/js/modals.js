@@ -65,7 +65,7 @@ $(document).ready(function() {
         }
     });
 
-    $("#btn-add-relation, #btn-edit-relation, #btn-add-source, #btn-edit-source, #btn-edit-contributor, .btn-save-funding-agency").click(function () {
+    $("#btn-add-relation, #btn-edit-relation, #btn-add-source, #btn-edit-source, #btn-edit-contributor, .btn-save-funding-agency, .btn-save-author").click(function () {
         let form = $(this).closest("form");
         if (form[0].checkValidity()) {
             $(this).text("Saving Changes...");
@@ -178,7 +178,7 @@ $(document).ready(function() {
         order.val(data.order != null ? data.order : "");
 
         // IDENTIFIERS
-        const identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+        // const identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
         const identifiersValueAttr = {
             googlescholarid: "GoogleScholarID",
             orcid: "ORCID",
@@ -188,7 +188,7 @@ $(document).ready(function() {
 
         dialog.find(".edit-identifiers-container .well:not(.identifier-template)").remove();
 
-        identifiers.forEach(function(identifier) {
+        for (let identifier in identifiersValueAttr) {
             if (data[identifier]) {
                 var templateInstance = dialog.find(".identifier-template").clone();
 
@@ -204,7 +204,6 @@ $(document).ready(function() {
 
                 dialog.find(".edit-identifiers-container").append(templateInstance);
             }
-        });
-
+        }
     });
 });
