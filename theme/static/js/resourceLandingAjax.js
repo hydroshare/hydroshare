@@ -898,9 +898,9 @@ function set_file_type_ajax_submit(url, folder_path) {
         },
         success: function (result) {
             waitDialog.dialog("close");
-            var json_response = JSON.parse(result);
-            var spatialCoverage = json_response.spatial_coverage;
-            updateResourceSpatialCoverage(spatialCoverage);
+            // var json_response = JSON.parse(result);
+            // var spatialCoverage = json_response.spatial_coverage;
+            // updateResourceSpatialCoverage(spatialCoverage);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
@@ -931,9 +931,6 @@ function remove_aggregation_ajax_submit(url) {
         async: true,
         success: function (result) {
             waitDialog.dialog("close");
-            var json_response = JSON.parse(result);
-            var spatialCoverage = json_response.spatial_coverage;
-            updateResourceSpatialCoverage(spatialCoverage);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');

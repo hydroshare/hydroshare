@@ -1199,7 +1199,6 @@ $(document).ready(function () {
                     updateResourceSpatialCoverage(response.spatial_coverage);
                     updateResourceTemporalCoverage(response.temporal_coverage);
                 }
-
             },
             init: function () {
                 // The user dragged a file onto the Dropzone
@@ -1957,6 +1956,7 @@ function setFileType(fileType){
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
     var calls = [];
     calls.push(set_file_type_ajax_submit(url, folderPath));
+
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
@@ -1972,7 +1972,6 @@ function setFileType(fileType){
            updateResourceSpatialCoverage(json_response.spatial_coverage);
            updateResourceTemporalCoverage(json_response.temporal_coverage);
 
-           customAlert("Resource Status:", json_response.message, "success", 5000);
            refreshFileBrowser();
        }
     });
@@ -1985,8 +1984,10 @@ function removeAggregation(){
     var resID = $("#hs-file-browser").attr("data-res-id");
     var url = "/hsapi/_internal/" + resID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
     var calls = [];
     calls.push(remove_aggregation_ajax_submit(url));
+
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
@@ -1994,7 +1995,6 @@ function removeAggregation(){
        $("#fileTypeMetaData").html(file_metadata_alert);
        if (json_response.status === 'success'){
            updateResourceSpatialCoverage(json_response.spatial_coverage);
-           customAlert("Resource Status:", json_response.message, "success", 5000);
            refreshFileBrowser();
        }
     });
