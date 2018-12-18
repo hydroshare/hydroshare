@@ -96,14 +96,13 @@ $(document).ready(function() {
         let form = dialog.find("form");
 
         // The resource must have at least one author.
-        if (!$(".author-modal-trigger").length > 1) {
+        if ($(".author-modal-trigger").length <= 1) {
             // Disable delete of author if only one exists
-            dialog.find("modal-body--delete").hide();
-            form.removeAttr("action");
+            dialog.find(".modal-body--delete").hide();
+            $("#confirm-delete-author").find(".btn-danger").removeAttr("href");
         }
         else {
             dialog.find("modal-body--delete").show();
-            // Set delete author link
             $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/delete-metadata/");
         }
 
@@ -140,6 +139,7 @@ $(document).ready(function() {
         let organization = dialog.find(".control-group--organization");
         organization.find("input").val(data.organization);
         organization.find("input").attr("name", "creator-" + data.order + "-organization");
+
         // If you don't have an author name, an organization is required
         if (!data.name) {
             organization.addClass("requiredField");
@@ -176,5 +176,35 @@ $(document).ready(function() {
         let order = dialog.find(".input-order");
         order.attr("name", "creator-" + data.order + "-order");
         order.val(data.order != null ? data.order : "");
+
+        // IDENTIFIERS
+        const identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+        const identifiersValueAttr = {
+            googlescholarid: "GoogleScholarID",
+            orcid: "ORCID",
+            researchgateid: "ResearchGateID",
+            researcerid: "ResearcherID"
+        };
+
+        dialog.find(".edit-identifiers-container .well:not(.identifier-template)").remove();
+
+        identifiers.forEach(function(identifier) {
+            if (data[identifier]) {
+                var templateInstance = dialog.find(".identifier-template").clone();
+
+                templateInstance.toggleClass("hidden", false);
+                templateInstance.toggleClass("identifier-template", false);
+
+                templateInstance.find(".select-identifier").attr("name", "identifier_name");
+                templateInstance.find(".identifier-link-container input").attr("name", "identifier_link");
+
+                templateInstance.find("select").val(identifiersValueAttr[identifier]);
+
+                templateInstance.find("input[name='identifier_link']").val(data[identifier]);
+
+                dialog.find(".edit-identifiers-container").append(templateInstance);
+            }
+        });
+
     });
 });

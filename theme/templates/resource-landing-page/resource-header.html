@@ -29,7 +29,10 @@
                                        data-email="{{ author.email|default:"" }}"
                                        data-address="{{ author.address|default:"" }}"
                                        data-phone="{{ author.phone|default:"" }}"
-                                       data-homepage="{{ author.homepage|default:"" }}">
+                                       data-homepage="{{ author.homepage|default:"" }}"
+                                            {% for name, link in author.identifiers.items %}
+                                       data-{{ name }}="{{ link }}"
+                                            {% endfor %}>
                                         {% if author.name %}
                                             {{ author.name }}
                                         {% else %}
