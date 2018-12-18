@@ -5,7 +5,8 @@
         {% if show_manage_access %}
             <a data-toggle="modal" data-target="#manage-access">
             <span data-toggle="tooltip" data-placement="bottom"
-                  title="Manage who has access. Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions."
+                  data-html="true"
+                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
                   class="fa fa-user-plus icon-button icon-blue"></span>
             </a>
         {% endif %}
@@ -98,9 +99,17 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.delete and cm.can_be_published and cm.raccess.public %}
-                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
-                                <span data-toggle="tooltip" data-placement="bottom" title="Publish this resource"
+                        {% if page.perms.delete and cm.can_be_published %}
+                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog"
+                               {% if not cm.raccess.public %}class="disabled"{% endif %}>
+                                <span data-toggle="tooltip" data-placement="bottom"
+                                        {% if cm.raccess.public %}
+                                      title="Publish this resource"
+                                        {% else %}
+                                      data-html="true"
+                                      title='Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published.</small>'
+                                        {% endif %}
+
                                       class="glyphicon glyphicon-globe icon-button icon-blue"></span>
                             </a>
                         {% endif %}
