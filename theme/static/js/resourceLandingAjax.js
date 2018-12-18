@@ -95,6 +95,8 @@ function change_access_ajax_submit() {
 
             // Enable Publish Resource button if the resource was made public
             $("#publish").toggleClass("disabled", element.attr("id") !== "btn-public");
+            $("#publish > span").attr("data-original-title", element.attr("id") !== "btn-public" ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
+            $("#publish > span").attr("data-html", element.attr("id") !== "btn-public" ? "false" : "true")
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);
