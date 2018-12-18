@@ -92,6 +92,9 @@ function change_access_ajax_submit() {
             }
             form.find("button").toggleClass("disabled", false);
             form.css("cursor", "auto");
+
+            // Enable Publish Resource button if the resource was made public
+            $("#publish").toggleClass("disabled", element.attr("id") !== "btn-public");
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);

@@ -39,7 +39,7 @@
                 {% endif %}
             {% endif %}
 
-                        {# "add to open with list" for WebApp resource only #}
+            {# "add to open with list" for WebApp resource only #}
             {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
                 {% if cm|app_on_open_with_list:user %}
                     <form data-id="form-add-open-with-app"
@@ -109,7 +109,6 @@
                                       data-html="true"
                                       title='Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published.</small>'
                                         {% endif %}
-
                                       class="glyphicon glyphicon-globe icon-button icon-blue"></span>
                             </a>
                         {% endif %}
