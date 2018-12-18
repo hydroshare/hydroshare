@@ -1985,6 +1985,7 @@ function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
             $btnDeleteTemporalCoverage.hide()
     }
 }
+
 // updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
     var $form = $("#id-coverage-temporal");
@@ -2010,6 +2011,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id-coverage-temporal").find("button.btn-primary").hide();
     initializeDatePickers();
 }
+
 // updates the UI spatial coverage elements for the aggregation
 function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elementID) {
     var $id_type_div = $("#id_type_filetype");
@@ -2084,4 +2086,22 @@ function setFileTypeMetadataFormsClickHandlers(){
         }
     });
     BindKeyValueFileTypeClickHandlers();
+}
+
+function updateResourceKeywords(keywordString) {
+    // Update the value of the input used in form submission
+    $("#id-subject").find("#id_value").val(keywordString);
+
+    // Populate keywords field in the UI
+    var keywords = keywordString.split(",");
+    $("#lst-tags").empty();
+
+    for (var i = 0; i < keywords.length; i++) {
+        if (keywords[i] != "") {
+            var li = $("<li class='tag'><span></span></li>");
+            li.find('span').text(keywords[i]);
+            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+            $("#lst-tags").append(li);
+        }
+    }
 }

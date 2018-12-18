@@ -129,15 +129,10 @@ function onAddKeyword(event) {
 }
 
 function updateKeywords() {
-    var keywords = "";
-    var count = $("#lst-tags").find(".tag > span").length;
-    for (var x = 0; x < count; x++) {
-        keywords += $($("#lst-tags").find(".tag > span")[x]).text();
-        if (x != count - 1) {
-            keywords += ",";
-        }
-    }
-
+    // Get the list of keywords and store them as a comma separated string
+    var keywords = $("#lst-tags").find(".tag > span").map(function () {
+        return $(this).text()
+    }).get().join(",");
     $("#id-subject").find("#id_value").val(keywords);
 }
 
@@ -557,23 +552,10 @@ $(document).ready(function () {
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    var keywordString = $("#keywords-string").val();
-    $("#id-subject").find("#id_value").val(keywordString);
-
     // Populate keywords field
-    var keywords = keywordString.split(",");
-    $("#lst-tags").empty();
-
-    for (var i = 0; i < keywords.length; i++) {
-        if (keywords[i] != "") {
-            var li = $("<li class='tag'><span></span></li>");
-            li.find('span').text(keywords[i]);
-            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-            $("#lst-tags").append(li);
-        }
-    }
-
-    $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
+    const keywordString = $("#keywords-string").val();
+    updateResourceKeywords(keywordString);
+    $("#lst-tags").on("click", ".icon-remove", onRemoveKeyword);
 
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {

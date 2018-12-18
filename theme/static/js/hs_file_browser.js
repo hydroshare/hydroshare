@@ -1185,6 +1185,30 @@ $(document).ready(function () {
             success: function (file, response) {
                 // console.log(response);
             },
+            successmultiple: function (files, response) {
+                // uploaded files can affect metadata in composite resource.
+                // Use the json data returned from backend to update UI
+                console.log(response);
+                const resourceType = $("#resource-type").val();
+
+                if (resourceType === 'Composite Resource') {
+                    $("#id_abstract").val(response.abstract);
+
+                    // TODO: populate form items dynamically for creators.
+                    if (response.creators.length) {
+
+                    }
+
+                    updateResourceKeywords(response.keywords.join(","));
+
+                    updateResourceSpatialCoverage(response.spatial_coverage);
+
+                    updateResourceTemporalCoverage(response.temporal_coverage);
+
+                    $("#txt-title").val(response.title);
+                }
+
+            },
             init: function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
