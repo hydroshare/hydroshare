@@ -103,6 +103,8 @@ If this resource was derived from another resource, click this button to create 
             {% endfor %}
             </tbody>
         </table>
+        {% else %}
+            <p class="small text-muted">No sources have been added.</p>
         {% endif %}
     </div>
     <div class="col-xs-12 content-block">
@@ -175,6 +177,8 @@ Click this button to add a relationship to another resource, external website, o
             {% endfor %}
             </tbody>
         </table>
+        {% else %}
+            <p class="small text-muted">No related resources have been added.</p>
         {% endif %}
     </div>
 {% endif %}

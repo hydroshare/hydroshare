@@ -127,7 +127,9 @@
 
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-add-author" type="button" class="btn btn-primary">Save Changes</button>
+                                <button id="btn-add-author" type="button" class="btn btn-primary">
+                                    Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -199,7 +201,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -377,7 +379,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -573,7 +575,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -833,7 +835,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-save-funding-agency">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -903,7 +905,9 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary btn-save-funding-agency" data-index="{{ forloop.counter0 }}">Save changes</button>
+                            <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid"
+                                    data-index="{{ forloop.counter0 }}">Save changes
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -923,7 +927,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger"
+                        <a type="button" class="btn btn-danger btn-disable-after"
                            href="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/delete-metadata/">Delete</a>
                     </div>
                 </div>
@@ -943,7 +947,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -954,8 +958,8 @@
          aria-hidden="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="id_source_{{ source.id }}" action="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/update-metadata/"
-                      method="POST" enctype="multipart/form-data">
+                <form id="id_source_{{ source.id }}" method="POST" enctype="multipart/form-data"
+                      action="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/update-metadata/">
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-header">
@@ -968,20 +972,22 @@
                             <fieldset>
                                 <legend>Source</legend>
                                 <div id="div_id_derived_from" class="control-group">
-                                    <label for="id_derived_from" class="control-label requiredField">
-                                    Derived from<span class="asteriskField">*</span></label>
+                                    <label for="id_source-{{ forloop.counter0 }}-derived_from"
+                                           class="control-label">Derived from*</label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_source-{{ forloop.counter0 }}-derived_from" maxlength="300" name="source-{{ forloop.counter0 }}-derived_from"
-                                            type="text" value="{{ source.derived_from }}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput" required="required"
+                                               id="id_source-{{ forloop.counter0 }}-derived_from" maxlength="300"
+                                               name="source-{{ forloop.counter0 }}-derived_from"
+                                               type="text" value="{{ source.derived_from }}">
+                                    </div>
                                 </div>
                             </fieldset>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-edit-source" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1001,7 +1007,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -1053,7 +1059,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-edit-relation" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1155,7 +1161,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button id="btn-edit-contributor" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1173,7 +1179,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -1181,7 +1187,6 @@
     </div>
     {% endfor %}
 
-{#    {% for author in creator_formset.initial %}#}
     <div class="modal fade" id="edit-creator-dialog" tabindex="-1" role="dialog"
          aria-labelledby="edit-creator" aria-hidden="true">
         <div class="modal-dialog">
@@ -1193,7 +1198,6 @@
                     <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
                 </div>
 
-{#                {% if creator_formset.initial|length > 1 %}#}
                 <div class="modal-body modal-body--delete">
                     <span title="Remove"
                        data-toggle="collapse" data-target="#confirm-delete-author"
@@ -1208,14 +1212,13 @@
                                     style="margin-right: 5px;"
                                     data-target="#confirm-delete-author">Cancel
                             </button>
-                            <a type="button" class="btn btn-danger"
+                            <a type="button" class="btn btn-danger btn-disable-after"
                                href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">
                                 Delete
                             </a>
                         </div>
                     </div>
                 </div>
-{#                {% endif %}#}
 
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -1234,7 +1237,6 @@
                                     </div>
                                 </div>
 
-{#                                {% if author.description %}#}
                                 <div class="control-group control-group--description">
                                     <label for="creator-description" class="control-label">HydroShare User Identifier (URL)</label>
 
@@ -1243,7 +1245,6 @@
                                                maxlength="200" type="url" readonly>
                                     </div>
                                 </div>
-{#                                {% endif %}#}
 
                                 <div class="control-group control-group--organization">
                                     <label for="creator-organization" class="control-label">Organization<span class="asteriskField">*</span></label>
@@ -1303,13 +1304,12 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-save-author">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-{#    {% endfor %}#}
 
     <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
          aria-hidden="true">
@@ -1331,12 +1331,11 @@
                             <fieldset>
                                 <legend>Source</legend>
                                 <div id="div_id_derived_from" class="control-group">
-                                    <label for="id_derived_from" class="control-label requiredField">Derived from<span class="asteriskField">*</span></label>
+                                    <label for="id_derived_from" class="control-label">Derived from*</label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_derived_from" maxlength="300"
-                                                                 name="derived_from" type="text">
+                                        <input class="form-control input-sm textinput textInput" id="id_derived_from"
+                                               required="required" maxlength="300" name="derived_from" type="text">
                                     </div>
                                 </div>
                             </fieldset>
@@ -1344,7 +1343,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-add-source" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1376,7 +1375,6 @@
 
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
-                                            <option value="" selected="selected">---------</option>
                                             {% for type_value, type_display in relation_source_types %}
                                                 <option value={{ type_value }}>{{ type_display }}</option>
                                             {% endfor %}
@@ -1391,7 +1389,7 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput"
-                                               id="id_value" maxlength="500" name="value"
+                                               id="id_value" maxlength="500" name="value" required="required"
                                                type="text">
                                     </div>
                                 </div>
@@ -1400,7 +1398,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-add-relation" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
