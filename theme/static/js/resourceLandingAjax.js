@@ -94,9 +94,10 @@ function change_access_ajax_submit() {
             form.css("cursor", "auto");
 
             // Enable Publish Resource button if the resource was made public
-            $("#publish").toggleClass("disabled", element.attr("id") !== "btn-public");
-            $("#publish > span").attr("data-original-title", element.attr("id") !== "btn-public" ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
-            $("#publish > span").attr("data-html", element.attr("id") !== "btn-public" ? "false" : "true")
+            const isPublic = element.attr("id") === "btn-public";
+            $("#publish").toggleClass("disabled", !isPublic);
+            $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
+            $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);

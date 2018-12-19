@@ -103,10 +103,10 @@
                             <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog"
                                {% if not cm.raccess.public %}class="disabled"{% endif %}>
                                 <span data-toggle="tooltip" data-placement="bottom"
+                                      data-html="true"
                                         {% if cm.raccess.public %}
                                       title="Publish this resource"
                                         {% else %}
-                                      data-html="true"
                                       title='Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published.</small>'
                                         {% endif %}
                                       class="glyphicon glyphicon-globe icon-button icon-blue"></span>
