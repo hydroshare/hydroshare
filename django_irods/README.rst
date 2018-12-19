@@ -1,4 +1,7 @@
-ga_irods - iRODS connector for Django with Celery
+Originally written by Jefferson Heard. Updated by Alva Couch
+for the HydroShare project.
+
+django_irods - iRODS connector for Django with Celery
 #################################################
 
 `ga_irods`_ is a Django+Celery -> `iRODS`_ connector.  The idea is that you can
