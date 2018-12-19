@@ -162,6 +162,16 @@
                     {% endif %}
                     <li id="content-type-separator" role="separator" class="divider"></li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                        {# ADD METADATA TO A FILE #}
+                        <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
+                        </li>
+                        {# ADD METADATA TO A FOLDER #}
+                        <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
+                        </li>
                         <li data-fb-action="subMenuSetContentType"
                             class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
@@ -170,16 +180,6 @@
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu">
-                                {# ADD METADATA TO A FILE #}
-                                <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
-                                    <i class="fa fa-plus icon-green" aria-hidden="true"></i>
-                                    <span>Add metadata</span>
-                                </li>
-                                {# ADD METADATA TO A FOLDER #}
-                                <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
-                                    <i class="fa fa-plus icon-green" aria-hidden="true"></i>
-                                    <span>Add metadata</span>
-                                </li>
                                 <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
                                     data-toggle="tooltip" data-placement="right" data-fb-action="setGeoRasterFileType"
                                     title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">

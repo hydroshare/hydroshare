@@ -294,6 +294,7 @@ function updateSelectionMenuContext() {
                     uiActionStates.setGeoFeatureFileType.disabled = true;
                     uiActionStates.setTimeseriesFileType.disabled = true;
                     uiActionStates.setFileSetFileType.disabled = true;
+                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
                 }
             }
             else {
@@ -302,6 +303,7 @@ function updateSelectionMenuContext() {
                 uiActionStates.setGeoFeatureFileType.disabled = true;
                 uiActionStates.setTimeseriesFileType.disabled = true;
                 uiActionStates.setFileSetFileType.disabled = true;
+                uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
         // The item selected is a file
