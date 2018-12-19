@@ -100,7 +100,8 @@
                         {% endif %}
 
                         {% if page.perms.delete and cm.can_be_published %}
-                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog"
+                            <a id="publish" {% if cm.raccess.public %}data-toggle="modal"{% endif %}
+                               data-target="#submit-for-publication-dialog"
                                {% if not cm.raccess.public %}class="disabled"{% endif %}>
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       data-html="true"
@@ -109,7 +110,8 @@
                                         {% else %}
                                       title='Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published.</small>'
                                         {% endif %}
-                                      class="glyphicon glyphicon-globe icon-button icon-blue"></span>
+                                      class="glyphicon glyphicon-globe icon-button icon-blue">
+                                </span>
                             </a>
                         {% endif %}
 
