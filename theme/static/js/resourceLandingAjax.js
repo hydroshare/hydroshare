@@ -98,6 +98,7 @@ function change_access_ajax_submit() {
             $("#publish").toggleClass("disabled", !isPublic);
             $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
             $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
+            $("#hl-sharing-status").text(element.text().trim());    // Update highlight sharing status
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);
