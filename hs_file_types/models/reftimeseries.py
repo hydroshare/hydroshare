@@ -367,13 +367,16 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """checks if keywords exists in the uploaded json file"""
 
         json_data_dict = self._json_to_dict()
-        return 'keyWords' in json_data_dict['timeSeriesReferenceFile']
+        if 'keyWords' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['keyWords'] is not None
+        return False
 
     def get_keywords_from_json(self):
         """get a list of all keywords associated with this ref time series from json file"""
         json_data_dict = self._json_to_dict()
         if 'keyWords' in json_data_dict['timeSeriesReferenceFile']:
-            return json_data_dict['timeSeriesReferenceFile']['keyWords']
+            if json_data_dict['timeSeriesReferenceFile']['keyWords'] is not None:
+                return json_data_dict['timeSeriesReferenceFile']['keyWords']
         return []
 
     @property
@@ -381,7 +384,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """get a list of all sample mediums associated with this ref time series"""
         sample_mediums = []
         for series in self.series_list:
-            if "sampleMedium" in series:
+            if "sampleMedium" in series and series['sampleMedium'] is not None:
                 if series['sampleMedium'] not in sample_mediums:
                     sample_mediums.append(series['sampleMedium'])
         return sample_mediums
@@ -933,19 +936,39 @@ def _validate_json_file(res_json_file):
         msg = "Not a valid reference time series json file. {}".format(ex.message)
         raise Exception(msg)
 
-    ts_series_list = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
-    _validate_json_data(ts_series_list)
+    _validate_json_data(json_data)
     return json_file_content
 
 
-def _validate_json_data(series_data):
-    # 1. here we need to test that the date values are actually date type data
-    # the beginDate <= endDate
-    # 2. the url is valid and live if the url value is not empty or 'unknown'
-    # 3. 'sampleMedium' key is present in each series
+def _validate_json_data(json_data):
+    # Here we are validating the followings:
+    # 1. date values are actually date type data and the beginDate <= endDate
+    # 2. 'url' is valid and live if the url value is not none or 'unknown' (case insensitive)
+    # 3. 'sampleMedium' key is present in each series and not empty string
     # 4. 'valueCount' key is present in each series
+    # 5. 'title' is not empty string
+    # 6. 'abstract' is not empty string
+    # 7. 'fileVersion' is not empty string
+    # 8. 'symbol' is not empty string
 
     err_msg = "Invalid json file. {}"
+    # validate title
+    if not json_data['timeSeriesReferenceFile']['title'].strip():
+        raise ValidationError("title has a value of empty string")
+
+    # validate abstract
+    if not json_data['timeSeriesReferenceFile']['abstract'].strip():
+        raise ValidationError("abstract has a value of empty string")
+
+    # validate fileVersion
+    if not json_data['timeSeriesReferenceFile']['fileVersion'].strip():
+        raise ValidationError("fileVersion has a value of empty string")
+
+    # validate symbol
+    if not json_data['timeSeriesReferenceFile']['symbol'].strip():
+            raise ValidationError("symbol has a value of empty string")
+
+    series_data = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
     urls = []
     for series in series_data:
         try:
@@ -963,19 +986,23 @@ def _validate_json_data(series_data):
 
         # validate requestInfo object
         request_info = series["requestInfo"]
+
         # validate refType
         if request_info['refType'] not in RefTimeseriesLogicalFile.get_allowed_ref_types():
             raise ValidationError("Invalid value for refType")
+
         # validate returnType
         if request_info['returnType'] not in RefTimeseriesLogicalFile.get_allowed_return_types():
             raise ValidationError("Invalid value for returnType")
+
         # validate serviceType
         if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
 
-        # check that sampleMedium key is there
-        if 'sampleMedium' not in series:
-            raise ValidationError("sampleMedium is missing")
+        # check that sampleMedium is not empty string
+        if series['sampleMedium'] is not None and not series['sampleMedium'].strip():
+            raise ValidationError("sampleMedium has a value of empty string")
+
         # check  that valueCount key is there
         if 'valueCount' not in series:
             raise ValidationError("valueCount is missing")
@@ -989,15 +1016,18 @@ def _validate_json_data(series_data):
                 raise Exception(err_msg.format("Invalid web service URL found"))
 
         if 'method' in series:
-            url = series['method']['methodLink'].strip()
-            if url and url.lower() != 'unknown':
-                url = Request(url)
-                if url not in urls:
-                    urls.append(url)
-                    try:
-                        urlopen(url)
-                    except URLError:
-                        raise Exception(err_msg.format("Invalid method link found"))
+            if series['method']['methodLink'] is not None:
+                url = series['method']['methodLink'].strip()
+                if not url:
+                    raise ValidationError("methodLink has a value of empty string")
+                if url.lower() != 'unknown':
+                    url = Request(url)
+                    if url not in urls:
+                        urls.append(url)
+                        try:
+                            urlopen(url)
+                        except URLError:
+                            raise Exception(err_msg.format("Invalid method link found"))
 
 
 TS_SCHEMA = {
@@ -1011,7 +1041,7 @@ TS_SCHEMA = {
                 "abstract": {"type": "string"},
                 "fileVersion": {"type": "string"},
                 "keyWords": {
-                    "type": "array",
+                    "type": ["array", "null"],
                     "items": {"type": "string"},
                     "uniqueItems": True
                 },
@@ -1045,7 +1075,7 @@ TS_SCHEMA = {
                             "type": "object",
                             "properties": {
                                 "methodDescription": {"type": "string"},
-                                "methodLink": {"type": "string"}
+                                "methodLink": {"type": ["string", "null"]}
                             },
                             "required": ["methodDescription", "methodLink"],
                             "additionalProperties": False
@@ -1064,7 +1094,7 @@ TS_SCHEMA = {
                                          "url"],
                             "additionalProperties": False
                         },
-                        "sampleMedium": {"type": "string"},
+                        "sampleMedium": {"type": ["string", "null"]},
                         "valueCount": {"type": "number"}
                     },
                     "required": ["beginDate", "endDate", "requestInfo",
@@ -1072,7 +1102,7 @@ TS_SCHEMA = {
                     "additionalProperties": False
                 }
             },
-            "required": ["fileVersion", "symbol", "referencedTimeSeries"],
+            "required": ["title", "abstract", "fileVersion", "symbol", "referencedTimeSeries"],
             "additionalProperties": False
         }
     },
