@@ -628,15 +628,21 @@ function bindFileBrowserItemEvents() {
         prevent = true;
         onOpenFolder();
     });
+
     $("#hs-file-browser li.fb-folder, #hs-file-browser li.fb-file").click(function () {
+        // Do not load file metadata if the side panel is hidden
+        if ($("#fb-metadata").hasClass("hidden")) {
+            return;
+        }
         $("#fileTypeMetaData").html(loading_metadata_alert);
         timer = setTimeout(function () {
             if (!prevent) {
                 showFileTypeMetadata(false, "");
             }
             prevent = false;
-        }, delay)
+        }, delay);
     });
+
     $("#hs-file-browser li.fb-file").dblclick(onOpenFile);
 
     // Right click menu for file browser
@@ -1247,8 +1253,6 @@ $(document).ready(function () {
                     if ($("#hs-file-browser").attr("data-refresh-on-upload") === "true") {
                         var currentPath = $("#hs-file-browser").attr("data-current-path");
                         sessionStorage.currentBrowsepath = currentPath;
-                        // Page refresh is needed to show updated metadata
-                        // window.location.reload(true);
                     }
                     else {
                         var resourceType = $("#resource-type").val();
@@ -1932,6 +1936,18 @@ $(document).ready(function () {
         $(".fb-dropzone-wrapper").toggleClass("fb-collapsed");
         $(".ui-resizable-e").toggleClass("hidden");
         $("#fb-metadata-helper .ui-icon-grip-dotted-vertical").toggleClass("hidden");
+
+        const selected = $("#fb-files-container li.ui-selected");
+
+        if (!($("#fb-metadata").hasClass("hidden"))) {
+            if (selected.length == 1) {
+                $("#fileTypeMetaData").html(loading_metadata_alert);
+                showFileTypeMetadata(false, "");
+            }
+            else {
+                $("#fileTypeMetaData").html(file_metadata_alert);
+            }
+        }
     });
 });
 
