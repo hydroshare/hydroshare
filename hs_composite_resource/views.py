@@ -16,9 +16,25 @@ def update_resource_coverage(request, resource_id, coverage_type, **kwargs):
     :return an instance of JsonResponse type
     """
 
+    return _process_resource_coverage_action(request, resource_id, coverage_type, action='update')
+
+
+@login_required
+def delete_resource_coverage(request, resource_id, coverage_type, **kwargs):
+    """Deletes resource coverage
+    :param  request: an instance of HttpRequest
+    :param  resource_id: id of resource for which coverage needs to be deleted
+    :param  coverage_type: a value of either temporal or spatial
+    :return an instance of JsonResponse type
+    """
+    return _process_resource_coverage_action(request, resource_id, coverage_type, action='delete')
+
+
+def _process_resource_coverage_action(request, resource_id, coverage_type, action):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
+
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
@@ -26,7 +42,7 @@ def update_resource_coverage(request, resource_id, coverage_type, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
-        err_msg = "Coverage can be updated only for composite resource."
+        err_msg = "Coverage can be {}d only for composite resource.".format(action)
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -36,11 +52,17 @@ def update_resource_coverage(request, resource_id, coverage_type, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if coverage_type.lower() == 'spatial':
-        res.update_spatial_coverage()
+        if action == 'delete':
+            res.delete_coverage(coverage_type='spatial')
+        else:
+            res.update_spatial_coverage()
     else:
-        res.update_temporal_coverage()
+        if action == 'delete':
+            res.delete_coverage(coverage_type='temporal')
+        else:
+            res.update_temporal_coverage()
 
-    msg = "Resource {} coverage was updated successfully.".format(coverage_type.lower())
+    msg = "Resource {0} coverage was {1}d successfully.".format(coverage_type.lower(), action)
     response_data['status'] = 'success'
     response_data['message'] = msg
     if coverage_type.lower() == 'spatial':

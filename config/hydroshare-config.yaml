@@ -11,7 +11,7 @@ USE_NGINX: false
 USE_SSL: false
 USE_SECURITY: false
 USE_HTTP_AUTH: false
- 
+
 ### SSL Configuration Variables ###
 SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert

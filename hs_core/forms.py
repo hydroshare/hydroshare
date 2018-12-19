@@ -986,6 +986,15 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
             self.fields['units'].widget.attrs['readonly'] = True
+            if file_type:
+                # add the 'data-map-item' attribute so that map interface can be used for editing
+                # these fields
+                self.fields['north'].widget.attrs['data-map-item'] = 'latitude'
+                self.fields['east'].widget.attrs['data-map-item'] = 'longitude'
+                self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
+                self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
+                self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
+                self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
 
     def clean(self):
         """Modify the form's cleaned_data dictionary."""
@@ -998,12 +1007,12 @@ class CoverageSpatialForm(forms.Form):
         if spatial_coverage_type == 'point':
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
-            if not north:
+            if not north and north != 0:
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
                 del self.cleaned_data['north']
 
-            if not east:
+            if not east and east != 0:
                 self._errors['east'] = ["Data for east is missing"]
                 is_form_errors = True
                 del self.cleaned_data['east']
@@ -1037,7 +1046,8 @@ class CoverageSpatialForm(forms.Form):
 
             for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
                 limit_data = temp_cleaned_data.get(limit, None)
-                if not limit_data:
+                # allow value of 0 to go through
+                if not limit_data and limit_data != 0:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
                     del self.cleaned_data[limit]

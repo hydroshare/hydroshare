@@ -179,7 +179,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 with div(cls="row"):
                     with div(cls="col-sm-6 col-xs-12 time-series-forms hs-coordinates-picker",
                              id="site-filetype", data_coordinates_type="point"):
-                        with form(id="id-site-file-type",
+                        with form(id="id-site-file-type", data_coordinates_type='point',
                                   action="{{ site_form.action }}",
                                   method="post", enctype="multipart/form-data"):
                             div("{% crispy site_form %}")
@@ -439,10 +439,12 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return "Time Series"
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=ts_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=ts_metadata, resource=resource)
 
     @property
     def supports_resource_file_move(self):
@@ -566,7 +568,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
-            logical_file = cls.initialize(base_file_name)
+            logical_file = cls.initialize(base_file_name, resource)
 
             try:
                 if folder_path is None:
@@ -583,17 +585,23 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                         aggregation_folder_created = True
                         tgt_folder = upload_folder
                         files_to_copy = [res_file]
+                        # create logical file record in DB
+                        logical_file.save()
                         logical_file.copy_resource_files(resource, files_to_copy,
                                                          tgt_folder)
                         res_files_to_delete.append(res_file)
                     else:
                         # selected file is already in a folder
                         upload_folder = file_folder
+                        # create logical file record in DB
+                        logical_file.save()
                         # make the selected file part of the aggregation
                         logical_file.add_resource_file(res_file)
                 else:
                     # folder has been selected for creating the aggregation
                     upload_folder = folder_path
+                    # create logical file record in DB
+                    logical_file.save()
                     # make the selected file part of the aggregation
                     logical_file.add_resource_file(res_file)
 
@@ -636,10 +644,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                                                        file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
-        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy()
+        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy(copied_resource)
         copy_of_logical_file.metadata.abstract = self.metadata.abstract
         copy_of_logical_file.metadata.value_counts = self.metadata.value_counts
         copy_of_logical_file.metadata.is_dirty = self.metadata.is_dirty

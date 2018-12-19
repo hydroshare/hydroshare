@@ -24,7 +24,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_resource_by_shortkey
+    set_dirty_bag_flag, add_file_to_resource, resource_modified
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 
@@ -138,7 +138,17 @@ class AbstractFileMetaData(models.Model):
 
             self.get_extra_metadata_html_form()
             if temporal_coverage:
-                self.get_temporal_coverage_html_form()
+                # for aggregation that contains other aggregations with temporal data,
+                # show option to update temporal coverage from contained aggregations
+                if self.logical_file.has_children_temporal_data:
+                    with self.get_temporal_coverage_html_form():
+                        with div():
+                            button("Set temporal coverage from folder contents",
+                                   type="button",
+                                   cls="btn btn-primary",
+                                   id="btn-update-aggregation-temporal-coverage")
+                else:
+                    self.get_temporal_coverage_html_form()
         return root_div
 
     def get_keywords_html_form(self):
@@ -238,7 +248,7 @@ class AbstractFileMetaData(models.Model):
         # set prior to calling the template.render(context)
         root_div = div(cls="col-lg-6 col-xs-12", id="temporal-coverage-filetype")
         with root_div:
-            with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+            with form(id="id-coverage-temporal-file-type", action="{{ temp_form.action }}",
                       method="post", enctype="multipart/form-data"):
                 div("{% crispy temp_form %}")
                 with div(cls="row", style="margin-top:10px;"):
@@ -378,14 +388,23 @@ class AbstractFileMetaData(models.Model):
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
         if element_model_name.lower() == "coverage":
-            resource = element.metadata.logical_file.resource
-            # resource will be None in case of coverage element being
+            aggr = element.metadata.logical_file
+            # aggregation won't have resource files in case of coverage element being
             # created as part of copying a resource that supports logical file
-            # types
-            if resource is not None:
-                # get the typed resource - CompositeResource
-                resource = get_resource_by_shortkey(resource.short_id)
+            # types - in that case no need for updating resource lever coverage
+            if aggr.files.all().count() > 0:
+                resource = aggr.resource
                 resource.update_coverage()
+
+            # if the aggregation (logical file) for which coverage data is created
+            # has a parent aggregation then coverage needs to be updated for that
+            # parent aggregation except in the case of metadata element being created as
+            # part of copying a resource.
+            # aggregation won't have resource files when copying a resource
+            if aggr.files.all().count() > 0:
+                parent_aggr = aggr.get_parent()
+                if parent_aggr is not None:
+                    parent_aggr.update_coverage()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -397,9 +416,15 @@ class AbstractFileMetaData(models.Model):
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
-            # get the typed resource - CompositeResource
-            resource = get_resource_by_shortkey(resource.short_id)
             resource.update_coverage()
+
+            # if the aggregation (logical file) for which coverage data is updated
+            # has a parent aggregation then coverage needs to be updated for that
+            # parent aggregation
+            aggr = element.metadata.logical_file
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None:
+                parent_aggr.update_coverage()
 
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -629,6 +654,7 @@ class AbstractFileMetaData(models.Model):
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
+    resource = models.ForeignKey('hs_composite_resource.CompositeResource')
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
@@ -648,15 +674,17 @@ class AbstractLogicalFile(models.Model):
         abstract = True
 
     @classmethod
-    def initialize(cls, dataset_name):
+    def initialize(cls, dataset_name, resource):
         """
         A helper for creating aggregation. Creates a new aggregation/logical_file type
         instance and sets it's dataset field
         :param  dataset_name: a name/title for the aggregation/logical file
+        :param  resource: an instance of composite resource for which this aggregation being
+        created
         """
-        logical_file = cls.create()
+        logical_file = cls.create(resource)
         logical_file.dataset_name = dataset_name
-        logical_file.save()
+        # at this point the logical file is not created in DB - caller needs to save it to DB
         return logical_file
 
     def _finalize(self, user, resource, folder_created, res_files_to_delete, reset_title=False):
@@ -727,9 +755,13 @@ class AbstractLogicalFile(models.Model):
     def get_main_file(self):
         file_extension = self.get_main_file_type()
         if file_extension:
-            for f in self.files.all():
-                if f.extension == file_extension:
-                    return f
+            if file_extension == ".*":
+                # any file can serve as main file
+                return self.files.all().first()
+            else:
+                for f in self.files.all():
+                    if f.extension == file_extension:
+                        return f
         return None
 
     @classmethod
@@ -803,31 +835,34 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            # get the files from the specified folder location
-            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                 sub_folders=False)
-            if not res_files:
-                msg = "The specified folder {} does not contain any file."
-                msg = msg.format(path_to_check)
-                raise ValidationError(msg)
-            else:
-                # check if the specified folder is suitable for aggregation
-                if cls.check_files_for_aggregation_type(res_files):
-                    # get the primary file suitable for creating a specific aggregation type
-                    res_file = cls.get_primary_resouce_file(res_files)
+            res_file = None
+            if cls.__name__ != 'FileSetLogicalFile':
+                # get the files from the specified folder location
+                res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                     sub_folders=False)
+                if not res_files:
+                    msg = "The specified folder {} does not contain any file."
+                    msg = msg.format(path_to_check)
+                    raise ValidationError(msg)
                 else:
-                    res_file = None
+                    # check if the specified folder is suitable for aggregation
+                    if cls.check_files_for_aggregation_type(res_files):
+                        # get the primary file suitable for creating a specific aggregation type
+                        res_file = cls.get_primary_resouce_file(res_files)
+                    else:
+                        res_file = None
 
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
+        if cls.__name__ != 'FileSetLogicalFile':
+            if res_file is None or not res_file.exists:
+                raise ValidationError("File not found.")
 
-        if res_file.has_logical_file:
-            msg = "Selected {} {} is already part of an aggregation."
-            if folder_path is None:
-                msg = msg.format('file', res_file.file_name)
-            else:
-                msg = msg.format('folder', folder_path)
-            raise ValidationError(msg)
+            if res_file.has_logical_file and not res_file.logical_file.is_fileset:
+                msg = "Selected {} {} is already part of an aggregation."
+                if folder_path is None:
+                    msg = msg.format('file', res_file.file_name)
+                else:
+                    msg = msg.format('folder', folder_path)
+                raise ValidationError(msg)
 
         return res_file, folder_path
 
@@ -886,6 +921,11 @@ class AbstractLogicalFile(models.Model):
         """Return the class name of the logical type (aggregation type)"""
         return self.__class__.__name__
 
+    @property
+    def is_fileset(self):
+        """Return True if this aggregation is a fileset aggregation, otherwise False"""
+        return self.get_aggregation_class_name() == 'FileSetLogicalFile'
+
     @staticmethod
     def get_aggregation_type_name():
         """Return the appropriate aggregation name needed for aggregation xml metadata and
@@ -910,14 +950,6 @@ class AbstractLogicalFile(models.Model):
     def size(self):
         # get total size (in bytes) of all files in this file type
         return sum([f.size for f in self.files.all()])
-
-    @property
-    def resource(self):
-        res_file = self.files.all().first()
-        if res_file is not None:
-            return res_file.resource
-        else:
-            return None
 
     @property
     def can_contain_folders(self):
@@ -963,7 +995,11 @@ class AbstractLogicalFile(models.Model):
             return self.files.first().short_path
         else:
             # self is a multi- file aggregation type
-            return self.files.first().file_folder
+            if not self.is_fileset:
+                return self.files.first().file_folder
+
+            # self is a fileset aggregation
+            return self.folder
 
     @property
     def metadata_short_file_path(self):
@@ -974,7 +1010,10 @@ class AbstractLogicalFile(models.Model):
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_meta.xml"
-        file_folder = self.files.first().file_folder
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
         if file_folder is not None:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
@@ -993,7 +1032,10 @@ class AbstractLogicalFile(models.Model):
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
         xml_file_name += "_resmap.xml"
-        file_folder = self.files.first().file_folder
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
         if file_folder is not None:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
@@ -1040,7 +1082,7 @@ class AbstractLogicalFile(models.Model):
             uploaded_file = UploadedFile(file=open(fl, 'rb'),
                                          name=os.path.basename(fl))
             new_res_file = add_file_to_resource(
-                resource, uploaded_file, folder=upload_folder
+                resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
             )
 
             # make each resource file we added part of the logical file
@@ -1081,12 +1123,14 @@ class AbstractLogicalFile(models.Model):
             # make the copied file as part of the aggregation/file type
             self.add_resource_file(copied_res_file)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """creates a copy of this logical file object with associated metadata needed to support
         resource copy.
+        :param  copied_resource: a copy of the resource for which a copy of aggregation needs to be
+        created
         Note: This copied logical file however does not have any association with resource files
         """
-        copy_of_logical_file = type(self).create()
+        copy_of_logical_file = type(self).create(copied_resource)
         copy_of_logical_file.dataset_name = self.dataset_name
         copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
         copy_of_logical_file.metadata.keywords = self.metadata.keywords
@@ -1141,6 +1185,7 @@ class AbstractLogicalFile(models.Model):
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
+        :param  user    user who is deleting file type/aggregation
         :param delete_res_files If True all resource files that are part of this logical file will
         be deleted
         """
@@ -1181,6 +1226,13 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
+        # find if there is a parent fileset aggregation - files in this (self) aggregation
+        # need to be added to parent if exists
+        parent_fs_aggr = self.get_parent()
+
+        res_files = []
+        res_files.extend(self.files.all())
+
         # first need to set the aggregation for each of the associated resource files to None
         # so that deleting the aggregation (logical file) does not cascade to deleting of
         # resource files associated with the aggregation
@@ -1197,6 +1249,57 @@ class AbstractLogicalFile(models.Model):
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
             metadata.delete()
+
+        # make all the resource files of this (self) aggregation part of the parent aggregation
+        if parent_fs_aggr is not None:
+            for res_file in res_files:
+                parent_fs_aggr.add_resource_file(res_file)
+
+    def get_parent(self):
+        """Find the parent fileset aggregation of this aggregation
+        :return a fileset aggregation if found, otherwise None
+        """
+
+        aggr_path = self.aggregation_name
+        if "/" in aggr_path:
+            parent_aggr_path = os.path.dirname(aggr_path)
+            return self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
+
+        return None
+
+    @property
+    def has_parent(self):
+        """Checks if this aggregation has a parent aggregation
+        :return True if there is a parent aggregation otherwise False
+        """
+        return self.get_parent() is not None
+
+    def get_children(self):
+        """Returns a list of all aggregations that are directly under the folder that represents
+        this (self) aggregation
+        :return a list of aggregations
+
+        Note: Aggregation types that support nested aggregation must override this method
+        """
+
+        return []
+
+    @property
+    def has_children(self):
+        """Returns True if the this aggregation contains any other aggregations, otherwise False"""
+        return len(self.get_children()) > 0
+
+    @property
+    def has_children_spatial_data(self):
+        """Returns True if any of the contained aggregation has spatial data, otherwise False"""
+        return any(child_aggr.metadata.spatial_coverage is not None for child_aggr in
+                   self.get_children())
+
+    @property
+    def has_children_temporal_data(self):
+        """Returns True if any of the contained aggregation has temporal data, otherwise False"""
+        return any(child_aggr.metadata.temporal_coverage is not None for child_aggr in
+                   self.get_children())
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
@@ -1233,7 +1336,7 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.exception("Failed to create aggregation metadata xml file")
+            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
             raise ex
         finally:
             shutil.rmtree(tmpdir)
@@ -1329,6 +1432,25 @@ class AbstractLogicalFile(models.Model):
         a.add_resource(resMetaFile)
         for f in resFiles:
             a.add_resource(f)
+
+        # Create a description of the contained aggregations and add it to the aggregation
+        child_ore_aggregations = []
+        for n, child_aggr in enumerate(self.get_children()):
+            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                aggr_name=child_aggr.map_short_file_path + '#aggregation')
+            child_ore_aggr = Aggregation(res_uri)
+            child_ore_aggregations.append(child_ore_aggr)
+            child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
+            child_agg_type_url = "{site}/terms/{aggr_type}"
+            child_agg_type_url = child_agg_type_url.format(
+                site=current_site_url, aggr_type=child_aggr.get_aggregation_type_name())
+            child_ore_aggregations[n]._dcterms.type = URIRef(child_agg_type_url)
+
+        # Add contained aggregations to the aggregation
+        for aggr in child_ore_aggregations:
+            a.add_resource(aggr)
 
         # Register a serializer with the aggregation, which creates a new ResourceMap that
         # needs a URI

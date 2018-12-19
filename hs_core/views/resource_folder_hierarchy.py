@@ -99,9 +99,11 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
-                main_file = aggregation_object.get_main_file.file_name
+                main_file = ''
+                if not aggregation_object.is_fileset:
+                    main_file = aggregation_object.get_main_file.file_name
             else:
-                # find if any aggregation type can be created from this folder
+                # find if any aggregation type that can be created from this folder
                 folder_aggregation_type_to_set =  \
                     resource.get_folder_aggregation_type_to_set(dir_path)
                 if folder_aggregation_type_to_set is None:
@@ -141,11 +143,13 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
+        is_single_file_aggregation = ''
         if resource.resource_type == "CompositeResource":
             if f.has_logical_file:
                 logical_file_type = f.logical_file_type_name
                 logical_file_id = f.logical_file.id
                 aggregation_name = f.aggregation_display_name
+                is_single_file_aggregation = f.logical_file.is_single_file_aggregation
                 if 'url' in f.logical_file.extra_data:
                     f_ref_url = f.logical_file.extra_data['url']
 
@@ -153,7 +157,8 @@ def data_store_structure(request):
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id})
+                      'logical_file_id': logical_file_id,
+                      'is_single_file_aggregation': is_single_file_aggregation})
 
     return_object = {'files': files,
                      'folders': dirs,

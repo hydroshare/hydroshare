@@ -55,8 +55,10 @@ class TestFolderDownloadZip(TestCase):
         if self.res:
             self.res.delete()
         if self.test_file:
+            self.test_file.close()
             os.remove(self.test_file.name)
         if self.refts_file:
+            self.refts_file.close()
             os.remove(self.refts_file.name)
         GenericResource.objects.all().delete()
         istorage = IrodsStorage()
