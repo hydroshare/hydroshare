@@ -41,7 +41,13 @@
     <tr>
         <th>Comments: </th>
         <td>
-            <a href="#resource-comments">{{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}</a>
+            <a href="#resource-comments">
+                {% if cm.comments_count >= 1 %}
+                    {{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}
+                {% else %}
+                    No comments (yet)
+                {% endif %}
+            </a>
         </td>
     </tr>
 </table>
