@@ -768,18 +768,17 @@
                                     {% if not resource_edit_mode %}
                                         {% block extended_metadata %}{% endblock %}
                                     {% else %}
-                                        {% crispy resource_edit_mode %}
+                                        {% crispy metadata_form  %}
                                     {% endif %}
-                                    {% block extra_section %} {# add extra section for resource landing page #}
-                                    {% endblock %}
+
+                                    {# add extra section for resource landing page #}
+                                    {% block extra_section %}{% endblock %}
                                 </div>
                             </div>
                         </div>
                     {% endif %}
                 {% endif %}
-
             {% endif %}
-
 
             {# ======= Additional Metadata ======= #}
             {% include "resource-landing-page/additional-metadata.html" %}
