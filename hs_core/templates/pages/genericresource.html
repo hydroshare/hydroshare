@@ -73,11 +73,6 @@
                 {% include "resource-landing-page/coverage.html" %}
             {% endif %}
 
-            {# ======= Readme ======= #}
-            {% if readme %}
-                {% include "resource-landing-page/readme-file.html" %}
-            {% endif %}
-
             {% block content_block %}
             {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
             {% if cm.resource_type != "ToolResource" %}
@@ -723,29 +718,34 @@
                         </div>
 
                         <div class="files" id="previews"></div>
-                            {% block download_bag %}
-                        <div>
-                        {% if user_zone_account_exist %}
-                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
-                               data-target="#rep-resource-to-irods-dialog">
-                                <span class="glyphicon">
-                                   <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
-                                </span>
-                            </a>
-                        {% endif %}
+                        {% block download_bag %}
+                            <div>
+                            {% if user_zone_account_exist %}
+                                <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
+                                   data-target="#rep-resource-to-irods-dialog">
+                                    <span class="glyphicon">
+                                       <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
+                                    </span>
+                                </a>
+                            {% endif %}
 
-                        {% if user_zone_account_exist %}
-                            <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-success"></span>
+                            {% if user_zone_account_exist %}
+                                <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-success"></span>
+                                </div>
+                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-error"></span>
+                                </div>
+                            {% endif %}
                             </div>
-                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-error"></span>
-                            </div>
-                        {% endif %}
-                        </div>
                         {% endblock %} {#  download_bag #}
+
+                        {# ======= Readme ======= #}
+                        {% if readme %}
+                            {% include "resource-landing-page/readme-file.html" %}
+                        {% endif %}
                     {% else %}
                         <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
                         <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
