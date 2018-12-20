@@ -2,7 +2,7 @@ FROM postgres:9.4.7
 
 RUN mkdir -p /app
 
-ADD ./conf_postgres/pg.development.sql /app/pg.development.sql
+ADD ./pg.development.sql /app/pg.development.sql
 
 # IPv6 listener disabled in pg_hba.conf
 ADD ./conf_postgres/pg_hba.conf /app/pg_hba.conf
