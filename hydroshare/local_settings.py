@@ -110,14 +110,14 @@ POSTGIS_VERSION=(2,1,1)
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_HOST = 'irods'
 IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
-IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
-IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
-IRODS_ZONE = 'hydrotest41Zone'
-IRODS_USERNAME = 'hsproxy'
-IRODS_AUTH = 'proxywater1'
+IRODS_DEFAULT_RESOURCE = 'demoResc'
+IRODS_HOME_COLLECTION = '/irods/home/rods'
+IRODS_CWD = '/irods/home/rods'
+IRODS_ZONE = 'tempZone'
+IRODS_USERNAME = 'rods'
+IRODS_AUTH = 'TEMPORARY_zone_key'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
