@@ -1,12 +1,3 @@
-# Temporary for alternate dev setup
-conf_postgres
-conf_solr
-Dockerfile-defaultworker
-Dockerfile-hydroshare
-Dockerfile-postgis
-Dockerfile-solr
-
-# HydroShare Custom
 *.pyc
 *.pyo
 *.db
