@@ -2,16 +2,18 @@ version: '3'
 #TODO clocks and timezones
 #TODO add devops admin network tools
 services:
-  irods:
-    build:
-      context: .
-      dockerfile: Dockerfile-irods
-    container_name: irods
-    hostname: irods
+#  irods:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile-irods
+#    container_name: irods
+#    hostname: irods.local
 #    volumes:
-#      - .:/hydroshare
-    stdin_open: true
-    tty: true
+#      - irodsvol/vault:/var/lib/irods/iRODS/Vault
+#      - irodsvol/pgdata:/var/lib/postgresql/data
+##      - .:/hydroshare
+#    stdin_open: true
+#    tty: true
   postgis:
     build:
       context: .
@@ -153,3 +155,4 @@ services:
 # docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
+  irodsvol:

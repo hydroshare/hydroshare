@@ -110,7 +110,7 @@ POSTGIS_VERSION=(2,1,1)
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'irods'
+IRODS_HOST = 'data.local.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'demoResc'
 IRODS_HOME_COLLECTION = '/irods/home/rods'
@@ -199,6 +199,58 @@ LOCAL_CACHE_URI = "/local-cache"
 RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+
+
+
+
+
+
+SHARED_NEG_KEY='hydroshareZonehydroshareuserZone'
+
+# Local resource iRODS configuration
+USE_IRODS=True
+IRODS_ROOT='/tmp'
+IRODS_ICOMMANDS_PATH='/usr/bin'
+IRODS_HOST='irods.local'
+IRODS_PORT='1247'
+IRODS_DEFAULT_RESOURCE='hydroshareReplResc'
+IRODS_HOME_COLLECTION='/hydroshareZone/home/wwwHydroProxy'
+IRODS_CWD='/hydroshareZone/home/wwwHydroProxy'
+IRODS_ZONE='hydroshareZone'
+IRODS_USERNAME='wwwHydroProxy'
+IRODS_AUTH='wwwHydroProxy'
+IRODS_GLOBAL_SESSION=True
+
+# Remote user zone iRODS configuration
+REMOTE_USE_IRODS=True
+
+# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
+HS_USER_ZONE_HOST='users.local.org'
+HS_USER_ZONE_PROXY_USER='hsuserproxy'
+HS_USER_ZONE_PROXY_USER_PWD='hsuserproxy'
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD='/home/hsuserproxy/create_user.sh'
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD='/home/hsuserproxy/delete_user.sh'
+
+# the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
+HS_LOCAL_PROXY_USER_IN_FED_ZONE='localHydroProxy'
+
+# Please keep the line below unchanged since it is used to check whether
+# the current site is in production or not
+HS_WWW_IRODS_PROXY_USER='wwwHydroProxy'
+# credentials for HydroShare proxy user iRODS account which is set to have own access control
+# to all collections in any federated zone with HydroShare zone, which is only useful when
+# testing HydroShare federated zone in local test development environment since in www
+# production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
+HS_WWW_IRODS_PROXY_USER_PWD='wwwHydroProxy'
+HS_WWW_IRODS_HOST='data.local.org'
+HS_IRODS_LOCAL_ZONE_DEF_RES='hydroshareLocalResc'
+HS_WWW_IRODS_ZONE='hydroshareZone'
+HS_USER_IRODS_ZONE='hydroshareuserZone'
+
+
+
+
+
 
 with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
