@@ -106,11 +106,16 @@ class TimeSeries(object):
                                         with td():
                                             a(self.method_link, href=self.method_link,
                                               target="_blank")
+                                    elif self.method_link is None:
+                                        td("")
                                     else:
                                         td(self.method_link)
                                 with tr():
                                     get_th('Sample Medium')
-                                    td(self.sample_medium)
+                                    if self.sample_medium is not None:
+                                        td(self.sample_medium)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Value Count')
                                     td(self.value_count)
@@ -159,9 +164,10 @@ class TimeSeries(object):
         hs_end_date.text = end_date.isoformat()
 
         # encode sample medium
-        hs_sample_medium = etree.SubElement(rdf_description, '{%s}sampleMedium'
-                                            % NAMESPACES['hsterms'])
-        hs_sample_medium.text = self.sample_medium
+        if self.sample_medium is not None:
+            hs_sample_medium = etree.SubElement(rdf_description, '{%s}sampleMedium'
+                                                % NAMESPACES['hsterms'])
+            hs_sample_medium.text = self.sample_medium
 
         # encode value count
         hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount' % NAMESPACES['hsterms'])
@@ -195,7 +201,7 @@ class TimeSeries(object):
         hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
                                           % NAMESPACES['hsterms'])
         hs_method_desc.text = self.method_description
-        if self.method_link:
+        if self.method_link is not None:
             hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
                                               % NAMESPACES['hsterms'])
             hs_method_link.text = self.method_link
@@ -944,29 +950,28 @@ def _validate_json_data(json_data):
     # Here we are validating the followings:
     # 1. date values are actually date type data and the beginDate <= endDate
     # 2. 'url' is valid and live if the url value is not none or 'unknown' (case insensitive)
-    # 3. 'sampleMedium' key is present in each series and not empty string
-    # 4. 'valueCount' key is present in each series
+    # 3. 'sampleMedium' is not empty string
+    # 4. 'variableName' is not empty string
     # 5. 'title' is not empty string
     # 6. 'abstract' is not empty string
     # 7. 'fileVersion' is not empty string
     # 8. 'symbol' is not empty string
+    # 9. 'siteName' is not empty string
+    # 10. 'methodLink' is not empty string
+    # 11. 'methodDescription' is not empty string
 
     err_msg = "Invalid json file. {}"
     # validate title
-    if not json_data['timeSeriesReferenceFile']['title'].strip():
-        raise ValidationError("title has a value of empty string")
+    _check_for_empty_string(json_data['timeSeriesReferenceFile']['title'], 'title')
 
     # validate abstract
-    if not json_data['timeSeriesReferenceFile']['abstract'].strip():
-        raise ValidationError("abstract has a value of empty string")
+    _check_for_empty_string(json_data['timeSeriesReferenceFile']['abstract'], 'abstract')
 
     # validate fileVersion
-    if not json_data['timeSeriesReferenceFile']['fileVersion'].strip():
-        raise ValidationError("fileVersion has a value of empty string")
+    _check_for_empty_string(json_data['timeSeriesReferenceFile']['fileVersion'], 'fileVersion')
 
     # validate symbol
-    if not json_data['timeSeriesReferenceFile']['symbol'].strip():
-            raise ValidationError("symbol has a value of empty string")
+    _check_for_empty_string(json_data['timeSeriesReferenceFile']['symbol'], 'symbol')
 
     series_data = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
     urls = []
@@ -999,13 +1004,14 @@ def _validate_json_data(json_data):
         if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
 
-        # check that sampleMedium is not empty string
-        if series['sampleMedium'] is not None and not series['sampleMedium'].strip():
-            raise ValidationError("sampleMedium has a value of empty string")
+        # check that sampleMedium
+        _check_for_empty_string(series['sampleMedium'], 'sampleMedium')
 
-        # check  that valueCount key is there
-        if 'valueCount' not in series:
-            raise ValidationError("valueCount is missing")
+        # validate siteName
+        _check_for_empty_string(series['site']['siteName'], 'siteName')
+
+        # validate variableName
+        _check_for_empty_string(series['variable']['variableName'], 'variableName')
 
         url = Request(request_info['url'])
         if url not in urls:
@@ -1015,20 +1021,27 @@ def _validate_json_data(json_data):
             except URLError:
                 raise Exception(err_msg.format("Invalid web service URL found"))
 
-        if 'method' in series:
-            if series['method']['methodLink'] is not None:
-                url = series['method']['methodLink'].strip()
-                if not url:
-                    raise ValidationError("methodLink has a value of empty string")
-                if url.lower() != 'unknown':
-                    url = Request(url)
-                    if url not in urls:
-                        urls.append(url)
-                        try:
-                            urlopen(url)
-                        except URLError:
-                            raise Exception(err_msg.format("Invalid method link found"))
+        #  validate methodDescription for empty string
+        _check_for_empty_string(series['method']['methodDescription'], 'methodDescription')
 
+        # validate methodLink
+        if series['method']['methodLink'] is not None:
+            url = series['method']['methodLink'].strip()
+            if not url:
+                raise ValidationError("methodLink has a value of empty string")
+            if url.lower() != 'unknown':
+                url = Request(url)
+                if url not in urls:
+                    urls.append(url)
+                    try:
+                        urlopen(url)
+                    except URLError:
+                        raise Exception(err_msg.format("Invalid method link found"))
+
+
+def _check_for_empty_string(item_to_chk, item_name):
+    if item_to_chk is not None and not item_to_chk.strip():
+        raise ValidationError("{} has a value of empty string".format(item_name))
 
 TS_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -1037,15 +1050,15 @@ TS_SCHEMA = {
         "timeSeriesReferenceFile": {
             "type": "object",
             "properties": {
-                "title": {"type": "string"},
-                "abstract": {"type": "string"},
-                "fileVersion": {"type": "string"},
+                "title": {"type": ["string", "null"]},
+                "abstract": {"type": ["string", "null"]},
+                "fileVersion": {"type": ["string", "null"]},
                 "keyWords": {
                     "type": ["array", "null"],
                     "items": {"type": "string"},
                     "uniqueItems": True
                 },
-                "symbol": {"type": "string"},
+                "symbol": {"type": ["string", "null"]},
                 "referencedTimeSeries": {
                     "type": "array",
                     "properties": {
@@ -1055,7 +1068,7 @@ TS_SCHEMA = {
                             "type": "object",
                             "properties": {
                                 "siteCode": {"type": "string"},
-                                "siteName": {"type": "string"},
+                                "siteName": {"type": ["string", "null"]},
                                 "latitude": {"type": "number", "minimum": -90, "maximum": 90},
                                 "longitude": {"type": "number", "minimum": -180, "maximum": 180}
                             },
@@ -1066,7 +1079,7 @@ TS_SCHEMA = {
                             "type": "object",
                             "properties": {
                                 "variableCode": {"type": "string"},
-                                "variableName": {"type": "string"}
+                                "variableName": {"type": ["string", "null"]}
                             },
                             "required": ["variableCode", "variableName"],
                             "additionalProperties": False
@@ -1074,7 +1087,7 @@ TS_SCHEMA = {
                         "method": {
                             "type": "object",
                             "properties": {
-                                "methodDescription": {"type": "string"},
+                                "methodDescription": {"type": ["string", "null"]},
                                 "methodLink": {"type": ["string", "null"]}
                             },
                             "required": ["methodDescription", "methodLink"],
@@ -1095,10 +1108,10 @@ TS_SCHEMA = {
                             "additionalProperties": False
                         },
                         "sampleMedium": {"type": ["string", "null"]},
-                        "valueCount": {"type": "number"}
+                        "valueCount": {"type": ["number", "null"]}
                     },
                     "required": ["beginDate", "endDate", "requestInfo",
-                                 "site", "sampleMedium", "valueCount", "variable"],
+                                 "site", "sampleMedium", "valueCount", "variable", "method"],
                     "additionalProperties": False
                 }
             },
