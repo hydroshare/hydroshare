@@ -2,25 +2,36 @@ version: '3'
 #TODO clocks and timezones
 #TODO add devops admin network tools
 services:
-#  irods:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile-irods
-#    container_name: irods
-#    hostname: irods.local
-#    volumes:
-#      - irodsvol/vault:/var/lib/irods/iRODS/Vault
-#      - irodsvol/pgdata:/var/lib/postgresql/data
-##      - .:/hydroshare
-#    stdin_open: true
-#    tty: true
+  irods-data:
+    build:
+      context: .
+      dockerfile: Dockerfile-irods
+    container_name: irods
+    hostname: data.local.org
+    volumes:
+      - irodsvault1vol:/var/lib/irods/iRODS/Vault
+      - irodsdata1vol:/var/lib/postgresql/data
+#      - .:/hydroshare
+    stdin_open: true
+    tty: true
+  irods-users:
+    build:
+      context: .
+      dockerfile: Dockerfile-irods
+      container_name: irods
+      hostname: users.local.org
+      volumes:
+        - irodsvault2vol:/var/lib/irods/iRODS/Vault
+        - irodsdata2vol:/var/lib/postgresql/data
+#        - .:/hydroshare
+      stdin_open: true
+      tty: true
   postgis:
     build:
       context: .
       dockerfile: Dockerfile-postgis
     container_name: postgis
     hostname: postgis
-    # Win10 docker volume issue - https://github.com/docker-library/postgres/issues/435
     volumes:
       - "pgdatavol:/var/lib/postgresql/data"
     ports:
@@ -155,4 +166,7 @@ services:
 # docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
-  irodsvol:
+  irodsvault1vol:
+  irodsdata1vol:
+  irodsvault2vol:
+  irodsdata2vol:
