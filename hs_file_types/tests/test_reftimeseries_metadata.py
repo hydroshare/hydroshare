@@ -446,6 +446,13 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self._test_invalid_json_file('refts_invalid_method_link_empty_string.refts.json')
 
+    def test_create_aggregation_fail_with_empty_method_description(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for methodDescription
+
+        self._test_invalid_json_file('refts_invalid_method_description_empty_string.refts.json')
+
     def test_create_aggregation_fail_with_empty_sample_medium(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
@@ -466,6 +473,20 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # as this file has a value of empty string for symbol
 
         self._test_invalid_json_file('refts_invalid_symbol_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_variable_name(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for variableName
+
+        self._test_invalid_json_file('refts_invalid_variable_name_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_site_name(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for siteName
+
+        self._test_invalid_json_file('refts_invalid_site_name_empty_string.refts.json')
 
     def test_remove_aggregation(self):
         # test that when an instance RefTimeseriesLogicalFile (aggregation) is deleted
