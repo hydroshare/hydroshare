@@ -1,5 +1,0 @@
-FROM mjstealey/docker-irods-icat:4.1.8
-
-RUN apt-get update && apt-get install -y
-
-CMD ["/bin/bash"]

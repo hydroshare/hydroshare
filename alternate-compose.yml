@@ -5,8 +5,8 @@ services:
   irods-data:
     build:
       context: .
-      dockerfile: Dockerfile-irods
-    container_name: irods
+      dockerfile: Dockerfile-data-irods
+    container_name: data.local.org
     hostname: data.local.org
     volumes:
       - irodsvault1vol:/var/lib/irods/iRODS/Vault
@@ -17,15 +17,15 @@ services:
   irods-users:
     build:
       context: .
-      dockerfile: Dockerfile-irods
-      container_name: irods
-      hostname: users.local.org
-      volumes:
-        - irodsvault2vol:/var/lib/irods/iRODS/Vault
-        - irodsdata2vol:/var/lib/postgresql/data
+      dockerfile: Dockerfile-users-irods
+    container_name: users.local.org
+    hostname: users.local.org
+    volumes:
+      - irodsvault2vol:/var/lib/irods/iRODS/Vault
+      - irodsdata2vol:/var/lib/postgresql/data
 #        - .:/hydroshare
-      stdin_open: true
-      tty: true
+    stdin_open: true
+    tty: true
   postgis:
     build:
       context: .
@@ -107,6 +107,8 @@ services:
       - redis:redis
       - solr:solr
       - rabbitmq:rabbitmq
+      - irods-data
+      - irods-users
     # This won't be necessary if irods is a container. Was just to have additional etc hosts entries for IPs of irods and the developer laptop or user IP I wonder if that is for whitelisting
 #    extra_hosts:
 #      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
@@ -116,6 +118,8 @@ services:
       - redis
       - solr
       - rabbitmq
+      - irods-data
+      - irods-users
     stdin_open: true
     tty: true
   defaultworker:
@@ -148,6 +152,8 @@ services:
       - postgis:postgis
       - redis:redis
       - rabbitmq:rabbitmq
+      - irods-data
+      - irods-users
 #    extra_hosts:
 #      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
 #      - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
@@ -157,6 +163,8 @@ services:
       - solr
       - redis
       - rabbitmq
+      - irods-data
+      - irods-users
     stdin_open: true
     tty: true
 

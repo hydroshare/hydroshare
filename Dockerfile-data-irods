@@ -1,0 +1,11 @@
+FROM mjstealey/docker-irods-icat:4.1.8
+
+# TODO verify ADD overwrites when no flags provided
+ADD ./conf_irods/data.local.org/database_config.json /etc/irods/database_config.json
+ADD ./conf_irods/data.local.org/server_config.json /etc/irods/server_config.json
+ADD ./conf_irods/service_account.config /etc/irods/service_account.config
+ADD ./conf_irods/data.local.org/irods.config /irods.config
+
+RUN apt-get update && apt-get install -y
+
+CMD ["/bin/bash"]

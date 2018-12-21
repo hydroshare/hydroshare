@@ -1,0 +1,2 @@
+- root contains irods-docker-entrypoint.sh and irods.config
+- /etc/irods contains database_config.json, server_config.json, service_account.config and other files that seem to be stock, already part of the docker image
