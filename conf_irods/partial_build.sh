@@ -84,10 +84,10 @@ source env-files/use-local-irods.env
 echo "INFO: Create Linux user ${HS_USER_ZONE_PROXY_USER} on ${HS_USER_ZONE_HOST}"
 echo "[root@${HS_USER_ZONE_HOST}]$ useradd -m -p ${HS_USER_ZONE_PROXY_USER_PWD} -s /bin/bash ${HS_USER_ZONE_PROXY_USER}"
 docker exec ${HS_USER_ZONE_HOST} sh -c "useradd -m -p ${HS_USER_ZONE_PROXY_USER_PWD} -s /bin/bash ${HS_USER_ZONE_PROXY_USER}"
-#echo "[root@${HS_USER_ZONE_HOST}]$ cp create_user.sh delete_user.sh /home/${HS_USER_ZONE_PROXY_USER}"
-#docker cp create_user.sh ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}
-#docker cp delete_user.sh ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}
-#docker exec ${HS_USER_ZONE_HOST} chown -R ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}
+echo "[root@${HS_USER_ZONE_HOST}]$ cp create_user.sh delete_user.sh /home/${HS_USER_ZONE_PROXY_USER}"
+docker cp create_user.sh ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}
+docker cp delete_user.sh ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}
+docker exec ${HS_USER_ZONE_HOST} chown -R ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}
 docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${HS_USER_ZONE_PROXY_USER}":"${HS_USER_ZONE_PROXY_USER}" | chpasswd"
 
 ## Make ${IRODS_HOST} and ${HS_USER_ZONE_HOST} aware of each other via /etc/hosts
@@ -100,33 +100,28 @@ ICAT2IP=$(docker exec ${HS_USER_ZONE_HOST} /sbin/ip -f inet -4 -o addr | grep et
 #docker exec ${HS_USER_ZONE_HOST} sh -c 'echo "'${ICAT1IP}' '${IRODS_HOST}'" >> /etc/hosts'
 
 # Generate .env files for rods@${IRODS_HOST} and rods@${HS_USER_ZONE_HOST}
-printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
-printf "IRODS_HOST=${ICAT2IP}\nIRODS_PORT=1247\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${HS_USER_IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${HS_USER_ZONE_HOST}.env
+#printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
+#printf "IRODS_HOST=${ICAT2IP}\nIRODS_PORT=1247\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${HS_USER_IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${HS_USER_ZONE_HOST}.env
 
-# Federate ${IRODS_ZONE} with ${HS_USER_IRODS_ZONE}
-echo "INFO: make remote zone for each"
-echo "[rods@${IRODS_HOST}]$ iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247"
-sleep 1s
-docker exec -e IRODS_HOST=${ICAT1IP} -e IRODS_PORT=1247 -e IRODS_USER_NAME=rods -e IRODS_ZONE_NAME=hydroshareZone -e IRODS_PASSWORD=rods users.local.org iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}
-#docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}"
+echo "INFO: Federate ${IRODS_ZONE} with ${HS_USER_IRODS_ZONE}"
+#echo "[rods@${IRODS_HOST}]$ iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247"
 #sleep 1s
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}
+
+#TODO keep comment https://gist.github.com/ElijahLynn/72cb111c7caf32a73d6f#file-pipe_to_docker_examples
+echo "echo rods | iadmin mkzone $HS_USER_IRODS_ZONE remote $ICAT2IP:1247" | docker exec --interactive data.local.org /bin/bash
+sleep 1s
+echo "echo rods | iadmin mkzone $IRODS_ZONE remote $ICAT1IP:1247" | docker exec --interactive users.local.org /bin/bash
 
 ## modify /etc/irods/server_config.json
 #echo "INFO: federation configuration for ${IRODS_HOST}"
-#docker exec ${IRODS_HOST} sh -c "jq '.federation[0].icat_host=\"${HS_USER_ZONE_HOST}\" | .federation[0].zone_name=\"${HS_USER_IRODS_ZONE}\" | .federation[0].zone_key=\"${HS_USER_IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
-#docker exec ${IRODS_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
-#docker exec ${IRODS_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
+docker exec ${IRODS_HOST} sh -c "jq '.federation[0].icat_host=\"${HS_USER_ZONE_HOST}\" | .federation[0].zone_name=\"${HS_USER_IRODS_ZONE}\" | .federation[0].zone_key=\"${HS_USER_IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
+docker exec ${IRODS_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
+docker exec ${IRODS_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
 #
 #echo "INFO: federation configuration for ${HS_USER_ZONE_HOST}"
-#docker exec ${HS_USER_ZONE_HOST} sh -c "jq '.federation[0].icat_host=\"${IRODS_HOST}\" | .federation[0].zone_name=\"${IRODS_ZONE}\" | .federation[0].zone_key=\"${IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
-#docker exec ${HS_USER_ZONE_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
-#docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
+docker exec ${HS_USER_ZONE_HOST} sh -c "jq '.federation[0].icat_host=\"${IRODS_HOST}\" | .federation[0].zone_name=\"${IRODS_ZONE}\" | .federation[0].zone_key=\"${IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
+docker exec ${HS_USER_ZONE_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
+docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
 #
 ## make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}
 #echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"

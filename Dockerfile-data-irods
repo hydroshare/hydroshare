@@ -51,7 +51,8 @@ RUN useradd -m -p hsuserproxy -s /bin/bash hsuserproxy
 #RUN chmod -R 777 /var/lib/irods
 
 RUN chmod -R 777 /home
-
+#RUN ICAT1IP=$(/sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
+#RUN echo rods | iadmin mkzone $IRODS_ZONE remote $ICAT1IP:$IRODS_PORT
 #
 #RUN cp /irods-docker-entrypoint.sh /usr/local/bin/
 #ENTRYPOINT ["/irods-docker-entrypoint.sh"]

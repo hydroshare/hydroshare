@@ -47,8 +47,7 @@ RUN useradd -m -p hsuserproxy -s /bin/bash hsuserproxy
 #RUN ichmod -r -M inherit /hydroshareuserZone/home
 
 RUN chmod -R 777 /home
-
-#EXPOSE 1247
+#RUN echo rods | iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}
 
 # TODO reduce permissions after cleaner solution found
 #RUN chmod -R 777 /var/lib/irods/iRODS/server/log

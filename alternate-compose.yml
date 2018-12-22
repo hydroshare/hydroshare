@@ -1,6 +1,4 @@
 version: '3'
-#TODO clocks and timezones
-#TODO add devops admin network tools
 services:
   data.local.org:
     build:
