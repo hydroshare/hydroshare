@@ -390,18 +390,82 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self._test_invalid_json_file('refts_invalid_abstract_empty_string.refts.json')
 
-    def test_create_aggregation_with_missing_keywords(self):
-        # here we are using a valid time series json file for setting it
-        # to RefTimeseries file type which should be successful even though it is missing keywords
+    def test_create_aggregation_with_null_title(self):
+        # here we are using a valid time series json file with 'title' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-        refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
-        refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
-            refts_missing_keywords_file_name)
+        self._test_valid_json_file('refts_valid_title_null.refts.json')
 
-        self.create_composite_resource(refts_missing_keywords_file)
-        self._test_valid_missing_optional_elements()
+    def test_create_aggregation_with_null_abstract(self):
+        # here we are using a valid time series json file with 'abstract' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-        self.composite_resource.delete()
+        self._test_valid_json_file('refts_valid_abstract_null.refts.json')
+
+    def test_create_aggregation_with_null_keywords(self):
+        # here we are using a valid time series json file with 'abstract' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_keywords_missing.refts.json')
+
+    def test_create_aggregation_with_null_fileversion(self):
+        # here we are using a valid time series json file with 'fileVersion' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_fileversion_null.refts.json')
+
+    def test_create_aggregation_with_null_symbol(self):
+        # here we are using a valid time series json file with 'symbol' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_symbol_null.refts.json')
+
+    def test_create_aggregation_with_null_variablename(self):
+        # here we are using a valid time series json file with 'variableName' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_variable_name_null.refts.json')
+
+    def test_create_aggregation_with_null_methodlink(self):
+        # here we are using a valid time series json file with 'methodLink' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_method_link_null.refts.json')
+
+    def test_create_aggregation_with_null_methoddescription(self):
+        # here we are using a valid time series json file with 'methodDescription' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_method_description_null.refts.json')
+
+    def test_create_aggregation_with_null_sitename(self):
+        # here we are using a valid time series json file with 'siteName' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_site_name_null.refts.json')
+
+    def test_create_aggregation_with_null_samplemedium(self):
+        # here we are using a valid time series json file with 'sampleMedium' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_sample_medium_null.refts.json')
+
+    def test_create_aggregation_with_null_valuecount(self):
+        # here we are using a valid time series json file with 'valueCount' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_value_count_null.refts.json')
 
     def test_create_aggregation_fail_with_duplicate_keywords(self):
         # here we are using an invalid time series json file for setting it
@@ -542,6 +606,10 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
         json_res_file = self.composite_resource.files.first()
         self.assertTrue(json_res_file.has_logical_file)
+        logical_file = json_res_file.logical_file
+        self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
+        self.assertEqual(logical_file.metadata.json_file_content,
+                         json_res_file.resource_file.read())
         self.composite_resource.delete()
 
     def _test_invalid_json_file(self, invalid_json_file_name):
@@ -567,23 +635,3 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.has_logical_file, False)
         self.composite_resource.delete()
 
-    def _test_valid_missing_optional_elements(self):
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is associated with any logical file
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no RefTimeseriesLogicalFile object
-        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
-
-        # set the json file to RefTimeseries file type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # check that there is one RefTimeseriesLogicalFile object
-        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
-        # test that the content of the json file is same is what we have
-        # saved in json_file_content field of the file metadata object
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
