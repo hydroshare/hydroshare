@@ -814,7 +814,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # here we are testing 'update_dataset_name' view function for updating dataset name
         # for reftimeseries aggregation
         # we should be able to update dataset name since the json file
-        # does not have the title element
+        # does not have a value for the title element
 
         self.create_composite_resource(file_to_upload=self.refts_missing_title_file)
         res_file = self.composite_resource.files.first()
@@ -893,13 +893,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_update_abstract_refts_aggregation_success(self):
         # here we are testing the view function 'update_refts_abstract'
         # we should be able to update abstract since the json file
-        # does't have the abstract element
+        # does't have a value the abstract element
 
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_null.refts.json'
-        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_abstract_file_name)
+        refts_missing_abstract_file_name = 'refts_valid_abstract_null.refts.json'
+        refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_abstract_file_name)
 
-        self.create_composite_resource(file_to_upload=self.refts_missing_abstract_file)
+        self.create_composite_resource(file_to_upload=refts_missing_abstract_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
@@ -1051,13 +1051,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_add_delete_keywords_refts_aggregation_success(self):
         # here we are testing the view function 'add_keyword_metadata'
         # we should be able to add/delete keywords since the json file
-        # does not have the keywords element
+        # does not have a value for the keyWords element
 
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
-        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_keywords_file_name)
+        refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
+        refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_keywords_file_name)
 
-        self.create_composite_resource(file_to_upload=self.refts_missing_keywords_file)
+        self.create_composite_resource(file_to_upload=refts_missing_keywords_file)
         res_file = self.composite_resource.files.first()
         file_type = 'RefTimeseriesLogicalFile'
         # set the json file to RefTimeSeries File type
