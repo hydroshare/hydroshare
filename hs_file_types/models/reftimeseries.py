@@ -330,12 +330,15 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def has_title_in_json(self):
         """checks if title is in the uploaded json file"""
         json_data_dict = self._json_to_dict()
-        return 'title' in json_data_dict['timeSeriesReferenceFile']
+        if 'title' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['title'] is not None
+        return False
 
     def get_title_from_json(self):
         """gets the title associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'title' in json_data_dict['timeSeriesReferenceFile']:
+        if 'title' in json_data_dict['timeSeriesReferenceFile'] and\
+                json_data_dict['timeSeriesReferenceFile']['title'] is not None:
             return json_data_dict['timeSeriesReferenceFile']['title']
         return ''
 
@@ -343,12 +346,15 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def has_abstract_in_json(self):
         """checks if abstract is in the uploaded json file"""
         json_data_dict = self._json_to_dict()
-        return 'abstract' in json_data_dict['timeSeriesReferenceFile']
+        if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['abstract'] is not None
+        return False
 
     def get_abstract_from_json(self):
         """get the abstract associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
+        if 'abstract' in json_data_dict['timeSeriesReferenceFile'] and\
+                json_data_dict['timeSeriesReferenceFile']['abstract'] is not None:
             return json_data_dict['timeSeriesReferenceFile']['abstract']
         return ''
 
@@ -356,7 +362,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def file_version(self):
         """get the file version associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'fileVersion' in json_data_dict['timeSeriesReferenceFile']:
+        if 'fileVersion' in json_data_dict['timeSeriesReferenceFile'] and\
+                json_data_dict['timeSeriesReferenceFile']['fileVersion'] is not None:
             return json_data_dict['timeSeriesReferenceFile']['fileVersion']
         return ''
 
@@ -364,7 +371,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def symbol(self):
         """get the symbol associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'symbol' in json_data_dict['timeSeriesReferenceFile']:
+        if 'symbol' in json_data_dict['timeSeriesReferenceFile'] and\
+                json_data_dict['timeSeriesReferenceFile']['symbol'] is not None:
             return json_data_dict['timeSeriesReferenceFile']['symbol']
         return ''
 
@@ -1115,7 +1123,7 @@ TS_SCHEMA = {
                     "additionalProperties": False
                 }
             },
-            "required": ["title", "abstract", "fileVersion", "symbol", "referencedTimeSeries"],
+            "required": ["title", "abstract", "fileVersion", "keyWords", "symbol", "referencedTimeSeries"],
             "additionalProperties": False
         }
     },
