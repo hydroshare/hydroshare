@@ -1,11 +1,66 @@
 FROM mjstealey/docker-irods-icat:4.1.8
 
+#RUN mkdir /home/hsuserproxy
 # TODO verify ADD overwrites when no flags provided
-ADD ./conf_irods/data.local.org/database_config.json /etc/irods/database_config.json
-ADD ./conf_irods/data.local.org/server_config.json /etc/irods/server_config.json
-ADD ./conf_irods/service_account.config /etc/irods/service_account.config
-ADD ./conf_irods/data.local.org/irods.config /irods.config
+#ADD ./conf_irods/data.local.org/database_config.json /etc/irods/database_config.json
+#ADD ./conf_irods/data.local.org/server_config.json /etc/irods/server_config.json
+#ADD ./conf_irods/service_account.config /etc/irods/service_account.config
+#ADD ./conf_irods/data.local.org/irods.config /irods.config
+#
+#ADD ./conf_irods/.pgpass /var/lib/irods/.pgpass
+#ADD ./conf_irods/data.local.org/.odbc.ini /var/lib/irods/.odbc.ini
+#ADD ./conf_irods/data.local.org/irods_environment.json /var/lib/irods/.irods/irods_environment.json
 
-RUN apt-get update && apt-get install -y
+ADD ./irods/delete_user.sh /home/hsuserproxy
+ADD ./irods/delete_user.sh /home/hsuserproxy
 
-CMD ["/bin/bash"]
+RUN useradd -m -p hsuserproxy -s /bin/bash hsuserproxy
+
+# make remote zone for each
+#TODO figure out
+#RUN iadmin mkzone hydroshareuserZone remote users.local.org:1247
+
+
+
+#RUN iadmin mkresc hydroshareReplResc unixfilesystem users.local.org:/var/lib/irods/iRODS/Vault
+
+#RUN iadmin mkuser wwwHydroProxy rodsuser
+#RUN iadmin moduser wwwHydroProxy password wwwHydroProxy
+#RUN iadmin mkuser localHydroProxy rodsuser
+#RUN iadmin moduser localHydroProxy password wwwHydroProxy
+#RUN iadmin mkuser hsuserproxy rodsadmin
+#RUN iadmin moduser hsuserproxy password hsuserproxy
+#RUN iadmin mkresc hydroshareLocalResc unixfilesystem users.local.org:/var/lib/irods/iRODS/Vault
+#Creating resource:
+#Name:		"hydroshareLocalResc"
+#Type:		"unixfilesystem"
+#Host:		"users.local.org"
+#Path:		"/var/lib/irods/iRODS/Vault"
+#Context:	""
+#RUN iinit
+#RUN iadmin mkuser wwwHydroProxy#hydroshareZone rodsuser
+#RUN ichmod -r -M own wwwHydroProxy#hydroshareZone /hydroshareuserZone/home
+#RUN ichmod -r -M own localHydroProxy /hydroshareuserZone/home
+#RUN ichmod -r -M inherit /hydroshareuserZone/home
+
+
+
+# TODO reduce permissions after cleaner solution found
+#RUN chmod -R 777 /var/lib/irods/iRODS/server/log
+#RUN chmod -R 777 /etc/irods
+#RUN chmod -R 777 /var/lib/irods
+
+RUN chmod -R 777 /home
+
+#
+#RUN cp /irods-docker-entrypoint.sh /usr/local/bin/
+#ENTRYPOINT ["/irods-docker-entrypoint.sh"]
+
+#USER irods
+#EXPOSE 1247
+
+#CMD ["/var/lib/irods/iRODS/irodsctl", "start"]
+#CMD ["/bin/bash"]
+
+#ENTRYPOINT ["/irods-docker-entrypoint.sh"]
+#CMD ["/bin/bash"]
