@@ -634,4 +634,3 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
         self.composite_resource.delete()
-

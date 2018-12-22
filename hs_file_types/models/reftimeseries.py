@@ -1123,7 +1123,8 @@ TS_SCHEMA = {
                     "additionalProperties": False
                 }
             },
-            "required": ["title", "abstract", "fileVersion", "keyWords", "symbol", "referencedTimeSeries"],
+            "required": ["title", "abstract", "fileVersion", "keyWords", "symbol",
+                         "referencedTimeSeries"],
             "additionalProperties": False
         }
     },
