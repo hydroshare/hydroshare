@@ -1012,6 +1012,10 @@ def _validate_json_data(json_data):
         if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
 
+        # check valueCount is not a negative number
+        if series['valueCount'] is not None and series['valueCount'] < 0:
+            raise ValidationError("valueCount can't be a negative number")
+
         # check that sampleMedium
         _check_for_empty_string(series['sampleMedium'], 'sampleMedium')
 

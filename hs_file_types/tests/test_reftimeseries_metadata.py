@@ -367,8 +367,6 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # key 'site' is missing
-        # Note we don't need to test for missing of any other required keys as we
-        # don't want to unit test the jsonschema module
 
         self._test_invalid_json_file('refts_missing_key.refts.json')
 
@@ -376,8 +374,6 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has title attribute with a value of empty string
-        # Note we don't need to test for missing of any other required keys as we
-        # don't want to unit test the jsonschema module
 
         self._test_invalid_json_file('refts_invalid_title_empty_string.refts.json')
 
@@ -385,8 +381,13 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has abstract attribute with a value of empty string
-        # Note we don't need to test for missing of any other required keys as we
-        # don't want to unit test the jsonschema module
+
+        self._test_invalid_json_file('refts_invalid_abstract_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_negative_valuecount(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has valueCount attribute with a -ve value
 
         self._test_invalid_json_file('refts_invalid_abstract_empty_string.refts.json')
 
