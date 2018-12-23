@@ -893,7 +893,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_update_abstract_refts_aggregation_success(self):
         # here we are testing the view function 'update_refts_abstract'
         # we should be able to update abstract since the json file
-        # does't have a value the abstract element
+        # does't have a value for the abstract element
 
         refts_missing_abstract_file_name = 'refts_valid_abstract_null.refts.json'
         refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
@@ -910,7 +910,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # test that the abstract key is not in json file
         self.assertFalse(logical_file.metadata.has_abstract_in_json)
-        self.assertEqual(logical_file.metadata.abstract, "")
+        self.assertEqual(logical_file.metadata.abstract, None)
         url_params = {'file_type_id': logical_file.id}
         url = reverse('update_reftimeseries_abstract', kwargs=url_params)
         new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
