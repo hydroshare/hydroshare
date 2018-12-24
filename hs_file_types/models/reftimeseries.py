@@ -56,7 +56,10 @@ class TimeSeries(object):
             with div(cls="custom-well panel panel-default"):
                 with div(cls="panel-heading"):
                     with h4(cls="panel-title"):
-                        a(self.site_name, data_toggle="collapse", data_parent="#accordion",
+                        site_name = "Site-{}".format(site_number)
+                        if self.site_name:
+                            site_name = self.site_name
+                        a(site_name, data_toggle="collapse", data_parent="#accordion",
                           href="#collapse{}".format(site_number))
                 with div(id="collapse{}".format(site_number), cls="panel-collapse collapse"):
                     with div(cls="panel-body"):
@@ -80,7 +83,10 @@ class TimeSeries(object):
                                         a(self.url, href=self.url, target="_blank")
                                 with tr():
                                     get_th('Site Name')
-                                    td(self.site_name)
+                                    if self.site_name:
+                                        td(self.site_name)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Site Code')
                                     td(self.site_code)
@@ -92,13 +98,19 @@ class TimeSeries(object):
                                     td(self.longitude)
                                 with tr():
                                     get_th('Variable Name')
-                                    td(self.variable_name)
+                                    if self.variable_name:
+                                        td(self.variable_name)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Variable Code')
                                     td(self.variable_code)
                                 with tr():
                                     get_th('Method Description')
-                                    td(self.method_description)
+                                    if self.method_description:
+                                        td(self.method_description)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Method Link')
                                     if self.method_link \
@@ -106,19 +118,22 @@ class TimeSeries(object):
                                         with td():
                                             a(self.method_link, href=self.method_link,
                                               target="_blank")
-                                    elif self.method_link is None:
-                                        td("")
-                                    else:
+                                    elif self.method_link:
                                         td(self.method_link)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Sample Medium')
-                                    if self.sample_medium is not None:
+                                    if self.sample_medium:
                                         td(self.sample_medium)
                                     else:
                                         td("")
                                 with tr():
                                     get_th('Value Count')
-                                    td(self.value_count)
+                                    if self.value_count is not None:
+                                        td(self.value_count)
+                                    else:
+                                        td("")
                                 with tr():
                                     get_th('Begin Date')
                                     td(self.start_date)
@@ -164,22 +179,25 @@ class TimeSeries(object):
         hs_end_date.text = end_date.isoformat()
 
         # encode sample medium
-        if self.sample_medium is not None:
+        if self.sample_medium:
             hs_sample_medium = etree.SubElement(rdf_description, '{%s}sampleMedium'
                                                 % NAMESPACES['hsterms'])
             hs_sample_medium.text = self.sample_medium
 
         # encode value count
-        hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount' % NAMESPACES['hsterms'])
-        hs_value_count.text = str(self.value_count)
+        if self.value_count is not None:
+            hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount'
+                                              % NAMESPACES['hsterms'])
+            hs_value_count.text = str(self.value_count)
 
         # encode site data
         hs_site = etree.SubElement(rdf_description, '{%s}site' % NAMESPACES['hsterms'])
         hs_site_desc = etree.SubElement(hs_site, '{%s}Description' % NAMESPACES['rdf'])
         hs_site_code = etree.SubElement(hs_site_desc, '{%s}siteCode' % NAMESPACES['hsterms'])
         hs_site_code.text = self.site_code
-        hs_site_name = etree.SubElement(hs_site_desc, '{%s}siteName' % NAMESPACES['hsterms'])
-        hs_site_name.text = self.site_name
+        if self.site_name:
+            hs_site_name = etree.SubElement(hs_site_desc, '{%s}siteName' % NAMESPACES['hsterms'])
+            hs_site_name.text = self.site_name
         hs_site_lat = etree.SubElement(hs_site_desc, '{%s}Latitude' % NAMESPACES['hsterms'])
         hs_site_lat.text = str(self.latitude)
         hs_site_lon = etree.SubElement(hs_site_desc, '{%s}Longitude' % NAMESPACES['hsterms'])
@@ -191,20 +209,23 @@ class TimeSeries(object):
         hs_variable_code = etree.SubElement(hs_variable_desc, '{%s}variableCode'
                                             % NAMESPACES['hsterms'])
         hs_variable_code.text = self.variable_code
-        hs_variable_name = etree.SubElement(hs_variable_desc, '{%s}variableName'
-                                            % NAMESPACES['hsterms'])
-        hs_variable_name.text = self.variable_name
+        if self.variable_name:
+            hs_variable_name = etree.SubElement(hs_variable_desc, '{%s}variableName'
+                                                % NAMESPACES['hsterms'])
+            hs_variable_name.text = self.variable_name
 
         # encode method data
-        hs_method = etree.SubElement(rdf_description, '{%s}method' % NAMESPACES['hsterms'])
-        hs_rdf_method_desc = etree.SubElement(hs_method, '{%s}Description' % NAMESPACES['rdf'])
-        hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
-                                          % NAMESPACES['hsterms'])
-        hs_method_desc.text = self.method_description
-        if self.method_link is not None:
-            hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
-                                              % NAMESPACES['hsterms'])
-            hs_method_link.text = self.method_link
+        if self.method_link or self.method_description:
+            hs_method = etree.SubElement(rdf_description, '{%s}method' % NAMESPACES['hsterms'])
+            hs_rdf_method_desc = etree.SubElement(hs_method, '{%s}Description' % NAMESPACES['rdf'])
+            if self.method_description:
+                hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
+                                                  % NAMESPACES['hsterms'])
+                hs_method_desc.text = self.method_description
+            if self.method_link:
+                hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
+                                                  % NAMESPACES['hsterms'])
+                hs_method_link.text = self.method_link
 
 
 class Site(object):
@@ -337,10 +358,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def get_title_from_json(self):
         """gets the title associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'title' in json_data_dict['timeSeriesReferenceFile'] and\
-                json_data_dict['timeSeriesReferenceFile']['title'] is not None:
+        if 'title' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['title']
-        return ''
+        return None
 
     @property
     def has_abstract_in_json(self):
@@ -353,28 +373,25 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def get_abstract_from_json(self):
         """get the abstract associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'abstract' in json_data_dict['timeSeriesReferenceFile'] and\
-                json_data_dict['timeSeriesReferenceFile']['abstract'] is not None:
+        if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['abstract']
-        return ''
+        return None
 
     @property
     def file_version(self):
         """get the file version associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'fileVersion' in json_data_dict['timeSeriesReferenceFile'] and\
-                json_data_dict['timeSeriesReferenceFile']['fileVersion'] is not None:
+        if 'fileVersion' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['fileVersion']
-        return ''
+        return None
 
     @property
     def symbol(self):
         """get the symbol associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
-        if 'symbol' in json_data_dict['timeSeriesReferenceFile'] and\
-                json_data_dict['timeSeriesReferenceFile']['symbol'] is not None:
+        if 'symbol' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['symbol']
-        return ''
+        return None
 
     @property
     def has_keywords_in_json(self):
@@ -579,8 +596,10 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         with root_div:
             div("{% load crispy_forms_tags %}")
             if self.has_title_in_json:
+                # title is in json file - we don't allow the user to edit title (dataset name)
                 self.get_dataset_name_html()
             else:
+                # title is not in json file - we allow the user to edit title (dataset name)
                 self.get_dataset_name_form()
             if self.has_keywords_in_json:
                 self.get_keywords_html()
@@ -591,9 +610,11 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             abstract_div = div(cls="col-xs-12 content-block")
             with abstract_div:
                 if self.has_abstract_in_json:
+                    # abstract is in json file - we don't allow the user to edit abstract
                     legend("Abstract")
                     p(self.abstract)
                 else:
+                    # abstract is not in json file - we allow the user to edit abstract
                     self.get_abstract_form()
             if self.file_version:
                 file_ver_div = div(cls="col-xs-12 content-block")
@@ -645,7 +666,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         root_div = div(cls="col-xs-12")
 
         # if json file contains abstract then we don't need this form since abstract can't be
-        # edited in that case
+        # edited in that case at the aggregation level
         if self.has_abstract_in_json:
             return
 
@@ -657,7 +678,10 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                     with div(cls="control-group"):
                         legend('Abstract')
                         with div(cls="controls"):
-                            textarea(self.abstract,
+                            abstract = ""
+                            if self.abstract:
+                                abstract = self.abstract
+                            textarea(abstract,
                                      cls="form-control input-sm textinput textInput",
                                      id="file_abstract", cols=40, rows=5,
                                      name="abstract")
@@ -870,19 +894,18 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
-    if resource.metadata.title.value.lower() == 'untitled resource' \
-            and logical_file.metadata.has_title_in_json:
+    if resource.metadata.title.value.lower() == 'untitled resource' and logical_file.dataset_name:
         resource.metadata.update_element('title', resource.metadata.title.id,
                                          value=logical_file.dataset_name)
 
     # add resource level abstract if necessary
     logical_file_abstract = logical_file.metadata.get_abstract_from_json()
-    if resource.metadata.description is None and logical_file.metadata.has_abstract_in_json:
-        resource.metadata.create_element('description',
-                                         abstract=logical_file_abstract)
+    if logical_file_abstract and resource.metadata.description is None:
+        resource.metadata.create_element('description',  abstract=logical_file_abstract)
+
     # add resource level keywords
     logical_file_keywords = logical_file.metadata.get_keywords_from_json()
-    if logical_file.metadata.has_keywords_in_json:
+    if logical_file_keywords:
         resource_keywords = [kw.value.lower() for kw in resource.metadata.subjects.all()]
         for kw in logical_file_keywords:
             if kw.lower() not in resource_keywords:
@@ -890,7 +913,8 @@ def _extract_metadata(resource, logical_file):
 
     # add to the file level metadata
     logical_file.metadata.keywords = logical_file_keywords
-    logical_file.metadata.abstract = logical_file_abstract
+    if logical_file_abstract:
+        logical_file.metadata.abstract = logical_file_abstract
     logical_file.metadata.save()
 
     # add file level temporal coverage
