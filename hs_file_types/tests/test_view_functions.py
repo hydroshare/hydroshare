@@ -826,8 +826,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertFalse(logical_file.metadata.has_title_in_json)
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # check dataset_name before updating via the view function
-        orig_dataset_name = ""
-        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        self.assertEqual(logical_file.dataset_name, None)
         url_params = {'hs_file_type': 'RefTimeseriesLogicalFile',
                       'file_type_id': logical_file.id
                       }
