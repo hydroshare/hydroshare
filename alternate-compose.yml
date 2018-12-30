@@ -176,8 +176,8 @@ services:
 #      - redis:redis
 #      - solr:solr
 #      - rabbitmq:rabbitmq
-#      - irods-data:irods-data
-#      - irods-users:irods-users
+##      - irods-data:irods-data
+##      - irods-users:irods-users
 #    # This won't be necessary if irods is a container. Was just to have additional etc hosts entries for IPs of irods and the developer laptop or user IP I wonder if that is for whitelisting
 ##    extra_hosts:
 ##      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
@@ -187,8 +187,8 @@ services:
 #      - redis
 #      - solr
 #      - rabbitmq
-#      - irods-data
-#      - irods-users
+##      - irods-data
+##      - irods-users
 #    stdin_open: true
 #    tty: true
 #  defaultworker:
@@ -221,8 +221,8 @@ services:
 #      - postgis:postgis
 #      - redis:redis
 #      - rabbitmq:rabbitmq
-#      - irods-data:irods-data
-#      - irods-users:irods-users
+##      - irods-data:irods-data
+##      - irods-users:irods-users
 ##    extra_hosts:
 ##      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
 ##      - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
@@ -232,15 +232,15 @@ services:
 #      - solr
 #      - redis
 #      - rabbitmq
-#      - irods-data
-#      - irods-users
+##      - irods-data
+##      - irods-users
 #    stdin_open: true
 #    tty: true
 #
-## Docker Volumes https://docs.docker.com/storage/volumes/
-## tldr;
-## docker volume ps | grep pgdatavol
-## docker volume rm hydroshare_pgdatavol
+### Docker Volumes https://docs.docker.com/storage/volumes/
+### tldr;
+### docker volume ps | grep pgdatavol
+### docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
   irodsvault1vol:
