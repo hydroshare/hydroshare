@@ -9,7 +9,7 @@ services:
     links:
       - users.local.org:users.local.org
     ports:
-      - "1247"
+      - "1247:1247"
     environment:
       SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
@@ -42,10 +42,9 @@ services:
       IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
-#    volumes:
-#      - irodsvault1vol:/var/lib/irods/iRODS/Vault
-#      - irodsdata1vol:/var/lib/postgresql/data
-#      - .:/hydroshare
+    volumes:
+      - irodsvault1vol:/var/lib/irods/iRODS/Vault
+      - irodsdata1vol:/var/lib/postgresql/data
     stdin_open: true
     tty: true
   users.local.org:
@@ -54,9 +53,6 @@ services:
       dockerfile: Dockerfile-users-irods
     container_name: users.local.org
     hostname: users.local.org
-    ports:
-      - "1247"
-      - "22"
     environment:
       SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
@@ -89,10 +85,9 @@ services:
       IRODS_DATABASE_SERVER_HOSTNAME: 'users.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
-#    volumes:
-#      - irodsvault2vol:/var/lib/irods/iRODS/Vault
-#      - irodsdata2vol:/var/lib/postgresql/data
-#        - .:/hydroshare
+    volumes:
+      - irodsvault2vol:/var/lib/irods/iRODS/Vault
+      - irodsdata2vol:/var/lib/postgresql/data
     stdin_open: true
     tty: true
   postgis:
@@ -128,6 +123,7 @@ services:
     stdin_open: true
     tty: true
   hydroshare:
+    #TODO https://docs.docker.com/compose/startup-order/
     build:
       context: .
       dockerfile: Dockerfile-hydroshare
@@ -178,7 +174,6 @@ services:
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
       - users.local.org:users.local.org
-    # This won't be necessary if irods is a container. Was just to have additional etc hosts entries for IPs of irods and the developer laptop or user IP I wonder if that is for whitelisting
     depends_on:
       - postgis
       - redis
