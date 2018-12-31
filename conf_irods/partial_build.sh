@@ -17,7 +17,6 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${HS_USER_ZONE_PROXY_USER}":"${HS_
 echo "INFO: Create Linux user rods on ${HS_USER_ZONE_HOST}"
 docker exec ${HS_USER_ZONE_HOST} useradd rods -s /bin/bash
 
-
 # Store IPs for data.local.org and users.local.org for use in scripts
 ICAT1IP=$(docker exec ${IRODS_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
 ICAT2IP=$(docker exec ${HS_USER_ZONE_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
