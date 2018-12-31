@@ -56,9 +56,7 @@ echo "echo rods | iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_Z
 echo "INFO: make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}"
 echo "echo rods | iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" | docker exec --interactive users.local.org /bin/bash
 
-echo "INFO: add irods_environment.json file for ?? user"
-#TODO refactor without jq or add jq to install requirements
-jq -n --arg h "${HS_USER_ZONE_HOST}" --arg p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${HS_USER_ZONE_PROXY_USER}" '{"irods_host": $h, "irods_port": 1247, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
+echo "INFO: copy iRODS config"
 docker exec --user rods ${HS_USER_ZONE_HOST} whoami
 docker exec --user rods ${HS_USER_ZONE_HOST} mkdir -p /home/${HS_USER_ZONE_PROXY_USER}/.irods
 docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json

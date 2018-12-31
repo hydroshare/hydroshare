@@ -1,7 +1,6 @@
 ## iRODS
 rods@data.local.org.env
 rods@users.local.org.env
-rods@users.local.org.json
 
 ## Custom
 *.pyc
