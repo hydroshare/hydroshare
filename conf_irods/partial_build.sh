@@ -56,14 +56,16 @@ echo "echo rods | iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_Z
 echo "INFO: make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}"
 echo "echo rods | iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" | docker exec --interactive users.local.org /bin/bash
 
+#TODO review if old use-local-irods.sh commands were failing silently via docker exec without --interactive flag
 echo "INFO: copy iRODS config"
 docker exec --user rods ${HS_USER_ZONE_HOST} whoami
 docker exec --user rods ${HS_USER_ZONE_HOST} mkdir -p /home/${HS_USER_ZONE_PROXY_USER}/.irods
 docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
 docker exec ${HS_USER_ZONE_HOST} chown ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
 
+#TODO review iinit call and order of copying json configuration file in
 echo "INFO: iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
-echo "echo users.local.org | iinit" | docker exec -u ${HS_USER_ZONE_PROXY_USER} -e IRODS_HOST=${ICAT2IP} -e IRODS_PORT=${IRODS_PORT} -e IRODS_USER_NAME=${HS_USER_ZONE_PROXY_USER} -e IRODS_PASSWORD=${HS_USER_ZONE_PROXY_USER_PWD} --interactive ${HS_USER_ZONE_HOST} /bin/bash
+echo "iinit" | docker exec -i -u hsuserproxy -e IRODS_HOST=${ICAT2IP} -e IRODS_PORT=${IRODS_PORT} -e IRODS_USER_NAME=${HS_USER_ZONE_PROXY_USER} -e IRODS_PASSWORD=${HS_USER_ZONE_PROXY_USER_PWD} users.local.org /bin/bash
 
 echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
 echo "echo rods | iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser" | docker exec --interactive users.local.org /bin/bash
