@@ -5,7 +5,6 @@
 source env-files/use-local-irods.env
 
 echo "INFO: Create Linux user ${HS_USER_ZONE_PROXY_USER} on ${HS_USER_ZONE_HOST}"
-#docker exec users.local.org useradd rods -s /bin/bash
 #docker exec ${HS_USER_ZONE_HOST} sh -c "useradd -m -p ${HS_USER_ZONE_PROXY_USER_PWD} -s /bin/bash ${HS_USER_ZONE_PROXY_USER}"
 # TODO why does the container/image contain a /home/hsuserproxy bad file that should be a directory? and hsuserproxy user already exists
 docker exec ${HS_USER_ZONE_HOST} rm -rf /home/hsuserproxy
@@ -17,8 +16,6 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${HS_USER_ZONE_PROXY_USER}":"${HS_
 
 echo "INFO: Create Linux user rods on ${HS_USER_ZONE_HOST}"
 docker exec ${HS_USER_ZONE_HOST} useradd rods -s /bin/bash
-#docker exec ${HS_USER_ZONE_HOST} chown -R ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}
-#docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${HS_USER_ZONE_PROXY_USER}":"${HS_USER_ZONE_PROXY_USER}" | chpasswd"
 
 
 # Store IPs for data.local.org and users.local.org for use in scripts
@@ -44,66 +41,40 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '
 echo "INFO: make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}"
 echo "echo rods | iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault" | docker exec --interactive data.local.org /bin/bash
 
-#TODO review iRODS commands with Phuong
 echo "INFO: make user ${IRODS_USERNAME} in ${IRODS_ZONE}"
-echo "echo rods | iadmin mkuser $IRODS_USERNAME rodsuser && iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" | docker exec --interactive data.local.org /bin/bash
+echo "echo rods | iadmin mkuser $IRODS_USERNAME rodsuser" | docker exec --interactive data.local.org /bin/bash
+echo "echo rods | iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" | docker exec --interactive data.local.org /bin/bash
 
-#echo "INFO: make ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} and ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser"
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser && iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}"
-echo "echo rods | iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser && iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}" | docker exec --interactive users.local.org /bin/bash
+echo "INFO: make ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} and ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
+echo "echo rods | iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser" | docker exec --interactive users.local.org /bin/bash
+echo "echo rods | iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}" | docker exec --interactive users.local.org /bin/bash
 
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin"
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin && iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
-echo "echo rods | iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin && iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}" | docker exec --interactive users.local.org /bin/bash
+echo "INFO: create and configure rodsadmin"
+echo "echo rods | iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin" | docker exec --interactive users.local.org /bin/bash
+echo "echo rods | iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}" | docker exec --interactive users.local.org /bin/bash
 
-## make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
+echo "INFO: make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}"
 echo "echo rods | iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" | docker exec --interactive users.local.org /bin/bash
 
-## iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}
-#echo "[${HS_USER_ZONE_PROXY_USER}@${HS_USER_ZONE_HOST}]$ iinit"
-docker exec -u ${HS_USER_ZONE_PROXY_USER} ${HS_USER_ZONE_HOST} sh -c "export IRODS_HOST=${ICAT2IP} && export IRODS_PORT=${IRODS_PORT} && export IRODS_USER_NAME=${HS_USER_ZONE_PROXY_USER} && export IRODS_PASSWORD=${HS_USER_ZONE_PROXY_USER_PWD} && iinit ${HS_USER_ZONE_PROXY_USER_PWD}"
-
-## add irods_environment.json file for rods user
+echo "INFO: add irods_environment.json file for ?? user"
+#TODO refactor without jq or add jq to install requirements
 jq -n --arg h "${HS_USER_ZONE_HOST}" --arg p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${HS_USER_ZONE_PROXY_USER}" '{"irods_host": $h, "irods_port": 1247, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
 docker exec --user rods ${HS_USER_ZONE_HOST} whoami
 docker exec --user rods ${HS_USER_ZONE_HOST} mkdir -p /home/${HS_USER_ZONE_PROXY_USER}/.irods
 docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
 docker exec ${HS_USER_ZONE_HOST} chown ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
 
-## give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home
-#echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${IRODS_USERNAME}#${IRODS_ZONE} rodsuser"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser"
+echo "INFO: iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
+echo "echo users.local.org | iinit" | docker exec -u ${HS_USER_ZONE_PROXY_USER} -e IRODS_HOST=${ICAT2IP} -e IRODS_PORT=${IRODS_PORT} -e IRODS_USER_NAME=${HS_USER_ZONE_PROXY_USER} -e IRODS_PASSWORD=${HS_USER_ZONE_PROXY_USER_PWD} --interactive ${HS_USER_ZONE_HOST} /bin/bash
+
+echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
 echo "echo rods | iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser" | docker exec --interactive users.local.org /bin/bash
 
-#echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${IRODS_USERNAME}#${IRODS_ZONE} /${HS_USER_IRODS_ZONE}/home"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home"
+echo "INFO: update permissions"
 echo "echo rods | ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home" | docker exec --interactive users.local.org /bin/bash
 
-## give ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} own rights over ${HS_USER_IRODS_ZONE}/home
-#echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} /${HS_USER_IRODS_ZONE}/home"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "ichmod -r -M own "${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" /${HS_USER_IRODS_ZONE}/home"
+echo "INFO: edit permissions in /home"
 echo "echo rods | ichmod -r -M own "${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" /${HS_USER_IRODS_ZONE}/home" | docker exec --interactive users.local.org /bin/bash
 
-## set ${HS_USER_IRODS_ZONE}/home to inherit
-#echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M inherit /${HS_USER_IRODS_ZONE}/home"
-#docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-#    mjstealey/docker-irods-icommands:4.1.8 \
-#    sh -c "ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home"
+echo "INFO: set ${HS_USER_IRODS_ZONE}/home to inherit"
 echo "echo rods | ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home" | docker exec --interactive users.local.org /bin/bash
