@@ -208,7 +208,7 @@ RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
 SHARED_NEG_KEY='hydroshareZonehydroshareuserZone'
 
 # Local resource iRODS configuration
-USE_IRODS=True
+USE_IRODS=False
 IRODS_ROOT='/tmp'
 IRODS_ICOMMANDS_PATH='/usr/bin'
 IRODS_HOST='data.local.org'
@@ -222,7 +222,7 @@ IRODS_AUTH='wwwHydroProxy'
 IRODS_GLOBAL_SESSION=True
 
 # Remote user zone iRODS configuration
-REMOTE_USE_IRODS=True
+REMOTE_USE_IRODS=False
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
 HS_USER_ZONE_HOST='users.local.org'
