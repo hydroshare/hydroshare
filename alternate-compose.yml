@@ -1,0 +1,155 @@
+version: '3'
+#TODO clocks and timezones
+#TODO add devops admin network tools
+services:
+  irods:
+    build:
+      context: .
+      dockerfile: Dockerfile-irods
+    container_name: irods
+    hostname: irods
+#    volumes:
+#      - .:/hydroshare
+    stdin_open: true
+    tty: true
+  postgis:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgis
+    container_name: postgis
+    hostname: postgis
+    # Win10 docker volume issue - https://github.com/docker-library/postgres/issues/435
+    volumes:
+      - "pgdatavol:/var/lib/postgresql/data"
+    ports:
+      - "54322:5432"
+    stdin_open: true
+    tty: true
+  rabbitmq:
+    image: rabbitmq:3.5
+    container_name: rabbitmq
+  redis:
+    image: redis:2.8
+    container_name: redis
+    stdin_open: true
+    tty: true
+  solr:
+    build:
+      context: .
+      dockerfile: Dockerfile-solr
+    container_name: solr
+    hostname: solr
+    ports:
+      - "8983:8983"
+    # This line is uncommented if $USE_LOCAL_IRODS = true per hsctrl
+    # - "8983"
+    stdin_open: true
+    tty: true
+  hydroshare:
+    build:
+      context: .
+      dockerfile: Dockerfile-hydroshare
+    container_name: hydroshare
+    hostname: hydroshare
+    devices:
+      - "/dev/fuse"
+    privileged: true
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      TMP: /hs_tmp
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+    volumes:
+      # hydroshare repository
+      - ".:/hydroshare"
+      # log files
+      - "${LOGDIR}:/hydroshare/log"
+      # shared location for gunicorn.sock between containers
+      - "/hs_tmp"
+      # temp directory shared with celery workers
+      - "/shared_tmp"
+      ## These two lines are actually active if $USE_LOCAL_IRODS = false: but can probably be removed entirely
+      ## These two lines are not present if $USE_LOCAL_IRODS = true
+      #- "/irods/hydroshare:/irods/hydroshare"
+      #- "/irods/hydroshare_vault:/irods/hydroshare_vault"
+    ports:
+      - "1338:2022"
+      - "8000:8000"
+      # this line is removed if irods $USE_LOCAL_IRODS = true not sure why
+      - "15001:15001"
+    links:
+      - postgis:postgis
+      - redis:redis
+      - solr:solr
+      - rabbitmq:rabbitmq
+    # This won't be necessary if irods is a container. Was just to have additional etc hosts entries for IPs of irods and the developer laptop or user IP I wonder if that is for whitelisting
+#    extra_hosts:
+#      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+#      - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
+    depends_on:
+      - postgis
+      - redis
+      - solr
+      - rabbitmq
+    stdin_open: true
+    tty: true
+  defaultworker:
+    # TODO https://docs.docker.com/compose/startup-order/
+    build:
+      context: .
+      dockerfile: Dockerfile-defaultworker
+    container_name: defaultworker
+    hostname: defaultworker
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+    volumes:
+      - ".:/hydroshare"
+      - "${LOGDIR}:/hydroshare/log"
+    links:
+      - postgis:postgis
+      - redis:redis
+      - rabbitmq:rabbitmq
+#    extra_hosts:
+#      - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+#      - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
+    depends_on:
+      - hydroshare
+      - postgis
+      - solr
+      - redis
+      - rabbitmq
+    stdin_open: true
+    tty: true
+
+# Docker Volumes https://docs.docker.com/storage/volumes/
+# tldr;
+# docker volume ps | grep pgdatavol
+# docker volume rm hydroshare_pgdatavol
+volumes:
+  pgdatavol:
