@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, hr, button, input, p, \
+from dominate.tags import div, legend, strong, form, select, option, button, input, p, \
     textarea, span, br
 
 from hs_core.hydroshare import utils
