@@ -8,8 +8,6 @@ RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355
 USER root
 WORKDIR /hydroshare
 
-# TODO move celerybeat sched to logdir
-
 ### Note Begin: this was being run by init-defaultworker.template /shell script:
 #RUN usermod -u 1000 hydro-service
 #RUN groupmod -g 1000 storage-hydro
