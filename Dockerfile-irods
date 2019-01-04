@@ -1,3 +1,0 @@
-FROM mjstealey/docker-irods-icat
-
-CMD ["/bin/bash"]

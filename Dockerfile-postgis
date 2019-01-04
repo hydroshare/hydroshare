@@ -26,6 +26,13 @@ RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 5432/tcp
 
+####TODO NEW STUFF:
+#RUN cp /docker-entrypoint.sh /usr/local/bin/
+#RUN echo "host all  all    0.0.0.0/0  md5" >> /var/lib/postgresql/data/pg_hba.conf && chown -R postgres /var/lib/postgresql/data/pg_hba.conf
+##CMD ["dbinit"] #gosu postgres initdb $POSTGRES_INITDB_ARGS
+##CMD ["marks_db_populate"]
+#CMD ["docker-entrypoint.sh", "postgres"]
+
 ### TODO find permanent solution to reconcile mutually exclisive first-run setup and subsequently necessary docker-entrypoint.sh
 ### COMMENT EVERYTHING BELOW THIS LINE FOR FIRST RUN TO INITIALIZE PGDATA THEN UNCOMMENT
 RUN cp /docker-entrypoint.sh /usr/local/bin/

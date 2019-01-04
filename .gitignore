@@ -1,3 +1,8 @@
+## iRODS
+rods@data.local.org.env
+rods@users.local.org.env
+
+## Custom
 *.pyc
 *.pyo
 *.db
@@ -9,7 +14,6 @@
 /celery
 /config/hydroshare-config.sh
 /config/hydroshare-config.yaml
-/hydroshare/local_settings.py
 /hydroshare/static
 /log
 /nginx/.htpasswd
