@@ -235,3 +235,4 @@ volumes:
   irodsdatavol2:
   irodsusersvol2:
   irodsdatavol3:
+  irodsusersvol3:
