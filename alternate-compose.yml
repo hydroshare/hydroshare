@@ -43,8 +43,9 @@ services:
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
     volumes:
-      - irodsvault1vol:/var/lib/irods/iRODS/Vault
-      - irodsdata1vol:/var/lib/postgresql/data
+      - irodsdatavol1:/var/lib
+      - irodsdatavol2:/etc
+      - irodsdatavol3:/home
     stdin_open: true
     tty: true
   users.local.org:
@@ -86,8 +87,9 @@ services:
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
     volumes:
-      - irodsvault2vol:/var/lib/irods/iRODS/Vault
-      - irodsdata2vol:/var/lib/postgresql/data
+      - irodsusersvol1:/var/lib
+      - irodsusersvol2:/etc
+      - irodsusersvol3:/home
     stdin_open: true
     tty: true
   postgis:
@@ -152,8 +154,6 @@ services:
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
-      # log files
-      - "${LOGDIR}:/hydroshare/log"
       # shared location for gunicorn.sock between containers
       - "/hs_tmp"
       # temp directory shared with celery workers
@@ -208,7 +208,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       - ".:/hydroshare"
-      - "${LOGDIR}:/hydroshare/log"
     links:
       - postgis:postgis
       - redis:redis
@@ -231,7 +230,9 @@ services:
 ### docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
-  irodsvault1vol:
-  irodsdata1vol:
-  irodsvault2vol:
-  irodsdata2vol:
+  irodsdatavol1:
+  irodsusersvol1:
+  irodsdatavol2:
+  irodsusersvol2:
+  irodsdatavol3:
+  irodsusersvol3:
