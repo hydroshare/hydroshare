@@ -254,13 +254,8 @@
                                 </strong>
                             </td>
                             {# First Author #}
-                            {% if res.first_creator.description %}
-                                <td>
-                                   {% include "includes/author-link.html" with author=res|resource_first_author %}
-                                </td>
-                            {% else %}
-                                <td>{{ res.first_creator.name }}</td>
-                            {% endif %}
+                            {{ res|resource_first_author }}
+
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
@@ -359,7 +354,6 @@
 </div>
 
 {% block modal %}
-    {% include "includes/author-preview.html" %}
     <!-- Manage Labels Modal -->
     <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
         <div class="modal-dialog" role="document">
@@ -434,7 +428,7 @@
     </div>
 {% endblock %}
 
-{#    To be used for querying the tabla in javascrip    t#}
+{#    To be used for querying the table in javascrip    t#}
 <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
 <span id="csrf">{% csrf_token %}</span>
 

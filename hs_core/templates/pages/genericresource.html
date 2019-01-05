@@ -23,6 +23,9 @@
         <input type="hidden" id="keywords-string" value="{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}">
         <input type="hidden" id="short-id" value="{{ page.get_content_model.short_id }}">
         <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
+        {% if page.perms.change and resource_edit_mode %}
+        {% csrf_token %}
+        {% endif %}
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
             {% block error %}
@@ -68,11 +71,6 @@
             {# ======= Coverage ======= #}
             {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
                 {% include "resource-landing-page/coverage.html" %}
-            {% endif %}
-
-            {# ======= Readme ======= #}
-            {% if readme %}
-                {% include "resource-landing-page/readme-file.html" %}
             {% endif %}
 
             {% block content_block %}
@@ -159,6 +157,16 @@
                     {% endif %}
                     <li id="content-type-separator" role="separator" class="divider"></li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                        {# ADD METADATA TO A FILE #}
+                        <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
+                        </li>
+                        {# ADD METADATA TO A FOLDER #}
+                        <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
+                        </li>
                         <li data-fb-action="subMenuSetContentType"
                             class="dropdown-submenu submenu-trigger">
                             <span tabindex="-1" class="">
@@ -167,16 +175,6 @@
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu">
-                                {# ADD METADATA TO A FILE #}
-                                <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
-                                    <i class="fa fa-plus icon-green" aria-hidden="true"></i>
-                                    <span>Add metadata</span>
-                                </li>
-                                {# ADD METADATA TO A FOLDER #}
-                                <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
-                                    <i class="fa fa-plus icon-green" aria-hidden="true"></i>
-                                    <span>Add metadata</span>
-                                </li>
                                 <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
                                     data-toggle="tooltip" data-placement="right" data-fb-action="setGeoRasterFileType"
                                     title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
@@ -720,29 +718,34 @@
                         </div>
 
                         <div class="files" id="previews"></div>
-                            {% block download_bag %}
-                        <div>
-                        {% if user_zone_account_exist %}
-                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
-                               data-target="#rep-resource-to-irods-dialog">
-                                <span class="glyphicon">
-                                   <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
-                                </span>
-                            </a>
-                        {% endif %}
+                        {% block download_bag %}
+                            <div>
+                            {% if user_zone_account_exist %}
+                                <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
+                                   data-target="#rep-resource-to-irods-dialog">
+                                    <span class="glyphicon">
+                                       <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
+                                    </span>
+                                </a>
+                            {% endif %}
 
-                        {% if user_zone_account_exist %}
-                            <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-success"></span>
+                            {% if user_zone_account_exist %}
+                                <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-success"></span>
+                                </div>
+                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-error"></span>
+                                </div>
+                            {% endif %}
                             </div>
-                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-error"></span>
-                            </div>
-                        {% endif %}
-                        </div>
                         {% endblock %} {#  download_bag #}
+
+                        {# ======= Readme ======= #}
+                        {% if readme %}
+                            {% include "resource-landing-page/readme-file.html" %}
+                        {% endif %}
                     {% else %}
                         <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
                         <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
@@ -765,18 +768,17 @@
                                     {% if not resource_edit_mode %}
                                         {% block extended_metadata %}{% endblock %}
                                     {% else %}
-                                        {% crispy resource_edit_mode %}
+                                        {% crispy metadata_form  %}
                                     {% endif %}
-                                    {% block extra_section %} {# add extra section for resource landing page #}
-                                    {% endblock %}
+
+                                    {# add extra section for resource landing page #}
+                                    {% block extra_section %}{% endblock %}
                                 </div>
                             </div>
                         </div>
                     {% endif %}
                 {% endif %}
-
             {% endif %}
-
 
             {# ======= Additional Metadata ======= #}
             {% include "resource-landing-page/additional-metadata.html" %}

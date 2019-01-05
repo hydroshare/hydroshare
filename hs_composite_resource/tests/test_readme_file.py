@@ -1,6 +1,6 @@
 import os
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
 
@@ -68,7 +68,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         os.remove(self.some_md_file.name)
 
     def test_readme_file_1(self):
-        """Test that when we upload a readme.txt file to the root, 
+        """Test that when we upload a readme.txt file to the root,
         this file is considered as the readme file of the resource"""
 
         self._create_composite_resource()

@@ -186,7 +186,7 @@
 
                                 <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">Latitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_north" name="north"
                                                value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north|floatformat:"4" }}{% endif %}">
@@ -197,7 +197,7 @@
 
                                 <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">Longitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_east" name="east"
                                                value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east|floatformat:"4" }}{% endif %}">
@@ -208,7 +208,7 @@
 
                                 <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">North Latitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">North Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_northlimit" name="northlimit"
                                                value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit|floatformat:"4" }}{% endif %}">
@@ -219,7 +219,7 @@
 
                                 <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">East Longitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">East Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_eastlimit" name="eastlimit"
                                                value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit|floatformat:"4" }}{% endif %}">
@@ -230,7 +230,7 @@
 
                                 <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">South Latitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">South Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_southlimit" name="southlimit"
                                                value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit|floatformat:"4" }}{% endif %}">
@@ -241,7 +241,7 @@
 
                                 <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">West Longitude*</span>
+                                        <span class="input-group-addon coordinates-label-addon">West Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_westlimit" name="westlimit"
                                                value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit|floatformat:"4" }}{% endif %}">
@@ -308,8 +308,8 @@
                             <div class="row">
                                 <div class="col-xs-12 col-sm-6">
                                     <div id="div_id_start" class="control-group">
-                                        <label for="id_start" class="control-label requiredField">
-                                            <i class="fa fa-calendar" aria-hidden="true"></i> Start Date<span class="asteriskField">*</span></label>
+                                        <label for="id_start" class="control-label">
+                                            <i class="fa fa-calendar" aria-hidden="true"></i> Start Date</label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm dateinput" id="id_start"
@@ -319,9 +319,8 @@
                                 </div>
                                 <div class="col-xs-12 col-sm-6">
                                     <div id="div_id_end" class="control-group">
-                                        <label for="id_end" class="control-label requiredField">
-                                            <i class="fa fa-calendar" aria-hidden="true"></i> End
-                                            Date<span class="asteriskField">*</span></label>
+                                        <label for="id_end" class="control-label">
+                                            <i class="fa fa-calendar" aria-hidden="true"></i> End Date</label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm dateinput" id="id_end"
@@ -345,28 +344,25 @@
                             <div class="row">
                                 <div class="col-xs-12 col-sm-6">
                                     <div id="div_id_start">
-                                        <label for="id_start" class="control-label requiredField">
-                                            <i class="fa fa-calendar" aria-hidden="true"></i> Start Date<span class="asteriskField">*</span></label>
+                                        <label for="id_start" class="control-label">
+                                            <i class="fa fa-calendar" aria-hidden="true"></i> Start Date</label>
 
                                         <div class="controls">
-                                            <input class="form-control input-sm dateinput" id="id_start"
-                                                   name="start" type="text"
-                                                   data-date="{{ coverage_temporal_form.initial.start }}"
-                                            >
+                                            <input class="form-control input-sm dateinput" id="id_start" name="start"
+                                                   type="text" data-date="{{ coverage_temporal_form.initial.start }}">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-xs-12 col-sm-6">
                                     <div id="div_id_end">
-                                        <label for="id_end" class="control-label requiredField"><i class="fa fa-calendar" aria-hidden="true"></i> End
-                                            Date<span class="asteriskField">*</span></label>
+                                        <label for="id_end" class="control-label">
+                                            <i class="fa fa-calendar" aria-hidden="true"></i> End Date
+                                        </label>
 
                                         <div class="controls">
-                                            <input class="form-control input-sm dateinput" id="id_end"
-                                                   name="end" type="text"
-                                                   data-date="{{ coverage_temporal_form.initial.end }}"
-                                            >
+                                            <input class="form-control input-sm dateinput" id="id_end" name="end"
+                                                   type="text" data-date="{{ coverage_temporal_form.initial.end }}">
                                         </div>
                                     </div>
                                 </div>

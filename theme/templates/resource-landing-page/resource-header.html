@@ -21,17 +21,24 @@
                         <span class="authors-wrapper sortable">
                             {% for author in creator_formset.initial %}
                                 <span>
-                                    {% if author.name %}
-                                        <a data-toggle="modal" data-placement="auto" title="Edit {{ author.name }}"
-                                           data-target="#edit-creator-dialog{{ author.id }}">
+                                    <a title="Edit {{ author.name }}"
+                                       class="author-modal-trigger" data-id="{{ author.id }}"
+                                       data-name="{{ author.name }}" data-order="{{ author.order }}"
+                                       data-description="{{ author.description|default:"" }}"
+                                       data-organization="{{ author.organization|default:"" }}"
+                                       data-email="{{ author.email|default:"" }}"
+                                       data-address="{{ author.address|default:"" }}"
+                                       data-phone="{{ author.phone|default:"" }}"
+                                       data-homepage="{{ author.homepage|default:"" }}"
+                                            {% for name, link in author.identifiers.items %}
+                                       data-{{ name }}="{{ link }}"
+                                            {% endfor %}>
+                                        {% if author.name %}
                                             {{ author.name }}
-                                        </a>
-                                    {% else %}
-                                        <a data-toggle="modal" data-placement="auto" title="Edit {{ author.organization }}"
-                                           data-target="#edit-creator-dialog{{ author.id }}">
+                                        {% else %}
                                             {{ author.organization }}
-                                        </a>
-                                    {% endif %}
+                                        {% endif %}
+                                    </a>
 
                                     <form class="hidden-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
@@ -40,29 +47,29 @@
                                         <input name="resource-mode" type="hidden" value="edit">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                               value="{% if author.name %}{{ author.name }}{% endif %}">
+                                               value="{{ author.name|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                               value="{% if author.description %}{{ author.description }}{% endif %}">
+                                               value="{{ author.description|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                               value="{% if author.organization %}{{ author.organization }}{% endif %}">
+                                               value="{{ author.organization|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                               value="{% if author.email %}{{ author.email }}{% endif %}">
+                                               value="{{ author.email|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                               value="{% if author.address %}{{ author.address }}{% endif %}">
+                                               value="{{ author.address|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                               type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+                                               type="text" value="{{ author.phone|default:"" }}">
 
                                         <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                               value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
+                                               value="{{ author.homepage|default:"" }}">
 
-                                        <input class="order-input"
+                                        <input class="input-order"
                                                name="creator-{{ author.order|add:"- 1" }}-order"
-                                               type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
+                                               type="number" value="{{ author.order|default:"" }}">
                                     </form>
                                  </span>
                             {% endfor %}

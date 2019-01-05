@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 from django.forms.models import formset_factory, BaseFormSet
 
-from dominate.tags import div, legend, form, button, p, textarea, strong, input, br, pre
+from dominate.tags import div, legend, form, button, p, textarea, input, br
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm

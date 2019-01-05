@@ -3,7 +3,6 @@
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
 
 {% if page.perms.change and resource_edit_mode %}
-
     <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
          aria-hidden="true">
         <div class="modal-dialog">
@@ -128,7 +127,9 @@
 
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-add-author" type="button" class="btn btn-primary">Save Changes</button>
+                                <button id="btn-add-author" type="button" class="btn btn-primary">
+                                    Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -200,7 +201,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -378,7 +379,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -574,7 +575,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -834,7 +835,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-save-funding-agency">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -904,7 +905,9 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary btn-save-funding-agency" data-index="{{ forloop.counter0 }}">Save changes</button>
+                            <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid"
+                                    data-index="{{ forloop.counter0 }}">Save changes
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -924,7 +927,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger"
+                        <a type="button" class="btn btn-danger btn-disable-after"
                            href="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/delete-metadata/">Delete</a>
                     </div>
                 </div>
@@ -944,7 +947,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -955,8 +958,8 @@
          aria-hidden="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="id_source_{{ source.id }}" action="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/update-metadata/"
-                      method="POST" enctype="multipart/form-data">
+                <form id="id_source_{{ source.id }}" method="POST" enctype="multipart/form-data"
+                      action="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/update-metadata/">
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-header">
@@ -969,20 +972,22 @@
                             <fieldset>
                                 <legend>Source</legend>
                                 <div id="div_id_derived_from" class="control-group">
-                                    <label for="id_derived_from" class="control-label requiredField">
-                                    Derived from<span class="asteriskField">*</span></label>
+                                    <label for="id_source-{{ forloop.counter0 }}-derived_from"
+                                           class="control-label">Derived from*</label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_source-{{ forloop.counter0 }}-derived_from" maxlength="300" name="source-{{ forloop.counter0 }}-derived_from"
-                                            type="text" value="{{ source.derived_from }}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput" required="required"
+                                               id="id_source-{{ forloop.counter0 }}-derived_from" maxlength="300"
+                                               name="source-{{ forloop.counter0 }}-derived_from"
+                                               type="text" value="{{ source.derived_from }}">
+                                    </div>
                                 </div>
                             </fieldset>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-edit-source" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1002,7 +1007,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -1054,7 +1059,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-edit-relation" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1156,7 +1161,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button id="btn-edit-contributor" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1174,7 +1179,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
+                    <a type="button" class="btn btn-danger btn-disable-after"
                        href="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/delete-metadata/">Delete</a>
                 </div>
             </div>
@@ -1182,8 +1187,7 @@
     </div>
     {% endfor %}
 
-    {% for author in creator_formset.initial %}
-    <div class="modal fade" id="edit-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
+    <div class="modal fade" id="edit-creator-dialog" tabindex="-1" role="dialog"
          aria-labelledby="edit-creator" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1194,128 +1198,97 @@
                     <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
                 </div>
 
-                {% if creator_formset.initial|length > 1 %}
-                    <div class="modal-body">
-                        <span title="Remove"
-                           data-toggle="collapse" data-target="#confirm-delete-author{{ author.id }}"
-                           class="glyphicon glyphicon-trash icon-button table-icon btn-remove"></span>
+                <div class="modal-body modal-body--delete">
+                    <span title="Remove"
+                       data-toggle="collapse" data-target="#confirm-delete-author"
+                       class="glyphicon glyphicon-trash icon-button table-icon btn-remove"></span>
 
-                        <div id="confirm-delete-author{{ author.id }}" class="collapse row" style="margin-top: 35px;">
-                            <div class="col-xs-6">
-                                <strong>Are you sure you want to delete this metadata element?</strong>
-                            </div>
-                            <div class="col-xs-6">
-                                <button type="button" class="btn btn-default" data-toggle="collapse"
-                                        style="margin-right: 10px;"
-                                        data-target="#confirm-delete-author{{ author.id }}">Cancel
-                                </button>
-                                <a type="button" class="btn btn-danger"
-                                   href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">
-                                    Delete
-                                </a>
-                            </div>
+                    <div id="confirm-delete-author" class="collapse row" style="margin-top: 35px;">
+                        <div class="col-xs-6">
+                            <strong>Are you sure you want to delete this metadata element?</strong>
+                        </div>
+                        <div class="col-xs-6">
+                            <button type="button" class="btn btn-default" data-toggle="collapse"
+                                    style="margin-right: 5px;"
+                                    data-target="#confirm-delete-author">Cancel
+                            </button>
+                            <a type="button" class="btn btn-danger btn-disable-after"
+                               href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">
+                                Delete
+                            </a>
                         </div>
                     </div>
-                {% endif %}
+                </div>
 
-                <form id="id_creator_{{ author.id }}"
-                      action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                      method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
 
                     <div class="modal-body">
                         <div class="form-group">
                             <fieldset>
-                                {% if author.name %}
-                                <div id="div_id_name" class="control-group">
-                                    <label class="control-label requiredField">Name<span
+                                <div class="control-group control-group--name">
+                                    <label for="creator-name" class="control-label requiredField">Name<span
                                             class="asteriskField">*</span></label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_creator-{{ author.order|add:"-1" }}-name" maxlength="100" name="creator-{{ author.order|add:"-1" }}-name"
-                                            required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
-                                </div>
-                                {% else %}
-                                <div id="div_id_name" class="control-group" style="display:none">
-                                    <label class="control-label requiredField">Name<span
-                                            class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_creator-{{ author.order|add:"-1" }}-name" maxlength="100" name="creator-{{ author.order|add:"-1" }}-name"
-                                            type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
-                                </div>
-                                {% endif %}
-                                {% if author.description %}
-                                    <div id="div_id_description" class="control-group">
-                                        <label class="control-label">HydroShare User Identifier (URL)</label>
-
-                                        <div class="controls"><input
-                                                class="form-control input-sm urlinput"
-                                                id="id_creator-{{ author.order|add:"-1" }}-description" maxlength="200"
-                                                name="creator-{{ author.order|add:"-1" }}-description" type="url"
-                                                value="{{ author.description }}"
-                                                readonly></div>
+                                    <div class="controls">
+                                        <input id="creator-name" class="form-control input-sm textinput textInput"
+                                               maxlength="100">
                                     </div>
-                                {% endif %}
-                                <!--If you don't have an author name you need an organization-->
-                                {% if author.name %}
-                                <div id="div_id_organization" class="control-group">
-                                    <label class="control-label">Organization</label>
-
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_creator-{{ author.order|add:"-1" }}-organization" maxlength="200"
-                                            name="creator-{{ author.order|add:"-1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                                 </div>
-                                {% else %}
-                                <div id="div_id_organization" class="control-group requiredField">
-                                    <label class="control-label">Organization<span
-                                            class="asteriskField">*</span></label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_creator-{{ author.order|add:"-1" }}-organization" maxlength="200"
-                                            required="required" name="creator-{{ author.order|add:"-1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
-                                </div>
-                                {% endif %}
-                                <div id="div_id_email" class="control-group">
-                                    <label class="control-label">Email</label>
+                                <div class="control-group control-group--description">
+                                    <label for="creator-description" class="control-label">HydroShare User Identifier (URL)</label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm emailinput"
-                                               id="id_creator-{{ author.order|add:"-1" }}-email" maxlength="75" name="creator-{{ author.order|add:"-1" }}-email"
-                                               type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
+                                        <input id="creator-description" class="form-control input-sm urlinput"
+                                               maxlength="200" type="url" readonly>
                                     </div>
                                 </div>
-                                <div id="div_id_address" class="control-group">
-                                    <label class="control-label">Address</label>
+
+                                <div class="control-group control-group--organization">
+                                    <label for="creator-organization" class="control-label">Organization<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_creator-{{ author.order|add:"-1" }}-address" maxlength="250"
-                                               name="creator-{{ author.order|add:"-1" }}-address"
-                                               type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
+                                        <input id="creator-organization" type="text"
+                                               class="form-control input-sm textinput textInput" maxlength="200">
                                     </div>
                                 </div>
-                                <div id="div_id_phone" class="control-group">
-                                    <label class="control-label">Phone</label>
+
+                                <div class="control-group control-group--email">
+                                    <label for="creator-email" class="control-label">Email</label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_creator-{{ author.order|add:"-1" }}-phone" maxlength="25" name="creator-{{ author.order|add:"-1" }}-phone"
-                                               type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+                                        <input id="creator-email" class="form-control input-sm emailinput" maxlength="75"
+                                               type="email">
                                     </div>
                                 </div>
-                                <div id="div_id_homepage" class="control-group">
-                                    <label class="control-label">Homepage</label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm urlinput"
-                                            id="id_creator-{{ author.order|add:"-1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"-1" }}-homepage"
-                                            type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
+                                <div class="control-group control-group--address">
+                                    <label for="creator-address" class="control-label">Address</label>
+
+                                    <div class="controls">
+                                        <input id="creator-address" class="form-control input-sm textinput textInput"
+                                               maxlength="250" type="text">
+                                    </div>
+                                </div>
+
+                                <div class="control-group control-group--phone">
+                                    <label for="creator-phone" class="control-label">Phone</label>
+
+                                    <div class="controls">
+                                        <input id="creator-phone" class="form-control input-sm textinput textInput"
+                                               maxlength="25" type="text">
+                                    </div>
+                                </div>
+
+                                <div class="control-group control-group--homepage">
+                                    <label for="creator-homepage" class="control-label">Homepage</label>
+
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput"
+                                               id="creator-homepage" maxlength="200" type="url">
+                                    </div>
                                 </div>
                             </fieldset>
 
@@ -1327,18 +1300,16 @@
                     </div>
 
                     {# Hidden in replacement for drag and drop, but still needed for form submission here #}
-                    <input class="hidden-form" id="id_creator-{{ author.order|add:"-1" }}-order"
-                           name="creator-{{ author.order|add:"-1" }}-order" value="">
+                    <input class="hidden-form input-order" type="number">
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    {% endfor %}
 
     <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
          aria-hidden="true">
@@ -1360,12 +1331,11 @@
                             <fieldset>
                                 <legend>Source</legend>
                                 <div id="div_id_derived_from" class="control-group">
-                                    <label for="id_derived_from" class="control-label requiredField">Derived from<span class="asteriskField">*</span></label>
+                                    <label for="id_derived_from" class="control-label">Derived from*</label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_derived_from" maxlength="300"
-                                                                 name="derived_from" type="text">
+                                        <input class="form-control input-sm textinput textInput" id="id_derived_from"
+                                               required="required" maxlength="300" name="derived_from" type="text">
                                     </div>
                                 </div>
                             </fieldset>
@@ -1373,7 +1343,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-add-source" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1405,7 +1375,6 @@
 
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
-                                            <option value="" selected="selected">---------</option>
                                             {% for type_value, type_display in relation_source_types %}
                                                 <option value={{ type_value }}>{{ type_display }}</option>
                                             {% endfor %}
@@ -1420,7 +1389,7 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput"
-                                               id="id_value" maxlength="500" name="value"
+                                               id="id_value" maxlength="500" name="value" required="required"
                                                type="text">
                                     </div>
                                 </div>
@@ -1429,7 +1398,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btn-add-relation" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1517,7 +1486,7 @@
             </div>
         {% endif %}
 
-        {% if page.perms.delete and cm.can_be_published and cm.raccess.public %}
+        {% if page.perms.delete and cm.can_be_published %}
             <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -1634,7 +1603,10 @@
                                 In copying this resource you are ethically bound to respect the terms of this license.
                                 Please confirm that you accept the terms of this license below before you can copy this resource.
                                 </p>
-                                <input type="checkbox" id="agree-chk-copy"><label for="agree-chk-copy" class="checkbox-label">I accept the terms of this license.</label>
+                                <input type="checkbox" id="agree-chk-copy">
+                                <label for="agree-chk-copy" class="checkbox-label">
+                                    I accept the terms of this license.
+                                </label>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -1669,7 +1641,10 @@
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
                 </p>
-                <input type="checkbox" id="agree-chk-download-bag"><label for="agree-chk-download" class="checkbox-label">I accept the terms of this license.</label>
+                <input type="checkbox" id="agree-chk-download-bag">
+                <label for="agree-chk-download-bag" class="checkbox-label">
+                    I accept the terms of this license.
+                </label>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -1700,7 +1675,10 @@
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
                 </p>
-                <input type="checkbox" id="agree-chk-download-file"><label for="agree-chk-download-file" class="checkbox-label">I accept the terms of this license.</label>
+                <input type="checkbox" id="agree-chk-download-file">
+                <label for="agree-chk-download-file" class="checkbox-label">
+                    I accept the terms of this license.
+                </label>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -2029,8 +2007,15 @@
                                                         Shareable
                                                     </label>
                                                 </div>
-                                                <p id="shareable-description" class="text-muted small">Allows others to share the
-                                                    resource without owner’s permission.</p>
+                                                <p id="shareable-description" class="text-muted small">
+                                                    {% if cm.raccess.shareable %}
+                                                        Uncheck the box to prevent others from sharing the resource
+                                                        without the owner's permission.
+                                                    {% else %}
+                                                        Check this box to allow others to share the resource without the
+                                                        owner's permission.
+                                                    {% endif %}
+                                                </p>
 
                                                 <input name="flag" type="hidden"
                                                        {% if cm.raccess.shareable %}value="make_not_shareable"

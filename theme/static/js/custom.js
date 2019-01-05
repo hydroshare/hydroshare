@@ -350,6 +350,11 @@ $(document).ready(function () {
 
         this.box.insertAfter(this.input).css({top: 35, left: 0});
     };
+
+    // Can be used to obtain an element's HTML including itself and not just its content
+    jQuery.fn.outerHTML = function () {
+        return jQuery('<div />').append(this.eq(0).clone()).html();
+    };
 });
 
 function showUniversalMessage(type, message, timeout) {

@@ -1,18 +1,17 @@
 <table id="table-stats" class="info-table">
     <tr>
-        {% if cm.raccess.published %}
-            <th>Sharing Status: </th>
-            <td>Published</td>
-        {% elif cm.raccess.public %}
-            <th>Sharing Status: </th>
-            <td>Public</td>
-        {% elif cm.raccess.discoverable %}
-            <th>Sharing Status: </th>
-            <td>Discoverable</td>
-        {% else %}
-            <th>Sharing Status: </th>
-            <td>Private</td>
-        {% endif %}
+        <th>Sharing Status:</th>
+        <td id="hl-sharing-status">
+            {% if cm.raccess.published %}
+                Published
+            {% elif cm.raccess.public %}
+                Public
+            {% elif cm.raccess.discoverable %}
+                Discoverable
+            {% else %}
+                Private
+            {% endif %}
+        </td>
     </tr>
     {% if cm.raccess.published %}
         {% if "pending" in cm.doi or "failure" in cm.doi %}
@@ -41,7 +40,13 @@
     <tr>
         <th>Comments: </th>
         <td>
-            <a href="#resource-comments">{{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}</a>
+            <a href="#resource-comments">
+                {% if cm.comments_count >= 1 %}
+                    {{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}
+                {% else %}
+                    No comments (yet)
+                {% endif %}
+            </a>
         </td>
     </tr>
 </table>

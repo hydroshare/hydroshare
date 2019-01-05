@@ -997,6 +997,10 @@ li.account p{
     margin-right: 10px;
 }
 
+.authors-wrapper a {
+	cursor: pointer;
+}
+
 .contact-table td:last-child{
     width: calc(20% - 20px);
 }
@@ -1287,7 +1291,7 @@ a[data-toggle='tab']{
     -webkit-border-radius: 0;
     -moz-border-radius: 0;
     border-radius: 0;
-    margin: 0 -1px;
+    margin: 0;
 }
 
 #btn-public {
@@ -2471,6 +2475,10 @@ div#coverage-spatial .coordinates-label-addon {
 
 .coverage-container {
 	margin-bottom:20px;
+}
+
+#ui-datepicker-div {
+	z-index: 2 !important;
 }
 
 .invalid-input {
@@ -4176,6 +4184,7 @@ ul#fb-files-container {
 
 ul#fb-files-container .hs-upload-indicator {
 	position: static;
+	color: #b3b3b3;
 }
 
 .fb-file span.fb-file-icon::before, .fb-stack .fa-file-o {

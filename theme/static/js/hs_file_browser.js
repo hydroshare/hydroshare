@@ -294,6 +294,7 @@ function updateSelectionMenuContext() {
                     uiActionStates.setGeoFeatureFileType.disabled = true;
                     uiActionStates.setTimeseriesFileType.disabled = true;
                     uiActionStates.setFileSetFileType.disabled = true;
+                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
                 }
             }
             else {
@@ -302,6 +303,7 @@ function updateSelectionMenuContext() {
                 uiActionStates.setGeoFeatureFileType.disabled = true;
                 uiActionStates.setTimeseriesFileType.disabled = true;
                 uiActionStates.setFileSetFileType.disabled = true;
+                uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
         // The item selected is a file
@@ -628,15 +630,21 @@ function bindFileBrowserItemEvents() {
         prevent = true;
         onOpenFolder();
     });
+
     $("#hs-file-browser li.fb-folder, #hs-file-browser li.fb-file").click(function () {
+        // Do not load file metadata if the side panel is hidden
+        if ($("#fb-metadata").hasClass("hidden")) {
+            return;
+        }
         $("#fileTypeMetaData").html(loading_metadata_alert);
         timer = setTimeout(function () {
             if (!prevent) {
                 showFileTypeMetadata(false, "");
             }
             prevent = false;
-        }, delay)
+        }, delay);
     });
+
     $("#hs-file-browser li.fb-file").dblclick(onOpenFile);
 
     // Right click menu for file browser
@@ -1185,6 +1193,21 @@ $(document).ready(function () {
             success: function (file, response) {
                 // console.log(response);
             },
+            successmultiple: function (files, response) {
+                // uploaded files can affect metadata in composite resource.
+                // Use the json data returned from backend to update UI
+
+                const resourceType = $("#resource-type").val();
+
+                if (resourceType === 'Composite Resource') {
+                    $("#id_abstract").val(response.abstract);
+                    $("#txt-title").val(response.title);
+                    updateResourceAuthors(response.creators);
+                    updateResourceKeywords(response.keywords.join(","));
+                    updateResourceSpatialCoverage(response.spatial_coverage);
+                    updateResourceTemporalCoverage(response.temporal_coverage);
+                }
+            },
             init: function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
@@ -1232,8 +1255,6 @@ $(document).ready(function () {
                     if ($("#hs-file-browser").attr("data-refresh-on-upload") === "true") {
                         var currentPath = $("#hs-file-browser").attr("data-current-path");
                         sessionStorage.currentBrowsepath = currentPath;
-                        // Page refresh is needed to show updated metadata
-                        // window.location.reload(true);
                     }
                     else {
                         var resourceType = $("#resource-type").val();
@@ -1246,12 +1267,6 @@ $(document).ready(function () {
                         if(resourceType === 'Composite Resource') {
                             var currentPath = $("#hs-file-browser").attr("data-current-path");
                             sessionStorage.currentBrowsepath = currentPath;
-                            // uploaded files can affect metadata in composite resource.
-                            // TODO: use the json data returned from backend to update UI
-                            // for resource level metadata
-
-                            // a full refresh is no more needed to reflect those changes
-                            //refreshResourceEditPage();
                             refreshFileBrowser();
                         }
                         else {
@@ -1923,6 +1938,18 @@ $(document).ready(function () {
         $(".fb-dropzone-wrapper").toggleClass("fb-collapsed");
         $(".ui-resizable-e").toggleClass("hidden");
         $("#fb-metadata-helper .ui-icon-grip-dotted-vertical").toggleClass("hidden");
+
+        const selected = $("#fb-files-container li.ui-selected");
+
+        if (!($("#fb-metadata").hasClass("hidden"))) {
+            if (selected.length == 1) {
+                $("#fileTypeMetaData").html(loading_metadata_alert);
+                showFileTypeMetadata(false, "");
+            }
+            else {
+                $("#fileTypeMetaData").html(file_metadata_alert);
+            }
+        }
     });
 });
 
@@ -1947,16 +1974,22 @@ function setFileType(fileType){
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
     var calls = [];
     calls.push(set_file_type_ajax_submit(url, folderPath));
+
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
        $("#fileTypeMetaData").html(file_metadata_alert);
-       // page refresh is needed to show any extracted metadata used at the resource level
+
        if (json_response.status === 'success'){
-           //refreshResourceEditPage();
-           // TODO: use resource level metadata in json_response to update resource level UI for
-           // metadata
+           // Use resource level metadata in json_response to update resource level UI
+           $("#id_abstract").val(json_response.abstract);
+           $("#txt-title").val(json_response.title);
+           updateResourceAuthors(json_response.creators);
+           updateResourceKeywords(json_response.keywords.join(","));
+           updateResourceSpatialCoverage(json_response.spatial_coverage);
+           updateResourceTemporalCoverage(json_response.temporal_coverage);
+
            refreshFileBrowser();
        }
     });
@@ -1969,14 +2002,17 @@ function removeAggregation(){
     var resID = $("#hs-file-browser").attr("data-res-id");
     var url = "/hsapi/_internal/" + resID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
     var calls = [];
     calls.push(remove_aggregation_ajax_submit(url));
+
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
        var json_response = JSON.parse(result);
        $("#fileTypeMetaData").html(file_metadata_alert);
        if (json_response.status === 'success'){
+           updateResourceSpatialCoverage(json_response.spatial_coverage);
            refreshFileBrowser();
        }
     });

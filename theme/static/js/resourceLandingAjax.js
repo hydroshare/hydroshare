@@ -92,6 +92,13 @@ function change_access_ajax_submit() {
             }
             form.find("button").toggleClass("disabled", false);
             form.css("cursor", "auto");
+
+            // Enable Publish Resource button if the resource was made public
+            const isPublic = element.attr("id") === "btn-public";
+            $("#publish").toggleClass("disabled", !isPublic);
+            $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
+            $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
+            $("#hl-sharing-status").text(element.text().trim());    // Update highlight sharing status
         },
         error: function () {
             form.find("button").toggleClass("disabled", false);
@@ -108,13 +115,16 @@ function shareable_ajax_submit(event) {
     var url = form.attr('action');
     var element = $(this);
     var action = $(this).closest("form").find("input[name='t']").val();
+
     element.attr("disabled", true);
+
     if (element.prop("checked")) {
-        $("#shareable-description").text("Allows others to share the resource without owner’s permission.");
+        $("#shareable-description").text("Uncheck the box to prevent others from sharing the resource without the owner's permission.");
     }
     else {
-        $("#shareable-description").text("Prevents others from sharing the resource without owner’s permission.");
+        $("#shareable-description").text("Check this box to allow others to share the resource without the owner's permission.");
     }
+
     $.ajax({
         type: "POST",
         url: url,
@@ -132,8 +142,8 @@ function shareable_ajax_submit(event) {
                 }
             }
             else {
-              element.attr("disabled", false);
-              element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
+                element.attr("disabled", false);
+                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
             }
         },
         error: function () {
@@ -895,9 +905,9 @@ function set_file_type_ajax_submit(url, folder_path) {
         },
         success: function (result) {
             waitDialog.dialog("close");
-            var json_response = JSON.parse(result);
-            var spatialCoverage = json_response.spatial_coverage;
-            updateResourceSpatialCoverage(spatialCoverage);
+            // var json_response = JSON.parse(result);
+            // var spatialCoverage = json_response.spatial_coverage;
+            // updateResourceSpatialCoverage(spatialCoverage);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
@@ -928,9 +938,6 @@ function remove_aggregation_ajax_submit(url) {
         async: true,
         success: function (result) {
             waitDialog.dialog("close");
-            var json_response = JSON.parse(result);
-            var spatialCoverage = json_response.spatial_coverage;
-            updateResourceSpatialCoverage(spatialCoverage);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
@@ -1272,12 +1279,11 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-            if (result.hasOwnProperty('spatial_coverage')){
+            if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
-
-            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')) {
+            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
                 var temporalCoverage = result.temporal_coverage;
                 updateResourceTemporalCoverage(temporalCoverage);
             }
@@ -1474,11 +1480,6 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             display_error_message('File/Folder Renaming Failed', xhr.responseText);
         }
     });
-}
-
-function refreshResourceEditPage() {
-    var form = $("#frm_refresh_page_edit_mode");
-    form.submit();
 }
 
 function addFileTypeExtraMetadata(){
@@ -1985,6 +1986,7 @@ function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
             $btnDeleteTemporalCoverage.hide()
     }
 }
+
 // updates the UI temporal coverage elements for the resource
 function updateResourceTemporalCoverage(temporalCoverage) {
     var $form = $("#id-coverage-temporal");
@@ -2010,6 +2012,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id-coverage-temporal").find("button.btn-primary").hide();
     initializeDatePickers();
 }
+
 // updates the UI spatial coverage elements for the aggregation
 function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elementID) {
     var $id_type_div = $("#id_type_filetype");
@@ -2084,4 +2087,71 @@ function setFileTypeMetadataFormsClickHandlers(){
         }
     });
     BindKeyValueFileTypeClickHandlers();
+}
+
+function updateResourceKeywords(keywordString) {
+    // Update the value of the input used in form submission
+    $("#id-subject").find("#id_value").val(keywordString);
+
+    // Populate keywords field in the UI
+    var keywords = keywordString.split(",");
+    $("#lst-tags").empty();
+
+    for (var i = 0; i < keywords.length; i++) {
+        if (keywords[i] != "") {
+            var li = $("<li class='tag'><span></span></li>");
+            li.find('span').text(keywords[i]);
+            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+            $("#lst-tags").append(li);
+        }
+    }
+}
+
+function updateResourceAuthors(authors) {
+    let container = $("#left-header-table .authors-wrapper");
+    container.empty();
+    authors.forEach(function (author) {
+        const shortID = $("#short-id").val();
+
+        // Could be cleaner using template literals, but those are currently not supported by IE 11
+        // https://kangax.github.io/compat-table/es6/
+        let authorTemplate = '<span> \
+            <a title="Edit ' + author.name + '" \
+               class="author-modal-trigger" data-id="' + author.id + '" \
+               data-name="' + author.name + '" data-order="' + author.order + '" \
+               data-description="' + author.description + '" \
+               data-organization="' + author.organization + '" \
+               data-email="' + author.email + '" \
+               data-address="' + author.address + '" \
+               data-phone="' + author.phone + '" \
+               data-homepage="' + author.homepage + '">' + (author.name ? author.name : author.organization) + ' \
+            </a> \
+            <form class="hidden-form" \
+                  action="/hsapi/_internal/' + shortID + '/creator/' + author.id + '/update-metadata/" \
+                  enctype="multipart/form-data"> \
+                ' + $(".main-container > input[name='csrfmiddlewaretoken']").outerHTML() +' \
+                <input name="resource-mode" type="hidden" value="edit"> \
+                <input name="creator-' + (author.order - 1) + '-name" \
+                       value="' + author.name + '"> \
+                <input name="creator-' + (author.order - 1) + '-description" \
+                       value="' + author.description + '"> \
+                <input name="creator-' + (author.order - 1) + '-organization" \
+                       value="' + author.organization + '"> \
+                <input name="creator-' + (author.order - 1) + '-email" \
+                       value="' + author.email + '"> \
+                <input name="creator-' + (author.order - 1) + '-address" \
+                       value="' + author.address + '"> \
+                <input name="creator-' + (author.order - 1) + '-phone" \
+                       type="text" value="' + author.phone + '"> \
+                <input name="creator-' + (author.order - 1) + '-homepage" type="url" \
+                       value="' + author.homepage + '"> \
+                <input class="input-order" \
+                       name="creator-' + (author.order - 1) + '-order" \
+                       type="number" value="' + author.order + '"> \
+            </form> \
+         </span>';
+
+        container.append(authorTemplate);
+    });
+
 }
