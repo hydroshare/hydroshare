@@ -1,7 +1,7 @@
 {
 	"timeSeriesReferenceFile": {
 		"referencedTimeSeries": [{
-			"beginDate": "2016A-04-06T00:00:00",
+			"beginDate": "2016-04-06T00:00:00",
 			"endDate": "2017-01-26T00:00:00+00:00",
 			"requestInfo": {
 				"networkName": "NWISDV",
@@ -20,6 +20,10 @@
 				"variableName": "Discharge, cubic feet per second",
 				"variableCode": "NWISDV:00060/DataType=MEAN"
 			},
+			"method": {
+				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
+				"methodLink": "https://nsidc.org/"
+			},
 			"valueCount": 1000,
 			"sampleMedium": "unknown"
 		}],
@@ -29,6 +33,6 @@
 			"CUAHSI"
 		],
 		"symbol": "http://data.cuahsi.org/content/images/cuahsi_logo_small.png",
-		"title": "Sites, Variable"
+		"title": " "
 	}
 }

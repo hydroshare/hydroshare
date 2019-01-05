@@ -1,7 +1,7 @@
 {
 	"timeSeriesReferenceFile": {
 		"referencedTimeSeries": [{
-			"beginDate": "2016A-04-06T00:00:00",
+			"beginDate": "2016-04-06T00:00:00",
 			"endDate": "2017-01-26T00:00:00+00:00",
 			"requestInfo": {
 				"networkName": "NWISDV",
@@ -11,7 +11,7 @@
 				"url": "http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
 			},
 			"site": {
-				"siteName": "HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH",
+				"siteName": null,
 				"siteCode": "NWISDV:10153100",
 				"latitude": 40.178871899999997,
 				"longitude": -111.639338
@@ -19,6 +19,10 @@
 			"variable": {
 				"variableName": "Discharge, cubic feet per second",
 				"variableCode": "NWISDV:00060/DataType=MEAN"
+			},
+			"method": {
+				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
+				"methodLink": "unknown"
 			},
 			"valueCount": 1000,
 			"sampleMedium": "unknown"
