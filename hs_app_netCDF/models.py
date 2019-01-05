@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input, span, br
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input, br
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
