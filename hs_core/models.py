@@ -1666,31 +1666,17 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
-    @property
-    def view_count(self):
-        return int(self.extra_data.get('view_count', '0'))
-
-    @property
-    def download_count(self):
-        return int(self.extra_data.get('download_count', '0'))
+    # for tracking number of times resource and its files have been downloaded
+    download_count = models.PositiveIntegerField(default=0)
+    # for tracking number of times resource has been viewed
+    view_count = models.PositiveIntegerField(default=0)
 
     def update_view_count(self, request):
-        resource_ids = request.session.get('resource_ids', [])
-        if resource_ids:
-            if self.short_id not in resource_ids:
-                self.__update_count('view_count')
-                request.session['resource_ids'].append(self.short_id)
-        else:
-            self.__update_count('view_count')
-            request.session['resource_ids'] = [self.short_id]
+        self.view_count += 1
+        self.save()
 
     def update_download_count(self):
-        self.__update_count('download_count')
-
-    def __update_count(self, key):
-        cur_count = self.extra_data.get(key, '0')
-        new_count = int(cur_count) + 1
-        self.extra_data[key] = str(new_count)
+        self.download_count += 1
         self.save()
 
     # definition of resource logic
