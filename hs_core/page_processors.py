@@ -117,10 +117,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     qholder = content_model.get_quota_holder()
 
-    readme = ''
-    if content_model.has_readme_file:
-        readme = content_model.get_readme_file_content()
-
+    readme = content_model.get_readme_file_content()
+    if readme is None:
+        readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
     # user requested the resource in READONLY mode

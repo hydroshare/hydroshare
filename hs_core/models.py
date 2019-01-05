@@ -2269,7 +2269,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = [f for f in self.files.all() if f.file_folder is None]
+        res_files_at_root = self.files.filter(file_folder=None)
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:
@@ -2285,26 +2285,18 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return readme_txt_file
 
-    @property
-    def has_readme_file(self):
-        """Returns True if the resource has a readme.md or readme.txt file at the root, otherwise
-        False."""
-
-        return self.readme_file is not None
-
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
-        then the content of the readme.md file is returned.
-        :raises If there is no readme file, ObjectDoesNotExist is raised
+        then the content of the readme.md file is returned, othewise None
         """
-        if self.readme_file is None:
-            raise ObjectDoesNotExist
-        else:
-            if self.readme_file.extension.lower() == '.md':
-                return {'content': markdown(self.readme_file.read().decode('utf-8')),
-                        'file_name': self.readme_file.file_name}
+        readme_file = self.readme_file
+        if readme_file is not None:
+            if readme_file.extension.lower() == '.md':
+                return {'content': markdown(readme_file.read().decode('utf-8')),
+                        'file_name': readme_file.file_name}
             else:
-                return {'content': self.readme_file.read(), 'file_name': self.readme_file.file_name}
+                return {'content': readme_file.read(), 'file_name': readme_file.file_name}
+        return readme_file
 
     @property
     def logical_files(self):

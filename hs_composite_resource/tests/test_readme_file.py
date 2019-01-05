@@ -75,14 +75,13 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
         # add the readme.txt file to the resource at the root level
         files_to_add = [self.readme_txt]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has a readme file
-        self.assertTrue(self.composite_resource.has_readme_file)
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
 
@@ -94,14 +93,13 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
         # add the readme.md file to the resource at the root level
         files_to_add = [self.readme_md]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has a readme file
-        self.assertTrue(self.composite_resource.has_readme_file)
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
 
@@ -113,7 +111,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
         # add the readme.txt file to the resource at the root level
         files_to_add = [self.readme_txt]
         self._add_files_to_resource(files_to_add)
@@ -123,7 +121,6 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should have two files at this point
         self.assertEqual(self.composite_resource.files.count(), 2)
         # resource has a readme file
-        self.assertTrue(self.composite_resource.has_readme_file)
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
         # check that the readme.md file is the readme file for the resource
@@ -145,7 +142,6 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
         self.assertEqual(self.composite_resource.readme_file, None)
 
         # add the readme.md file to the resource at the folder 'my-new-folder'
@@ -154,7 +150,6 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should have two files at this point
         self.assertEqual(self.composite_resource.files.count(), 2)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
         self.assertEqual(self.composite_resource.readme_file, None)
 
     def test_readme_file_5(self):
@@ -166,7 +161,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
 
         # add the some.txt file to the resource at the root level
         files_to_add = [self.some_txt]
@@ -174,7 +169,6 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
         self.assertEqual(self.composite_resource.readme_file, None)
 
         # add the some.md file to the resource at the root level
@@ -183,7 +177,6 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should have two files at this point
         self.assertEqual(self.composite_resource.files.count(), 2)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
         self.assertEqual(self.composite_resource.readme_file, None)
 
     def test_readme_file_6(self):
@@ -194,14 +187,13 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
         # add the README.TXT file to the resource at the root level
         files_to_add = [self.README_TXT]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has a readme file
-        self.assertTrue(self.composite_resource.has_readme_file)
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
 
@@ -213,14 +205,13 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
-        self.assertFalse(self.composite_resource.has_readme_file)
+        self.assertEqual(self.composite_resource.readme_file, None)
         # add the README.MD file to the resource at the root level
         files_to_add = [self.README_MD]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
         # resource has a readme file
-        self.assertTrue(self.composite_resource.has_readme_file)
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
 
