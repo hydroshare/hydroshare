@@ -23,7 +23,6 @@ from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse, QueryDict
 from django.core.validators import URLValidator
-from django.forms.models import model_to_dict
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework import status
@@ -1266,29 +1265,3 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
             temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
             temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict
-
-
-def get_resource_metadata(resource):
-    """Helper function to return resource level metadata that is needed to update UI
-    Only the following resource level metadata is returned:
-    title
-    abstract
-    keywords
-    creators
-    spatial coverage
-    temporal coverage
-    """
-    res_metadata = dict()
-    res_metadata['title'] = resource.metadata.title.value
-    if resource.metadata.description:
-        res_metadata['abstract'] = resource.metadata.description.abstract
-    else:
-        res_metadata['abstract'] = None
-    creators = []
-    for creator in resource.metadata.creators.all():
-        creators.append(model_to_dict(creator))
-    res_metadata['creators'] = creators
-    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
-    res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
-    res_metadata['temporal_coverage'] = get_coverage_data_dict(resource, coverage_type='temporal')
-    return res_metadata
