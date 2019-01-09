@@ -184,7 +184,6 @@ services:
     stdin_open: true
     tty: true
   defaultworker:
-    # TODO https://docs.docker.com/compose/startup-order/
     build:
       context: .
       dockerfile: Dockerfile-defaultworker
