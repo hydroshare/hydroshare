@@ -7,7 +7,6 @@ import redis
 import os
 import yaml
 from kombu import Queue, Exchange
-from kombu.common import Broadcast
 
 DEBUG = True
 
@@ -129,6 +128,8 @@ IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
+IRODS_SERVICE_ACCOUNT_USERNAME = ''
+
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
 
 # crossref login credential for resource publication
@@ -204,3 +205,5 @@ with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-c
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
+# insert a google maps key here when in production
+MAPS_KEY=''

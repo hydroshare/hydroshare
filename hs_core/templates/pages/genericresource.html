@@ -119,21 +119,18 @@
 
                         <li id="delete-separator" role="separator" class="divider"></li>
 
-                        {% if cm|resource_type == "Generic" %}
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip Folder...</span>
+                        </li>
 
-                            <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
-                                data-target="#zip-folder-dialog">
-                                <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                <span>Zip Folder...</span>
-                            </li>
+                        <li id="btn-unzip" data-menu-name="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                            <li id="btn-unzip" data-menu-name="unzip">
-                                <span class="fa fa-file-archive-o icon-blue"></span>
-                                <span>Unzip here</span>
-                            </li>
-
-                            <li id="zip-separator" role="separator" class="divider"></li>
-                        {% endif %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
                     {% endif %}
                     {% if cm.raccess.require_download_agreement %}
@@ -155,10 +152,22 @@
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
+                    <li id="btn-get-referenced-url" data-menu-name="get-ref-url" data-toggle="modal" data-target="#redirect-referenced-url-dialog" hidden>
+                        <span class="fa fa-link icon-blue"></span>
+                        <span>Open referenced URL</span>
+                    </li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                        <li id="btn-edit-referenced-url" data-menu-name="update-ref-url" data-toggle="modal" data-target="#edit-referenced-url-dialog" hidden>
+                            <span class="fa fa-link icon-blue"></span>
+                            <span>Edit referenced URL</span>
+                        </li>
                         <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip" title="Add metadata to an individual file">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Add metadata to file</span>
+                        </li>
+                        <li id="btn-set-fileset-file-type" data-menu-name="setfilesetfiletype" data-toggle="tooltip" title="Add metadata to a folder">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Add metadata to folder</span>
                         </li>
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype" data-toggle="tooltip" title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
@@ -180,16 +189,27 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Convert to Time Series</span>
                         </li>
-                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">
+                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="modal"
+                                data-target="#remove-aggregation-dialog">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Remove content type</span>
+                            <span data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">Remove content type</span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}
                         {% for tool in relevant_tools.tool_list %}
                             {% if tool.openwithlist %}
-                                {% if tool.agg_types or tool.file_extensions %}
-                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}" agg-types="{{ tool.agg_types }}" file-extensions="{{ tool.file_extensions }}">
+                                {% if tool.agg_types %}
+                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                                {% if tool.file_extensions %}
+                                    <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
                                         <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
                                          {% if tool.title|length > 20 %}
                                             <span>{{ tool.title|slice:":21"|add:"..." }}</span>
@@ -211,6 +231,11 @@
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder icon-blue"></span>
                                 <span>New Folder</span>
+                            </li>
+                            <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-external-link icon-blue"></span>
+                                <span>Add content from the web</span>
                             </li>
                             <li role="separator" class="divider"></li>
                         {% endif %}
@@ -367,7 +392,16 @@
                                                                 data-target="#create-folder-dialog"
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
-                                                    </button>
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% if cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-add-reference" class="fb-space-right disabled"
+                                                                data-toggle="modal"
+                                                                data-target="#add-reference-url-dialog"
+                                                            title="Add content from the web">
+                                                        <span class="fa fa-external-link icon-blue"></span>
+                                                        </button>
                                                     {% endif %}
 
                                                         {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
@@ -481,7 +515,11 @@
                                     <input type="hidden" name="file_ids" value=""/>
                                 </form>
                             </div>
-
+                            <div id="ref_file_note" class="text-muted division-title-caption"
+                                    {% if not show_web_reference_note %} hidden {% endif %}>
+                            Please note: This resource contains links to external content. Linked content is NOT stored in
+                            HydroShare, and we can't guarantee its availability, quality, or security.
+                            </div>
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                                 <div class="fb-upload-caption {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
                                     <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
@@ -1265,7 +1303,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>

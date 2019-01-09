@@ -3,7 +3,7 @@ import logging
 import os
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
@@ -15,7 +15,9 @@ from hs_core.models import ResourceFile
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
+    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
+    add_reference_url_to_resource, edit_reference_url_in_resource
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +99,11 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
-                main_file = aggregation_object.get_main_file.file_name
+                main_file = ''
+                if not aggregation_object.is_fileset:
+                    main_file = aggregation_object.get_main_file.file_name
             else:
-                # find if any aggregation type can be created from this folder
+                # find if any aggregation type that can be created from this folder
                 folder_aggregation_type_to_set =  \
                     resource.get_folder_aggregation_type_to_set(dir_path)
                 if folder_aggregation_type_to_set is None:
@@ -135,19 +139,26 @@ def data_store_structure(request):
             # skip metadata files
             continue
 
+        f_ref_url = ''
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
+        is_single_file_aggregation = ''
         if resource.resource_type == "CompositeResource":
             if f.has_logical_file:
                 logical_file_type = f.logical_file_type_name
                 logical_file_id = f.logical_file.id
                 aggregation_name = f.aggregation_display_name
+                is_single_file_aggregation = f.logical_file.is_single_file_aggregation
+                if 'url' in f.logical_file.extra_data:
+                    f_ref_url = f.logical_file.extra_data['url']
 
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
+                      'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id})
+                      'logical_file_id': logical_file_id,
+                      'is_single_file_aggregation': is_single_file_aggregation})
 
     return_object = {'files': files,
                      'folders': dirs,
@@ -298,15 +309,12 @@ def data_store_folder_unzip(request, **kwargs):
         return HttpResponse('Bad request - zip_with_rel_path must not contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    remove_original = request.POST.get('remove_original_zip', None)
-    bool_remove_original = True
-    if remove_original:
-        remove_original = str(remove_original).strip().lower()
-        if remove_original == 'false':
-            bool_remove_original = False
+    overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
+    remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
     try:
-        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
+        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original=remove_original_zip,
+                   overwrite=overwrite)
     except SessionException as ex:
         specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                        "protection from overwriting existing files. Unzip in a different " \
@@ -339,6 +347,82 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
     sys_pathname = 'data/contents/%s' % pathname
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
+
+
+@api_view(['POST'])
+def data_store_add_reference(request):
+    """
+    create the reference url file, add the url file to resource, and add the url to
+    metadata accordingly for easy later retrieval
+    :param request:
+    :return: JsonResponse with status code and message
+    """
+
+    res_id = request.POST.get('res_id', None)
+    curr_path = request.POST.get('curr_path', None)
+    ref_name = request.POST.get('ref_name', None)
+    ref_url = request.POST.get('ref_url', None)
+
+    if not res_id:
+        return HttpResponseBadRequest('Must have res_id included in the POST data')
+    if not curr_path:
+        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+    if not ref_name:
+        return HttpResponseBadRequest('Must have ref_name included in the POST data')
+    if not ref_url:
+        return HttpResponseBadRequest('Must have ref_url included in the POST data')
+
+    try:
+        res, _, _ = authorize(request, res_id,
+                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponseBadRequest('Bad request - resource not found')
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    ret_status, msg, file_id = add_reference_url_to_resource(request.user, res_id, ref_url,
+                                                             ref_name, curr_path)
+    if ret_status == status.HTTP_200_OK:
+        return JsonResponse({'status': 'success', 'file_id': file_id})
+    else:
+        return JsonResponse({'message': msg}, status=ret_status)
+
+
+@api_view(['POST'])
+def data_store_edit_reference_url(request):
+    """
+    edit the referenced url in an url file
+    :param request:
+    :return: JsonResponse on success or HttpResponse with error status code on error
+    """
+    res_id = request.POST.get('res_id', None)
+    curr_path = request.POST.get('curr_path', None)
+    url_filename = request.POST.get('url_filename', None)
+    new_ref_url = request.POST.get('new_ref_url', None)
+
+    if not res_id:
+        return HttpResponseBadRequest('Must have res_id included in the POST data')
+    if not curr_path:
+        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+    if not url_filename:
+        return HttpResponseBadRequest('Must have url_filename included in the POST data')
+    if not new_ref_url:
+        return HttpResponseBadRequest('Must have new_ref_url included in the POST data')
+
+    try:
+        res, _, _ = authorize(request, res_id,
+                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponseBadRequest('Bad request - resource not found')
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    ret_status, msg = edit_reference_url_in_resource(request.user, res, new_ref_url,
+                                                     curr_path, url_filename)
+    if ret_status == status.HTTP_200_OK:
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'message': msg}, status=ret_status)
 
 
 def data_store_create_folder(request):

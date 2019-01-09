@@ -51,7 +51,7 @@
 				"methodDescription" : "Estimated by NASA National Snow and Ice Data Center",
 				"methodLink" : "https://nsidc.org/"
 			},
-			"valueCount": -1,
+			"valueCount": 500,
 			"sampleMedium" : "unknown"
           }
         ],

@@ -3,7 +3,6 @@ import json
 import datetime
 import pytz
 import logging
-import os
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -16,7 +15,7 @@ from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response, render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
@@ -31,7 +30,7 @@ from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
-import autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
@@ -42,7 +41,7 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    replicate_resource_bag_to_user_zone
+    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -129,6 +128,25 @@ def change_quota_holder(request, shortkey):
     return HttpResponseRedirect(res.get_absolute_url())
 
 
+@api_view(['POST'])
+def update_quota_usage(request, username):
+    req_user = request.user
+    if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
+        return HttpResponseForbidden('only iRODS service account is authorized to '
+                                     'perform this action')
+    if not req_user.is_authenticated():
+        return HttpResponseForbidden('You are not authenticated to perform this action')
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest('user to update quota for is not valid')
+
+    update_quota_usage_utility(user=user)
+
+    return HttpResponse('quota for user ' + user.username + ' has been updated', status=200)
+
+
 def extract_files_with_paths(request):
     res_files = []
     full_paths = {}
@@ -152,9 +170,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
     res_files, full_paths = extract_files_with_paths(request)
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
-    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    extract_metadata = request.GET.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
     if file_folder is not None:
@@ -375,11 +394,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                # get the spatial coverage element
-                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
-                                      'spatial_coverage': spatial_coverage_dict,
+                                      'spatial_coverage': get_coverage_data_dict(res),
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -389,6 +406,12 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
+                                      'spatial_coverage': get_coverage_data_dict(res),
+                                      'temporal_coverage': get_coverage_data_dict(res, 'temporal'),
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -468,6 +491,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
@@ -510,15 +537,11 @@ def file_download_url_mapper(request, shortkey):
         logger.debug("request path is {}".format(request.path))
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
-    # logger.debug("public_file_path is {}".format(public_file_path))
+
     istorage = res.get_irods_storage()
-    if request.GET.get('zipped', "False") == "True":
-        file_download_url = istorage.url(public_file_path) + "?zipped=True"
-    else:
-        file_download_url = istorage.url(public_file_path)
-    if __debug__:
-        logger.debug("redirect is {}".format(file_download_url))
-    return HttpResponseRedirect(file_download_url)
+    url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
+    zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -1004,7 +1027,7 @@ def verify_account(request, *args, **kwargs):
             'username' : request.GET['username'],
             'email' : request.GET['email']
         }
-    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+    return render(request, 'pages/verify-account.html', context)
 
 
 @processor_for('resend-verification-email')
@@ -1025,7 +1048,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
         context = {
             'is_email_sent' : True
         }
-        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+        return render(request, 'pages/verify-account.html', context)
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -1133,7 +1156,7 @@ def add_generic_context(request, page):
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
-    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+    return render(request, 'pages/create-resource.html')
 
 
 @login_required

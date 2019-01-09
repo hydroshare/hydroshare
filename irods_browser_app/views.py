@@ -152,7 +152,7 @@ def upload_add(request):
     res_id = request.POST['res_id']
     resource, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
-    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    extract_metadata = request.POST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')

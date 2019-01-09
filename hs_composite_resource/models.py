@@ -1,7 +1,4 @@
 import os
-import json
-from operator import lt, gt
-from dateutil import parser
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -11,7 +8,8 @@ from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource
 
 
 from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, TimeSeriesLogicalFile
+    NetCDFLogicalFile, TimeSeriesLogicalFile, FileSetLogicalFile
+from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
 class CompositeResource(BaseResource):
@@ -36,6 +34,36 @@ class CompositeResource(BaseResource):
 
         return True
 
+    @property
+    def logical_files(self):
+        """Returns a list of all logical file type objects associated with this resource """
+
+        lf_list = []
+        lf_list.extend(self.filesetlogicalfile_set.all())
+        lf_list.extend(self.genericlogicalfile_set.all())
+        lf_list.extend(self.geofeaturelogicalfile_set.all())
+        lf_list.extend(self.netcdflogicalfile_set.all())
+        lf_list.extend(self.georasterlogicalfile_set.all())
+        lf_list.extend(self.reftimeserieslogicalfile_set.all())
+        lf_list.extend(self.timeserieslogicalfile_set.all())
+
+        return lf_list
+
+    @property
+    def can_be_published(self):
+        # resource level metadata check
+        if not super(CompositeResource, self).can_be_published:
+            return False
+
+        # filetype level metadata check
+        for lf in self.logical_files:
+            if not lf.metadata.has_all_required_elements():
+                return False
+            # url file cannot be published
+            if 'url' in lf.extra_data:
+                return False
+        return True
+
     def set_default_logical_file(self):
         """sets an instance of GenericLogicalFile to any resource file objects of this instance
         of the resource that is not already associated with a logical file. """
@@ -53,11 +81,24 @@ class CompositeResource(BaseResource):
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        files_in_folder = [res_file for res_file in self.files.all()
-                           if res_file.dir_path == dir_path]
-        for fl in files_in_folder:
-            if fl.has_logical_file:
-                return fl.logical_file
+
+        aggregation_path = dir_path[len(self.file_path) + 1:]
+        try:
+            return self.get_aggregation_by_name(aggregation_path)
+        except ObjectDoesNotExist:
+            return None
+
+    def get_file_aggregation_object(self, file_path):
+        """Returns an aggregation (file type) object if the specified file *file_path* represents a
+         file type aggregation (logical file), otherwise None.
+
+         :param file_path: Resource file path (full file path starting with resource id)
+         for which the aggregation object to be retrieved
+        """
+        for res_file in self.files.all():
+            if res_file.full_path == file_path:
+                if res_file.has_logical_file:
+                    return res_file.logical_file
         return None
 
     def get_folder_aggregation_type_to_set(self, dir_path):
@@ -73,7 +114,7 @@ class CompositeResource(BaseResource):
         does not contain other folders or does not have a parent folder then return the
         class name of that matching aggregation type.
         """
-        aggregation_type_to_set = ""
+
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
             return None
@@ -83,16 +124,21 @@ class CompositeResource(BaseResource):
         if self.is_federated:
             irods_path = os.path.join(self.resource_federation_path, irods_path)
         store = istorage.listdir(irods_path)
-        if store[0]:
-            # seems there are folders under dir_path - no aggregation type can be set if the target
-            # folder contains other folders
-            return None
+        files_in_folder = ResourceFile.list_folder(self, folder=irods_path, sub_folders=False)
 
-        files_in_folder = [res_file for res_file in self.files.all()
-                           if res_file.dir_path == dir_path]
         if not files_in_folder:
             # folder is empty
+            # check sub folders for files - if file exist we can set FileSet aggregation
+            files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
+                                                            sub_folders=True)
+            if files_in_sub_folders:
+                return FileSetLogicalFile.__name__
+
             return None
+        if store[0]:
+            # there are folders under dir_path as well as files - only FileSet can bet set
+            return FileSetLogicalFile.__name__
+
         if len(files_in_folder) > 1:
             # check for geo feature
             aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
@@ -105,6 +151,7 @@ class CompositeResource(BaseResource):
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
+            return FileSetLogicalFile.__name__
         else:
             # check for raster
             aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
@@ -121,8 +168,7 @@ class CompositeResource(BaseResource):
                 files_in_folder)
             if aggregation_type_to_set:
                 return aggregation_type_to_set
-
-        return None
+            return FileSetLogicalFile.__name__
 
     @property
     def supports_folders(self):
@@ -209,17 +255,39 @@ class CompositeResource(BaseResource):
                 aggregation.create_aggregation_xml_documents()
 
     def get_aggregation_by_name(self, name):
-            """Get an aggregation that matches the aggregation name specified by *name*
-            :param  name: name (aggregation path) of the aggregation to find
-            :return an aggregation object if found
-            :raises ObjectDoesNotExist if no matching aggregation is found
-            """
-            for aggregation in self.logical_files:
-                # remove the last slash in aggregation_name if any
-                if aggregation.aggregation_name.rstrip('/') == name:
-                    return aggregation
+        """Get an aggregation that matches the aggregation name specified by *name*
+        :param  name: name (aggregation path) of the aggregation to find
+        :return an aggregation object if found
+        :raises ObjectDoesNotExist if no matching aggregation is found
+        """
+        for aggregation in self.logical_files:
+            # remove the last slash in aggregation_name if any
+            if aggregation.aggregation_name.rstrip('/') == name:
+                return aggregation
 
-            raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+
+    def get_fileset_aggregation_in_path(self, path):
+        """Get the first fileset aggregation in the path moving up (towards the root)in the path
+        :param  path: directory path in which to search for a fileset aggregation
+        :return a fileset aggregation object if found, otherwise None
+        """
+
+        def get_fileset(path):
+            try:
+                aggregation = self.get_aggregation_by_name(path)
+                if aggregation.is_fileset:
+                    return aggregation
+            except ObjectDoesNotExist:
+                return None
+
+        while '/' in path:
+            fileset = get_fileset(path)
+            if fileset is not None:
+                return fileset
+            path = os.path.dirname(path)
+        else:
+            return get_fileset(path)
 
     def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
         """
@@ -259,6 +327,17 @@ class CompositeResource(BaseResource):
 
         if is_new_aggr_a_folder:
             delete_old_xml_files(folder=new_aggr_name)
+            try:
+                # in case of fileset aggregation need to update aggregation folder attribute to the
+                # new folder name
+                aggregation = self.get_aggregation_by_name(orig_aggr_name)
+                if aggregation.is_fileset:
+                    # update folder attribute of this fileset aggregation and all nested
+                    # fileset aggregations of this aggregation
+                    aggregation.update_folder(new_folder=new_aggr_name)
+            except ObjectDoesNotExist:
+                # not renaming a fileset aggregation folder
+                pass
             self._recreate_xml_docs_for_folder(new_aggr_name)
         else:
             # check if there is a matching single file aggregation
@@ -419,7 +498,7 @@ class CompositeResource(BaseResource):
                     aggregation = self.get_aggregation_by_name(aggregation_path)
                     return aggregation.can_contain_folders
                 except ObjectDoesNotExist:
-                    # target folder doesn't represent an aggrgation - no restriction
+                    # target folder doesn't represent an aggregation - no restriction
                     return True
             return True
 
@@ -500,6 +579,20 @@ class CompositeResource(BaseResource):
                                               'missing_elements': missing_elements})
         return metadata_missing_info
 
+    def delete_coverage(self, coverage_type):
+        """Deletes coverage data for the resource
+        :param coverage_type: A value of either 'spatial' or 'temporal
+        :return:
+        """
+        if coverage_type.lower() == 'spatial' and self.metadata.spatial_coverage:
+            self.metadata.spatial_coverage.delete()
+            self.metadata.is_dirty = True
+            self.metadata.save()
+        elif coverage_type.lower() == 'temporal' and self.metadata.temporal_coverage:
+            self.metadata.temporal_coverage.delete()
+            self.metadata.is_dirty = True
+            self.metadata.save()
+
     def update_coverage(self):
         """Update resource spatial and temporal coverage based on the corresponding coverages
         from all the contained aggregations (logical file) only if the resource coverage is not
@@ -518,90 +611,8 @@ class CompositeResource(BaseResource):
         aggregations (file type). Note: This action will overwrite any existing resource spatial
         coverage data.
         """
-        spatial_coverages = [lf.metadata.spatial_coverage for lf in self.logical_files
-                             if lf.metadata.spatial_coverage is not None]
 
-        if not spatial_coverages:
-            # no aggregation level spatial coverage data exist - no need to update resource
-            # spatial coverage
-            return
-
-        bbox_limits = {'box': {'northlimit': 'northlimit', 'southlimit': 'southlimit',
-                               'eastlimit': 'eastlimit', 'westlimit': 'westlimit'},
-                       'point': {'northlimit': 'north', 'southlimit': 'north',
-                                 'eastlimit': 'east', 'westlimit': 'east'}
-                       }
-
-        def set_coverage_data(res_coverage_value, lfo_coverage_element, box_limits):
-            comparison_operator = {'northlimit': lt, 'southlimit': gt, 'eastlimit': lt,
-                                   'westlimit': gt}
-            for key in comparison_operator.keys():
-                if comparison_operator[key](res_coverage_value[key],
-                                            lfo_coverage_element.value[box_limits[key]]):
-                    res_coverage_value[key] = lfo_coverage_element.value[box_limits[key]]
-
-        cov_type = "point"
-        bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
-                      'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
-
-        if len(spatial_coverages) > 1:
-            # check if one of the coverage is of type box
-            if any(sp_cov.type == 'box' for sp_cov in spatial_coverages):
-                cov_type = 'box'
-            else:
-                # check if the coverages represent different locations
-                unique_lats = set([sp_cov.value['north'] for sp_cov in spatial_coverages])
-                unique_lons = set([sp_cov.value['east'] for sp_cov in spatial_coverages])
-                if len(unique_lats) == 1 and len(unique_lons) == 1:
-                    cov_type = 'point'
-                else:
-                    cov_type = 'box'
-            if cov_type == 'point':
-                sp_cov = spatial_coverages[0]
-                bbox_value = dict()
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['north'] = sp_cov.value['north']
-                bbox_value['east'] = sp_cov.value['east']
-            else:
-                for sp_cov in spatial_coverages:
-                    if sp_cov.type == "box":
-                        box_limits = bbox_limits['box']
-                        set_coverage_data(bbox_value, sp_cov, box_limits)
-                    else:
-                        # point type coverage
-                        box_limits = bbox_limits['point']
-                        set_coverage_data(bbox_value, sp_cov, box_limits)
-
-        elif len(spatial_coverages) == 1:
-            sp_cov = spatial_coverages[0]
-            if sp_cov.type == "box":
-                cov_type = 'box'
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['northlimit'] = sp_cov.value['northlimit']
-                bbox_value['eastlimit'] = sp_cov.value['eastlimit']
-                bbox_value['southlimit'] = sp_cov.value['southlimit']
-                bbox_value['westlimit'] = sp_cov.value['westlimit']
-            else:
-                # point type coverage
-                cov_type = "point"
-                bbox_value = dict()
-                bbox_value['projection'] = 'WGS 84 EPSG:4326'
-                bbox_value['units'] = 'Decimal degrees'
-                bbox_value['north'] = sp_cov.value['north']
-                bbox_value['east'] = sp_cov.value['east']
-
-        spatial_cov = self.metadata.spatial_coverage
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            place_name = spatial_cov.value.get('name', None)
-            if place_name is not None:
-                bbox_value['name'] = place_name
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            self.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+        update_target_spatial_coverage(self)
 
     def update_temporal_coverage(self):
         """Updates resource temporal coverage based on the contained temporal coverages of
@@ -609,39 +620,8 @@ class CompositeResource(BaseResource):
         coverage data.
         """
 
-        temporal_coverages = [lf.metadata.temporal_coverage for lf in self.logical_files
-                              if lf.metadata.temporal_coverage is not None]
+        update_target_temporal_coverage(self)
 
-        if not temporal_coverages:
-            # no aggregation level temporal coverage data - no update at resource level is needed
-            return
-
-        date_data = {'start': None, 'end': None}
-
-        def set_date_value(date_data, coverage_element, key):
-            comparison_operator = gt if key == 'start' else lt
-            if date_data[key] is None:
-                date_data[key] = coverage_element.value[key]
-            else:
-                if comparison_operator(parser.parse(date_data[key]),
-                                       parser.parse(coverage_element.value[key])):
-                    date_data[key] = coverage_element.value[key]
-
-        for temp_cov in temporal_coverages:
-            start_date = parser.parse(temp_cov.value['start'])
-            end_date = parser.parse(temp_cov.value['end'])
-            temp_cov.value['start'] = start_date.strftime('%m/%d/%Y')
-            temp_cov.value['end'] = end_date.strftime('%m/%d/%Y')
-            set_date_value(date_data, temp_cov, 'start')
-            set_date_value(date_data, temp_cov, 'end')
-
-        temp_cov = self.metadata.temporal_coverage
-        if date_data['start'] is not None and date_data['end'] is not None:
-            if temp_cov:
-                temp_cov._value = json.dumps(date_data)
-                temp_cov.save()
-            else:
-                self.metadata.create_element("coverage", type='period', value=date_data)
 
 
 # this would allow us to pick up additional form elements for the template before the template

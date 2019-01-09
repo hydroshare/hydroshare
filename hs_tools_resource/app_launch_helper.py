@@ -86,15 +86,11 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     agg_types = ""
     file_extensions = ""
-    if (tool_url_agg_new and ("HS_JS_AGG_KEY" in tool_url_agg_new or
-                              "HS_JS_FILE_KEY" in tool_url_agg_new)) or \
-            (tool_url_file_new and ("HS_JS_AGG_KEY" in tool_url_file_new or
-                                    "HS_JS_FILE_KEY" in tool_url_file_new)):
-        if tool_res_obj.metadata._supported_agg_types.first():
-            agg_types = tool_res_obj.metadata._supported_agg_types.first() \
-                .get_supported_agg_types_str()
-        if tool_res_obj.metadata.supported_file_extensions:
-            file_extensions = tool_res_obj.metadata.supported_file_extensions.value
+    if tool_res_obj.metadata._supported_agg_types.first():
+        agg_types = tool_res_obj.metadata._supported_agg_types.first() \
+            .get_supported_agg_types_str()
+    if tool_res_obj.metadata.supported_file_extensions:
+        file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if (tool_url_resource_new is not None) or \
             (tool_url_agg_new is not None) or \

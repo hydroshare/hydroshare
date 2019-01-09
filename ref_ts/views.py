@@ -11,7 +11,7 @@ import logging
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, FileResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 
 from hs_core import hydroshare
@@ -208,7 +208,7 @@ def create_ref_time_series(request, *args, **kwargs):
     except Exception as ex:
         logger.exception("create_ref_time_series: %s" % (ex.message))
         context = {'resource_creation_error': "Error: failed to create resource." }
-        return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
+        return render(request, 'pages/create-ref-time-series.html', context)
 
 
 def download_refts_resource_bag(request, shortkey, *args, **kwargs):

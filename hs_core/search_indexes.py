@@ -155,6 +155,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(Q(raccess__discoverable=True) |
                                                Q(raccess__public=True))
 
+    def prepare_created(self, obj):
+        return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def prepare_modified(self, obj):
+        return obj.updated.strftime('%Y-%m-%dT%H:%M:%SZ')
+
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
@@ -178,8 +184,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None:
+            if first_creator.name:
                 return first_creator.name.lstrip()
+            elif first_creator.organization:
+                return first_creator.organization.strip()
             else:
                 return 'none'
         else:
@@ -194,9 +202,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None and first_creator.name != '':
+            if first_creator.name:
                 normalized = normalize_name(first_creator.name)
                 return normalized
+            elif first_creator.organization:
+                return first_creator.organization.strip()
             else:
                 return 'none'
         else:

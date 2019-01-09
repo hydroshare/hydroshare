@@ -254,13 +254,8 @@
                                 </strong>
                             </td>
                             {# First Author #}
-                            {% if res.first_creator.description %}
-                                <td>
-                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                </td>
-                            {% else %}
-                                <td>{{ res.first_creator.name }}</td>
-                            {% endif %}
+                            {{ res|resource_first_author }}
+
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}

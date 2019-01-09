@@ -116,8 +116,7 @@ function onAddKeyword(event) {
             li.find('span').text(keyword[i]);
             li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
             $("#lst-tags").append(li);
-
-            $(".icon-remove").click(onRemoveKeyword);
+            $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
             updateKeywords();
             existsNewKeywords = true;
         }
@@ -172,6 +171,7 @@ function onAddKeywordFileType(event) {
     if(existsNewKeywords) {
         filetype_keywords_update_ajax_submit();
         $("#txt-keyword-filetype").val("");  // Clear text input
+        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
     }
 }
 
@@ -326,7 +326,7 @@ function saveExtraMetadata() {
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
     t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-        var extra_meta_name = this.data()[0].trim();
+        var extra_meta_name = $("<div/>").html(this.data()[0].trim()).text();
         var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
         json_obj[extra_meta_name] = extra_meta_value;
     });
@@ -573,7 +573,7 @@ $(document).ready(function () {
         }
     }
 
-    $(".icon-remove").click(onRemoveKeyword);
+    $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
 
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {

@@ -25,7 +25,13 @@ def landing_page(request, page):
         context['script_metadata'] = content_model.metadata.program
 
         # get the helptext for each mp field
-        attributes = content_model.metadata.scriptspecificmetadata.model._meta.get_fields_with_model()
+        attributes = [
+            (f, f.model if f.model else None)
+            for f in content_model.metadata.scriptspecificmetadata.model._meta.get_fields()
+            if not f.is_relation
+                or f.one_to_one
+                or (f.many_to_one and f.related_model)
+        ]
         attribute_dict = {}
         for att in attributes:
             if hasattr(att[0], 'help_text'):

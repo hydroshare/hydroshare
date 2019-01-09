@@ -27,6 +27,7 @@ function processSiteMetadataElement(){
             }
             return;
         }
+        $("#id-site-file-type").coordinatesPicker();
 
         $(sites_json).each(function (i, site) {
             if (site.site_code === selectedSiteCode){

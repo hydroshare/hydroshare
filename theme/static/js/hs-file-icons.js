@@ -29,9 +29,10 @@ function getFolderIcons() {
         "alt='Geographic Feature Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
-        "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/img/resource-icons/composite48x48.png' " +
-        "alt='Default Aggregation Icon'/></span>";
+        "<span class='fa-stack fb-stack'>" +
+        "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-aggregation' aria-hidden='true'></i>" +
+        "<i class='fa fa-tag fa-stack-1x' aria-hidden='true'></i>" +
+        "</span>";
     return folderIcons;
 }
 
@@ -150,6 +151,12 @@ function getFileIcons() {
         "<span class='fa-stack fb-stack fb-stack-refts'>" +
         "<i class='fa fa-file-o fa-stack-2x '></i>" +
         "<i class='fa fa-line-chart fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.URL =
+        "<span class='fa-stack fb-stack fb-stack-url'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i class='fa fa-external-link fa-stack-1x'></i>" +
         "</span>";
 
     fileIcons.DEFAULT =
