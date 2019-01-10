@@ -4,6 +4,7 @@ import os
 import sys
 
 import redis
+import yaml
 from kombu import Queue, Exchange
 
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
@@ -462,18 +463,6 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 #     "NEVERCACHE_KEY": NEVERCACHE_KEY,
 # }
 
-
-##################
-# LOCAL SETTINGS #
-##################
-
-# Allow any settings to be defined in local_settings.py which should be
-# ignored in your version control system allowing for settings to be
-# defined per machine.
-local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
-for k in dir(local_settings):
-    locals()[k] = getattr(local_settings, k)
-
 ####################
 # DYNAMIC SETTINGS #
 ####################
@@ -872,6 +861,20 @@ LOCAL_CACHE_URI = "/local-cache"
 RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
+
+##################
+# LOCAL SETTINGS #
+##################
+
+# Allow any settings to be defined in local_settings.py which should be
+# ignored in your version control system allowing for settings to be
+# defined per machine.
+try:
+    local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
+    for k in dir(local_settings):
+        locals()[k] = getattr(local_settings, k)
+except:
+    pass
 
 with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
