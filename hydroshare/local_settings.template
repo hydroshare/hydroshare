@@ -1,0 +1,31 @@
+# Copy the contents of this file to a new file local_settings.py
+# Values here will serve as overrides when developing locally
+# local_settings.py will not be version controlled so storing keys is acceptable
+
+DEBUG = True
+
+# Local resource iRODS configuration
+USE_IRODS = True
+IRODS_ROOT = '/tmp'
+IRODS_ICOMMANDS_PATH = '/usr/bin'
+IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_PORT = '1247'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'proxywater1'
+IRODS_GLOBAL_SESSION = True
+
+# Remote user zone iRODS configuration
+REMOTE_USE_IRODS = False
+
+# iRODS customized bagit rule path
+IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
+IRODS_BAGIT_PATH = 'bags'
+IRODS_BAGIT_POSTFIX = 'zip'
+
+IRODS_SERVICE_ACCOUNT_USERNAME = ''
+
+HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'

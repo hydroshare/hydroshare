@@ -3,6 +3,7 @@ rods@data.local.org.env
 rods@users.local.org.env
 
 ## Custom
+local_settings.py
 *.pyc
 *.pyo
 *.db
