@@ -19,7 +19,7 @@ services:
       IRODS_PORT: '1247'
       IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
       IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy'
+#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy' breaking change for 4.1.8 to 4.2.4
       IRODS_ZONE: 'hydroshareZone'
       IRODS_USERNAME: 'wwwHydroProxy'
       IRODS_AUTH: 'wwwHydroProxy'
@@ -63,7 +63,7 @@ services:
       IRODS_PORT: '1247'
       IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
       IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy'
+#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy' breaking change for 4.1.8 to 4.2.4
       IRODS_ZONE: 'hydroshareZone'
       IRODS_USERNAME: 'wwwHydroProxy'
       IRODS_AUTH: 'wwwHydroProxy'
@@ -120,12 +120,9 @@ services:
     hostname: solr
     ports:
       - "8983:8983"
-    # This line is uncommented if $USE_LOCAL_IRODS = true per hsctrl
-    # - "8983"
     stdin_open: true
     tty: true
   hydroshare:
-    #TODO https://docs.docker.com/compose/startup-order/
     build:
       context: .
       dockerfile: Dockerfile-hydroshare
@@ -158,15 +155,9 @@ services:
       - "/hs_tmp"
       # temp directory shared with celery workers
       - "/shared_tmp"
-      ## These two lines are actually active if $USE_LOCAL_IRODS = false: but can probably be removed entirely
-      ## These two lines are not present if $USE_LOCAL_IRODS = true
-      #- "/irods/hydroshare:/irods/hydroshare"
-      #- "/irods/hydroshare_vault:/irods/hydroshare_vault"
     ports:
       - "1338:2022"
       - "8000:8000"
-      # this line is removed if irods $USE_LOCAL_IRODS = true not sure why
-      - "15001:15001"
     links:
       - postgis:postgis
       - redis:redis
