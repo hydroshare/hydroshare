@@ -862,6 +862,9 @@ RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
+# insert a google maps key here when in production
+MAPS_KEY = ''
+
 ##################
 # LOCAL SETTINGS #
 ##################
@@ -870,10 +873,8 @@ RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 # ignored in your version control system allowing for settings to be
 # defined per machine.
 try:
-    local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
-    for k in dir(local_settings):
-        locals()[k] = getattr(local_settings, k)
-except:
+    from local_settings import *
+except ImportError:
     pass
 
 with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
@@ -881,5 +882,3 @@ with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-co
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-# insert a google maps key here when in production
-MAPS_KEY = ''
