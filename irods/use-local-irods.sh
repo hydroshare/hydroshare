@@ -34,7 +34,7 @@ if [[ "${1}" == "--persist" ]]; then
         mkdir -p /home/${USER}/icat2/vault
         mkdir -p /home/${USER}/icat2/pgdata
     fi
-    # Create ${IRODS_HOST} container from irods v.4.1.8
+    # Create ${IRODS_HOST} container from irods v.4.2.4
     echo "CREATE: ${IRODS_HOST} container"
     docker run -d --name ${IRODS_HOST} \
         -v /home/${USER}/icat1/vault:/var/lib/irods/iRODS/Vault \
@@ -46,9 +46,9 @@ if [[ "${1}" == "--persist" ]]; then
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        mjstealey/irods-provider-postgres:4.2.4
 
-    # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
+    # Create ${HS_USER_ZONE_HOST} container from irods v.4.2.4
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
     docker run -d --name ${HS_USER_ZONE_HOST} \
         -v /home/${USER}/icat2/vault:/var/lib/irods/iRODS/Vault \
@@ -61,9 +61,9 @@ if [[ "${1}" == "--persist" ]]; then
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        mjstealey/irods-provider-postgres:4.2.4
 else
-    # Create ${IRODS_HOST} container from irods v.4.1.8
+    # Create ${IRODS_HOST} container from irods v.4.2.4
     echo "CREATE: ${IRODS_HOST} container"
     docker run -d --name ${IRODS_HOST} \
         -e IRODS_ZONE_NAME=${IRODS_ZONE} \
@@ -71,9 +71,9 @@ else
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        mjstealey/irods-provider-postgres:4.2.4
 
-    # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
+    # Create ${HS_USER_ZONE_HOST} container from irods v.4.2.4
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
     docker run -d --name ${HS_USER_ZONE_HOST} \
         -e IRODS_ZONE_NAME=${HS_USER_IRODS_ZONE} \
@@ -82,7 +82,7 @@ else
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        mjstealey/irods-provider-postgres:4.2.4
 fi
 
 # wait for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} to finish standing up
@@ -92,12 +92,7 @@ for pc in $(seq 20 -1 1); do
 done
 
 # Install OpenSSH on ${HS_USER_ZONE_HOST}
-echo "INFO: running apt-get update on ${HS_USER_ZONE_HOST}"
-docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
-
 echo "INFO: Install OpenSSH on ${HS_USER_ZONE_HOST}"
-echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
-docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
 
@@ -113,8 +108,8 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${HS_USER_ZONE_PROXY_USER}":"${HS_
 
 # Make ${IRODS_HOST} and ${HS_USER_ZONE_HOST} aware of each other via /etc/hosts
 echo "INFO: update /etc/hosts"
-ICAT1IP=$(docker exec ${IRODS_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
-ICAT2IP=$(docker exec ${HS_USER_ZONE_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
+ICAT1IP=$(docker exec ${IRODS_HOST} hostname -i)
+ICAT2IP=$(docker exec ${HS_USER_ZONE_HOST} hostname -i)
 echo "[root@${IRODS_HOST}]$ echo \"'${ICAT2IP}' ${HS_USER_ZONE_HOST}\" >> /etc/hosts"
 docker exec ${IRODS_HOST} sh -c 'echo "'${ICAT2IP}' '${HS_USER_ZONE_HOST}'" >> /etc/hosts'
 echo "[root@${HS_USER_ZONE_HOST}]$ echo \"'${ICAT1IP}' ${IRODS_HOST}\" >> /etc/hosts"
@@ -129,55 +124,55 @@ echo "INFO: make remote zone for each"
 echo "[rods@${IRODS_HOST}]$ iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247"
 sleep 1s
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}"
 sleep 1s
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}
 
 # modify /etc/irods/server_config.json
 echo "INFO: federation configuration for ${IRODS_HOST}"
-docker exec ${IRODS_HOST} sh -c "jq '.federation[0].icat_host=\"${HS_USER_ZONE_HOST}\" | .federation[0].zone_name=\"${HS_USER_IRODS_ZONE}\" | .federation[0].zone_key=\"${HS_USER_IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
+docker exec ${IRODS_HOST} sh -c "jq '.federation[0].catalog_provider_hosts[0]=\"${HS_USER_ZONE_HOST}\" | .federation[0].zone_name=\"${HS_USER_IRODS_ZONE}\" | .federation[0].zone_key=\"${HS_USER_IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
 docker exec ${IRODS_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
 docker exec ${IRODS_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
 
 echo "INFO: federation configuration for ${HS_USER_ZONE_HOST}"
-docker exec ${HS_USER_ZONE_HOST} sh -c "jq '.federation[0].icat_host=\"${IRODS_HOST}\" | .federation[0].zone_name=\"${IRODS_ZONE}\" | .federation[0].zone_key=\"${IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
+docker exec ${HS_USER_ZONE_HOST} sh -c "jq '.federation[0].catalog_provider_hosts[0]=\"${IRODS_HOST}\" | .federation[0].zone_name=\"${IRODS_ZONE}\" | .federation[0].zone_key=\"${IRODS_ZONE}_KEY\" | .federation[0].negotiation_key=\"${SHARED_NEG_KEY}\"' /etc/irods/server_config.json > /tmp/tmp.json"
 docker exec ${HS_USER_ZONE_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
 docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
 
 # make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 
 # make user ${IRODS_USERNAME} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkuser ${IRODS_USERNAME} rodsuser"
 echo "[rods@${IRODS_HOST}]$ iadmin moduser ${IRODS_USERNAME} password ${IRODS_AUTH}"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkuser ${IRODS_USERNAME} rodsuser && iadmin moduser ${IRODS_USERNAME} password ${IRODS_AUTH}"
 
 # make ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} and ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser"
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser && iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}"
 
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin"
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin && iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
 
 # make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 
 # iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}
@@ -191,24 +186,24 @@ docker exec ${HS_USER_ZONE_HOST} chown ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE
 # give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${IRODS_USERNAME}#${IRODS_ZONE} rodsuser"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser"
 
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${IRODS_USERNAME}#${IRODS_ZONE} /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home"
 
 # give ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} own rights over ${HS_USER_IRODS_ZONE}/home
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "ichmod -r -M own "${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" /${HS_USER_IRODS_ZONE}/home"
 
 # set ${HS_USER_IRODS_ZONE}/home to inherit
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M inherit /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
+    mjstealey/irods-icommands:4.2.0 \
     sh -c "ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home"
 
 # configure local_settings.py
