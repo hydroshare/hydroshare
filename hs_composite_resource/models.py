@@ -623,7 +623,6 @@ class CompositeResource(BaseResource):
         update_target_temporal_coverage(self)
 
 
-
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(CompositeResource)(resource_processor)
