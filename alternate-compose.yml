@@ -42,10 +42,10 @@ services:
       IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
-    volumes:
-      - irodsdatavol1:/var/lib
-      - irodsdatavol2:/etc
-      - irodsdatavol3:/home
+#    volumes:
+#      - irodsdatavol1:/var/lib
+#      - irodsdatavol2:/etc
+#      - irodsdatavol3:/home
     stdin_open: true
     tty: true
   users.local.org:
@@ -86,10 +86,10 @@ services:
       IRODS_DATABASE_SERVER_HOSTNAME: 'users.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
-    volumes:
-      - irodsusersvol1:/var/lib
-      - irodsusersvol2:/etc
-      - irodsusersvol3:/home
+#    volumes:
+#      - irodsusersvol1:/var/lib
+#      - irodsusersvol2:/etc
+#      - irodsusersvol3:/home
     stdin_open: true
     tty: true
   postgis:
