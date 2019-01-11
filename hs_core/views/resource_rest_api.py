@@ -431,6 +431,10 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         else:
             filter_parms['type'] = list(filter_parms['type'])
 
+        # query params come in as a comma separated string
+        if filter_parms['authors']:
+            filter_parms['authors'] = filter_parms['authors'][0].split(',')
+
         filter_parms['public'] = not self.request.user.is_authenticated()
         filtered_res_list = []
 

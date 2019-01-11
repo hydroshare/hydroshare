@@ -68,7 +68,7 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 class ResourceListRequestValidator(serializers.Serializer):
     creator = serializers.CharField(min_length=1, required=False)
-    authors = serializers.ListField(required=False)
+    authors = serializers.ListField(required=False, child=serializers.CharField())
     group = serializers.CharField(min_length=1, required=False, validators=[validate_group])
     user = serializers.CharField(min_length=1, required=False, validators=[validate_user])
     owner = serializers.CharField(min_length=1, required=False, validators=[validate_user])
