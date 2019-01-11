@@ -409,7 +409,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
-    pagination_class.page_size_query_param = 'Page size'
+    pagination_class.page_size_query_param = 'count'
 
     @swagger_auto_schema(query_serializer=serializers.ResourceListRequestValidator,
                          operation_description="List resources")
@@ -430,10 +430,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             filter_parms['type'] = None
         else:
             filter_parms['type'] = list(filter_parms['type'])
-
-        # query params come in as a comma separated string
-        if filter_parms['authors']:
-            filter_parms['authors'] = filter_parms['authors'][0].split(',')
 
         filter_parms['public'] = not self.request.user.is_authenticated()
         filtered_res_list = []

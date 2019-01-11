@@ -272,7 +272,7 @@ def get_public_groups():
         return Group.objects.filter(gaccess__public=True)
 
 
-def get_resource_list(authors=[], creator=None, group=None, user=None, owner=None, from_date=None,
+def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
@@ -304,7 +304,7 @@ def get_resource_list(authors=[], creator=None, group=None, user=None, owner=Non
     because it gets too expensive quickly.
 
     parameters:
-        authors = a list of Users or names
+        author = a list of User names or emails
         creator = a User or name
         group = Group or name
         user = User or name
@@ -321,7 +321,7 @@ def get_resource_list(authors=[], creator=None, group=None, user=None, owner=Non
         east = east coordinate
     """
 
-    if not any((authors, creator, group, user, owner, from_date, to_date, start,
+    if not any((author, creator, group, user, owner, from_date, to_date, start,
                 count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
@@ -337,8 +337,7 @@ def get_resource_list(authors=[], creator=None, group=None, user=None, owner=Non
         q.append(Q(doi__isnull=False))
 
     if author:
-        authors.append(author)
-    if authors:
+        authors = author.split(',')
         author_parties = (
             (Creator.objects.filter(email__in=authors) | Creator.objects.filter(name__in=authors))
         )
@@ -438,6 +437,7 @@ def get_resource_list(authors=[], creator=None, group=None, user=None, owner=Non
                 # No matches on title or abstract, so treat as no results of search
                 flt = flt.none()
 
+    # TODO The below is legacy pagination... need to find out if anything is using it and delete
     qcnt = 0
     if flt:
         qcnt = len(flt)

@@ -67,27 +67,53 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 
 class ResourceListRequestValidator(serializers.Serializer):
-    creator = serializers.CharField(min_length=1, required=False)
-    authors = serializers.ListField(required=False, child=serializers.CharField())
-    group = serializers.CharField(min_length=1, required=False, validators=[validate_group])
-    user = serializers.CharField(min_length=1, required=False, validators=[validate_user])
-    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user])
-    from_date = serializers.DateField(required=False, default=None)
-    to_date = serializers.DateField(required=False, default=None)
-    start = serializers.IntegerField(required=False, default=None)
-    count = serializers.IntegerField(required=False, default=None)
-    subject = serializers.CharField(required=False)
-    metadata = serializers.CharField(min_length=1, required=False, validators=[validate_json])
-    full_text_search = serializers.CharField(required=False)
-    edit_permission = serializers.BooleanField(required=False, default=False)
-    published = serializers.BooleanField(required=False, default=False)
-    type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None)
-    coverage_type = serializers.ChoiceField(choices=['box', 'point'], required=False)
-    north = serializers.CharField(required=False)
-    south = serializers.CharField(required=False)
-    east = serializers.CharField(required=False)
-    west = serializers.CharField(required=False)
-    include_obsolete = serializers.BooleanField(required=False, default=False)
+    creator = serializers.CharField(min_length=1, required=False,
+                                    help_text='The first author (name or email)')
+    author = serializers.CharField(required=False,
+                                   help_text='Comma separated list of authors (name or email)')
+    group = serializers.CharField(min_length=1, required=False, validators=[validate_group],
+                                  help_text='A group name (requires edit_permissions=True)')
+    user = serializers.CharField(min_length=1, required=False, validators=[validate_user],
+                                 help_text='Viewable by user (name or email)')
+    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user],
+                                  help_text='Owned by user (name or email)')
+    from_date = serializers.DateField(required=False, default=None,
+                                      help_text='to get a list of resources created on or after '
+                                                'this date')
+    to_date = serializers.DateField(required=False, default=None,
+                                    help_text='to get a list of resources created on or before '
+                                              'this date')
+    subject = serializers.CharField(required=False,
+                                    help_text='Comma separated list of subjects')
+    full_text_search = serializers.CharField(required=False,
+                                             help_text='get a list of resources with this text')
+    edit_permission = serializers.BooleanField(required=False, default=False,
+                                               help_text='filter by edit permissions of '
+                                                         'user/group/owner')
+    published = serializers.BooleanField(required=False, default=False,
+                                         help_text='filter by published resources')
+    type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None,
+                                           help_text='to get a list of resources of the specified '
+                                                     'resource types')
+    coverage_type = serializers.ChoiceField(choices=['box', 'point'], required=False,
+                                            help_text='to get a list of resources that fall within '
+                                                      'the specified spatial coverage boundary')
+    north = serializers.CharField(required=False,
+                                  help_text='north coordinate of spatial coverage. This parameter '
+                                            'is required if *coverage_type* has been specified')
+    south = serializers.CharField(required=False,
+                                  help_text='south coordinate of spatial coverage. This parameter '
+                                            'is required if *coverage_type* has been specified '
+                                            'with a value of box')
+    east = serializers.CharField(required=False,
+                                 help_text='east coordinate of spatial coverage. This parameter '
+                                           'is required if *coverage_type* has been specified')
+    west = serializers.CharField(required=False,
+                                 help_text='west coordinate of spatial coverage. This parameter '
+                                           'is required if *coverage_type* has been specified with '
+                                           'a value of box')
+    include_obsolete = serializers.BooleanField(required=False, default=False,
+                                                help_text='Include repleaced resources')
 
 
 class ResourceListItemSerializer(serializers.Serializer):
