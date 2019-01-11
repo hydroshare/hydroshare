@@ -220,9 +220,9 @@ services:
 ### docker volume rm hydroshare_pgdatavol
 volumes:
   pgdatavol:
-  irodsdatavol1:
-  irodsusersvol1:
-  irodsdatavol2:
-  irodsusersvol2:
-  irodsdatavol3:
-  irodsusersvol3:
+#  irodsdatavol1:
+#  irodsusersvol1:
+#  irodsdatavol2:
+#  irodsusersvol2:
+#  irodsdatavol3:
+#  irodsusersvol3:
