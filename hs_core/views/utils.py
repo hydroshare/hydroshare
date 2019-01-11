@@ -404,7 +404,6 @@ def validate_user(user_identifier):
         if not User.objects.filter(email=user_identifier).exists():
             raise ValidationError(detail='No user found for user identifier:%s' % user_identifier)
 
-
 def validate_group(group_identifier):
     if not Group.objects.filter(name=group_identifier).exists():
         try:

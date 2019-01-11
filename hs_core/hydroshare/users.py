@@ -272,7 +272,7 @@ def get_public_groups():
         return Group.objects.filter(gaccess__public=True)
 
 
-def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
+def get_resource_list(authors=[], creator=None, group=None, user=None, owner=None, from_date=None,
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
@@ -304,6 +304,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     because it gets too expensive quickly.
 
     parameters:
+        authors = a list of Users or names
+        creator = a User or name
         group = Group or name
         user = User or name
         from_date = datetime object
@@ -319,7 +321,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         east = east coordinate
     """
 
-    if not any((creator, group, user, owner, from_date, to_date, start,
+    if not any((authors, creator, group, user, owner, from_date, to_date, start,
                 count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
@@ -335,8 +337,10 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(doi__isnull=False))
 
     if author:
+        authors.append(author)
+    if authors:
         author_parties = (
-            (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+            (Creator.objects.filter(email__in=authors) | Creator.objects.filter(name__in=authors))
         )
 
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))

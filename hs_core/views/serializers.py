@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from hs_core.hydroshare import utils
 from hs_core import hydroshare
-from .utils import validate_json, validate_user,  validate_group
+from .utils import validate_json, validate_user, validate_group
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 
@@ -67,7 +67,8 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 
 class ResourceListRequestValidator(serializers.Serializer):
-    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user])
+    creator = serializers.CharField(min_length=1, required=False)
+    authors = serializers.ListField(required=False)
     group = serializers.CharField(min_length=1, required=False, validators=[validate_group])
     user = serializers.CharField(min_length=1, required=False, validators=[validate_user])
     owner = serializers.CharField(min_length=1, required=False, validators=[validate_user])
@@ -94,6 +95,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     resource_title = serializers.CharField(max_length=200)
     resource_id = serializers.CharField(max_length=100)
     abstract = serializers.CharField()
+    authors = serializers.ListField()
     creator = serializers.CharField(max_length=100)
     doi = serializers.CharField(max_length=200)
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
@@ -108,6 +110,12 @@ class ResourceListItemSerializer(serializers.Serializer):
     science_metadata_url = serializers.URLField()
     resource_map_url = serializers.URLField()
     resource_url = serializers.URLField()
+
+
+class ResourceCreatedSerializer(serializers.Serializer):
+    resource_type = serializers.CharField(max_length=100)
+    resource_id = serializers.CharField(max_length=100)
+    message = serializers.CharField()
 
 
 class ResourceFileSerializer(serializers.Serializer):
@@ -127,6 +135,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'resource_id',
                                'resource_title',
                                'abstract',
+                               'authors',
                                'creator',
                                'doi',
                                'public',
