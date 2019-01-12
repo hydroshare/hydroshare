@@ -494,41 +494,34 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """overrides the base class function"""
 
         html_string = super(RefTimeseriesFileMetaData, self).get_html()
-        if not self.has_metadata:
-            html_string = '<div id="#fb-metadata-default" class="text-center text-muted" ' \
-                          'role="alert">' \
-                          '<div>No file level metadata exists for the selected file.</div>' \
-                          '<hr>' \
-                          '<i class="fa fa-eye-slash fa-2x" aria-hidden="true"></i></div>'
-        else:
-            if self.abstract:
-                abstract_div = div(cls="content-block")
-                with abstract_div:
-                    legend("Abstract")
-                    p(self.abstract)
+        if self.abstract:
+            abstract_div = div(cls="content-block")
+            with abstract_div:
+                legend("Abstract")
+                p(self.abstract)
 
-                html_string += abstract_div.render()
-            if self.file_version:
-                file_ver_div = div(cls="content-block")
-                with file_ver_div:
-                    legend("File Version")
-                    p(self.file_version)
-                html_string += file_ver_div.render()
-            if self.symbol:
-                symbol_div = div(cls="content-block")
-                with symbol_div:
-                    legend("Symbol")
-                    if self.symbol.startswith('http'):
-                        with p():
-                            a(self.symbol, href=self.symbol, target="_blank")
-                    else:
-                        p(self.symbol)
-                html_string += symbol_div.render()
-            if self.temporal_coverage:
-                html_string += self.temporal_coverage.get_html()
+            html_string += abstract_div.render()
+        if self.file_version:
+            file_ver_div = div(cls="content-block")
+            with file_ver_div:
+                legend("File Version")
+                p(self.file_version)
+            html_string += file_ver_div.render()
+        if self.symbol:
+            symbol_div = div(cls="content-block")
+            with symbol_div:
+                legend("Symbol")
+                if self.symbol.startswith('http'):
+                    with p():
+                        a(self.symbol, href=self.symbol, target="_blank")
+                else:
+                    p(self.symbol)
+            html_string += symbol_div.render()
+        if self.temporal_coverage:
+            html_string += self.temporal_coverage.get_html()
 
-            if self.spatial_coverage:
-                html_string += self.spatial_coverage.get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
 
         html_string += self.get_ts_series_html().render()
         html_string += self.get_json_file_data_html().render()
