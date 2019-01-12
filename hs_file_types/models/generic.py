@@ -5,7 +5,7 @@ from django.db import models
 from django.template import Template, Context
 from django.core.exceptions import ValidationError
 
-from dominate.tags import div, form, button
+from dominate.tags import div, form, button, hr, i
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
@@ -57,11 +57,14 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
 
         html_string = super(GenericFileMetaDataMixin, self).get_html()
         if not self.has_metadata:
-            html_string = '<div id="#fb-metadata-default" class="text-center text-muted" ' \
-                          'role="alert">' \
-                          '<div>No file level metadata exists for the selected file.</div>' \
-                          '<hr>' \
-                          '<i class="fa fa-eye-slash fa-2x" aria-hidden="true"></i></div>'
+            no_metadata_message = div(id="#fb-metadata-default", cls="text-center text-muted",
+                                      role="alert")
+            with no_metadata_message:
+                div("No file level metadata exists for the selected file.")
+                hr()
+                i_tag = i(cls="fa fa-eye-slash fa-2x")
+                i_tag['aria-hidden'] = 'true'
+            html_string = no_metadata_message.render()
         else:
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
