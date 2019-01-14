@@ -7,7 +7,7 @@ DEBUG = True
 
 SHARED_NEG_KEY='hydroshareZonehydroshareuserZone'
 
-# Local resource iRODS configuration
+# Native Docker iRODS developer local
 USE_IRODS=True
 IRODS_ROOT='/tmp'
 IRODS_ICOMMANDS_PATH='/usr/bin'
@@ -20,6 +20,20 @@ IRODS_ZONE='hydroshareZone'
 IRODS_USERNAME='wwwHydroProxy'
 IRODS_AUTH='wwwHydroProxy'
 IRODS_GLOBAL_SESSION=True
+
+# RENCI Datacenter iRODS Shared obtain auth password from a team member
+USE_IRODS = True
+IRODS_ROOT = '/tmp'
+IRODS_ICOMMANDS_PATH = '/usr/bin'
+IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_PORT = '1247'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = ''
+IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
 REMOTE_USE_IRODS=True
