@@ -1125,7 +1125,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        response_data = {'resource_id': pk, 'file_name': file_name}
+        file_id = os.path.basename(res_file_objects[0].object_id)
+        response_data = {'resource_id': pk, 'file_name': file_name, 'file_id': file_id}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 

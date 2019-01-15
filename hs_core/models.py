@@ -3525,7 +3525,7 @@ class CoreMetaData(models.Model):
             parsed_metadata.append({"language": {"code": metadata.pop('language')}})
 
         if 'rights' in keys_to_update:
-            parsed_metadata.append({"rights": {"statement": metadata.pop('rights')}})
+            parsed_metadata.append({"rights": metadata.pop('rights')})
 
         if 'sources' in keys_to_update:
             for source in metadata.pop('sources'):
