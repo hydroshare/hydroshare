@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 from django.forms.models import formset_factory, BaseFormSet
 
-from dominate.tags import div, legend, form, button, p, textarea, input, br
+from dominate.tags import div, legend, form, button, p, textarea, input
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -167,14 +167,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.id)
         style = "display:none;"
         if self.is_dirty:
-            style = "margin-bottom:10px"
+            style = "margin-bottom:15px"
         root_div = div(id="div-netcdf-file-update", cls="row", style=style)
 
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    div("NetCDF file needs to be synced with metadata changes.")
-                    br()
+                    div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
                     input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
