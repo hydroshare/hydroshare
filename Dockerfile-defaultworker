@@ -8,24 +8,5 @@ RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355
 USER root
 WORKDIR /hydroshare
 
-# TODO move celerybeat sched to logdir
-
-### Note Begin: this was being run by init-defaultworker.template /shell script:
-#RUN usermod -u 1000 hydro-service
-#RUN groupmod -g 1000 storage-hydro
-#RUN celery beat -A hydroshare -s /log/celerybeat-schedule &
-#CMD celery worker -A hydroshare -E -Q default
-### Note End
-
-# TODO sort these out potentially remove:
-#ADD hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
-#RUN mkdir /hs_tmp
-#RUN mkdir /shared_tmp
-#RUN chown -R hydro-service:storage-hydro /etc/ssh
-#RUN chown -R hydro-service:storage-hydro /hs_tmp
-#RUN chown -R hydro-service:storage-hydro /shared_tmp
-#RUN mkdir /hydroshare/celery
-
-
 RUN celery beat -A hydroshare -s /log/celerybeat-schedule &
 CMD celery worker -A hydroshare -E -Q default
