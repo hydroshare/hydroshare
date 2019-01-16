@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input, br
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
@@ -180,21 +180,17 @@ class OriginalCoverage(AbstractMetaDataElement):
             if self.value.get('projection', ''):
                 div('Coordinate Reference System', cls='text-muted')
                 div(self.value.get('projection', ''))
-                br()
             if self.datum:
-                div('Datum', cls='text-muted')
+                div('Datum', cls='text-muted space-top')
                 div(self.datum)
-                br()
             if self.projection_string_type:
-                div('Coordinate String Type', cls='text-muted')
+                div('Coordinate String Type', cls='text-muted space-top')
                 div(self.projection_string_type)
-                br()
             if self.projection_string_text:
-                div('Coordinate String Text', cls='text-muted')
+                div('Coordinate String Text', cls='text-muted space-top')
                 div(self.projection_string_text)
-                br()
 
-            h4('Extent')
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
@@ -582,8 +578,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    div("NetCDF file needs to be synced with metadata changes.")
-                    br()
+                    div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
 
                     input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
                     with form(action=form_action, method="post", id="update-netcdf-file",):

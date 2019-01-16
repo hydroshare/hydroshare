@@ -5086,3 +5086,7 @@ a[data-toggle="modal"] {
 .space-top {
 	margin-top: 15px;
 }
+
+.space-bottom {
+	margin-bottom: 15px;
+}
