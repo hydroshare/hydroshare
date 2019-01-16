@@ -39,7 +39,7 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4, br
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 import unicodedata
@@ -1368,11 +1368,9 @@ class Coverage(AbstractMetaDataElement):
                 legend('Spatial Coverage')
                 div('Coordinate Reference System', cls='text-muted')
                 div(self.value['projection'])
-                br()
-                div('Coordinate Reference System Unit', cls='text-muted')
+                div('Coordinate Reference System Unit', cls='text-muted space-top')
                 div(self.value['units'])
-                br()
-                h4('Extent')
+                h4('Extent', cls='space-top')
                 with table(cls='custom-table'):
                     if self.type == 'box':
                         with tbody():
