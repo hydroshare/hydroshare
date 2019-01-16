@@ -9,7 +9,7 @@
                     {% if spatial_coverage.projection %}
                         <div>
                             <i class="fa fa-globe" aria-hidden="true"></i>
-                            <small>&nbsp;Coordinate System/Geographic Projection:&nbsp;</small>
+                            <small> Coordinate System/Geographic Projection: </small>
                         </div>
                         <div>{{ spatial_coverage.projection }}</div>
                         <br>
@@ -17,7 +17,7 @@
                     {% if spatial_coverage.units %}
                         <div>
                             <i class="fa fa-tachometer" aria-hidden="true"></i>
-                            <small>&nbsp;Coordinate Units:&nbsp;</small>
+                            <small> Coordinate Units: </small>
                         </div>
                         <div>{{ spatial_coverage.units }}</div>
                         <br>
@@ -77,13 +77,13 @@
                             <table class="info-table">
                                 <tbody>
                                 <tr>
-                                    <th><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>Start Date:</strong></th>
+                                    <th><i class="fa fa-calendar" aria-hidden="true"></i> <strong>Start Date:</strong></th>
                                     <td><span class="format-date"
                                                 data-date="{{ temporal_coverage.start_date }}"></span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>End Date:</strong></th>
+                                    <th><i class="fa fa-calendar" aria-hidden="true"></i> <strong>End Date:</strong></th>
                                     <td><span class="format-date"
                                                 data-date="{{ temporal_coverage.end_date }}"></span></td>
                                 </tr>
@@ -117,7 +117,7 @@
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                     <div class="flex">
-                                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                        <i class="glyphicon glyphicon-info-sign space-right"></i>
                                         <em>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
                                         feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
                                         the content files.</em>
@@ -128,7 +128,7 @@
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible" role="alert"
                                  style="display: none;">
                                 <div class="flex">
-                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <i class="glyphicon glyphicon-info-sign space-right"></i>
                                     <em>Spatial coverage for time series resources should be set by editing the
                                     coordinates of the monitoring sites on the "Resource Specific" metadata tab.</em>
                                 </div>
@@ -171,20 +171,20 @@
 
                                 {% if spatial_coverage.projection %}
                                     <small class="text-muted">
-                                        <div><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;Coordinate System/Geographic Projection:&nbsp;</div>
+                                        <div><i class="fa fa-globe" aria-hidden="true"></i> Coordinate System/Geographic Projection:</div>
                                         <div><strong>{{ spatial_coverage.projection }}</strong></div>
                                     </small>
                                     <br>
                                 {% endif %}
                                 {% if spatial_coverage.units %}
                                     <small class="text-muted">
-                                        <div><i class="fa fa-tachometer" aria-hidden="true"></i>&nbsp;Coordinate Units:&nbsp;</div>
+                                        <div><i class="fa fa-tachometer" aria-hidden="true"></i> Coordinate Units:</div>
                                         <div><strong>{{ spatial_coverage.units }}</strong></div>
                                     </small>
                                     <br>
                                 {% endif %}
 
-                                <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_north" class="control-group space-top">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -195,7 +195,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_east" class="control-group space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -206,7 +206,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_northlimit" class="control-group space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">North Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -217,7 +217,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_eastlimit" class="control-group space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">East Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -228,7 +228,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_southlimit" class="control-group space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">South Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -239,7 +239,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
+                                <div id="div_id_westlimit" class="control-group space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">West Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -367,7 +367,7 @@
                                     </div>
                                 </div>
 
-                                <div style="margin-top:20px" class="col-xs-12">
+                                <div class="col-xs-12 space-top">
                                     <button type="button" class="btn btn-primary pull-right btn-form-submit"
                                             style="display: none;">Save changes
                                     </button>

@@ -5091,6 +5091,14 @@ a[data-toggle="modal"] {
 	margin-bottom: 15px;
 }
 
+.space-right {
+	margin-right: 15px;
+}
+
+.space-left {
+	margin-left: 15px;
+}
+
 .border-gray {
 	border: 1px solid #DDD;
 }
