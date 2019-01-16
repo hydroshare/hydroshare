@@ -5090,3 +5090,7 @@ a[data-toggle="modal"] {
 .space-bottom {
 	margin-bottom: 15px;
 }
+
+.border-gray {
+	border: 1px solid #DDD;
+}
