@@ -5082,3 +5082,7 @@ a[data-toggle="modal"] {
 .d-block {
 	display: block;
 }
+
+.space-top {
+	margin-top: 15px;
+}

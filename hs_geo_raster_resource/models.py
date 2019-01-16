@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, br
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
@@ -167,19 +167,15 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         with root_div:
             legend('Spatial Reference')
-            div('Coordinate Reference System', cls='text-muted')
+            div('Coordinate Reference System', cls='text-muted space-top')
             div(self.value.get('projection', ''))
-            br()
-            div('Coordinate Reference System Unit', cls='text-muted')
+            div('Coordinate Reference System Unit', cls='text-muted space-top')
             div(self.value['units'])
-            br()
-            div('Datum', cls='text-muted')
+            div('Datum', cls='text-muted space-top')
             div(self.value.get('datum', ''))
-            br()
-            div('Coordinate String', cls='text-muted')
+            div('Coordinate String', cls='text-muted space-top')
             div(self.value.get('projection_string', ''), style="word-break: break-all;")
-            br()
-            h4('Extent')
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
