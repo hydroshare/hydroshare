@@ -41,14 +41,11 @@ class OriginalCoverage(AbstractMetaDataElement):
             legend('Spatial Reference')
             div('Coordinate Reference System', cls='text-muted')
             div(self.projection_name)
-            br()
-            div('Datum', cls='text-muted')
+            div('Datum', cls='text-muted space-top')
             div(self.datum)
-            br()
-            div('Coordinate String Text', cls='text-muted')
+            div('Coordinate String Text', cls='text-muted space-top')
             div(self.projection_string)
-            br()
-            h4('Extent')
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():

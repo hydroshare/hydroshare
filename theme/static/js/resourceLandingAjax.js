@@ -193,9 +193,6 @@ function license_agreement_ajax_submit(event) {
                 element.attr("disabled", false);
                 element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
             }
-            // page refresh is needed to update if license agreement popup to show or not prior
-            // to download of files/bag
-            // window.location = window.location.href;
         },
         error: function () {
             element.attr("disabled", false);
@@ -905,9 +902,6 @@ function set_file_type_ajax_submit(url, folder_path) {
         },
         success: function (result) {
             waitDialog.dialog("close");
-            // var json_response = JSON.parse(result);
-            // var spatialCoverage = json_response.spatial_coverage;
-            // updateResourceSpatialCoverage(spatialCoverage);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
