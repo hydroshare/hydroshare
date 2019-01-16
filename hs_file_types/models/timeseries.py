@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, button, input, p, \
-    textarea, span, br
+    textarea, span
 
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
@@ -115,25 +115,22 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                     # generate html for display of site element
                     site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
                     if site:
-                        legend("Site")
+                        legend("Site", cls='space-top')
                         site.get_html()
-                        br()
 
                     # generate html for variable element
                     variable = self.get_element_by_series_id(series_id=series_id,
                                                              elements=self.variables)
                     if variable:
-                        legend("Variable")
+                        legend("Variable", cls='space-top')
                         variable.get_html()
-                        br()
 
                     # generate html for method element
                     method = self.get_element_by_series_id(series_id=series_id,
                                                            elements=self.methods)
                     if method:
-                        legend("Method")
+                        legend("Method", cls='space-top')
                         method.get_html()
-                        br()
 
                 # create 2nd column of the row
                 with div(cls="content-block"):
@@ -144,16 +141,14 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                                                   elements=self.processing_levels)
                         if pro_level:
                             pro_level.get_html()
-                            br()
 
                     # generate html for timeseries_result element
                     if self.time_series_results:
-                        legend("Time Series Result")
+                        legend("Time Series Result", cls='space-top')
                         ts_result = self.get_element_by_series_id(series_id=series_id,
                                                                   elements=self.time_series_results)
                         if ts_result:
                             ts_result.get_html()
-                            br()
 
         html_string += series_selection_div.render()
         template = Template(html_string)
