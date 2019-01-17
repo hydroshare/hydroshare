@@ -1196,16 +1196,9 @@ $(document).ready(function () {
             successmultiple: function (files, response) {
                 // uploaded files can affect metadata in composite resource.
                 // Use the json data returned from backend to update UI
-
                 const resourceType = $("#resource-type").val();
-
                 if (resourceType === 'Composite Resource') {
-                    $("#id_abstract").val(response.abstract);
-                    $("#txt-title").val(response.title);
-                    updateResourceAuthors(response.creators);
-                    updateResourceKeywords(response.keywords.join(","));
-                    updateResourceSpatialCoverage(response.spatial_coverage);
-                    updateResourceTemporalCoverage(response.temporal_coverage);
+                    updateResourceUI();
                 }
             },
             init: function () {
@@ -1977,21 +1970,30 @@ function setFileType(fileType){
 
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
-       $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-       var json_response = JSON.parse(result);
-       $("#fileTypeMetaData").html(file_metadata_alert);
+        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+        var json_response = JSON.parse(result);
+        $("#fileTypeMetaData").html(file_metadata_alert);
 
-       if (json_response.status === 'success'){
-           // Use resource level metadata in json_response to update resource level UI
-           $("#id_abstract").val(json_response.abstract);
-           $("#txt-title").val(json_response.title);
-           updateResourceAuthors(json_response.creators);
-           updateResourceKeywords(json_response.keywords.join(","));
-           updateResourceSpatialCoverage(json_response.spatial_coverage);
-           updateResourceTemporalCoverage(json_response.temporal_coverage);
+        if (json_response.status === 'success') {
+            // Use resource level metadata in json_response to update resource level UI
+            updateResourceUI();
+            refreshFileBrowser();
+        }
+    });
+}
 
-           refreshFileBrowser();
-       }
+// Get resource metadata and update UI elements
+function updateResourceUI() {
+    var calls = [];
+    calls.push(getResourceMetadata());
+    $.when.apply($, calls).done(function (result) {
+        let UIData = JSON.parse(result);
+        $("#id_abstract").val(UIData.abstract);
+        $("#txt-title").val(UIData.title);
+        updateResourceAuthors(UIData.creators);
+        updateResourceKeywords(UIData.keywords.join(","));
+        updateResourceSpatialCoverage(UIData.spatial_coverage);
+        updateResourceTemporalCoverage(UIData.temporal_coverage);
     });
 }
 
