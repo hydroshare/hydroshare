@@ -1227,10 +1227,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    // TODO: remove "data/contents" split once it's removed from back end.
                     $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
                         v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path'].split("data/contents/")[1], v['main_file']));
+                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
                 });
             }
             if (!files.length && !folders.length) {
