@@ -3,7 +3,6 @@ import json
 import datetime
 import pytz
 import logging
-import requests
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -63,33 +62,6 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 from hs_collection_resource.models import CollectionDeletedResource
 
 logger = logging.getLogger(__name__)
-
-
-class HydroshareWebServices():
-
-    def __init__(self, services_url, api_token, timeout):
-        self.services_url = services_url
-        self.timeout = timeout
-        self.session = requests.Session()
-        self.session.headers.update(
-            {"Authorization": " ".join(("Token", str(api_token)))}
-        )
-
-    def update(self, res_id):
-        rest_url = str(self.services_url) + "/update-services/?res_id=" + str(res_id)
-        try:
-            return self.session.post(rest_url, timeout=self.timeout)
-        except requests.exceptions.RequestException as requests_exception:
-            return requests_exception
-        except ValueError as requests_exception:
-            return requests_exception
-
-
-web_services = HydroshareWebServices(
-    services_url="http://localhost:8080/apps/hydroshare-web-services-manager/api",
-    api_token="932aebc70b5924dd31da63f8d80e7c62db18c02c",
-    timeout=20
-)
 
 
 def short_url(request, *args, **kwargs):
@@ -234,8 +206,6 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
         return HttpResponse(msg, status=500)
-
-    web_services.update(shortkey)
 
     return HttpResponse(status=200)
 
@@ -588,8 +558,6 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
 
-    web_services.update(shortkey)
-
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -610,8 +578,6 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
-
-    web_services.update(shortkey)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -652,8 +618,6 @@ def delete_resource(request, shortkey, *args, **kwargs):
     post_delete_resource.send(sender=type(res), request=request, user=user,
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
-
-    web_services.update(shortkey)
 
     if request.is_ajax():
         return JsonResponse(ajax_response_data)
@@ -818,11 +782,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if request.META.get('HTTP_REFERER', None):
         request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
 
-        web_services.update(shortkey)
-
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
-
-    web_services.update(shortkey)
 
     return HttpResponse(status=202)
 
@@ -1296,8 +1256,6 @@ def create_resource(request, *args, **kwargs):
             ajax_response_data['file_upload_status'] = 'success'
         ajax_response_data['status'] = 'success'
         ajax_response_data['resource_url'] = resource.get_absolute_url()
-
-    web_services.update(resource.short_id)
 
     return JsonResponse(ajax_response_data)
 

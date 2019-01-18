@@ -7,6 +7,11 @@ import string
 import errno
 import shutil
 
+from hs_core.signals import post_create_resource, post_delete_resource, \
+   post_add_files_to_resource, post_delete_file_from_resource
+from hydroshare import settings as hs_settings
+from hs_core.tasks import update_web_services
+
 from collections import namedtuple
 import paramiko
 import logging
@@ -23,6 +28,7 @@ from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse, QueryDict
 from django.core.validators import URLValidator
+from django.dispatch import receiver
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework import status
@@ -71,6 +77,20 @@ def json_or_jsonp(r, i, code=200):
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
+
+
+@receiver(post_create_resource)
+@receiver(post_delete_resource)
+@receiver(post_add_files_to_resource)
+@receiver(post_delete_file_from_resource)
+def hs_update_web_services(**kwargs):
+    """Update resource web services."""
+    update_web_services(
+        services_url=hs_settings.HSWS_URL,
+        api_token=hs_settings.HSWS_API_TOKEN,
+        timeout=hs_settings.HSWS_TIMEOUT,
+        res_id=kwargs.get("resource").short_id
+    )
 
 
 # Since an SessionException will be raised for all irods-related operations from django_irods
