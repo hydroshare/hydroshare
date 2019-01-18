@@ -29,7 +29,7 @@ def data_store_structure(request):
     It is invoked by an AJAX call and returns json object that holds content for files
     and folders under the requested directory/collection/subcollection.
     The AJAX request must be a POST request with input data passed in for res_id and store_path
-    where store_path is the relative path under res_id collection/directory
+    where store_path is the relative path to res_id/data/contents
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
@@ -53,20 +53,20 @@ def data_store_structure(request):
         return HttpResponse('Bad request - store_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
     store_path = str(store_path).strip()
-    if not store_path:
-        logger.error("store_path empty for resource {}".format(res_id))
-        return HttpResponse('Bad request - store_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not store_path.startswith('data/contents'):
-        logger.error("store_path doesn't start with data/contents for resource {}".format(res_id))
-        return HttpResponse('Bad request - store_path must start with data/contents/',
+    if store_path.startswith('/'):
+        logger.error("store_path must not start with '/' for resource {}".format(res_id))
+        return HttpResponse("Bad request - store_path must not start with '/'",
                             status=status.HTTP_400_BAD_REQUEST)
 
     if store_path.find('/../') >= 0 or store_path.endswith('/..'):
         logger.error("store_path cannot contain .. for resource {}".format(res_id))
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    if not store_path:
+        store_path = "data/contents"
+    elif not store_path.startswith('data/contents'):
+        store_path = os.path.join('data', 'contents', store_path)
 
     istorage = resource.get_irods_storage()
     directory_in_irods = resource.get_irods_path(store_path)
