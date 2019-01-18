@@ -2,7 +2,7 @@ FROM hydroshare/hs_docker_base:release-1.9.1
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 ### Begin - HydroShare Development Image Additions ###
-RUN pip install --upgrade pip && pip install djangorestframework==3.6.4
+# RUN pip install --upgrade pip && pip install djangorestframework==3.6.4
 RUN pip install \
   robot_detection \
   django-ipware \

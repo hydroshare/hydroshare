@@ -306,6 +306,7 @@ INSTALLED_APPS = (
     "hs_rest_api",
     "hs_dictionary",
     "security",
+    "hs_explore", 
     "hs_manish", 
 )
 
