@@ -1227,9 +1227,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
+                    // TODO: remove "data/contents" split once it's removed from back end.
                     $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
                         v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
+                        v['folder_aggregation_type_to_set'], v['folder_short_path'].split("data/contents/")[1], v['main_file']));
                 });
             }
             if (!files.length && !folders.length) {
@@ -1259,11 +1260,11 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             bindFileBrowserItemEvents();
 
             $("#hs-file-browser").attr("data-current-path", store_path);
-            $("#upload-folder-path").text(store_path.replace("data/", "")); // We don't show the data folder in the UI path
+            $("#upload-folder-path").text(store_path); // We don't show the data folder in the UI path
             $("#hs-file-browser").attr("data-res-id", res_id);
 
             // strip the 'data' folder from the path
-            setBreadCrumbs(store_path.replace("data/", ""));
+            setBreadCrumbs(store_path);
 
             if ($("#hsDropzone").hasClass("dropzone")) {
                 // If no multiple files allowed and a file already exists, disable upload

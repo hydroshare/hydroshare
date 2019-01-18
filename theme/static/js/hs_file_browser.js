@@ -891,41 +891,45 @@ function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if(!path) {
-        return;
-    }
-
-    if (path && path.lastIndexOf("/") === "-1") {
-        $("#fb-move-up").toggleClass("disabled", true)
-    }
-    else {
-        $("#fb-move-up").toggleClass("disabled", false)
-    }
-
-    var setFirstActive = false;
-    while (path){
-        var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
-        var currentPath = path;
-        path = path.substr(0, path.lastIndexOf("/"));
-        if (setFirstActive) {
-            crumbs.prepend('<li data-path="data/' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+    if (path) {
+        if (path.lastIndexOf("/") === "-1") {
+            $("#fb-move-up").toggleClass("disabled", true)
         }
         else {
-            crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
-            setFirstActive = true;
+            $("#fb-move-up").toggleClass("disabled", false)
         }
-    }
 
-    // Bind click events
-    $("#fb-bread-crumbs li:not(.active)").click(function() {
-        var resID = $("#hs-file-browser").attr("data-res-id");
-        var path = $(this).attr("data-path");
-        sessionStorage.currentBrowsepath = path;
-        pathLog.push(sessionStorage.currentBrowsepath);
-        pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(resID, sessionStorage.currentBrowsepath);
-        $("#fileTypeMetaDataTab").html(file_metadata_alert);
-    });
+        var setFirstActive = false;
+        while (path) {
+            var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
+            var currentPath = path;
+            path = path.substr(0, path.lastIndexOf("/"));
+            if (setFirstActive) {
+                crumbs.prepend('<li data-path="' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+            }
+            else {
+                crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+                setFirstActive = true;
+            }
+        }
+
+        // Prepend root folder
+        crumbs.prepend('<li data-path=""><i class="fa fa-folder-o" aria-hidden="true"></i><span> contents</span></li>');
+
+        // Bind click events
+        $("#fb-bread-crumbs li:not(.active)").click(function () {
+            var resID = $("#hs-file-browser").attr("data-res-id");
+            var path = $(this).attr("data-path");
+            sessionStorage.currentBrowsepath = path;
+            pathLog.push(sessionStorage.currentBrowsepath);
+            pathLogIndex = pathLog.length - 1;
+            get_irods_folder_struct_ajax_submit(resID, sessionStorage.currentBrowsepath);
+            $("#fileTypeMetaDataTab").html(file_metadata_alert);
+        });
+    }
+    else {
+        crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> contents</span></li>');
+    }
 }
 
 // File sorting sort algorithms
@@ -1053,7 +1057,7 @@ function onOpenFolder() {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var currentPath = $("#hs-file-browser").attr("data-current-path");
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-    var targetPath = currentPath + "/" + folderName;
+    var targetPath = currentPath.length > 0 ? currentPath + "/" + folderName : folderName;
     sessionStorage.currentBrowsepath = targetPath;
     var allowCreateFolder = true;
     // Remove further paths from the log
@@ -1069,8 +1073,8 @@ function onOpenFolder() {
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
-        var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        allowCreateFolder = logicalFileType.length === 0;
+        let logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+        allowCreateFolder = !logicalFileType || logicalFileType.length === 0;
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1079,7 +1083,7 @@ function onOpenFolder() {
 }
 
 function updateNavigationState() {
-    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 1); // we are at the root: data/contents
+    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 1); // we are at the root folder
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
 
     var upPath = $("#hs-file-browser").attr("data-current-path");
@@ -1142,7 +1146,7 @@ $(document).ready(function () {
     if (resID) {
 
         if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
-            sessionStorage.currentBrowsepath = 'data/contents';
+            sessionStorage.currentBrowsepath = '';
         }
         if(sessionStorage.resID !== resID) {
             sessionStorage.resID = resID;
@@ -1237,7 +1241,8 @@ $(document).ready(function () {
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
                         var currentPath = $("#hs-file-browser").attr("data-current-path");
-                        previewNode.find("#upload-folder-path").text(currentPath.replace("data/", ""));
+                        previewNode.find("#upload-folder-path").text(currentPath);
+                        $("#root-path").text(currentPath.length > 0 ? "contents/" : "contents");
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1293,7 +1298,7 @@ $(document).ready(function () {
                 });
 
                 this.on('sending', function (file, xhr, formData) {
-                    formData.append('file_folder', "data/" + $("#upload-folder-path").text());
+                    formData.append('file_folder', $("#upload-folder-path").text());
                 });
 
                 // Applies allowing upload of multiple files to OS upload dialog
@@ -1508,7 +1513,8 @@ $(document).ready(function () {
         var folderName = $("#txtFolderName").val();
         if (folderName) {
             var calls = [];
-            calls.push(create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName));
+            // TODO: remove "data/contents" once it is removed from the back end.
+            calls.push(create_irods_folder_ajax_submit(resID, "data/contents/" + currentPath + "/" + folderName));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1579,7 +1585,7 @@ $(document).ready(function () {
         if (pathLogIndex > 1) {
             pathLogIndex--;
             if (pathLogIndex == 1) {
-                // we are at the root: data/contents
+                // we are at the root folder
                 $("#fb-move-back").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
@@ -1779,8 +1785,7 @@ $(document).ready(function () {
     // Open with method
     $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
-        // only need that path after /data/contents/
-        var path = file.attr("data-url").split('/data/contents/')[1];
+        var path = file.attr("data-url");
         var fullURL;
         if ($(this).attr("url_aggregation")) {
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
