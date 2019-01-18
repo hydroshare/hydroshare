@@ -225,6 +225,7 @@ class Command(BaseCommand):
 
             target_res_jaccard_sim = {}
             recommended_resources(target_user, out, target_res_preferences_set, target_res_jaccard_sim)
+            '''
             try:
                 op = OwnershipPreferences.objects.get(user=target_user)
                 all_op = op.preferences.all()
@@ -236,11 +237,12 @@ class Command(BaseCommand):
                 print("@@@@@@@ active users ownership resources")
                 recommended_resources(target_user, out, target_ownership_resource_preferences_set, target_res_jaccard_sim)
             except:
-                pass    
-            print("------------ Jaccard similarity for Combination ---------------")
+                pass
+            '''    
+            print("------------ Jaccard similarity for Propensity ---------------")
             for key, value in sorted(target_res_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
                 candidate_resource = get_resource_by_shortkey(key)
-                r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Combination', round(value, 4))
+                r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Propensity', round(value, 4))
                 recommended_subjects = ind.prepare_subject(candidate_resource)
                 recommended_subjects = [sub.lower() for sub in recommended_subjects]
                 common_subjects = set.union(set.intersection(target_res_preferences_set, set(recommended_subjects)),
@@ -256,6 +258,7 @@ class Command(BaseCommand):
             print("========== Making user recommendations =============")
             recommended_users(target_user, target_user_preferences_set)
             counter += 1
+        '''
         counter2 = 0 
         for op in OwnershipPreferences.objects.exclude(user__username__in=active_users):
             target_username = op.user.username
@@ -300,5 +303,6 @@ class Command(BaseCommand):
                     r1.relate('subject', cs, 1)
                 print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
             counter2 += 1
+        '''
         elapsed_time = time.time() - start_time
-        print("time for recommending resources: " + str(elapsed_time) + " for " + str(counter) +  " + " + str(counter2))
+        print("time for recommending resources: " + str(elapsed_time) + " for " + str(counter))
