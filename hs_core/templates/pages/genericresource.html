@@ -45,7 +45,7 @@
                 <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
                 <div class="col-sm-12">
                     <div id='download-status-info' class="alert alert-success">
-                        Please wait for the resource bag to be created<span id="loading">.</span>
+                        Please wait for the download to be prepared<span id="loading">.</span>
                     </div>
                 </div>
             {% endif %}
@@ -82,13 +82,13 @@
             {% if cm.resource_type != "ToolResource" %}
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
-                    <li id="btn-open" data-menu-name="open">
-                        <span class="fa fa-folder-open icon-blue"></span>
-                        <span>Open</span>
-                    </li>
+                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
+                        <li id="btn-open" data-menu-name="open">
+                            <span class="fa fa-folder-open icon-blue"></span>
+                            <span>Open</span>
+                        </li>
 
-                    <li id="open-separator" role="separator" class="divider"></li>
+                        <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
                         {% if page.perms.change and metadata_form %}
@@ -105,7 +105,7 @@
 
                         {% endif %}
 
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
+                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
                             <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                 <span>Rename</span>
@@ -119,21 +119,18 @@
 
                         <li id="delete-separator" role="separator" class="divider"></li>
 
-                        {% if cm|resource_type == "Generic" %}
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip Folder...</span>
+                        </li>
 
-                            <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
-                                data-target="#zip-folder-dialog">
-                                <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                <span>Zip Folder...</span>
-                            </li>
+                        <li id="btn-unzip" data-menu-name="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                            <li id="btn-unzip" data-menu-name="unzip">
-                                <span class="fa fa-file-archive-o icon-blue"></span>
-                                <span>Unzip here</span>
-                            </li>
-
-                            <li id="zip-separator" role="separator" class="divider"></li>
-                        {% endif %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
                     {% endif %}
                     {% if cm.raccess.require_download_agreement %}
@@ -146,33 +143,84 @@
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
+                        <li id="btn-download-zip" data-menu-name="download" >
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download Zipped</span>
+                        </li>
                     {% endif %}
                     <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
+                    <li id="btn-get-referenced-url" data-menu-name="get-ref-url" data-toggle="modal" data-target="#redirect-referenced-url-dialog" hidden>
+                        <span class="fa fa-link icon-blue"></span>
+                        <span>Open referenced URL</span>
+                    </li>
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                        <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Raster File Type</span>
+                        <li id="btn-edit-referenced-url" data-menu-name="update-ref-url" data-toggle="modal" data-target="#edit-referenced-url-dialog" hidden>
+                            <span class="fa fa-link icon-blue"></span>
+                            <span>Edit referenced URL</span>
                         </li>
-                        <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
+                        <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip" title="Add metadata to an individual file">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Multidimensional Data File Type</span>
+                            <span>Add metadata to file</span>
                         </li>
-                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
+                        <li id="btn-set-fileset-file-type" data-menu-name="setfilesetfiletype" data-toggle="tooltip" title="Add metadata to a folder">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Feature File Type</span>
+                            <span>Add metadata to folder</span>
                         </li>
-                        <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
+                        <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype" data-toggle="tooltip" title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Reference Timeseries File Type</span>
+                            <span>Convert to Geographic Raster</span>
                         </li>
-                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
+                        <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype" data-toggle="tooltip" title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Timeseries File Type</span>
+                            <span>Convert to Multidimensional</span>
+                        </li>
+                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype" data-toggle="tooltip" title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Convert to Geographic Feature</span>
+                        </li>
+                        <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip" title="Convert to a referenced time series dataset with metadata">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Convert to Referenced Time Series</span>
+                        </li>
+                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype" data-toggle="tooltip" title="Convert to a time series dataset to which you can add metadata">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Convert to Time Series</span>
+                        </li>
+                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="modal"
+                                data-target="#remove-aggregation-dialog">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">Remove content type</span>
                         </li>
                     {%  endif %}
+                    {% if relevant_tools %}
+                        {% for tool in relevant_tools.tool_list %}
+                            {% if tool.openwithlist %}
+                                {% if tool.agg_types %}
+                                    <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                                {% if tool.file_extensions %}
+                                    <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
+                                        <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
+                                         {% if tool.title|length > 20 %}
+                                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                        {% else %}
+                                            <span>{{ tool.title }}</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </ul>
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
@@ -183,6 +231,11 @@
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder icon-blue"></span>
                                 <span>New Folder</span>
+                            </li>
+                            <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-external-link icon-blue"></span>
+                                <span>Add content from the web</span>
                             </li>
                             <li role="separator" class="divider"></li>
                         {% endif %}
@@ -339,7 +392,16 @@
                                                                 data-target="#create-folder-dialog"
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
-                                                    </button>
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% if cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-add-reference" class="fb-space-right disabled"
+                                                                data-toggle="modal"
+                                                                data-target="#add-reference-url-dialog"
+                                                            title="Add content from the web">
+                                                        <span class="fa fa-external-link icon-blue"></span>
+                                                        </button>
                                                     {% endif %}
 
                                                         {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
@@ -453,7 +515,11 @@
                                     <input type="hidden" name="file_ids" value=""/>
                                 </form>
                             </div>
-
+                            <div id="ref_file_note" class="text-muted division-title-caption"
+                                    {% if not show_web_reference_note %} hidden {% endif %}>
+                            Please note: This resource contains links to external content. Linked content is NOT stored in
+                            HydroShare, and we can't guarantee its availability, quality, or security.
+                            </div>
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                                 <div class="fb-upload-caption {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
                                     <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
@@ -650,10 +716,10 @@
                                  </li>
                             {% endif %}
                             {% if cm.resource_type == "CompositeResource" %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
+                                <li class="col-xs-2 col-md-2" style="min-width: 200px;">
+                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="Content Metadata">
                                         <span class="glyphicon glyphicon-list-alt"> </span>
-                                        &nbspFile Metadata
+                                        Content Metadata
                                     </a>
                                  </li>
                             {% endif %}
@@ -1124,13 +1190,12 @@
                                             {% for tool in relevant_tools.tool_list %}
                                                 <div class="col-lg-3 col-md-4 col-sm-12">
                                                     <div title="{{ tool.title }}" id="web-app-item">
-                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
     						                         {% if tool.approved %}
                                                          <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
                                                              <img class="app-approved-icon-img" src="/static/img/approved_app.png">
                                                          </a>
                                                      {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                    <a href="/resource/{{ tool.res_id }}/" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open this WebApp resource">
                                                         {% if tool.title|length > 20 %}
                                                             <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                         {% else %}
@@ -1151,18 +1216,14 @@
                             <!-- ========= EXTRA METADATA TAB ========= -->
                             {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                 <div class="tab-pane" id="extraMetaTab">
-                                    {% if metadata_form %}
-                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                            <i class="fa fa-plus"></i> Add New Entry
-                                        </a>
-                                    {% endif %}
+                                    <legend>Extended Metadata</legend>
                                     <table id="extraMetaTable" class="hs-table table" width="100%">
                                         <thead>
                                         <tr>
                                             <th>Name</th>
                                             <th>Value</th>
                                             {% if metadata_form %}
-                                                <th>Edit/Remove</th>
+                                                <th></th>
                                             {% endif %}
                                         </tr>
                                         </thead>
@@ -1178,13 +1239,11 @@
                                                     {% if metadata_form %}
                                                         <td>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  data-form-type="toggle-favorite"
                                                                   class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
                                                                   data-toggle="tooltip" data-placement="top"
                                                                   title="Edit">
                                                             </span>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  data-form-type="toggle-favorite"
                                                                   class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
                                                                   data-toggle="tooltip" data-placement="top"
                                                                   title="Remove">
@@ -1196,19 +1255,21 @@
                                         </tbody>
                                     </table>
 
+                                    <br>
+
                                     {% if metadata_form %}
-                                        <br>
-                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn"
-                                               value="Save Changes" style="display: none"/>
+                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
+                                            <i class="fa fa-plus"></i> Add New Entry
+                                        </a>
                                     {% endif %}
-                            </div>
+                                </div>
                             {% endif %}
 
                             {# ===========   File Type Metadata Tab ================== #}
                             {% if cm.resource_type == "CompositeResource" %}
                                 <div class="tab-pane" id="fileTypeMetaDataTab">
                                     <div class="alert alert-warning alert-dismissible" role="alert">
-                                        <h4>Select a file to see file type metadata.</h4>
+                                        <h4>Select content in the file browser to see metadata specific to that content. Metadata will only display here when the the content is selected above. Content specific metadata does not display on the Discover page.</h4>
                                     </div>
                                 </div>
                             {% endif %}
@@ -1242,7 +1303,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>

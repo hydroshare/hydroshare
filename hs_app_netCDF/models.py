@@ -110,7 +110,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     def _validate_bounding_box(cls, box_dict):
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
             try:
-                float(box_dict[limit])
+                box_dict[limit] = float(box_dict[limit])
             except ValueError:
                 raise ValidationError("Bounding box data is not numeric")
 
@@ -305,6 +305,7 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
@@ -333,11 +334,11 @@ class NetcdfResource(BaseResource):
         # get existing hs_term_dict from base class
         hs_term_dict = super(NetcdfResource, self).get_hs_term_dict()
         # add new terms for NetCDF res
-        hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
+        hs_term_dict["HS_FILE_NAME"] = ""
         for res_file in self.files.all():
             _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
             if f_ext.lower() == '.nc':
-                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_fullname
+                hs_term_dict["HS_FILE_NAME"] = f_fullname
                 break
         return hs_term_dict
 
@@ -351,6 +352,8 @@ class NetcdfResource(BaseResource):
         from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
         if nc_res_file and txt_res_file:
             netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
+
+    discovery_content_type = 'Multidimensional (NetCDF)'  # used during discovery
 
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'

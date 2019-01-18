@@ -12,9 +12,9 @@
                     {% else %}
                         <span>{{ cr.name }}</span>
                     {% endif %}
-                {% else %}
-                    {% if cr.description %}
-                        <a href="{{ cr.description }}">{{ cr.organization }}</a>
+                {% else %}{# Author is an organization #}
+                    {% if cr.homepage %}
+                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
                     {% else %}
                         <span>{{ cr.organization }}</span>
                     {% endif %}
@@ -23,10 +23,13 @@
         </td></tr>
         <tr><th>Owners:</th><td>
             {% for u in owners %}
-                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                 <span>{{ u|contact }}</span>
             {% endfor %}
         </td></tr>
+        {% if cm.raccess.published %}
+            <tr><th>DOI:</th><td>10.4211/hs.{{ cm.short_id }}  <a href="#howToCite">How to Cite</a></td></tr>
+        {% endif %}
         <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
         <tr><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
         <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
@@ -38,18 +41,17 @@
             <tr>
                 <th>Authors:</th>
                 <td><span id="authors">
-
                         {% for author in creator_formset.initial %}
-                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                            {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                             {% if author.name %}
                                 {% if author.description %}
                                     <a href="{{ author.description }}">{{ author.name }}</a>
                                 {% else %}
                                     <span>{{ author.name }}</span>
                                 {% endif %}
-                            {% else %}
-                                {% if author.description %}
-                                    <a href="{{ author.description }}">{{ author.organization }}</a>
+                            {% else %}{# Author is an organization #}
+                                {% if author.homepage %}
+                                    <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
                                 {% else %}
                                     <span>{{ author.organization }}</span>
                                 {% endif %}
@@ -60,7 +62,7 @@
             </tr>
             <tr><th>Owners:</th><td>
                 {% for u in owners %}
-                    {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                    {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
                     <span>{{ u|contact }}</span>
                 {% endfor %}
             </td></tr>

@@ -321,7 +321,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
     def test_party_external_links(self):
         # TESTING LINKS FOR CREATOR: add creator element with profile links (identifiers)
         kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
-                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+                  'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001'}}
         resource.create_metadata_element(self.res.short_id, 'creator', **kwargs)
         # test external link (identifiers)
         cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
@@ -332,14 +332,38 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that trying to add an identifier that doesn't have a valid url value should
         # raise exception
-        kwargs = {'identifiers': {'ResearchGate': 'researchgate.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGateID': 'researchgate.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
+        # test that the url for ResearchGate must start with https://www.researchgate.net/
+        kwargs = {'identifiers': {'ResearchGateID': 'https://researchgate.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
+        # test that the url for ORCID must start with https://orcid.org/
+        kwargs = {'identifiers': {'ORCID': 'http://orcid.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                                 cr_lisa.id, **kwargs)
+
+        # test that the url for Google Scholar must start with https://scholar.google.com/
+        kwargs = {'identifiers': {'GoogleScholarID': 'https://scholar.google.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
+
+        # test that the url for ResearcherID must start with https://www.researcherid.com/
+        kwargs = {'identifiers': {'ResearcherID': 'https://researcherid.com/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator',
                                              cr_lisa.id, **kwargs)
 
         # test that multiple identifiers can be created for one creator
-        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
-                                 'ORCID': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001',
+                                 'ORCID': 'https://orcid.org/LH001'}}
 
         resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
         # lisa should have 2 external profile link
@@ -348,18 +372,18 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Creator Lisa does not have 2 identifier.")
 
         for name, link in cr_lisa.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID'])
-            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
+            self.assertIn(name, ['ResearchGateID', 'ORCID'])
+            self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001'])
 
         # test that duplicate identifier name is not allowed - should raise validation error
-        kwargs = {'identifiers': {'ORCID': 'http://researchgate.org/LH001',
-                                 'orcid': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ORCID': 'https://www.researchgate.net/LH001',
+                                 'orcid': 'https://orcid.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
 
         # test that duplicate identifier link is not allowed - should raise validation error
-        kwargs = {'identifiers': {'researchGate': 'http://researchgate.org/LH001',
-                                 'ORCID': 'http://researchgate.org/LH001'}}
+        kwargs = {'identifiers': {'researchGate': 'https://www.researchgate.net/LH001',
+                                 'ORCID': 'https://www.researchgate.net/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
@@ -373,7 +397,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # TESTING LINKS FOR CONTRIBUTOR: add contributor element with profile links/identifiers
         kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
-                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+                  'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001'}}
         resource.create_metadata_element(self.res.short_id, 'contributor', **kwargs)
         # test external link
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
@@ -383,16 +407,20 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="contributor Lisa does not have 1 external link.")
 
         # test that multiple identifiers can be created for one contributor
-        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
-                                  'ORCID': 'http://orcid.org/LH001'}}
+        kwargs = {'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001',
+                                  'ORCID': 'https://orcid.org/LH001',
+                                  'GoogleScholarID': 'https://scholar.google.com/LH001',
+                                  'ResearcherID': 'https://www.researcherid.com/LH001'}}
         resource.update_metadata_element(self.res.short_id, 'contributor', con_lisa.id, **kwargs)
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
-        self.assertEqual(len(con_lisa.identifiers), 2,
-                         msg="Contributor Lisa does not have 2 identifier.")
+        self.assertEqual(len(con_lisa.identifiers), 4,
+                         msg="Contributor Lisa does not have 4 identifier.")
 
         for name, link in con_lisa.identifiers.iteritems():
-            self.assertIn(name, ['ResearchGate', 'ORCID'])
-            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
+            self.assertIn(name, ['ResearchGateID', 'ORCID', 'GoogleScholarID', 'ResearcherID'])
+            self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001',
+                                 'https://scholar.google.com/LH001',
+                                 'https://www.researcherid.com/LH001'])
 
         # test deleting all identifiers for the contributor
         kwargs = {'identifiers': {}}
@@ -510,7 +538,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
         # now create coverage of type 'point' with all valid data
-        value_dict = {'east': '120.45678', 'north': '80.60', 'units': 'decimal deg'}
+        value_dict = {'east': '120.45678', 'north': '0.0', 'units': 'decimal deg'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
         self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1)
 
@@ -567,15 +595,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
-        # value for 'eastlimit' must be greater than 'westlimit'
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+        # now create with all valid data including west > east and limits set to zero
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '0', 'southlimit': '0',
                       'westlimit': '130.6789', 'units': 'decimal deg' }
-        with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
-
-        # now create with all valid data
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '110.6789', 'units': 'decimal deg' }
         resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         self.assertEqual(self.res.metadata.coverages.filter(type='box').count(), 1)
@@ -931,7 +953,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
         self.res.doi = None
         self.res.save()
-        url_doi = "http://dx.doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
+        url_doi = "https://doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
                                                                               name='DOI',  url=url_doi))
 
@@ -946,7 +968,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               doi_idf.id, name='DOI-1'))
 
         # test that 'DOI' identifier url can be changed
-        resource.update_metadata_element(self.res.short_id, 'identifier', doi_idf.id, url='http://doi.org/001')
+        resource.update_metadata_element(self.res.short_id, 'identifier', doi_idf.id, url='https://doi.org/001')
 
         # test that hydroshareidentifier can't be deleted - raise exception
         hs_idf = self.res.metadata.identifiers.all().filter(name='hydroShareIdentifier').first()
@@ -1404,8 +1426,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        identifiers = {'researchID': 'http://research.org/001',
-                       'researchGateID': 'http://research-gate.org/001'}
+        identifiers = {'ResearcherID': 'https://www.researcherid.com/001',
+                       'ResearchGateID': 'https://www.researchgate.net/001'}
         self.res.metadata.create_element('creator',
                                          name=cr_name,
                                          description=cr_des,
@@ -1467,7 +1489,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # add 'DOI' identifier
         self.res.doi='doi1000100010001'
         self.res.save()
-        self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
+        self.res.metadata.create_element('identifier', name='DOI', url="https://doi.org/001")
 
         # no need to add a language element - language element is created at the time of resource creation
 

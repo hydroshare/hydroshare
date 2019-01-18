@@ -4,7 +4,8 @@ TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
-import importlib
+import sys
+# import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
 
@@ -145,12 +146,6 @@ USE_I18N = False
 #   * Receive x-headers
 INTERNAL_IPS = ("127.0.0.1",)
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    "django.template.loaders.filesystem.Loader",
-    "django.template.loaders.app_directories.Loader",
-)
-
 # make django file uploader to always write uploaded file to a temporary directory
 # rather than holding uploaded file in memory for small files. This is due to
 # the difficulty of metadata extraction from an uploaded file being held in memory
@@ -159,14 +154,15 @@ TEMPLATE_LOADERS = (
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
+# TODO remove MezzanineBackend after conflicting users have been removed
+AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -242,12 +238,6 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 
-# Put strings here, like "/home/html/django_templates"
-# or "C:/www/django/templates".
-# Always use forward slashes, even on Windows.
-# Don't forget to use absolute paths, not relative paths.
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
-
 ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
 INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
@@ -270,10 +260,10 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "rest_framework_swagger",
     "inplaceeditform",
     "django_nose",
     "django_irods",
+    "drf_yasg",
     "theme",
     "theme.blog_mods",
     "heartbeat",
@@ -287,7 +277,6 @@ INSTALLED_APPS = (
     "mezzanine.galleries",
     "crispy_forms",
     "mezzanine.accounts",
-    "mezzanine.mobile",
     "haystack",
     "jquery_ui",
     "rest_framework",
@@ -316,8 +305,8 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
-    "hs_explore",
     "security",
+    "hs_manish", 
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -350,18 +339,35 @@ APPS_TO_NOT_RUN = (
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.contrib.messages.context_processors.messages",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.static",
-    "django.core.context_processors.media",
-    "django.core.context_processors.request",
-    "django.core.context_processors.tz",
-    "mezzanine.conf.context_processors.settings",
-    "mezzanine.pages.context_processors.page",
-)
+#TEMPLATE_CONTEXT_PROCESSORS = ()
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            (os.path.join(PROJECT_ROOT, "templates"),)
+        ],
+        'OPTIONS': {
+            'context_processors': [
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
+                "django.template.context_processors.static",
+                "django.template.context_processors.media",
+                "django.template.context_processors.request",
+                "django.template.context_processors.tz",
+                "mezzanine.conf.context_processors.settings",
+                "mezzanine.pages.context_processors.page",
+            ],
+            "loaders": [
+                "mezzanine.template.loaders.host_themes.Loader",
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ]
+        },
+    },
+]
 
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
@@ -377,8 +383,6 @@ MIDDLEWARE_CLASSES = (
     "django.contrib.messages.middleware.MessageMiddleware",
     "mezzanine.core.request.CurrentRequestMiddleware",
     "mezzanine.core.middleware.RedirectFallbackMiddleware",
-    "mezzanine.core.middleware.TemplateForDeviceMiddleware",
-    "mezzanine.core.middleware.TemplateForHostMiddleware",
     "mezzanine.core.middleware.AdminLoginInterfaceSelectorMiddleware",
     "mezzanine.core.middleware.SitePermissionMiddleware",
     # Uncomment the following if using any of the SSL settings:
@@ -464,7 +468,6 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-
 ####################
 # DYNAMIC SETTINGS #
 ####################
@@ -482,7 +485,7 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-AUTH_PROFILE_MODULE = "theme.UserProfile"
+ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -492,7 +495,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
 }
 
@@ -501,7 +504,8 @@ SOLR_PORT = '8983'
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr'.format(**globals()),
+        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1'.format(**globals()),
+        'ADMIN_URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores'.format(**globals()),
         # ...or for multicore...
         # 'URL': 'http://127.0.0.1:8983/solr/mysite',
     },
@@ -509,13 +513,14 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
 
 
-# customized value for password reset token and email verification link token to expire in 1 day
-PASSWORD_RESET_TIMEOUT_DAYS = 1
+# customized value for password reset token, email verification and group invitation link token
+# to expire in 7 days
+PASSWORD_RESET_TIMEOUT_DAYS = 7
 
-#
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
+RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
+# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# extraction
 TEMP_FILE_DIR = '/hs_tmp'
 
 ####################
@@ -523,8 +528,7 @@ TEMP_FILE_DIR = '/hs_tmp'
 ####################
 
 OAUTH2_PROVIDER = {
-   # 30 days
-   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
 }
 
 ####################
@@ -536,12 +540,12 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
             'format': '[%(asctime)s] %(levelname)s %(message)s',
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
     },
     'handlers': {
@@ -550,7 +554,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/system.log',
             'formatter': 'simple',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'djangolog': {
@@ -558,7 +562,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'hydrosharelog': {
@@ -566,7 +570,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
     },
@@ -575,6 +579,12 @@ LOGGING = {
             'handlers': ['syslog', 'djangolog'],
             'propagate': True,
             'level': 'DEBUG',
+        },
+        # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
+        'django.template': {
+            'handlers': ['syslog', 'djangolog'],
+            'level': 'INFO',
+            'propagate': True,
         },
         'django.db.backends': {
             'handlers': ['syslog'],
@@ -604,8 +614,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # sha256-* strings are hashes of inline scripts and styles
 
 CSP_DICT = {
-    "default-src" : ["none",],
-    "script-src" : [
+    "default-src": ["none", ],
+    "script-src": [
         "self",
         "*.google.com",
         "*.googleapis.com",
@@ -657,7 +667,7 @@ CSP_DICT = {
         "'sha256-fUjKhLcjxDsHY0YkuZGJ9RcBu+3nIlSqpSUI9biHAJw='",
         "'sha256-7ydyyMhpPIo0fTHZtxmllQ+MJpMVM299EkUKAf0K1hs='"
     ],
-    "style-src" : [
+    "style-src": [
         "self",
         "unsafe-inline",
         "*.googleapis.com",
@@ -670,7 +680,7 @@ CSP_DICT = {
         # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
         # "'sha256-qxBJozwM44kf1mKAeiT/XkAwReBZ/To9FXKNw3bdVwk='"
     ],
-    "img-src" : [
+    "img-src": [
         "self",
         "data:",
         "*.datatables.net",
@@ -678,21 +688,20 @@ CSP_DICT = {
         "*.gstatic.com",
         "*.google.com"
     ],
-    "connect-src" : [
+    "connect-src": [
         "self",
         "*.github.com"
     ],
-    "font-src" : [
+    "font-src": [
         "self",
         "*.gstatic.com",
         "*.bootstrapcdn.com"
     ],
-    "frame-src" : [
+    "frame-src": [
         "self",
         "*.hydroshare.org"
     ]
 }
-
 
 
 X_FRAME_OPTIONS = "deny"
@@ -707,3 +716,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 SWAGGER_SETTINGS = {
     "VALIDATOR_URL": False
 }
+
+# detect test mode to turn off some features
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'

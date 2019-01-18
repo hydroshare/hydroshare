@@ -15,7 +15,7 @@ from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response, render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
@@ -23,16 +23,16 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
-import autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
-from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
@@ -40,7 +40,8 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -127,6 +128,37 @@ def change_quota_holder(request, shortkey):
     return HttpResponseRedirect(res.get_absolute_url())
 
 
+@api_view(['POST'])
+def update_quota_usage(request, username):
+    req_user = request.user
+    if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
+        return HttpResponseForbidden('only iRODS service account is authorized to '
+                                     'perform this action')
+    if not req_user.is_authenticated():
+        return HttpResponseForbidden('You are not authenticated to perform this action')
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest('user to update quota for is not valid')
+
+    update_quota_usage_utility(user=user)
+
+    return HttpResponse('quota for user ' + user.username + ' has been updated', status=200)
+
+
+def extract_files_with_paths(request):
+    res_files = []
+    full_paths = {}
+    for key in request.FILES.keys():
+        full_path = request.POST.get(key, None)
+        f = request.FILES[key]
+        res_files.append(f)
+        if full_path:
+            full_paths[f] = full_path
+    return res_files, full_paths
+
+
 def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     This view function is called by AJAX in the folder implementation
@@ -138,8 +170,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.values()
-    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+
+    res_files, full_paths = extract_files_with_paths(request)
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
+    extract_metadata = request.GET.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     file_folder = request.POST.get('file_folder', None)
     if file_folder is not None:
@@ -147,6 +181,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
             file_folder = None
         elif file_folder.startswith("data/contents/"):
             file_folder = file_folder[len("data/contents/"):]
+
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
@@ -165,7 +200,8 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   folder=file_folder)
+                                                   folder=file_folder, full_paths=full_paths,
+                                                   auto_aggregate=auto_aggregate)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
@@ -213,7 +249,13 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     post_data = request.POST.copy()
     resource_mode = post_data.pop('resource-mode', None)
-    res.extra_metadata = post_data.dict()
+    extra_metadata = post_data.dict()
+    extra_metadata_copy = extra_metadata.copy()
+    for key in extra_metadata_copy:
+        if not key:
+            extra_metadata.pop(key)
+
+    res.extra_metadata = extra_metadata
     is_update_success = True
     err_message = ""
     try:
@@ -352,11 +394,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                # get the spatial coverage element
-                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
-                                      'spatial_coverage': spatial_coverage_dict,
+                                      'spatial_coverage': get_coverage_data_dict(res),
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -366,6 +406,12 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
+                                      'spatial_coverage': get_coverage_data_dict(res),
+                                      'temporal_coverage': get_coverage_data_dict(res, 'temporal'),
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status
@@ -445,6 +491,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
+                                      'has_logical_temporal_coverage':
+                                          res.has_logical_temporal_coverage,
+                                      'has_logical_spatial_coverage':
+                                          res.has_logical_spatial_coverage,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
@@ -474,12 +524,24 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
+    try:
+        res, _, _ = authorize(request, shortkey,
+                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                              raises_exception=False)
+    except ObjectDoesNotExist:
+        return HttpResponse("resource not found", status=status.HTTP_404_NOT_FOUND)
+    except PermissionDenied:
+        return HttpResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    istorage = resource.get_irods_storage()
-    irods_file_path = '/'.join(request.path.split('/')[2:-1])
-    file_download_url = istorage.url(irods_file_path)
-    return HttpResponseRedirect(file_download_url)
+    if __debug__:
+        logger.debug("request path is {}".format(request.path))
+    path_split = request.path.split('/')[2:]  # strip /resource/
+    public_file_path = '/'.join(path_split)
+
+    istorage = res.get_irods_storage()
+    url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
+    zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -510,9 +572,9 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
-            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.debug(ex.message)
+            logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -584,7 +646,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
     try:
-        utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
             json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
@@ -599,6 +661,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": ex.message}),
             content_type="application/json"
         )
+    except ValidationError as ex:
+        return HttpResponse(
+            json.dumps({"error": ex.message}),
+            content_type="application/json"
+        )
+
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
@@ -606,7 +674,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource)
+        new_resource = hydroshare.copy_resource(res, new_resource, user=request.user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
@@ -636,7 +704,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.locked_time = None
             res.save()
         else:
-            # cannot create new version for this resource since the resource is locked by another user
+            # cannot create new version for this resource since the resource is locked by another
+            # user
             request.session['resource_creation_error'] = 'Failed to create a new version for ' \
                                                          'this resource since another user is ' \
                                                          'creating a new version for this ' \
@@ -958,7 +1027,7 @@ def verify_account(request, *args, **kwargs):
             'username' : request.GET['username'],
             'email' : request.GET['email']
         }
-    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+    return render(request, 'pages/verify-account.html', context)
 
 
 @processor_for('resend-verification-email')
@@ -979,7 +1048,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
         context = {
             'is_email_sent' : True
         }
-        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+        return render(request, 'pages/verify-account.html', context)
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -1065,7 +1134,7 @@ def my_resources(request, page):
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
-    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
+    user_zone_account_exist = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
@@ -1087,7 +1156,7 @@ def add_generic_context(request, page):
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
-    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+    return render(request, 'pages/create-resource.html')
 
 
 @login_required
@@ -1097,10 +1166,11 @@ def create_resource(request, *args, **kwargs):
     ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-    resource_files = request.FILES.values()
+    resource_files, full_paths = extract_files_with_paths(request)
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower() == 'true'
+    auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
@@ -1157,7 +1227,7 @@ def create_resource(request, *args, **kwargs):
                 # TODO: should probably be resource_federation_path like it is set to.
                 fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
                 move=(fed_copy_or_move == 'move'),
-                content=res_title
+                content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
         ajax_response_data['message'] = ex.stderr
@@ -1396,7 +1466,8 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
                 # redirect to group profile page
                 return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
             else:
-                messages.error(request, "The link you clicked is no longer valid.")
+                messages.error(request, "The link you clicked is no longer valid. Please ask to "
+                                        "join the group again.")
                 return redirect("/")
         else:
             messages.error(request, "The group is no longer active.")
@@ -1449,7 +1520,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
 
 @login_required
 def get_file(request, *args, **kwargs):
-    from django_irods.icommands import RodsSession
+    from django_irods.icommands import Session as RodsSession
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
     session.runCmd("iinit")

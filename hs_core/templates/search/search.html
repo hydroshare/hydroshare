@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-{% block title %}Discovery{% endblock %}
+{% block meta_title %}Discover{% endblock %}
 {% block main %}
     <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
 <div class="container" id="discover-main">
@@ -55,8 +55,8 @@
                                             &nbsp; Filter by contributor
                                         {% elif key ==  'subject'%}
                                             &nbsp; Filter by subject
-                                        {% elif key ==  'resource_type'%}
-                                            &nbsp; Filter by resource type
+                                        {% elif key ==  'content_type'%}
+                                            &nbsp; Filter by content type
                                         {% elif key ==  'owner'%}
                                             &nbsp; Filter by owner
                                         {% elif key ==  'availability'%}
@@ -344,7 +344,8 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places" type="text/javascript"></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places{% if maps_key %}&key={{ maps_key }}{% endif %}" type="text/javascript"></script>
     <script src="https://cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/discover.js"></script>

@@ -119,6 +119,13 @@
                     <span data-toggle="tooltip" data-placement="bottom" title="View resource"
                           class="glyphicon glyphicon-circle-arrow-left icon-button icon-blue"></span>
             </a>
+            {% if cm.resource_type == 'CompositeResource' %}
+                {# This form gets submitted to reload the page in edit mode when aggregation is removed or created #}
+                <form id="frm_refresh_page_edit_mode" action="{{ cm.get_absolute_url }}" method="post">
+                   {% csrf_token %}
+                    <input name="resource-mode" type="hidden" value="edit"/>
+                </form>
+            {% endif %}
         {% endif %}
 
         {% if show_manage_access %}

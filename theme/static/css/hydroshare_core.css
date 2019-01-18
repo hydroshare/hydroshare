@@ -1391,19 +1391,7 @@ body > .main-container {
 
 .custom-alert {
 	position: fixed;
-	background-color: lightgreen;
-	padding: 0 10px;
-	text-align: center;
-	line-height: 50px;
-	text-shadow: 1px -1px #BEFFBE;
 	z-index: 2;
-}
-
-.custom-alert-icon {
-    font-size: 24px;
-    color: #337133;
-    top: 5px;
-    margin-right: 10px;
 }
 
 .alert-dismissible {
@@ -1503,7 +1491,7 @@ body > .main-container {
 	outline: none;
 }
 
-.btn-create-resource {
+.btn-create-resource .btn-cancel-create-resource {
     height: 40px;
     line-height: 26px;
     width: 180px;
@@ -1543,6 +1531,10 @@ body > .main-container {
 }
 
 .btn-download{
+    color:#428bca;
+}
+
+.btn-download-zip{
     color:#428bca;
 }
 
@@ -1863,6 +1855,12 @@ a.tag:hover {
   }
 }}
 
+@media(min-width: 767px) and (max-width: 991px){
+  /* Add extra padding to push down the text */
+  .page-tip {
+    padding: 50px 0px 15px;
+  }
+}
 
 
 .resource-search {
@@ -2740,7 +2738,7 @@ span.you-flag {
 }
 
 #items-discovered, #item-selectors {
-	width: 100% !important;
+	width: calc(100% - 2px) !important;		/* Makes up for border width */
 }
 
 .resource-custom-table {
@@ -2752,7 +2750,7 @@ span.you-flag {
 }
 
 #collected-by-table {
-    border: 0px !important;
+    border: 0 !important;
 }
 
 #item-selectors.group-resource-list {
@@ -4267,6 +4265,26 @@ div.fb-upload-caption a {
 	display: block;
 }
 
+.fb-view-grid .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -3px;
+	left: -12px;
+}
+
+.fb-view-list .fb-folder i.fa-tag {
+    transform: rotate(90deg);
+    color: #FF9800;
+    top: -8px;
+    left: -7px;
+    font-size: 9px;
+}
+
+.fb-view-grid .fb-aggregation-icon > img {
+	width: 30px;
+	height: 30px;
+}
+
 .fb-view-grid .fb-file-name {
 	display: block;
 	text-overflow: ellipsis;
@@ -4277,6 +4295,25 @@ div.fb-upload-caption a {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 18px;
+}
+
+.fb-view-list .fb-folder-aggregation {
+	margin-left: 0;
+}
+
+.fb-folder-aggregation {
+	color: #45911c;
+}
+
+.fb-view-list .fb-aggregation-icon {
+	margin-right: 10px;
+	margin-left: 10px;
+	font-size: 18px;
+}
+
+.fb-view-list .fb-aggregation-icon > img {
+	width: 20px;
+	height: 20px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
@@ -4662,4 +4699,25 @@ div#resource-content {
 
 .btn-choose-coordinates {
 	vertical-align: top;
+}
+
+/* popover styling */
+.popover-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* info icon to popover */
+.info-popover-glypn {
+  font-size:15px;
+  color:lightblue;
+}
+
+#coverage-spatial input[type=number]::-webkit-inner-spin-button,
+#coverage-spatial input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+#coverage-spatial input[type=number] {
+	-moz-appearance: textfield;
 }

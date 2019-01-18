@@ -1,12 +1,9 @@
 from django import forms
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import ugettext_lazy as _
-
-from mezzanine.pages.admin import PageAdmin
 
 from .models import *
 
@@ -23,13 +20,14 @@ UserAdmin.add_fieldsets = (
         'fields': ('email', 'username', 'password1', 'password2',)
     }),
 )
+UserAdmin.list_display = [
+    'username', 'email', 'first_name', 'last_name', 'is_staff',
+    'is_active', 'date_joined', 'last_login'
+]
 
 class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
 
-class GenericResourceAdmin(PageAdmin):
-    inlines = PageAdmin.inlines + [InlineResourceFiles]
-
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-admin.site.register(GenericResource, GenericResourceAdmin)
+admin.site.unregister(GenericResource)

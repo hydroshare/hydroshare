@@ -1,5 +1,5 @@
 postgis:
-  image: mjstealey/hs_postgres:9.4.7
+  image: hydroshare/hs_postgres:9.4.7
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
@@ -10,7 +10,7 @@ rabbitmq:
   image: rabbitmq:3.5
   container_name: rabbitmq
 solr:
-  image: makuk66/docker-solr:4.10.4
+  image: solr:6.6
   container_name: solr
   volumes:
     # hydroshare repository
@@ -48,9 +48,12 @@ hydroshare:
     - "/hs_tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
+    - "/irods/hydroshare:/irods/hydroshare"
+    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
   ports:
     - "1338:2022"
     - "8000:8000"
+    - "15001:15001"
   links:
     - postgis:postgis
     - redis:redis

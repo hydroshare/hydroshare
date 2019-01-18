@@ -4,7 +4,7 @@ from django import forms
 from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
     FieldNotRecognizedError, InequalityNotAllowedError, MalformedDateError
 
-FACETED_FIELDS = ['creator', 'contributor', 'owner', 'resource_type', 'subject', 'availability']
+FACETS_TO_SHOW = ['creator', 'contributor', 'owner', 'content_type', 'subject', 'availability']
 
 
 class DiscoveryForm(FacetedSearchForm):
@@ -114,7 +114,7 @@ class DiscoveryForm(FacetedSearchForm):
         contributor_sq = None
         owner_sq = None
         subject_sq = None
-        resource_type_sq = None
+        content_type_sq = None
         availability_sq = None
 
         # We need to process each facet to ensure that the field name and the
@@ -152,11 +152,11 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         subject_sq.add(SQ(subject__exact=value), SQ.OR)
 
-                elif "resource_type" in field:
-                    if resource_type_sq is None:
-                        resource_type_sq = SQ(resource_type__exact=value)
+                elif "content_type" in field:
+                    if content_type_sq is None:
+                        content_type_sq = SQ(content_type__exact=value)
                     else:
-                        resource_type_sq.add(SQ(resource_type__exact=value), SQ.OR)
+                        content_type_sq.add(SQ(content_type__exact=value), SQ.OR)
 
                 elif "availability" in field:
                     if availability_sq is None:
@@ -175,8 +175,8 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(owner_sq)
         if subject_sq is not None:
             sqs = sqs.filter(subject_sq)
-        if resource_type_sq is not None:
-            sqs = sqs.filter(resource_type_sq)
+        if content_type_sq is not None:
+            sqs = sqs.filter(content_type_sq)
         if availability_sq is not None:
             sqs = sqs.filter(availability_sq)
 

@@ -16,7 +16,6 @@ from dominate.tags import div, legend, strong, form, select, option, hr, button,
     textarea, span
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.models import CoreMetaData
 
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
@@ -180,7 +179,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 with div(cls="row"):
                     with div(cls="col-sm-6 col-xs-12 time-series-forms hs-coordinates-picker",
                              id="site-filetype", data_coordinates_type="point"):
-                        with form(id="id-site-file-type",
+                        with form(id="id-site-file-type", data_coordinates_type='point',
                                   action="{{ site_form.action }}",
                                   method="post", enctype="multipart/form-data"):
                             div("{% crispy site_form %}")
@@ -383,12 +382,12 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
 
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(TimeSeriesFileMetaData, self)._get_xml_containers()
         NAMESPACES = CoreMetaData.NAMESPACES
-        container_to_add_to = super(TimeSeriesFileMetaData, self).add_to_xml_container(container)
         if self.abstract:
             dc_description = etree.SubElement(container_to_add_to,
                                               '{%s}description' % NAMESPACES['dc'])
@@ -399,6 +398,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             dcterms_abstract.text = self.abstract
 
         add_to_xml_container_helper(self, container_to_add_to)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -411,15 +412,39 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return [".csv", ".sqlite"]
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".sqlite"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are: .csv and .sqlite"""
         return [".csv", ".sqlite"]
 
+    @staticmethod
+    def get_aggregation_display_name():
+        return 'Time Series Content: One or more time series held in an ODM2 format SQLite ' \
+               'file and optional source comma separated (.csv) files'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "TimeSeriesAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Time Series"
+
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=ts_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=ts_metadata, resource=resource)
 
     @property
     def supports_resource_file_move(self):
@@ -486,31 +511,30 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         sqlite_file_update(self, sqlite_file_to_update, user)
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
-        """
-        Sets a .sqlite or .csv resource file to TimeSeries file type
-        :param resource: an instance of resource type CompositeResource
-        :param file_id: id of the resource file to be set as TimeSeries file type
-        :param user: user who is setting the file type
-        :return:
-        """
+    def check_files_for_aggregation_type(cls, files):
+        """Checks if the specified files can be used to set this aggregation type
+        :param  files: a list of ResourceFile objects
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        :return If the files meet the requirements of this aggregation type, then returns this
+        aggregation class name, otherwise empty string.
+        """
+        if len(files) != 1:
+            # no files or more than 1 file
+            return ""
+
+        if files[0].extension not in cls.get_allowed_uploaded_file_types():
+            return ""
+
+        return cls.__name__
+
+    @classmethod
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+        """ Creates a TimeSeriesLogicalFile (aggregation) from a sqlite or a csv resource file, or
+        a folder
+        """
 
         log = logging.getLogger()
-
-        # get the resource file
-        res_file = utils.get_resource_file_by_id(resource, file_id)
-
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
-
-        if res_file.extension.lower() not in ('.sqlite', '.csv'):
-            raise ValidationError("Not a valid time series supported file.")
-
-        if not res_file.has_generic_logical_file:
-            raise ValidationError("Selected file must be part of a generic file type.")
+        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # get the file from irods to temp dir
         temp_res_file = utils.get_file_from_irods(res_file)
@@ -530,72 +554,81 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             raise ValidationError(validate_err_message)
 
         file_name = res_file.file_name
-        # file name without the extension
+        # file name without the extension - used for naming the new aggregation folder
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
+        aggregation_folder_created = False
+        res_files_to_delete = []
+        # determine if we need to create a new folder for the aggregation
+        create_new_folder = cls._check_create_aggregation_folder(
+            selected_res_file=res_file, selected_folder=folder_path,
+            aggregation_file_count=1)
         file_type_success = False
         upload_folder = ''
-        msg = "TimeSeries file type. Error when setting file type. Error:{}"
+        msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
-            logical_file = cls.create()
+            logical_file = cls.initialize(base_file_name, resource)
 
-            # by default set the dataset_name attribute of the logical file to the
-            # name of the file selected to set file type
-            logical_file.dataset_name = base_file_name
-            logical_file.save()
             try:
-                # create a folder for the timeseries file type using the base file
-                # name as the name for the new folder
-                new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                               base_file_name)
-                create_folder(resource.short_id, new_folder_path)
-                log.info("Folder created:{}".format(new_folder_path))
+                if folder_path is None:
+                    # we are here means aggregation is being created by selecting a file
+                    # create a folder for the timeseries file type using the base file
+                    # name as the name for the new folder if the file is not in a folder already
+                    if create_new_folder:
+                        # create a folder for the raster file type using the base file name
+                        # as the name for the new folder
+                        upload_folder = cls._create_aggregation_folder(resource, file_folder,
+                                                                       base_file_name)
 
-                new_folder_name = new_folder_path.split('/')[-1]
-                if file_folder is None:
-                    upload_folder = new_folder_name
+                        log.info("Folder created:{}".format(upload_folder))
+                        aggregation_folder_created = True
+                        tgt_folder = upload_folder
+                        files_to_copy = [res_file]
+                        # create logical file record in DB
+                        logical_file.save()
+                        logical_file.copy_resource_files(resource, files_to_copy,
+                                                         tgt_folder)
+                        res_files_to_delete.append(res_file)
+                    else:
+                        # selected file is already in a folder
+                        upload_folder = file_folder
+                        # create logical file record in DB
+                        logical_file.save()
+                        # make the selected file part of the aggregation
+                        logical_file.add_resource_file(res_file)
                 else:
-                    upload_folder = os.path.join(file_folder, new_folder_name)
+                    # folder has been selected for creating the aggregation
+                    upload_folder = folder_path
+                    # create logical file record in DB
+                    logical_file.save()
+                    # make the selected file part of the aggregation
+                    logical_file.add_resource_file(res_file)
 
-                # add the file to the resource
-                uploaded_file = UploadedFile(file=open(temp_res_file, 'rb'),
-                                             name=os.path.basename(temp_res_file))
+                # add a blank ODM2 sqlite file to the resource and make it part of the aggregation
+                # if we creating aggregation from a csv file
+                if res_file.extension.lower() == '.csv':
+                    new_sqlite_file = add_blank_sqlite_file(resource, upload_folder)
+                    logical_file.add_resource_file(new_sqlite_file)
 
-                # the added resource file will be part of a new generic logical file by default
-                new_res_file = utils.add_file_to_resource(
-                    resource, uploaded_file, folder=upload_folder
-                )
-
-                # delete the generic logical file object
-                if new_res_file.logical_file is not None:
-                    # deleting the file level metadata object will delete the associated
-                    # logical file object
-                    new_res_file.logical_file.metadata.delete()
-
-                # make each resource file we added part of the logical file
-                logical_file.add_resource_file(new_res_file)
-
-                # add the blank sqlite file
-                if res_file.extension == '.csv':
-                    new_res_file = add_blank_sqlite_file(resource, upload_folder)
-                    logical_file.add_resource_file(new_res_file)
-
-                info_msg = "TimeSeries file type - {} file was added to the file type."
+                info_msg = "TimeSeries aggregation type - {} file was added to the aggregation."
                 info_msg = info_msg.format(res_file.extension[1:])
                 log.info(info_msg)
-                if res_file.extension == ".sqlite":
+                # extract metadata if we are creating aggregation form a sqlite file
+                if res_file.extension.lower() == ".sqlite":
                     extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
                     if extract_err_message:
                         raise ValidationError(extract_err_message)
+                    log.info("Metadata was extracted from sqlite file.")
                 else:
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
-                log.info("TimeSeries file type and resource level metadata updated.")
-                # delete the original sqlite/csv file used as part of setting file type
-                delete_resource_file(resource.short_id, file_id, user)
-                log.info("Deleted original resource file.")
+                reset_title = logical_file.dataset_name == base_file_name
+                logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                                       res_files_to_delete=res_files_to_delete,
+                                       reset_title=reset_title)
+
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -605,17 +638,16 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-        if not file_type_success and upload_folder:
-            # delete any new files uploaded as part of setting file type
-            folder_to_remove = os.path.join('data', 'contents', upload_folder)
-            remove_folder(user, resource.short_id, folder_to_remove)
-            log.info("Deleted newly created file type folder")
+        if not file_type_success:
+            aggregation_from_folder = folder_path is not None
+            cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
+                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
-    def get_copy(self):
+    def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
-        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy()
+        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy(copied_resource)
         copy_of_logical_file.metadata.abstract = self.metadata.abstract
         copy_of_logical_file.metadata.value_counts = self.metadata.value_counts
         copy_of_logical_file.metadata.is_dirty = self.metadata.is_dirty
@@ -624,6 +656,26 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
         copy_cv_terms(src_metadata=self.metadata, tgt_metadata=copy_of_logical_file.metadata)
         return copy_of_logical_file
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets a resource file that has extension .sqlite or .csv from the list of files
+        *resource_files*
+        """
+
+        res_files = [f for f in resource_files if f.extension.lower() == '.sqlite' or
+                     f.extension.lower() == '.csv']
+        return res_files[0] if res_files else None
+
+    @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        res_file, folder_path = super(TimeSeriesLogicalFile, cls)._validate_set_file_type_inputs(
+            resource, file_id, folder_path)
+        if folder_path is None and res_file.extension.lower() not in ('.sqlite', '.csv'):
+            # when a file is specified by the user for creating this file type it must be a
+            # sqlite or csv file
+            raise ValidationError("Not a valid timeseries file.")
+        return res_file, folder_path
 
 
 def copy_cv_terms(src_metadata, tgt_metadata):
@@ -1093,7 +1145,10 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                         or len(target_obj.metadata.time_series_results) == 0:
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict["status"] = result["StatusCV"]
+                    if result["StatusCV"] is not None:
+                        data_dict["status"] = result["StatusCV"]
+                    else:
+                        data_dict["status"] = ""
                     data_dict["sample_medium"] = result["SampledMediumCV"]
                     data_dict["value_count"] = result["ValueCount"]
 
@@ -1353,29 +1408,16 @@ def _extract_coverage_metadata(resource, cur, logical_file=None):
 
         target_obj.metadata.create_element('coverage', type='box', value=bbox)
 
-    cur.execute("SELECT * FROM Results")
-    results = cur.fetchall()
-    min_begin_date = None
-    max_end_date = None
-    for result in results:
-        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
-                    (result["FeatureActionID"],))
-        feature_action = cur.fetchone()
-        cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
-                    (feature_action["ActionID"],))
-        action = cur.fetchone()
-        if min_begin_date is None:
-            min_begin_date = action["BeginDateTime"]
-        elif min_begin_date > action["BeginDateTime"]:
-            min_begin_date = action["BeginDateTime"]
+    # extract temporal coverage
+    cur.execute("SELECT MAX(ValueDateTime) AS 'EndDate', MIN(ValueDateTime) AS 'BeginDate' "
+                "FROM TimeSeriesResultValues")
 
-        if max_end_date is None:
-            max_end_date = action["EndDateTime"]
-        elif max_end_date < action["EndDateTime"]:
-            max_end_date = action["EndDateTime"]
+    dates = cur.fetchone()
+    begin_date = dates['BeginDate']
+    end_date = dates['EndDate']
 
     # create coverage element
-    value_dict = {"start": min_begin_date, "end": max_end_date}
+    value_dict = {"start": begin_date, "end": end_date}
     target_obj.metadata.create_element('coverage', type='period', value=value_dict)
 
 
@@ -1766,6 +1808,8 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
                                                      user)
                 metadata = instance.metadata
+                if is_file_type:
+                    instance.create_aggregation_xml_documents(create_map_xml=False)
                 metadata.is_dirty = False
                 metadata.save()
                 log.info("SQLite file update was successful.")

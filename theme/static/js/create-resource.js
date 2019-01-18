@@ -20,6 +20,8 @@ $(document).ready(function () {
     var myDropzone;
     var fileIcons = getFileIcons();
 
+    $('[data-toggle="popover1"]').popover();
+
     if (sessionStorage.signininfo) {
         $("#sign-in-info").text(sessionStorage.signininfo);
         $("#btn-select-irods-file").show();
@@ -97,6 +99,10 @@ $(document).ready(function () {
                 }
             });
 
+            $(".btn-cancel-create-resource").click(function () {
+                history.back();
+            });
+
             // The user dragged a file onto the Dropzone
             this.on("dragenter", function (file) {
                 $("#hsDropzone").toggleClass("hs-dropzone-highlight", true);
@@ -110,17 +116,26 @@ $(document).ready(function () {
             this.on("addedfile", function (file) {
                 // Initialize tooltips
                 var template = $(file.previewElement);
-                template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+                template.find(".dz-filename").attr("title", file.fullPath);
 
                 // Set file type icon
                 var fileName = template.find(".dz-filename").text();
                 var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
+                var iconTemplate;
                 if (fileIcons[fileTypeExt]) {
-                    template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
+                    iconTemplate = fileIcons[fileTypeExt];
+                    if (iconTemplate === fileIcons.JSON){
+                        // json is really for refts.json icon
+                        if (!fileName.toUpperCase().endsWith(".REFTS.JSON")){
+                            iconTemplate = fileIcons.DEFAULT;
+                        }
+                    }
                 }
                 else {
-                    template.find(".file-type-icon").append(fileIcons.DEFAULT);
+                    iconTemplate = fileIcons.DEFAULT;
                 }
+                template.find(".dz-filename").attr("title", file.fullPath);
+                template.find(".file-type-icon").append(iconTemplate);
 
                 template.find("[data-toggle='tooltip']").tooltip();
 

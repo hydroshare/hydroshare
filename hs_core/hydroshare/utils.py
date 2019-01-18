@@ -125,6 +125,8 @@ def group_from_id(grp):
     except ObjectDoesNotExist:
         try:
             tgt = Group.objects.get(pk=int(grp))
+        except ValueError:
+            raise Http404('Group not found')
         except TypeError:
             raise Http404('Group not found')
         except ObjectDoesNotExist:
@@ -134,29 +136,21 @@ def group_from_id(grp):
 
 def get_user_zone_status_info(user):
     """
-    This function should be called to determine whether the site is in production and whether user
-    zone functionality should be enabled or not on the web site front end
+    This function should be called to determine whether user zone functionality should be
+    enabled or not on the web site front end
     Args:
         user: the requesting user
     Returns:
-        in_production, enable_user_zone where both are boolean indicating whether the site is
-        in production and whether user zone functionality should be enabled or not on the web site
-        front end
+        enable_user_zone boolean indicating whether user zone functionality should be enabled or
+        not on the web site front end
     """
     if user is None:
-        return None, None
+        return None
     if not hasattr(user, 'userprofile') or user.userprofile is None:
-        return None, None
+        return None
 
-    in_production = True if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER else False
-    enable_user_zone = user.userprofile.create_irods_user_account
-    if not in_production and enable_user_zone:
-        # if these settings are not empty, for example, in users' local
-        # development environment for testing, user_zone selection is shown
-        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or
-                not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
-            enable_user_zone = False
-    return in_production, enable_user_zone
+    enable_user_zone = user.userprofile.create_irods_user_account and settings.REMOTE_USE_IRODS
+    return enable_user_zone
 
 
 def is_federated(homepath):
@@ -253,14 +247,16 @@ def get_fed_zone_files(irods_fnames):
 
 
 # TODO: make the local cache file (and cleanup) part of ResourceFile state?
-def get_file_from_irods(res_file):
+def get_file_from_irods(res_file, temp_dir=None):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
     over to django (temp directory) which is
     necessary for manipulating the file (e.g. metadata extraction).
     Note: The caller is responsible for cleaning the temp directory
 
-    :param res_file: an instance of ResourceFile
+    :param  res_file: an instance of ResourceFile
+    :param  temp_dir: (optional) existing temp directory to which the file will be copied from
+    irods. If temp_dir is None then a new temporary directory will be created.
     :return: location of the copied file
     """
     res = res_file.resource
@@ -268,20 +264,20 @@ def get_file_from_irods(res_file):
     res_file_path = res_file.storage_path
     file_name = os.path.basename(res_file_path)
 
-    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
-    tmpfile = os.path.join(tmpdir, file_name)
+    if temp_dir is not None:
+        if not temp_dir.startswith(settings.TEMP_FILE_DIR):
+            raise ValueError("Specified temp directory is not valid")
+        elif not os.path.exists(temp_dir):
+            raise ValueError("Specified temp directory doesn't exist")
 
-    # TODO: If collisions occur, really bad things happen.
-    # TODO: Directories are never cleaned up when unused. need cache management.
-    try:
-        os.makedirs(tmpdir)
-    except OSError as ex:
-        if ex.errno == errno.EEXIST:
+        tmpdir = temp_dir
+    else:
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+        if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
-            os.makedirs(tmpdir)
-        else:
-            raise Exception(ex.message)
+        os.makedirs(tmpdir)
 
+    tmpfile = os.path.join(tmpdir, file_name)
     istorage.getFile(res_file_path, tmpfile)
     copied_file = tmpfile
     return copied_file
@@ -323,23 +319,6 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
-# TODO: should be ResourceFile.url
-def get_resource_file_url(res_file):
-    """
-    Gets the download url of the specified resource file
-    :param res_file: an instance of ResourceFile for which download url is to be retrieved
-    :return: download url for the resource file
-    """
-
-    if res_file.resource_file:
-        f_url = res_file.resource_file.url
-    elif res_file.fed_resource_file:
-        f_url = res_file.fed_resource_file.url
-    else:
-        f_url = ''
-    return f_url
-
-
 # TODO: should be classmethod of ResourceFile
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
@@ -360,46 +339,6 @@ def get_resource_file_by_name(resource, file_name):
 
 def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
-
-
-def replicate_resource_bag_to_user_zone(user, res_id):
-    """
-    Replicate resource bag to iRODS user zone
-    Args:
-        user: the requesting user
-        res_id: the resource id with its bag to be replicated to iRODS user zone
-
-    Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
-    """
-    # do on-demand bag creation
-    res = get_resource_by_shortkey(res_id)
-    res_coll = res.root_path
-    istorage = res.get_irods_storage()
-    bag_modified = "false"
-    # needs to check whether res_id collection exists before getting/setting AVU on it to
-    # accommodate the case where the very same resource gets deleted by another request when
-    # it is getting downloaded
-    # TODO: why would we want to do anything at all if the resource does not exist???
-    if istorage.exists(res_coll):
-        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-        if bag_modified.lower() == "true":
-            # import here to avoid circular import issue
-            from hs_core.tasks import create_bag_by_irods
-            create_bag_by_irods(res_id)
-
-        # do replication of the resource bag to irods user zone
-        if not res.resource_federation_path:
-            istorage.set_fed_zone_session()
-        src_file = res.bag_path
-        # TODO: allow setting destination path
-        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-        fsize = istorage.size(src_file)
-        validate_user_quota(user, fsize)
-        istorage.copyFiles(src_file, tgt_file)
-    else:
-        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
@@ -448,7 +387,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
     map_logical_files = {}
     for src_logical_file in src_logical_files:
-        map_logical_files[src_logical_file] = src_logical_file.get_copy()
+        map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
@@ -458,6 +397,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
             tgt_logical_file = map_logical_files[f.logical_file]
+            if f.logical_file.extra_data:
+                tgt_logical_file.extra_data = copy.deepcopy(f.logical_file.extra_data)
+                tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
     if src_res.resource_type.lower() == "collectionresource":
@@ -504,6 +446,9 @@ def copy_and_create_metadata(src_res, dest_res):
     # create the key/value metadata
     dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
     dest_res.save()
+    # generate metadata and map xml files for logical files in the target resource
+    for logical_file in dest_res.logical_files:
+        logical_file.create_aggregation_xml_documents()
 
 
 # TODO: should be BaseResource.mark_as_modified.
@@ -860,6 +805,7 @@ def get_party_data_from_user(user):
     party_data['description'] = '/user/{uid}/'.format(uid=user.pk)
     party_data['phone'] = user_profile.phone_1
     party_data['organization'] = user_profile.organization
+    party_data['identifiers'] = user_profile.identifiers
     return party_data
 
 
@@ -892,8 +838,11 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     if __debug__:
         assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
+    full_paths = kwargs.pop('full_paths', {})
+    auto_aggregate = kwargs.pop('auto_aggregate', True)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               source_names=source_names)
+                                               source_names=source_names, full_paths=full_paths,
+                                               auto_aggregate=auto_aggregate)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
@@ -920,12 +869,13 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False):
+                         move=False, check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
-    :param resource: Resource to which file should be added
-    :param f: File-like object to add to a resource
-    :param source_name: the logical file name of the resource content file for
+    :param  resource: Resource to which file should be added
+    :param  f: File-like object to add to a resource
+    :param  folder: folder at which the file will live
+    :param  source_name: the logical file name of the resource content file for
                         federated iRODS resource or the federated zone name;
                         By default, it is empty. A non-empty value indicates
                         the file needs to be added into the federated zone, either
@@ -933,21 +883,38 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                         disk, or from the federated zone directly where f is empty
                         but source_name has the whole data object
                         iRODS path in the federated zone
-    :param move: indicate whether the file should be copied or moved from private user
+    :param  move: indicate whether the file should be copied or moved from private user
                  account to proxy user account in federated zone; A value of False
                  indicates copy is needed, a value of True indicates no copy, but
                  the file will be moved from private user account to proxy user account.
                  The default value is False.
 
+    :param  check_target_folder: if true and the resource is a composite resource then uploading
+    a file to the specified folder will be validated before adding the file to the resource
+    :param  add_to_aggregation: if true and the resource is a composite resource then the file
+    being added to the resource also will be added to a fileset aggregation if such an aggregation
+    exists in the file path
     :return: The identifier of the ResourceFile added.
     """
 
-    # importing here to avoid circular import
-    from hs_file_types.models import GenericLogicalFile
+    # validate parameters
+    if check_target_folder and resource.resource_type != 'CompositeResource':
+        raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
     if f:
+        if check_target_folder and folder is not None:
+                tgt_full_upload_path = os.path.join(resource.file_path, folder)
+                if not resource.can_add_files(target_full_path=tgt_full_upload_path):
+                    err_msg = "File can't be added to this folder which represents an aggregation"
+                    raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
+        if add_to_aggregation:
+            if folder is not None and resource.resource_type == 'CompositeResource':
+                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                if aggregation is not None:
+                    # make the added file part of the fileset aggregation
+                    aggregation.add_resource_file(ret)
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
@@ -974,13 +941,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     # TODO: generate this from data in ResourceFile rather than extension
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
-
-    # if a file gets added successfully to composite resource, then better to set the generic
-    # logical file here
-    if resource.resource_type == "CompositeResource":
-        logical_file = GenericLogicalFile.create()
-        ret.logical_file_content_object = logical_file
-        ret.save()
 
     return ret
 
@@ -1041,7 +1001,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                          "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
                                                                   field=xml_element_name))
-                field.text = str(attr)
+                field.text = unicode(attr)
 
 
 class ZipContents(object):
@@ -1091,3 +1051,37 @@ def resolve_request(request):
         return request.data
 
     return {}
+
+
+def check_aggregations(resource, folders, res_files):
+    """
+    A helper to support creating aggregations for a given composite resource when new folders
+    or files are added to the resource
+    Checks for aggregations in each folder first, then checks for aggregations in each file
+    :param resource: resource object
+    :param folders: list of folders as strings to check for aggregations creation
+    :param res_files: list of ResourceFile objects to check for aggregations creation
+    :return:
+    """
+    if resource.resource_type == "CompositeResource":
+        from hs_file_types.utils import set_logical_file_type
+        # check folders for aggregations
+        for fol in folders:
+            folder = fol
+            if not fol.startswith(resource.file_path):
+                # need absolute folder path to check if folder can be set to aggregation
+                folder = os.path.join(resource.file_path, fol)
+            else:
+                # need relative folder path for creating aggregation from folder
+                fol = fol[len(resource.file_path) + 1:]
+            agg_type = resource.get_folder_aggregation_type_to_set(folder)
+            if agg_type and agg_type != "FileSetLogicalFile":
+                agg_type = agg_type.replace('LogicalFile', '')
+                set_logical_file_type(res=resource, user=None, file_id=None,
+                                      hs_file_type=agg_type, folder_path=fol,
+                                      fail_feedback=False)
+        # check files for aggregation
+        for res_file in res_files:
+            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                      fail_feedback=False)
