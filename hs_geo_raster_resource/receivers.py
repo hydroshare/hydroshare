@@ -106,24 +106,32 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 def _process_uploaded_file(resource, validate_files_dict):
     log = logging.getLogger()
 
-    res_file = resource.files.all().first()
+    # find a tif file or a zip file
+    res_file = None
+    for r_file in resource.files.all():
+        if r_file.extension.lower() in ('.tif', '.tiff', '.zip'):
+            res_file = r_file
+            break
+
     if res_file:
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         # validate the file
-        error_info, files_to_add_to_resource = raster.raster_file_validation(raster_file=temp_file)
-        if not error_info:
+        validation_results = raster.raster_file_validation(raster_file=temp_file,
+                                                           resource=resource)
+        if not validation_results['error_info']:
             log.info("Geo raster file validation successful.")
             # extract metadata
             temp_dir = os.path.dirname(temp_file)
             temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
                                   '.vrt' == os.path.splitext(f)[1]].pop()
             metadata = raster.extract_metadata(temp_vrt_file_path)
-            # delete the original resource file
-            file_name = delete_resource_file_only(resource, res_file)
-            delete_format_metadata_after_delete_file(resource, file_name)
+            # delete the original resource file if it is a zip file
+            if res_file.extension.lower() == '.zip':
+                file_name = delete_resource_file_only(resource, res_file)
+                delete_format_metadata_after_delete_file(resource, file_name)
             # add all extracted files (tif and vrt)
-            for f in files_to_add_to_resource:
+            for f in validation_results['new_resource_files_to_add']:
                 uploaded_file = UploadedFile(file=open(f, 'rb'),
                                              name=os.path.basename(f))
                 utils.add_file_to_resource(resource, uploaded_file)
@@ -138,11 +146,12 @@ def _process_uploaded_file(resource, validate_files_dict):
             log_msg = log_msg.format(resource.short_id)
             log.info(log_msg)
         else:
-            # delete the invalid file just uploaded
-            delete_resource_file_only(resource, res_file)
+            # delete all the files in the resource
+            for res_file in resource.files.all():
+                delete_resource_file_only(resource, res_file)
             validate_files_dict['are_files_valid'] = False
             err_msg = "Uploaded file was not added to the resource. "
-            err_msg += ", ".join(msg for msg in error_info)
+            err_msg += ", ".join(msg for msg in validation_results['error_info'])
             validate_files_dict['message'] = err_msg
             log_msg = "File validation failed for raster resource (ID:{})."
             log_msg = log_msg.format(resource.short_id)

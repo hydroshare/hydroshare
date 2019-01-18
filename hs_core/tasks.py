@@ -7,32 +7,30 @@ import sys
 import traceback
 import zipfile
 import logging
+import json
 
-import requests
-
+from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
-from rest_framework import status
-
+import requests
+from celery import shared_task
+from celery.schedules import crontab
+from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.contrib.auth.models import User
+from rest_framework import status
 
-from celery.task import periodic_task
-from celery.schedules import crontab
-from celery import shared_task
-
-from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage
-from theme.utils import get_quota_message
+from theme.models import UserQuota, QuotaMessage, UserProfile, User
 
 from django_irods.icommands import SessionException
 
+from hs_core.models import BaseResource
+from theme.utils import get_quota_message
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -41,9 +39,100 @@ from django_irods.icommands import SessionException
 logger = logging.getLogger('django')
 
 
+# Currently there are two different cleanups scheduled.
+# One is 20 minutes after creation, the other is nightly.
+# TODO Clean up zipfiles in remote federated storage as well.
+@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
+def nightly_zips_cleanup():
+    # delete 2 days ago
+    date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
+    zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
+    if __debug__:
+        logger.debug("cleaning up {}".format(zips_daily_date))
+    istorage = IrodsStorage()
+    if istorage.exists(zips_daily_date):
+        istorage.delete(zips_daily_date)
+    federated_prefixes = BaseResource.objects.all().values_list('resource_federation_path')\
+        .distinct()
+
+    for p in federated_prefixes:
+        prefix = p[0]  # strip tuple
+        if prefix != "":
+            zips_daily_date = "{prefix}/zips/{daily_date}"\
+                .format(prefix=prefix, daily_date=date_folder)
+            if __debug__:
+                logger.debug("cleaning up {}".format(zips_daily_date))
+            istorage = IrodsStorage("federated")
+            if istorage.exists(zips_daily_date):
+                istorage.delete(zips_daily_date)
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+def sync_email_subscriptions():
+    sixty_days = datetime.today() - timedelta(days=60)
+    active_subscribed = UserProfile.objects.filter(email_opt_out=False,
+                                                   user__last_login__gte=sixty_days,
+                                                   user__is_active=True)
+    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
+    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
+    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
+
+
+def sync_mailchimp(active_subscribed, list_id):
+    session = requests.Session()
+    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
+    # get total members
+    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
+        'hs-celery', settings.MAILCHIMP_PASSWORD))
+    total_items = json.loads(response.content)["total_items"]
+    # get list of all member ids
+    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
+                                                                          total_items=total_items),
+                           auth=requests.auth.HTTPBasicAuth('hs-celery',
+                                                            settings.MAILCHIMP_PASSWORD))
+    # clear the email list
+    delete_count = 0
+    for member in json.loads(response.content)["members"]:
+        if member["status"] == "subscribed":
+            session_response = session.delete(
+                (url + "/{id}").format(list_id=list_id, id=member["id"]),
+                auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
+            if session_response.status_code != 204:
+                logger.info("Expected 204 status code, got " + str(session_response.status_code))
+                logger.debug(session_response.content)
+            else:
+                delete_count += 1
+    # add active subscribed users to mailchimp
+    add_count = 0
+    for subscriber in active_subscribed:
+        json_data = {"email_address": subscriber.user.email, "status": "subscribed",
+                     "merge_fields": {"FNAME": subscriber.user.first_name,
+                                      "LNAME": subscriber.user.last_name}}
+        session_response = session.post(
+            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
+                'hs-celery', settings.MAILCHIMP_PASSWORD))
+        if session_response.status_code != 200:
+            logger.info("Expected 200 status code, got " + str(session_response.status_code))
+            logger.debug(session_response.content)
+        else:
+            add_count += 1
+    if delete_count == active_subscribed.count():
+        logger.info("successfully cleared mailchimp for list id " + list_id)
+    else:
+        logger.info(
+            "cleared " + str(delete_count) + " out of " + str(
+                active_subscribed.count()) + " for list id " + list_id)
+
+    if active_subscribed.count() == add_count:
+        logger.info("successfully synced all subscriptions for list id " + list_id)
+    else:
+        logger.info("added " + str(add_count) + " out of " + str(
+            active_subscribed.count()) + " for list id " + list_id)
+
+
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def manage_task_nightly():
-    # The nightly running task do DOI activation check and over-quota check
+    # The nightly running task do DOI activation check
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
@@ -113,42 +202,66 @@ def manage_task_nightly():
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1))
+def manage_task_weekly():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
-    users = User.objects.filter(is_active=True).all()
+    users = User.objects.filter(is_active=True).filter(is_superuser=False).all()
     for u in users:
         uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
-        used_percent = uq.used_percent
-        if used_percent >= qmsg.soft_limit_percent:
-            if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-                if uq.remaining_grace_period < 0:
-                    # triggers grace period counting
-                    uq.remaining_grace_period = qmsg.grace_period
-                elif uq.remaining_grace_period > 0:
-                    # reduce remaining_grace_period by one day
-                    uq.remaining_grace_period -= 1
-            elif used_percent >= qmsg.hard_limit_percent:
-                # set grace period to 0 when user quota exceeds hard limit
-                uq.remaining_grace_period = 0
-            uq.save()
-            user = uq.user
-            uemail = user.email
-            msg_str = 'Dear ' + u.username + ':\n\n'
-            msg_str += get_quota_message(user)
-
-            msg_str += '\n\nHydroShare Support'
-            subject = 'Quota warning'
-            # send email for people monitoring and follow-up as needed
-            send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
-                      [uemail])
-        else:
-            if uq.remaining_grace_period >= 0:
-                # turn grace period off now that the user is below quota soft limit
-                uq.remaining_grace_period = -1
+        if uq:
+            used_percent = uq.used_percent
+            if used_percent >= qmsg.soft_limit_percent:
+                if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
+                    if uq.remaining_grace_period < 0:
+                        # triggers grace period counting
+                        uq.remaining_grace_period = qmsg.grace_period
+                    elif uq.remaining_grace_period > 0:
+                        # reduce remaining_grace_period by one day
+                        uq.remaining_grace_period -= 1
+                elif used_percent >= qmsg.hard_limit_percent:
+                    # set grace period to 0 when user quota exceeds hard limit
+                    uq.remaining_grace_period = 0
                 uq.save()
+
+                if u.first_name and u.last_name:
+                    sal_name = '{} {}'.format(u.first_name, u.last_name)
+                elif u.first_name:
+                    sal_name = u.first_name
+                elif u.last_name:
+                    sal_name = u.last_name
+                else:
+                    sal_name = u.username
+
+                msg_str = 'Dear ' + sal_name + ':\n\n'
+
+                ori_qm = get_quota_message(u)
+                # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
+                replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
+                    settings.DEFAULT_SUPPORT_EMAIL)
+                new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
+                msg_str += new_qm
+
+                msg_str += '\n\nHydroShare Support'
+                subject = 'Quota warning'
+                try:
+                    # send email for people monitoring and follow-up as needed
+                    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                              [u.email, settings.DEFAULT_SUPPORT_EMAIL],
+                              html_message=msg_str)
+                except Exception as ex:
+                    logger.debug("Failed to send quota warning email: " + ex.message)
+            else:
+                if uq.remaining_grace_period >= 0:
+                    # turn grace period off now that the user is below quota soft limit
+                    uq.remaining_grace_period = -1
+                    uq.save()
+        else:
+            logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
 
 
 @shared_task
@@ -201,6 +314,59 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
     finally:
         # Delete upload file
         os.unlink(zip_file_path)
+
+
+@shared_task
+def delete_zip(zip_path):
+    istorage = IrodsStorage()
+    if istorage.exists(zip_path):
+        istorage.delete(zip_path)
+
+
+@shared_task
+def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip=False):
+    """ Create temporary zip file from input_path and store in output_path
+    :param input_path: full irods path of input starting with federation path
+    :param output_path: full irods path of output starting with federation path
+    :param sf_aggregation: if True, include logical metadata files
+    """
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = get_resource_by_shortkey(resource_id)
+    istorage = res.get_irods_storage()  # invoke federated storage as necessary
+
+    if res.resource_type == "CompositeResource":
+        if '/data/contents/' in input_path:
+            short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+            res.create_aggregation_xml_documents(aggregation_name=short_path)
+        else:  # all metadata included, e.g., /data/*
+            res.create_aggregation_xml_documents()
+
+    try:
+        if sf_zip:
+            # input path points to single file aggregation
+            # ensure that foo.zip contains aggregation metadata
+            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+            istorage.copyFiles(input_path, out_with_folder)
+            if sf_aggregation:
+                try:
+                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                try:
+                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                except SessionException:
+                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
+            istorage.zipup(temp_folder_name, output_path)
+            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+        else:  # regular folder to zip
+            istorage.zipup(input_path, output_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return False
+    return True
 
 
 @shared_task
@@ -345,15 +511,6 @@ def update_quota_usage_task(username):
 
     # get quota size for the user in iRODS user zone
     try:
-        # cannot use FedStorage() since the proxy iRODS account in data zone cannot access
-        # user type metadata for the proxy iRODS user in the user zone. Have to create an iRODS
-        # environment session using HS_USER_ZONE_PROXY_USER with an rodsadmin role
-        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
-                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                                  host=settings.HS_USER_ZONE_HOST,
-                                  port=settings.IRODS_PORT,
-                                  zone=settings.HS_USER_IRODS_ZONE,
-                                  sess_id='user_proxy_session')
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                      settings.IRODS_BAGIT_PATH)

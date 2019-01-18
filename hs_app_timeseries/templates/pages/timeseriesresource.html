@@ -37,7 +37,9 @@
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
-                                <tr><th class="text-muted">Name </th><td>{{ site.site_name }}</td></tr>
+                                {% if site.site_name %}
+                                    <tr><th class="text-muted">Name </th><td>{{ site.site_name }}</td></tr>
+                                {% endif %}
                                 <tr><th class="text-muted">Elevation M </th><td>{{ site.elevation_m }}</td></tr>
                                 <tr><th class="text-muted">Elevation Datum </th><td>{{ site.elevation_datum }}</td></tr>
                                 <tr><th class="text-muted">Site Type </th><td>{{ site.site_type }}</td></tr>
@@ -128,7 +130,9 @@
                             <tr><th class="text-muted">Units Type </th><td>{{ timeseries_result.units_type }}</td></tr>
                             <tr><th class="text-muted">Units Name </th><td>{{ timeseries_result.units_name }}</td></tr>
                             <tr><th class="text-muted">Units Abbreviation </th><td>{{ timeseries_result.units_abbreviation }}</td></tr>
-                            <tr><th class="text-muted">Status </th><td>{{ timeseries_result.status }}</td></tr>
+                            {% if timeseries_result.status %}
+                                <tr><th class="text-muted">Status </th><td>{{ timeseries_result.status }}</td></tr>
+                            {% endif %}
                             <tr><th class="text-muted">Sample Medium </th><td>{{ timeseries_result.sample_medium }}</td></tr>
                             <tr><th class="text-muted">Value Count </th><td>{{ timeseries_result.value_count }}</td></tr>
                             <tr><th class="text-muted">Aggregation Statistics </th><td>{{ timeseries_result.aggregation_statistics }}</td></tr>

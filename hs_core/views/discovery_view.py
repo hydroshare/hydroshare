@@ -1,11 +1,12 @@
 from haystack.generic_views import FacetedSearchView
 from haystack.generic_views import FacetedSearchMixin
-from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
+from hs_core.discovery_form import DiscoveryForm, FACETS_TO_SHOW
 from haystack.query import SearchQuerySet
+from django.conf import settings
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = FACETED_FIELDS  # interpreted by FacetedSearchView; must be attribute
+    facet_fields = FACETS_TO_SHOW  # interpreted by FacetedSearchView; must be attribute
     form_class = DiscoveryForm
 
     def form_valid(self, form):
@@ -32,18 +33,21 @@ class DiscoveryView(FacetedSearchView):
         if sortfield is not None and sortdir is not None:
             self.queryset = self.queryset.order_by(sortdir + sortfield)
 
+        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
         if form.parse_error is not None:
             context = self.get_context_data(**{
                 self.form_name: form,
                 'query': form.cleaned_data.get(self.search_field),
                 'object_list': self.queryset,
-                'parse_error': form.parse_error  # if not None, then show error message
+                'parse_error': form.parse_error,  # if not None, then show error message
+                'maps_key': maps_key
             })
         else:
             context = self.get_context_data(**{
                 self.form_name: form,
                 'query': form.cleaned_data.get(self.search_field),
                 'object_list': self.queryset,
+                'maps_key': maps_key
             })
         return self.render_to_response(context)
 

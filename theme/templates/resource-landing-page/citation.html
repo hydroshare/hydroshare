@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 <div class="col-sm-12 content-block">
-    <h3>How to cite</h3>
+    <h3 id="howToCite">How to cite</h3>
 
     <div class="row">
         <div class="col-xs-12">
@@ -14,13 +14,13 @@
                 </button>
             </div>
 
-            {% if is_owner_user and not cm.raccess.published %}
+            {% if is_owner_user and not cm.raccess.published and cm.can_be_published %}
             <br />
 
             <div>
                 <em>
                     When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
-                    accessible at the following URL: http://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
+                    accessible at the following URL: https://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
                     ready to permanently publish, click the Publish button at the top of the page to request your DOI.
                     Reminder: You may no longer edit your resource, once you have permanently published it.
                 </em>
@@ -36,10 +36,10 @@
                         {% if rights.statement %}
                             {% if rights.statement|length > 1000 %}
                                 <div class="pre-scrollable">
-                                    <span>{{ rights.statement|linebreaks }}</span>
+                                    <span>{{ rights.statement|linebreaks|urlize }}</span>
                                 </div>
                             {% else %}
-                                <span>{{ rights.statement|linebreaks }}</span>
+                                <span>{{ rights.statement|linebreaks|urlize }}</span>
                             {% endif %}
                         {% endif %}
 
@@ -187,7 +187,7 @@
                             {% csrf_token %}
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                     id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                    title='Metadata is public but data is protected.' type="submit"
+                                    title='Metadata is public but data are protected.' type="submit"
                                     {% if cm.raccess.discoverable and not cm.raccess.public %}
                                         class="btn btn-default active"
                                     {% else %}

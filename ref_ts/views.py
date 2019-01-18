@@ -11,7 +11,7 @@ import logging
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, FileResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 
 from hs_core import hydroshare
@@ -208,7 +208,7 @@ def create_ref_time_series(request, *args, **kwargs):
     except Exception as ex:
         logger.exception("create_ref_time_series: %s" % (ex.message))
         context = {'resource_creation_error': "Error: failed to create resource." }
-        return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
+        return render(request, 'pages/create-ref-time-series.html', context)
 
 
 def download_refts_resource_bag(request, shortkey, *args, **kwargs):
@@ -223,7 +223,8 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
             return response
 
         path = "bags/" + str(shortkey) + ".zip"
-        response_irods = download_bag_from_irods(request, path, use_async=False)
+        response_irods = download_bag_from_irods(request, path, use_async=False,
+                                                 use_reverse_proxy=False)
 
         tempdir = tempfile.mkdtemp()
         response = assemble_refts_bag(shortkey, response_irods.streaming_content,
@@ -249,7 +250,8 @@ def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
     try:
 
         path = "bags/" + str(shortkey) + ".zip"
-        response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False)
+        response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False,
+                                                 use_reverse_proxy=False)
 
         if not response_irods.streaming:
             raise Exception("Failed to stream RefTS bag")

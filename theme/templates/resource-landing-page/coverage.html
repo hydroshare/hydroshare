@@ -1,4 +1,5 @@
 {% if not metadata_form %}
+    {# resource view mode #}
     <div class="col-xs-12 content-block">
         <div class="row">
             <div class="col-xs-12">
@@ -45,36 +46,36 @@
                                 {% endif %}
                             </div>
 
-                            {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                            {% if spatial_coverage.north is not None or spatial_coverage.northlimit is not None %}
                                 <div class="row coordinates-list-container">
                                     {% if spatial_coverage.type == 'point' %}
-                                        {% if spatial_coverage.east %}
+                                        {% if spatial_coverage.east is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>Longitude</strong>
                                                 <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.north %}
+                                        {% if spatial_coverage.north is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>Latitude</strong>
                                                 <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
                                     {% else %}
-                                        {% if spatial_coverage.northlimit %}
+                                        {% if spatial_coverage.northlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>North Latitude</strong>
                                                 <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.eastlimit %}
+                                        {% if spatial_coverage.eastlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>East Longitude</strong>
                                                 <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.southlimit %}
+                                        {% if spatial_coverage.southlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>South Latitude</strong>
                                                 <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
                                             </div>
                                         {% endif %}
-                                        {% if spatial_coverage.westlimit %}
+                                        {% if spatial_coverage.westlimit is not None %}
                                             <div class="col-xs-12 col-sm-6"><strong>West Longitude</strong>
                                                 <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
                                             </div>
@@ -83,6 +84,7 @@
                                 </div>
                             {% endif %}
                         {% endif %}
+
                         {% if temporal_coverage %}
                             <br>
                             <h4>Temporal: </h4>
@@ -116,6 +118,7 @@
         </div>
     </div>
 {% else %}
+    {# resource edit mode #}
     <div class="col-xs-12">
         <div class="row">
             <div class="col-xs-12 content-block" id="coverage-spatial">
@@ -126,6 +129,13 @@
                         {% csrf_token %}
                         <div class="col-sm-12">
                             <h3>Coverage</h3>
+                            {% if cm.resource_type == 'CompositeResource' %}
+                                <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible">
+                                    <label>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
+                                        feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
+                                        the content files.</label>
+                                </div>
+                            {% endif %}
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible"
                                  style="display: none;">
                                 <label>Spatial coverage for time series resources should be set by editing the
@@ -144,7 +154,19 @@
                         </div>
 
                         <br>
-                        <div class="col-xs-12"><h4>Spatial: </h4></div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-4 col-md-2">
+                                    <h4>Spatial:</h4>
+                                </div>
+                                <div class="col-xs-8 col-md-10">
+                                    <a id="id-delete-spatial-resource" type="button" class="pull-left">
+                                        <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
 
                         <fieldset>
                             <div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
@@ -176,7 +198,7 @@
                                 <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_north" name="north"
                                                value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -187,7 +209,7 @@
                                 <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_east" name="east"
                                                value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -198,7 +220,7 @@
                                 <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">North Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_northlimit" name="northlimit"
                                                value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -209,7 +231,7 @@
                                 <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">East Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_eastlimit" name="eastlimit"
                                                value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -220,7 +242,7 @@
                                 <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">South Latitude*</span>
-                                        <input type="text" class="form-control" placeholder="-90 to 90"
+                                        <input type="number" class="form-control" placeholder="-90 to 90"
                                                id="id_southlimit" name="southlimit"
                                                value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -231,7 +253,7 @@
                                 <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">West Longitude*</span>
-                                        <input type="text" class="form-control" placeholder="-180 to 180"
+                                        <input type="number" class="form-control" placeholder="-180 to 180"
                                                id="id_westlimit" name="westlimit"
                                                value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit|floatformat:"4" }}{% endif %}">
                                         <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
@@ -267,10 +289,31 @@
                         </fieldset>
                     </form>
                 </div>
+                {% if cm.resource_type == "CompositeResource" and cm.has_logical_spatial_coverage %}
+                     <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit">
+                         Set spatial coverage from content files
+                     </button>
+                {% else %}
+                    {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                    <button id="btn-update-resource-spatial-coverage"
+                             type="button" class="btn btn-primary btn-form-submit" style="display: none">
+                         Set spatial coverage from content files
+                     </button>
+                {% endif %}
             </div>
-
-            <div class="col-xs-12"><h4>Temporal:</h4></div>
-
+            <div class="col-xs-12">
+                <br>
+                <div class="row">
+                    <div class="col-xs-4 col-md-2">
+                        <h4>Temporal:</h4></div>
+                    <div class="col-xs-8 col-md-10">
+                        <a id="id-delete-temporal-resource" type="button" class="pull-left">
+                            <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
             <div class="form-group col-xs-12 col-sm-6 content-block" id="coverage-temporal">
                 {% if not coverage_temporal_form.initial.start %}
                     <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
@@ -355,5 +398,17 @@
                 {% endif %}
             </div>
         </div>
+    {% if cm.resource_type == "CompositeResource" and cm.has_logical_temporal_coverage %}
+         <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit">
+             Set temporal coverage from content files
+         </button>
+    {% else %}
+        {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+        <button id="btn-update-resource-temporal-coverage"
+                 type="button" class="btn btn-primary btn-form-submit" style="display: none">
+             Set temporal coverage from content files
+         </button>
+    {% endif %}
     </div>
 {% endif %}

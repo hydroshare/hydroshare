@@ -5,17 +5,15 @@ from django.contrib.auth.models import Group
 from django.conf import settings
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import TestCaseCommonUtilities
 from utils import assert_ref_time_series_file_type_metadata
-from hs_file_types.models import RefTimeseriesLogicalFile, GenericLogicalFile
+from hs_file_types.models import RefTimeseriesLogicalFile
 
 
 class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(RefTimeSeriesFileTypeMetaDataTest, self).setUp()
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -29,7 +27,7 @@ class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTest
 
         super(RefTimeSeriesFileTypeMetaDataTest, self).create_irods_user_in_user_zone()
 
-        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
         # transfer this valid tif file to user zone space for testing
@@ -46,15 +44,11 @@ class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTest
 
     def tearDown(self):
         super(RefTimeSeriesFileTypeMetaDataTest, self).tearDown()
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
         super(RefTimeSeriesFileTypeMetaDataTest, self).delete_irods_user_in_user_zone()
 
     def test_refts_set_file_type_to_reftimeseries(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(RefTimeSeriesFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(RefTimeSeriesFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         # here we are using a valid ref time series for setting it
         # to RefTimeseries file type which includes metadata extraction
@@ -72,28 +66,23 @@ class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTest
             source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
             move=False,
-            metadata=[]
+            metadata=[],
+            auto_aggregate=False
         )
 
         # test resource is created on federated zone
         self.assertNotEqual(self.composite_resource.resource_federation_path, '')
-
-        # set the logical file -which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
         fed_file_path = "data/contents/{}".format(self.refts_file_name)
         self.assertEqual(os.path.join('data', 'contents', res_file.short_path), fed_file_path)
 
         # set the tif file to RefTimeseries file type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test that the content of the json file is same is what we have
         # saved in json_file_content field of the file metadata object

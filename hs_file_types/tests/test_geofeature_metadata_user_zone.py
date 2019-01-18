@@ -1,19 +1,19 @@
+import os
+
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.conf import settings
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import TestCaseCommonUtilities
 from utils import assert_geofeature_file_type_metadata
-from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GeoFeatureFileMetaData
+from hs_file_types.models import GeoFeatureLogicalFile, GeoFeatureFileMetaData
 
 
 class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(GeoFeatureFileTypeMetaDataTest, self).setUp()
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -45,15 +45,12 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
 
     def tearDown(self):
         super(GeoFeatureFileTypeMetaDataTest, self).tearDown()
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
+
         super(GeoFeatureFileTypeMetaDataTest, self).delete_irods_user_in_user_zone()
 
     def test_zip_set_file_type_to_geo_feature(self):
-        # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-        # are set up properly
-        if not super(GeoFeatureFileTypeMetaDataTest, self).is_federated_irods_available():
-            return
+        super(GeoFeatureFileTypeMetaDataTest, self).assert_federated_irods_available()
 
         # here we are using a valid zip file for setting it
         # to Geo Feature file type which includes metadata extraction
@@ -75,24 +72,17 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
 
         # test resource is created on federated zone
         self.assertNotEqual(self.composite_resource.resource_federation_path, '')
-
-        # set the logical file -which get sets as part of the post resource creation signal
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        expected_folder_name = res_file.file_name[:-4]
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        fed_file_path = "{}/data/contents/{}".format(self.composite_resource.root_path,
-                                                     self.zip_file_name)
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_folder_name = base_file_name
+        # check that the resource file is not associated with logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        fed_file_path = "{}/{}".format(self.composite_resource.file_path, self.zip_file_name)
         self.assertEqual(res_file.storage_path, fed_file_path)
 
         # set the zip file to GeoFeatureFile type
-        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test file type and file type extracted metadata
         assert_geofeature_file_type_metadata(self, expected_folder_name)
         self.composite_resource.delete()

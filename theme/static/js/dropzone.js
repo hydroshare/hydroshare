@@ -1378,6 +1378,7 @@
       }
       for (i = _m = 0, _ref5 = files.length - 1; 0 <= _ref5 ? _m <= _ref5 : _m >= _ref5; i = 0 <= _ref5 ? ++_m : --_m) {
         formData.append(this._getParamName(i), files[i], this._renameFilename(files[i].name));
+        formData.append(this._getParamName(i), files[i].fullPath)
       }
       return this.submitRequest(xhr, formData, files);
     };

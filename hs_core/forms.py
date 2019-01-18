@@ -1,13 +1,9 @@
 """Django forms for hs_core module."""
 
 import copy
-import json
 
 from django.forms import ModelForm, BaseFormSet
 from django.contrib.admin.widgets import forms
-from django.utils.safestring import mark_safe
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
@@ -16,14 +12,6 @@ from crispy_forms.bootstrap import Field
 from hydroshare import utils
 from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
     FundingAgency, Description
-
-
-class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-    """Return a horizontal list of radio buttons."""
-
-    def render(self):
-        """Return a newline separated list of radio button elements."""
-        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
 class Helper(object):
@@ -270,33 +258,7 @@ class PartyValidationForm(forms.Form):
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
-        if data:
-            # data is expected as json string - convert it to a dict
-            try:
-                data = json.loads(data)
-            except ValueError:
-                raise forms.ValidationError("Invalid data found for identifiers.")
-
-            # validate identifier values - check for duplicate links
-            links = [l.lower() for l in data.values()]
-            if len(links) != len(set(links)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier links found.")
-
-            for link in links:
-                validator = URLValidator()
-                try:
-                    validator(link)
-                except ValidationError:
-                    raise forms.ValidationError("Invalid data found for identifiers. "
-                                                "Identifier link must be a URL.")
-
-            # validate identifier keys - check for duplicate names
-            names = [n.lower() for n in data.keys()]
-            if len(names) != len(set(names)):
-                raise forms.ValidationError("Invalid data found for identifiers. "
-                                            "Duplicate identifier names found")
-        return data
+        return Party.validate_identifiers(data)
 
     def clean(self):
         """Validate that name and/or organization are present in form data."""
@@ -876,7 +838,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         fields will be displayed
         """
         file_type = kwargs.pop('file_type', False)
-        form_field_names = ['type', 'start', 'end']
+        form_field_names = ['start', 'end']
         crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 
@@ -979,7 +941,7 @@ class CoverageSpatialForm(forms.Form):
     )
 
     type = forms.ChoiceField(choices=TYPE_CHOICES,
-                             widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
+                             widget=forms.RadioSelect(attrs={'class': 'inline'}), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
     projection = forms.CharField(max_length=100, required=False,
                                  label='Coordinate System/Geographic Projection')
@@ -1024,6 +986,15 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
             self.fields['units'].widget.attrs['readonly'] = True
+            if file_type:
+                # add the 'data-map-item' attribute so that map interface can be used for editing
+                # these fields
+                self.fields['north'].widget.attrs['data-map-item'] = 'latitude'
+                self.fields['east'].widget.attrs['data-map-item'] = 'longitude'
+                self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
+                self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
+                self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
+                self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
 
     def clean(self):
         """Modify the form's cleaned_data dictionary."""
@@ -1036,12 +1007,12 @@ class CoverageSpatialForm(forms.Form):
         if spatial_coverage_type == 'point':
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
-            if not north:
+            if not north and north != 0:
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
                 del self.cleaned_data['north']
 
-            if not east:
+            if not east and east != 0:
                 self._errors['east'] = ["Data for east is missing"]
                 is_form_errors = True
                 del self.cleaned_data['east']
@@ -1075,7 +1046,8 @@ class CoverageSpatialForm(forms.Form):
 
             for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
                 limit_data = temp_cleaned_data.get(limit, None)
-                if not limit_data:
+                # allow value of 0 to go through
+                if not limit_data and limit_data != 0:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
                     del self.cleaned_data[limit]

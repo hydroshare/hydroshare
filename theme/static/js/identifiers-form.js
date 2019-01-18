@@ -10,24 +10,6 @@ function cleanIdentifiers() {
 }
 
 $(document).ready(function () {
-    $(".edit-identifiers-container").on("change", ".select-identifier", function () {
-        var value = $(this).val();
-        var showOther = value === "Other";
-
-        var other = $(this).closest(".well").find(".identifier-specify");
-
-        other.toggleClass("hidden", !showOther);
-
-        if (showOther) {
-            other.find("input").attr("name", $(this).attr("name"));
-            $(this).removeAttr("name");
-        }
-        else {
-            $(this).attr("name", other.find("input").attr("name"));
-            other.find("input").removeAttr("name");
-        }
-    });
-
     $(".edit-identifiers-container").on("click", ".close", function () {
         $(this).closest(".well").remove();
     });

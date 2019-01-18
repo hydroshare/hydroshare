@@ -1,7 +1,7 @@
 import json
 import logging
 
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import Polygon, Point
 from django.core.files import File
@@ -25,8 +25,7 @@ log = logging.getLogger(__name__)
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
-        password=None, active=True, organization=None
-):
+        password=None, active=True, organization=None):
     """
     Create a new user within the HydroShare system.
 
@@ -38,8 +37,17 @@ def create_account(
     from hs_access_control.models import UserAccess
     from hs_labels.models import UserLabels
 
-    username = username if username else email
-
+    try:
+        user = User.objects.get(Q(username__iexact=username))
+        raise ValidationError("User with provided username already exists.")
+    except User.DoesNotExist:
+        pass
+    try:
+        # we chose to follow current email practices with case insensitive emails
+        user = User.objects.get(Q(email__iexact=email))
+        raise ValidationError("User with provided email already exists.")
+    except User.DoesNotExist:
+        pass
     groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
 
@@ -79,7 +87,7 @@ def create_account(
         user_profile.organization = organization
         user_profile.save()
 
-        dict_items = organization.split(",")
+        dict_items = organization.split(";")
 
         for dict_item in dict_items:
             # Update Dictionaries
@@ -376,7 +384,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if edit_permission:
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.edit_resources))
+            q.append(Q(short_id__in=group.gaccess.edit_resources.values_list('short_id',
+                                                                             flat=True)))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
 
@@ -387,7 +396,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.view_resources))
+            q.append(Q(short_id__in=group.gaccess.view_resources.values_list('short_id',
+                                                                             flat=True)))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
@@ -408,7 +418,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if not include_obsolete:
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
-
     for q in q:
         flt = flt.filter(q)
 

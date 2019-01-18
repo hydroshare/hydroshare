@@ -7,6 +7,7 @@ import redis
 import os
 from kombu import Queue, Exchange
 from kombu.common import Broadcast
+import yaml
 
 DEBUG = True
 
@@ -112,11 +113,11 @@ IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'dev-irods-1.cuahsi.org'
 IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'cuahsi4ReplResc'
-IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi4DataProxy'
-IRODS_CWD = '/hydroshareZone/home/cuahsi4DataProxy'
+IRODS_DEFAULT_RESOURCE = 'cuahsi3ReplResc'
+IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi3DataProxy'
+IRODS_CWD = '/hydroshareZone/home/cuahsi3DataProxy'
 IRODS_ZONE = 'hydroshareZone'
-IRODS_USERNAME = 'cuahsi4DataProxy'
+IRODS_USERNAME = 'cuahsi3DataProxy'
 IRODS_AUTH = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
 IRODS_GLOBAL_SESSION = True
 
@@ -147,24 +148,24 @@ HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
 HS_USER_ZONE_HOST = 'dev-irods-2.cuahsi.org'
-HS_USER_ZONE_PROXY_USER = 'cuahsi4LinuxProxy'
+HS_USER_ZONE_PROXY_USER = 'cuahsi3LinuxProxy'
 HS_USER_ZONE_PROXY_USER_PWD = 'aena3eijeiheir7iqu3mai7peun7aeRo'
-HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = '/home/cuahsi4LinuxProxy/create_user.sh'
-HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = '/home/cuahsi4LinuxProxy/delete_user.sh'
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = '/home/cuahsi3LinuxProxy/create_user.sh'
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = '/home/cuahsi3LinuxProxy/delete_user.sh'
 
 # the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
-HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'cuahsi4UserProxy'
+HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'cuahsi3UserProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not
-HS_WWW_IRODS_PROXY_USER = 'cuahsi4DataProxy'
+HS_WWW_IRODS_PROXY_USER = 'cuahsi3DataProxy'
 # credentials for HydroShare proxy user iRODS account which is set to have own access control
 # to all collections in any federated zone with HydroShare zone, which is only useful when
 # testing HydroShare federated zone in local test development environment since in www
 # production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
 HS_WWW_IRODS_PROXY_USER_PWD = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
 HS_WWW_IRODS_HOST = 'dev-irods-1.cuahsi.org'
-HS_IRODS_LOCAL_ZONE_DEF_RES = 'cuahsi4LocalResc'
+HS_IRODS_LOCAL_ZONE_DEF_RES = 'cuahsi3LocalResc'
 HS_WWW_IRODS_ZONE = 'hydroshareZone'
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
@@ -179,4 +180,29 @@ DEFAULT_FROM_EMAIL= 'support@hydroshare.org'
 DEFAULT_SUPPORT_EMAIL= 'support@hydroshare.org'
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
+
+TIME_ZONE = "Etc/UTC"
+
+#used by the mailchimp subscription job in hs_core/tasks.py
+MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
+MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
+
+# sendfile support for large files
+# These must match settings in nginx
+SENDFILE_ON = False
+IRODS_USER_URI = "/irods-user"
+IRODS_DATA_URI = "/irods-data"
+LOCAL_CACHE_URI = "/local-cache"
+
+RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+
+with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+    try:
+        EXTERNAL_CONFIG = yaml.load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
+# insert a google maps key here when in production
+MAPS_KEY=''
 

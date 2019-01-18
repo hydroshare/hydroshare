@@ -1,13 +1,65 @@
 import json
+import os
 from dateutil import parser
 from operator import lt, gt
+from hs_core.hydroshare import utils
+
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
+
+from hs_file_types.models.base import AbstractLogicalFile
+from django.apps import apps
 
 
-def update_resource_coverage_element(resource):
-    # update resource spatial coverage based on coverage metadata from the
-    # logical files in the resource
-    spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
-                         if lf.metadata.spatial_coverage is not None]
+def get_SupportedAggTypes_choices():
+    """
+    This function harvests all existing aggregation types in system,
+    and puts them in a list:
+    [
+        ["AGGREGATION_CLASS_NAME_1", "AGGREGATION_VERBOSE_NAME_1"],
+        ["AGGREGATION_CLASS_NAME_2", "AGGREGATION_VERBOSE_NAME_2"],
+        ...
+        ["AGGREGATION_CLASS_NAME_N", "AGGREGATION_VERBOSE_NAME_N"],
+    ]
+    """
+
+    result_list = []
+    agg_types_list = get_aggregation_types()
+    for r_type in agg_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type.get_aggregation_display_name()
+        result_list.append([class_name, verbose_name])
+    return result_list
+
+
+def get_aggregation_types():
+    aggregation_types = []
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            if not getattr(model, 'archived_model', False):
+                aggregation_types.append(model)
+    return aggregation_types
+
+
+def update_target_spatial_coverage(target):
+    """Updates target spatial coverage based on the contained spatial coverages of
+    aggregations (file type). Note: This action will overwrite any existing target spatial
+    coverage data.
+
+    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    """
+
+    if isinstance(target, FileSetLogicalFile):
+        spatial_coverages = [lf.metadata.spatial_coverage for lf in target.get_children()
+                             if lf.metadata.spatial_coverage is not None]
+    else:
+        spatial_coverages = [lf.metadata.spatial_coverage for lf in target.logical_files
+                             if lf.metadata.spatial_coverage is not None and not lf.has_parent]
+
+    if not spatial_coverages:
+        # no aggregation level spatial coverage data exist - no need to update resource
+        # spatial coverage
+        return
 
     bbox_limits = {'box': {'northlimit': 'northlimit', 'southlimit': 'southlimit',
                            'eastlimit': 'eastlimit', 'westlimit': 'westlimit'},
@@ -75,26 +127,36 @@ def update_resource_coverage_element(resource):
             bbox_value['north'] = sp_cov.value['north']
             bbox_value['east'] = sp_cov.value['east']
 
-    spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
-    if len(spatial_coverages) > 0:
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            place_name = spatial_cov.value.get('name', None)
-            if place_name is not None:
-                bbox_value['name'] = place_name
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+    spatial_cov = target.metadata.spatial_coverage
+    if spatial_cov:
+        spatial_cov.type = cov_type
+        place_name = spatial_cov.value.get('name', None)
+        if place_name is not None:
+            bbox_value['name'] = place_name
+        spatial_cov._value = json.dumps(bbox_value)
+        spatial_cov.save()
     else:
-        # delete spatial coverage element for the resource since the content files don't have any
-        # spatial coverage
-        if spatial_cov:
-            spatial_cov.delete()
+        target.metadata.create_element("coverage", type=cov_type, value=bbox_value)
 
-    # update resource temporal coverage
-    temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
-                          if lf.metadata.temporal_coverage is not None]
+
+def update_target_temporal_coverage(target):
+    """Updates target temporal coverage based on the contained temporal coverages of
+    aggregations (file type).
+    Note: This action will overwrite any existing target temporal
+    coverage data.
+
+    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    """
+    if isinstance(target, FileSetLogicalFile):
+        temporal_coverages = [lf.metadata.temporal_coverage for lf in target.get_children()
+                              if lf.metadata.temporal_coverage is not None]
+    else:
+        temporal_coverages = [lf.metadata.temporal_coverage for lf in target.logical_files
+                              if lf.metadata.temporal_coverage is not None and not lf.has_parent]
+
+    if not temporal_coverages:
+        # no aggregation level temporal coverage data - no update at resource level is needed
+        return
 
     date_data = {'start': None, 'end': None}
 
@@ -115,14 +177,71 @@ def update_resource_coverage_element(resource):
         set_date_value(date_data, temp_cov, 'start')
         set_date_value(date_data, temp_cov, 'end')
 
-    temp_cov = resource.metadata.coverages.all().filter(type='period').first()
+    temp_cov = target.metadata.temporal_coverage
     if date_data['start'] is not None and date_data['end'] is not None:
         if temp_cov:
             temp_cov._value = json.dumps(date_data)
             temp_cov.save()
         else:
-            resource.metadata.create_element("coverage", type='period', value=date_data)
-    elif temp_cov:
-        # delete the temporal coverage for the resource since the content files don't have
-        # temporal coverage
-        temp_cov.delete()
+            target.metadata.create_element("coverage", type='period', value=date_data)
+
+
+def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None,
+                          fail_feedback=True):
+    """ Return the logical file type associated with a new file """
+    if hs_file_type is None:
+        res_file = utils.get_resource_file_by_id(res, file_id)
+        ext_to_type = {".tif": "GeoRaster", ".tiff": "GeoRaster", ".vrt": "GeoRaster",
+                       ".nc": "NetCDF", ".shp": "GeoFeature", ".json": "RefTimeseries",
+                       ".sqlite": "TimeSeries"}
+        file_name = str(res_file)
+        root, ext = os.path.splitext(file_name)
+        ext = ext.lower()
+        if ext in ext_to_type:
+            # Check for special case of RefTimeseries having 2 extensions
+            if ext == ".json":
+                if not file_name.lower().endswith(".refts.json"):
+                    if fail_feedback:
+                        raise ValueError("Unsupported aggregation extension. Supported aggregation "
+                                         "extensions are: {}".format(ext_to_type.keys()))
+            hs_file_type = ext_to_type[ext]
+        else:
+            if fail_feedback:
+                raise ValueError("Unsupported aggregation extension. Supported aggregation "
+                                 "extensions are: {}".format(ext_to_type.keys()))
+            return None
+
+    file_type_map = {"SingleFile": GenericLogicalFile,
+                     "FileSet": FileSetLogicalFile,
+                     "GeoRaster": GeoRasterLogicalFile,
+                     "NetCDF": NetCDFLogicalFile,
+                     'GeoFeature': GeoFeatureLogicalFile,
+                     'RefTimeseries': RefTimeseriesLogicalFile,
+                     'TimeSeries': TimeSeriesLogicalFile}
+    if hs_file_type not in file_type_map:
+        if fail_feedback:
+            raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
+                             "}".format(ext_to_type.keys()))
+        return None
+    logical_file_type_class = file_type_map[hs_file_type]
+    return logical_file_type_class
+
+
+def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=None, extra_data={},
+                          fail_feedback=True):
+    """ set the logical file type for a new file """
+    logical_file_type_class = get_logical_file_type(res, user, file_id, hs_file_type,
+                                                    folder_path, fail_feedback)
+
+    try:
+        # Some aggregations use the folder name for the aggregation name
+        folder_path = folder_path.rstrip('/') if folder_path else folder_path
+        if extra_data:
+            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                  folder_path=folder_path, extra_data=extra_data)
+        else:
+            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                  folder_path=folder_path)
+    except:
+        if fail_feedback:
+            raise

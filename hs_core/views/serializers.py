@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from hs_core.hydroshare import utils
 from hs_core import hydroshare
-from .utils import validate_json, validate_user_name,  validate_group_name
+from .utils import validate_json, validate_user,  validate_group
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 
@@ -67,10 +67,10 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 
 class ResourceListRequestValidator(serializers.Serializer):
-    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
-    group = serializers.CharField(min_length=1, required=False, validators=[validate_group_name])
-    user = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
-    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
+    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user])
+    group = serializers.CharField(min_length=1, required=False, validators=[validate_group])
+    user = serializers.CharField(min_length=1, required=False, validators=[validate_user])
+    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user])
     from_date = serializers.DateField(required=False, default=None)
     to_date = serializers.DateField(required=False, default=None)
     start = serializers.IntegerField(required=False, default=None)
@@ -95,6 +95,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     resource_id = serializers.CharField(max_length=100)
     abstract = serializers.CharField()
     creator = serializers.CharField(max_length=100)
+    doi = serializers.CharField(max_length=200)
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
     date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
     public = serializers.BooleanField()
@@ -110,6 +111,7 @@ class ResourceListItemSerializer(serializers.Serializer):
 
 
 class ResourceFileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     url = serializers.URLField()
     size = serializers.IntegerField()
     content_type = serializers.CharField(max_length=255)
@@ -126,6 +128,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'resource_title',
                                'abstract',
                                'creator',
+                               'doi',
                                'public',
                                'discoverable',
                                'shareable',
@@ -141,6 +144,7 @@ ResourceListItem = namedtuple('ResourceListItem',
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
+                               'id',
                                'size',
                                'content_type'])
 

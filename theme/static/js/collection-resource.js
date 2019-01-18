@@ -5,7 +5,7 @@
 var paging = false;
 var page_length = 15;
 var page_type = "numbers";
-var page_length_change = false;
+
 $(document).ready(function() {
 
     //------------------ table headers ------------
@@ -19,7 +19,7 @@ $(document).ready(function() {
 
     var edit_mode = $("#edit-mode").val();
     if (edit_mode.toLowerCase() == "false") {
-            resourceTable = $("#collection-table").DataTable({
+        resourceTable = $("#collection-table").DataTable({
             "order": [[2, "asc"]],
             "paging": paging,
             "bLengthChange": false,
@@ -34,17 +34,17 @@ $(document).ready(function() {
                     "visible": false,
                 },
                 {
-                "targets": [6],     // <th>Remove</th>
-                "visible": false,
-                },
+                    "targets": [6],     // <th>Remove</th>
+                    "visible": false,
+                }
             ],
             "language": {
                 "emptyTable": "This collection is empty"
             }
-            });
+        });
     }
     else {
-         resourceTable = $("#collection-table").DataTable({
+        resourceTable = $("#collection-table").DataTable({
             "order": [[2, "asc"]],
             "paging": paging,
             "bLengthChange": false,
@@ -62,7 +62,7 @@ $(document).ready(function() {
             "language": {
                 "emptyTable": "This collection is empty"
             }
-            });
+        });
     }
 
     resourceTable = $("#collection-table-candidate").DataTable({
@@ -76,7 +76,7 @@ $(document).ready(function() {
             {
                 "targets": [6],     // <th>Remove</th>
                 "visible": false,
-            },
+            }
         ],
         "language": {
             "emptyTable": "No resource available in this table"
@@ -95,7 +95,6 @@ $(document).ready(function() {
             "emptyTable": "All deleted resources have been cleared"
         }
     });
-
 
     // Mark checkbox when row is clicked
     $("#collection-table-candidate td").click(onCollectionTableRowClick);
@@ -188,16 +187,9 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
     $("#remove-collection-btn-warning").show();
     var resource_id_list = [res_id];
 
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        Collection updated.\
-    </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Error! </strong> \
-        Collection failed to update.\
-    </div>';
+    const successMsg = "Collection updated.";
+    const errorMsg = "Collection failed to update.";
+
     $form = $('#collector-new');
     $.ajax({
         type: "POST",
@@ -216,7 +208,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
-                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
+                                customAlert("Collection Status:", "Sufficient to publish or make public","success", 3000);
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
@@ -224,7 +216,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                     }
                 }
                 updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
-                customAlert($alert_success, 3000);
+                customAlert("Success!", successMsg, "success", 3000);
 
                 // get row obj is being removed from collection
                 var removed_row_from_colletion = $('#collection-table').DataTable().row('#' + res_id);
@@ -240,7 +232,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                 $('#remove-collection-warning').modal('hide');
             }
             else {
-                customAlert($alert_error, 3000);
+                customAlert("Error!", errorMsg, "error", 3000);
                 console.log(json_response.msg);
                 $('#remove-collection-warning').modal('hide');
             }
@@ -250,7 +242,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
             document.body.style.cursor='default';
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            customAlert($alert_error, 3000);
+            customAlert("Error!", errorMsg, "error", 3000);
             $('#remove-collection-warning').modal('hide');
             $("#remove-collection-btn-ok").prop("disabled", false);
             $("#remove-collection-btn-cancel").prop("disabled", false);
@@ -274,16 +266,9 @@ function add_collection_item_ajax() {
             resource_id_list.push(this.id);
     });
 
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        Collection updated.\
-    </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Error! </strong> \
-        Collection failed to update.\
-    </div>';
+    const alert_success = "Collection updated.";
+    const alert_error = "Collection failed to update.";
+
     $form = $('#collector-new');
     $.ajax({
         type: "POST",
@@ -302,7 +287,7 @@ function add_collection_item_ajax() {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
-                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
+                                customAlert("Collection Status:", "Sufficient to publish or make public", "success", 3000);
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
@@ -310,7 +295,7 @@ function add_collection_item_ajax() {
                     }
                 }
                 updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
-                customAlert($alert_success, 3000);
+                customAlert("Success!", alert_success, "success", 3000);
 
                 $.each($("#collection-candidate .row-selector:checked"), function (index, chkbox) {
                     var res_id = chkbox.id;
@@ -325,11 +310,9 @@ function add_collection_item_ajax() {
                     var resID = $(this).attr("data-res-id");
                     remove_collection_item_popup(resID);
                 });
-
-
             }
             else {
-                customAlert($alert_error, 3000);
+                customAlert("Error!", alert_error, "error", 3000);
                 console.log(json_response.msg);
                 $('#collection-candidate').modal('hide');
             }
@@ -339,7 +322,7 @@ function add_collection_item_ajax() {
             document.body.style.cursor='default';
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-             customAlert($alert_error, 3000);
+            customAlert("Error!", alert_error, "error", 3000);
              $('#collection-candidate').modal('hide');
              $("#save-collection-btn-ok").prop("disabled", false);
              $("#save-collection-btn-cancel").prop("disabled", false);
@@ -390,16 +373,9 @@ function clear_deleted_resources_table_ajax(collection_id) {
 }
 
 function collection_coverages_calculate_ajax() {
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        Please click the "Save changes" button to save changes.\
-        </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Error! </strong> \
-        Calculate coverages failed.\
-        </div>';
+    const alert_success = 'Please click the "Save changes" button to save changes.';
+    const alert_error = 'Calculate coverages failed.';
+
     var res_id = $("#collection-res-id").val();
     var url = "/hsapi/_internal/calculate-collection-coverages/" + res_id + "/";
     $.ajax({
@@ -412,14 +388,14 @@ function collection_coverages_calculate_ajax() {
             json_response = result;
             if (json_response.status === 'success') {
                 updateCoverageMetadataTabpage(json_response.new_coverage_list, false, true);
-                customAlert($alert_success, 3000);
+                customAlert("Success!", alert_success, "success", 3000);
             }
             else {
-                customAlert($alert_error, 3000);
+                customAlert("Error!", alert_error, "error", 3000);
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-             customAlert($alert_error, 3000);
+             customAlert("Error!", alert_error, "error", 3000);
         }
     });
     //don't submit the form
@@ -504,8 +480,7 @@ function updateCoverageMetadataTabpage(new_coverage_list, change_coverage_metada
 
 var empty_value = '';
 
-function cleanSpatialCoverageUI()
-{
+function cleanSpatialCoverageUI() {
     document.getElementById('id_northlimit').value = empty_value;
     document.getElementById('id_eastlimit').value = empty_value;
     document.getElementById('id_southlimit').value = empty_value;
@@ -514,14 +489,12 @@ function cleanSpatialCoverageUI()
     document.getElementById('id_north').value = empty_value;
 }
 
-function cleanTemporalCoverageUI()
-{
+function cleanTemporalCoverageUI() {
     document.getElementById('id_start').value = empty_value;
     document.getElementById('id_end').value = empty_value;
 }
 
-function changeMetadataFormAction2Update(form_id, new_element_id_str)
-{
+function changeMetadataFormAction2Update(form_id, new_element_id_str) {
     if (new_element_id_str.length > 0 && new_element_id_str != "-1")
     {
         var url_old = $('#'+form_id).attr('action');
@@ -532,8 +505,7 @@ function changeMetadataFormAction2Update(form_id, new_element_id_str)
     }
 }
 
-function changeMetadataFormAction2Add(form_id)
-{
+function changeMetadataFormAction2Add(form_id) {
     var url_old = $('#'+form_id).attr('action');
     var new_part = '/coverage/add-metadata/';
     var url_new = url_old.replace(/\/coverage\/.+\/update-metadata\//, new_part);

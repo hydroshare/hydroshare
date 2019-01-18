@@ -193,6 +193,19 @@ function delete_irods_account() {
     });
 }
 
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
 $(document).ready(function () {
     // Change country first empty option to 'Unspecified'
     var option = $("select[name='country'] option:first-child");
@@ -250,7 +263,7 @@ $(document).ready(function () {
     });
 
     $(".btn-cancel-profile-edit").click(function () {
-        setViewMode();
+        location.reload();
     });
 
     // Abstract collapse toggle
@@ -319,6 +332,7 @@ $(document).ready(function () {
     $('.tagsinput').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
+      delimiter: [";"],
       autocomplete: {
         source: "/hsapi/dictionary/universities/",
         minLength: 3,
@@ -340,5 +354,11 @@ $(document).ready(function () {
         $(this).trigger(jQuery.Event('keypress', { which: 13 }));
       }
     });
+
+    if(getUrlVars()["edit"] == 'true'){
+        setEditMode();
+        // clear out the edit query params so edit mode isn't reopened on save
+        history.pushState('', document.title, window.location.pathname);
+    }
 });
 

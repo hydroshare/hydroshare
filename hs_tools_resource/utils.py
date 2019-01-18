@@ -1,8 +1,18 @@
+import imghdr
+import os
 from string import Template
 import logging
-from hs_core.hydroshare.utils import get_resource_types
+from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_types, get_resource_by_shortkey
+from django_irods.icommands import SessionException
+from hs_tools_resource.app_keys import irods_path_key, irods_resc_key, user_auth_flag_key
+
 
 logger = logging.getLogger(__name__)
+
+
+class WebAppLaunchException(Exception):
+    pass
 
 
 def parse_app_url_template(url_template_string, term_dict_list=()):
@@ -14,6 +24,9 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
     :param term_dict_list: a list of dict that stores pairs of Term Name and Term Value
     :return: the updated url string, or None if template contains undefined terms
     """
+
+    if not url_template_string:
+        return None
 
     new_url_string = url_template_string
     merged_term_dic = {}
@@ -28,6 +41,23 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
         new_url_string = None
     finally:
         return new_url_string
+
+
+def get_image_type(h):
+    """
+    Wraps the imghdr.what method to include a patch for identify Exif jpeg formats.
+    This is a documented bug that is not and will not be patched for python 2.7
+    https://bugs.python.org/issue16512
+    :param h: the byte array of an image file
+    :return: the image type as a string (i.e. jpeg, png... etc)
+    """
+    image_type = imghdr.what(None, h=h)
+    if not image_type:
+        if h.startswith(b'\xff\xd8'):
+            return 'jpeg'
+        return None
+    else:
+        return image_type
 
 
 def get_SupportedResTypes_choices():
@@ -58,3 +88,60 @@ def get_SupportedSharingStatus_choices():
             ['Discoverable', 'Discoverable'],
             ['Private', 'Private'],
             ]
+
+
+def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_shortkey, user):
+    """
+    When app resource has iRODS federation target path and target resource defined as
+    extended metadata, the resource needs to be pushed to the specified iRODS federation path
+    in the specified iRODS storage resource.
+    :param app_shortkey: shortkey of the app tool resource to be launched
+    :param res_shortkey: shortkey of the resource launching the app tool resource
+    :param user: requesting user
+    :return:
+    """
+    # check whether irods_path_key and irods_resc_key are added as extended metadata of the
+    # app tool resource, and if they are, push resource to specified iRODS target accordingly
+    filterd_app_obj = BaseResource.objects.filter(short_id=app_shortkey).filter(
+        extra_metadata__has_key=irods_path_key).filter(
+        extra_metadata__has_key=irods_resc_key).first()
+    if filterd_app_obj:
+        try:
+            res = get_resource_by_shortkey(res_shortkey)
+            app_res = get_resource_by_shortkey(app_shortkey)
+            user_auth_key_exist = BaseResource.objects.filter(short_id=app_shortkey).filter(
+                extra_metadata__has_key=user_auth_flag_key).first()
+            if user_auth_key_exist:
+                req_user_auth = True \
+                    if app_res.extra_metadata[user_auth_flag_key].lower() == 'true' \
+                    else False
+                if req_user_auth and not user.is_authenticated():
+                    err_msg = "Only authorized users can launch the web app tool - " \
+                              "Please sign in first."
+                    raise WebAppLaunchException(err_msg)
+
+            irods_path = app_res.extra_metadata[irods_path_key]
+            irods_resc = app_res.extra_metadata[irods_resc_key]
+            istorage = res.get_irods_storage()
+            src_path = res.root_path
+            # delete all temporary resources copied to this user's space before pushing resource
+            dest_path = os.path.join(irods_path, user.username)
+            if istorage.exists(dest_path):
+                istorage.delete(dest_path)
+            dest_path = os.path.join(dest_path, res_shortkey)
+            istorage.copyFiles(src_path, dest_path, irods_resc)
+        except SessionException as ex:
+            raise WebAppLaunchException(ex.stderr)
+        except Exception as ex:
+            raise WebAppLaunchException(ex.message)
+
+
+def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):
+    """
+    check whether there are extra work needed to be done when the app is launched.
+    :param app_shortkey: shortkey of the app tool resource to be launched
+    :param res_shortkey: shortkey of the resource launching the app tool resource
+    :param user: requesting user
+    :return:
+    """
+    copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_shortkey, user)

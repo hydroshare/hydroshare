@@ -128,8 +128,8 @@ class TestCreateResource(HSRESTTestCase):
         con_address = "11 River Drive, Logan UT-84321, USA"
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
-        con_identifiers = {'ORCID': 'http://orcid.org/mike_s',
-                           'ResearchGate': 'http://researchgate.org/mike_s'}
+        con_identifiers = {'ORCID': 'https://orcid.org/mike_s',
+                           'ResearchGateID': 'https://www.researchgate.net/mike_s'}
         metadata.append({'contributor': {'name': con_name,
                                          'organization': con_org, 'email': con_email,
                                          'address': con_address, 'phone': con_phone,
@@ -143,8 +143,8 @@ class TestCreateResource(HSRESTTestCase):
         cr_address = "101 Clarson Ave, Provo UT-84321, USA"
         cr_phone = '801-567=9090'
         cr_homepage = 'http://byu.edu/homepage/002'
-        cr_identifiers = {'ORCID': 'http://orcid.org/john_smith',
-                          'ResearchGate': 'http://researchgate.org/john_smith'}
+        cr_identifiers = {'ORCID': 'https://orcid.org/john_smith',
+                          'ResearchGateID': 'https://www.researchgate.net/john_smith'}
         metadata.append({'creator': {'name': cr_name, 'organization': cr_org,
                                      'email': cr_email, 'address': cr_address,
                                      'phone': cr_phone, 'homepage': cr_homepage,
@@ -250,8 +250,8 @@ class TestCreateResource(HSRESTTestCase):
         title = 'My Test resource'
         metadata = []
         # originalcover
-        value = {"northlimit": '12', "projection": "transverse_mercator", "units": "meter",
-                 "southlimit": '10', "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": 12, "projection": "transverse_mercator", "units": "meter",
+                 "southlimit": 10, "eastlimit": 23, "westlimit": 2}
 
         metadata.append({'originalcoverage': {'value': value,
                                               'projection_string_text': '+proj=tmerc +lon_0=-111.0 '
