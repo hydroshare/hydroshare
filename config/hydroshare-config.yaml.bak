@@ -1,25 +1,23 @@
+<<<<<<< HEAD
+=======
 ### Local Configuration Variables ###
 HS_PATH: /home/hydro/hydroshare
-HOST_SSL_DIR: /home/hydro/hydroshare/nginx/cert-files
-HS_DATABASE: pg.deploy.sql
+HOST_SSL_DIR: /home/hydro/hs-certs
+HS_DATABASE: pg.development.sql
 HS_LOG_FILES: /home/hydro/hydroshare/log
-HS_SERVICE_UID: 214401701
-HS_SERVICE_GID: 214401702
+HS_SERVICE_UID: 1000
+HS_SERVICE_GID: 1000
 
 ### Deployment Options ###
-USE_NGINX: true
-USE_SSL: true
+USE_NGINX: false
+USE_SSL: false
 USE_SECURITY: false
 USE_HTTP_AUTH: false
 
-### nginx Configuration Variables ###
-FQDN_OR_IP: dev-hs-3.cuahsi.org
-NGINX_DIR: /home/hydro/hydroshare/nginx
-
 ### SSL Configuration Variables ###
 SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
-SSL_CERT_FILE: cuahsi.crt
-SSL_KEY_FILE: cuahsi.key
+SSL_CERT_FILE: hydrodev-vb.example.org.cert
+SSL_KEY_FILE: hydrodev-vb.example.org.key
 
 ### NGINX Build Variables ###
 
@@ -55,4 +53,5 @@ IRODS_USER_URI: irods-user
 IRODS_CACHE_URI: irods-cache
 
 ### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###
- 
+
+>>>>>>> develop
