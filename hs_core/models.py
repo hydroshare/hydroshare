@@ -1769,6 +1769,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         # avoid import loop
         from hs_core.views.utils import run_script_to_update_hyrax_input_files
+        from hs_core.signals import post_raccess_change
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -1798,6 +1799,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             if value:  # can't be public without being discoverable
                 self.raccess.discoverable = value
             self.raccess.save()
+            post_raccess_change.send(sender=self, resource=self)
 
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:

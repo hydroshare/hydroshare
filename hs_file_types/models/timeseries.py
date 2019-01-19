@@ -17,6 +17,7 @@ from dominate.tags import div, legend, strong, form, select, option, hr, button,
 
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
+from hs_core.signals import post_add_timeseries_aggregation
 
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
 from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, \
@@ -630,6 +631,11 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                                        reset_title=reset_title)
 
                 file_type_success = True
+                post_add_timeseries_aggregation.send(
+                    sender=AbstractLogicalFile,
+                    resource=resource,
+                    file=logical_file
+                )
             except Exception as ex:
                 msg = msg.format(ex.message)
                 log.exception(msg)

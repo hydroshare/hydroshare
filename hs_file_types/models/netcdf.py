@@ -19,6 +19,7 @@ from dominate.tags import div, legend, form, button, p, textarea, strong, input
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.signals import post_add_netcdf_aggregation
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -514,6 +515,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                            folder_created=aggregation_folder_created,
                                            res_files_to_delete=res_files_to_delete)
                     file_type_success = True
+                    post_add_netcdf_aggregation.send(
+                        sender=AbstractLogicalFile,
+                        resource=resource,
+                        file=logical_file
+                    )
                 except Exception as ex:
                     msg = msg.format(ex.message)
                     log.exception(msg)

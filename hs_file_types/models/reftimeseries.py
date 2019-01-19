@@ -17,6 +17,7 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
+from hs_core.signals import post_add_reftimeseries_aggregation
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
@@ -819,6 +820,11 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                                        res_files_to_delete=[])
 
                 log.info("RefTimeseries aggregation type was created.")
+                post_add_reftimeseries_aggregation.send(
+                    sender=AbstractLogicalFile,
+                    resource=resource,
+                    file=logical_file
+                )
             except Exception as ex:
                 msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                       "type. Error:{}"

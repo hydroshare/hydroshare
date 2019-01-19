@@ -17,6 +17,7 @@ from dominate.tags import legend, table, tbody, tr, th, div
 from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
+from hs_core.signals import post_add_geofeature_aggregation
 
 
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
@@ -348,6 +349,11 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                        reset_title=reset_title)
 
                 file_type_success = True
+                post_add_geofeature_aggregation.send(
+                    sender=AbstractLogicalFile,
+                    resource=resource,
+                    file=logical_file
+                )
             except Exception as ex:
                 msg = "GeoFeature aggregation type. Error when creating aggregation type. Error:{}"
                 msg = msg.format(ex.message)

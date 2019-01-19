@@ -22,6 +22,7 @@ from dominate.tags import div, legend, form, button
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import ResourceFile, CoreMetaData
+from hs_core.signals import post_add_raster_aggregation
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
@@ -415,6 +416,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                            reset_title=True)
 
                     file_type_success = True
+                    post_add_raster_aggregation.send(
+                        sender=AbstractLogicalFile,
+                        resource=resource,
+                        file=logical_file
+                    )
                 except Exception as ex:
                     msg = msg.format(ex.message)
                     log.exception(msg)
