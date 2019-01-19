@@ -79,6 +79,8 @@ def data_store_structure(request):
 
     files = []
     dirs = []
+    # folder path relative to 'data/contents/' needed for the UI
+    folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
@@ -115,7 +117,7 @@ def data_store_structure(request):
                      'folder_aggregation_name': folder_aggregation_name,
                      'folder_aggregation_id': folder_aggregation_id,
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                     'folder_short_path': os.path.join(store_path[len("data/contents/"):], d_pk)})  # this is NOT short path
+                     'folder_short_path': os.path.join(folder_path, d_pk)})
 
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
