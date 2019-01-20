@@ -177,13 +177,14 @@
 }
 
 .fb-view-grid .fb-stack-url .fa-external-link, .dz-details .fb-stack-url .fa-external-link {
-    top: 4px;
-    font-size: 19px;
+    top: 7px;
+    font-size: 16px;
 }
 
 .fb-view-list .fb-stack-url .fa-external-link {
-    top: -4px;
-    font-size: 11px;
+    top: -2px;
+    font-size: 9px;
+    left: -2px;
 }
 
 .fb-view-grid .fb-stack-css [data-icon], .dz-details .fb-stack-css [data-icon] {
