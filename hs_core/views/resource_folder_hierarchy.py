@@ -48,25 +48,11 @@ def data_store_structure(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     store_path = request.POST.get('store_path', None)
-    if store_path is None:
-        logger.error("store_path not included for resource {}".format(res_id))
-        return HttpResponse('Bad request - store_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
-    store_path = str(store_path).strip()
-    if store_path.startswith('/'):
-        logger.error("store_path must not start with '/' for resource {}".format(res_id))
-        return HttpResponse("Bad request - store_path must not start with '/'",
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    if store_path.find('/../') >= 0 or store_path.endswith('/..'):
-        logger.error("store_path cannot contain .. for resource {}".format(res_id))
-        return HttpResponse('Bad request - store_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not store_path:
-        store_path = "data/contents"
-    elif not store_path.startswith('data/contents'):
-        store_path = os.path.join('data', 'contents', store_path)
+    try:
+        store_path = _validate_path(store_path, 'store_path', check_path_empty=False)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
     directory_in_irods = resource.get_irods_path(store_path)
@@ -191,7 +177,7 @@ def data_store_folder_zip(request, res_id=None):
     json object that holds the created zip file name if it succeeds, and an empty string
     if it fails. The AJAX request must be a POST request with input data passed in for
     res_id, input_coll_path, output_zip_file_name, and remove_original_after_zip where
-    input_coll_path is the relative sub-collection path under res_id collection to be zipped,
+    input_coll_path is the relative path under res_id/data/contents to be zipped,
     output_zip_file_name is the file name only with no path of the generated zip file name,
     and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
     whether original files will be deleted after zipping.
@@ -210,21 +196,11 @@ def data_store_folder_zip(request, res_id=None):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     input_coll_path = resolve_request(request).get('input_coll_path', None)
-    if input_coll_path is None:
-        return HttpResponse('Bad request - input_coll_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
-    input_coll_path = str(input_coll_path).strip()
-    if not input_coll_path:
-        return HttpResponse('Bad request - input_coll_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    if not input_coll_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - input_coll_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if input_coll_path.find('/../') >= 0 or input_coll_path.endswith('/..'):
-        return HttpResponse('Bad request - input_coll_path must not contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        input_coll_path = _validate_path(input_coll_path, 'input_coll_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
@@ -294,22 +270,11 @@ def data_store_folder_unzip(request, **kwargs):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     zip_with_rel_path = request.POST.get('zip_with_rel_path', kwargs.get('zip_with_rel_path'))
-    if zip_with_rel_path is None:
-        return HttpResponse('Bad request - zip_with_rel_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    zip_with_rel_path = str(zip_with_rel_path).strip()
-    if not zip_with_rel_path:
-        return HttpResponse('Bad request - zip_with_rel_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    # security checks deny illicit requests
-    if not zip_with_rel_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - zip_with_rel_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-    if zip_with_rel_path.find('/../') >= 0 or zip_with_rel_path.endswith('/..'):
-        return HttpResponse('Bad request - zip_with_rel_path must not contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        zip_with_rel_path = _validate_path(zip_with_rel_path, 'zip_with_rel_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
@@ -347,8 +312,7 @@ def data_store_folder_unzip_public(request, pk, pathname):
     :return HttpResponse:
     """
 
-    sys_pathname = 'data/contents/%s' % pathname
-    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
 
 
 @api_view(['POST'])
@@ -367,12 +331,15 @@ def data_store_add_reference(request):
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
-    if not curr_path:
-        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+
     if not ref_name:
         return HttpResponseBadRequest('Must have ref_name included in the POST data')
     if not ref_url:
         return HttpResponseBadRequest('Must have ref_url included in the POST data')
+    try:
+        curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         res, _, _ = authorize(request, res_id,
@@ -404,12 +371,16 @@ def data_store_edit_reference_url(request):
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
-    if not curr_path:
-        return HttpResponseBadRequest('Must have curr_path included in the POST data')
+
     if not url_filename:
         return HttpResponseBadRequest('Must have url_filename included in the POST data')
     if not new_ref_url:
         return HttpResponseBadRequest('Must have new_ref_url included in the POST data')
+
+    try:
+        curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         res, _, _ = authorize(request, res_id,
@@ -433,8 +404,8 @@ def data_store_create_folder(request):
     resource backend store. It is invoked by an AJAX call and returns json object that has the
     relative path of the new folder created if succeeds, and return empty string if fails. The
     AJAX request must be a POST request with input data passed in for res_id and folder_path
-    where folder_path is the relative path for the new folder to be created under
-    res_id collection/directory.
+    where folder_path is the relative path to res_id/data/contents for the new folder to be
+    created under res_id collection/directory.
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
@@ -450,21 +421,11 @@ def data_store_create_folder(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
-    if folder_path is None:
-        return HttpResponse('Bad request - folder_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
-    folder_path = str(folder_path).strip()
-    if not folder_path:
-        return HttpResponse('Bad request - folder_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    if not folder_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - folder_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
-        return HttpResponse('Bad request - folder_path must not contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        folder_path = _validate_path(folder_path, 'folder_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         create_folder(res_id, folder_path)
@@ -487,8 +448,8 @@ def data_store_remove_folder(request):
     resource backend store. It is invoked by an AJAX call and returns json object that include a
     status of 'success' if succeeds, and HttpResponse of status code of 403, 400, or 500 if fails.
     The AJAX request must be a POST request with input data passed in for res_id and folder_path
-    where folder_path is the relative path for the folder to be removed under
-    res_id collection/directory.
+    where folder_path is the relative path (relative to res_id/data/contents) for the folder to
+    be removed under res_id collection/directory.
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
@@ -504,21 +465,11 @@ def data_store_remove_folder(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
-    if folder_path is None:
-        return HttpResponse('Bad request - folder_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
-    folder_path = str(folder_path).strip()
-    if not folder_path:
-        return HttpResponse('Bad request - folder_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    if not folder_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - folder_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
-        return HttpResponse('Bad request - folder_path must not contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        folder_path = _validate_path(folder_path, 'folder_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         remove_folder(user, res_id, folder_path)
@@ -540,8 +491,9 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
     resource backend store. It is invoked by an AJAX call and returns json object that has the
     relative path of the target file or folder being moved to if succeeds, and return empty string
     if fails. The AJAX request must be a POST request with input data passed in for res_id,
-    source_path, and target_path where source_path and target_path are the relative paths for the
-    source and target file or folder under res_id collection/directory.
+    source_path, and target_path where source_path and target_path are the relative paths
+    (relative to path res_id/data/contents) for the source and target file or folder under
+    res_id collection/directory.
     """
     res_id = request.POST.get('res_id', res_id)
     if res_id is None:
@@ -558,29 +510,11 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
 
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
-    if src_path is None or tgt_path is None:
-        return HttpResponse('Bad request - src_path or tgt_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
-    src_path = str(src_path).strip()
-    tgt_path = str(tgt_path).strip()
-    if not src_path or not tgt_path:
-        return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not src_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - src_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-        return HttpResponse('Bad request - src_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - tgt_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Bad request - tgt_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        src_path = _validate_path(src_path, 'src_path')
+        tgt_path = _validate_path(tgt_path, 'tgt_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
@@ -613,8 +547,8 @@ def data_store_move_to_folder(request, pk=None):
     It is invoked by an AJAX call and returns a json object that has the relative paths of
     the target files or folders to which files have been moved. The AJAX request must be a POST
     request with input data passed in for source_paths and target_path where source_paths
-    and target_path are the relative paths for the source and target file or folder in the
-    res_id file directory.
+    and target_path are the relative paths (relative to path res_id/data/contents) for the source
+    and target file or folder in the res_id file directory.
 
     This routine is **specifically** targeted at validating requests from the UI.
     Thus it is much more limiting than a general purpose REST responder.
@@ -638,27 +572,14 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
-    if src_paths is None or tgt_path is None:
-        return HttpResponse('Bad request - src_paths or tgt_path is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
 
-    tgt_path = str(tgt_path).strip()
-    if not tgt_path:
-        return HttpResponse('Target directory not specified',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    # protect against common hacking attacks
-    if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Target directory path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Bad request - tgt_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
 
-    # strip trailing slashes (if any)
-    tgt_path = tgt_path.rstrip('/')
     tgt_short_path = tgt_path[len('data/contents/'):]
     tgt_storage_path = os.path.join(resource.root_path, tgt_path)
 
@@ -668,19 +589,12 @@ def data_store_move_to_folder(request, pk=None):
 
     src_paths = json.loads(src_paths)
 
-    for i in range(len(src_paths)):
-        src_paths[i] = str(src_paths[i]).strip().rstrip('/')
-
     # protect against common hacking attacks
-    for src_path in src_paths:
-
-        if not src_path.startswith('data/contents/'):
-            return HttpResponse('Paths to be moved must start with data/contents/',
-                                status=status.HTTP_400_BAD_REQUEST)
-
-        if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-            return HttpResponse('Paths to be moved cannot contain /../',
-                                status=status.HTTP_400_BAD_REQUEST)
+    for index, src_path in enumerate(src_paths):
+        try:
+            src_paths[index] = _validate_path(src_path, 'src_paths')
+        except ValidationError as ex:
+            return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
     skipped_tgt_paths = []
@@ -751,7 +665,8 @@ def data_store_rename_file_or_folder(request, pk=None):
     This is invoked by an AJAX call in the UI. It returns a json object that has the
     relative path of the target file or folder that has been renamed. The AJAX request
     must be a POST request with input data for source_path and target_path, where source_path
-    and target_path are the relative paths for the source and target file or folder.
+    and target_path are the relative paths (relative to path res_id/data/contents) for the
+    source and target file or folder.
 
     This routine is **specifically** targeted at validating requests from the UI.
     Thus it is much more limiting than a general purpose REST responder.
@@ -771,37 +686,17 @@ def data_store_rename_file_or_folder(request, pk=None):
 
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
-    if src_path is None or tgt_path is None:
-        return HttpResponse('Source or target name is not specified',
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        src_path = _validate_path(src_path, 'src_path')
+        tgt_path = _validate_path(tgt_path, 'tgt_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-    if not src_path or not tgt_path:
-        return HttpResponse('Source or target name is empty',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    src_path = str(src_path).strip()
-    tgt_path = str(tgt_path).strip()
     src_folder, src_base = os.path.split(src_path)
     tgt_folder, tgt_base = os.path.split(tgt_path)
 
     if src_folder != tgt_folder:
         return HttpResponse('Rename: Source and target names must be in same folder',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not src_path.startswith('data/contents/'):
-        return HttpResponse('Rename: Source path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-        return HttpResponse('Rename: Source path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Rename: Target path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Rename: Target path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
@@ -858,3 +753,26 @@ def data_store_rename_file_or_folder(request, pk=None):
         json.dumps(return_object),
         content_type='application/json'
     )
+
+
+def _validate_path(path, path_param_name, check_path_empty=True):
+    if path is None:
+        raise ValidationError('Bad request - {} is not included in the request'.format(
+            path_param_name))
+
+    # strip trailing slashes (if any)
+    path = str(path).strip().rstrip('/')
+    if not path and check_path_empty:
+        raise ValidationError('Bad request - {} cannot be empty'.format(path_param_name))
+
+    if path.startswith('/'):
+        raise ValidationError("Bad request - {} must not start with '/'".format(path_param_name))
+
+    if path.find('/../') >= 0 or path.endswith('/..'):
+        raise ValidationError('Bad request - {} must not contain /../'.format(path_param_name))
+
+    if not path:
+        path = "data/contents"
+    elif not path.startswith('data/contents/'):
+        path = os.path.join('data', 'contents', path)
+    return path
