@@ -931,7 +931,9 @@ function setBreadCrumbs(path) {
         }
 
         // Prepend root folder
-        crumbs.prepend('<li data-path=""><i class="fa fa-folder-o" aria-hidden="true"></i><span> contents</span></li>');
+        crumbs.prepend('<li data-path="">' +
+            '<i class="fa fa-folder-o" aria-hidden="true"></i>' +
+            '<span> contents</span></li>');
 
         // Bind click events
         $("#fb-bread-crumbs li:not(.active)").click(function () {
@@ -945,7 +947,9 @@ function setBreadCrumbs(path) {
         });
     }
     else {
-        crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> contents</span></li>');
+        crumbs.prepend('<li class="active">' +
+            '<i class="fa fa-folder-open-o" aria-hidden="true"></i><span> contents</span>' +
+            '</li>');
     }
 }
 
