@@ -1895,12 +1895,14 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() !== "") {
-            var currentPath = $("#hs-file-browser").attr("data-current-path");
-            var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-            var fileName = $("#txtZipName").val() + ".zip";
+            let currentPath = $("#hs-file-browser").attr("data-current-path");
+            let folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            let fileName = $("#txtZipName").val() + ".zip";
 
-            var calls = [];
-            calls.push(zip_irods_folder_ajax_submit(resID, currentPath + "/" + folderName, fileName));
+            let calls = [];
+            let path = currentPath !== "" ? currentPath + "/" + folderName : folderName;
+
+            calls.push(zip_irods_folder_ajax_submit(resID, path, fileName));
 
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
