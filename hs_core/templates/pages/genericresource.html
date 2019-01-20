@@ -312,7 +312,24 @@
                                 </em>
                             </div>
                         </div>
+                    {% endif %}
 
+                    <div id="ref_file_note" class="alert alert-warning space-top" role="alert"
+                            {% if not show_web_reference_note %} hidden {% endif %}>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <div class="flex">
+                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                            <em>
+                                This resource contains links to external content. Linked content is
+                                NOT stored in HydroShare, and we can't guarantee its availability, quality, or
+                                security.
+                            </em>
+                        </div>
+                    </div>
+
+                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                         <div id="fb-alerts">
                             <div class="alert alert-warning alert-dismissible" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -333,20 +350,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    <div id="ref_file_note" class="alert alert-warning space-top" role="alert"
-                            {% if not show_web_reference_note %} hidden {% endif %}>
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                        <div class="flex">
-                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                            <em>
-                                This resource contains links to external content. Linked content is
-                                NOT stored in HydroShare, and we can't guarantee its availability, quality, or
-                                security.
-                            </em>
-                        </div>
-                    </div>
+
                     {% if page.perms.change and resource_edit_mode %}
                         {% if file_type_error %}
                             <div class="alert alert-danger alert-dismissible" role="alert">

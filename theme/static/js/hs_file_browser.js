@@ -1564,13 +1564,17 @@ $(document).ready(function () {
             var calls = [];
             calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
 
-            $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
-            });
+            // Disable the Cancel button until request has finished
+            $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
 
-            $.when.apply($, calls).fail(function () {
+            function afterRequest() {
                 refreshFileBrowser();
-            });
+                $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
+                $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            }
+
+            $.when.apply($, calls).done(afterRequest);
+            $.when.apply($, calls).fail(afterRequest);
         }
         return false;
     });

@@ -1392,7 +1392,9 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
             $("#ref_file_note").show();
         },
         error: function(xhr, errmsg, err){
-            display_error_message('Add reference content Failed', xhr.responseText);
+            // Response text is not yet user friendly enough to display in UI
+            display_error_message('Error', "Failed to add reference content.");
+            $('#add-reference-url-dialog').modal('hide');
         }
     });
 }

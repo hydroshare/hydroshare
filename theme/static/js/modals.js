@@ -47,6 +47,18 @@ $(document).on("click", ".btn-change-share-permission", function () {
 $(document).ready(function() {
     var resID = $("#resID").val();
 
+    var btnDisabledTexts = {
+        'delete': 'Deleting...',
+        'add content': 'Adding Content...',
+        'save changes': 'Saving Changes...',
+    };
+
+    function setButtonDisabledText(btn) {
+        let buttonText = btn.text().toLowerCase().trim();
+        btn.text(btnDisabledTexts[buttonText] !== null ? btnDisabledTexts[buttonText] : "Saving Changes...");
+        btn.addClass("disabled");
+    }
+
     $("#btn-replicate").click(function() {
         rep_res_to_irods_user_zone_ajax_submit(resID);
     });
@@ -67,29 +79,14 @@ $(document).ready(function() {
 
     // Disables the button after it has been clicked and its closest form was found to be valid
     $(".btn-disable-after-valid").click(function () {
-        let form = $(this).closest("form");
-        if (form[0].checkValidity()) {
-            if ($(this).text().trim() == "Delete") {
-                $(this).text("Deleting...");
-            }
-            else {
-                $(this).text("Saving Changes...");
-            }
-
-            $(this).addClass("disabled");
+        if ($(this).closest("form")[0].checkValidity()) {
+            setButtonDisabledText($(this));
         }
     });
 
     // Disables the button after it is clicked
     $(".btn-disable-after").click(function () {
-        if ($(this).text().trim() == "Delete") {
-            $(this).text("Deleting...");
-        }
-        else {
-            $(this).text("Saving Changes...");
-        }
-
-        $(this).addClass("disabled");
+        setButtonDisabledText($(this));
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
