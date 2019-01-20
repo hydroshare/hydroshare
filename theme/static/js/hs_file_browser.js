@@ -491,13 +491,30 @@ function bindFileBrowserItemEvents() {
                 }
 
                 var currentPath = $("#hs-file-browser").attr("data-current-path");
-                var destFolderPath = currentPath + "/" + destName;
-
+                var destFolderPath;
+                if(currentPath === "") {
+                    destFolderPath = destName;
+                }
+                else {
+                    destFolderPath = currentPath + "/" + destName;
+                }
                 var calls = [];
                 var callSources = [];
                 for (var i = 0; i < sources.length; i++) {
-                    var sourcePath = currentPath + "/" + $(sources[i]).text();
-                    var destPath = destFolderPath + "/" + $(sources[i]).text();
+                    var sourcePath;
+                    var destPath;
+                    if(currentPath === "") {
+                        sourcePath = $(sources[i]).text();
+                    }
+                    else {
+                        sourcePath = currentPath + "/" + $(sources[i]).text();
+                    }
+                    if(destFolderPath === "") {
+                        destPath = $(sources[i]).text();
+                    }
+                    else {
+                        destPath = destFolderPath + "/" + $(sources[i]).text();
+                    }
                     if (sourcePath !== destPath) {
                         callSources.push(sourcePath);
                     }
@@ -1511,10 +1528,16 @@ $(document).ready(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $("#txtFolderName").val();
+        var newFolderPath;
         if (folderName) {
             var calls = [];
-            // TODO: remove "data/contents" once it is removed from the back end.
-            calls.push(create_irods_folder_ajax_submit(resID, "data/contents/" + currentPath + "/" + folderName));
+            if(currentPath === ""){
+                newFolderPath = folderName;
+            }
+            else {
+                newFolderPath = currentPath + "/" + folderName;
+            }
+            calls.push(create_irods_folder_ajax_submit(resID, newFolderPath));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1618,7 +1641,12 @@ $(document).ready(function () {
 
         for (var i = 0; i < selection.length; i++) {
             var itemName = $(selection[i]).children(".fb-file-name").text();
-            sourcePaths.push(currentPath + "/" + itemName);
+            if(currentPath === "") {
+                sourcePaths.push(itemName);
+            }
+            else {
+                sourcePaths.push(currentPath + "/" + itemName);
+            }
 
             $(selection[i]).addClass("fb-cutting");
         }
@@ -1636,9 +1664,14 @@ $(document).ready(function () {
     function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var targetPath;
+        if(currentPath === "") {
+            targetPath = folderName;
+        }
+        else {
+            targetPath = currentPath + "/" + folderName;
+        }
 
-        targetPath = currentPath + "/" + folderName;
-        
         var calls = [];
         var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
         calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
@@ -1677,7 +1710,14 @@ $(document).ready(function () {
                 }
                 else {  // item is a folder
                     var folderName = $(deleteList[i]).children(".fb-file-name").text();
-                    var folder_path = currentPath + "/" + folderName;
+                    var folder_path;
+                    if(currentPath === ""){
+                        folder_path = folderName;
+                    }
+                    else {
+                        folder_path = currentPath + "/" + folderName;
+                    }
+
                     calls.push(delete_folder_ajax_submit(resID, folder_path));
                 }
             }
@@ -1735,7 +1775,17 @@ $(document).ready(function () {
         }
 
         var calls = [];
-        calls.push(rename_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
+        var oldNamePath;
+        var newNamePath;
+        if(currentPath === "") {
+            oldNamePath = oldName;
+            newNamePath = newName;
+        }
+        else {
+            oldNamePath = currentPath + "/" + oldName;
+            newNamePath = currentPath + "/" + newName;
+        }
+        calls.push(rename_file_or_folder_ajax_submit(resID, oldNamePath, newNamePath));
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
