@@ -1,31 +1,11 @@
 from django.core.management.base import BaseCommand
-from hs_core.models import BaseResource
-from hs_core.hydroshare.features import Features
 from django.contrib.auth.models import Group
-from hs_explore.utils import Utils
-from datetime import datetime
-from pprint import pprint
-import sys
-from collections import defaultdict
-import pandas as pd
-from django.contrib.auth.models import User
-from hs_core.models import BaseResource
-from scipy import sparse
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
-import numpy.matlib
-from sklearn.metrics import jaccard_similarity_score
 from hs_core.search_indexes import BaseResourceIndex
-from scipy.spatial import distance
 import time
-from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
-from django.db.models import Q
+from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
-    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair, \
-    PropensityPrefToPair, PropensityPreferences, OwnershipPrefToPair, OwnershipPreferences, UserInteractedResources, UserNeighbors
-import re
-from hs_tracking.models import Variable
+    GroupPreferences, GroupPrefToPair, PropensityPrefToPair, PropensityPreferences, \
+    UserInteractedResources, UserNeighbors
 from haystack.query import SearchQuerySet, SQ
 
 
@@ -52,7 +32,8 @@ def recommended_resources(target_user, out, target_res_preferences_set, target_j
         res_id = res.short_id
         if len(subjects) == 0:
             continue
-        intersection_cardinality = len(set.intersection(*[target_res_preferences_set, set(subjects)]))
+        intersection_cardinality = len(set.intersection(*[target_res_preferences_set,
+                                                        set(subjects)]))
         union_cardinality = len(set.union(*[target_res_preferences_set, set(subjects)]))
         js = intersection_cardinality/float(union_cardinality)
         if res_id not in target_jaccard_sim:
@@ -81,12 +62,14 @@ def recommended_groups(target_user, target_group_preferences_set):
         if (len(group_subjects) == 0):
             continue
 
-        intersection_cardinality = len(set.intersection(*[target_group_preferences_set, group_subjects]))
+        intersection_cardinality = len(set.intersection(*[target_group_preferences_set,
+                                                        group_subjects]))
         union_cardinality = len(set.union(*[target_group_preferences_set, group_subjects]))
         js = intersection_cardinality/float(union_cardinality)
         jaccard_groups_sim[gp.group.name] = js
 
-    for key, value in sorted(jaccard_groups_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+    for key, value in sorted(jaccard_groups_sim.iteritems(),
+                                key=lambda (k, v): (v, k), reverse=True)[:5]:
         if value - 0 < 0.000001:
             break
         candidate_group = Group.objects.get(name=key)
@@ -108,6 +91,7 @@ def recommended_groups(target_user, target_group_preferences_set):
         if value != 0:
             print("group {}:, {}".format(candidate_group.name, str(value)))
 
+
 def recommended_users(target_user, target_user_preferences_set):
     jaccard_users_sim = {}
     try:
@@ -121,10 +105,11 @@ def recommended_users(target_user, target_user_preferences_set):
         try:
             neighbor_up = PropensityPreferences.objects.get(user=neighbor)
             neighbor_pref = neighbor_up.preferences.all()
-            neighbor_propensity_preferences = PropensityPrefToPair.objects.filter(prop_pref=neighbor_up, 
-                                                                                  pair__in=neighbor_pref, 
-                                                                                  state='Seen', 
-                                                                                  pref_for='User')
+            neighbor_propensity_preferences = PropensityPrefToPair.objects.\
+                                                        filter(prop_pref=neighbor_up,
+                                                               pair__in=neighbor_pref,
+                                                               state='Seen',
+                                                               pref_for='User')
             neighbor_subjects = set()
             for p in neighbor_propensity_preferences:
                 if p.pair.key == 'subject':
@@ -133,7 +118,8 @@ def recommended_users(target_user, target_user_preferences_set):
             if (len(neighbor_subjects) == 0):
                 continue
 
-            intersection_cardinality = len(set.intersection(*[target_user_preferences_set, neighbor_subjects]))
+            intersection_cardinality = len(set.intersection(*[target_user_preferences_set,
+                                                              neighbor_subjects]))
             union_cardinality = len(set.union(*[target_user_preferences_set, neighbor_subjects]))
             js = intersection_cardinality/float(union_cardinality)
             jaccard_users_sim[neighbor.username] = js
@@ -142,17 +128,19 @@ def recommended_users(target_user, target_user_preferences_set):
     if len(jaccard_users_sim) == 0:
         return
 
-    for key, value in sorted(jaccard_users_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+    for key, value in sorted(jaccard_users_sim.iteritems(),
+                                key=lambda (k, v): (v, k), reverse=True)[:5]:
         if value - 0 < 0.000001:
             break
         candidate_user = user_from_id(key)
         r2 = RecommendedUser.recommend(target_user, candidate_user, round(value, 4))
         neighbor_up = PropensityPreferences.objects.get(user__username=key)
         neighbor_pref = neighbor_up.preferences.all()
-        neighbor_propensity_preferences = PropensityPrefToPair.objects.filter(prop_pref=neighbor_up, 
-                                                                              pair__in=neighbor_pref, 
-                                                                              state='Seen', 
-                                                                              pref_for='User')
+        neighbor_propensity_preferences = PropensityPrefToPair.objects.\
+                                                        filter(prop_pref=neighbor_up,
+                                                               pair__in=neighbor_pref,
+                                                               state='Seen',
+                                                               pref_for='User')
         neighbor_subjects = set()
         for p in neighbor_propensity_preferences:
             if p.pair.key == 'subject':
@@ -185,19 +173,33 @@ class Command(BaseCommand):
             target_user = user_from_id(target_username)
             all_p = pp.preferences.all()
 
-            resource_preferences = PropensityPrefToPair.objects.filter(prop_pref=pp, pair__in=all_p, state='Seen', pref_for='Resource')
-            user_preferences = PropensityPrefToPair.objects.filter(prop_pref=pp, pair__in=all_p, state='Seen', pref_for='User')
-            group_preferences = PropensityPrefToPair.objects.filter(prop_pref=pp, pair__in=all_p, state='Seen', pref_for='Group')            
-            
+            resource_preferences = PropensityPrefToPair.objects.\
+                                                filter(prop_pref=pp,
+                                                       pair__in=all_p,
+                                                       state='Seen',
+                                                       pref_for='Resource')
+            user_preferences = PropensityPrefToPair.objects.\
+                                                filter(prop_pref=pp,
+                                                       pair__in=all_p,
+                                                       state='Seen',
+                                                       pref_for='User')
+            group_preferences = PropensityPrefToPair.objects.\
+                                                filter(prop_pref=pp,
+                                                       pair__in=all_p,
+                                                       state='Seen',
+                                                       pref_for='Group')
+
             target_interacted_resources = UserInteractedResources.objects.get(user=target_user)
 
             target_res_preferences_set = set()
-            target_ownership_resource_preferences_set = set()
+            target_ownership_res_preferences_set = set()
             target_user_preferences_set = set()
             target_group_preferences_set = set()
             target_interacted_res_set = set()
 
-            if (resource_preferences.count() == 0 and user_preferences.count() == 0 and group_preferences.count() == 0):
+            if (resource_preferences.count() == 0 and
+                        user_preferences.count() == 0 and
+                        group_preferences.count() == 0):
                 continue
             if target_interacted_resources.interacted_resources.count() == 0:
                 continue
@@ -214,7 +216,6 @@ class Command(BaseCommand):
                 if p.pair.key == 'subject':
                     target_group_preferences_set.add(p.pair.value)
 
-
             for r in target_interacted_resources.interacted_resources.all():
                 target_interacted_res_set.add(r.short_id)
 
@@ -224,33 +225,47 @@ class Command(BaseCommand):
             out = out.exclude(short_id__in=target_interacted_res_short_ids)
 
             target_res_jaccard_sim = {}
-            recommended_resources(target_user, out, target_res_preferences_set, target_res_jaccard_sim)
+            recommended_resources(target_user, out,
+                                        target_res_preferences_set,
+                                        target_res_jaccard_sim)
             '''
             try:
                 op = OwnershipPreferences.objects.get(user=target_user)
                 all_op = op.preferences.all()
-                ownership_resource_preferences = OwnershipPrefToPair.objects.filter(own_pref=op, pair__in=all_op, state='Seen', pref_for='Resource')
-                #target_ownership_resource_preferences_set = set()
+                ownership_resource_preferences = OwnershipPrefToPair.objects.\
+                                                        filter(own_pref=op,
+                                                               pair__in=all_op,
+                                                               state='Seen',
+                                                               pref_for='Resource')
+                # target_ownership_res_preferences_set = set()
                 for p in ownership_resource_preferences:
                     if p.pair.key == 'subject':
-                        target_ownership_resource_preferences_set.add(p.pair.value)
+                        target_ownership_res_preferences_set.add(p.pair.value)
                 print("@@@@@@@ active users ownership resources")
-                recommended_resources(target_user, out, target_ownership_resource_preferences_set, target_res_jaccard_sim)
+                recommended_resources(target_user, out,
+                                      target_ownership_res_preferences_set,
+                                      target_res_jaccard_sim)
             except:
                 pass
-            '''    
+            '''
             print("------------ Jaccard similarity for Propensity ---------------")
-            for key, value in sorted(target_res_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+            for key, value in sorted(target_res_jaccard_sim.iteritems(),
+                                        key=lambda (k, v): (v, k), reverse=True)[:5]:
                 candidate_resource = get_resource_by_shortkey(key)
-                r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Propensity', round(value, 4))
+                r1 = RecommendedResource.recommend(target_user,
+                                                   candidate_resource,
+                                                   'Propensity',
+                                                    round(value, 4))
                 recommended_subjects = ind.prepare_subject(candidate_resource)
                 recommended_subjects = [sub.lower() for sub in recommended_subjects]
-                common_subjects = set.union(set.intersection(target_res_preferences_set, set(recommended_subjects)),
-                                            set.intersection(target_ownership_resource_preferences_set, set(recommended_subjects)))
+                common_subjects = set.union(set.intersection(target_res_preferences_set,
+                                                             set(recommended_subjects)),
+                                            set.intersection(target_ownership_res_preferences_set,
+                                                             set(recommended_subjects)))
                 for cs in common_subjects:
                     r1.relate('subject', cs, 1)
                 print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))
-            
+
             print("========== Making group recommendations =============")
             if len(target_group_preferences_set) != 0:
                 recommended_groups(target_user, target_group_preferences_set)
@@ -259,21 +274,27 @@ class Command(BaseCommand):
             recommended_users(target_user, target_user_preferences_set)
             counter += 1
         '''
-        counter2 = 0 
+        counter2 = 0
         for op in OwnershipPreferences.objects.exclude(user__username__in=active_users):
             target_username = op.user.username
             print("Only ownership : " + target_username)
             target_user = user_from_id(target_username)
             all_p = op.preferences.all()
 
-            ownership_resource_preferences = OwnershipPrefToPair.objects.filter(own_pref=op, pair__in=all_p, state='Seen', pref_for='Resource')
+            ownership_resource_preferences = OwnershipPrefToPair.objects.\
+                                                        filter(own_pref=op,
+                                                               pair__in=all_p,
+                                                               state='Seen',
+                                                               pref_for='Resource')
 
             target_interacted_resources = UserInteractedResources.objects.get(user=target_user)
 
             target_ownership_res_preferences_set = set()
             target_interacted_res_set = set()
 
-            if (resource_preferences.count() == 0 and user_preferences.count() == 0 and group_preferences.count() == 0):
+            if (resource_preferences.count() == 0 and
+                        user_preferences.count() == 0 and
+                        group_preferences.count() == 0):
                 continue
             if target_interacted_resources.interacted_resources.count() == 0:
                 continue
@@ -290,15 +311,22 @@ class Command(BaseCommand):
             out = SearchQuerySet()
             out = out.exclude(short_id__in=target_interacted_res_short_ids)
             target_res_jaccard_sim = {}
-            recommended_resources(target_user, out, target_ownership_res_preferences_set, target_res_jaccard_sim)
-            
+            recommended_resources(target_user, out,
+                                  target_ownership_res_preferences_set,
+                                  target_res_jaccard_sim)
+
             print("------------ Jaccard similarity for Combination  ---------------")
-            for key, value in sorted(target_res_jaccard_sim.iteritems(), key=lambda (k,v): (v,k), reverse=True)[:5]:
+            for key, value in sorted(target_res_jaccard_sim.iteritems(),
+                                        key=lambda (k, v): (v, k), reverse=True)[:5]:
                 candidate_resource = get_resource_by_shortkey(key)
-                r1 = RecommendedResource.recommend(target_user, candidate_resource, 'Combination', round(value, 4))
+                r1 = RecommendedResource.recommend(target_user,
+                                                   candidate_resource,
+                                                   'Combination',
+                                                   round(value, 4))
                 recommended_subjects = ind.prepare_subject(candidate_resource)
                 recommended_subjects = [sub.lower() for sub in recommended_subjects]
-                common_subjects = set.intersection(target_ownership_res_preferences_set, set(recommended_subjects))
+                common_subjects = set.intersection(target_ownership_res_preferences_set,
+                                                   set(recommended_subjects))
                 for cs in common_subjects:
                     r1.relate('subject', cs, 1)
                 print("https://www.hydroshare.org/resource/{}\n{}".format(key, value))

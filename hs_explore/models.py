@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from hs_core.models import BaseResource, Subject
+from hs_core.models import BaseResource
 from django.contrib.auth.models import User, Group
 from hs_core.hydroshare import user_from_id, group_from_id, get_resource_by_shortkey
 
@@ -125,7 +125,7 @@ class RecommendedResource(models.Model):
     candidate_resource = models.ForeignKey(BaseResource, editable=False,
                                            related_name='resource_recommendation')
     relevance = models.FloatField(editable=False, default=0.0)
-    rec_type = models.CharField(max_length=11, null=True, 
+    rec_type = models.CharField(max_length=11, null=True,
                                 choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity'),
                                          ('Combination', 'Combination')))
     state = models.IntegerField(choices=Status.STATUS_CHOICES,
@@ -207,7 +207,7 @@ class RecommendedResource(models.Model):
     def clear():
         RecommendedResource.objects.all().delete()
         ResourceRecToPair.objects.all().delete()
-    
+
     def to_json(self):
         json_obj = {}
         json_obj['user'] = self.user.username
@@ -430,12 +430,13 @@ class RecommendedGroup(models.Model):
 class ResourcePrefToPair(models.Model):
     res_pref = models.ForeignKey('ResourcePreferences', editable=False,
                                   null=False, on_delete=models.CASCADE)
-    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity')))
+    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'),
+                                                                    ('Propensity', 'Propensity')))
     pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
     weight = models.FloatField(editable=False, null=False)
     state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
                              default='Seen')
-    #time = models.IntegerField(null=False)    
+    # time = models.IntegerField(null=False)
 
     class Meta:  # this works with uniqueness of each pair
         unique_together = ('res_pref', 'pair', 'pref_type')
@@ -448,7 +449,12 @@ class ResourcePrefToPair(models.Model):
         if s is not None:
             defaults['state'] = s
         with transaction.atomic():
-            object, created = ResourcePrefToPair.objects.get_or_create(res_pref=u, pref_type=t, pair=p, weight=w, defaults=defaults)
+            object, created = ResourcePrefToPair.objects.\
+                                        get_or_create(res_pref=u,
+                                                      pref_type=t,
+                                                      pair=p,
+                                                      weight=w,
+                                                      defaults=defaults)
             if not created:
                 if s is not None:
                     object.state = s
@@ -460,7 +466,8 @@ class ResourcePrefToPair(models.Model):
 class UserPrefToPair(models.Model):
     user_pref = models.ForeignKey('UserPreferences', editable=False,
                                   null=False, on_delete=models.CASCADE)
-    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity')))
+    pref_type = models.CharField(max_length=10, null=True, choices=(('Ownership', 'Ownership'),
+                                                                    ('Propensity', 'Propensity')))
     pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
     weight = models.FloatField(editable=False, null=False)
     state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
@@ -478,7 +485,11 @@ class UserPrefToPair(models.Model):
         if s is not None:
             defaults['state'] = s
         with transaction.atomic():
-            object, created = UserPrefToPair.objects.get_or_create(user_pref=u, pref_type=t, pair=p, defaults=defaults)
+            object, created = UserPrefToPair.objects.\
+                                        get_or_create(user_pref=u,
+                                                      pref_type=t,
+                                                      pair=p,
+                                                      defaults=defaults)
             if not created:
                 object.weight = w
                 if s is not None:
@@ -493,9 +504,8 @@ class GroupPrefToPair(models.Model):
                                    null=False, on_delete=models.CASCADE)
     pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
     weight = models.FloatField(editable=False, null=False)
-    #state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
-    #                        default='Seen')    
-
+    # state = models.CharField(max_length=8, choices=(('Seen', 'Seen'), ('Rejected', 'Rejected')),
+    #                        default='Seen')
 
     class Meta:  # this works with uniqueness of each pair
         unique_together = ('group_pref', 'pair')
@@ -504,24 +514,25 @@ class GroupPrefToPair(models.Model):
     def create(g, k, v, w):
         """ eliminate duplicates: only thing that can change is weight """
         p = KeyValuePair.create(key=k, value=v)
-        #defaults = {}
-        #defaults['weight'] = w
-        #if s is not None:
+        # defaults = {}
+        # defaults['weight'] = w
+        # if s is not None:
         #    defaults['state'] = s
         with transaction.atomic():
             object, created = GroupPrefToPair.objects.get_or_create(group_pref=g, pair=p, weight=w)
             if not created:
                 object.weight = w
-                #if s is not None:
+                # if s is not None:
                 #    object.state = s
                 object.save()
 
         return object
 
+
 class PropensityPrefToPair(models.Model):
     prop_pref = models.ForeignKey('PropensityPreferences', editable=False,
                                   null=False, on_delete=models.CASCADE)
-    pref_for = models.CharField(max_length=8, choices=(('Resource', 'Resource'), 
+    pref_for = models.CharField(max_length=8, choices=(('Resource', 'Resource'),
                                 ('User', 'User'), ('Group', 'Group')))
     pair = models.ForeignKey(KeyValuePair, editable=False, null=False, on_delete=models.CASCADE)
     weight = models.FloatField(editable=False, null=False)
@@ -529,7 +540,7 @@ class PropensityPrefToPair(models.Model):
                              default='Seen')
 
     class Meta:  # this works with uniqueness of each pair
-        unique_together = ('prop_pref', 'pref_for','pair')
+        unique_together = ('prop_pref', 'pref_for', 'pair')
 
     @staticmethod
     def create(u, pf, k, v, w, s=None):
@@ -539,7 +550,12 @@ class PropensityPrefToPair(models.Model):
         if s is not None:
             defaults['state'] = s
         with transaction.atomic():
-            object, created = PropensityPrefToPair.objects.get_or_create(prop_pref=u, pref_for=pf, pair=p, weight=w, defaults=defaults)
+            object, created = PropensityPrefToPair.objects.\
+                                        get_or_create(prop_pref=u,
+                                                      pref_for=pf,
+                                                      pair=p,
+                                                      weight=w,
+                                                      defaults=defaults)
             if not created:
                 if s is not None:
                     object.state = s
@@ -559,7 +575,7 @@ class OwnershipPrefToPair(models.Model):
                              default='Seen')
 
     class Meta:  # this works with uniqueness of each pair
-        unique_together = ('own_pref', 'pref_for','pair')
+        unique_together = ('own_pref', 'pref_for', 'pair')
 
     @staticmethod
     def create(u, pf, k, v, w, s=None):
@@ -569,7 +585,12 @@ class OwnershipPrefToPair(models.Model):
         if s is not None:
             defaults['state'] = s
         with transaction.atomic():
-            object, created = OwnershipPrefToPair.objects.get_or_create(own_pref=u, pref_for=pf, pair=p, weight=w, defaults=defaults)
+            object, created = OwnershipPrefToPair.objects.\
+                                        get_or_create(own_pref=u,
+                                                      pref_for=pf,
+                                                      pair=p,
+                                                      weight=w,
+                                                      defaults=defaults)
             if not created:
                 if s is not None:
                     object.state = s
@@ -584,8 +605,10 @@ class ResourcePreferences(models.Model):
                                          related_name='for_res_pref',
                                          through=ResourcePrefToPair,
                                          through_fields=('res_pref', 'pair'))
-    interacted_resources = models.ManyToManyField(BaseResource, editable=False, related_name='interested_resources')    
-   
+    interacted_resources = models.ManyToManyField(BaseResource,
+                                                  editable=False,
+                                                  related_name='interested_resources')
+
     @staticmethod
     def prefer(u, pref_type, preferences=(), interacted_resources=()):
         with transaction.atomic():
@@ -606,7 +629,7 @@ class ResourcePreferences(models.Model):
         relationships = ResourcePrefToPair.objects.filter(pair=pair, res_pref=self)
         for r in relationships:
             r.delete()
-    
+
     def reject(self, key, value):
         pair = KeyValuePair.objects.get(key=key, value=value)
         relationships = ResourcePrefToPair.objects.filter(pair=pair, res_pref=self)
@@ -648,7 +671,7 @@ class UserPreferences(models.Model):
         relationships = UserPrefToPair.objects.filter(pair=pair, user_pref=self)
         for r in relationships:
             r.delete()
-    
+
     def reject(self, key, value):
         pair = KeyValuePair.objects.get(key=key, value=value)
         relationships = UserPrefToPair.objects.filter(pair=pair, user_pref=self)
@@ -699,12 +722,14 @@ class GroupPreferences(models.Model):
         GroupPreferences.objects.all().delete()
         GroupPrefToPair.objects.all().delete()
 
+
 class PropensityPreferences(models.Model):
     user = models.OneToOneField(User, editable=False)
     preferences = models.ManyToManyField(KeyValuePair, editable=False,
                                          related_name='for_prop_pref',
                                          through=PropensityPrefToPair,
                                          through_fields=('prop_pref', 'pair', 'pref_for'))
+
     @staticmethod
     def prefer(u, pf, preferences=()):
         with transaction.atomic():
@@ -743,6 +768,7 @@ class OwnershipPreferences(models.Model):
                                          related_name='for_own_pref',
                                          through=OwnershipPrefToPair,
                                          through_fields=('own_pref', 'pair'))
+
     @staticmethod
     def prefer(u, pf, preferences=()):
         with transaction.atomic():
@@ -777,7 +803,9 @@ class OwnershipPreferences(models.Model):
 
 class UserInteractedResources(models.Model):
     user = models.OneToOneField(User, editable=False)
-    interacted_resources = models.ManyToManyField(BaseResource, editable=False, related_name='interacted_resources')
+    interacted_resources = models.ManyToManyField(BaseResource,
+                                                  editable=False,
+                                                  related_name='interacted_resources')
 
     @staticmethod
     def interact(u, interacted_resources=()):
@@ -792,6 +820,7 @@ class UserInteractedResources(models.Model):
     @staticmethod
     def clear():
         UserInteractedResources.objects.all().delete()
+
 
 class UserNeighbors(models.Model):
     user = models.OneToOneField(User, editable=False)

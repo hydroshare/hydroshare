@@ -2,30 +2,16 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.features import Features
 from django.contrib.auth.models import Group
-from hs_explore.utils import Utils
-from datetime import datetime
-from pprint import pprint
-import sys
 from collections import defaultdict
 import pandas as pd
 from django.contrib.auth.models import User
-from hs_core.models import BaseResource
-from scipy import sparse
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import numpy.matlib
-from sklearn.metrics import jaccard_similarity_score
-from hs_core.search_indexes import BaseResourceIndex
-from scipy.spatial import distance
 import time
 from datetime import date, timedelta
-from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
+from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from django.db.models import Q
-from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    KeyValuePair, ResourceRecToPair, UserRecToPair, GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
-    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair, \
-    PropensityPrefToPair, PropensityPreferences, OwnershipPrefToPair, OwnershipPreferences, UserInteractedResources, UserNeighbors
-import simplejson as json
+from hs_explore.models import ResourcePreferences, UserPreferences, GroupPreferences,\
+    PropensityPreferences, OwnershipPreferences, UserInteractedResources, UserNeighbors
 from sklearn.metrics.pairwise import pairwise_distances
 from haystack.query import SearchQuerySet
 
@@ -34,7 +20,6 @@ class Command(BaseCommand):
     help = "make recommendations for a user."
 
     def handle(self, *args, **options):
-        ind = BaseResourceIndex()
 
         propensity = defaultdict(int)
         ownership = defaultdict(int)
@@ -44,7 +29,7 @@ class Command(BaseCommand):
         users_own_resources = {}
         users_interested_resources = {}
 
-        today = date(2018,07,31)
+        today = date(2018, 07, 31)
         beginning = today - timedelta(days=6)
 
         ResourcePreferences.clear()
@@ -59,9 +44,10 @@ class Command(BaseCommand):
             if user is not None and \
                user.username != 'test' and user.username != 'demo':
                 user_usernames.add(user.username)
-                users_own_resources[user.username] = BaseResource.objects.filter(Q(r2urp__user=user) |
-                                        Q(r2grp__group__g2ugp__user=user) |
-                                        Q(r2url__user=user)).distinct()
+                users_own_resources[user.username] = BaseResource.objects.\
+                                                        filter(Q(r2urp__user=user) |
+                                                               Q(r2grp__group__g2ugp__user=user) |
+                                                               Q(r2url__user=user)).distinct()
 
         for user, resources in users_own_resources.iteritems():
             for res in resources:
@@ -142,20 +128,21 @@ class Command(BaseCommand):
         resource_ids = set()
         all_subjects = set()
         resource_to_subjects = {}
-
+        '''
         public_discoverable_resource_ids = set()
         public_discoverable_all_subjects = set()
         public_discoverable_resource_to_subjects = {}
+        '''
         out = SearchQuerySet()
-        #for res in BaseResource.objects.all():
+        # for res in BaseResource.objects.all():
         for res in out:
-            #subjects = ind.prepare_subject(res)
+            # subjects = ind.prepare_subject(res)
             subjects = [sub.lower() for sub in res.subject]
             '''
             if ind.prepare_start_date(res):
                 start_date = "start" + str(ind.prepare_start_date(res).year)
                 subjects.append(start_date)
-            
+
             if ind.prepare_end_date(res):
                 end_date = "end" + str(ind.prepare_end_date(res).year)
                 subjects.append(end_date)
@@ -163,7 +150,7 @@ class Command(BaseCommand):
             start_date = res.start_date
             end_date = res.end_date
             if start_date is not None:
-                start_date_year =  str(start_date.year)
+                start_date_year = str(start_date.year)
                 subjects.append(start_date_year)
 
             if end_date is not None:
@@ -232,24 +219,27 @@ class Command(BaseCommand):
         m_hg_values = np.matmul(m_hr_values, m_rg_values)
         m_hg = pd.DataFrame(m_hg_values, index=list(group_names), columns=all_subjects_list)
 
-
         nonzero_nm_ug_ones = nm_ug_ones[(nm_ug_ones.T != 0).any()]
-        ug_jac_sim = 1 - pairwise_distances(nonzero_nm_ug_ones, metric = "hamming")
-        ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nonzero_nm_ug_ones.index, columns=nonzero_nm_ug_ones.index)
+        ug_jac_sim = 1 - pairwise_distances(nonzero_nm_ug_ones, metric="hamming")
+        ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nonzero_nm_ug_ones.index,
+                                  columns=nonzero_nm_ug_ones.index)
         knn = 10
         order = np.argsort(-ug_jac_sim.values, axis=1)[:, :knn]
         ug_nearest_neighbors = pd.DataFrame(ug_jac_sim.columns[order],
-                              columns=['neighbor{}'.format(i) for i in range(1, knn+1)],
-                              index=ug_jac_sim.index)
-
+                                            columns=['neighbor{}'
+                                                        .format(i) for i in range(1, knn+1)],
+                                            index=ug_jac_sim.index)
+        '''
         nonzero_nm_og_ones = nm_og_ones[(nm_og_ones.T != 0).any()]
         og_jac_sim = 1 - pairwise_distances(nonzero_nm_og_ones, metric = "hamming")
-        og_jac_sim = pd.DataFrame(og_jac_sim, index=nonzero_nm_og_ones.index, columns=nonzero_nm_og_ones.index)
+        og_jac_sim = pd.DataFrame(og_jac_sim, index=nonzero_nm_og_ones.index,
+                                  columns=nonzero_nm_og_ones.index)
         order = np.argsort(-og_jac_sim.values, axis=1)[:, :knn]
         og_nearest_neighbors = pd.DataFrame(og_jac_sim.columns[order],
-                              columns=['neighbor{}'.format(i) for i in range(1, knn+1)],
-                              index=og_jac_sim.index)
-
+                                            columns=['neighbor{}'
+                                                        .format(i) for i in range(1, knn+1)],
+                                            index=og_jac_sim.index)
+        '''
         matrices_elapsed_time = time.time() - matrices_start_time
         print("m_ur shape {}".format(m_ur.shape))
         print("m_ug shape {}".format(m_ug.shape))
@@ -268,7 +258,7 @@ class Command(BaseCommand):
 
         print("-------- store user ownership preferences objects ---------")
         store_users_start_time = time.time()
-        
+
         for index, row in m_og.iterrows():
             # skip users with no interests
             if index not in users_interested_resources:
@@ -282,28 +272,27 @@ class Command(BaseCommand):
             own_pref_subjects = []
             sorted_row = (-row).argsort()
 
-            #for i in user_nonzero_index[0]:
+            # for i in user_nonzero_index[0]:
             for i in sorted_row[:5]:
                 if row.iat[i] == 0:
                     break
                 subject = all_subjects_list[i]
                 own_pref_subjects.append(('subject', subject, row.iat[i]))
-           
+
             OwnershipPreferences.prefer(current_user, 'Resource', own_pref_subjects)
             OwnershipPreferences.prefer(current_user, 'User', own_pref_subjects)
             OwnershipPreferences.prefer(current_user, 'Group', own_pref_subjects)
- 
-            #UserPreferences.prefer(current_user, 'Ownership', res_pref_subjects, neighbors)
+
+            # UserPreferences.prefer(current_user, 'Ownership', res_pref_subjects, neighbors)
         store_users_elapsed_time = time.time() - store_users_start_time
         print("time for storing users ownership preferences: " + str(store_users_elapsed_time))
-
 
         print("-------- store user propensity preferences objects ---------")
         store_users_start_time = time.time()
         for index, row in m_ug.iterrows():
             if index not in users_interested_resources:
                 continue
-            #if index != 'ChristinaBandaragoda':
+            # if index != 'ChristinaBandaragoda':
             #    continue
             current_user = user_from_id(index)
             user_nonzero_index = row.nonzero()
@@ -313,13 +302,13 @@ class Command(BaseCommand):
             prop_pref_subjects = []
 
             sorted_row = (-row).argsort()
-            #for i in user_nonzero_index[0]:
+            # for i in user_nonzero_index[0]:
             for i in sorted_row[:5]:
                 if row.iat[i] == 0:
                     break
                 subject = all_subjects_list[i]
                 prop_pref_subjects.append(('subject', subject, row.iat[i]))
-            
+
             neighbors = []
             if len(ug_nearest_neighbors.loc[index]) == 0:
                 continue
@@ -336,11 +325,11 @@ class Command(BaseCommand):
             PropensityPreferences.prefer(current_user, 'Resource', prop_pref_subjects)
             PropensityPreferences.prefer(current_user, 'User', prop_pref_subjects)
             PropensityPreferences.prefer(current_user, 'Group', prop_pref_subjects)
-            #UserInteractedResources.interact(current_user, interested_resources)
+            # UserInteractedResources.interact(current_user, interested_resources)
             UserNeighbors.relate_neighbos(current_user, neighbors)
         store_users_elapsed_time = time.time() - store_users_start_time
         print("time for storing users propensity preferences: " + str(store_users_elapsed_time))
-        
+
         print("------- store group preferences objects -------")
         store_groups_start_time = time.time()
         for index, row in m_hg.iterrows():

@@ -10,11 +10,11 @@ from hs_core.models import get_user
 class RecommendList(TemplateView):
     """ Get the top five recommendations for resources, users, groups """
     template_name = 'recommendations.html'
-    
+
     def get_context_data(self, **kwargs):
 
         context = super(RecommendList, self).get_context_data(**kwargs)
-        
+
         user = get_user(self.request)
         username = user.username
         context['resource_list'] = RecommendedResource.objects\
