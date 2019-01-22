@@ -41,7 +41,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-
         parser.add_argument(
             "--monthly-users-counts",
             dest="monthly_users_counts",
@@ -191,8 +190,6 @@ class Command(BaseCommand):
             timestamp__gte=yesterday_start,
             timestamp__lt=today_start
         )
-        print(yesterday_start)
-        print(today_start)
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
 
