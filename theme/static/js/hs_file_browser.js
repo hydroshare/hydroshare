@@ -1271,27 +1271,21 @@ $(document).ready(function () {
 
                 // Called when all files in the queue finish uploading.
                 this.on("queuecomplete", function () {
-                    if ($("#hs-file-browser").attr("data-refresh-on-upload") === "true") {
-                        var currentPath = $("#hs-file-browser").attr("data-current-path");
+                    let resourceType = $("#resource-type").val();
+                    // Remove further paths from the log
+                    let range = pathLog.length - pathLogIndex;
+                    pathLog.splice(pathLogIndex + 1, range);
+                    pathLog.push(sessionStorage.currentBrowsepath);
+                    pathLogIndex = pathLog.length - 1;
+
+                    if (resourceType === 'Composite Resource') {
+                        let currentPath = $("#hs-file-browser").attr("data-current-path");
                         sessionStorage.currentBrowsepath = currentPath;
+                        refreshFileBrowser();
                     }
                     else {
-                        var resourceType = $("#resource-type").val();
-                        // Remove further paths from the log
-                        var range = pathLog.length - pathLogIndex;
-                        pathLog.splice(pathLogIndex + 1, range);
-                        pathLog.push(sessionStorage.currentBrowsepath);
-                        pathLogIndex = pathLog.length - 1;
-
-                        if(resourceType === 'Composite Resource') {
-                            var currentPath = $("#hs-file-browser").attr("data-current-path");
-                            sessionStorage.currentBrowsepath = currentPath;
-                            refreshFileBrowser();
-                        }
-                        else {
-                            refreshFileBrowser();
-                            $("#previews").empty();
-                        }
+                        refreshFileBrowser();
+                        $("#previews").empty();
                     }
                 });
 
