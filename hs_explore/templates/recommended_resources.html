@@ -1,5 +1,5 @@
 {% for r in resource_list %}
-    {% if r.rec_type == "Combination" %}
+    {% if r.rec_type == "Propensity" and r.relevance > 0 %}
         <li><a href="/resource/{{ r.candidate_resource.short_id }}/">{{ r.candidate_resource.title }}</a> (relevance {{ r.relevance }})</li>
         {% if r.keywords %}
             based on your interests in these keywords:

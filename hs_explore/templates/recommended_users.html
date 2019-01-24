@@ -1,15 +1,17 @@
 {% for r in user_list %}
-    <li><a href="/user/{{ r.candidate_user.id }}/">{{ r.candidate_user.username }}</a> (relevance {{ r.relevance }})</li>
-    {% if r.keywords %}
-        based on your interests in these keywords: 
-        <ul class="list-inline"> 
-            {% for z in r.keywords.all %}
-                <li> {{ z.value }}
-                    <button class="dismiss-button" style="background:none;border:none;padding:0;"  
-                            onclick="update_users('{{z.key}}', '{{z.value}}')">
-                    <span class="glyphicon glyphicon-remove-circle"></span></button>        
-                </li>
-            {% endfor %}
-        </ul> 
+    {% if r.relevance > 0 %}
+        <li><a href="/user/{{ r.candidate_user.id }}/">{{ r.candidate_user.username }}</a> (relevance {{ r.relevance }})</li>
+        {% if r.keywords %}
+            based on your interests in these keywords: 
+            <ul class="list-inline"> 
+                {% for z in r.keywords.all %}
+                    <li> {{ z.value }}
+                        <button class="dismiss-button" style="background:none;border:none;padding:0;"  
+                                onclick="update_users('{{z.key}}', '{{z.value}}')">
+                        <span class="glyphicon glyphicon-remove-circle"></span></button>        
+                    </li>
+                {% endfor %}
+            </ul> 
+        {% endif %}
     {% endif %}
 {% endfor %}

@@ -5,6 +5,7 @@ from django.views.generic import TemplateView  # ListView
 from hs_core.models import get_user
 from hs_explore.models import RecommendedGroup, Status, PropensityPreferences, \
     PropensityPrefToPair, GroupPreferences, GroupPrefToPair
+from hs_core.hydroshare.utils import user_from_id
 
 
 class RecommendGroups(TemplateView):
@@ -13,8 +14,10 @@ class RecommendGroups(TemplateView):
 
     def get_context_data(self, **kwargs):
 
-        target_user = get_user(self.request)
-        target_username = target_user.username
+        # target_user = get_user(self.request)
+        # target_username = target_user.username
+        target_username = str(self.request.GET['user'])
+        target_user = user_from_id(target_username)
         action = str(self.request.GET['action'])
 
         if action == 'update':
