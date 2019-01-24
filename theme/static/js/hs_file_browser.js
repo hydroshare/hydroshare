@@ -435,7 +435,7 @@ function updateSelectionMenuContext() {
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
         uiActionStates.createFolder.disabled = true;
-        uiActionStates.rename.disabled = true;
+        uiActionStates.rename.disabled = !selected.hasClass("fb-folder");
         uiActionStates.delete.disabled = !selected.hasClass("fb-folder");
         uiActionStates.cut.disabled = true;
         uiActionStates.setGenericFileType.disabled = true;
