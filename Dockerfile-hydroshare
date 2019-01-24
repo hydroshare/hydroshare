@@ -17,4 +17,3 @@ RUN chown -R hydro-service:storage-hydro /hs_tmp
 RUN chown -R hydro-service:storage-hydro /shared_tmp
 
 CMD ["runuser", "-p", "-u", "hydro-service", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]
-
