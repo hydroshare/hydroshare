@@ -784,7 +784,7 @@ IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
 IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
 IRODS_ZONE = 'hydrotest41Zone'
 IRODS_USERNAME = 'hsproxy'
-IRODS_AUTH = ''
+IRODS_AUTH = 'hydroshare123'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
