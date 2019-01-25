@@ -158,7 +158,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 @receiver(post_delete_resource)
 @receiver(post_raccess_change)
 def hs_update_web_services(sender, **kwargs):
-    """Update resource web services."""
+    """Signal to update resource web services."""
     update_web_services(
         services_url=hs_settings.HSWS_URL,
         api_token=hs_settings.HSWS_API_TOKEN,
