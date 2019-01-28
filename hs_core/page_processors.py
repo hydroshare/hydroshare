@@ -117,10 +117,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     qholder = content_model.get_quota_holder()
 
+    readme = content_model.get_readme_file_content()
+    if readme is None:
+        readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
     # user requested the resource in READONLY mode
     if not resource_edit:
+        content_model.update_view_count(request)
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
@@ -160,7 +164,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         else:
             spatial_coverage_data_dict = None
 
-        keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
+        keywords = [sub.value for sub in content_model.metadata.subjects.all()]
         languages_dict = dict(languages_iso.languages)
         language = languages_dict[content_model.metadata.language.code] if \
             content_model.metadata.language else None
@@ -176,6 +180,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
                    'title': title,
+                   'readme': readme,
                    'abstract': abstract,
                    'creators': content_model.metadata.creators.all(),
                    'contributors': content_model.metadata.contributors.all(),
@@ -377,6 +382,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'add_creator_modal_form': add_creator_modal_form,
                'creator_profilelink_formset': None,
                'title': content_model.metadata.title,
+               'readme': readme,
                'abstract_form': abstract_form,
                'contributor_formset': contributor_formset,
                'add_contributor_modal_form': add_contributor_modal_form,
@@ -402,6 +408,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
                'quota_holder': qholder,
+               'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and
@@ -434,7 +441,10 @@ def check_resource_mode(request):
         if edit_resource:
             del request.session['resource-mode']
         else:
-            edit_resource = request.GET.get('resource-mode', None) == 'edit'
+            if request.session.get('just_created', False):
+                edit_resource = True
+            else:
+                edit_resource = request.GET.get('resource-mode', None) == 'edit'
     else:
         edit_resource = True
 

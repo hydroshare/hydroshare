@@ -7,180 +7,159 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-            <div class="col-md-12">
-                <div>
-                    {% if homepage_url %}
-                        <h4><strong>Home Page URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-8">{{ homepage_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
+        {% if homepage_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Home Page URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ homepage_url.value|urlize }}</div>
                 </div>
-                <div>
-                    {% if url_base %}
-                        <h4><strong>App-launching Resource Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ url_base.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if url_base_aggregation %}
-                        <h4><strong>App-launching Aggregation Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ url_base_aggregation.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if url_base_file %}
-                        <h4><strong>App-launching File Level URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ url_base_file.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if supported_file_extensions %}
-                        <h4><strong>Supported File Extensions:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_file_extensions.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if supported_res_types %}
-                        <h4><strong>Supported Resource Types:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_res_types }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if supported_agg_types %}
-                        <h4><strong>Supported Aggregation Types:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_agg_types }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if supported_sharing_status %}
-                        <h4><strong>Supported Resource Sharing Status:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_sharing_status }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if version %}
-                        <h4><strong>Version:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ version.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if tool_icon_url %}
-                        <h4><strong>App Icon:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
-                        </div>
-                    {% endif %}
-                </div>
-                <div>
-                    {% if testing_protocol_url %}
-                        <h4><strong>Testing Protocol URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-8">{{ testing_protocol_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if help_page_url %}
-                        <h4><strong>Help Page URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-8">{{ help_page_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if source_code_url %}
-                        <h4><strong>Source Code URL:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ source_code_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if issues_page_url %}
-                        <h4><strong>Issues Page URL:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ issues_page_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if mailing_list_url %}
-                        <h4><strong>Mailing List URL:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ mailing_list_url.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if roadmap %}
-                        <h4><strong>Roadmap:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ roadmap.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-{#                <div>#}
-{#                    {% if show_on_open_with_list %}#}
-{#                        <h4><strong>Shown on Open With List:</strong></h4>#}
-{#                        <hr class="tool-metadata-hr">#}
-{#                        <div class="row">#}
-{#                            <div class="col-sm-8">{{ show_on_open_with_list.value|urlize }}</div>#}
-{#                        </div>#}
-{#                        <hr style="border:0">#}
-{#                    {%  endif %}#}
-{#                </div>#}
+                <br>
             </div>
-        </div>
-    {%  endif %}
+        {% endif %}
+        {% if url_base %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>App-launching Resource Level URL Pattern:
+                    <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a>
+                </h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ url_base.value }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if url_base_aggregation %}
+            <div class="col-lg-6 col-xs-12">
+
+                <h4>App-launching Aggregation Level URL Pattern:
+                    <a href='/terms#AppURLPattern' target='_blank'>
+                        <font size='3'>Help</font></a>
+                </h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ url_base_aggregation.value }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if url_base_file %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>App-launching File Level URL Pattern:
+                    <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a>
+                </h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ url_base_file.value }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if supported_file_extensions %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Supported File Extensions:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ supported_file_extensions.value }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if supported_res_types %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Supported Resource Types:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ supported_res_types }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if supported_agg_types %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Supported Aggregation Types:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ supported_agg_types }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if supported_sharing_status %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Supported Resource Sharing Status:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ supported_sharing_status }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if version %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Version:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ version.value }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if tool_icon_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>App Icon:</h4>
+                <div class="row">
+                    <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if testing_protocol_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Testing Protocol URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ testing_protocol_url.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if help_page_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Help Page URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ help_page_url.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if source_code_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Source Code URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ source_code_url.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if issues_page_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Issues Page URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ issues_page_url.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if mailing_list_url %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Mailing List URL:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ mailing_list_url.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+        {% if roadmap %}
+            <div class="col-lg-6 col-xs-12">
+                <h4>Roadmap:</h4>
+                <div class="row">
+                    <div class="col-sm-8">{{ roadmap.value|urlize }}</div>
+                </div>
+                <br>
+            </div>
+        {% endif %}
+    {% endif %}
 {%  endblock %}
 
 {% block extra_js %}

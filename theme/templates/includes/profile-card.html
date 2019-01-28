@@ -1,0 +1,78 @@
+<ul class="dropdown-menu arrow_box profile-card">
+    <li>
+        <div class="flex">
+            <div>
+                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon"></div>
+{#                <a href="#" class="btn btn-info btn-block" title="View Profile" data-url>Profile</a>#}
+
+                <div class="contributions-wrapper">
+                    <small>Contributions</small><br>
+                    <div class="label label-default" data-contributions></div>
+                </div>
+
+                <div class="joined-wrapper">
+                    <small>Joined</small>
+                    <div data-joined class="label label-default"></div>
+                </div>
+            </div>
+            <div style="flex-grow: 1;">
+                <h4 style="margin-top: 0;"><a href="#" title="View Profile" data-name></a></h4>
+
+                <table>
+                    <tr class="email-wrapper">
+                        <td class="text-center"><i class="fa fa-envelope text-muted" aria-hidden="true"></i></td>
+                        <td><span data-email></span></td>
+                    </tr>
+                    <tr class="location-wrapper">
+                        <td class="text-center"><i class="fa fa-map-marker text-muted" aria-hidden="true"></i></td>
+                        <td><span data-state></span><span data-country></span></td>
+                    </tr>
+                </table>
+
+                <div class="org-wrapper separate">
+                    <span data-organization></span><span data-title></span>
+                </div>
+
+                <div class="subjectareas-wrapper">
+                    <small class="text-muted">Subject Areas:</small>
+                    <div data-subjectareas></div>
+                </div>
+
+                <div class="externalprofiles-wrapper">
+                    <small class="text-muted">External Profiles:</small>
+                    <div class="external-profiles">
+                        <a href="" data-googlescholarid class="identifier-icon" target="_blank"
+                           data-toggle="tooltip"
+                           data-placement="top"
+                           title="Google Scholar">
+                            <i class="ai ai-google-scholar-square hover-shadow"></i>
+                        </a>
+                        <a href="" data-orcid class="identifier-icon" target="_blank" data-toggle="tooltip"
+                           data-placement="top"
+                           title="ORCID">
+                            <i class="ai ai-orcid hover-shadow"></i>
+                        </a>
+                        <a href="" data-researchgateid class="identifier-icon" target="_blank" data-toggle="tooltip"
+                           data-placement="top"
+                           title="ResearchGate">
+                            <i class="ai ai-researchgate-square hover-shadow"></i>
+                        </a>
+                        <a href="" data-researcerid class="identifier-icon" target="_blank" data-toggle="tooltip"
+                           data-placement="top"
+                           title="ResearcherID">
+                            <img class="hover-shadow"
+                                 src="{{ STATIC_URL }}img/researcherID.png"
+                                 alt="ResearcherID icon"/>
+                        </a>
+                        <a href="" data-identifier-other class="identifier-icon" target="_blank"
+                           data-toggle="tooltip"
+                           data-placement="top"
+                           title="">
+                            <i class="fa fa-address-card hover-shadow"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+</ul>

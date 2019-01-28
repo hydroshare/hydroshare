@@ -2,8 +2,7 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block extra_css %}
-{#    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">#}
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
 {% endblock %}
 
 {% block main %}
@@ -135,7 +134,7 @@
                                                 <p class="description"><strong>ABSTRACT: </strong>
                                                 </p> {{ res.metadata.description|linebreaks }}
                                             </div>
-                                            <div class="show-more-btn btn-default" title="Show less">···</div>
+                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
                                         {% endif %}
                                     </div>
                             {% endfor %}
@@ -906,7 +905,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
 {#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>

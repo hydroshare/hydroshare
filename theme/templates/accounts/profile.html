@@ -5,7 +5,6 @@
 
 {% block extra_head %}
     <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
-    <link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -302,7 +301,7 @@
                                                             <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                         </p>
                                                     </div>
-                                                    <div class="show-more-btn btn-default" title="Show abstract">···</div>
+                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
                                                 {% endif %}
                                             </div>
                                             {% endif %}
@@ -357,7 +356,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td><span class="text-muted">User since: </span></td>
-                                                    <td>{{ profile_user.date_joined }}</td>
+                                                    <td>{{ profile_user.date_joined|date:"M d, Y" }}</td>
                                                 </tr>
                                                 </tbody>
                                             </table>
@@ -766,7 +765,7 @@
                                                         <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                     </p>
                                                 </div>
-                                                <div class="show-more-btn btn-default" title="Show more">···</div>
+                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
                                             {% endif %}
 
                                         </div>
