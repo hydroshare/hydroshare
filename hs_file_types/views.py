@@ -82,8 +82,6 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
 
         response_data['status'] = 'success'
         response_data['message'] = msg
-        spatial_coverage_dict = get_coverage_data_dict(res)
-        response_data['spatial_coverage'] = spatial_coverage_dict
         return JsonResponse(response_data, status=status.HTTP_201_CREATED)
 
     except ValidationError as ex:

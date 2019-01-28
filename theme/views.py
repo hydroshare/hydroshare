@@ -145,7 +145,7 @@ def rating(request):
         return response
     obj, post_data = response
     url = add_cache_bypass(obj.get_absolute_url().split("#")[0])
-    response = redirect(url + "#rating-%s" % obj.id)
+    response = redirect(url)
     resource_mode = post_data.get('resource-mode', 'view')
     request.session['resource-mode'] = resource_mode
     rating_form = RatingForm(request, obj, post_data)

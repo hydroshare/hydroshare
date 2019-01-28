@@ -98,7 +98,9 @@
 }
 
 .fb-view-list .fb-stack .fa-file-o {
-	font-size: 18px;
+    font-size: 18px;
+    width: auto;
+    margin-left: 10px;
 }
 
 .fb-view-grid .fb-stack-netcdf .fa-th-large, .dz-details .fb-stack-netcdf .fa-th-large {
@@ -143,6 +145,16 @@
     top: -3px;
 }
 
+.fb-view-grid .fb-stack-database .fa-database, .dz-details .fb-stack-database .fa-database {
+    top: 6px;
+}
+
+.fb-view-list .fb-stack-database .fa-database {
+    font-size: 8px;
+    top: -3px;
+    left: -2px;
+}
+
 .fb-view-grid .fb-stack-cs [data-icon], .dz-details .fb-stack-cs [data-icon] {
     top: 6px;
     font-size: 15px;
@@ -165,13 +177,14 @@
 }
 
 .fb-view-grid .fb-stack-url .fa-external-link, .dz-details .fb-stack-url .fa-external-link {
-    top: 4px;
-    font-size: 19px;
+    top: 7px;
+    font-size: 16px;
 }
 
 .fb-view-list .fb-stack-url .fa-external-link {
-    top: -4px;
-    font-size: 11px;
+    top: -2px;
+    font-size: 9px;
+    left: -2px;
 }
 
 .fb-view-grid .fb-stack-css [data-icon], .dz-details .fb-stack-css [data-icon] {
@@ -253,4 +266,27 @@
 
 .fb-view-grid .fb-stack .fa-file-o {
 	font-size: 32px;
+}
+
+.fb-view-grid .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -3px;
+	left: -12px;
+}
+
+.fb-view-list .fb-folder i.fa-tag {
+	transform: rotate(90deg);
+	color: #FF9800;
+	top: -8px;
+	left: -7px;
+	font-size: 9px;
+}
+
+.fb-view-list .fb-folder-aggregation {
+	margin-left: 0;
+}
+
+.fb-folder-aggregation {
+	color: #45911c;
 }
