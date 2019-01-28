@@ -8,6 +8,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from markdown import markdown
 
 from django_irods.icommands import SessionException
 
@@ -1357,7 +1358,7 @@ class Coverage(AbstractMetaDataElement):
         This function should be used for displaying one spatial coverage element
         or one temporal coverage element
         """
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls='content-block')
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -1365,16 +1366,11 @@ class Coverage(AbstractMetaDataElement):
         with root_div:
             if self.type == 'box' or self.type == 'point':
                 legend('Spatial Coverage')
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            get_th('Coordinate Reference System')
-                            td(self.value['projection'])
-                        with tr():
-                            get_th('Coordinate Reference System Unit')
-                            td(self.value['units'])
-
-                h4('Extent')
+                div('Coordinate Reference System', cls='text-muted')
+                div(self.value['projection'])
+                div('Coordinate Reference System Unit', cls='text-muted space-top')
+                div(self.value['units'])
+                h4('Extent', cls='space-top')
                 with table(cls='custom-table'):
                     if self.type == 'box':
                         with tbody():
@@ -1667,6 +1663,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
+
+    # for tracking number of times resource and its files have been downloaded
+    download_count = models.PositiveIntegerField(default=0)
+    # for tracking number of times resource has been viewed
+    view_count = models.PositiveIntegerField(default=0)
+
+    def update_view_count(self, request):
+        self.view_count += 1
+        self.save()
+
+    def update_download_count(self):
+        self.download_count += 1
+        self.save()
 
     # definition of resource logic
     @property
@@ -2253,14 +2262,61 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return True
 
     @property
+    def readme_file(self):
+        """Returns a resource file that is at the root with a file name of either
+        'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
+        is returned. If both files exist then resource file for readme.md is returned"""
+
+        res_files_at_root = self.files.filter(file_folder=None)
+        readme_txt_file = None
+        readme_md_file = None
+        for res_file in res_files_at_root:
+            if res_file.file_name.lower() == 'readme.md':
+                readme_md_file = res_file
+            elif res_file.file_name.lower() == 'readme.txt':
+                readme_txt_file = res_file
+            if readme_md_file is not None:
+                break
+
+        if readme_md_file is not None:
+            return readme_md_file
+        else:
+            return readme_txt_file
+
+    def get_readme_file_content(self):
+        """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
+        then the content of the readme.md file is returned, othewise None
+        """
+        readme_file = self.readme_file
+        if readme_file is not None:
+            if readme_file.extension.lower() == '.md':
+                return {'content': markdown(readme_file.read().decode('utf-8')),
+                        'file_name': readme_file.file_name}
+            else:
+                return {'content': readme_file.read(), 'file_name': readme_file.file_name}
+        return readme_file
+
+    @property
     def logical_files(self):
-        """Get list of logical files for resource."""
+        """Get a list of logical files for resource."""
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
                 if res_file.logical_file not in logical_files_list:
                     logical_files_list.append(res_file.logical_file)
         return logical_files_list
+
+    @property
+    def aggregation_types(self):
+        """Gets a list of all aggregation types that currently exist in this resource"""
+        aggr_types = []
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name)
+                aggr_type = lf.get_aggregation_display_name().split(":")[0]
+                aggr_types.append(aggr_type)
+        return aggr_types
 
     @property
     def non_logical_files(self):

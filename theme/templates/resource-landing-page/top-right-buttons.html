@@ -1,38 +1,16 @@
 {% load hydroshare_tags %}
 {#        ======= Top right buttons =======#}
 <div class="col-sm-12">
-    <div class="custom-btn-toolbar height-fix">
-        {% if not metadata_form %}
-
-            {# "add to open with list" for WebApp resource only #}
-            {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
-                {% if cm|app_on_open_with_list:user %}
-                    <form data-id="form-add-open-with-app"
-                          id="form-add-open-with-app"
-                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="label_type" value="OPENWITHAPP">
-                        <input type="hidden" name="action" value="DELETE">
-                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Remove WebApp from OpenWith list" data-form-id="form-add-open-with-app"
-                                class="glyphicon glyphicon-th icon-button btn-resource-remove"></button>
-                    </form>
-                {% else %}
-                    <form data-id="form-add-open-with-app"
-                          id="form-add-open-with-app"
-                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="label_type" value="OPENWITHAPP">
-                        <input type="hidden" name="action" value="CREATE">
-                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Add WebApp to OpenWith list" data-form-id="form-add-open-with-app"
-                                class="glyphicon glyphicon-th icon-button btn-resource-add"></button>
-                    </form>
-                {% endif %}
-            {% endif %}
-
+    <div class="custom-btn-toolbar">
+        {% if show_manage_access %}
+            <a data-toggle="modal" data-target="#manage-access">
+            <span data-toggle="tooltip" data-placement="bottom"
+                  data-html="true"
+                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
+                  class="fa fa-user-plus icon-button icon-blue"></span>
+            </a>
+        {% endif %}
+        {% if not resource_edit_mode %}
             {% if not is_owner_user and not is_edit_user and not is_view_user and cm.raccess.public %}
                 {% if resource_is_mine %}
                     <form data-id="form-add-to-my-resources"
@@ -61,40 +39,36 @@
                 {% endif %}
             {% endif %}
 
-            {% if not is_replaced_by %}
-                {% if page.perms.change or is_owner_user and cm.raccess.published %}
-                    <form action="{{ cm.get_absolute_url }}" method="post">
+            {# "add to open with list" for WebApp resource only #}
+            {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
+                {% if cm|app_on_open_with_list:user %}
+                    <form data-id="form-add-open-with-app"
+                          id="form-add-open-with-app"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
                         {% csrf_token %}
-                        {% if page.perms.delete %}
-                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                                <span data-toggle="tooltip" data-placement="bottom" title="Delete this resource"
-                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                            </a>
-                        {% endif %}
-
-                        {% if page.perms.change %}
-                            <input name="resource-mode" type="hidden" value="edit"/>
-                            <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="bottom"
-                                    title="Edit this resource"
-                                    class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
-                        {% endif %}
-
-                        {% if page.perms.delete and cm.can_be_published and cm.raccess.public %}
-                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
-                                <span data-toggle="tooltip" data-placement="bottom" title="Publish this resource"
-                                      class="glyphicon glyphicon-globe icon-button icon-blue"></span>
-                            </a>
-                        {% endif %}
-
-                        {% if page.perms.delete or cm.raccess.published %}
-                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
-                                <span data-toggle="tooltip" data-placement="bottom"
-                                      title="Create a new version of this resource"
-                                      class="fa fa-clone icon-button icon-blue"></span>
-                            </a>
-                        {% endif %}
+                        <input type="hidden" name="label_type" value="OPENWITHAPP">
+                        <input type="hidden" name="action" value="DELETE">
+                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
+                                title="Remove WebApp from 'Open With' list" data-form-id="form-add-open-with-app"
+                                class="glyphicon glyphicon-th icon-button btn-resource-remove"></button>
+                    </form>
+                {% else %}
+                    <form data-id="form-add-open-with-app"
+                          id="form-add-open-with-app"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="label_type" value="OPENWITHAPP">
+                        <input type="hidden" name="action" value="CREATE">
+                        <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
+                                title="Add WebApp to 'Open With' list" data-form-id="form-add-open-with-app"
+                                class="glyphicon glyphicon-th icon-button btn-resource-add"></button>
                     </form>
                 {% endif %}
+            {% endif %}
+
+            {% if not is_replaced_by %}
                 {% if user.is_authenticated and rights.statement %}
                     {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
                         {% if not allow_resource_copy %}
@@ -113,26 +87,55 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
+                {% if page.perms.change or is_owner_user and cm.raccess.published %}
+                    <form action="{{ cm.get_absolute_url }}" method="post">
+                        {% csrf_token %}
+
+                        {% if page.perms.delete or cm.raccess.published %}
+                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="bottom"
+                                      title="Create a new version of this resource"
+                                      class="fa fa-code-fork icon-button icon-blue"></span>
+                            </a>
+                        {% endif %}
+
+                        {% if page.perms.delete and cm.can_be_published %}
+                            <a id="publish" {% if cm.raccess.public %}data-toggle="modal"{% endif %}
+                               data-target="#submit-for-publication-dialog"
+                               {% if not cm.raccess.public %}class="disabled"{% endif %}>
+                                <span data-toggle="tooltip" data-placement="bottom"
+                                      data-html="true"
+                                        {% if cm.raccess.public %}
+                                      title="Publish this resource"
+                                        {% else %}
+                                      title='Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published.</small>'
+                                        {% endif %}
+                                      class="glyphicon glyphicon-globe icon-button icon-blue">
+                                </span>
+                            </a>
+                        {% endif %}
+
+                        {% if page.perms.change %}
+                            <input name="resource-mode" type="hidden" value="edit"/>
+                            <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="bottom"
+                                    title="Edit this resource"
+                                    class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
+                        {% endif %}
+
+                        {% if page.perms.delete %}
+                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="bottom" title="Delete this resource"
+                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            </a>
+                        {% endif %}
+                    </form>
+                {% endif %}
             {% endif %}
         {% else %}
             <a href="{{ cm.get_absolute_url }}">
                     <span data-toggle="tooltip" data-placement="bottom" title="View resource"
                           class="glyphicon glyphicon-circle-arrow-left icon-button icon-blue"></span>
             </a>
-            {% if cm.resource_type == 'CompositeResource' %}
-                {# This form gets submitted to reload the page in edit mode when aggregation is removed or created #}
-                <form id="frm_refresh_page_edit_mode" action="{{ cm.get_absolute_url }}" method="post">
-                   {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit"/>
-                </form>
-            {% endif %}
-        {% endif %}
-
-        {% if show_manage_access %}
-        <a data-toggle="modal" data-target="#manage-access">
-            <span data-toggle="tooltip" data-placement="bottom" title="Manage who has access. Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions."
-                  class="fa fa-user-plus fa-2x icon-button icon-blue"></span>
-        </a>
         {% endif %}
     </div>
 </div>

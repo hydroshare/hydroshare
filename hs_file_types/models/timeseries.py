@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, hr, button, input, p, \
+from dominate.tags import div, legend, strong, form, select, option, button, input, p, \
     textarea, span
 
 from hs_core.hydroshare import utils
@@ -94,7 +94,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         html_string = super(TimeSeriesFileMetaData, self).get_html()
         if self.abstract:
-            abstract_div = div(cls="col-xs-12 content-block")
+            abstract_div = div(cls="content-block")
             with abstract_div:
                 legend("Abstract")
                 p(self.abstract)
@@ -106,33 +106,34 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             html_string += self.temporal_coverage.get_html()
 
         series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
+        legend("Corresponding Metadata")
         with series_selection_div:
-            div_meta_row = div(cls="row")
+            div_meta_row = div(cls='custom-well')
             with div_meta_row:
                 # create 1st column of the row
-                with div(cls="col-md-6 col-xs-12"):
+                with div(cls="content-block"):
                     # generate html for display of site element
                     site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
                     if site:
-                        legend("Site")
+                        legend("Site", cls='space-top')
                         site.get_html()
 
                     # generate html for variable element
                     variable = self.get_element_by_series_id(series_id=series_id,
                                                              elements=self.variables)
                     if variable:
-                        legend("Variable")
+                        legend("Variable", cls='space-top')
                         variable.get_html()
 
                     # generate html for method element
                     method = self.get_element_by_series_id(series_id=series_id,
                                                            elements=self.methods)
                     if method:
-                        legend("Method")
+                        legend("Method", cls='space-top')
                         method.get_html()
 
                 # create 2nd column of the row
-                with div(cls="col-md-6 col-xs-12"):
+                with div(cls="content-block"):
                     # generate html for processing_level element
                     if self.processing_levels:
                         legend("Processing Level")
@@ -143,7 +144,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
                     # generate html for timeseries_result element
                     if self.time_series_results:
-                        legend("Time Series Result")
+                        legend("Time Series Result", cls='space-top')
                         ts_result = self.get_element_by_series_id(series_id=series_id,
                                                                   elements=self.time_series_results)
                         if ts_result:
@@ -176,8 +177,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
             series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
             with series_selection_div:
-                with div(cls="row"):
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms hs-coordinates-picker",
+                with div(cls='custom-well'):
+                    with div(cls="content-block time-series-forms hs-coordinates-picker",
                              id="site-filetype", data_coordinates_type="point"):
                         with form(id="id-site-file-type", data_coordinates_type='point',
                                   action="{{ site_form.action }}",
@@ -189,7 +190,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms",
+
+                    with div(cls="content-block time-series-forms",
                              id="processinglevel-filetype"):
                         with form(id="id-processinglevel-file-type",
                                   action="{{ processinglevel_form.action }}",
@@ -201,8 +203,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
-                with div(cls="row"):
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="variable-filetype"):
+
+                    with div(cls="content-block time-series-forms", id="variable-filetype"):
                         with form(id="id-variable-file-type",
                                   action="{{ variable_form.action }}",
                                   method="post", enctype="multipart/form-data"):
@@ -214,7 +216,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
 
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms",
+                    with div(cls="content-block time-series-forms",
                              id="timeseriesresult-filetype"):
                         with form(id="id-timeseriesresult-file-type",
                                   action="{{ timeseriesresult_form.action }}",
@@ -227,8 +229,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
 
-                with div(cls="row"):
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="method-filetype"):
+                    with div(cls="content-block time-series-forms", id="method-filetype"):
                         with form(id="id-method-file-type",
                                   action="{{ method_form.action }}",
                                   method="post", enctype="multipart/form-data"):
@@ -240,7 +241,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
                     if self.logical_file.has_csv_file:
-                        with div(cls="col-sm-6 col-xs-12 time-series-forms",
+                        with div(cls="content-block time-series-forms",
                                  id="utcoffset-filetype"):
                             with form(id="id-utcoffset-file-type",
                                       action="{{ utcoffset_form.action }}",
@@ -271,8 +272,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         """Generates html needed to display series selection dropdown box and the
         associated form"""
 
-        root_div = div(id="div-series-selection-file_type", cls="content-block col-xs-12 col-sm-12",
-                       style="margin-top:10px;")
+        root_div = div(id="div-series-selection-file_type", cls="content-block")
         heading = "Select a timeseries to see corresponding metadata (Number of time series:{})"
         if self.series_names:
             time_series_count = len(self.series_names)
@@ -280,7 +280,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             time_series_count = self.time_series_results.count()
         heading = heading.format(str(time_series_count))
         with root_div:
-            strong(heading)
+            legend("Corresponding Metadata")
+            span(heading)
             action_url = "/hsapi/_internal/{logical_file_id}/series_id/resource_mode/"
             action_url += "get-timeseries-file-metadata/"
             action_url = action_url.format(logical_file_id=self.logical_file.id)
@@ -293,7 +294,6 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                             option(display_text, value=series_id, selected="selected", title=label)
                         else:
                             option(display_text, value=series_id, title=label)
-            hr()
         return root_div
 
     def get_update_sqlite_file_html_form(self):
@@ -331,7 +331,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     def get_abstract_form(self):
         form_action = "/hsapi/_internal/{}/update-timeseries-abstract/"
         form_action = form_action.format(self.logical_file.id)
-        root_div = div(cls="col-xs-12")
+        root_div = div(cls="content-block")
         if self.abstract:
             abstract = self.abstract
         else:

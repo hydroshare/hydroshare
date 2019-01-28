@@ -354,6 +354,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
         if not res.is_federated:
+            # track download count
+            res.update_download_count()
+
             # invoke X-Accel-Redirect on physical vault file in nginx
             response = HttpResponse(content_type=mtype)
             response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
@@ -366,6 +369,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
         elif res.resource_federation_path == userpath:  # this guarantees a "user" resource
+            # track download count
+            res.update_download_count()
+
             # invoke X-Accel-Redirect on physical vault file in nginx
             response = HttpResponse(content_type=mtype)
             response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
@@ -385,6 +391,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # this unusual way of calling works for streaming federated or local resources
     if __debug__:
         logger.debug("Locally streaming {}".format(output_path))
+    # track download count
+    res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
     response = FileResponse(proc.stdout, content_type=mtype)
     response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
