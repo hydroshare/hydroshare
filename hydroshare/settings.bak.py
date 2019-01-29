@@ -5,6 +5,9 @@ TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
 import sys
+import yaml
+import redis
+from kombu import Queue, Exchange
 # import importlib
 
 ######################
@@ -344,6 +347,7 @@ APPS_TO_NOT_RUN = (
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
+# TODO: uncomment to match local settings
 # TEMPLATE_CONTEXT_PROCESSORS = ()
 
 TEMPLATES = [
