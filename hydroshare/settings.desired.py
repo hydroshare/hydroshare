@@ -1,3 +1,6 @@
+# TODO this file contains settings overlayed from local_settings so that the program would launch without a local_settings.py
+# TODO something about it is broken regarding raise ImproperlyConfigured("The SECRET_KEY setting must not be empty
+
 from __future__ import absolute_import, unicode_literals
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'

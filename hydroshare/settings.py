@@ -7,6 +7,8 @@ import os
 import sys
 # import importlib
 
+local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
+
 ######################
 # MEZZANINE SETTINGS #
 ######################
@@ -101,7 +103,7 @@ MANAGERS = ADMINS
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = []
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -110,7 +112,7 @@ ALLOWED_HOSTS = "*"
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = "Etc/UTC"
+TIME_ZONE = None
 
 # If you set this to True, Django will use timezone-aware datetimes.
 USE_TZ = True
@@ -179,27 +181,20 @@ ROBOTS_SITEMAP_URLS = [
 # DATABASES #
 #############
 
-POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
-POSTGIS_PORT = 5432
-POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
-POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
-POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
-POSTGIS_VERSION = (2, 1, 1)
-
 DATABASES = {
     "default": {
         # Add "postgresql_psycopg2", "mysql", "sqlite3" or "oracle".
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "ENGINE": "django.db.backends.",
         # DB name or path to database file if using sqlite3.
-        "NAME": POSTGIS_DB,
+        "NAME": "",
         # Not used with sqlite3.
-        "USER": POSTGIS_USER,
+        "USER": "",
         # Not used with sqlite3.
-        "PASSWORD": POSTGIS_PASSWORD,
+        "PASSWORD": "",
         # Set to empty string for localhost. Not used with sqlite3.
-        "HOST": POSTGIS_HOST,
+        "HOST": "",
         # Set to empty string for default. Not used with sqlite3.
-        "PORT": POSTGIS_PORT,
+        "PORT": "",
     }
 }
 
@@ -344,8 +339,7 @@ APPS_TO_NOT_RUN = (
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-# TODO: uncomment to match local settings
-# TEMPLATE_CONTEXT_PROCESSORS = ()
+#TEMPLATE_CONTEXT_PROCESSORS = ()
 
 TEMPLATES = [
     {
@@ -461,6 +455,18 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 #     "SECRET_KEY": SECRET_KEY,
 #     "NEVERCACHE_KEY": NEVERCACHE_KEY,
 # }
+
+
+##################
+# LOCAL SETTINGS #
+##################
+
+# Allow any settings to be defined in local_settings.py which should be
+# ignored in your version control system allowing for settings to be
+# defined per machine.
+local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
+for k in dir(local_settings):
+    locals()[k] = getattr(local_settings, k)
 
 ####################
 # DYNAMIC SETTINGS #
@@ -713,15 +719,3 @@ SWAGGER_SETTINGS = {
 
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
-##################
-# LOCAL SETTINGS #
-##################
-
-# Allow any settings to be defined in local_settings.py which should be
-# ignored in your version control system allowing for settings to be
-# defined per machine.
-try:
-    from local_settings import *
-except ImportError:
-    pass
