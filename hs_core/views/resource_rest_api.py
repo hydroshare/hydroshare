@@ -80,6 +80,7 @@ class ResourceFileToListItemMixin(object):
         url = site_url + f.url
         fsize = f.size
         id = f.id
+        logical_file_type = f.logical_file_type_name
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -89,7 +90,8 @@ class ResourceFileToListItemMixin(object):
         resource_file_info_item = serializers.ResourceFileItem(url=url,
                                                                id=id,
                                                                size=fsize,
-                                                               content_type=ftype)
+                                                               content_type=ftype,
+                                                               logical_file_type=logical_file_type)
         return resource_file_info_item
 
 
