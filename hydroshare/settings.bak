@@ -1,16 +1,11 @@
 from __future__ import absolute_import, unicode_literals
-
-import os
-import sys
-
-import redis
-import yaml
-from kombu import Queue, Exchange
-
+#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
-local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
+import os
+import sys
+# import importlib
 
 ######################
 # MEZZANINE SETTINGS #
@@ -90,6 +85,7 @@ local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_setti
 # If True, the south application will be automatically added to the
 # INSTALLED_APPS setting.
 USE_SOUTH = False
+
 
 ########################
 # MAIN DJANGO SETTINGS #
@@ -207,9 +203,12 @@ DATABASES = {
     }
 }
 
+
 #########
 # PATHS #
 #########
+
+import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -506,6 +505,7 @@ HAYSTACK_CONNECTIONS = {
 }
 HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
 
+
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT_DAYS = 7
@@ -547,7 +547,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/system.log',
             'formatter': 'simple',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'djangolog': {
@@ -555,7 +555,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'hydrosharelog': {
@@ -563,7 +563,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
     },
@@ -600,6 +600,7 @@ TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Content Security Policy
 # See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
@@ -694,6 +695,7 @@ CSP_DICT = {
         "*.hydroshare.org"
     ]
 }
+
 
 X_FRAME_OPTIONS = "deny"
 
