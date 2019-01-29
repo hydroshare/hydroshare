@@ -42,3 +42,4 @@ USER postgres
 
 ## /var/lib/postgresql/data/postgresql.conf and pg_hba.conf seem to regenerate so copying over them does not work
 CMD ["/usr/lib/postgresql/9.4/bin/postgres", "-D", "/var/lib/postgresql/data", "-c", "config_file=/app/postgresql.conf"]
+
