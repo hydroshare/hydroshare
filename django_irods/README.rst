@@ -1,5 +1,5 @@
 Originally written by Jefferson Heard. Updated by Alva Couch
-for the HydroShare project. 
+for the HydroShare project.
 
 django_irods - iRODS connector for Django with Celery
 #################################################
@@ -34,7 +34,7 @@ Once environments are setup, you can write a webapp that manipulates iRODS.  One
 might attach a RodsEnvironment to a session object, then use this to accomplish
 things in an example view like so in your views.py::
 
-    from django_irods import tasks as itasks
+    from ga_irods import tasks as itasks
 
     @requires_login
     def my_view(request):

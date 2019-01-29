@@ -82,6 +82,12 @@
     margin-top: 6px;
 }
 
-#btn-signout-irods {
+a#btn-signout-irods {
+    display: inline-block;
     margin-top: 10px;
+}
+
+#irods-group {
+    margin-top: 5px;
+    margin-right: 6px;
 }

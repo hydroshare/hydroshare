@@ -20,7 +20,7 @@
             <h2 class="page-title">Sign In</h2>
         </div>
         <div class="col-xs-12 col-sm-6">
-            <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+            <form class="account-form space-bottom" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
