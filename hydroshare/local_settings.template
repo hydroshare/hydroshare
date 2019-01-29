@@ -66,3 +66,10 @@ SENDFILE_ON = False
 IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
+
+# Needed for deployments to non-dev environments
+with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+    try:
+        EXTERNAL_CONFIG = yaml.load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
