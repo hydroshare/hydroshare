@@ -101,8 +101,8 @@ urlpatterns = [
         core_views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_resource_map'),
 
-    url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<file_id>[0-9]+)/metadata/$',
-        FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata"),
+    url(r'resource/(?P<pk>[0-9a-f-]+)/files/metadata/(?P<pathname>.*)/$',
+        FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata_path"),
 
     # Patterns are now checked in the view class.
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',

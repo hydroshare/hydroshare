@@ -156,9 +156,12 @@ def get_resource_file(pk, filename):
     Exception.ServiceFailure - The service is unable to process the request
     """
     resource = utils.get_resource_by_shortkey(pk)
+    filename = filename.strip("/")
+    if not filename.startswith("data/contents/"):
+        filename = os.path.join("data/contents/", filename)
     for f in ResourceFile.objects.filter(object_id=resource.id):
-        if os.path.basename(f.resource_file.name) == filename:
-            return f.resource_file
+        if f.resource_file.name.endswith(filename):
+            return f
     raise ObjectDoesNotExist(filename)
 
 
@@ -793,7 +796,6 @@ def add_resource_files(pk, *files, **kwargs):
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, new_folders, ret)
         # some file(s) added, need to update quota usage
-        update_quota_usage(res=resource)
     return ret
 
 

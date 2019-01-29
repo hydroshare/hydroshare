@@ -79,7 +79,7 @@ class ResourceFileToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
-        id = f.id
+        file_name = os.path.basename(f.resource_file.name)
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -87,7 +87,7 @@ class ResourceFileToListItemMixin(object):
         else:
             ftype = repr(None)
         resource_file_info_item = serializers.ResourceFileItem(url=url,
-                                                               id=id,
+                                                               file_name=file_name,
                                                                size=fsize,
                                                                content_type=ftype)
         return resource_file_info_item
@@ -885,7 +885,7 @@ class ResourceFileCRUD(APIView):
             return Response(ex.message, status_code=status.HTTP_400_BAD_REQUEST)
 
         try:
-            f = hydroshare.get_resource_file(pk, pathname)
+            f = hydroshare.get_resource_file(pk, pathname).resource_file
         except ObjectDoesNotExist:
             err_msg = 'File with file name {file_name} does not exist for resource with ' \
                       'resource id {res_id}'.format(file_name=pathname, res_id=pk)
@@ -1123,12 +1123,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
             raise ValidationError(detail=error_msg)
 
-        # prepare response data
-        file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        file_id = res_file_objects[0].pk
-        response_data = {'resource_id': pk, 'file_name': file_name, 'file_id': file_id}
         resource_modified(resource, request.user, overwrite_bag=False)
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
+        return Response(data=self.resourceFileToListItem(res_file_objects[0]), status=status.HTTP_201_CREATED)
 
 
 def _validate_metadata(metadata_list):

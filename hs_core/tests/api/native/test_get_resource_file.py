@@ -44,7 +44,8 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_file(self):
         # test if the added test file is obtained
-        res_file_object = hydroshare.get_resource_file(self.res.short_id, self.file.name)
+        res_file_object = hydroshare.get_resource_file(self.res.short_id,
+                                                       self.file.name).resource_file
         self.assertEqual(
             self.file.name,
             os.path.basename(res_file_object.name),

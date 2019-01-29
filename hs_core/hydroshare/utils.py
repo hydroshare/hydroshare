@@ -1085,3 +1085,5 @@ def check_aggregations(resource, folders, res_files):
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)
+                # refresh object to include new aggreagation
+                res_file.refresh_from_db()
