@@ -1,0 +1,29 @@
+<a class="profile-preview" data-toggle="dropdown"
+   href="#"
+   data-name="{% if user.first_name or user.last_name %}
+    {{ user.first_name }} {% if user.middle_name %}
+    {{ user.middle_name }}{% endif %} {{ user.last_name }}
+    {% else %}
+    {{ user.username }}
+    {% endif %}"
+   data-email="{{ user.email }}"
+   data-organization="{{ user.userprofile.organization|default:"" }}"
+   data-title="{{ user.userprofile.title|default:"" }}"
+   data-contributions="{{ user.uaccess.owned_resources.count|default:"" }}"
+   data-subjectareas="{{ user.userprofile.subject_areas|default:"" }}"
+        {% for name, link in user.userprofile.identifiers.items %}
+   data-{{ name }}="{{ link }}"
+        {% endfor %}
+   data-state="{{ user.userprofile.state|default:"" }}" data-country="{{ user.userprofile.country|default:"" }}"
+   data-joined="{{ user.date_joined|date:"M d, Y" }}"
+        {% if user.userprofile.picture %}
+   data-profile-picture="{{ user.userprofile.picture.url }}"
+        {% endif %}
+   data-profile-url="/user/{{ user.id }}">
+    {% if user.first_name or user.last_name %}
+        {{ user.first_name }} {% if user.middle_name %}
+        {{ user.middle_name }}{% endif %} {{ user.last_name }}
+    {% else %}
+        {{ user.username }}
+    {% endif %}
+</a>

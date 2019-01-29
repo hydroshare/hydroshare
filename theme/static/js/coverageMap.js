@@ -80,7 +80,7 @@ function drawInitialShape() {
             allShapes.push(marker);
             // Center map at new market
             coverageMap.setCenter(marker.getPosition());
-            $("#resetZoomBtn").click(function () {
+            $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
@@ -120,7 +120,7 @@ function drawInitialShape() {
             rectangle.setMap(coverageMap);
             allShapes.push(rectangle);
             zoomCoverageMap(bounds);
-            $("#resetZoomBtn").click(function () {
+             $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 zoomCoverageMap(bounds);
             });
         }
@@ -182,6 +182,7 @@ function initMap() {
             shapeType = " ";
         }
     }
+
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",
         zoom: 3,
@@ -198,6 +199,30 @@ function initMap() {
             position: google.maps.ControlPosition.TOP_RIGHT
         }
     });
+
+    // Set CSS for the control border.
+    var btnRecenter = document.createElement('button');
+    btnRecenter.setAttribute("dragable", "false");
+    btnRecenter.setAttribute("title", "Recenter");
+    btnRecenter.setAttribute("aria-label", "Recenter");
+    btnRecenter.setAttribute("type", "button");
+    btnRecenter.setAttribute("id", "resetZoomBtn");
+    btnRecenter.setAttribute("class", "gm-control-active");
+    btnRecenter.style.background = 'none rgb(255, 255, 255)';
+    btnRecenter.style.border = '0';
+    btnRecenter.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
+    btnRecenter.style.margin = '10px';
+    btnRecenter.style.padding = '0px';
+    btnRecenter.style.position = 'absolute';
+    btnRecenter.style.borderRadius = "2px";
+    btnRecenter.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 1px 4px -1px";
+    btnRecenter.style.width = "40px";
+    btnRecenter.style.height = "40px";
+    btnRecenter.style.color = "#666666";
+    btnRecenter.style.fontSize = "24px";
+    btnRecenter.innerHTML = '<i class="fa fa-dot-circle-o"></i>';
+
+    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(btnRecenter);
 
     drawInitialShape();
     if (!shapeType) {
@@ -268,7 +293,7 @@ function drawMarkerOnTextChange(){
     // Center map at new market
     coverageMap.setCenter(marker.getPosition());
     // Set onClick event for recenter button
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         coverageMap.setCenter(marker.getPosition());
     });
     allShapes.push(marker);
@@ -333,7 +358,7 @@ function drawRectangleOnTextChange(){
         processDrawing(coordinates, "rectangle");
     });
     zoomCoverageMap(bounds);
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         zoomCoverageMap(bounds);
     });
     allShapes.push(rectangle);
@@ -380,7 +405,7 @@ function processDrawing (coordinates, shape) {
         $("#id_eastlimit").removeClass("invalid-input");
         $("#id_southlimit").removeClass("invalid-input");
         $("#id_westlimit").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function(){
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             zoomCoverageMap(bounds);
         });
     }
@@ -401,7 +426,7 @@ function processDrawing (coordinates, shape) {
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function () {
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             coverageMap.setCenter(coordinates);
         });
     }

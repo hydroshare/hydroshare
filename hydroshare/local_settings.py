@@ -113,12 +113,12 @@ IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'dev-irods-1.cuahsi.org'
 IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'cuahsi3ReplResc'
-IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi3DataProxy'
-IRODS_CWD = '/hydroshareZone/home/cuahsi3DataProxy'
-IRODS_ZONE = 'hydroshareZone'
-IRODS_USERNAME = 'cuahsi3DataProxy'
-IRODS_AUTH = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'hydroshare123'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
