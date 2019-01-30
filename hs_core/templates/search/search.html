@@ -10,30 +10,30 @@
                 <small class="text-muted"><i>Public resources shared with the community.</i></small>
             </h2>
         </div>
-        <div class="col-sm-9 col-sm-offset-3 col-xs-12">
-            <button id="solr-help-info" class="btn btn-info" data-toggle="popover" 
-                    data-placement="right">
-                    <i class="glyphicon glyphicon-info-sign"></i>
-            </button>
-            <div id="discover-resource-search" class="resource-search">
-
-                <form id="search-field" method="get" action="." class="search-field">
-                    {% for field in form %}
-                        {% if field.auto_id  == "id_q" %}
-                        <div class="fieldWrapper">
-                            <span class="glyphicon glyphicon-search search-icon"></span>
-                            {{ field }}
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                </form>
+        <div class="col-sm-9 col-sm-offset-3 col-xs-12 space-bottom">
+            <div class="flex">
+                <span id="solr-help-info" class="glyphicon glyphicon-info-sign info-popover-glypn c-pointer"
+                      data-toggle="popover"
+                      data-placement="bottom">
+                </span>
+                <div id="discover-resource-search" class="resource-search">
+                    <form id="search-field" method="get" action="." class="search-field">
+                        {% for field in form %}
+                            {% if field.auto_id  == "id_q" %}
+                                <div class="fieldWrapper">
+                                    <span class="glyphicon glyphicon-search search-icon"></span>
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </form>
+                </div>
             </div>
-            <div> 
-                {% if parse_error %}
-                    <em><font color='red'>{{ parse_error }}</font></em> 
-                {% endif %}
-            </div> 
-            <br>
+            {% if parse_error %}
+                <div>
+                    <em><font color='red'>{{ parse_error }}</font></em>
+                </div>
+            {% endif %}
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
             <div>
