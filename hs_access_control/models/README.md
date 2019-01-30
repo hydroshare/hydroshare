@@ -1,5 +1,5 @@
-"""
 Access control classes for hydroshare.
+-------------------------
 
 This module implements access control for hydroshare.  Privilege models act on users,
 groups, and resources, and determine what objects are accessible to which users.  These models:
