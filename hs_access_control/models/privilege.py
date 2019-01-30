@@ -3,8 +3,6 @@ from django.db import models
 from django.db import transaction
 
 from hs_core.models import BaseResource
-from hs_access_control.models.provenance import UserGroupProvenance,\
-        UserResourceProvenance, GroupResourceProvenance
 
 #############################################
 # Classes involving privilege
@@ -223,6 +221,8 @@ class UserGroupPrivilege(PrivilegeBase):
         Usage:
             UserGroupPrivilege.share(group={X}, user={Y}, privilege={Z}, grantor={W}
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserGroupProvenance
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -258,6 +258,8 @@ class UserGroupPrivilege(PrivilegeBase):
         Use UserAccess.unshare_group_with_user instead. That routine avoids single-owner
         deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserGroupProvenance
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -296,6 +298,8 @@ class UserGroupPrivilege(PrivilegeBase):
         Use UserAccess.undo_share_group_with_user instead. That routine avoids single-owner
         deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserGroupProvenance
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -324,6 +328,8 @@ class UserGroupPrivilege(PrivilegeBase):
         **This is a system routine** that should not be called directly by developers!
         Use UserAccess.__get_group_undo_users instead. That routine avoids single-owner deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserGroupProvenance
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -396,6 +402,8 @@ class UserResourcePrivilege(PrivilegeBase):
 
         This routine links UserResourcePrivilege and UserResourceProvenance.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserResourceProvenance
         cls.update(**kwargs)
         UserResourceProvenance.update(**kwargs)
 
@@ -421,6 +429,8 @@ class UserResourcePrivilege(PrivilegeBase):
         Use UserAccess.unshare_resource_with user instead. That routine avoids
         single-owner deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserResourceProvenance
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
@@ -453,6 +463,8 @@ class UserResourcePrivilege(PrivilegeBase):
         Use UserAccess.undo_share_resource_with user instead. That routine avoids
         single-owner deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserResourceProvenance
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -481,6 +493,8 @@ class UserResourcePrivilege(PrivilegeBase):
         Use UserAccess.__get_resource_undo_users instead. That routine avoids single-owner
         deletion.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import UserResourceProvenance
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -554,6 +568,8 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import GroupResourceProvenance
         cls.update(**kwargs)
         GroupResourceProvenance.update(**kwargs)
 
@@ -573,6 +589,8 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import GroupResourceProvenance
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
@@ -599,6 +617,8 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import GroupResourceProvenance
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -621,6 +641,8 @@ class GroupResourcePrivilege(PrivilegeBase):
         **This is a system routine** that should not be called directly by developers!
         Use UserAccess.__get_resource_undo_groups instead.
         """
+        # prevent import loops
+        from hs_access_control.models.provenance import GroupResourceProvenance
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
