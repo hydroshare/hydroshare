@@ -144,7 +144,7 @@ ResourceListItem = namedtuple('ResourceListItem',
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
-                               'pathname',
+                               'file_name',
                                'size',
                                'content_type'])
 
