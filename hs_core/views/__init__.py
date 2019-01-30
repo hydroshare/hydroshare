@@ -1188,7 +1188,7 @@ def add_generic_context(request, page):
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
-        'add_view_contri_user_form': AddUserContriForm(),
+        'add_view_contrib_user_form': AddUserContriForm(),
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
