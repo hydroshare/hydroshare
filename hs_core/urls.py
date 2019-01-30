@@ -1,7 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from hs_core import views
+from hs_core.views.autocomplete import autocomplete
 
-urlpatterns = patterns('',
+urlpatterns = [
     # internal API
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$',
         views.add_files_to_resource, name='add_files_to_resource'),
@@ -13,6 +14,8 @@ urlpatterns = patterns('',
         views.update_metadata_element, name='update_metadata_element'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$',
         views.delete_metadata_element, name='delete_metadata_element'),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/get-metadata/$',
+        views.get_resource_metadata, name='get_metadata'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/update-key-value-metadata/$',
         views.update_key_value_metadata, name="update_key_value_metadata"),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource-file/(?P<f>[0-9]+)/$',
@@ -72,7 +75,7 @@ urlpatterns = patterns('',
         views.get_supported_file_types_for_resource_type, name='resource_type_file_types'),
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
         views.is_multiple_file_upload_allowed, name="resource_type_multiple_file_upload"),
-    url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
+    url(r'^_internal/search/autocomplete/', autocomplete),
     url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
     url(r'^_internal/data-store-folder-zip/$',
         views.resource_folder_hierarchy.data_store_folder_zip),
@@ -80,6 +83,10 @@ urlpatterns = patterns('',
         views.resource_folder_hierarchy.data_store_folder_unzip),
     url(r'^_internal/data-store-create-folder/$',
         views.resource_folder_hierarchy.data_store_create_folder),
+    url(r'^_internal/data-store-add-reference/$',
+        views.resource_folder_hierarchy.data_store_add_reference),
+    url(r'^_internal/data-store-edit-reference-url/$',
+        views.resource_folder_hierarchy.data_store_edit_reference_url),
     url(r'^_internal/data-store-move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename),
     url(r'^_internal/data-store-move-to-folder/$',
@@ -88,4 +95,6 @@ urlpatterns = patterns('',
         views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
-)
+    url(r'^_internal/update_quota_usage/(?P<username>[\w.@+-]+)/$',
+        views.update_quota_usage, name='update_quota_usage'),
+]

@@ -26,7 +26,7 @@ from mezzanine.utils.email import send_verification_mail, send_approve_mail, sub
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.accounts.forms import LoginForm
-from mezzanine.utils.views import render
+from django.shortcuts import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_core.hydroshare.utils import user_from_id
@@ -145,7 +145,7 @@ def rating(request):
         return response
     obj, post_data = response
     url = add_cache_bypass(obj.get_absolute_url().split("#")[0])
-    response = redirect(url + "#rating-%s" % obj.id)
+    response = redirect(url)
     resource_mode = post_data.get('resource-mode', 'view')
     request.session['resource-mode'] = resource_mode
     rating_form = RatingForm(request, obj, post_data)
@@ -606,3 +606,4 @@ def create_irods_account(request):
             dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
+

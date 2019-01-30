@@ -3,21 +3,19 @@ import logging
 import shutil
 import zipfile
 import xmltodict
+from lxml import etree
 
 from osgeo import ogr, osr
 
-
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title
+from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm
 
 
@@ -65,7 +63,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         return template.render(context)
 
     def _get_field_informations_html(self):
-        root_div = div(cls="col-md-12 col-sm-12 pull-left", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
         with root_div:
             legend('Field Information')
             with table(style="width: 100%;"):
@@ -87,11 +85,11 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoFeatureFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="content-block"):
                 div("{% crispy geometry_information_form %}")
-            with div(cls="col-lg-6 col-xs-12 col-md-pull-6", style="margin-top:40px;"):
+            with div(cls="content-block"):
                 div("{% crispy spatial_coverage_form %}")
-            with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="content-block"):
                 div("{% crispy original_coverage_form %}")
 
         template = Template(root_div.render())
@@ -143,11 +141,11 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of all metadata elements associated with this
-        logical file type instance"""
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
 
-        container_to_add_to = super(GeoFeatureFileMetaData, self).add_to_xml_container(container)
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(GeoFeatureFileMetaData, self)._get_xml_containers()
         if self.geometryinformation:
             self.geometryinformation.add_to_xml_container(container_to_add_to)
 
@@ -156,6 +154,9 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container_to_add_to)
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -173,6 +174,11 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ".mxs")
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".shp"
+
+    @classmethod
     def get_allowed_storage_file_types(cls):
         """file types allowed in this logical file group are the followings"""
         return [".shp", ".shx", ".dbf", ".prj",
@@ -182,10 +188,29 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ]
 
     @classmethod
-    def create(cls):
+    def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
         feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
-        return cls.objects.create(metadata=feature_metadata)
+        # Note we are not creating the logical file record in DB at this point
+        # the caller must save this to DB
+        return cls(metadata=feature_metadata, resource=resource)
+
+    @staticmethod
+    def get_aggregation_display_name():
+        return 'Geographic Feature Content: The multiple files that are part of a geographic ' \
+               'shapefile'
+
+    @staticmethod
+    def get_aggregation_type_name():
+        return "GeographicFeatureAggregation"
+
+    # used in discovery faceting to aggregate native and composite content types
+    @staticmethod
+    def get_discovery_content_type():
+        """Return a human-readable content type for discovery.
+        This must agree between Composite Types and native types.
+        """
+        return "Geographic Feature (ESRI Shapefiles)"
 
     @property
     def supports_resource_file_move(self):
@@ -208,31 +233,26 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         return False
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
-        """
-        Sets a .shp or .zip resource file to GeoFeatureFile type
-        :param resource: an instance of resource type CompositeResource
-        :param file_id: id of the resource file to be set as GeoFeatureFile type
-        :param user: user who is setting the file type
-        :return:
+    def check_files_for_aggregation_type(cls, files):
+        """Checks if the specified files can be used to set this aggregation type
+        :param  files: a list of ResourceFile objects
+
+        :return If the files meet the requirements of this aggregation type, then returns this
+        aggregation class name, otherwise empty string.
         """
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        if _check_if_shape_files(files, temp_files=False):
+            return cls.__name__
+        else:
+            return ""
+
+    @classmethod
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file,
+        or a folder """
 
         log = logging.getLogger()
-
-        # get the file from irods
-        res_file = utils.get_resource_file_by_id(resource, file_id)
-
-        if res_file is None or not res_file.exists:
-            raise ValidationError("File not found.")
-
-        if res_file.extension.lower() not in ('.zip', '.shp'):
-            raise ValidationError("Not a valid geographic feature file.")
-
-        if not res_file.has_generic_logical_file:
-            raise ValidationError("Selected file must be part of a generic file type.")
+        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
@@ -254,57 +274,82 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         file_folder = res_file.file_folder
         file_type_success = False
         upload_folder = ''
-        msg = "GeoFeature file type. Error when setting file type. Error:{}"
+        res_files_to_delete = []
+        aggregation_folder_created = False
+        create_new_folder = cls._check_create_aggregation_folder(
+            selected_res_file=res_file, selected_folder=folder_path,
+            aggregation_file_count=len(shape_files))
+
+        msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
         with transaction.atomic():
             # create a GeoFeature logical file object to be associated with
             # resource files
-            logical_file = cls.create()
-
-            # by default set the dataset_name attribute of the logical file to the
-            # name of the file selected to set file type
-            logical_file.dataset_name = base_file_name
-            logical_file.save()
+            logical_file = cls.initialize(base_file_name, resource)
             try:
-                # create a folder for the geofeature file type using the base file
-                # name as the name for the new folder
-                new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                               base_file_name)
-                create_folder(resource.short_id, new_folder_path)
-                log.info("Folder created:{}".format(new_folder_path))
+                if folder_path is None:
+                    # we are here means aggregation is being created by selecting a file
 
-                new_folder_name = new_folder_path.split('/')[-1]
-                if file_folder is None:
-                    upload_folder = new_folder_name
+                    if create_new_folder:
+                        # create a folder for the geofeature file type using the base file
+                        # name as the name for the new folder
+                        upload_folder = cls._create_aggregation_folder(resource, file_folder,
+                                                                       base_file_name)
+
+                        log.info("Folder created:{}".format(upload_folder))
+                        aggregation_folder_created = True
+                        # create logical file record in DB
+                        logical_file.save()
+                        if res_file.extension.lower() == ".shp":
+                            # selected file is a shp file - that means we didn't create any new
+                            # files - we just need to copy all the existing files to a new folder
+                            # and makes those copied files part of the new aggregation
+                            tgt_folder = upload_folder
+                            logical_file.copy_resource_files(resource, shp_res_files, tgt_folder)
+                            res_files_to_delete.extend(shp_res_files)
+
+                        else:
+                            # selected file must be a zip file - add the extracted files to
+                            # the resource and make those files part of the aggregation
+                            logical_file.add_files_to_resource(
+                                resource=resource, files_to_add=shape_files,
+                                upload_folder=upload_folder)
+                            res_files_to_delete.append(res_file)
+                    else:
+                        # create logical file record in DB
+                        logical_file.save()
+                        upload_folder = file_folder
+
+                        # we need to upload files to the resource only if the selected file is a zip
+                        # file - since we created new files by unzipping
+                        if res_file.extension.lower() == ".zip":
+                            # selected file must be a zip file- add the extracted files to the
+                            # resource and make those files part of the aggregation
+                            logical_file.add_files_to_resource(
+                                resource=resource, files_to_add=shape_files,
+                                upload_folder=upload_folder)
+                            res_files_to_delete.append(res_file)
+                        else:
+                            # selected file must be a shp file - make all files in the folder part
+                            # of the aggregation
+                            logical_file.add_resource_files_in_folder(resource, upload_folder)
                 else:
-                    upload_folder = os.path.join(file_folder, new_folder_name)
-                # add all new files to the resource
-                files_to_add_to_resource = shape_files
-                for fl in files_to_add_to_resource:
-                    uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                                 name=os.path.basename(fl))
-                    # the added resource file will be part of a new generic logical file by default
-                    new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=upload_folder
-                    )
+                    # create logical file record in DB
+                    logical_file.save()
+                    # user selected a folder to create aggregation
+                    # make all the files in the selected folder as part of the aggregation
+                    logical_file.add_resource_files_in_folder(resource, folder_path)
 
-                    # delete the generic logical file object
-                    if new_res_file.logical_file is not None:
-                        # deleting the file level metadata object will delete the associated
-                        # logical file object
-                        new_res_file.logical_file.metadata.delete()
-
-                    # make each resource file we added part of the logical file
-                    logical_file.add_resource_file(new_res_file)
-
-                log.info("GeoFeature file type - files were added to the file type.")
+                log.info("GeoFeature aggregation - files were added to the aggregation.")
                 add_metadata(resource, meta_dict, xml_file, logical_file)
-                log.info("GeoFeature file type and resource level metadata updated.")
-                # delete the original resource files used as part of setting file type
-                for fl in shp_res_files:
-                    delete_resource_file(resource.short_id, fl.id, user)
-                log.info("Deleted original resource files.")
+                log.info("GeoFeature aggregation and resource level metadata updated.")
+                reset_title = logical_file.dataset_name == base_file_name
+                logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
+                                       res_files_to_delete=res_files_to_delete,
+                                       reset_title=reset_title)
+
                 file_type_success = True
             except Exception as ex:
+                msg = "GeoFeature aggregation type. Error when creating aggregation type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
             finally:
@@ -312,12 +357,33 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-        if not file_type_success and upload_folder:
-            # delete any new files uploaded as part of setting file type
-            folder_to_remove = os.path.join('data', 'contents', upload_folder)
-            remove_folder(user, resource.short_id, folder_to_remove)
-            log.info("Deleted newly created file type folder")
+        if not file_type_success:
+            aggregation_from_folder = folder_path is not None
+            cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
+                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
+
+    @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        res_file, folder_path = super(GeoFeatureLogicalFile, cls)._validate_set_file_type_inputs(
+            resource, file_id, folder_path)
+        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
+            # when a file is specified by the user for creating this file type it must be a
+            # zip or shp file
+            raise ValidationError("Not a valid geographic feature file.")
+        return res_file, folder_path
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets a resource file that has extension .shp from the list of files *resource_files* """
+
+        res_files = [f for f in resource_files if f.extension.lower() == '.shp']
+        return res_files[0] if res_files else None
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(GeoFeatureLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
 
 
 def extract_metadata_and_files(resource, res_file, file_type=True):
@@ -459,11 +525,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                 if f.extension.lower() == '.xml' and not f.file_name.lower().endswith('.shp.xml'):
                     continue
                 if f.extension.lower() in GeoFeatureLogicalFile.get_allowed_storage_file_types():
-                    if file_type:
-                        if f.has_generic_logical_file:
-                            collect_shape_resource_files(f)
-                    else:
-                        collect_shape_resource_files(f)
+                    collect_shape_resource_files(f)
 
         for f in shape_res_files:
             temp_file = utils.get_file_from_irods(f)
@@ -500,11 +562,13 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
     return shape_temp_files, shape_res_files
 
 
-def _check_if_shape_files(files):
+def _check_if_shape_files(files, temp_files=True):
     """
     checks if the list of file temp paths in *files* are part of shape files
     must have all these file extensions: (shp, shx, dbf)
-    :param files: list of files located in temp directory in django
+    :param files: list of files located in temp directory in django if temp_file is True, otherwise
+    list of resource files are from django db
+    :param  temp_files: a flag to treat list of files *files* as temp files or not
     :return: True/False
     """
     # Note: this is the original function (check_fn_for_shp) in geo feature resource receivers.py
@@ -513,24 +577,49 @@ def _check_if_shape_files(files):
     # at least needs to have 3 mandatory files: shp, shx, dbf
     if len(files) >= 3:
         # check that there are no files with same extension
-        file_extensions = set([os.path.splitext(os.path.basename(f).lower())[1] for f in files])
+        if temp_files:
+            # files are on temp directory
+            file_extensions = set([os.path.splitext(os.path.basename(f).lower())[1] for f in files])
+        else:
+            # files are in db
+            file_extensions = set([f.extension.lower() for f in files])
+
         if len(file_extensions) != len(files):
             return False
         # check if there is the xml file
         xml_file = ''
         for f in files:
-            if f.lower().endswith('.shp.xml'):
-                xml_file = f
+            if temp_files:
+                # files are on temp directory
+                if f.lower().endswith('.shp.xml'):
+                    xml_file = f
+            else:
+                # files are in db
+                if f.file_name.lower().endswith('.shp.xml'):
+                    xml_file = f
 
-        file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
-                          not f.lower().endswith('.shp.xml')])
+        if temp_files:
+            # files are on temp directory
+            file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
+                              not f.lower().endswith('.shp.xml')])
+        else:
+            # files are in db
+            file_names = set([os.path.splitext(os.path.basename(f.file_name))[0] for f in files if
+                              not f.file_name.lower().endswith('.shp.xml')])
         if len(file_names) > 1:
             # file names are not the same
             return False
+
         # check if xml file name matches with other file names
         if xml_file:
             # -8 for '.shp.xml'
-            if os.path.basename(xml_file)[:-8] not in file_names:
+            if temp_files:
+                # files are on temp directory
+                xml_file_name = os.path.basename(xml_file)
+            else:
+                # files are in db
+                xml_file_name = xml_file.file_name
+            if xml_file_name[:-8] not in file_names:
                 return False
         for ext in file_extensions:
             if ext not in GeoFeatureLogicalFile.get_allowed_storage_file_types():
@@ -542,12 +631,14 @@ def _check_if_shape_files(files):
         return False
 
     # test if we can open the shp file
-    shp_file = [f for f in files if f.lower().endswith('.shp')][0]
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    dataset = driver.Open(shp_file)
-    if dataset is None:
-        return False
-    dataset = None
+    if temp_files:
+        # files are on temp directory
+        shp_file = [f for f in files if f.lower().endswith('.shp')][0]
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        dataset = driver.Open(shp_file)
+        if dataset is None:
+            return False
+        dataset = None
 
     return True
 
@@ -559,7 +650,6 @@ def extract_metadata(shp_file_full_path):
     :return: returns a dict of collected metadata
     """
 
-    # TODO: Pabitra - try to simplify the logic in this function
     try:
         metadata_dict = {}
 
@@ -571,11 +661,12 @@ def extract_metadata(shp_file_full_path):
             if wgs84_dict["westlimit"] == wgs84_dict["eastlimit"] \
                and wgs84_dict["northlimit"] == wgs84_dict["southlimit"]:
                 coverage_dict = {"Coverage": {"type": "point",
-                                 "value": {"east": wgs84_dict["eastlimit"],
-                                           "north": wgs84_dict["northlimit"],
-                                           "units": wgs84_dict["units"],
-                                           "projection": wgs84_dict["projection"]}
-                                }}
+                                              "value": {
+                                                  "east": wgs84_dict["eastlimit"],
+                                                  "north": wgs84_dict["northlimit"],
+                                                  "units": wgs84_dict["units"],
+                                                  "projection": wgs84_dict["projection"]
+                                              }}}
             else:  # otherwise, create box type coverage
                 coverage_dict = {"Coverage": {"type": "box",
                                               "value": parsed_md_dict["wgs84_extent_dict"]}}
@@ -625,7 +716,7 @@ def extract_metadata(shp_file_full_path):
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
     except:
-        raise ValidationError("Parse Shapefiles Failed!")
+        raise ValidationError("Parsing of shapefiles failed!")
 
 
 def parse_shp(shp_file_path):

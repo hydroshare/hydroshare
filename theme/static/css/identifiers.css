@@ -60,18 +60,18 @@ img.identifier-icon {
     margin-right: 12px;
 }
 
-i.identifier-icon.ai-orcid {
+i.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
     color: #a6ce39;
 }
 
-i.identifier-icon.ai-google-scholar-square {
+i.identifier-icon.ai-google-scholar-square, .identifier-icon .ai-google-scholar-square {
     color: #367df3;
 }
 
-i.identifier-icon.ai-researchgate-square {
+i.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-square {
     color: #00CCBB;
 }
 
-i.identifier-icon.fa-address-card {
+i.identifier-icon.fa-address-card, .identifier-icon .fa-address-card {
     color: #b7b7b7;
 }

@@ -1,12 +1,58 @@
+import os
+
 from dateutil import parser
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from django.core.files.uploadedfile import UploadedFile
+
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
+from hs_core.hydroshare import create_resource, add_resource_files
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
     NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
     TimeSeriesLogicalFile, TimeSeriesFileMetaData
 
 
-def assert_raster_file_type_metadata(self):
+class CompositeResourceTestMixin(object):
+
+    def add_file_to_resource(self, file_to_add, upload_folder=None):
+        file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
+                                      name=os.path.basename(file_to_add))
+
+        new_res_file = add_file_to_resource(
+            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+        )
+        return new_res_file
+
+    def add_files_to_resource(self, files_to_add, upload_folder=None):
+        files_to_upload = []
+        for fl in files_to_add:
+            file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
+            files_to_upload.append(file_to_upload)
+        added_resource_files = add_resource_files(self.composite_resource.short_id,
+                                                  *files_to_upload, folder=upload_folder)
+        return added_resource_files
+
+    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=None):
+        if isinstance(file_to_upload, str):
+            file_to_upload = [file_to_upload]
+        files = []
+        full_paths = {}
+        for file_name in file_to_upload:
+            file_obj = open(file_name, 'r')
+            if folder:
+                full_paths[file_obj] = os.path.join(folder, file_name)
+            uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
+            files.append(uploaded_file)
+        self.composite_resource = create_resource(
+            resource_type='CompositeResource',
+            owner=self.user,
+            title=self.res_title,
+            files=files,
+            auto_aggregate=auto_aggregate,
+            full_paths=full_paths
+        )
+
+
+def assert_raster_file_type_metadata(self, aggr_folder_path):
     # test the resource now has 2 files (vrt file added as part of metadata extraction)
     self.assertEqual(self.composite_resource.files.all().count(), 2)
 
@@ -16,13 +62,9 @@ def assert_raster_file_type_metadata(self):
         self.assertEqual(res_file.has_logical_file, True)
         self.assertTrue(isinstance(res_file.logical_file, GeoRasterLogicalFile))
 
-    # check that we put the 2 files in a new folder (small_logan)
+    # check that the 2 files are in the aggr_folder_path
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
-        expected_file_path = "{}/data/contents/small_logan/{}"
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, aggr_folder_path)
 
     # check that there is no GenericLogicalFile object
     self.assertEqual(GenericLogicalFile.objects.count(), 0)
@@ -30,10 +72,11 @@ def assert_raster_file_type_metadata(self):
     self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
 
     res_file = self.composite_resource.files.first()
-    # check that the logicalfile is associated with 2 files
+    expected_dataset_name = os.path.basename(res_file.file_folder)
     logical_file = res_file.logical_file
-    self.assertEqual(logical_file.dataset_name, 'small_logan')
+    self.assertEqual(logical_file.dataset_name, expected_dataset_name)
     self.assertEqual(logical_file.has_metadata, True)
+    # check that the logicalfile is associated with 2 files
     self.assertEqual(logical_file.files.all().count(), 2)
     self.assertEqual(set(self.composite_resource.files.all()),
                      set(logical_file.files.all()))
@@ -68,18 +111,18 @@ def assert_raster_file_type_metadata(self):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 42.0500269597691)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.57773718106195)
-    self.assertEqual(box_coverage.value['southlimit'], 41.98722286029891)
-    self.assertEqual(box_coverage.value['westlimit'], -111.69756293084055)
+    self.assertEqual(float(box_coverage.value['northlimit']), 42.0500269597691)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.57773718106195)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.98722286029891)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.69756293084055)
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
-    self.assertEqual(ori_coverage.value['northlimit'], 4655492.446916306)
-    self.assertEqual(ori_coverage.value['eastlimit'], 452144.01909127034)
-    self.assertEqual(ori_coverage.value['southlimit'], 4648592.446916306)
-    self.assertEqual(ori_coverage.value['westlimit'], 442274.01909127034)
+    self.assertEqual(float(ori_coverage.value['northlimit']), 4655492.446916306)
+    self.assertEqual(float(ori_coverage.value['eastlimit']), 452144.01909127034)
+    self.assertEqual(float(ori_coverage.value['southlimit']), 4648592.446916306)
+    self.assertEqual(float(ori_coverage.value['westlimit']), 442274.01909127034)
     self.assertEqual(ori_coverage.value['units'], 'meter')
     self.assertEqual(ori_coverage.value['projection'],
                      'NAD83 / UTM zone 12N')
@@ -100,7 +143,7 @@ def assert_raster_file_type_metadata(self):
     self.assertEqual(band_info.minimumValue, '1870.63659668')
 
 
-def assert_netcdf_file_type_metadata(self, title):
+def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # check that there is one NetCDFLogicalFile object
     self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
     # check that there is no GenericLogicalFile object
@@ -108,13 +151,12 @@ def assert_netcdf_file_type_metadata(self, title):
 
     # There should be now 2 files
     self.assertEqual(self.composite_resource.files.count(), 2)
-    # check that we put the 2 files in a new folder (netcdf_valid)
+    # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name = res_file.full_path, res_file.file_name
-        expected_file_path = u"{}/data/contents/netcdf_valid/{}"
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path, aggr_folder,
+                                                  res_file.file_name)
+        self.assertEqual(res_file.full_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, aggr_folder)
 
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file
@@ -166,10 +208,10 @@ def assert_netcdf_file_type_metadata(self, title):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.867126409)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.505940368)
-    self.assertEqual(box_coverage.value['southlimit'], 41.8639080745)
-    self.assertEqual(box_coverage.value['westlimit'], -111.51138808)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -202,10 +244,10 @@ def assert_netcdf_file_type_metadata(self, title):
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
     proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
-    self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
-    self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
-    self.assertEqual(ori_coverage.value['southlimit'], '4.63479e+06')
-    self.assertEqual(ori_coverage.value['westlimit'], '457560.0')
+    self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
+    self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
+    self.assertEqual(float(ori_coverage.value['southlimit']), 4.63479e+06)
+    self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
@@ -295,10 +337,10 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
                      'unknown')
     self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
     self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
-    self.assertEqual(logical_file.metadata.originalcoverage.eastlimit, -66.9692712587578)
-    self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
-    self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
-    self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.eastlimit), -66.9692712587578)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.northlimit), 71.406235393967)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.southlimit), 18.921786345087)
+    self.assertEqual(float(logical_file.metadata.originalcoverage.westlimit), -178.217598362366)
 
 
 def assert_ref_time_series_file_type_metadata(self):
@@ -331,10 +373,10 @@ def assert_ref_time_series_file_type_metadata(self):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 40.48498)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.46245)
-    self.assertEqual(box_coverage.value['southlimit'], 40.1788719)
-    self.assertEqual(box_coverage.value['westlimit'], -111.639338)
+    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
+    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -352,10 +394,10 @@ def assert_ref_time_series_file_type_metadata(self):
     box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'Unknown')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 40.48498)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.46245)
-    self.assertEqual(box_coverage.value['southlimit'], 40.1788719)
-    self.assertEqual(box_coverage.value['westlimit'], -111.639338)
+    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
+    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
     temporal_coverage = logical_file.metadata.coverages.all().filter(
         type='period').first()
     self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -406,8 +448,8 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertIn("WaterML 1.1", web_return_types)
 
 
-def assert_time_series_file_type_metadata(self):
-    """Test timeseries file type metadata extraction.  """
+def assert_time_series_file_type_metadata(self, expected_file_folder):
+    """Test timeseries file type metadata extraction."""
 
     # check that there is one TimeSeriesLogicalFile object
     self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
@@ -451,10 +493,10 @@ def assert_time_series_file_type_metadata(self):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -475,17 +517,14 @@ def assert_time_series_file_type_metadata(self):
 
     # test that we put the sqlite file into a new directory
     res_file = self.composite_resource.files.first()
-    file_path, base_file_name = res_file.full_path, res_file.file_name
-    expected_file_path = u"{}/data/contents/ODM2_Multi_Site_One_Variable/{}"
-    expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                   base_file_name)
-    self.assertEqual(file_path, expected_file_path)
+    self.assertEqual(res_file.file_folder, expected_file_folder)
+
     logical_file = res_file.logical_file
 
     # logical file should be associated with 1 file
     self.assertEqual(logical_file.files.all().count(), 1)
     res_file = logical_file.files.first()
-    self.assertIn('.sqlite', res_file.extension)
+    self.assertEqual('.sqlite', res_file.extension.lower())
 
     # test file level metadata extraction
 
@@ -508,10 +547,10 @@ def assert_time_series_file_type_metadata(self):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
 
     # test temporal coverage
     temporal_coverage = logical_file.metadata.temporal_coverage

@@ -1,71 +1,140 @@
 {% load hydroshare_tags %}
 
-{% if not metadata_form %}
-<div class="col-xs-12">
-    <table class="info-table">
-        <tr><th>Authors:</th><td id="authors">
-            {% for cr in creators %}
-                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                {% if cr.name %}
-                    {% if cr.description %}
-                        <a href="{{ cr.description }}">{{ cr.name }}</a>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-6 res-header">
+            <table id="left-header-table" class="info-table">
+                <tr>
+                    <th>Authors:</th>
+                    {% if not metadata_form %}
+                        <td class="authors-wrapper">
+                            {% for author in creators %}
+                                {% include "includes/author-link.html" with author=author %}
+                            {% endfor %}
+                        </td>
                     {% else %}
-                        <span>{{ cr.name }}</span>
+                    <td>
+                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
+                           data-target="#add-creator-dialog" title="Add Author">
+                            <span class="glyphicon glyphicon-plus"></span>
+                        </a>
+                        <span class="authors-wrapper sortable">
+                            {% for author in creator_formset.initial %}
+                                <span>
+                                    <a title="Edit {{ author.name }}"
+                                       class="author-modal-trigger" data-id="{{ author.id }}"
+                                       data-name="{{ author.name }}" data-order="{{ author.order }}"
+                                       data-description="{{ author.description|default:"" }}"
+                                       data-organization="{{ author.organization|default:"" }}"
+                                       data-email="{{ author.email|default:"" }}"
+                                       data-address="{{ author.address|default:"" }}"
+                                       data-phone="{{ author.phone|default:"" }}"
+                                       data-homepage="{{ author.homepage|default:"" }}"
+                                            {% for name, link in author.identifiers.items %}
+                                       data-{{ name }}="{{ link }}"
+                                            {% endfor %}>
+                                        {% if author.name %}
+                                            {{ author.name }}
+                                        {% else %}
+                                            {{ author.organization }}
+                                        {% endif %}
+                                    </a>
+
+                                    <form class="hidden-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                          enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input name="resource-mode" type="hidden" value="edit">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                               value="{{ author.name|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                               value="{{ author.description|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
+                                               value="{{ author.organization|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                               value="{{ author.email|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                               value="{{ author.address|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                               type="text" value="{{ author.phone|default:"" }}">
+
+                                        <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
+                                               value="{{ author.homepage|default:"" }}">
+
+                                        <input class="input-order"
+                                               name="creator-{{ author.order|add:"- 1" }}-order"
+                                               type="number" value="{{ author.order|default:"" }}">
+                                    </form>
+                                 </span>
+                            {% endfor %}
+                        </span>
+                        <span data-toggle="tooltip" data-placement="auto"
+                              title='Drag and drop Authors to rearrange.'
+                              class="glyphicon glyphicon-info-sign text-muted"></span>
+
+                    </td>
                     {% endif %}
-                {% else %}{# Author is an organization #}
-                    {% if cr.homepage %}
-                        <a href="{{ cr.homepage }}" target="_blank">{{ cr.organization }}</a>
-                    {% else %}
-                        <span>{{ cr.organization }}</span>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-        </td></tr>
-        <tr><th>Owners:</th><td>
-            {% for u in owners %}
-                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                <span>{{ u|contact }}</span>
-            {% endfor %}
-        </td></tr>
-        <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-        <tr><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-        <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
-    </table>
-</div>
-{% else %}
-    <div class="col-sm-6">
-        <table class="info-table">
-            <tr>
-                <th>Authors:</th>
-                <td><span id="authors">
-                        {% for author in creator_formset.initial %}
-                            {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                            {% if author.name %}
-                                {% if author.description %}
-                                    <a href="{{ author.description }}">{{ author.name }}</a>
-                                {% else %}
-                                    <span>{{ author.name }}</span>
-                                {% endif %}
-                            {% else %}{# Author is an organization #}
-                                {% if author.homepage %}
-                                    <a href="{{ author.homepage }}" target="_blank">{{ author.organization }}</a>
-                                {% else %}
-                                    <span>{{ author.organization }}</span>
-                                {% endif %}
-                            {% endif %}
+                </tr>
+                <tr>
+                    <th>Owners:</th>
+                    <td class="owners-wrapper">
+                        {% for u in owners %}
+                            {% include "includes/profile-link.html" with user=u %}
                         {% endfor %}
-                    </span>
-                </td>
-            </tr>
-            <tr><th>Owners:</th><td>
-                {% for u in owners %}
-                    {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                    <span>{{ u|contact }}</span>
-                {% endfor %}
-            </td></tr>
-            <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-            <tr><th>Created: </th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
-            <tr><th>Last updated:</th><td>{{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
-        </table>
+                        {% include "includes/profile-card.html" %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Resource type:</th>
+                    <td>{{ cm|resource_type }}</td>
+                </tr>
+                <tr>
+                    <th>Storage:</th>
+                    <td>The size of this resource is {{ cm.size|filesizeformat }}</td>
+                </tr>
+                <tr>
+                    <th>Created:</th>
+                    <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
+                </tr>
+                <tr>
+                    <th>Last updated:</th>
+                    <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
+                        {% if cm.last_changed_by %} by
+                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}
+                        {% endif %}
+                        {% include "includes/profile-card.html" %}
+                    </td>
+                </tr>
+                {% if cm.raccess.published %}
+                <tr>
+                    <th>DOI:</th>
+                    <td>10.4211/hs.{{ cm.short_id }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Citation:</th>
+                    <td><a href="#citation">See how to cite this resource</a></td>
+                </tr>
+                {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
+                <tr>
+                    <th>Content types:</th>
+                    <td>
+                        {% for ct in cm.aggregation_types %}
+                            <span class="label label-info agg-{{ ct|display_name_to_class }}">{{ ct }}</span>&nbsp;
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        <div class="col-sm-12 col-md-6 res-header">
+            {% include "resource-landing-page/highlights.html" %}
+        </div>
     </div>
-{% endif %}
+</div>

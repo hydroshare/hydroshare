@@ -5,8 +5,8 @@
 
 import redis
 import os
+import yaml
 from kombu import Queue, Exchange
-from kombu.common import Broadcast
 
 DEBUG = True
 
@@ -117,7 +117,7 @@ IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
 IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
 IRODS_ZONE = 'hydrotest41Zone'
 IRODS_USERNAME = 'hsproxy'
-IRODS_AUTH = 'proxywater1'
+IRODS_AUTH = 'hydroshare123'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
@@ -127,6 +127,8 @@ REMOTE_USE_IRODS = False
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
+
+IRODS_SERVICE_ACCOUNT_USERNAME = ''
 
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
 
@@ -197,3 +199,11 @@ LOCAL_CACHE_URI = "/local-cache"
 RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+
+with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+    try:
+        EXTERNAL_CONFIG = yaml.load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
+# insert a google maps key here when in production
+MAPS_KEY=''

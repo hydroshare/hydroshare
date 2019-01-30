@@ -10,12 +10,15 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import GenericResource, Relation
 from hs_core import languages_iso
+
+from django.conf import settings
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
     MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    res_has_web_reference
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 
@@ -114,8 +117,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     qholder = content_model.get_quota_holder()
 
+    readme = content_model.get_readme_file_content()
+    if readme is None:
+        readme = ''
+    has_web_ref = res_has_web_reference(content_model)
+
     # user requested the resource in READONLY mode
     if not resource_edit:
+        content_model.update_view_count(request)
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
@@ -155,7 +164,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         else:
             spatial_coverage_data_dict = None
 
-        keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
+        keywords = [sub.value for sub in content_model.metadata.subjects.all()]
         languages_dict = dict(languages_iso.languages)
         language = languages_dict[content_model.metadata.language.code] if \
             content_model.metadata.language else None
@@ -164,12 +173,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             content_model.metadata.description else None
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
                    'title': title,
+                   'readme': readme,
                    'abstract': abstract,
                    'creators': content_model.metadata.creators.all(),
                    'contributors': content_model.metadata.contributors.all(),
@@ -200,7 +211,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
-                   'current_user': user
+                   'show_web_reference_note': has_web_ref,
+                   'current_user': user,
+                   'maps_key': maps_key
         }
 
         if 'task_id' in request.session:
@@ -360,6 +373,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
                                          extended_metadata_layout=extended_metadata_layout)
 
+    maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+
     context = {
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
@@ -367,6 +382,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'add_creator_modal_form': add_creator_modal_form,
                'creator_profilelink_formset': None,
                'title': content_model.metadata.title,
+               'readme': readme,
                'abstract_form': abstract_form,
                'contributor_formset': contributor_formset,
                'add_contributor_modal_form': add_contributor_modal_form,
@@ -392,13 +408,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
                'quota_holder': qholder,
+               'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and
                                               type_value != 'isVersionOf' and
                                               type_value != 'hasPart'),
                'is_resource_specific_tab_active': False,
-               'belongs_to_collections': belongs_to_collections
+               'show_web_reference_note': has_web_ref,
+               'belongs_to_collections': belongs_to_collections,
+               'maps_key': maps_key
     }
 
     return context
@@ -422,7 +441,10 @@ def check_resource_mode(request):
         if edit_resource:
             del request.session['resource-mode']
         else:
-            edit_resource = request.GET.get('resource-mode', None) == 'edit'
+            if request.session.get('just_created', False):
+                edit_resource = True
+            else:
+                edit_resource = request.GET.get('resource-mode', None) == 'edit'
     else:
         edit_resource = True
 

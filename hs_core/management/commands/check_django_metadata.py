@@ -34,7 +34,7 @@ def check_django_metadata(self, stop_on_error=False,
 
     # skip federated resources if not configured to handle these
     if self.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
+        msg = "check_django_metadata: skipping check of federated resource {} in unfederated mode"\
             .format(self.short_id)
         if echo_errors:
             print(msg)

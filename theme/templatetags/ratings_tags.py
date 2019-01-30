@@ -34,4 +34,4 @@ def rating_for(context, obj):
 
     for f in ("average", "count", "sum"):
         context["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
-    return context
+    return context.flatten()

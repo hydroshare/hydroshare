@@ -11,6 +11,8 @@ This checks that every relation to a resource refers to an existing resource
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.management.utils import check_relations
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
@@ -21,33 +23,28 @@ class Command(BaseCommand):
         # a list of resource id's, or none to check all resources
         parser.add_argument('resource_ids', nargs='*', type=str)
 
-        # Named (optional) arguments
-        parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
-        )
-
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = BaseResource.objects.get(short_id=rid)
+                    resource = get_resource_by_shortkey(rid)
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
+                    continue
 
                 print("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid))
-                resource.check_relations(stop_on_error=False,
-                                         echo_errors=not options['log'],
-                                         log_errors=options['log'],
-                                         return_errors=False)
+                check_relations(resource)
 
         else:  # check all resources
             print("LOOKING FOR RELATION ERRORS FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
-                r.check_relations(stop_on_error=False,
-                                  echo_errors=not options['log'],  # Don't both log and echo
-                                  log_errors=options['log'],
-                                  return_errors=False)
+                try:
+                    resource = get_resource_by_shortkey(r.short_id)
+                except BaseResource.DoesNotExist:
+                    msg = "Resource with id {} not found in Django Resources".format(rid)
+                    print(msg)
+                    continue
+
+                print("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid))
+                check_relations(resource)

@@ -8,6 +8,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
+from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
@@ -432,6 +433,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
@@ -642,7 +644,7 @@ class AccessRulesUpdate(APIView):
         res = get_resource_by_shortkey(pk)
         try:
             res.set_public(validated_request_data['public'], request.user)
-        except ValidationError:
+        except CoreValidationError:
             return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
@@ -864,6 +866,7 @@ class ResourceFileCRUD(APIView):
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileCRUD, self).initialize_request(request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
@@ -1049,6 +1052,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileListCreate, self).initialize_request(
                 request, *args, **kwargs)
+            request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request

@@ -116,8 +116,7 @@ function onAddKeyword(event) {
             li.find('span').text(keyword[i]);
             li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
             $("#lst-tags").append(li);
-
-            $(".icon-remove").click(onRemoveKeyword);
+            $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
             updateKeywords();
             existsNewKeywords = true;
         }
@@ -130,15 +129,10 @@ function onAddKeyword(event) {
 }
 
 function updateKeywords() {
-    var keywords = "";
-    var count = $("#lst-tags").find(".tag > span").length;
-    for (var x = 0; x < count; x++) {
-        keywords += $($("#lst-tags").find(".tag > span")[x]).text();
-        if (x != count - 1) {
-            keywords += ",";
-        }
-    }
-
+    // Get the list of keywords and store them as a comma separated string
+    var keywords = $("#lst-tags").find(".tag > span").map(function () {
+        return $(this).text()
+    }).get().join(",");
     $("#id-subject").find("#id_value").val(keywords);
 }
 
@@ -172,6 +166,7 @@ function onAddKeywordFileType(event) {
     if(existsNewKeywords) {
         filetype_keywords_update_ajax_submit();
         $("#txt-keyword-filetype").val("");  // Clear text input
+        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
     }
 }
 
@@ -326,7 +321,7 @@ function saveExtraMetadata() {
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
     t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-        var extra_meta_name = this.data()[0].trim();
+        var extra_meta_name = $("<div/>").html(this.data()[0].trim()).text();
         var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
         json_obj[extra_meta_name] = extra_meta_value;
     });
@@ -415,18 +410,18 @@ $(document).ready(function () {
         update_download_status(task_id, download_path);
     }
 
-    $('.contact-table .sortable').sortable({
-        axis: "y",
+    $('.authors-wrapper.sortable').sortable({
+        placeholder: "ui-state-highlight",
         stop: function( event, ui ) {
-            var forms = $("#authors-table .drag-indicator > form");
+            var forms = $(".authors-wrapper.sortable form");
 
             // Set the new order value in the form items
-            for (var i = 0; i < forms.length; i++) {
-                $(forms[i]).find("input.order-input").attr("value", i + 1);
-                $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
+            for (let i = 0; i < forms.length; i++) {
+                $(forms[i]).find("input.input-order").val(i + 1);
+                $(forms[i]).find("input.input-order").attr("value", i + 1);
             }
 
-            $form = $(ui.item.find(".drag-indicator > form"));
+            let $form = $(ui.item.find("form"));
             var url = $form.attr('action');
             var datastring = $form.serialize();
             $("html").css("cursor", "progress");
@@ -435,9 +430,8 @@ $(document).ready(function () {
                 type: "POST",
                 url: url,
                 data: datastring,
-                success: function (result) {
+                success: function () {
                     $("html").css("cursor", "initial");
-
                 },
                 error: function (xhr, errmsg, err) {
                     $("html").css("cursor", "initial");
@@ -552,28 +546,16 @@ $(document).ready(function () {
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
     $("#btnOpenWithApp").click(label_ajax_submit);
+    $("#form-change-access button").on("click", change_access_ajax_submit);
 
     // Apply theme to comment's submit button
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    var keywordString = $("#keywords-string").val();
-    $("#id-subject").find("#id_value").val(keywordString);
-
     // Populate keywords field
-    var keywords = keywordString.split(",");
-    $("#lst-tags").empty();
-
-    for (var i = 0; i < keywords.length; i++) {
-        if (keywords[i] != "") {
-            var li = $("<li class='tag'><span></span></li>");
-            li.find('span').text(keywords[i]);
-            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-            $("#lst-tags").append(li);
-        }
-    }
-
-    $(".icon-remove").click(onRemoveKeyword);
+    const keywordString = $("#keywords-string").val();
+    updateResourceKeywords(keywordString);
+    $("#lst-tags").on("click", ".icon-remove", onRemoveKeyword);
 
     $("#btn-add-keyword").click(onAddKeyword);
     $("#txt-keyword").keyup(function (e) {
@@ -732,7 +714,6 @@ $(document).ready(function () {
             $("#invite-flag button[data-value='groups']").addClass("btn-default");
             $("#invite-flag button[data-value='users']").removeClass("btn-default");
             $("#invite-flag button[data-value='users']").addClass("btn-primary");
-
         }
         else {
             $(".add-view-group-form").show();
@@ -777,5 +758,33 @@ $(document).ready(function () {
     $("#btn-delete-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");
         deleteFileTypeExtraMetadata(formID);
+    });
+
+
+    const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
+    var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
+
+    // Fix buttons toolbar when scrolling down
+    // ========================================
+    $(window).bind('scroll', function () {
+        let toolbar = $(".custom-btn-toolbar");
+        if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
+            toolbar.parent().height(toolbar.parent().height());
+            toolbar.css("top", $("#hs-nav-bar").height() + 11);
+            toolbar.addClass('toolbar-fixed');
+            toolbar.css("right", toolbar.parent().offset().left + 4);
+        }
+        else if ($(window).scrollTop() <= toolbar_offset && toolbar.hasClass('toolbar-fixed')) {
+            toolbar.parent().height("initial");
+            toolbar.css("top", "initial");
+            toolbar.removeClass('toolbar-fixed');
+            // Recalculate in case UI elements were added/removed
+            toolbar_offset = toolbar.parent().offset().top - $("#hs-nav-bar").height() - SPACING;
+        }
+    });
+
+    $(window).resize(function () {
+        // Recalculate on window re-size
+        toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
     });
 });

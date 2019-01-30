@@ -18,14 +18,15 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-
+    var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+    var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
     // Set initial coverage fields state
-    if ($("#id_type_1").is(':checked')) { //box type coverage
+    if ($radioBox.is(':checked')) { //box type coverage
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
     }
-    if ($("#id_type_2").is(':checked')) { // point type coverage
+    if ($radioPoint.is(':checked')) { // point type coverage
         $("#div_id_northlimit").hide();
         $("#div_id_eastlimit").hide();
         $("#div_id_southlimit").hide();
@@ -46,9 +47,9 @@ function drawInitialShape() {
     var resourceType = $("#resource-type").val();
     var spatialCoverageType = $("#spatial-coverage-type").val();
     // Center the map
-    if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
+    if (shapeType || resourceType === "Time Series") {
         deleteAllShapes();
-        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite Resource" && spatialCoverageType == "point")) {
+        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
             var myLatLng;
             if (shapeType == "point") {
                 // resource view mode
@@ -79,11 +80,11 @@ function drawInitialShape() {
             allShapes.push(marker);
             // Center map at new market
             coverageMap.setCenter(marker.getPosition());
-            $("#resetZoomBtn").click(function () {
+            $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
-        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite Resource" && spatialCoverageType == "box")) {
+        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
             var bounds;
             if (shapeType == "box") {
                 //resource view mode
@@ -107,7 +108,7 @@ function drawInitialShape() {
                 }
             }
 
-            if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+            if (bounds.north === null || bounds.south === null || bounds.east === null || bounds.west === null) {
                 return;
             }
             // Define the rectangle and set its editable property to true.
@@ -119,13 +120,14 @@ function drawInitialShape() {
             rectangle.setMap(coverageMap);
             allShapes.push(rectangle);
             zoomCoverageMap(bounds);
-            $("#resetZoomBtn").click(function () {
+             $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 zoomCoverageMap(bounds);
             });
         }
     }
     else {
-        if ($("#id_type_1").is(":checked")) {
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        if ($radioBox.is(":checked")) {
             drawRectangleOnTextChange();
         }
         else {
@@ -175,11 +177,12 @@ function initMap() {
         // data-shape-type is set to have a value only in resource view mode
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
         resourceType = $("#resource-type").val();
-        if (resourceType === "Time Series" || resourceType === "Composite Resource"){
+        if (resourceType === "Time Series"){
             // set to view mode
             shapeType = " ";
         }
     }
+
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",
         zoom: 3,
@@ -196,6 +199,30 @@ function initMap() {
             position: google.maps.ControlPosition.TOP_RIGHT
         }
     });
+
+    // Set CSS for the control border.
+    var btnRecenter = document.createElement('button');
+    btnRecenter.setAttribute("dragable", "false");
+    btnRecenter.setAttribute("title", "Recenter");
+    btnRecenter.setAttribute("aria-label", "Recenter");
+    btnRecenter.setAttribute("type", "button");
+    btnRecenter.setAttribute("id", "resetZoomBtn");
+    btnRecenter.setAttribute("class", "gm-control-active");
+    btnRecenter.style.background = 'none rgb(255, 255, 255)';
+    btnRecenter.style.border = '0';
+    btnRecenter.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
+    btnRecenter.style.margin = '10px';
+    btnRecenter.style.padding = '0px';
+    btnRecenter.style.position = 'absolute';
+    btnRecenter.style.borderRadius = "2px";
+    btnRecenter.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 1px 4px -1px";
+    btnRecenter.style.width = "40px";
+    btnRecenter.style.height = "40px";
+    btnRecenter.style.color = "#666666";
+    btnRecenter.style.fontSize = "24px";
+    btnRecenter.innerHTML = '<i class="fa fa-dot-circle-o"></i>';
+
+    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(btnRecenter);
 
     drawInitialShape();
     if (!shapeType) {
@@ -266,7 +293,7 @@ function drawMarkerOnTextChange(){
     // Center map at new market
     coverageMap.setCenter(marker.getPosition());
     // Set onClick event for recenter button
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         coverageMap.setCenter(marker.getPosition());
     });
     allShapes.push(marker);
@@ -331,7 +358,7 @@ function drawRectangleOnTextChange(){
         processDrawing(coordinates, "rectangle");
     });
     zoomCoverageMap(bounds);
-    $("#resetZoomBtn").click(function(){
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
         zoomCoverageMap(bounds);
     });
     allShapes.push(rectangle);
@@ -349,9 +376,10 @@ function processDrawing (coordinates, shape) {
         deleteAllShapes();
     }
     // Show save changes button
-    $("#coverage-spatial").find(".btn-primary").show();
-    if (shape == "rectangle"){
-        document.getElementById("id_type_1").checked = true;
+    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
+    if (shape === "rectangle"){
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        $radioBox.prop("checked", true);
         $("#div_id_north").hide();
         $("#div_id_east").hide();
         $("#div_id_elevation").hide();
@@ -377,12 +405,13 @@ function processDrawing (coordinates, shape) {
         $("#id_eastlimit").removeClass("invalid-input");
         $("#id_southlimit").removeClass("invalid-input");
         $("#id_westlimit").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function(){
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             zoomCoverageMap(bounds);
         });
     }
     else {
-        document.getElementById("id_type_2").checked = true;
+        var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+        $radioPoint.prop("checked", true);
         $("#div_id_north").show();
         $("#div_id_east").show();
         $("#div_id_elevation").show();
@@ -397,7 +426,7 @@ function processDrawing (coordinates, shape) {
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
-        $("#resetZoomBtn").click(function () {
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
             coverageMap.setCenter(coordinates);
         });
     }
@@ -418,24 +447,5 @@ function deleteAllShapes(){
 }
 
 function zoomCoverageMap(bounds) {
-    // Zoom in on the shape
-    var GLOBE_WIDTH = 256; // a constant in Google maps projection
-    var c_west = bounds.west * 8;    // Zooms out on the shape a little so that we can see it
-    var c_east = bounds.east * 8;
-    var angle = c_east - c_west;
-    var pixelWidth = parseInt($("#coverageMap").width());
-    if (angle < 0) {
-        angle += 360;
-    }
-    var zoom = Math.round(Math.log(pixelWidth * 360 / angle / GLOBE_WIDTH) / Math.LN2);
-    if (!isNaN(zoom)){
-        coverageMap.setZoom(Math.max(3, zoom)); // Allow minumum zoom level of 3
-    }
-    else{
-        return;
-    }
-    // Center map at new rectangle
-    var latCenter = (bounds.north + bounds.south) / 2;
-    var lngCenter = (bounds.west + bounds.east) / 2;
-    coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+    coverageMap.fitBounds(bounds);
 }

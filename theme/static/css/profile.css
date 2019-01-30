@@ -96,15 +96,6 @@ div.affiliation {
     margin: 2px 0;
 }
 
-.activity-description {
-    float: left;
-    border-left: 3px solid #CCC;
-    max-height: 50px;
-    overflow: hidden;
-    margin-bottom: 5px;
-    margin-top: 10px;
-}
-
 .contribution .activity-description {
     margin-left: 15px;
 }
@@ -113,20 +104,6 @@ div.affiliation {
     border-top: 0;
     margin-top: 0;
     padding-top:0;
-}
-
-.show-more-btn {
-    width: 50px;
-    margin-left: 10px;
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
-    text-align: center;
-    color: #AAA;
-    border: 1px solid #ddd;
-    font-size: 12px;
-    cursor: pointer;
-    float: left;
 }
 
 #div_id_abstract textarea, #id_statement {

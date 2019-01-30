@@ -8,6 +8,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from markdown import markdown
 
 from django_irods.icommands import SessionException
 
@@ -1329,10 +1330,6 @@ class Coverage(AbstractMetaDataElement):
                             raise ValidationError("Value for '{}' must be numeric"
                                                   .format(value_item))
 
-            if value_dict['northlimit'] < value_dict['southlimit']:
-                raise ValidationError("Value for North latitude must be greater than or equal to "
-                                      "that of South latitude.")
-
             if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1341,9 +1338,11 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for South latitude should be "
                                       "in the range of -90 to 90")
 
-            if value_dict['eastlimit'] < value_dict['westlimit']:
-                raise ValidationError("Value for East longitude must be greater than or equal to "
-                                      "that of West longitude.")
+            if (value_dict['northlimit'] < 0 and value_dict['southlimit'] < 0) or (
+                    value_dict['northlimit'] > 0 and value_dict['southlimit'] > 0):
+                if value_dict['northlimit'] < value_dict['southlimit']:
+                    raise ValidationError("Value for North latitude must be greater than or "
+                                          "equal to that of South latitude.")
 
             if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
                 raise ValidationError("Value for East longitude should be "
@@ -1359,7 +1358,7 @@ class Coverage(AbstractMetaDataElement):
         This function should be used for displaying one spatial coverage element
         or one temporal coverage element
         """
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls='content-block')
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -1367,16 +1366,11 @@ class Coverage(AbstractMetaDataElement):
         with root_div:
             if self.type == 'box' or self.type == 'point':
                 legend('Spatial Coverage')
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            get_th('Coordinate Reference System')
-                            td(self.value['projection'])
-                        with tr():
-                            get_th('Coordinate Reference System Unit')
-                            td(self.value['units'])
-
-                h4('Extent')
+                div('Coordinate Reference System', cls='text-muted')
+                div(self.value['projection'])
+                div('Coordinate Reference System Unit', cls='text-muted space-top')
+                div(self.value['units'])
+                h4('Extent', cls='space-top')
                 with table(cls='custom-table'):
                     if self.type == 'box':
                         with tbody():
@@ -1670,6 +1664,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
+    # for tracking number of times resource and its files have been downloaded
+    download_count = models.PositiveIntegerField(default=0)
+    # for tracking number of times resource has been viewed
+    view_count = models.PositiveIntegerField(default=0)
+
+    def update_view_count(self, request):
+        self.view_count += 1
+        self.save()
+
+    def update_download_count(self):
+        self.download_count += 1
+        self.save()
+
     # definition of resource logic
     @property
     def supports_folders(self):
@@ -1697,7 +1704,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         and False otherwise
         """
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         has_metadata = self.has_required_metadata
         return has_files and has_metadata
 
@@ -1728,7 +1735,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
@@ -1780,7 +1787,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
-        has_files = self.has_required_content_files
+        has_files = self.has_required_content_files()
         if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
@@ -1846,22 +1853,74 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def get_url_of_path(self, path):
+        """Return the URL of an arbtrary path in this resource.
+
+        A GET of this URL simply returns the contents of the path.
+        This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+        path includes data/contents/
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.short_id, path)
+
+    def get_public_path(self, path):
+        """Return the public path for a specific path within the resource.
+           This is the path that appears in public URLs.
+           The input path includes data/contents/ as needed.
+        """
+        return os.path.join(self.short_id, path)
+
+    def get_irods_path(self, path):
+        """Return the irods path by which the given path is accessed.
+           The input path includes data/contents/ as needed.
+        """
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        else:
+            return self.get_public_path(path)
+
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
 
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.hydroshare.resource import update_quota_usage
+
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        self.setAVU("quotaUserName", new_holder.username)
+        attname = "quotaUserName"
+
+        if setter.username != new_holder.username:
+            # this condition check is needed to make sure attname exists as AVU before getting it
+            oldqu = self.getAVU(attname)
+            if oldqu:
+                # have to remove the old AVU first before setting to the new one in order to trigger
+                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
+                # holder will be reduced as a result of setting quota holder to a different user
+                self.removeAVU(attname, oldqu)
+        self.setAVU(attname, new_holder.username)
+        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -1879,6 +1938,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             # quotaUserName AVU does not exist, return None
             return None
+
+    def removeAVU(self, attribute, value):
+        """Remove an AVU at the resource level.
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
@@ -2011,6 +2080,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.object_id = metatdata_obj.id
             self.save()
             return metatdata_obj
+
+    def is_aggregation_xml_file(self, file_path):
+        """Checks if the file path *file_path* is one of the aggregation related xml file paths
+
+        :param  file_path: full file path starting with resource short_id
+        :return True if file_path is one of the aggregation xml file paths else False
+
+        This function is overridden for Composite Resource.
+        """
+        return False
 
     def extra_capabilites(self):
         """Return None. No-op method.
@@ -2183,14 +2262,61 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return True
 
     @property
+    def readme_file(self):
+        """Returns a resource file that is at the root with a file name of either
+        'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
+        is returned. If both files exist then resource file for readme.md is returned"""
+
+        res_files_at_root = self.files.filter(file_folder=None)
+        readme_txt_file = None
+        readme_md_file = None
+        for res_file in res_files_at_root:
+            if res_file.file_name.lower() == 'readme.md':
+                readme_md_file = res_file
+            elif res_file.file_name.lower() == 'readme.txt':
+                readme_txt_file = res_file
+            if readme_md_file is not None:
+                break
+
+        if readme_md_file is not None:
+            return readme_md_file
+        else:
+            return readme_txt_file
+
+    def get_readme_file_content(self):
+        """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
+        then the content of the readme.md file is returned, othewise None
+        """
+        readme_file = self.readme_file
+        if readme_file is not None:
+            if readme_file.extension.lower() == '.md':
+                return {'content': markdown(readme_file.read().decode('utf-8')),
+                        'file_name': readme_file.file_name}
+            else:
+                return {'content': readme_file.read(), 'file_name': readme_file.file_name}
+        return readme_file
+
+    @property
     def logical_files(self):
-        """Get list of logical files for resource."""
+        """Get a list of logical files for resource."""
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
                 if res_file.logical_file not in logical_files_list:
                     logical_files_list.append(res_file.logical_file)
         return logical_files_list
+
+    @property
+    def aggregation_types(self):
+        """Gets a list of all aggregation types that currently exist in this resource"""
+        aggr_types = []
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name)
+                aggr_type = lf.get_aggregation_display_name().split(":")[0]
+                aggr_types.append(aggr_type)
+        return aggr_types
 
     @property
     def non_logical_files(self):
@@ -2213,14 +2339,24 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return generic_logical_files_list
 
     def get_logical_files(self, logical_file_class_name):
-        """Get list of logical files for a specified class name."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file_type_name == logical_file_class_name:
-                    if res_file.logical_file not in logical_files_list:
-                        logical_files_list.append(res_file.logical_file)
+        """Get a list of logical files (aggregations) for a specified logical file class name."""
+
+        logical_files_list = [lf for lf in self.logical_files if
+                              lf.type_name() == logical_file_class_name]
+
         return logical_files_list
+
+    @property
+    def has_logical_spatial_coverage(self):
+        """Checks if any of the logical files has spatial coverage"""
+
+        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+
+    @property
+    def has_logical_temporal_coverage(self):
+        """Checks if any of the logical files has temporal coverage"""
+
+        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
     def supports_logical_file(self):
@@ -2257,328 +2393,45 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
 
+    @property
+    def storage_type(self):
+        if not self.is_federated:
+            return 'local'
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+        if self.resource_federation_path == userpath:
+            return 'user'
+        else:
+            return 'federated'
+
+    def is_folder(self, folder_path):
+        """Determine whether a given path (relative to resource root, including /data/contents/)
+           is a folder or not. Returns False if the path does not exist.
+        """
+        path_split = folder_path.split('/')
+        while path_split[-1] == '':
+            path_split.pop()
+        dir_path = u'/'.join(path_split[0:-1])
+
+        # handles federation
+        irods_path = os.path.join(self.root_path, dir_path)
+        istorage = self.get_irods_storage()
+        try:
+            listing = istorage.listdir(irods_path)
+        except SessionException:
+            return False
+        if path_split[-1] in listing[0]:  # folders
+            return True
+        else:
+            return False
+
     class Meta:
         """Define meta properties for AbstractResource class."""
 
         abstract = True
         unique_together = ("content_type", "object_id")
-
-    def check_relations(self, stop_on_error=False, log_errors=True,
-                        echo_errors=False, return_errors=False):
-        """Check for dangling relations due to deleted resource files.
-
-        :param stop_on_error: whether to raise a ValidationError exception on first error
-        :param log_errors: whether to log errors to Django log
-        :param echo_errors: whether to print errors on stdout
-        :param return_errors: whether to collect errors in an array and return them.
-        """
-        from hs_core.hydroshare.utils import get_resource_by_shortkey
-        for r in self.metadata.relations.all():
-            if r.value.startswith('http://www.hydroshare.org/resource/'):
-                target = r.value[len('http://www.hydroshare.org/resource/'):].rstrip('/')
-                try:
-                    get_resource_by_shortkey(target, or_404=False)
-                except BaseResource.DoesNotExist:
-                    print("relation {} {} {} (this does not exist)"
-                          .format(self.short_id, r.type, target))
-
-    def fix_irods_user_paths(self, log_actions=True, echo_actions=False, return_actions=False):
-        """Move iRODS user paths to the locations specified in settings.
-
-        :param log_actions: whether to log actions to Django log
-        :param echo_actions: whether to print actions on stdout
-        :param return_actions: whether to collect actions in an array and return them.
-
-        This is a temporary fix to the user resources, which are currently stored like
-        federated resources but whose paths are dynamically determined. This function points
-        the paths for user-level resources to where they are stored in the current environment,
-        as specified in hydroshare/local_settings.py.
-
-        * This only does something if the environment is not a production environment.
-        * It is idempotent, in the sense that it can be repeated more than once without problems.
-        * It must be done once whenever the django database is reloaded.
-        * It does not check whether the paths exist afterward. This is done by check_irods_files.
-        """
-        logger = logging.getLogger(__name__)
-        actions = []
-        ecount = 0
-
-        # location of the user files in production
-        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
-                              '/hydroshareuserZone/home/localHydroProxy')
-        # where resource should be found; this is equal to the default path in production
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
-
-        msg = "fix_irods_user_paths: user path is {}".format(userpath)
-        if echo_actions:
-            print(msg)
-        if log_actions:
-            logger.info(msg)
-        if return_actions:
-            actions.append(msg)
-
-        # only take action if you find a path that is a default user path and not in production
-        if self.resource_federation_path == defaultpath and userpath != defaultpath:
-            msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
-                  .format(self.resource_federation_path, userpath)
-            if echo_actions:
-                print(msg)
-            if log_actions:
-                logger.info(msg)
-            if return_actions:
-                actions.append(msg)
-
-            self.resource_federation_path = userpath
-            self.save()
-            for f in self.files.all():
-                path = f.storage_path
-                if path.startswith(defaultpath):
-                    newpath = userpath + path[len(defaultpath):]
-                    f.set_storage_path(newpath, test_exists=False)  # does implicit save
-                    ecount += 1
-                    msg = "fix_irods_user_paths: rewriting {} to {}".format(path, newpath)
-                    if echo_actions:
-                        print(msg)
-                    if log_actions:
-                        logger.info(msg)
-                    if return_actions:
-                        actions.append(msg)
-                else:
-                    msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
-                           " {} should start with {}; cannot convert")\
-                        .format(path, self.short_id, defaultpath)
-                    if echo_actions:
-                        print(msg)
-                    if log_actions:
-                        logger.error(msg)
-                    if return_actions:
-                        actions.append(msg)
-
-        if ecount > 0:  # print information about the affected resource (not really an error)
-            msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
-                .format(self.short_id, self.resource_type, self.metadata.title.value)
-            if log_actions:
-                logger.info(msg)
-            if echo_actions:
-                print(msg)
-            if return_actions:
-                actions.append(msg)
-
-        return actions, ecount  # empty unless return_actions=True
-
-    def check_irods_files(self, stop_on_error=False, log_errors=True,
-                          echo_errors=False, return_errors=False,
-                          sync_ispublic=False, clean_irods=False, clean_django=False):
-        """Check whether files in self.files and on iRODS agree.
-
-        :param stop_on_error: whether to raise a ValidationError exception on first error
-        :param log_errors: whether to log errors to Django log
-        :param echo_errors: whether to print errors on stdout
-        :param return_errors: whether to collect errors in an array and return them.
-        :param sync_ispublic: whether to repair deviations between ResourceAccess.public
-               and AVU isPublic
-        :param clean_irods: whether to delete files in iRODs that are not in Django
-        :param clean_django: whether to delete files in Django that are not in iRODs
-        """
-        from hs_core.hydroshare.resource import delete_resource_file
-
-        logger = logging.getLogger(__name__)
-        istorage = self.get_irods_storage()
-        errors = []
-        ecount = 0
-        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
-                              '/hydroshareuserZone/home/localHydroProxy')
-
-        # skip federated resources if not configured to handle these
-        if self.is_federated and not settings.REMOTE_USE_IRODS:
-            msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
-                .format(self.short_id)
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.info(msg)
-
-        # skip resources that do not exist in iRODS
-        elif not istorage.exists(self.root_path):
-                msg = "root path {} does not exist in iRODS".format(self.root_path)
-                ecount += 1
-                if echo_errors:
-                    print(msg)
-                if log_errors:
-                    logger.error(msg)
-                if return_errors:
-                    errors.append(msg)
-
-        else:
-            # Step 1: repair irods user file paths if necessary
-            if clean_irods or clean_django:
-                # fix user paths before check (required). This is an idempotent step.
-                if self.resource_federation_path == defaultpath:
-                    error2, ecount2 = self.fix_irods_user_paths(log_actions=log_errors,
-                                                                echo_actions=echo_errors,
-                                                                return_actions=False)
-                    errors.extend(error2)
-                    ecount += ecount2
-
-            # Step 2: does every file here refer to an existing file in iRODS?
-            for f in self.files.all():
-                if not istorage.exists(f.storage_path):
-                    ecount += 1
-                    msg = "check_irods_files: django file {} does not exist in iRODS"\
-                        .format(f.storage_path)
-                    if clean_django:
-                        delete_resource_file(self.short_id, f.short_path, self.creator,
-                                             delete_logical_file=False)
-                        msg += " (DELETED FROM DJANGO)"
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-
-            # Step 3: does every iRODS file correspond to a record in files?
-            error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
-                                                           stop_on_error=stop_on_error,
-                                                           log_errors=log_errors,
-                                                           echo_errors=echo_errors,
-                                                           return_errors=return_errors,
-                                                           clean=clean_irods)
-            errors.extend(error2)
-            ecount += ecount2
-
-            # Step 4: check whether the iRODS public flag agrees with Django
-            django_public = self.raccess.public
-            irods_public = None
-            try:
-                irods_public = self.getAVU('isPublic')
-            except SessionException as ex:
-                msg = "cannot read isPublic attribute of {}: {}"\
-                    .format(self.short_id, ex.stderr)
-                ecount += 1
-                if log_errors:
-                    logger.error(msg)
-                if echo_errors:
-                    print(msg)
-                if return_errors:
-                    errors.append(msg)
-                if stop_on_error:
-                    raise ValidationError(msg)
-
-            if irods_public is not None:
-                # convert to boolean
-                irods_public = str(irods_public).lower() == 'true'
-
-            if irods_public is None or irods_public != django_public:
-                ecount += 1
-                if not django_public:  # and irods_public
-                    msg = "check_irods_files: resource {} public in irods, private in Django"\
-                        .format(self.short_id)
-                    if sync_ispublic:
-                        try:
-                            self.setAVU('isPublic', 'false')
-                            msg += " (REPAIRED IN IRODS)"
-                        except SessionException as ex:
-                            msg += ": (CANNOT REPAIR: {})"\
-                                .format(ex.stderr)
-
-                else:  # django_public and not irods_public
-                    msg = "check_irods_files: resource {} private in irods, public in Django"\
-                        .format(self.short_id)
-                    if sync_ispublic:
-                        try:
-                            self.setAVU('isPublic', 'true')
-                            msg += " (REPAIRED IN IRODS)"
-                        except SessionException as ex:
-                            msg += ": (CANNOT REPAIR: {})"\
-                                .format(ex.stderr)
-
-                if msg != '':
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-
-        if ecount > 0:  # print information about the affected resource (not really an error)
-            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
-                .format(self.short_id, self.resource_type, self.metadata.title.value)
-            if log_errors:
-                logger.error(msg)
-            if echo_errors:
-                print(msg)
-            if return_errors:
-                errors.append(msg)
-
-        return errors, ecount  # empty unless return_errors=True
-
-    def __check_irods_directory(self, dir, logger,
-                                stop_on_error=False, log_errors=True,
-                                echo_errors=False, return_errors=False,
-                                clean=False):
-        """List a directory and check files there for conformance with django ResourceFiles.
-
-        :param stop_on_error: whether to raise a ValidationError exception on first error
-        :param log_errors: whether to log errors to Django log
-        :param echo_errors: whether to print errors on stdout
-        :param return_errors: whether to collect errors in an array and return them.
-
-        """
-        errors = []
-        ecount = 0
-        istorage = self.get_irods_storage()
-        try:
-            listing = istorage.listdir(dir)
-            for fname in listing[1]:  # files
-                fullpath = os.path.join(dir, fname)
-                found = False
-                for f in self.files.all():
-                    if f.storage_path == fullpath:
-                        found = True
-                        break
-                if not found:
-                    ecount += 1
-                    msg = "check_irods_files: file {} in iRODs does not exist in Django"\
-                        .format(fullpath)
-                    if clean:
-                        try:
-                            istorage.delete(fullpath)
-                            msg += " (DELETED FROM IRODS)"
-                        except SessionException as ex:
-                            msg += ": (CANNOT DELETE: {})"\
-                                .format(ex.stderr)
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-
-            for dname in listing[0]:  # directories
-                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
-                                                               stop_on_error=stop_on_error,
-                                                               echo_errors=echo_errors,
-                                                               log_errors=log_errors,
-                                                               return_errors=return_errors,
-                                                               clean=clean)
-                errors.extend(error2)
-                ecount += ecount2
-
-        except SessionException:
-            pass  # not an error not to have a file directory.
-            # Non-existence of files is checked elsewhere.
-
-        return errors, ecount  # empty unless return_errors=True
 
 
 def get_path(instance, filename, folder=None):
@@ -2629,10 +2482,11 @@ def get_resource_file_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return os.path.join(resource.file_path, folder, filename)
+        return resource.file_path + '/' + folder + '/' + filename
+
     else:
         # use root folder
-        return os.path.join(resource.file_path, filename)
+        return resource.file_path + '/' + filename
 
 
 def path_is_allowed(path):
@@ -2663,6 +2517,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
+    class Meta:
+        index_together = [['object_id', 'resource_file'],
+                          ['object_id', 'fed_resource_file'],
+                          ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
@@ -2820,17 +2678,27 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def size(self):
-        """Retturn file size for federated or non-federated files."""
+        """Return file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
-            return self.fed_resource_file.size
+            try:
+                return self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
-            return self.resource_file.size
+            try:
+                return self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                return 0
 
     # TODO: write unit test
     @property
@@ -3058,24 +2926,38 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # TODO: move to BaseResource as instance method
     @classmethod
-    def list_folder(cls, resource, folder):
-        """List a given folder.
+    def list_folder(cls, resource, folder, sub_folders=True):
+        """List files (instances of ResourceFile) in a given folder.
 
         :param resource: resource for which to list the folder
         :param folder: folder listed as either short_path or fully qualified path
+        :param sub_folders: if true files from sub folders of *folder* will be included in the list
         """
+        file_folder_to_match = folder
+
         if folder is None:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
-        if resource.is_federated:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                fed_resource_file__startswith=folder)
+        else:
+            file_folder_to_match = folder[len(resource.file_path) + 1:]
+
+        if sub_folders:
+            # append trailing slash to match only this folder
+            if not folder.endswith("/"):
+                folder += "/"
+            if resource.is_federated:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    fed_resource_file__startswith=folder)
+            else:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    resource_file__startswith=folder)
         else:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
-                resource_file__startswith=folder)
+                file_folder=file_folder_to_match)
 
     # TODO: move to BaseResource as instance method
     @classmethod
@@ -3130,8 +3012,13 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def logical_file_type_name(self):
-        """Return classname of logical file's content object."""
+        """Return class name of logical file's content object."""
         return self.logical_file_content_object.__class__.__name__
+
+    @property
+    def aggregation_display_name(self):
+        """Return a name for the logical file type (aggregation)- used in UI"""
+        return self.logical_file.get_aggregation_display_name()
 
     @property
     def has_generic_logical_file(self):
@@ -3173,12 +3060,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         return os.path.basename(self.storage_path)
 
     @property
-    def can_set_file_type(self):
-        """Check if file type can be set for this resource file instance."""
-        return self.extension in ('.tif', '.zip', '.nc', '.shp', '.refts') and \
-            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
-
-    @property
     def url(self):
         """Return the URL of the file contained in this ResourceFile.
 
@@ -3195,25 +3076,27 @@ class ResourceFile(ResourceFileIRODSMixin):
                 views.file_download_url_mapper,
                 name='get_resource_file')
 
+        This url does NOT depend upon federation status.
         """
-        # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.resource.short_id,
-                                  'data', 'contents', self.short_path)
+        return '/' + os.path.join('resource', self.public_path)
 
     @property
-    def irods_url(self):
-        """Return the iRODS URL of the file.
-
-        This is a direct link and independent of the Django path in ResourceFile.url
-        However, this does not invoke Nginx large file support with sendfile.
-        So use this with caution.
+    def public_path(self):
+        """ return the public path (unqualified iRODS path) for a resource.
+            This corresponds to the iRODS path if the resource isn't federated.
         """
-        if self.resource_file:
-            return self.resource_file.url
-        elif self.fed_resource_file:
-            return self.fed_resource_file.url
+        return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
+
+    @property
+    def irods_path(self):
+        """ Return the irods path for accessing a file, including possible federation information.
+            This consists of the resource id, /data/contents/, and the file path.
+        """
+
+        if self.resource.is_federated:
+            return os.path.join(self.resource.resource_federation_path, self.public_path)
         else:
-            return None
+            return self.public_path
 
 
 class Bags(models.Model):
@@ -3276,6 +3159,8 @@ class BaseResource(Page, AbstractResource):
     discoverable_resources = DiscoverableResourceManager()
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
+
+    discovery_content_type = 'Generic'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3473,6 +3358,11 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model()._meta.verbose_name
 
     @property
+    def discovery_content_type(self):
+        """Return verbose name of content type."""
+        return self.get_content_model().discovery_content_type
+
+    @property
     def can_be_published(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
@@ -3532,6 +3422,7 @@ class BaseResource(Page, AbstractResource):
         return hs_term_dict
 
 
+# TODO Deprecated
 class GenericResource(BaseResource):
     """Define GenericResource model."""
 
@@ -3542,9 +3433,10 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
+    discovery_content_type = 'Generic'  # used during discovery
+
     class Meta:
         """Define meta properties for GenericResource model."""
-
         verbose_name = 'Generic'
         proxy = True
 
@@ -3632,6 +3524,14 @@ class CoreMetaData(models.Model):
     def publisher(self):
         """Return the first _publisher object from metadata."""
         return self._publisher.all().first()
+
+    @property
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
 
     @property
     def serializer(self):
@@ -3878,10 +3778,8 @@ class CoreMetaData(models.Model):
                             subjects.append(dict_item['subject']['value'])
                             continue
                         if element_name == 'coverage':
-                            # coverage metadata is not allowed for update for composite
-                            # and time series resource
-                            if self.resource.resource_type in ("CompositeResource",
-                                                               "TimeSeriesResource"):
+                            # coverage metadata is not allowed for update for time series resource
+                            if self.resource.resource_type == "TimeSeriesResource":
                                 err_msg = "Coverage metadata can't be updated for {} resource"
                                 err_msg = err_msg.format(self.resource.resource_type)
                                 raise ValidationError(err_msg)

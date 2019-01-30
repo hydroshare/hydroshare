@@ -1,9 +1,6 @@
 import os
 import json
-import tempfile
-import shutil
 
-from django.core.files.uploadedfile import UploadedFile
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -11,17 +8,20 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import resource_post_create_actions
+from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
+
 from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
     delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
-    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata
-from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile
+    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata, remove_aggregation, \
+    delete_coverage_element, update_aggregation_coverage
+from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, NetCDFFileMetaData, \
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
+from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
+class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResourceTestMixin):
     def setUp(self):
         super(TestFileTypeViewFunctions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -37,62 +37,40 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Raster File Metadata'
-        )
-
+        self.res_title = 'Test Raster File Type'
         self.factory = RequestFactory()
 
-        self.temp_dir = tempfile.mkdtemp()
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
-        target_temp_raster_file = os.path.join(self.temp_dir, self.raster_file_name)
-        shutil.copy(self.raster_file, target_temp_raster_file)
-        self.raster_file_obj = open(target_temp_raster_file, 'r')
 
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
-        target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
-        shutil.copy(self.netcdf_file, target_temp_netcdf_file)
-        self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
 
-        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
-        target_temp_refts_file = os.path.join(self.temp_dir, self.refts_file_name)
-        shutil.copy(self.refts_file, target_temp_refts_file)
 
-        missing_title_refts_json_file = 'refts_valid_title_missing.json.refts'
+        missing_title_refts_json_file = 'refts_valid_title_null.refts.json'
         self.refts_missing_title_file_name = missing_title_refts_json_file
         self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_title_file_name)
-        target_temp_refts_file = os.path.join(self.temp_dir, self.refts_missing_title_file_name)
-        shutil.copy(self.refts_missing_title_file, target_temp_refts_file)
 
         self.sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         self.sqlite_file = 'hs_file_types/tests/data/{}'.format(self.sqlite_file_name)
 
-        target_temp_sqlite_file = os.path.join(self.temp_dir, self.sqlite_file_name)
-        shutil.copy(self.sqlite_file, target_temp_sqlite_file)
+        self.text_file_name = 'generic_file.txt'
+        self.text_file = 'hs_file_types/tests/{}'.format(self.text_file_name)
 
-    def tearDown(self):
-        super(TestFileTypeViewFunctions, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
-
-    def test_set_raster_file_type(self):
+    def test_create_raster_aggregation_from_file(self):
         # here we are using a valid raster tif file for setting it
         # to Geo Raster file type which includes metadata extraction
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource(self.raster_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.raster_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,
@@ -105,9 +83,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='GeoRaster')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_dict = json.loads(response.content)
-        self.assertIn("File was successfully set to selected file type.",
-                      response_dict['message'])
 
         # there should be 2 file now (vrt file was generated by the system
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -115,18 +90,52 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
         self.composite_resource.delete()
 
-    def test_set_netcdf_file_type(self):
+    def test_create_raster_aggregation_from_folder(self):
+        # here we are using a folder that contains a valid raster tif file for setting it (folder)
+        # to Geo Raster file type which includes metadata extraction
+
+        self.create_composite_resource()
+        # create a folder to place the raster file
+        new_folder = 'raster_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the tif file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertNotEqual(res_file.file_folder, None)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'hs_file_type': 'GeoRaster'
+                      }
+        post_data = {'folder_path': res_file.file_folder}
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='GeoRaster')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # there should be 2 file now (vrt file was generated by the system
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
+        self.composite_resource.delete()
+
+    def test_create_netcdf_aggregation_from_file(self):
         # here we are using a valid netcdf file for setting it
         # to NetCDF file type which includes metadata extraction
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._create_composite_resource(self.netcdf_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,
@@ -139,9 +148,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='NetCDF')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_dict = json.loads(response.content)
-        self.assertIn("File was successfully set to selected file type.",
-                      response_dict['message'])
 
         # there should be 2 file now (vrt file was generated by the system
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -149,18 +155,52 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
         self.composite_resource.delete()
 
-    def test_sqlite_set_timeseries_file_type(self):
-        # here we are using a valid sqlite file for setting it
-        # to TimeSeries file type which includes metadata extraction
-        self.sqlite_file_obj = open(self.sqlite_file, 'r')
-        self._create_composite_resource(self.sqlite_file_obj)
+    def test_create_netcdf_aggregation_from_folder(self):
+        # here we are using a folder that contains a valid netcdf file for setting it
+        # to NetCDF file type which includes metadata extraction
+
+        self.create_composite_resource()
+        # create a folder to place the nc file
+        new_folder = 'netcdf_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the tif file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'hs_file_type': 'NetCDF'
+                      }
+        post_data = {'folder_path': res_file.file_folder}
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='NetCDF')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # there should be 2 file now (vrt file was generated by the system
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        self.composite_resource.delete()
+
+    def test_create_timeseries_aggregation_from_file(self):
+        # here we are using a valid sqlite file for setting it
+        # to TimeSeries file type which includes metadata extraction
+
+        self.create_composite_resource(file_to_upload=self.sqlite_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,
@@ -173,9 +213,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='TimeSeries')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_dict = json.loads(response.content)
-        self.assertIn("File was successfully set to selected file type.",
-                      response_dict['message'])
 
         # there should be still 1 file now (sqlite file)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -183,13 +220,323 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
         self.composite_resource.delete()
 
-    def test_add_update_metadata_to_raster_file_type(self):
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource(self.raster_file_obj)
+    def test_create_timeseries_aggregation_from_folder(self):
+        # here we are using a folder that contains a valid sqlite file for setting it
+        # to TimeSeries file type which includes metadata extraction
+
+        self.create_composite_resource()
+        # create a folder to place the nc file
+        new_folder = 'timeseries_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the tif file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'hs_file_type': 'TimeSeries'
+                      }
+        post_data = {'folder_path': res_file.file_folder}
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='TimeSeries')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # there should be still 1 file now (sqlite file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        self.composite_resource.delete()
+
+    def test_create_fileset_aggregation(self):
+        """Here we are testing creating a file set aggregation"""
+
+        self.create_composite_resource()
+        # create a folder and put a file in that folder
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'hs_file_type': 'FileSet'
+                      }
+        post_data = {'folder_path': res_file.file_folder}
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 hs_file_type='FileSet')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # there should be still 1 file now
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "FileSetLogicalFile")
+        self.composite_resource.delete()
+
+    def test_remove_aggregation(self):
+        # here we are testing the remove_aggregation view function
+
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        expected_file_folder, _ = os.path.splitext(res_file.file_name)
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile'
+                      }
+        url = reverse('remove_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = remove_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is not deleted
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, expected_file_folder)
+
+        self.composite_resource.delete()
+
+    def test_add_update_single_file_aggregation_metadata(self):
+        # here we are testing 'add_metadata_element' view function for updating metadata
+        # for a single file aggregation
+
+        self.create_composite_resource(file_to_upload=self.text_file)
+        res_file = self.composite_resource.files.first()
+
+        # set the text file to GenericLogicalFile (single file) aggregation type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # no temporal coverage for the single file type yet
+        self.assertEqual(logical_file.metadata.temporal_coverage, None)
+        # add temporal coverage
+        url_params = {'hs_file_type': 'GenericLogicalFile',
+                      'file_type_id': logical_file.id,
+                      'element_name': 'coverage'
+                      }
+        url = reverse('add_file_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'start': '1/1/2010', 'end': '12/12/2015'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = add_metadata_element(request, hs_file_type="GenericLogicalFile",
+                                        file_type_id=logical_file.id, element_name='coverage')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # now the single file aggregation should have temporal coverage element
+        self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+
+        # test updating temporal coverage
+        url_params['element_id'] = logical_file.metadata.temporal_coverage.id
+        url = reverse('update_file_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'start': '1/1/2011', 'end': '12/12/2016'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_metadata_element(request, hs_file_type="GenericLogicalFile",
+                                           file_type_id=logical_file.id, element_name='coverage',
+                                           element_id=logical_file.metadata.temporal_coverage.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        temporal_coverage = logical_file.metadata.temporal_coverage
+        self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
+        self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+        self.composite_resource.delete()
+
+    def test_add_update_file_set_aggregation_metadata(self):
+        # here we are testing 'add_metadata_element' view function for updating metadata
+        # for a file set aggregation
+
+        self.create_composite_resource()
+        # create a folder and put a file in that folder
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # no file set aggregation at this point
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
+
+        # set the folder to file set aggregation type
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        # there should be one file set aggregation
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        logical_file = FileSetLogicalFile.objects.first()
+
+        # no temporal coverage for the file set file type yet
+        self.assertEqual(logical_file.metadata.temporal_coverage, None)
+        # add temporal coverage
+        url_params = {'hs_file_type': 'FileSetLogicalFile',
+                      'file_type_id': logical_file.id,
+                      'element_name': 'coverage'
+                      }
+        url = reverse('add_file_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'start': '1/1/2010', 'end': '12/12/2015'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = add_metadata_element(request, hs_file_type="FileSetLogicalFile",
+                                        file_type_id=logical_file.id, element_name='coverage')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # now the single file aggregation should have temporal coverage element
+        self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+
+        # test updating temporal coverage
+        url_params['element_id'] = logical_file.metadata.temporal_coverage.id
+        url = reverse('update_file_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'start': '1/1/2011', 'end': '12/12/2016'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_metadata_element(request, hs_file_type="FileSetLogicalFile",
+                                           file_type_id=logical_file.id, element_name='coverage',
+                                           element_id=logical_file.metadata.temporal_coverage.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        temporal_coverage = logical_file.metadata.temporal_coverage
+        self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
+        self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+        self.composite_resource.delete()
+
+    def test_delete_single_file_aggregation_coverage(self):
+        """Here we are testing deleting temporal and spatial coverage for a single file
+        aggregation"""
+
+        self.create_composite_resource(file_to_upload=self.text_file)
+        res_file = self.composite_resource.files.first()
+
+        # set the text file to GenericLogicalFile (single file) aggregation type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self._test_delete_aggregation_coverage(file_type="GenericLogicalFile")
+
+    def test_delete_file_set_aggregation_coverage(self):
+        """Here we are testing deleting temporal and spatial coverage for a file set
+        aggregation"""
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        # set the folder to file set aggregation type
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self._test_delete_aggregation_coverage(file_type="FileSetLogicalFile")
+
+    def _test_delete_aggregation_coverage(self, file_type):
+        """helper to test delete of coverage for either single file or file set aggregation"""
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test deleting spatial coverage
+        self.assertEqual(logical_file.metadata.spatial_coverage, None)
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        self.assertTrue(logical_file.metadata.is_dirty)
+        logical_file.metadata.is_dirty = False
+        logical_file.metadata.save()
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        url_params = {'hs_file_type': file_type,
+                      'file_type_id': logical_file.id,
+                      'element_id': logical_file.metadata.spatial_coverage.id
+                      }
+
+        url = reverse('delete_file_coverage', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_coverage_element(request, hs_file_type=file_type,
+                                           file_type_id=logical_file.id,
+                                           element_id=logical_file.metadata.spatial_coverage.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        self.assertEqual(logical_file.metadata.spatial_coverage, None)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertTrue(logical_file.metadata.is_dirty)
+
+        # test deleting temporal coverage
+        self.assertEqual(logical_file.metadata.temporal_coverage, None)
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        logical_file.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+        self.assertTrue(logical_file.metadata.is_dirty)
+        logical_file.metadata.is_dirty = False
+        logical_file.metadata.save()
+        self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+        url_params = {'hs_file_type': file_type,
+                      'file_type_id': logical_file.id,
+                      'element_id': logical_file.metadata.temporal_coverage.id
+                      }
+
+        url = reverse('delete_file_coverage', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_coverage_element(request, hs_file_type=file_type,
+                                           file_type_id=logical_file.id,
+                                           element_id=logical_file.metadata.temporal_coverage.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        self.assertEqual(logical_file.metadata.temporal_coverage, None)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertTrue(logical_file.metadata.is_dirty)
+
+        self.composite_resource.delete()
+
+    def test_add_update_raster_aggregation_metadata(self):
+        # here we are testing 'add_metadata_element' view function for updating metadata
+        # for raster aggregation
+
+        self.create_composite_resource(file_to_upload=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -230,13 +577,15 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
         self.composite_resource.delete()
 
-    def test_add_update_metadata_to_netcdf_file_type(self):
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._create_composite_resource(self.netcdf_file_obj)
+    def test_add_update_netcdf_aggregation_metadata(self):
+        # here we are testing 'add_metadata_element' view function for updating metadata
+        # for netcdf aggregation
+
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
         res_file = self.composite_resource.files.first()
 
         # set the nc file to NetCDF File type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -272,10 +621,10 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # there should be original coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.original_coverage, None)
         orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(orig_coverage.value['northlimit'], '4.63515e+06')
+        self.assertEqual(float(orig_coverage.value['northlimit']), 4.63515e+06)
 
-        coverage_data = {'northlimit': '111.333', 'southlimit': '42.678', 'eastlimit': '123.789',
-                         'westlimit': '40.789', 'units': 'meters'}
+        coverage_data = {'northlimit': 111.333, 'southlimit': 42.678, 'eastlimit': 123.789,
+                         'westlimit': 40.789, 'units': 'meters'}
         url_params['element_name'] = 'originalcoverage'
         url_params['element_id'] = logical_file.metadata.original_coverage.id
         url = reverse('update_file_metadata', kwargs=url_params)
@@ -290,18 +639,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         response_dict = json.loads(response.content)
         self.assertEqual('success', response_dict['status'])
         orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(orig_coverage.value['northlimit'], '111.333')
+        self.assertEqual(float(orig_coverage.value['northlimit']), 111.333)
 
         # test updating spatial coverage
         # there should be spatial coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_coverage.value['northlimit'], 41.867126409)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.867126409)
 
-        coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': '41.87',
-                         'southlimit': '41.863',
-                         'eastlimit': '-111.505',
-                         'westlimit': '-111.511', 'units': 'meters'}
+        coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
+                         'southlimit': 41.863,
+                         'eastlimit': -111.505,
+                         'westlimit': -111.511, 'units': 'meters'}
 
         url_params['element_name'] = 'coverage'
         url_params['element_id'] = spatial_coverage.id
@@ -317,7 +666,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         response_dict = json.loads(response.content)
         self.assertEqual('success', response_dict['status'])
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_coverage.value['northlimit'], 41.87)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87)
 
         # test update Variable element
         variable = logical_file.metadata.variables.first()
@@ -342,61 +691,75 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         self.composite_resource.delete()
 
-    def test_update_dataset_name_raster_file_type(self):
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource(self.raster_file_obj)
+    def test_update_dataset_name_single_file_aggregation(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for single file aggregation
+
+        self.create_composite_resource(file_to_upload=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self._test_update_dataset_name_aggregation(file_type="GenericLogicalFile",
+                                                   dataset_name="Updated dataset name for "
+                                                                "single file aggregation")
+
+    def test_update_dataset_name_raster_aggregation(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for raster aggregation
+
+        self.create_composite_resource(file_to_upload=self.raster_file)
         res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
 
-        self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
-        # check dataset_name before updating via the view function
-        self.assertEqual(logical_file.dataset_name, "small_logan")
-        url_params = {'hs_file_type': 'GeoRasterLogicalFile',
-                      'file_type_id': logical_file.id
-                      }
-        url = reverse('update_filetype_datatset_name', kwargs=url_params)
-        request = self.factory.post(url, data={'dataset_name': 'Logan River'})
-        request.user = self.user
-        # this is the view function we are testing
-        response = update_dataset_name(request, hs_file_type="GeoRasterLogicalFile",
-                                       file_type_id=logical_file.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
-        self.assertEqual('success', response_dict['status'])
-        # check dataset_name after updating via the view function
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertEqual(logical_file.dataset_name, "Logan River")
+        # set the tif file to GeoRasterFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self._test_update_dataset_name_aggregation(file_type="GeoRasterLogicalFile",
+                                                   dataset_name="Updated dataset name for "
+                                                                "Geo Raster aggregation")
 
-        self.composite_resource.delete()
+    def test_update_dataset_name_netcdf_aggregation(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for necdf aggregation
 
-    def test_update_dataset_name_netcdf_file_type(self):
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._create_composite_resource(self.netcdf_file_obj)
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
         res_file = self.composite_resource.files.first()
 
         # set the nc file to NetCDF File type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self._test_update_dataset_name_aggregation(file_type="NetCDFLogicalFile",
+                                                   dataset_name="Updated dataset name for "
+                                                                "NetCDF aggregation")
+
+    def test_update_dataset_name_file_set_aggregation(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for file set aggregation
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        # set the folder to file set aggregation
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self._test_update_dataset_name_aggregation(file_type="FileSetLogicalFile",
+                                                   dataset_name="Updated dataset name for "
+                                                                "File Set aggregation")
+
+    def _test_update_dataset_name_aggregation(self, file_type, dataset_name):
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-
-        self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        self.assertEqual(res_file.logical_file_type_name, file_type)
         # check dataset_name before updating via the view function
-        dataset_name = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
-        self.assertEqual(logical_file.dataset_name, dataset_name)
-        url_params = {'hs_file_type': 'NetCDFLogicalFile',
+        self.assertNotEqual(logical_file.dataset_name, dataset_name)
+        url_params = {'hs_file_type': file_type,
                       'file_type_id': logical_file.id
                       }
         url = reverse('update_filetype_datatset_name', kwargs=url_params)
-        dataset_name = "Snow water equivalent estimation at TWDEF site from Oct 20010 to June 2015"
         request = self.factory.post(url, data={'dataset_name': dataset_name})
         request.user = self.user
         # this is the view function we are testing
-        response = update_dataset_name(request, hs_file_type="NetCDFLogicalFile",
+        response = update_dataset_name(request, hs_file_type=file_type,
                                        file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content)
@@ -408,15 +771,17 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         self.composite_resource.delete()
 
-    def test_update_dataset_name_refts_file_type_failure(self):
+    def test_update_dataset_name_refts_aggregation_failure(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for reftimeseries aggregation
         # we should not be able to update dataset name since the json file
         # has the title element
-        self.refts_file_obj = open(self.refts_file, 'r')
-        self._create_composite_resource(self.refts_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.refts_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -445,22 +810,23 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.dataset_name, orig_dataset_name)
         self.composite_resource.delete()
 
-    def test_update_dataset_name_refts_file_type_success(self):
+    def test_update_dataset_name_refts_aggregation_success(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for reftimeseries aggregation
         # we should be able to update dataset name since the json file
-        # does not have the title element
-        self.refts_missing_title_file_obj = open(self.refts_missing_title_file, 'r')
-        self._create_composite_resource(self.refts_missing_title_file_obj)
+        # does not have a value for the title element
+
+        self.create_composite_resource(file_to_upload=self.refts_missing_title_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertFalse(logical_file.metadata.has_title_in_json)
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # check dataset_name before updating via the view function
-        orig_dataset_name = ""
-        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        self.assertEqual(logical_file.dataset_name, None)
         url_params = {'hs_file_type': 'RefTimeseriesLogicalFile',
                       'file_type_id': logical_file.id
                       }
@@ -481,15 +847,16 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.dataset_name, dataset_name)
         self.composite_resource.delete()
 
-    def test_update_abstract_refts_failure(self):
+    def test_update_abstract_refts_aggregation_failure(self):
+        # here we are testing the view function 'update_refts_abstract'
         # we should not be able to update abstract since the json file
         # has the abstract element
-        self.refts_file_obj = open(self.refts_file, 'r')
-        self._create_composite_resource(self.refts_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.refts_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -522,29 +889,27 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.abstract, orig_abstract)
         self.composite_resource.delete()
 
-    def test_update_abstract_refts_success(self):
+    def test_update_abstract_refts_aggregation_success(self):
+        # here we are testing the view function 'update_refts_abstract'
         # we should be able to update abstract since the json file
-        # does't have the abstract element
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
-        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_abstract_file_name)
+        # does't have a value for the abstract element
 
-        tgt_temp_refts_abstract_file = os.path.join(
-            self.temp_dir, self.refts_missing_abstract_file_name)
-        shutil.copy(self.refts_missing_abstract_file, tgt_temp_refts_abstract_file)
-        self.refts_file_obj = open(self.refts_missing_abstract_file, 'r')
-        self._create_composite_resource(self.refts_file_obj)
+        refts_missing_abstract_file_name = 'refts_valid_abstract_null.refts.json'
+        refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_abstract_file_name)
+
+        self.create_composite_resource(file_to_upload=refts_missing_abstract_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # test that the abstract key is not in json file
         self.assertFalse(logical_file.metadata.has_abstract_in_json)
-        self.assertEqual(logical_file.metadata.abstract, "")
+        self.assertEqual(logical_file.metadata.abstract, None)
         url_params = {'file_type_id': logical_file.id}
         url = reverse('update_reftimeseries_abstract', kwargs=url_params)
         new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
@@ -562,17 +927,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
         self.composite_resource.delete()
 
-    def test_update_abstract_timeseries(self):
+    def test_update_abstract_timeseries_aggregation(self):
+        # here we are testing the view function 'update_timeseries_abstract'
         # we should be able to update abstract for time series file type
         # does't have the abstract element
-        self.sqlite_file_obj = open(self.sqlite_file, 'r')
-        self._create_composite_resource(self.sqlite_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.sqlite_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -594,17 +960,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
         self.composite_resource.delete()
 
-    def test_get_timeseries_metadata(self):
+    def test_get_timeseries_aggregation_metadata(self):
+        # here we are testing the view function 'get_timeseries_metadata'
         # we should be able to update abstract for time series file type
-        # does't have the abstract element
-        self.sqlite_file_obj = open(self.sqlite_file, 'r')
-        self._create_composite_resource(self.sqlite_file_obj)
+        # that does't have the abstract element
+
+        self.create_composite_resource(file_to_upload=self.sqlite_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -624,15 +991,16 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
-    def test_add_delete_keywords_refts_failure(self):
+    def test_add_delete_keywords_refts_aggregation_failure(self):
+        # here we are testing the view function 'add_keyword_metadata'
         # we should not be able to add/delete keywords since the json file
         # has the keywords element
-        self.refts_file_obj = open(self.refts_file, 'r')
-        self._create_composite_resource(self.refts_file_obj)
+
+        self.create_composite_resource(file_to_upload=self.refts_file)
         res_file = self.composite_resource.files.first()
         file_type = 'RefTimeseriesLogicalFile'
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -679,22 +1047,20 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
             self.assertIn(kw, logical_file.metadata.keywords)
         self.composite_resource.delete()
 
-    def test_add_delete_keywords_refts_success(self):
+    def test_add_delete_keywords_refts_aggregation_success(self):
+        # here we are testing the view function 'add_keyword_metadata'
         # we should be able to add/delete keywords since the json file
-        # does not have the keywords element
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.json.refts'
-        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_keywords_file_name)
+        # does not have a value for the keyWords element
 
-        tgt_temp_refts_missing_keywords_file = os.path.join(
-            self.temp_dir, self.refts_missing_keywords_file_name)
-        shutil.copy(self.refts_missing_keywords_file, tgt_temp_refts_missing_keywords_file)
-        self.refts_file_obj = open(tgt_temp_refts_missing_keywords_file, 'r')
-        self._create_composite_resource(self.refts_file_obj)
+        refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
+        refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_keywords_file_name)
+
+        self.create_composite_resource(file_to_upload=refts_missing_keywords_file)
         res_file = self.composite_resource.files.first()
         file_type = 'RefTimeseriesLogicalFile'
         # set the json file to RefTimeSeries File type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id,)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -742,13 +1108,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         self.composite_resource.delete()
 
-    def test_CRUD_key_value_metadata_raster_file_type(self):
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource(self.raster_file_obj)
+    def test_CRUD_key_value_metadata_raster_aggregation(self):
+        # here we are testing the view function 'update_key_value_metadata'
+
+        self.create_composite_resource(file_to_upload=self.raster_file)
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -815,13 +1182,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.extra_metadata, {})
         self.composite_resource.delete()
 
-    def test_CRUD_key_value_metadata_netcdf_file_type(self):
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._create_composite_resource(self.netcdf_file_obj)
+    def test_CRUD_key_value_metadata_netcdf_aggregation(self):
+        # here we are testing the view function 'update_key_value_metadata'
+
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
         res_file = self.composite_resource.files.first()
 
         # set the nc file to NetCDF file type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -888,22 +1256,24 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.extra_metadata, {})
         self.composite_resource.delete()
 
-    def test_add_delete_keywords_file_types(self):
-        # test adding and deleting of keywords
-        # test for raster file type
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._add_delete_keywords_file_type(self.raster_file_obj, 'GeoRasterLogicalFile')
-        # test for netcdf file type
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._add_delete_keywords_file_type(self.netcdf_file_obj, 'NetCDFLogicalFile')
+    def test_add_delete_keywords_aggregations(self):
+        # test adding and deleting of keywords - testing the view functions: 'add_keyword_metadata'
+        # and 'delete_keyword_metadata'
 
-    def test_update_netcdf_file(self):
-        self.netcdf_file_obj = open(self.netcdf_file, 'r')
-        self._create_composite_resource(self.netcdf_file_obj)
+        # test for raster aggregation
+        self._add_delete_keywords_file_type(self.raster_file, 'GeoRasterLogicalFile')
+
+        # test for netcdf aggregation
+        self._add_delete_keywords_file_type(self.netcdf_file, 'NetCDFLogicalFile')
+
+    def test_update_netcdf_file_for_aggregation(self):
+        # here we are testing the view function 'update_netcdf_file'
+
+        self.create_composite_resource(file_to_upload=self.netcdf_file)
         res_file = self.composite_resource.files.first()
 
         # set the nc file to NetCDF file type
-        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -937,13 +1307,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read())
         self.composite_resource.delete()
 
-    def test_update_sqlite_file(self):
-        """test updating sqlite file for timeseries file type"""
-        self.sqlite_file_obj = open(self.sqlite_file, 'r')
-        self._create_composite_resource(self.sqlite_file_obj)
+    def test_update_sqlite_file_for_aggregation(self):
+        # here we are testing the view function 'update_sqlite_file' to update the sqlite file that
+        # is part of a timeseries aggregation
+
+        self.create_composite_resource(file_to_upload=self.sqlite_file)
         res_file = self.composite_resource.files.first()
         # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         logical_file.metadata.abstract = "new abstract for time series file type"
@@ -961,15 +1332,99 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
-    def _add_delete_keywords_file_type(self, file_obj, file_type):
-        self._create_composite_resource(file_obj)
+    def test_update_file_set_coverage_from_contents(self):
+        """Here we are testing file set temporal and spatial coverage update using respective
+         coverage data from the contained aggregations"""
+
+        self.create_composite_resource()
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        # set the folder to file set aggregation
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        # fileset aggregation should not have any temporal coverage or
+        # spatial coverage at this point
+        self.assertEqual(fs_aggr.metadata.temporal_coverage, None)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage, None)
+        # create temporal coverage for file set
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2018', 'end': '12/12/2018'}
+        fs_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+        # fileset aggregation should have temporal coverage at this point
+        self.assertNotEqual(fs_aggr.metadata.temporal_coverage, None)
+        #  create spatial coverage for file set
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        fs_aggr.metadata.create_element('coverage', type='point', value=value_dict)
+        # fileset aggregation should have spatial coverage at this point
+        self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
+
+        fs_aggr_path = fs_aggr.aggregation_name
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # upload a netcdf file to the new_folder - folder that represents the above fileset
+        # aggregation
+        self.add_files_to_resource(files_to_add=[self.netcdf_file], upload_folder=fs_aggr_path)
+        # netcdf child aggregation should have been created
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+        self.assertTrue(nc_aggr.has_parent)
+        # netcdf aggregation should have temporal coverage
+        self.assertNotEqual(nc_aggr.metadata.temporal_coverage, None)
+
+        # temporal coverage of the fileset aggregation should NOT match with that of the contained
+        # netcdf aggregation
+        for temp_date in ('start', 'end'):
+            self.assertNotEqual(fs_aggr.metadata.temporal_coverage.value[temp_date],
+                                nc_aggr.metadata.temporal_coverage.value[temp_date])
+
+        # update file set aggregation temporal coverage from it's contained aggregation
+        url_params = {'file_type_id': fs_aggr.id,
+                      'coverage_type': 'temporal'
+                      }
+        url = reverse('update_fileset_coverage', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing for updating file set temporal coverage
+        response = update_aggregation_coverage(request, file_type_id=fs_aggr.id,
+                                               coverage_type='temporal')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # temporal coverage of the fileset aggregation should now match with that of the contained
+        # netcdf aggregation
+        for temp_date in ('start', 'end'):
+            self.assertEqual(fs_aggr.metadata.temporal_coverage.value[temp_date],
+                             nc_aggr.metadata.temporal_coverage.value[temp_date])
+
+        #  update file set spatial coverage from contents
+        url_params = {'file_type_id': fs_aggr.id,
+                      'coverage_type': 'spatial'
+                      }
+        url = reverse('update_fileset_coverage', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing for updating the file set spatial coverage
+        response = update_aggregation_coverage(request, file_type_id=fs_aggr.id,
+                                               coverage_type='spatial')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # test the file set spatial coverage same as that of the NC aggregation
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            self.assertEqual(fs_aggr.metadata.spatial_coverage.value[limit],
+                             nc_aggr.metadata.spatial_coverage.value[limit])
+        self.composite_resource.delete()
+
+    def _add_delete_keywords_file_type(self, file_path, file_type):
+        self.create_composite_resource(file_path)
         res_file = self.composite_resource.files.first()
 
         # set specific file type
         if file_type == "GeoRasterLogicalFile":
-            GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         else:
-            NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+            NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -1047,17 +1502,3 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # resource level
         self.assertIn('keyword-1', res_keywords)
         self.composite_resource.delete()
-
-    def _create_composite_resource(self, file_obj):
-        uploaded_file = UploadedFile(file=file_obj,
-                                     name=os.path.basename(file_obj.name))
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Raster File Type Metadata',
-            files=(uploaded_file,)
-        )
-
-        # set the generic logical file type
-        resource_post_create_actions(resource=self.composite_resource, user=self.user,
-                                     metadata=self.composite_resource.metadata)

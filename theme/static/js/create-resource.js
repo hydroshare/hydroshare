@@ -13,12 +13,22 @@ constraints = {
     }
 };
 
+// Displays error message if resource creation fails and restores UI state
+function showCreateError() {
+    showUniversalMessage("error", 'Failed to create resource.', 10000)();
+    $(".btn-create-resource").removeClass("disabled");
+    $(".btn-create-resource").text("Create Resource");
+    $(".btn-cancel-create-resource").removeClass("disabled");
+}
+
 $(document).ready(function () {
     var json_response_file_types = {};
     var json_response_multiple_file = {};
     var selected_file = undefined;
     var myDropzone;
     var fileIcons = getFileIcons();
+
+    $('[data-toggle="popover1"]').popover();
 
     if (sessionStorage.signininfo) {
         $("#sign-in-info").text(sessionStorage.signininfo);
@@ -64,6 +74,9 @@ $(document).ready(function () {
             myDropzone = this;
             $(".btn-create-resource").click(function () {
                 $("html, #dz-container").css("cursor", "progress");
+                $(".btn-create-resource").text("Creating Resource...");
+                $(".btn-create-resource").addClass("disabled");
+                $(".btn-cancel-create-resource").addClass("disabled");
 
                 // Delete invalid files from queue before uploading
                 $(".dz-error .btn-remove").trigger("click");
@@ -89,9 +102,14 @@ $(document).ready(function () {
                             if (response.status == "success") {
                                 window.location = response['resource_url'];
                             }
+                            else {
+                                console.log(response);
+                                showCreateError();
+                            }
                         },
                         error: function (response) {
                             console.log(response);
+                            showCreateError();
                         }
                     });
                 }
@@ -114,17 +132,26 @@ $(document).ready(function () {
             this.on("addedfile", function (file) {
                 // Initialize tooltips
                 var template = $(file.previewElement);
-                template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+                template.find(".dz-filename").attr("title", file.fullPath);
 
                 // Set file type icon
                 var fileName = template.find(".dz-filename").text();
                 var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
+                var iconTemplate;
                 if (fileIcons[fileTypeExt]) {
-                    template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
+                    iconTemplate = fileIcons[fileTypeExt];
+                    if (iconTemplate === fileIcons.JSON){
+                        // json is really for refts.json icon
+                        if (!fileName.toUpperCase().endsWith(".REFTS.JSON")){
+                            iconTemplate = fileIcons.DEFAULT;
+                        }
+                    }
                 }
                 else {
-                    template.find(".file-type-icon").append(fileIcons.DEFAULT);
+                    iconTemplate = fileIcons.DEFAULT;
                 }
+                template.find(".dz-filename").attr("title", file.fullPath);
+                template.find(".file-type-icon").append(iconTemplate);
 
                 template.find("[data-toggle='tooltip']").tooltip();
 

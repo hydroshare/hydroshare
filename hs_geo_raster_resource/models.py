@@ -160,28 +160,22 @@ class OriginalCoverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
         with root_div:
             legend('Spatial Reference')
-            with table(cls='custom-table'):
-                with tbody():
-                    with tr():
-                        get_th('Coordinate Reference System')
-                        td(self.value.get('projection', ''))
-                    with tr():
-                        get_th('Coordinate Reference System Unit')
-                        td(self.value['units'])
-                    with tr():
-                        get_th('Datum')
-                        td(self.value.get('datum', ''))
-                    with tr():
-                        get_th('Coordinate String')
-                        td(self.value.get('projection_string', ''))
-            h4('Extent')
+            div('Coordinate Reference System', cls='text-muted space-top')
+            div(self.value.get('projection', ''))
+            div('Coordinate Reference System Unit', cls='text-muted space-top')
+            div(self.value['units'])
+            div('Datum', cls='text-muted space-top')
+            div(self.value.get('datum', ''))
+            div('Coordinate String', cls='text-muted space-top')
+            div(self.value.get('projection_string', ''), style="word-break: break-all;")
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
@@ -235,7 +229,7 @@ class BandInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 pull-left", style="margin-bottom:40px;")
+        root_div = div()
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -315,7 +309,7 @@ class CellInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -343,9 +337,12 @@ class CellInformation(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
+# TODO Deprecated
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
+
+    discovery_content_type = 'Geographic Raster'  # used during discovery
 
     class Meta:
         verbose_name = 'Geographic Raster'
@@ -359,12 +356,12 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif", ".zip")
+        return (".tiff", ".tif", ".vrt", ".zip")
 
     @classmethod
     def allow_multiple_file_upload(cls):
-        # can upload only 1 file
-        return False
+        # can upload multiple files
+        return True
 
     @classmethod
     def can_have_multiple_files(cls):
