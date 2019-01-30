@@ -22,6 +22,6 @@ $(document).ready(function () {
         templateInstance.find(".select-identifier").attr("name", "identifier_name");
         templateInstance.find(".identifier-link-container input").attr("name", "identifier_link");
 
-        $(this).parent().find(".edit-identifiers-container").append(templateInstance).hide().fadeIn(350);
+        $(this).parent().find(".edit-identifiers-container").append(templateInstance);
     });
 });

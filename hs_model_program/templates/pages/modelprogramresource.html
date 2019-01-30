@@ -6,105 +6,101 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-            <div class="col-md-12">
-                {# Add the view mode html code below #}
-                {% if mpmetadata %}
-                    {########################}
-                    {#       CONTENT FILES     #}
-                    {########################}
-                    {% if mpmetadata.get_engine_list|first or mpmetadata.get_software_list|first or mpmetadata.get_releasenotes_list|first  or mpmetadata.get_documentation_list|first  %}
-                    <legend>Content files</legend>
-                    <table class="custom-table">
-                        <tbody>
-                        {% if mpmetadata.get_engine_list|first %}
-                            {% for name in mpmetadata.get_engine_list %}
-                                <tr>
-                                    {% if forloop.counter0 > 0 %}
-                                        <th></th>
-                                    {% else %}
-                                        <th class="text-muted">Computational Engine</th>
-                                    {% endif %}
-                                    <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
-                                           target="_blank">{{ name }}</a></td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
+        <div class="col-md-12">
+            {# Add the view mode html code below #}
+            {% if mpmetadata %}
+                {########################}
+                {#       CONTENT FILES     #}
+                {########################}
+                {% if mpmetadata.get_engine_list|first or mpmetadata.get_software_list|first or mpmetadata.get_releasenotes_list|first  or mpmetadata.get_documentation_list|first  %}
+                <legend>Content files</legend>
+                <table class="custom-table">
+                    <tbody>
+                    {% if mpmetadata.get_engine_list|first %}
+                        {% for name in mpmetadata.get_engine_list %}
+                            <tr>
+                                {% if forloop.counter0 > 0 %}
+                                    <th></th>
+                                {% else %}
+                                    <th class="text-muted">Computational Engine</th>
+                                {% endif %}
+                                <td><a id="permalink"
+                                       href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
+                                       target="_blank">{{ name }}</a></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
 
-                        {% if mpmetadata.get_software_list|first %}
-                            {% for name in mpmetadata.get_software_list %}
-                                <tr>
-                                    {% if forloop.counter0 > 0 %}
-                                        <th></th>
-                                    {% else %}
-                                        <th class="text-muted">Software</th>
-                                    {% endif %}
-                                    <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
-                                           target="_blank">{{ name }}</a></td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
+                    {% if mpmetadata.get_software_list|first %}
+                        {% for name in mpmetadata.get_software_list %}
+                            <tr>
+                                {% if forloop.counter0 > 0 %}
+                                    <th></th>
+                                {% else %}
+                                    <th class="text-muted">Software</th>
+                                {% endif %}
+                                <td><a id="permalink"
+                                       href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
+                                       target="_blank">{{ name }}</a></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
 
-                        {% if mpmetadata.get_documentation_list|first %}
-                            {% for name in mpmetadata.get_documentation_list %}
-                                <tr>
-                                    {% if forloop.counter0 > 0 %}
-                                        <th></th>
-                                    {% else %}
-                                        <th class="text-muted">Documentation</th>
-                                    {% endif %}
-                                    <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
-                                           target="_blank">{{ name }}</a></td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
+                    {% if mpmetadata.get_documentation_list|first %}
+                        {% for name in mpmetadata.get_documentation_list %}
+                            <tr>
+                                {% if forloop.counter0 > 0 %}
+                                    <th></th>
+                                {% else %}
+                                    <th class="text-muted">Documentation</th>
+                                {% endif %}
+                                <td><a id="permalink"
+                                       href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
+                                       target="_blank">{{ name }}</a></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
 
 
-                        {% if mpmetadata.get_releasenotes_list|first %}
-                            {% for name in mpmetadata.get_releasenotes_list %}
-                                <tr>
-                                    {% if forloop.counter0 > 0 %}
-                                        <th></th>
-                                    {% else %}
-                                        <th class="text-muted">Release Notes</th>
-                                    {% endif %}
-                                    <td>
-                                        <a id="permalink"
-                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
-                                           target="_blank">{{ name }}</a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                    <hr style="border:0">
-
+                    {% if mpmetadata.get_releasenotes_list|first %}
+                        {% for name in mpmetadata.get_releasenotes_list %}
+                            <tr>
+                                {% if forloop.counter0 > 0 %}
+                                    <th></th>
+                                {% else %}
+                                    <th class="text-muted">Release Notes</th>
+                                {% endif %}
+                                <td>
+                                    <a id="permalink"
+                                       href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
+                                       target="_blank">{{ name }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                    </tbody>
+                </table>
+                <br>
                 {% endif %}
 
-                    {########################}
-                    {#  SOFTWARE  METADATA  #}
-                    {########################}
+                {########################}
+                {#  SOFTWARE  METADATA  #}
+                {########################}
                 {% if mpmetadata.modelProgramLanguage or mpmedata.modelOperatingSystem or mpmetadata.modelCodeRepository or mpmetadata.modelReleaseDate or mpmetadata.modelVersion or mpmetadata.modelWebsite%}
-                    <legend>Software</legend>
-                    <table class="custom-table">
-                        <tbody>
-                           {% if mpmetadata.modelProgramLanguage %}<tr><th class="text-muted">Programming Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelOperatingSystem %}<tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelCodeRepository %}<tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>{% endif %}
-                           {% if mpmetadata.modelReleaseDate %}<tr><th class="text-muted">Release Date </th><td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelVersion %}<tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelWebsite %}<tr><th class="text-muted">Website </th><td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td></tr>{% endif %}
-                        </tbody>
-                    </table>
-                    <hr style="border:0"/>
+                <legend>Software</legend>
+                <table class="custom-table">
+                    <tbody>
+                       {% if mpmetadata.modelProgramLanguage %}<tr><th class="text-muted">Programming Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>{% endif %}
+                       {% if mpmetadata.modelOperatingSystem %}<tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>{% endif %}
+                       {% if mpmetadata.modelCodeRepository %}<tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>{% endif %}
+                       {% if mpmetadata.modelReleaseDate %}<tr><th class="text-muted">Release Date </th><td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td></tr>{% endif %}
+                       {% if mpmetadata.modelVersion %}<tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>{% endif %}
+                       {% if mpmetadata.modelWebsite %}<tr><th class="text-muted">Website </th><td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td></tr>{% endif %}
+                    </tbody>
+                </table>
+                <br>
                 {% endif %}
-                {% endif %}
-
-            </div>
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}

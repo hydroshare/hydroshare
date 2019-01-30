@@ -49,7 +49,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.refts_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
-        missing_title_refts_json_file = 'refts_valid_title_missing.refts.json'
+        missing_title_refts_json_file = 'refts_valid_title_null.refts.json'
         self.refts_missing_title_file_name = missing_title_refts_json_file
         self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_title_file_name)
@@ -814,7 +814,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # here we are testing 'update_dataset_name' view function for updating dataset name
         # for reftimeseries aggregation
         # we should be able to update dataset name since the json file
-        # does not have the title element
+        # does not have a value for the title element
 
         self.create_composite_resource(file_to_upload=self.refts_missing_title_file)
         res_file = self.composite_resource.files.first()
@@ -826,8 +826,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertFalse(logical_file.metadata.has_title_in_json)
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # check dataset_name before updating via the view function
-        orig_dataset_name = ""
-        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        self.assertEqual(logical_file.dataset_name, None)
         url_params = {'hs_file_type': 'RefTimeseriesLogicalFile',
                       'file_type_id': logical_file.id
                       }
@@ -893,13 +892,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_update_abstract_refts_aggregation_success(self):
         # here we are testing the view function 'update_refts_abstract'
         # we should be able to update abstract since the json file
-        # does't have the abstract element
+        # does't have a value for the abstract element
 
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.refts.json'
-        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_abstract_file_name)
+        refts_missing_abstract_file_name = 'refts_valid_abstract_null.refts.json'
+        refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_abstract_file_name)
 
-        self.create_composite_resource(file_to_upload=self.refts_missing_abstract_file)
+        self.create_composite_resource(file_to_upload=refts_missing_abstract_file)
         res_file = self.composite_resource.files.first()
 
         # set the json file to RefTimeSeries File type
@@ -910,7 +909,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
         # test that the abstract key is not in json file
         self.assertFalse(logical_file.metadata.has_abstract_in_json)
-        self.assertEqual(logical_file.metadata.abstract, "")
+        self.assertEqual(logical_file.metadata.abstract, None)
         url_params = {'file_type_id': logical_file.id}
         url = reverse('update_reftimeseries_abstract', kwargs=url_params)
         new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
@@ -1051,13 +1050,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_add_delete_keywords_refts_aggregation_success(self):
         # here we are testing the view function 'add_keyword_metadata'
         # we should be able to add/delete keywords since the json file
-        # does not have the keywords element
+        # does not have a value for the keyWords element
 
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
-        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_keywords_file_name)
+        refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
+        refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
+            refts_missing_keywords_file_name)
 
-        self.create_composite_resource(file_to_upload=self.refts_missing_keywords_file)
+        self.create_composite_resource(file_to_upload=refts_missing_keywords_file)
         res_file = self.composite_resource.files.first()
         file_type = 'RefTimeseriesLogicalFile'
         # set the json file to RefTimeSeries File type

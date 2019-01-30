@@ -21,6 +21,7 @@ var ACCESS_GRANTOR_COL =    14;
 var colDefs = [
     {
         "targets": [RESOURCE_TYPE_COL],     // Resource type
+        "width": "135px"
     },
     {
         "targets": [ACTIONS_COL],           // Actions

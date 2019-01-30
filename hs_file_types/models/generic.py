@@ -5,7 +5,7 @@ from django.db import models
 from django.template import Template, Context
 from django.core.exceptions import ValidationError
 
-from dominate.tags import div, form, button, h4
+from dominate.tags import div, form, button, hr, i
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
@@ -57,10 +57,14 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
 
         html_string = super(GenericFileMetaDataMixin, self).get_html()
         if not self.has_metadata:
-            root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
-            with root_div:
-                h4("No file level metadata exists for the selected file.")
-            html_string = root_div.render()
+            no_metadata_message = div(id="#fb-metadata-default", cls="text-center text-muted",
+                                      role="alert")
+            with no_metadata_message:
+                div("No file level metadata exists for the selected file.")
+                hr()
+                i_tag = i(cls="fa fa-eye-slash fa-2x")
+                i_tag['aria-hidden'] = 'true'
+            html_string = no_metadata_message.render()
         else:
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
@@ -78,9 +82,10 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GenericFileMetaDataMixin, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
+            with div():
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
-                          method="post", enctype="multipart/form-data"):
+                          method="post", enctype="multipart/form-data", cls='hs-coordinates-picker',
+                          data_coordinates_type="point"):
                     div("{% crispy spatial_form %}")
                     with div(cls="row", style="margin-top:10px;"):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "

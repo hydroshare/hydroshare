@@ -1,12 +1,11 @@
 import os
 import shutil
+import json
 
 from django.contrib.auth.models import Group
-from django.contrib.messages import get_messages
 from django.core.urlresolvers import reverse
 from django.core.files.uploadedfile import UploadedFile
 
-from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import set_resource_flag
@@ -75,13 +74,12 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
 
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
-        set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         # check that the resource is still not public
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.public, False)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertNotEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'error')
 
         # setting flag to public for 2nd resource should succeed
         # test that the resource is not public
@@ -95,10 +93,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_two.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
+
         # check that the resource is public now
         self.gen_res_two.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_two.raccess.public, True)
@@ -125,10 +122,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
+
         # check that the resource is private now
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.public, False)
@@ -152,13 +148,12 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
 
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
-        set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         # check that the resource is still not discoverable
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.discoverable, False)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertNotEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'error')
 
         # setting flag to discoverable for 2nd resource should succeed
         # test that the resource is not discoverable
@@ -172,10 +167,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_two.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
+
         # check that the resource is discoverable now
         self.gen_res_two.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_two.raccess.discoverable, True)
@@ -203,10 +197,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
+
         # check that the resource is not discoverable now
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.discoverable, False)
@@ -233,10 +226,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
+
         # check that the resource is shareable now
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.shareable, True)
@@ -259,10 +251,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertEqual(len(err_messages), 0)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['status'], 'success')
         # check that the resource is not shareable now
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.shareable, False)

@@ -1,39 +1,38 @@
-{ "timeSeriesReferenceFile" :
-	{ "referencedTimeSeries" : [
-		{
-			"beginDate" : "2016-04-06T00:00:00",
-            "endDate" : "2017-01-26T00:00:00+00:00",
-            "requestInfo": {
-				"networkName" : "NWISDV",
-				"refType" : "WOF",
-				"returnType" : "WaterML 1.1",
-				"serviceType" : "SOAP",
-				"url" : "http://hydroporta.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
+{
+	"timeSeriesReferenceFile": {
+		"referencedTimeSeries": [{
+			"beginDate": "2016-04-06T00:00:00",
+			"endDate": "2017-01-26T00:00:00+00:00",
+			"requestInfo": {
+				"networkName": "NWISDV",
+				"refType": "WOF",
+				"returnType": "WaterML 1.1",
+				"serviceType": "SOAP",
+				"url": "http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
 			},
 			"site": {
-				"siteName" : "HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH",
-				"siteCode" : "NWISDV:10153100",
-				"latitude" : 40.178871899999997,
-                "longitude" : -111.639338
+				"siteName": "HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH",
+				"siteCode": "NWISDV:10153100",
+				"latitude": 40.178871899999997,
+				"longitude": -111.639338
 			},
-            "variable": {
-				"variableName" : "Discharge, cubic feet per second",
-				"variableCode" : "NWISDV:00060/DataType=MEAN"
+			"variable": {
+				"variableName": "Discharge, cubic feet per second",
+				"variableCode": "NWISDV:00060/DataType=MEAN"
 			},
-			"method" : {
-                "methodDescription" : "Estimated by NASA National Snow and Ice Data Center",
-                "methodLink" : "https://nsidc-1.org/"
-            },
+			"method": {
+				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
+				"methodLink": "https://nsidc-1.org/"
+			},
 			"valueCount": 1000,
-			"sampleMedium" : "unknown"
-          }
-        ],
-      "abstract" : "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), phycocyanin data collected from 2016-04-06 to 2017-02-09 created on Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and Provo River at Charleston Advanced Aquatic. Data created by CUAHSI HydroClient: http://data.cuahsi.org/#.",
-      "fileVersion" : "1",
-      "keyWords" : [ "Time Series",
-          "CUAHSI"
-        ],
-      "symbol" : "http://data.cuahsi.org/content/images/cuahsi_logo_small.png",
-      "title" : "Sites, Variable"
-    }
+			"sampleMedium": "unknown"
+		}],
+		"abstract": "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), phycocyanin data collected from 2016-04-06 to 2017-02-09 created on Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and Provo River at Charleston Advanced Aquatic. Data created by CUAHSI HydroClient: http://data.cuahsi.org/#.",
+		"fileVersion": "1",
+		"keyWords": ["Time Series",
+			"CUAHSI"
+		],
+		"symbol": "http://data.cuahsi.org/content/images/cuahsi_logo_small.png",
+		"title": "Sites, Variable"
+	}
 }

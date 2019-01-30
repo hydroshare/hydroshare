@@ -5,6 +5,7 @@
 {% load staticfiles  %}
 
 {% block extended_metadata %}
+    <div class="col-xs-12">
     {% if extended_metadata_exists %}
         {% if model_output %}
             <legend>Model Output</legend>
@@ -63,6 +64,7 @@
             </table>
         {% endif %}
     {% endif %}
+    </div>
 {% endblock %}
 
 {% block extra_css %}
