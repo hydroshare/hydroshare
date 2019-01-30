@@ -469,7 +469,7 @@ function updateSelectionMenuContext() {
     });
 
     $("#open-separator").toggleClass("hidden", uiActionStates.open.fileMenu.hidden);
-    $("#content-type-separator").toggleClass("hidden", uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
+    $("#content-type-separator").toggleClass("hidden", mode !== "edit" || uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
     $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
 }
 
