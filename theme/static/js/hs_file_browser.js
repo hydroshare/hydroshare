@@ -1402,8 +1402,13 @@ $(document).ready(function () {
         $('#file_redirect_url').prop('href', ref_url);
     });
 
+    $("[data-fb-action='zip']").click(function() {
+         var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        $("#txtZipName").val(folderName);
+    });
+
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
-        $('#txtFolderName').focus();
+        $('#txtZipName').focus();
 
         // Select the file name by default
         var input = document.getElementById("txtZipName");
@@ -1426,7 +1431,6 @@ $(document).ready(function () {
 
     $('#edit-referenced-url-dialog').on('shown.bs.modal', function () {
         var file = $("#fb-files-container li.ui-selected");
-        var fileName = file.children(".fb-file-name").text();
         var ref_url = file.attr("data-ref-url");
         $('#txtNewRefURL').val(ref_url);
         $('#txtNewRefURL').focus();
@@ -1915,11 +1919,6 @@ $(document).ready(function () {
                 refreshFileBrowser();
             });
         }
-    });
-
-    $("#btn-zip").click(function() {
-        var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        $("#txtZipName").val(folderName);
     });
 
     // Unzip method
