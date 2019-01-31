@@ -148,11 +148,6 @@ class ResourcePermissionsMixin(Ownable):
 
         abstract = True
 
-    @property
-    def permissions_store(self):
-        """Use PERMISSIONS_DB constant. Unsure what 's' is here."""
-        return s.PERMISSIONS_DB
-
     def can_add(self, request):
         """Pass through can_change to determine if user can make changes to a resource."""
         return self.can_change(request)
