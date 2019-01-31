@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes
+from hs_access_control.models.community import Community 
 
 #################################
 # classes that track provenance of privileges
@@ -90,6 +91,8 @@ class ProvenanceBase(models.Model):
             UserResourceProvenance.get_privilege(resource={X}, user={Y})
             UserGroupProvenance.get_privilege(group={X}, user={Y})
             GroupResourceProvenance.get_privilege(resource={X}, group={Y})
+            UserCommunityProvenance.get_privilege(user={X}, community={Y})
+            GroupCommunityProvenance.get_privilege(group={X}, community={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
@@ -112,6 +115,8 @@ class ProvenanceBase(models.Model):
             UserResourceProvenance.update(resource={X}, user={Y}, privilege={Z}, ...)
             UserGroupProvenance.update(group={X}, user={Y}, privilege={Z}, ...)
             GroupResourceProvenance.update(resource={X}, group={Y}, privilege={Z}, ...)
+            UserCommunityProvenance.update(user={X}, community={Y}, privilege={Z}, ...)
+            GroupCommunityProvenance.update(group={X}, community={Y}, privilege={Z}, ...)
         """
         cls.objects.create(**kwargs)
 
@@ -128,6 +133,8 @@ class ProvenanceBase(models.Model):
             UserResourceProvenance.__get_prev_start(resource={X}, user={Y})
             UserGroupProvenance.__get_prev_start(group={X}, user={Y})
             GroupResourceProvenance.__get_prev_start(resource={X}, group={Y})
+            UserCommunityProvenance.__get_prev_start(user={X}, community={Y})
+            GroupCommunityProvenance.__get_prev_start(group={X}, community={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
@@ -152,6 +159,8 @@ class ProvenanceBase(models.Model):
             UserResourceProvenance.__get_prev_record(resource={X}, user={Y})
             UserGroupProvenance.__get_prev_record(group={X}, user={Y})
             GroupResourceProvenance.__get_prev_record(resource={X}, group={Y})
+            UserCommunityProvenance.__get_prev_record(user={X}, community={Y})
+            GroupCommunityProvenance.__get_prev_record(group={X}, community={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
@@ -492,7 +501,7 @@ class GroupResourceProvenance(ProvenanceBase):
 
     The group privilege over a resource is not directly meaningful.
     it is resolved instead into user privilege for each member of
-    the group, as listed in UserGroupProvenance above.
+    the group, as listed in UserGroupProvenance and GroupCommunityProvenance above.
 
     This is an append-only ledger of group privilege that serves as complete provenance
     of access changes.  At any one time, one privilege applies to each user and resource.
@@ -583,3 +592,219 @@ class GroupResourceProvenance(ProvenanceBase):
                                                    privilege=privilege,
                                                    grantor=grantor,
                                                    undone=undone)
+
+
+class UserCommunityProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a user over a community
+
+    Having any privilege over a community is synonymous with membership.
+
+    This is an append-only ledger of user privilege that serves as complete provenance
+    of access changes.  At any time, one privilege applies to each grantee and group.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table UserCommunityPrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    complete time-based journal of what privilege was in effect when.
+
+    An "undone" field allows one-step undo but prohibits further undo.
+
+    """
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    community = models.ForeignKey(Community,
+                                  null=False,
+                                  editable=False,
+                                  related_name='c2ucq',
+                                  help_text='community to be granted privilege')
+
+    user = models.ForeignKey(User,
+                             null=False,
+                             editable=False,
+                             related_name='u2ucq',
+                             help_text='user to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
+                                related_name='x2ucq',
+                                help_text='grantor of privilege')
+
+    undone = models.BooleanField(editable=False, default=False)
+
+    class Meta:
+        unique_together = ('community', 'user', 'start')
+
+    @property
+    def grantee(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.community
+
+    @property
+    def entity(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.user
+
+    @classmethod
+    def get_undo_users(cls, community, grantor):
+        """
+        get the users for which a specific grantee can undo privilege
+
+        :param community: community to check.
+        :param grantor: user that would initiate the rollback.
+
+        Note: undo is somewhat independent of access control. A user need not hold
+        a privilege to undo a privilege that was previously granted.
+        """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(community, Community)
+
+        # users are those last granted a privilege over the entity by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        selected = User.objects.filter(u2ucq__community=community)\
+                               .annotate(start=Max('c2ucq__start'))\
+                               .filter(u2ucq__start=F('start'),
+                                       u2ucq__grantor=grantor,
+                                       u2ucq__undone=False)
+        return selected
+
+    @classmethod
+    def update(cls, user, community, privilege, grantor, undone=False):
+        """
+        Add a provenance record to the provenance chain.
+
+        :param user: shared user
+        :param community: community with which user is shared.
+        :param grantor: user that would initiate the rollback.
+
+        This is just a wrapper around ProvenanceBase.update that makes parameters explicit.
+        """
+
+        if __debug__:
+            assert isinstance(user, User)
+            assert isinstance(community, Community)
+            assert grantor is None or isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+
+        super(UserCommunityProvenance, cls).update(user=user,
+                                                   community=community,
+                                                   privilege=privilege,
+                                                   grantor=grantor,
+                                                   undone=undone)
+
+
+class GroupCommunityProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a group over a community
+
+    Having any privilege over a community is synonymous with membership.
+
+    This is an append-only ledger of group privilege that serves as complete provenance
+    of access changes.  At any time, one privilege applies to each grantee and group.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table GroupCommunityPrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    complete time-based journal of what privilege was in effect when.
+
+    An "undone" field allows one-step undo but prohibits further undo.
+
+    """
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    community = models.ForeignKey(Community,
+                                  null=False,
+                                  editable=False,
+                                  related_name='c2gcq',
+                                  help_text='group to be granted privilege')
+
+    group = models.ForeignKey(Group,
+                              null=False,
+                              editable=False,
+                              related_name='g2gcq',
+                              help_text='group to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
+                                related_name='x2gcq',
+                                help_text='grantor of privilege')
+
+    undone = models.BooleanField(editable=False, default=False)
+
+    class Meta:
+        unique_together = ('community', 'group', 'start')
+
+    @property
+    def grantee(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.community
+
+    @property
+    def entity(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.group
+
+    @classmethod
+    def get_undo_groups(cls, community, grantor):
+        """
+        get the groups for which a specific grantee can undo privilege
+
+        :param community: community to check.
+        :param grantor: user that would initiate the rollback.
+
+        Note: undo is somewhat independent of access control. A user need not hold
+        a privilege to undo a privilege that was previously granted.
+        """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(community, Community)
+
+        # users are those last granted a privilege over the entity by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        selected = Group.objects.filter(g2gcq__community=community)\
+                               .annotate(start=Max('g2gcq__start'))\
+                               .filter(g2gcq__start=F('start'),
+                                       g2gcq__grantor=grantor,
+                                       g2gcq__undone=False)
+        return selected
+
+    @classmethod
+    def update(cls, group, community, privilege, grantor, undone=False):
+        """
+        Add a provenance record to the provenance chain.
+
+        :param group: shared group
+        :param community: community with which group is shared.
+        :param grantor: user that would initiate the rollback.
+
+        This is just a wrapper around ProvenanceBase.update that makes parameters explicit.
+        """
+
+        if __debug__:
+            assert isinstance(group, Group)
+            assert isinstance(community, Community)
+            assert grantor is None or isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+
+        super(GroupCommunityProvenance, cls).update(group=group,
+                                                    community=community,
+                                                    privilege=privilege,
+                                                    grantor=grantor,
+                                                    undone=undone)
