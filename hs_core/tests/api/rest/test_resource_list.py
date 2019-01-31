@@ -410,3 +410,22 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
+
+        # resources by author email
+        response = self.client.get('/hsapi/resource/', {'author': self.user.email}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+
+        # resources by author email bad
+        response = self.client.get('/hsapi/resource/',
+                                   {'author': ','.join(self.user.email + "bad")}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 0)
+
+        # resources by author bad
+        response = self.client.get('/hsapi/resource/', {'author': "bad"}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 0)
