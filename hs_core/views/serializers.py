@@ -115,6 +115,7 @@ class ResourceFileSerializer(serializers.Serializer):
     url = serializers.URLField()
     size = serializers.IntegerField()
     content_type = serializers.CharField(max_length=255)
+    logical_file_type = serializers.CharField(max_length=255)
 
 
 class ResourceType(object):
@@ -146,7 +147,8 @@ ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
                                'id',
                                'size',
-                               'content_type'])
+                               'content_type',
+                               'logical_file_type'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

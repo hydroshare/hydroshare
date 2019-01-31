@@ -539,3 +539,19 @@ def update_quota_usage_task(username):
     uq.update_used_value(used_val)
 
     return True
+
+
+@shared_task
+def update_web_services(services_url, api_token, timeout, res_id):
+    session = requests.Session()
+    session.headers.update(
+        {"Authorization": " ".join(("Token", str(api_token)))}
+    )
+    rest_url = str(services_url) + "/update-services/?res_id=" + str(res_id)
+    try:
+        response = session.post(rest_url, timeout=timeout)
+        logger.info(response)
+        return response
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logger.error(e)
+        return e
