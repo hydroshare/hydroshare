@@ -6,32 +6,29 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+
 var file_metadata_alert = `
     <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
         <div>Select a file to see file type metadata.</div>
         <hr>
         <span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
-            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"style="top: 14px;"></i>
+            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true" style="top: 14px;"></i>
         </span>
-    </div>
-`;
+    </div>`;
 
 var no_metadata_alert = `
     <div class="alert alert-warning text-center" role="alert">
         <div>No file type metadata exists for this file.</div>
         <hr>
         <i class="fa fa-eye-slash fa-3x" aria-hidden="true"></i>
-    </div>
-`;
+    </div>`;
 
 var loading_metadata_alert = `
     <div class="text-center" role="alert">
         <br>
         <i class="fa fa-spinner fa-spin fa-3x fa-fw icon-blue"></i>
         <span class="sr-only">Loading...</span>
-    </div>
-`;
-
+    </div>`;
 
 const MAX_FILE_SIZE = 1024; // MB
 
@@ -1165,7 +1162,6 @@ $(document).ready(function () {
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
-
         if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
             sessionStorage.currentBrowsepath = '';
         }
@@ -1193,7 +1189,16 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode == "edit" && acceptedFiles.length > 0) {
+    if (mode === "edit") {
+        no_metadata_alert += `
+        <div class="text-center">
+            <a type="button" class="btn btn-success" data-fb-action="setFileSetFileType">
+                <i class="fa fa-plus"></i> Add metadata
+            </a>
+        </div>`
+    };
+
+    if (mode === "edit" && acceptedFiles.length > 0) {
         var allowMultiple = null;
         if ($("#hs-file-browser").attr("data-allow-multiple-files") != "True") {
             allowMultiple = 1;
@@ -1856,43 +1861,43 @@ $(document).ready(function () {
     });
 
     // set generic file type method
-     $("#btn-set-generic-file-type").click(function () {
-         setFileType("SingleFile");
-      });
+    $("#btn-set-generic-file-type").click(function () {
+        setFileType("SingleFile");
+    });
 
     // set fileset file type method
-     $("#btn-set-fileset-file-type").click(function () {
-         setFileType("FileSet");
-      });
+    $("#hs-file-browser, #right-click-menu").on("click", "[data-fb-action='setFileSetFileType']", function () {
+        setFileType("FileSet");
+    });
 
     // set geo raster file type method
-     $("#btn-set-geo-file-type").click(function () {
-         setFileType("GeoRaster");
-      });
+    $("#btn-set-geo-file-type").click(function () {
+        setFileType("GeoRaster");
+    });
 
     // set NetCDF file type method
-     $("#btn-set-netcdf-file-type").click(function () {
-         setFileType("NetCDF");
-     });
+    $("#btn-set-netcdf-file-type").click(function () {
+        setFileType("NetCDF");
+    });
 
     // set GeoFeature file type method
-     $("#btn-set-geofeature-file-type").click(function () {
-         setFileType("GeoFeature");
-     });
+    $("#btn-set-geofeature-file-type").click(function () {
+        setFileType("GeoFeature");
+    });
     // set RefTimeseries file type method
-     $("#btn-set-refts-file-type").click(function () {
-         setFileType("RefTimeseries");
-     });
+    $("#btn-set-refts-file-type").click(function () {
+        setFileType("RefTimeseries");
+    });
 
-     // set Timeseries file type method
-     $("#btn-set-timeseris-file-type").click(function () {
-         setFileType("TimeSeries");
-     });
+    // set Timeseries file type method
+    $("#btn-set-timeseris-file-type").click(function () {
+        setFileType("TimeSeries");
+    });
 
-     // set remove aggregation (file type) method
-     $("#btnRemoveAggregation").click(function () {
-         removeAggregation();
-     });
+    // set remove aggregation (file type) method
+    $("#btnRemoveAggregation").click(function () {
+        removeAggregation();
+    });
 
     // Zip method
     $("#btn-confirm-zip").click(function () {
