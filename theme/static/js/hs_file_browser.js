@@ -636,9 +636,11 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
         $(".selection-menu").hide();
     });
+
     var timer = 0;
     var delay = 200;
     var prevent = false;
+
     $("#hs-file-browser li.fb-folder").dblclick(function () {
         clearTimeout(timer);
         prevent = true;
@@ -1111,7 +1113,8 @@ function updateNavigationState() {
 }
 
 // Reload the current folder structure
-function refreshFileBrowser() {
+// Optional argument: file name or folder name to select after reload
+function refreshFileBrowser(name) {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var currentPath = $("#hs-file-browser").attr("data-current-path");
     var calls = [];
@@ -1121,8 +1124,25 @@ function refreshFileBrowser() {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
-        updateSelectionMenuContext();
+
         $("#fileTypeMetaData").html(file_metadata_alert);
+
+        if (name) {
+            // Find the item and trigger its selection
+            let items = $("#fb-files-container li");
+            for (let i = 0; i < items.length; i++) {
+                let text = $(items[i]).find(".fb-file-name").text().trim();
+                if (text === name) {
+                    // Trigger all relevant events
+                    $(items[i]).trigger("mousedown");
+                    $(items[i]).trigger("mouseup");
+                    $(items[i]).trigger("click");
+                    break;
+                }
+            }
+        }
+
+        updateSelectionMenuContext();
     });
 
     $.when.apply($, calls).fail(function () {
@@ -2018,13 +2038,16 @@ function setFileType(fileType){
     var resID = $("#hs-file-browser").attr("data-res-id");
     var url;
     var folderPath = "";
-    if($("#fb-files-container li.ui-selected").hasClass('fb-file')){
-        var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+    let selected = $("#fb-files-container li.ui-selected");
+    let name = $("#fb-files-container li.ui-selected").find(".fb-file-name").text().trim();
+
+    if(selected.hasClass('fb-file')){
+        var file_id = selected.attr("data-pk");
         url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
     }
     else {
         // this must be folder selection for aggregation creation
-        folderPath = $("#fb-files-container li.ui-selected").children('span.fb-file-type').attr("data-folder-short-path");
+        folderPath = selected.children('span.fb-file-type').attr("data-folder-short-path");
         url = "/hsapi/_internal/" + resID + "/" + fileType + "/set-file-type/";
     }
 
@@ -2041,7 +2064,9 @@ function setFileType(fileType){
         if (json_response.status === 'success') {
             // Use resource level metadata in json_response to update resource level UI
             updateResourceUI();
-            refreshFileBrowser();
+
+            // Select the clicked element to view metadata entry form after reloading structure
+            refreshFileBrowser(name);
         }
     });
 }
