@@ -1124,7 +1124,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         resource_modified(resource, request.user, overwrite_bag=False)
-        return Response(data=self.resourceFileToListItem(res_file_objects[0]), status=status.HTTP_201_CREATED)
+        return Response(data=self.resourceFileToListItem(res_file_objects[0]),
+                        status=status.HTTP_201_CREATED)
 
 
 def _validate_metadata(metadata_list):
