@@ -1,0 +1,65 @@
+{
+	"timeSeriesReferenceFile": {
+		"referencedTimeSeries": [{
+			"beginDate": "2016-04-06T00:00:00",
+			"endDate": "2017-01-26T00:00:00+00:00",
+			"requestInfo": {
+				"networkName": "NWISDV",
+				"refType": "WOF",
+				"returnType": "WaterML 1.1",
+				"serviceType": "SOAP",
+				"url": "http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
+			},
+			"site": {
+				"siteName": "HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH",
+				"siteCode": "NWISDV:10153100",
+				"latitude": 40.178871899999997,
+				"longitude": -111.639338
+			},
+			"variable": {
+				"variableName": "Discharge, cubic feet per second",
+				"variableCode": "NWISDV:00060/DataType=MEAN"
+			},
+			"method": {
+				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
+				"methodLink": "https://nsidc.org/"
+			},
+			"valueCount": 1000,
+			"sampleMedium": "unknown"
+		},
+		{
+			"beginDate": "2016-04-06T00:00:00",
+			"endDate": "2017-02-09T23:45:00+00:00",
+			"requestInfo": {
+				"networkName": "Provo River GAMUT",
+				"refType": "WOF",
+				"returnType": "WaterML 1.1",
+				"serviceType": "SOAP",
+				"url": "http://data.iutahepscor.org/ProvoRiverWOF/cuahsi_1_1.asmx?WSDL"
+			},
+			"site": {
+				"siteName": "Provo River at Charleston Advanced Aquatic",
+				"siteCode": "Provo River GAMUT:PR_CH_AA",
+				"latitude": 40.48498,
+				"longitude": -111.46245
+			},
+			"variable": {
+				"variableName": "Blue-green algae (cyanobacteria), phycocyanin",
+				"variableCode": "iutah:BGA"
+			},
+			"method": {
+				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
+				"methodLink": "https://nsidc.org/"
+			},
+			"valueCount": 10,
+			"sampleMedium": "unknown"
+		}],
+		"abstract": "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), phycocyanin data collected from 2016-04-06 to 2017-02-09 created on Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and Provo River at Charleston Advanced Aquatic. Data created by CUAHSI HydroClient: http://data.cuahsi.org/#.",
+		"fileVersion": "1",
+		"symbol": " ",
+		"keyWords": ["Time Series",
+			"CUAHSI"
+		],
+		"title": "Sites, Variable"
+	}
+}

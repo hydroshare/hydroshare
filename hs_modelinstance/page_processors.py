@@ -36,11 +36,11 @@ def landing_page(request, page):
                                           element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
         ext_md_layout = Layout(
-                           HTML("<div class='form-group' id='modeloutput'> "
+                           HTML("<div class='form-group col-xs-12' id='modeloutput'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy model_output_form %} '
                                 '</div>'),
-                           HTML('<div class="form-group" id="executedby"> '
+                           HTML('<div class="form-group col-xs-12" id="executedby"> '
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy executed_by_form %} '
                                 '</div> ')

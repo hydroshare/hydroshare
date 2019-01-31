@@ -18,8 +18,8 @@ $(document).ready(function(){
     $("#coverage-spatial :input").prop('readonly', true);
     // Don't allow the user to change the coverage type
     var $id_type_div = $("#div_id_type");
-    var $box_radio = $id_type_div.find("#id_type_1");
-    var $point_radio = $id_type_div.find("#id_type_2");
+    var $box_radio = $id_type_div.find("input[value='box']");
+    var $point_radio = $id_type_div.find("input[value='point']");
     if ($box_radio.attr("checked") !== "checked") {
         $box_radio.parent().closest("label").addClass("text-muted");
         $box_radio.attr('disabled', true);

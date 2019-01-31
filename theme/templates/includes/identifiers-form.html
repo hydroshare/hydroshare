@@ -1,8 +1,4 @@
 {% load mezzanine_tags hydroshare_tags %}
-{% block extra_css %}
-
-<link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
-{% endblock %}
 <div class="edit-identifiers-container">
     <!--Template use for dynamic instances-->
     <div class="well identifier-template hidden">
@@ -21,11 +17,6 @@
             </select>
         </fieldset>
 
-        <fieldset class="hidden identifier-specify">
-            <label>Specify</label>
-            <input class="form-control">
-        </fieldset>
-
         <fieldset class="identifier-link-container">
             <label>Identifier Link</label>
             <input class="form-control identifier-link">
@@ -40,12 +31,7 @@
 
         <fieldset class="select-identifier-fieldset">
             <label>Identifier Name</label>
-            <select class="form-control select-identifier"
-                    {% if name == "GoogleScholarID" or name == "ORCID" or name == "ResearchGateID" or name == "ResearcherID" %}
-                    name="identifier_name"
-                    value="{{ name }}"
-                    {% endif %}
-            >
+            <select class="form-control select-identifier" name="identifier_name" value="{{ name }}">
                 <option value="GoogleScholarID"
                         {% if name == "GoogleScholarID" %}selected{% endif %}>
                     GoogleScholarID
@@ -62,7 +48,6 @@
                         {% if name == "ResearcherID" %}selected{% endif %}>
                     ResearcherID
                 </option>
-
             </select>
         </fieldset>
 
