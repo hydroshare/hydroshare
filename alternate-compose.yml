@@ -99,11 +99,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.5
     container_name: rabbitmq
-  redis:
-    image: redis:2.8
-    container_name: redis
-    stdin_open: true
-    tty: true
   solr:
     build:
       context: .
@@ -126,8 +121,6 @@ services:
     environment:
       POSTGIS_HOST: postgis
       POSTGIS_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
@@ -152,14 +145,12 @@ services:
       - "8000:8000"
     links:
       - postgis:postgis
-      - redis:redis
       - solr:solr
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
       - users.local.org:users.local.org
     depends_on:
       - postgis
-      - redis
       - solr
       - rabbitmq
       - data.local.org
@@ -175,8 +166,6 @@ services:
     environment:
       POSTGIS_HOST: postgis
       POSTGIS_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
       PGPASSWORD: postgres
@@ -192,7 +181,6 @@ services:
       - ".:/hydroshare"
     links:
       - postgis:postgis
-      - redis:redis
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
       - users.local.org:users.local.org
@@ -200,7 +188,6 @@ services:
       - hydroshare
       - postgis
       - solr
-      - redis
       - rabbitmq
       - data.local.org
       - users.local.org
