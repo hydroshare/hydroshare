@@ -3,7 +3,6 @@ import datetime
 import sys
 import logging
 from calendar import monthrange
-from optparse import make_option
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
@@ -40,44 +39,45 @@ def month_year_iter(start, end):
 class Command(BaseCommand):
     help = "Output engagement stats about HydroShare"
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+
+        parser.add_argument(
             "--monthly-users-counts",
             dest="monthly_users_counts",
             action="store_true",
             help="user stats by month",
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--monthly-orgs-counts",
             dest="monthly_orgs_counts",
             action="store_true",
             help="unique organization stats by month",
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--users-details",
             dest="users_details",
             action="store_true",
             help="current user list",
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--resources-details",
             dest="resources_details",
             action="store_true",
             help="current resource list with sizes",
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--monthly-users-by-type",
             dest="monthly_users_by_type",
             action="store_true",
             help="user type stats by month",
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--yesterdays-variables",
             dest="yesterdays_variables",
             action="store_true",
             help="dump tracking variables collected today",
-        ),
-    )
+        )
+        parser.add_argument('lookback-days', nargs='?', default=1)
 
     def print_var(self, var_name, value, period=None):
         timestamp = timezone.now()
@@ -248,9 +248,4 @@ class Command(BaseCommand):
         if options["resources_details"]:
             self.resources_details()
         if options["yesterdays_variables"]:
-            if len(args) > 0:
-                # run look-back mode
-                self.yesterdays_variables(lookback=int(args[0]))
-            else:
-                # run default mode
-                self.yesterdays_variables()
+            self.yesterdays_variables(lookback=int(options['lookback-days']))

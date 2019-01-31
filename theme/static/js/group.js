@@ -273,26 +273,6 @@ $(document).ready(function () {
 
      $("#id_user-autocomplete").addClass("form-control");
 
-    // Abstract collapse toggle
-    $(".show-more-btn").click(function () {
-        if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
-            var block = $(this).parent().find(".activity-description");
-
-            block.css("max-height", "initial"); // Set max-height to initial temporarily.
-            var maxHeight = block.height();    // Save the max height
-            block.css("max-height", "50px");    // Restore
-
-            block.animate({'max-height': maxHeight}, 300); // Animate to max height
-            $(this).text("▲");
-            $(this).attr("title", "Show less");
-        }
-        else {
-            $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
-            $(this).attr("title", "Show more");
-            $(this).text("···");
-        }
-    });
-
     $("#list-roles a").click(onRoleSelect);
 
     $("#id_user-autocomplete").attr("placeholder", "Search by name or username");

@@ -323,166 +323,235 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_create_aggregation_with_invalid_urls(self):
         # here we are using an invalid time series json file for setting it
-        # to RefTimeseries file type which should fail
-        self.refts_invalid_url_file_name = 'refts_invalid_urls.refts.json'
-        self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_url_file_name)
+        # to RefTimeseries file type which should fail as the 'url' specified in this files
+        # doesn't exist
 
-        self.create_composite_resource(self.refts_invalid_url_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+        self._test_invalid_json_file('refts_invalid_urls.refts.json')
 
     def test_create_aggregation_with_invalid_method_link(self):
         # here we are using an invalid time series json file for setting it
-        # to RefTimeseries file type which should fail as it as has an invalid method link
+        # to RefTimeseries file type which should fail as it as has an invalid method link - the
+        # url specified doesn't exist
 
-        self.refts_invalid_mlink_file_name = 'refts_invalid_method_link.refts.json'
-        self.refts_invalid_mlink_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_mlink_file_name)
+        self._test_invalid_json_file('refts_invalid_method_link.refts.json')
 
-        self.create_composite_resource(self.refts_invalid_mlink_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+    def test_create_aggregation_with_unknown_method_link(self):
+        # here we are using a valid time series json file with methodLink set to 'unknown'
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_method_link_unknown_lc.refts.json')
+
+    def test_create_aggregation_with_UNKNOWN_method_link(self):
+        # here we are using a valid time series json file with methodLink set to 'UNKNOWN'
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_method_link_unknown_uc.refts.json')
 
     def test_create_aggregation_with_invalid_date_value(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # beginDate has an invalid date value
 
-        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.refts.json'
-        self.refts_invalid_dates_1_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_dates_1_file_name)
-
-        self.create_composite_resource(self.refts_invalid_dates_1_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+        self._test_invalid_json_file('refts_invalid_dates_1.refts.json')
 
     def test_create_aggregation_with_invalid_date_order(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # beginDate > endDate
 
-        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.refts.json'
-        self.refts_invalid_dates_2_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_dates_2_file_name)
-
-        self.create_composite_resource(self.refts_invalid_dates_2_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+        self._test_invalid_json_file('refts_invalid_dates_2.refts.json')
 
     def test_create_aggregation_with_missing_key(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # key 'site' is missing
-        # Note we don't need to test for missing of any other required keys as we
-        # don't want to unit test the jsonschema module
 
-        self.refts_missing_key_file_name = 'refts_missing_key.refts.json'
-        self.refts_missing_key_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_key_file_name)
+        self._test_invalid_json_file('refts_missing_key.refts.json')
 
-        self.create_composite_resource(self.refts_missing_key_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+    def test_create_aggregation_fail_with_empty_title(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has title attribute with a value of empty string
 
-    def test_create_aggregation_with_missing_title(self):
-        # here we are using a valid time series json file for setting it
-        # to RefTimeseries file type which should be successful even though it is missing title
+        self._test_invalid_json_file('refts_invalid_title_empty_string.refts.json')
 
-        self.refts_missing_title_file_name = 'refts_valid_title_missing.refts.json'
-        self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_title_file_name)
+    def test_create_aggregation_fail_with_empty_abstract(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has abstract attribute with a value of empty string
 
-        self.create_composite_resource(self.refts_missing_title_file)
-        self._test_valid_missing_optional_elements()
+        self._test_invalid_json_file('refts_invalid_abstract_empty_string.refts.json')
 
-        self.composite_resource.delete()
+    def test_create_aggregation_fail_with_negative_valuecount(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has valueCount attribute with a -ve value
 
-    def test_create_aggregation_with_missing_abstract(self):
-        # here we are using a valid time series json file for setting it
-        # to RefTimeseries file type which should be successful even though it is missing abstract
+        self._test_invalid_json_file('refts_invalid_abstract_empty_string.refts.json')
 
-        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.refts.json'
-        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_abstract_file_name)
+    def test_create_aggregation_with_null_title(self):
+        # here we are using a valid time series json file with 'title' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-        self.create_composite_resource(self.refts_missing_abstract_file)
-        self._test_valid_missing_optional_elements()
+        self._test_valid_json_file('refts_valid_title_null.refts.json')
 
-        self.composite_resource.delete()
+    def test_create_aggregation_with_null_abstract(self):
+        # here we are using a valid time series json file with 'abstract' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-    def test_create_aggregation_with_missing_keywords(self):
-        # here we are using a valid time series json file for setting it
-        # to RefTimeseries file type which should be successful even though it is missing keywords
+        self._test_valid_json_file('refts_valid_abstract_null.refts.json')
 
-        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.refts.json'
-        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_keywords_file_name)
+    def test_create_aggregation_with_null_keywords(self):
+        # here we are using a valid time series json file with 'abstract' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-        self.create_composite_resource(self.refts_missing_keywords_file)
-        self._test_valid_missing_optional_elements()
+        self._test_valid_json_file('refts_valid_keywords_missing.refts.json')
 
-        self.composite_resource.delete()
+    def test_create_aggregation_with_null_fileversion(self):
+        # here we are using a valid time series json file with 'fileVersion' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
 
-    def test_create_aggregation_with_duplicate_keywords(self):
+        self._test_valid_json_file('refts_valid_fileversion_null.refts.json')
+
+    def test_create_aggregation_with_null_symbol(self):
+        # here we are using a valid time series json file with 'symbol' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_symbol_null.refts.json')
+
+    def test_create_aggregation_with_null_variablename(self):
+        # here we are using a valid time series json file with 'variableName' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_variable_name_null.refts.json')
+
+    def test_create_aggregation_with_null_methodlink(self):
+        # here we are using a valid time series json file with 'methodLink' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_method_link_null.refts.json')
+
+    def test_create_aggregation_with_null_methoddescription(self):
+        # here we are using a valid time series json file with 'methodDescription' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_method_description_null.refts.json')
+
+    def test_create_aggregation_with_null_sitename(self):
+        # here we are using a valid time series json file with 'siteName' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_site_name_null.refts.json')
+
+    def test_create_aggregation_with_null_samplemedium(self):
+        # here we are using a valid time series json file with 'sampleMedium' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_sample_medium_null.refts.json')
+
+    def test_create_aggregation_with_null_valuecount(self):
+        # here we are using a valid time series json file with 'valueCount' set to null
+        # for setting it to RefTimeseries file type which should pass json validation
+        # and a RefTimeseries aggregation should be created
+
+        self._test_valid_json_file('refts_valid_value_count_null.refts.json')
+
+    def test_create_aggregation_fail_with_duplicate_keywords(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has duplicate keywords
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_duplicate_keywords_file_name = 'invalid_duplicate_keywords.refts.json'
-        self.invalid_duplicate_keywords_file = 'hs_file_types/tests/{}'.format(
-            self.invalid_duplicate_keywords_file_name)
+        self._test_invalid_json_file('invalid_duplicate_keywords.refts.json')
 
-        self.create_composite_resource(self.invalid_duplicate_keywords_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
-
-    def test_create_aggregation_with_invalid_service_type(self):
+    def test_create_aggregation_fail_with_invalid_service_type(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has invalid service type
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_service_type_file_name = 'invalid_service_type.refts.json'
-        self.invalid_service_type_file = 'hs_file_types/tests/{}'.format(
-            self.invalid_service_type_file_name)
+        self._test_invalid_json_file('invalid_service_type.refts.json')
 
-        self.create_composite_resource(self.invalid_service_type_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
-
-    def test_create_aggregation_with_invalid_return_type(self):
+    def test_create_aggregation_fail_with_invalid_return_type(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has invalid return type
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_return_type_file_name = 'invalid_return_type.refts.json'
-        self.invalid_return_type_file = 'hs_file_types/tests/{}'.format(
-            self.invalid_return_type_file_name)
+        self._test_invalid_json_file('invalid_return_type.refts.json')
 
-        self.create_composite_resource(self.invalid_return_type_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
-
-    def test_create_aggregation_with_invalid_ref_type(self):
+    def test_create_aggregation_fail_with_invalid_ref_type(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # as this file has invalid ref type
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
 
-        self.invalid_ref_type_file_name = 'invalid_ref_type.refts.json'
-        self.invalid_ref_type_file = 'hs_file_types/tests/{}'.format(
-            self.invalid_ref_type_file_name)
+        self._test_invalid_json_file('invalid_ref_type.refts.json')
 
-        self.create_composite_resource(self.invalid_ref_type_file)
-        self._test_invalid_file()
-        self.composite_resource.delete()
+    def test_create_aggregation_fail_with_empty_method_link(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for methodLink
+
+        self._test_invalid_json_file('refts_invalid_method_link_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_method_description(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for methodDescription
+
+        self._test_invalid_json_file('refts_invalid_method_description_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_sample_medium(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for sampleMedium
+
+        self._test_invalid_json_file('refts_invalid_sample_medium_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_file_version(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for fileVesrion
+
+        self._test_invalid_json_file('refts_invalid_fileversion_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_symbol(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for symbol
+
+        self._test_invalid_json_file('refts_invalid_symbol_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_variable_name(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for variableName
+
+        self._test_invalid_json_file('refts_invalid_variable_name_empty_string.refts.json')
+
+    def test_create_aggregation_fail_with_empty_site_name(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has a value of empty string for siteName
+
+        self._test_invalid_json_file('refts_invalid_site_name_empty_string.refts.json')
 
     def test_remove_aggregation(self):
         # test that when an instance RefTimeseriesLogicalFile (aggregation) is deleted
@@ -515,7 +584,40 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def _test_invalid_file(self):
+    def test_main_file(self):
+        self.create_composite_resource(self.refts_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
+        self.assertEqual(".json", RefTimeseriesLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(self.refts_file_name,
+                         RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
+
+    def _test_valid_json_file(self, json_file_name):
+        refts_file = 'hs_file_types/tests/{}'.format(json_file_name)
+
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
+        self.create_composite_resource(refts_file)
+        json_res_file = self.composite_resource.files.first()
+        # set the json file to RefTimeseries file type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, json_res_file.id)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        json_res_file = self.composite_resource.files.first()
+        self.assertTrue(json_res_file.has_logical_file)
+        logical_file = json_res_file.logical_file
+        self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
+        self.assertEqual(logical_file.metadata.json_file_content,
+                         json_res_file.resource_file.read())
+        self.composite_resource.delete()
+
+    def _test_invalid_json_file(self, invalid_json_file_name):
+        invalid_json_file = 'hs_file_types/tests/{}'.format(invalid_json_file_name)
+
+        self.create_composite_resource(invalid_json_file)
+
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
@@ -532,36 +634,4 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
-
-    def _test_valid_missing_optional_elements(self):
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is associated with any logical file
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no RefTimeseriesLogicalFile object
-        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
-
-        # set the json file to RefTimeseries file type
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # check that there is one RefTimeseriesLogicalFile object
-        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
-        # test that the content of the json file is same is what we have
-        # saved in json_file_content field of the file metadata object
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
-
-    def test_main_file(self):
-        self.create_composite_resource(self.refts_file)
-
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-
-        self.assertEqual(1, RefTimeseriesLogicalFile.objects.count())
-        self.assertEqual(".json", RefTimeseriesLogicalFile.objects.first().get_main_file_type())
-        self.assertEqual(self.refts_file_name,
-                         RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
+        self.composite_resource.delete()

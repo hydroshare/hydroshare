@@ -14,6 +14,8 @@ urlpatterns = [
         views.update_metadata_element, name='update_metadata_element'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$',
         views.delete_metadata_element, name='delete_metadata_element'),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/get-metadata/$',
+        views.get_resource_metadata, name='get_metadata'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/update-key-value-metadata/$',
         views.update_key_value_metadata, name="update_key_value_metadata"),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource-file/(?P<f>[0-9]+)/$',
@@ -93,6 +95,6 @@ urlpatterns = [
         views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
-    url(r'^_internal/update_quota_usage/(?P<username>[A-z0-9_]+)/$',
+    url(r'^_internal/update_quota_usage/(?P<username>[\w.@+-]+)/$',
         views.update_quota_usage, name='update_quota_usage'),
 ]
