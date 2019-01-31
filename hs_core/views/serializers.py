@@ -15,6 +15,10 @@ class StringListField(serializers.ListField):
     child = serializers.CharField()
 
 
+class CheckTaskStatusRequestValidator(serializers.Serializer):
+    task_id = serializers.CharField(required=True)
+
+
 class ResourceUpdateRequestValidator(serializers.Serializer):
     title = serializers.CharField(required=False)
     metadata = serializers.CharField(validators=[validate_json], required=False)
@@ -63,7 +67,13 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
 
 class ResourceTypesSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100, required=True,
-                                          validators=[lambda x: x in RESOURCE_TYPES])
+                                          validators=[lambda x: x in RESOURCE_TYPES],
+                                          help_text='list of resource types')
+
+
+class TaskStatusSerializer(serializers.Serializer):
+    bag_status = serializers.CharField(help_text='Status of task, i.e. "Not Ready" ')
+    task_id = serializers.CharField(help_text="The task id to be used to check task status")
 
 
 class ResourceListRequestValidator(serializers.Serializer):
@@ -145,10 +155,10 @@ class ResourceCreatedSerializer(serializers.Serializer):
 
 
 class ResourceFileSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    url = serializers.URLField()
-    size = serializers.IntegerField()
-    content_type = serializers.CharField(max_length=255)
+    file_name = serializers.CharField(max_length=200, help_text='The filename, including the path')
+    url = serializers.URLField(help_text='The url to download the file')
+    size = serializers.IntegerField(help_text='The size of the file')
+    content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
 
 
 class ResourceType(object):

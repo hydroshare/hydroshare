@@ -37,14 +37,6 @@ urlpatterns = [
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
 
-    # DEPRECATED: use from above instead
-    url(r'^resourceTypes/$', core_views.resource_rest_api.ResourceTypes.as_view(),
-        name='DEPRECATED_list_resource_types'),
-
-    # DEPRECATED: use GET /resource/ instead
-    url(r'^resourceList/$', core_views.resource_rest_api.ResourceList.as_view(),
-        name='DEPRECATED_list_resources'),
-
     url(r'^resource/$', core_views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
 
@@ -72,11 +64,6 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/sysmeta/$',
         core_views.resource_rest_api.SystemMetadataRetrieve.as_view(),
         name='get_system_metadata'),
-
-    # DEPRECATED: use from above instead
-    url(r'^sysmeta/(?P<pk>[0-9a-f-]+)/$',
-        core_views.resource_rest_api.SystemMetadataRetrieve.as_view(),
-        name='DEPRECATED_get_system_metadata'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/$',
         core_views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
