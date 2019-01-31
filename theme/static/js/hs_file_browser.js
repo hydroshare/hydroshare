@@ -736,6 +736,13 @@ function showFileTypeMetadata(file_type_time_series, url){
     var logical_file_id = selectedItem.attr("data-logical-file-id");
     if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
         $("#fileTypeMetaData").html(no_metadata_alert);
+        // Set corresponding action for "Add metadata" button in side bar
+        if (selectedItem.hasClass("fb-file")) {
+            $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
+        }
+        else {
+            $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+        }
         return;
     }
 
@@ -748,6 +755,8 @@ function showFileTypeMetadata(file_type_time_series, url){
         // file type metadata when a file is selected
         if (logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile") {
             $("#fileTypeMetaData").html(no_metadata_alert);
+            $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
+            updateSelectionMenuContext();
             return;
         }
     }
@@ -1212,7 +1221,7 @@ $(document).ready(function () {
     if (mode === "edit") {
         no_metadata_alert += `
         <div class="text-center">
-            <a type="button" class="btn btn-success" data-fb-action="setFileSetFileType">
+            <a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">
                 <i class="fa fa-plus"></i> Add metadata
             </a>
         </div>`
@@ -1881,7 +1890,7 @@ $(document).ready(function () {
     });
 
     // set generic file type method
-    $("#btn-set-generic-file-type").click(function () {
+    $("#hs-file-browser, #right-click-menu").on("click", "[data-fb-action='setGenericFileType']", function () {
         setFileType("SingleFile");
     });
 
