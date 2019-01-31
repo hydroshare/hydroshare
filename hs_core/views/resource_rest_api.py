@@ -32,7 +32,6 @@ from hs_core.serialization import GenericResourceMeta, HsDeserializationDependen
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import api_view
 
 
 logger = logging.getLogger(__name__)
@@ -401,7 +400,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                                                           metadata=metadata, **kwargs)
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             post_creation_error_msg = ex.message
-
 
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
                          'message': post_creation_error_msg}
