@@ -3,7 +3,7 @@ from django.db import models
 from django.db import transaction
 
 from hs_core.models import BaseResource
-from hs_access_control.models.community import Community 
+from hs_access_control.models.community import Community
 
 #############################################
 # Classes involving privilege

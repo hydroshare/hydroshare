@@ -2932,8 +2932,3 @@ class UserAccess(models.Model):
         A user is a member of a community if the user is a member of one group in the community.
         """
         return Community.objects.filter(c2gcp__group__g2ugp__user=self.user)
-
-    def get_groups_with_explicit_community_access(self, privilege):
-        return Group.objects.filter(g2gcp__community=self, g2gcp__privilege=privilege)
-
-

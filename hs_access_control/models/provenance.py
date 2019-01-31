@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes
-from hs_access_control.models.community import Community 
+from hs_access_control.models.community import Community
 
 #################################
 # classes that track provenance of privileges
