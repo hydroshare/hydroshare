@@ -211,8 +211,8 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.holes in self.cat.uaccess.view_resources)
         self.assertTrue(self.holes not in self.cat.uaccess.edit_resources)
 
-        print('pets.member_groups')
-        pprint(list(self.pets.member_groups))
+        # print('pets.member_groups')
+        # pprint(list(self.pets.member_groups))
 
         self.assertTrue(self.cats in self.pets.member_groups)
         self.assertTrue(self.dogs in self.pets.member_groups)
@@ -650,9 +650,14 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
             pprint("CHANGE")
             pprint(group)
             pprint(resources)
+            for r in resources: 
+                self.assertTrue(self.dog.uaccess.can_change_resource(r))
+
             resources = comm.get_resources_with_explicit_access(self.dog, group,
                                                                 PrivilegeCodes.VIEW)
             pprint("VIEW")
             pprint(group)
             pprint(resources)
-        self.assertTrue(False)
+            for r in resources: 
+                self.assertTrue(self.dog.uaccess.can_view_resource(r))
+                self.assertFalse(self.dog.uaccess.can_change_resource(r))

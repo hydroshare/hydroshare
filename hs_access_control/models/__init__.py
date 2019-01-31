@@ -8,4 +8,4 @@ from group import GroupAccess, GroupMembershipRequest
 from resource import ResourceAccess
 from community import Community
 from exceptions import PolymorphismError
-from utilities import access_provenance, access_permissions, coarse_privileges
+from utilities import access_provenance, access_permissions, coarse_permissions
