@@ -788,10 +788,13 @@ function metadata_update_ajax_submit(form_id){
                     if (json_response.metadata_status !== $('#metadata-status').text()) {
                         $('#metadata-status').text(json_response.metadata_status);
                         if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                            if(resourceType != 'Web App Resource')
-                                promptMessage = "This resource can be published or made public.";
+                            if(resourceType != 'Web App Resource' && resourceType != 'Collection Resource' )
+                                promptMessage = "All required fields are completed. The resource can now be made discoverable " + 
+                                                "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                                                "must first be made public.";
                             else
-                                promptMessage = "This resource can be made public.";
+                                promptMessage = "All required fields are completed. It can now be made discoverable " + 
+                                                "or public.";
                             if (!metadata_update_ajax_submit.resourceSatusDisplayed){
                                 metadata_update_ajax_submit.resourceSatusDisplayed = true;
                                 if (json_response.hasOwnProperty('res_public_status')) {
