@@ -650,7 +650,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
             pprint("CHANGE")
             pprint(group)
             pprint(resources)
-            for r in resources: 
+            for r in resources:
                 self.assertTrue(self.dog.uaccess.can_change_resource(r))
 
             resources = comm.get_resources_with_explicit_access(self.dog, group,
@@ -658,6 +658,14 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
             pprint("VIEW")
             pprint(group)
             pprint(resources)
-            for r in resources: 
+            for r in resources:
                 self.assertTrue(self.dog.uaccess.can_view_resource(r))
-                self.assertFalse(self.dog.uaccess.can_change_resource(r))
+
+        # The quandary here is that the privileges do not arise only from the community,
+        # but also from other sources. Thus it is NOT guaranteed that searching for something
+        # one can view would actually lead to something that one can't change BY OTHER MEANS,
+        # like, e.g., ownership. So, should we list group resources owned by the user, as
+        # well as accessible via the community?
+
+        # E.g., how do I handle the situation in which a resource is shared with the community
+        # as VIEW, but I actually OWN it? What do I show?

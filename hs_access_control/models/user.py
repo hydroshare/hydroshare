@@ -1222,13 +1222,14 @@ class UserAccess(models.Model):
 
         Held implies viewable. This includes group-community-group relationships,
         unlike GroupAccess.view_groups and GroupAccess.edit_groups.
+
+        This can be subqueried in returns, because it is lazily evaluated.
+        e.g., resource in self.uaccess.view_resources runs efficiently, because it
+        is equivalent to self.uaccess.view_resources.filter(id=resource).exists()
         """
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        # This can be subqueried in returns, because it is lazily evaluated.
-        # e.g., resource in self.uaccess.view_resources runs efficiently, because it
-        # is equivalent to self.uaccess.view_resources.filter(id=resource).exists()
         return BaseResource.objects.filter(
             # direct access
             Q(r2urp__user=self.user) |
@@ -1286,21 +1287,23 @@ class UserAccess(models.Model):
         #    contains the user, and the community share preserves edit
 
         return BaseResource.objects.filter(
-            Q(raccess__immutable=False) &
             # user has direct access
-            (Q(r2urp__user=self.user,
-               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
-             # user has direct access through being a member of a group
-             Q(r2grp__group__gaccess__active=True,
-               r2grp__group__g2ugp__user=self.user,
-               r2grp__privilege=PrivilegeCodes.CHANGE) |
-             # user has access by being a member of a privileged group in the same community
-             # Note: CHANGE privilege overrides allow_view flag.
-             Q(r2grp__group__gaccess__active=True,
-               r2grp__privilege=PrivilegeCodes.CHANGE,
-               r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-               r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user,
-               r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)))\
+            Q(raccess__immutable=False, 
+              r2urp__user=self.user,
+              r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
+            # user has direct access through being a member of a group
+            Q(raccess__immutable=False, 
+              r2grp__group__gaccess__active=True,
+              r2grp__group__g2ugp__user=self.user,
+              r2grp__privilege=PrivilegeCodes.CHANGE) |
+            # user has access by being a member of a privileged group in the same community
+            # Note: CHANGE privilege overrides allow_view flag.
+            Q(raccess__immutable=False, 
+              r2grp__group__gaccess__active=True,
+              r2grp__privilege=PrivilegeCodes.CHANGE,
+              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user,
+              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE))\
             .distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
