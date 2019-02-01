@@ -14,7 +14,7 @@ groups, and resources, and determine what objects are accessible to which users.
 
    1) allow accounting for what happened.
    2) allow limited undo of prior actions.
-   3) limit each user to accumulating one privilege over a thing
+   3) limit each user to accumulating one privilege over a thing...
 
 Notes and quandaries
 --------------------
