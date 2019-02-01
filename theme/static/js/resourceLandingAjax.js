@@ -413,7 +413,67 @@ function promptSelfRemovingAccess(form_id){
     });
 }
 
-function change_share_permission_ajax_submit(form_id) {
+function promptChangeSharePermissionWarning(form_id){
+    // close the manage access panel (modal)
+    $("#manage-access").modal('hide');
+
+    // display change share permission confirmation dialog
+    $("#dialog-confirm-change-share-permission").dialog({
+        resizable: false,
+        draggable: false,
+        height: "auto",
+        width: 500,
+        modal: true,
+        dialogClass: 'noclose',
+        buttons: {
+            Cancel: function () {
+                $(this).dialog("close");
+                // show manage access control panel again
+                $("#manage-access").modal('show');
+            },
+            "Confirm": function () {
+                $(this).dialog("close");
+                change_share_permission(form_id);
+                $("#manage-access").modal('show');
+            }
+        },
+        open: function () {
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:first") // the first button
+                .addClass("btn btn-default");
+
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .addClass("btn btn-danger");
+        }
+    });
+}
+
+function isSharePermissionPromptRequired(form_id, previousAccess, clickedAccess) {
+    let REQUIRED = true;
+    let NOT_REQUIRED = false;
+
+    let formIDParts = form_id.split('-');
+    let userID = parseInt(formIDParts[formIDParts.length -1]);
+    let currentUserID = parseInt($("#current-user-id").val());
+
+    if (currentUserID == userID
+        && previousAccess == "Is owner"
+        && previousAccess != clickedAccess){
+         return REQUIRED;
+    }
+    return NOT_REQUIRED;
+}
+function change_share_permission_ajax_submit(form_id, previousAccess, clickedAccess) {
+    if (!isSharePermissionPromptRequired(form_id, previousAccess, clickedAccess)) {
+        change_share_permission(form_id);
+    }
+    else {
+        promptChangeSharePermissionWarning(form_id);
+    }
+}
+
+function change_share_permission(form_id) {
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var url = $form.attr('action');

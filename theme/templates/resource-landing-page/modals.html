@@ -1946,6 +1946,15 @@
             </p>
         </div>
     {% endblock %}
+
+    {% block change-share-permission %}
+        <div id="dialog-confirm-change-share-permission" title="Warning! Loss of owner privilege" style="display:none">
+            <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
+                This action will make you lose owner privilege to this resource. You will no longer be an owner
+                without another owner set you back to owner. This is not reversible, so <strong>Comfirm</strong> with caution.
+            </p>
+        </div>
+    {% endblock %}
 {% endif %}
 
 <div class="modal fade" id="redirect-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
