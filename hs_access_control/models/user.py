@@ -8,7 +8,7 @@ from hs_access_control.models.privilege import PrivilegeCodes, \
         UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
         UserCommunityPrivilege, GroupCommunityPrivilege
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
-from hs_access_control.models.utils import PolymorphismError
+from hs_access_control.models.utilities import PolymorphismError
 from hs_access_control.models.community import Community
 
 #############################################
@@ -1291,17 +1291,17 @@ class UserAccess(models.Model):
 
         return BaseResource.objects.filter(
             # user has direct access
-            Q(raccess__immutable=False, 
+            Q(raccess__immutable=False,
               r2urp__user=self.user,
               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
             # user has direct access through being a member of a group
-            Q(raccess__immutable=False, 
+            Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
               r2grp__privilege=PrivilegeCodes.CHANGE) |
             # user has access by being a member of a privileged group in the same community
             # Note: CHANGE privilege overrides allow_view flag.
-            Q(raccess__immutable=False, 
+            Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__privilege=PrivilegeCodes.CHANGE,
               r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
