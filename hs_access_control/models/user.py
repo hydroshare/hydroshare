@@ -417,7 +417,7 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        return this_group in self.edit_groups
+        return self.user in this_group.gaccess.edit_users
 
     def can_view_group(self, this_group):
         """
@@ -449,8 +449,10 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active and not self.owns_group(this_group):
             raise PermissionDenied("Group is not active")
 
-        return self.user.is_superuser or this_group.gaccess.public \
-            or this_group in self.__all_view_groups
+        access_group = this_group.gaccess
+
+        return self.user.is_superuser or access_group.public \
+            or self.user in this_group.gaccess.view_users
 
     def can_view_group_metadata(self, this_group):
         """
@@ -1111,8 +1113,8 @@ class UserAccess(models.Model):
         If this routine returns False, UserAccess.unshare_group_with_community is *guaranteed*
         to raise an exception.
 
--       Note that can_unshare_X is parallel to unshare_X and returns False exactly
--       when unshare_X will raise an exception.
+        Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        when unshare_X will raise an exception.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
@@ -1179,6 +1181,7 @@ class UserAccess(models.Model):
     # get groups with specific access for a user
     ####################################
 
+    # TODO: couch: check usage of this and expand to include community groups if possible
     def get_groups_with_explicit_access(self, this_privilege):
         """
         Get a QuerySet of groups for which the user has the specified privilege
@@ -1971,7 +1974,7 @@ class UserAccess(models.Model):
 -       when __check_unshare_X and unshare_X will raise an exception.
         """
         if this_user not in this_resource.raccess.view_users:
-            raise PermissionDenied("User is not a member of the group")
+            raise PermissionDenied("User does not have access to the group")
 
         # Check for sufficient privilege
         if not self.user.is_superuser \

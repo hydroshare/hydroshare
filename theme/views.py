@@ -74,7 +74,8 @@ class UserProfileView(TemplateView):
                     # admin can see all resources owned by profile user
                     pass
                 else:
-                    # filter out any resources the requesting user doesn't have access
+                    # filter out any resources to which the requesting user doesn't have access
+                    # couch: this now includes community privileges 
                     resources = resources.filter(Q(pk__in=self.request.user.uaccess.view_resources) |
                                                  Q(raccess__public=True) | Q(raccess__discoverable=True))
 

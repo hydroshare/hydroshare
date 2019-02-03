@@ -271,14 +271,13 @@ def get_public_groups():
         """
         return Group.objects.filter(gaccess__public=True)
 
-
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
                       north=None, south=None, east=None, west=None, include_obsolete=False):
     """
-    Return a list of pids for Resources that have been shared with a group identified by groupID.
+    Return a list of pids for Resources matching various criteria.
 
     Parameters:
     queryType - string specifying the type of query being performed
@@ -304,21 +303,23 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     because it gets too expensive quickly.
 
     parameters:
-        group = Group or name
-        user = User or name
-        from_date = datetime object
-        to_date = datetime object
-        start = int
-        count = int
-        subject = list of subject
-        type = list of resource type names, used for filtering
-        coverage_type = geo parameter, one of box or point
-        north = north coordinate
-        west = west coordinate
-        south = south coordinate
-        east = east coordinate
-    """
 
+     * group = Group or name
+     * user = User or name
+     * from_date = datetime object
+     * to_date = datetime object
+     * start = int
+     * count = int
+     * subject = list of subject
+     * type = list of resource type names, used for filtering
+     * coverage_type = geo parameter, one of box or point
+     * north = north coordinate
+     * west = west coordinate
+     * south = south coordinate
+     * east = east coordinate
+    """
+    # TODO: couch: The queries herein are naive and can be made more efficient 
+    # TODO: couch: this conditional does not include all parameters in the invocation. Why?
     if not any((creator, group, user, owner, from_date, to_date, start,
                 count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
@@ -384,6 +385,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if edit_permission:
         if group:
             group = group_from_id(group)
+            # TODO: couch: this includes community resources at this point
             q.append(Q(short_id__in=group.gaccess.edit_resources.values_list('short_id',
                                                                              flat=True)))
 
@@ -396,6 +398,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         if group:
             group = group_from_id(group)
+            # TODO: couch: this includes community resources at this point
             q.append(Q(short_id__in=group.gaccess.view_resources.values_list('short_id',
                                                                              flat=True)))
 
@@ -473,6 +476,7 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                         # if some non-admin authenticated user is asking for resources owned by another user then
                         # get other user's owned resources that are public or discoverable, or if requesting user
                         # has access to those private resources
+                        # TODO: couch: this includes community resources at this point
                         query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
                                      Q(raccess__discoverable=True))
         else:

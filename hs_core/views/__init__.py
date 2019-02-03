@@ -933,6 +933,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     ajax_response_data = {'status': 'success'}
     try:
         user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
+        # couch: these now include community privileges
         if user not in res.raccess.view_users:
             # user has no explict access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
@@ -952,6 +953,7 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
     ajax_response_data = {'status': 'success'}
     try:
         user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
+        # couch: these now include community privileges
         if user not in res.raccess.view_users:
             # user has no explicit access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
@@ -981,6 +983,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             undo_user_privilege = 'none'
         ajax_response_data['undo_user_privilege'] = undo_user_privilege
 
+        # couch: these now include community privileges
         if user not in res.raccess.view_users:
             # user has no explict access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
@@ -1000,14 +1003,17 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     ajax_response_data = {'status': 'success'}
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        # couch: these now include community privileges 
         if group_to_unshare_with in res.raccess.edit_groups:
             undo_group_privilege = 'change'
+        # couch: these now include community privileges 
         elif group_to_unshare_with in res.raccess.view_groups:
             undo_group_privilege = 'view'
         else:
             undo_group_privilege = 'none'
         ajax_response_data['undo_group_privilege'] = undo_group_privilege
 
+        # couch: these now include community privileges 
         if user not in res.raccess.view_users:
             # user has no explicit access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
@@ -1663,6 +1669,7 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
 def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
     users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
     owners = set(resource.raccess.owners.all())
+    # couch: these now include community privileges 
     editors = set(resource.raccess.edit_users.all()) - owners
     viewers = set(resource.raccess.view_users.all()) - editors - owners
 
@@ -1734,6 +1741,7 @@ class MyGroupsView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
+        # couch: these now include community privileges 
         groups = u.uaccess.view_groups
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
             group_to_join__gaccess__active=False).all()
@@ -1770,6 +1778,7 @@ class GroupView(TemplateView):
         g = Group.objects.get(pk=group_id)
         u = User.objects.get(pk=self.request.user.id)
         u.is_group_owner = u.uaccess.owns_group(g)
+        # couch: these now include community privileges
         u.is_group_editor = g in u.uaccess.edit_groups
         u.is_group_viewer = g in u.uaccess.view_groups
 
@@ -1780,6 +1789,7 @@ class GroupView(TemplateView):
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
+        # couch: these now include community privileges
         for res in g.gaccess.view_resources:
             grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
             res.grantor = grp.grantor
