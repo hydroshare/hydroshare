@@ -8,7 +8,7 @@ from hs_access_control.models.privilege import PrivilegeCodes, \
         UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
         UserCommunityPrivilege, GroupCommunityPrivilege
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
-from hs_access_control.models.utilities import PolymorphismError
+from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community
 
 #############################################
