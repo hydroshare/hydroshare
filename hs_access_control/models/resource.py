@@ -79,6 +79,8 @@ class ResourceAccess(models.Model):
 
         This is a property so that it is a workalike for a prior explicit list.
 
+        This now accounts for group and community privileges
+
         For VIEW, effective privilege = declared privilege, in the sense that all editors have
         VIEW, even if the resource is immutable.
         """
@@ -91,6 +93,7 @@ class ResourceAccess(models.Model):
     def __edit_users_from_individual(self):
         return Q(is_active=True,
                  u2urp__resource=self.resource,
+                 u2urp__resource__raccess__immutable=False,
                  u2urp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
@@ -119,9 +122,10 @@ class ResourceAccess(models.Model):
 
         This is a property so that it is a workalike for a prior explicit list.
 
+        This now accounts for group and community privileges
+
         If the resource is immutable, an empty QuerySet is returned.
 
-        At present, this does not account for group/community behavior.
         """
 
         if self.immutable:
@@ -134,14 +138,12 @@ class ResourceAccess(models.Model):
 
     @property
     def __view_groups_from_group(self):
-        return Q(is_active=True,
-                 gaccess__active=True,
+        return Q(gaccess__active=True,
                  g2grp__resource=self.resource)
 
     @property
     def __view_groups_from_community(self):
-        return Q(is_active=True,
-                 gaccess__active=True,
+        return Q(gaccess__active=True,
                  g2gcp__community__c2gcp__allow_view=True,
                  g2gcp__community__c2gcp__group__gaccess__active=True,
                  g2gcp__community__c2gcp__group__g2grp__resource=self.resource)
@@ -150,6 +152,8 @@ class ResourceAccess(models.Model):
     def view_groups(self):
         """
         QuerySet of groups with view privileges
+
+        This now accounts for community privileges
 
         This is a property so that it is a workalike for a prior explicit list
         """
@@ -181,7 +185,7 @@ class ResourceAccess(models.Model):
 
         If the resource is immutable, an empty QuerySet is returned.
 
-        Note that in terms of communities, edit for resources does not imply edit for groups.
+        This now accounts for community privileges
         """
         if self.immutable:
             return Group.objects.none()
@@ -196,40 +200,114 @@ class ResourceAccess(models.Model):
 
         This is a property so that it is a workalike for a prior explicit list.
 
+        Groups and communities cannot own resources.
+
         For immutable resources, owners are not modified, but do not have CHANGE privilege.
         """
         return User.objects.filter(is_active=True,
                                    u2urp__privilege=PrivilegeCodes.OWNER,
                                    u2urp__resource=self.resource)
 
-    def get_users_with_explicit_access(self, this_privilege, include_user_granted_access=True,
-                                       include_group_granted_access=True):
+    def get_users_with_explicit_access(self, this_privilege,
+                                       include_user_granted_access=True,
+                                       include_group_granted_access=True,
+                                       include_community_granted_access=False):
 
         """
         Gets a QuerySet of Users who have the explicit specified privilege access to the resource.
         An empty list is returned if both include_user_granted_access and
         include_group_granted_access are set to False.
 
-        :param this_privilege: the explict privilege over the resource for which list of users
+        :param this_privilege: the explicit privilege over the resource for which list of users
          needed
         :param include_user_granted_access: if True, then users who have been granted directly the
         specified privilege will be included in the list
         :param include_group_granted_access: if True, then users who have been granted the
         specified privilege via group privilege over the resource will be included in the list
+        :param include_community_granted_access: if True, then users who have been granted the
+        specified privilege via community privilege over the resource will be included in the list
         :return:
         """
-        # TODO: add communities
-        if include_user_granted_access and include_group_granted_access:
-            return User.objects.filter(self.__user_view_from_individual |
-                                       self.__user_view_from_group) \
-                               .exclude(self.__user_edit_from_individual |
-                                        self.__user_edit_from_group).distinct()
-        elif include_user_granted_access:
-            return User.objects.filter(self.__user_view_from_individual) \
-                               .exclude(self.__user_view_from_individual)
-        elif include_group_granted_access:
-            return User.objects.filter(self.__user_view_from_group) \
-                               .exclude(self.__user_edit_from_group)
+        incl = None
+        if this_privilege == PrivilegeCodes.OWNER:
+            return self.owners  # groups cannot own
+
+        elif this_privilege == PrivilegeCodes.VIEW:
+
+            if include_user_granted_access:
+                i = Q(u2urp__resource=self.resource,
+                      u2urp__privilege=PrivilegeCodes.VIEW) | \
+                    Q(u2urp__resource=self.resource,
+                      u2urp__privilege=PrivilegeCodes.CHANGE,
+                      u2urp__resource__immutable=True)
+                incl = i
+
+            if include_group_granted_access:
+                i = Q(u2ugp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2grp__privilege=PrivilegeCodes.VIEW)
+                if incl is not None:
+                    incl = incl | i
+                else:
+                    incl = i
+
+            if include_community_granted_access:
+                # view privilege results if either group or community privilege is view,
+                # but if community privilege is VIEW, then allow_view must be True
+
+                i = Q(u2ugp__group__gaccess__active=True,  # community is VIEW, allow_view=True
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                      u2ugp__group__g2gcp__community__c2gcp__allow_view=True,
+                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.VIEW) | \
+                    Q(u2ugp__group__gaccess__active=True,  # community is CHANGE, group is VIEW
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.CHANGE,
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=
+                            PrivilegeCodes.VIEW)
+
+                if incl is not None:
+                    incl = incl | i
+                else:
+                    incl = i
+
+            if incl is not None:
+                return User.objects.filter(incl)
+            else:
+                return User.objects.none()
+
+        elif this_privilege == PrivilegeCodes.CHANGE:
+
+            if include_user_granted_access:
+                i = Q(u2urp__resource=self.resource,
+                      u2urp__privilege=PrivilegeCodes.CHANGE)
+                incl = i
+
+            if include_group_granted_access:
+                i = Q(u2ugp__group__gaccess__active=True,
+                      u2ugp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2grp__privilege=PrivilegeCodes.CHANGE)
+                if incl is not None:
+                    incl = incl | i
+                else:
+                    incl = i
+
+            if include_community_granted_access:
+                i = Q(u2ugp__group__gaccess__active=True,  # both group and community are CHANGE
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.CHANGE,
+                      u2ugp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
+                if incl is not None:
+                    incl = incl | i
+                else:
+                    incl = i
+
+            if incl is None:
+                return User.objects.none()
+            else:
+                return User.objects.filter(incl).distinct()
+
         else:
             return User.objects.none()
 
@@ -302,13 +380,13 @@ class ResourceAccess(models.Model):
         community_priv = GroupResourcePrivilege.objects \
             .filter(Q(resource=self.resource,
                       group__gaccess__active=True,
-                      group__g2cgp__allow_view=True,
-                      group__g2cgp__community__c2gcp__group__g2ugp__user=this_user) |
+                      group__g2gcp__allow_view=True,
+                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user) |
                     Q(resource=self.resource,
                       group__gaccess__active=True,
                       privilege=PrivilegeCodes.CHANGE,
-                      group__g2cgp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                      group__g2cgp__community__c2gcp__group__g2ugp__user=this_user)) \
+                      group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user)) \
             .aggregate(models.Min('privilege'),
                        models.Min('group__g2gcp__community__c2gcp__privilege'))
 
