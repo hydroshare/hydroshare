@@ -26,7 +26,7 @@ class ShareResourceUser(APIView):
         if privilege_code == PrivilegeCodes.NONE:
             user.uaccess.unshare_resource_with_user(res, to_user)
         else:
-            user.uaccess.share_resource_with_user(res, to_user, privilege)
+            user.uaccess.share_resource_with_user(res, to_user, privilege_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -44,6 +44,6 @@ class ShareResourceGroup(APIView):
         if privilege_code == PrivilegeCodes.NONE:
             user.uaccess.unshare_resource_with_group(res, to_group)
         else:
-            user.uaccess.share_resource_with_group(res, to_group, privilege)
+            user.uaccess.share_resource_with_group(res, to_group, privilege_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
