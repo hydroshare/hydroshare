@@ -7,6 +7,7 @@ from rest_framework import serializers
 from hs_core.hydroshare import utils
 from hs_core import hydroshare
 from .utils import validate_json, validate_user, validate_group
+from hs_access_control.models import PrivilegeCodes
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 
@@ -159,6 +160,31 @@ class ResourceFileSerializer(serializers.Serializer):
     url = serializers.URLField(help_text='The url to download the file')
     size = serializers.IntegerField(help_text='The size of the file')
     content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
+
+
+class GroupPrivilegeSerializer(serializers.Serializer):
+    status = serializers.CharField(help_text='The status of the request')
+    name = serializers.CharField(help_text="The name of the shared group")
+    privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
+        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+    group_pic = serializers.CharField(help_text="Url of the group picture")
+    current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
+        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+    error_msg = serializers.CharField(help_text="Description of error")
+
+
+class UserPrivilegeSerializer(serializers.Serializer):
+    status = serializers.CharField(help_text='The status of the request')
+    username = serializers.CharField(help_text="The username name of the shared user")
+    name = serializers.CharField(help_text="The full name name of the shared user")
+    privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
+        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+    current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
+        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+    profile_pic = serializers.CharField(help_text="Url of the user's profile picture")
+    is_current_user = serializers.BooleanField(help_text="Indicates whether the currently logged "
+                                                         "in user made ther permission request")
+    error_msg = serializers.CharField(help_text="Description of error")
 
 
 class ResourceType(object):

@@ -12,6 +12,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+from .views.hs_core import ShareResourceGroup, ShareResourceUser
+
 schema_view_yasg = get_schema_view(
    openapi.Info(
       title="Hydroshare API",
@@ -55,6 +57,12 @@ urlpatterns = [
     # public copy resource endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$',
         core_views.copy_resource_public, name='copy_resource_public'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/group/(?P<group_id>[\w.@+-]+)/$',
+        ShareResourceGroup.as_view(), name='share_resource_group_public'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/user/(?P<user_id>[\w.@+-]+)/$',
+        ShareResourceUser.as_view(), name='share_resource_user_public'),
 
     # DEPRECATED: use form above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',
