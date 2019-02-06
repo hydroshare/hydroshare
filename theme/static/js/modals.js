@@ -40,10 +40,8 @@ $(document).on('click', '.btn-undo-share', function () {
 });
 
 $(document).on("click", ".btn-change-share-permission", function () {
-    let previousAccess = $(this).closest(".dropdown-menu").find("li.active").attr("data-access-type");
-    let clickedAccess = $(this).closest("form").attr("data-access-type");
     var arg = $(this).attr("data-arg");
-    change_share_permission_ajax_submit(arg, previousAccess, clickedAccess);
+    change_share_permission_ajax_submit(arg);
 });
 
 $(document).ready(function() {
