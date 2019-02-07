@@ -400,9 +400,10 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
     temp_dir = os.path.dirname(shape_files[0])
     if not _check_if_shape_files(shape_files):
         if res_file.extension.lower() == '.shp':
-            err_msg = "Shapefile component file at location: " \
-                      "{folder_path} are incomplete or incorrect. The .shp, .shx, and .dbf shapefile " \
-                      "component files are required. Other shapefile component files " \
+            err_msg = "There was a problem parsing the component files associated with " \
+                      "({folder_path}) as a geographic shapefile. This may be because a component " \
+                      "file is corrupt or missing. The .shp, .shx, and .dbf shapefile component " \
+                      "files are required. Other shapefile component files  " \
                       "(.cpg, .prj, .sbn, .sbx, .xml, .fbn, .fbx, .ain, .aih, .atx, .ixs, .mxs) " \
                       "should also be added where available."
             err_msg = err_msg.format(folder_path=res_file.short_path)
