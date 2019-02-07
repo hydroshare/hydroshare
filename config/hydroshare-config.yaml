@@ -1,8 +1,8 @@
 ### Local Configuration Variables ###
-HS_PATH: /c/Users/sblack/hydroshare/hs
-HOST_SSL_DIR: /c/Users/sblack/hydroshare/hs-certs
+HS_PATH: /home/hydro/hydroshare
+HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
-HS_LOG_FILES: /c/Users/sblack/hydroshare/hs/log
+HS_LOG_FILES: /home/hydro/hydroshare/log
 HS_SERVICE_UID: 1000
 HS_SERVICE_GID: 1000
 
@@ -13,7 +13,7 @@ USE_SECURITY: false
 USE_HTTP_AUTH: false
 
 ### SSL Configuration Variables ###
-SSL_CERT_DIR: /c/Users/sblack/hydroshare/hs/nginx/cert-files
+SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert
 SSL_KEY_FILE: hydrodev-vb.example.org.key
 
@@ -23,7 +23,7 @@ SSL_KEY_FILE: hydrodev-vb.example.org.key
 FQDN_OR_IP: localhost
 
 ### Where to find Nginx configuration
-NGINX_DIR: /c/Users/sblack/hydroshare/hs/nginx
+NGINX_DIR: /home/hydro/hydroshare/nginx
 
 ### Mount point in host operating system (outside docker)
 ### This is mounted from here into the Nginx container
