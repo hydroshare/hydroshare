@@ -568,31 +568,11 @@ function getCurrentUser() {
     return parseInt($("#current-user-id").val());
 }
 
-function promptUserInShareList(){
-    // close the manage access panel (modal)
-    $("#manage-access").modal('hide');
+function promptUserInShareList() {
+    let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
+    $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+    $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
 
-    // display change share permission confirmation dialog
-    $("#dialog-user-invited").dialog({
-        resizable: false,
-        draggable: false,
-        height: "auto",
-        width: 500,
-        modal: true,
-        dialogClass: 'noclose',
-        buttons: {
-            Cancel: function () {
-                $(this).dialog("close");
-		// show manage access control panel again
-		$("#manage-access").modal('show');
-            }
-        },
-	open: function () {
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:first") // the first button
-                .addClass("btn btn-default");
-        }
-    });
 }
 
 function share_resource_ajax_submit(form_id) {
