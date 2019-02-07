@@ -1526,7 +1526,7 @@ body > .main-container {
 	cursor: default;
 }
 
-#success-alert, #error-alert {
+#success-alert, #error-alert, .custom-alert {
     position: fixed;
     z-index: 999;
     margin-right: auto;
@@ -1534,11 +1534,6 @@ body > .main-container {
     left: 50%;
     margin-left: -25%;
     top: 60px;
-}
-
-.custom-alert {
-	position: fixed;
-	z-index: 2;
 }
 
 .alert-dismissible {
