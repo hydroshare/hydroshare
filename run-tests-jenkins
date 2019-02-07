@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test -v 3 --failfast --with-xunit $1
+coverage run manage.py test -v 3 --failfast --with-xunit $1 --with-timer
 coverage xml

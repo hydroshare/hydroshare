@@ -719,22 +719,6 @@ SWAGGER_SETTINGS = {
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
-REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
-REDIS_PORT = 6379
-
-REDIS_CONNECTION = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=4)
-WMS_CACHE_DB = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=5)
-PERMISSIONS_DB = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=6)
-
 RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
