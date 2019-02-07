@@ -87,7 +87,7 @@ a#btn-signout-irods {
     margin-top: 10px;
 }
 
-#irods-group {
+#hs-file-browser #irods-group {
     margin-top: 5px;
     margin-right: 6px;
 }
