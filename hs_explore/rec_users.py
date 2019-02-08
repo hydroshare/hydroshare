@@ -65,6 +65,9 @@ class RecommendUsers(TemplateView):
                 union_cardinality = len(set.union(*[target_propensity_preferences_set,
                                                     neighbor_subjects]))
                 js = intersection_cardinality/float(union_cardinality)
+                
+                #if js - 0 < 0.000001:
+                #    continue
                 r2 = RecommendedUser.recommend(target_user, neighbor, round(js, 4))
                 common_subjects = set.intersection(target_propensity_preferences_set,
                                                    neighbor_subjects)

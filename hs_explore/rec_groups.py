@@ -58,6 +58,8 @@ class RecommendGroups(TemplateView):
                 union_cardinality = len(set.union(*[target_propensity_preferences_set,
                                                     gp_propensity_preferences_set]))
                 js = intersection_cardinality/float(union_cardinality)
+                #if js - 0 < 0.000001:
+                #    continue
                 r3 = RecommendedGroup.recommend(target_user, group, round(js, 4))
                 common_subjects = set.intersection(target_propensity_preferences_set,
                                                    gp_propensity_preferences_set)

@@ -36,7 +36,9 @@ def update_recs(request):
 
     if update_part == 'resources':
         res_list = []
-        RecommendedResource.clear()
+        #RecommendedResource.clear()
+        recommended_recs = RecommendedResource.objects.get(user=target_user)
+        recommended_recs.delete()
         out = SearchQuerySet() 
         out = out.filter(recommend_to_users=target_username)
         rp = ResourcePreferences.objects.get(user=target_user)
@@ -86,9 +88,10 @@ def update_recs(request):
             res_list.append(r1)
         res_list.sort(key=lambda x: x.relevance, reverse=True)
         return render(request, 'recommended_resources.html', {'resource_list': res_list})
-    else:
+    elif update_part == 'users':
         user_list = []
-        RecommendedUser.clear()
+        recommended_users = RecommendedUser.get(user=target_user)
+        recommended_users.delete()
         up = UserPreferences.objects.get(user=target_user)
         up.reject(gk, gv)
         all_p = up.preferences.all()
@@ -127,3 +130,46 @@ def update_recs(request):
         
         user_list.sort(key=lambda x: x.relevance, reverse=True)
         return render(request, 'recommended_users.html', {'user_list': user_list[:5]})
+    '''
+    else:
+        groups_list = []
+        recommended_gps = RecommendedGroup.get(user=target_user)
+        recommended_gps.delete()
+        gp = GroupPreferences.objects.get(user=target_user)
+        gp.reject(gk, gv)
+        all_p = gp.preferences.all()
+        propensity_preferences = GroupPrefToPair.objects.filter(user_pref=gp,
+                                                                pair__in=all_p,
+                                                                state='Seen')
+
+        target_propensity_preferences_set = set()
+
+        for p in propensity_preferences:
+            if p.pair.key == 'subject':
+                target_propensity_preferences_set.add(p.pair.value)
+
+        for neighbor in up.neighbors.all():
+            neighbor_up = UserPreferences.objects.get(user=neighbor)
+            neighbor_pref = neighbor_up.preferences.all()
+            neighbor_propensity_preferences = UserPrefToPair.objects.filter(user_pref=neighbor_up,
+                                                                            pair__in=neighbor_pref,
+                                                                            pref_type='Propensity')
+            neighbor_subjects = set()
+            for p in neighbor_propensity_preferences:
+                if p.pair.key == 'subject':
+                    neighbor_subjects.add(p.pair.value)
+
+            intersection_cardinality = len(set.intersection(*[target_propensity_preferences_set, neighbor_subjects]))
+            union_cardinality = len(set.union(*[target_propensity_preferences_set, neighbor_subjects]))
+            js = intersection_cardinality/float(union_cardinality)
+            r2 = RecommendedUser.recommend(target_user, neighbor, round(js, 4))
+
+            common_subjects = set.intersection(target_propensity_preferences_set, neighbor_subjects)
+
+            for cs in common_subjects:
+                r2.relate('subject', cs, 1)
+            user_list.append(r2)
+
+        user_list.sort(key=lambda x: x.relevance, reverse=True)
+        return render(request, 'recommended_users.html', {'user_list': user_list[:5]})
+        '''

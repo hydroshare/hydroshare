@@ -3,6 +3,8 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Explore{% endblock %}
 {% block main %}
+    <input name="user" type="text" id="user" value='xuezhaokun'/>
+    <input id="change-user" type="button" value="change" onclick="change_user();" />
     <h2>Recommended resources</h2>
     <ul id='rec-res'>
         {% include "recommended_resources.html" %}
@@ -19,10 +21,12 @@
 {% block extra_js %}
     <script>
         var update_resources = function(key, value) {
+            var curr_user = $('#user').val()
             $.ajax({
                 url: '/rec_res/',
                 type: 'GET',
                 data: {
+                    user: curr_user,
                     action: 'update',
                     genre_key: key,
                     genre_value: value
@@ -37,10 +41,12 @@
         };
 
         var update_users = function(key, value) {
+            var curr_user = $('#user').val();
             $.ajax({
                 url: '/rec_users/',
                 type: 'GET',
                 data: {
+                    user: curr_user,
                     action: 'update',
                     genre_key: key,
                     genre_value: value
@@ -55,10 +61,12 @@
         };
 
         var update_groups = function(key, value) {
+            var curr_user = $('#user').val();
             $.ajax({
                 url: '/rec_groups/',
                 type: 'GET',
                 data: {
+                    user: curr_user,
                     action: 'update',
                     genre_key: key,
                     genre_value: value
@@ -71,12 +79,69 @@
                 }
             });
         };
-       
-        $(document).ready(function () {
+
+        var change_user = function(){
+            var updated_user = $('#user').val();
             $.ajax({
                 url: '/rec_res/',
                 type: 'GET',
                 data: {
+                    user: updated_user,
+                    action: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    $('#rec-res').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+            $.ajax({
+                url: '/rec_users/',
+                type: 'GET',
+                data: {
+                    user: updated_user,
+                    action: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    $('#rec-users').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+            $.ajax({
+                url: '/rec_groups/',
+                type: 'GET',
+                data: {
+                    user: updated_user,
+                    action: 'init',
+                    genre_key: '',
+                    genre_value: ''
+                },
+                success: function(data) {
+                    $('#rec-groups').html(data);
+                },
+                failure: function(data) { 
+                    console.log('Got an error dude');
+                }
+            });
+        }
+        
+
+        $(document).ready(function () {
+            change_user();
+            /*
+            var init_user = $('#user').val();
+            $.ajax({
+                url: '/rec_res/',
+                type: 'GET',
+                data: {
+                    user: init_user,
                     action: 'init',
                     genre_key: '',
                     genre_value: ''
@@ -93,6 +158,7 @@
                 url: '/rec_users/',
                 type: 'GET',
                 data: {
+                    user: init_user,
                     action: 'init',
                     genre_key: '',
                     genre_value: ''
@@ -109,6 +175,7 @@
                 url: '/rec_groups/',
                 type: 'GET',
                 data: {
+                    user: init_user,
                     action: 'init',
                     genre_key: '',
                     genre_value: ''
@@ -119,7 +186,7 @@
                 failure: function(data) { 
                     console.log('Got an error dude');
                 }
-            });
+            });*/
         });
 
     </script>

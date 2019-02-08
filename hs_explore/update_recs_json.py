@@ -253,6 +253,34 @@ def init_recs(request):
     return render(request, 'recommendations.html', {'resource_list': resource_list, 'user_list': user_list, 'group_list': group_list})
 
 
-def load_empty(request):
-    return render_to_response('recommendations.html')
-    #return render(request, 'recommendations.html', {})
+def init_explore(request):
+    #return render_to_response('recommendations.html')
+    if request.is_ajax():
+        target_user = get_user(request)
+        target_username = target_user.username
+        resource_list = RecommendedResource.objects\
+                .filter(state__lte=Status.STATUS_EXPLORED, user__username=target_username)\
+                .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+        for r in resource_list:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
+
+        user_list = RecommendedUser.objects\
+                .filter(state__lte=Status.STATUS_EXPLORED, user__username=target_username)\
+                .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+        for r in user_list:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
+
+        group_list = RecommendedGroup.objects\
+                .filter(state__lte=Status.STATUS_EXPLORED, user__username=target_username)\
+                .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+        for r in group_list:
+            if r.state == Status.STATUS_NEW:
+                r.shown()
+
+        return render(request, 'recommendations.html', {'resource_list': resource_list, 'user_list': user_list, 'group_list': group_list})    
+    else:    
+        return render(request, 'recommendations.html', {})
