@@ -72,6 +72,9 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         try:
             resource_file = hydroshare.get_resource_file(pk, pathname)
         except ObjectDoesNotExist:
+            # Backwards compatibility for file_id
+            resource_file = ResourceFile.objects.get(id=pathname)
+        if resource_file is None:
             raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
 
         if resource_file.metadata is None or not resource_file.has_logical_file:
@@ -105,8 +108,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
         ## Parameters
         * `id` - alphanumeric uuid of the resource, i.e. cde01b3898c94cdab78a2318330cf795
-        * `file_id` - integer id of the resource file. You can use the `/hsapi/resource/{id}/files`
-        to get these
+        * `pathname` - The pathname of the file
         * `data` - see the "returns" section for formatting
 
         ## Returns
@@ -142,7 +144,10 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             try:
                 resource_file = hydroshare.get_resource_file(pk, pathname)
             except ObjectDoesNotExist:
+                # Backwards compatibility for file_id
                 resource_file = ResourceFile.objects.get(id=pathname)
+            if resource_file is None:
+                raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
             resource_file.metadata.logical_file.dataset_name = title
             resource_file.metadata.logical_file.save()
 

@@ -97,7 +97,7 @@ urlpatterns = [
         name='get_resource_map'),
 
     url(r'resource/(?P<pk>[0-9a-f-]+)/files/metadata/(?P<pathname>.*)/$',
-        FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata_path"),
+        FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata"),
 
     # Patterns are now checked in the view class.
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',

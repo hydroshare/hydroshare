@@ -19,7 +19,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         # Test 404
         response = self.client.get(reverse('get_update_resource_file_metadata', kwargs={
             "pk": "abc123",
-            "file_id": 1234
+            "pathname": "bad_path"
         }))
         self.assertEqual(response.content,
                          '{"detail":"No resource was found for resource id:abc123"}')
@@ -56,12 +56,16 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
         response_json = json.loads(response.content)
         self.assertEqual(len(response_json.get("results")), 1)
-        file_id = response_json.get("results")[0]['id']
 
         # Test Empty Metadata
+        set_type_url = reverse('set_file_type_public', kwargs={"pk": res_id,
+                                                               "file_path": txt_file_name,
+                                                               "hs_file_type": "SingleFile"})
+        response = self.client.post(set_type_url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         file_metadata_url = reverse('get_update_resource_file_metadata', kwargs={
             "pk": res_id,
-            "file_id": file_id
+            "pathname": txt_file_name
         })
         response = self.client.get(file_metadata_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -160,13 +164,17 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
         response_json = json.loads(response.content)
         self.assertEqual(len(response_json.get("results")), 1)
-        file_id = response_json.get("results")[0]['id']
 
         # Test Empty Metadata
         file_metadata_url = reverse('get_update_resource_file_metadata', kwargs={
             "pk": res_id,
-            "file_id": file_id
+            "pathname": txt_file_name
         })
+        set_type_url = reverse('set_file_type_public', kwargs={"pk": res_id,
+                                                               "file_path": txt_file_name,
+                                                               "hs_file_type": "SingleFile"})
+        response = self.client.post(set_type_url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response = self.client.get(file_metadata_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

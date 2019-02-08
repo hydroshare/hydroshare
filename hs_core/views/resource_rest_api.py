@@ -241,9 +241,8 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                                                           metadata=metadata, **kwargs)
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             post_creation_error_msg = ex.message
-        response_data = serializers.ResourceCreatedSerializer(resource_type=resource_type,
-                                                              resource_id=resource.short_id,
-                                                              message=post_creation_error_msg)
+        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
+                         'message': post_creation_error_msg}
 
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
@@ -282,6 +281,10 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     # covers serialization of output from GET request
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
+
+    # covers serialization of output from POST request
+    def post_serializer_class(self):
+        return serializers.ResourceCreatedSerializer
 
 
 class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
@@ -634,7 +637,8 @@ class ResourceFileCRUD(APIView):
 
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        response_data = {'resource_id': pk, 'file_name': file_name}
+        file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
+        response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 

@@ -796,6 +796,7 @@ def add_resource_files(pk, *files, **kwargs):
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, new_folders, ret)
         # some file(s) added, need to update quota usage
+        update_quota_usage(res=resource)
     return ret
 
 
