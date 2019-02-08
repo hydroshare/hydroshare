@@ -80,8 +80,8 @@ urlpatterns = i18n_patterns(
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"),
-    url(r'^explore/$', hs_explore_init.init_explore, name='init_recommend_list'),
     url(r'^explore/$', login_required(hs_explore_init.init_explore), name='init_recommend_list'),
+    url(r'^rec_res/$', hs_explore_resources.RecommendResources.as_view(), name='recommend_resources'),
     url(r'^rec_users/$', hs_explore_users.RecommendUsers.as_view(), name='recommend_users'),
     url(r'^rec_groups/$', hs_explore_groups.RecommendGroups.as_view(), name='recommend_groups')
 )
