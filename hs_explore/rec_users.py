@@ -14,10 +14,10 @@ class RecommendUsers(TemplateView):
 
     def get_context_data(self, **kwargs):
 
-        # target_user = get_user(self.request)
-        # target_username = target_user.username
-        target_username = str(self.request.GET['user'])
-        target_user = user_from_id(target_username)
+        target_user = get_user(self.request)
+        target_username = target_user.username
+        # target_username = str(self.request.GET['user'])
+        # target_user = user_from_id(target_username)
         action = str(self.request.GET['action'])
 
         if action == 'update':
