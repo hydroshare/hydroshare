@@ -166,10 +166,12 @@ class GroupPrivilegeSerializer(serializers.Serializer):
     status = serializers.CharField(help_text='The status of the request')
     name = serializers.CharField(help_text="The name of the shared group")
     privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
-        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+                                               choices=PrivilegeCodes.CHOICES,
+                                               default=PrivilegeCodes.NONE)
     group_pic = serializers.CharField(help_text="Url of the group picture")
     current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
-        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+                                                     choices=PrivilegeCodes.CHOICES,
+                                                     default=PrivilegeCodes.NONE)
     error_msg = serializers.CharField(help_text="Description of error")
 
 
@@ -178,9 +180,11 @@ class UserPrivilegeSerializer(serializers.Serializer):
     username = serializers.CharField(help_text="The username name of the shared user")
     name = serializers.CharField(help_text="The full name name of the shared user")
     privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
-        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+                                               choices=PrivilegeCodes.CHOICES,
+                                               default=PrivilegeCodes.NONE)
     current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
-        choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.NONE)
+                                                     choices=PrivilegeCodes.CHOICES,
+                                                     default=PrivilegeCodes.NONE)
     profile_pic = serializers.CharField(help_text="Url of the user's profile picture")
     is_current_user = serializers.BooleanField(help_text="Indicates whether the currently logged "
                                                          "in user made ther permission request")
