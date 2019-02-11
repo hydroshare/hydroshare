@@ -127,8 +127,7 @@
         {# tab body for ncdump #}
             {% for f in cm.files.all %}
                 {% if f.short_path|slice:"-3:" == 'txt'%}
-                    <div style="clear: both">
-                        <br>
+                    <div class="col-xs-12 space-top">
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.short_path }}</p>
                         <div class="hs-doc-preview">

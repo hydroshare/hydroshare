@@ -234,6 +234,7 @@ VariableLayoutEdit = Layout(
         """
         {% load crispy_forms_tags %}
             {% if variable_formset.forms %}
+            <div class="col-xs-12">
              <div id="variables" class="well"><div class="row">
              {% for form in variable_formset.forms %}
                  <div class="form-group col-xs-12 col-md-4">
@@ -250,6 +251,7 @@ VariableLayoutEdit = Layout(
                 </form>
                 </div>
              {% endfor %}</div></div>
+             </div>
              {% endif %}
         """
         ))
