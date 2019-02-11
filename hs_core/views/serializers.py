@@ -16,10 +16,6 @@ class StringListField(serializers.ListField):
     child = serializers.CharField()
 
 
-class CheckTaskStatusRequestValidator(serializers.Serializer):
-    task_id = serializers.CharField(required=True)
-
-
 class ResourceUpdateRequestValidator(serializers.Serializer):
     title = serializers.CharField(required=False)
     metadata = serializers.CharField(validators=[validate_json], required=False)
