@@ -99,7 +99,7 @@ def landing_page(request, page):
                                 """)
 
         # update context
-        ext_md_layout = Layout(HTML("<div class='row'>"),
+        ext_md_layout = Layout(HTML("<div>"),
                                ori_coverage_layout,
                                cellinfo_layout,
                                BandInfoLayoutEdit,
