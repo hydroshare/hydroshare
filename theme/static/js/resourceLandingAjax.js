@@ -364,7 +364,7 @@ function promptSelfRemovingAccess(form_id){
     var url = $form.attr('action');
     // check if we are unsharing a user or a group
     var isUserUnsharing = false;
-    if(url.split("/")[4] === "unshare-resource-with-user"){
+    if (url.indexOf("unshare-resource-with-user") > 0) {
         isUserUnsharing = true;
     }
     if(!isUserUnsharing){
@@ -407,7 +407,7 @@ function promptSelfRemovingAccess(form_id){
                 .addClass("btn btn-default");
 
             $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the second button
                 .addClass("btn btn-danger");
         }
     });
