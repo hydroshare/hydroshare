@@ -4,7 +4,7 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div id="div-series-selection" class="row">
+        <div id="div-series-selection" class="">
             <div class="col-sm-12">
                 <strong>Select a timeseries to see corresponding metadata (Number of
                     timeseries:{{ series_ids.items|length }}):</strong>
@@ -25,7 +25,7 @@
                 <hr>
             </div>
         </div>
-        <div class="row">
+        <div class="">
             {% if sites or variables or methods %}
                 <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                     {% if sites %}
