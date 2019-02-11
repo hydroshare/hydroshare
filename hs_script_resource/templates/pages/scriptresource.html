@@ -6,48 +6,45 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-            <div class="col-md-12">
-                {% if script_metadata %}
-                    {########################}
-                    {#   SCRIPT  METADATA  #}
-                    {########################}
-                    <legend>General</legend>
-                    <table class="custom-table">
-                        <tbody>
-                            <tr>
-                                <th class="text-muted">Programming Language </th>
-                                <td>{{ script_metadata.scriptLanguage }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Programming Language Version </th>
-                                <td>{{ script_metadata.languageVersion }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Script Version </th>
-                                <td>{{ script_metadata.scriptVersion }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Script Dependencies </th>
-                                <td>{{ script_metadata.scriptDependencies }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Release Date </th>
-                                <td>{{ script_metadata.scriptReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Script Repository </th>
-                                <td>
-                                    <a target="_blank" href="{{ script_metadata.scriptCodeRepository }}">
-                                        {{ script_metadata.scriptCodeRepository }}
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <hr style="border:0"/>
-                {% endif %}
-            </div>
+        <div class="col-md-12">
+            {% if script_metadata %}
+                {########################}
+                {#   SCRIPT  METADATA  #}
+                {########################}
+                <legend>General</legend>
+                <table class="custom-table space-bottom">
+                    <tbody>
+                        <tr>
+                            <th class="text-muted">Programming Language </th>
+                            <td>{{ script_metadata.scriptLanguage }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Programming Language Version </th>
+                            <td>{{ script_metadata.languageVersion }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Script Version </th>
+                            <td>{{ script_metadata.scriptVersion }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Script Dependencies </th>
+                            <td>{{ script_metadata.scriptDependencies }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Release Date </th>
+                            <td>{{ script_metadata.scriptReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Script Repository </th>
+                            <td>
+                                <a target="_blank" href="{{ script_metadata.scriptCodeRepository }}">
+                                    {{ script_metadata.scriptCodeRepository }}
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}
