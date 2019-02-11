@@ -364,7 +364,7 @@ function promptSelfRemovingAccess(form_id){
     var url = $form.attr('action');
     // check if we are unsharing a user or a group
     var isUserUnsharing = false;
-    if(url.indexOf("unshare-resource-with-user") > 0){
+    if(url.split("/")[4] === "unshare-resource-with-user"){
         isUserUnsharing = true;
     }
     if(!isUserUnsharing){
@@ -379,7 +379,7 @@ function promptSelfRemovingAccess(form_id){
     }
 
     // close the manage access panel (modal)
-    $("#manage-access .btn-primary").click();
+    $("#manage-access ").modal("hide");
 
     // display remove access confirmation dialog
     $("#dialog-confirm-delete-self-access").dialog({
