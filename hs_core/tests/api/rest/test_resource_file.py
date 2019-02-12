@@ -74,7 +74,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertIn(self.raster_file_name, content_list)
 
     def test_get_resource_file(self):
-        file_response = self.getResourceFile(self.pid, self.txt_file_name)
+        file_response = self.getResourceFile(self.pid, "test/" + self.txt_file_name)
 
     def test_create_resource_file(self):
         # Make a new text file
