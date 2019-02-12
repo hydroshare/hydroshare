@@ -244,7 +244,8 @@ VariableLayoutEdit = Layout(
                                     {% crispy form %}
                                     <div class="row" style="margin-top:10px">
                                         <div class="col-md-10 col-xs-6">
-                                            <button type="button" class="btn btn-primary btn-form-submit">
+                                            <button type="button"
+                                                class="btn btn-primary btn-form-submit">
                                                 Save Changes
                                             </button>
                                         </div>
