@@ -22,6 +22,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -1155,9 +1156,28 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
+    """
+    TODO parameterize and give user control of listings per page, saved in user preferences
+    Template processor for my-resources.html resources listing for user
+    :param request: WSGI GET request for endpoint
+    :param page: Mezzanine middleware in process_view sends <Page: My Resources>
+    :return: html template render with page of resources
+    """
     resource_collection = get_my_resources_list(request)
-    context = {'collection': resource_collection}
+    page = request.GET.get('page')
+    # TODO investigate iRODS performance issue; listing caps out at 10 resources per page, otherwise very slow loading
+    paginator = Paginator(resource_collection, 10)
+    try:
+        collection = paginator.page(page)
+    except PageNotAnInteger:
+        collection = paginator.page(1)
+    except EmptyPage:
+        collection = paginator.page(paginator.num_pages)
+
+    context = {
+                'collection': collection,
+                'numOwned': len(resource_collection)
+               }
 
     return context
 
