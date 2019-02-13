@@ -30,7 +30,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # Get the resource system metadata to make sure the resource was
         # properly created.
-        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta//".format(res_id=res_id)
+        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
