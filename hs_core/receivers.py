@@ -7,7 +7,7 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change
 from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Party
-from hydroshare import settings as hs_settings
+from django.conf import settings
 from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -159,9 +159,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 @receiver(post_raccess_change)
 def hs_update_web_services(sender, **kwargs):
     """Signal to update resource web services."""
-    update_web_services(
-        services_url=hs_settings.HSWS_URL,
-        api_token=hs_settings.HSWS_API_TOKEN,
-        timeout=hs_settings.HSWS_TIMEOUT,
-        res_id=kwargs.get("resource").short_id
-    )
+
+    update_web_services.apply_async((
+        settings.HSWS_URL,
+        settings.HSWS_API_TOKEN,
+        settings.HSWS_TIMEOUT,
+        settings.HSWS_PUBLISH_URLS,
+        kwargs.get("resource").short_id
+    ), countdown=1)

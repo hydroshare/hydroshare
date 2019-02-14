@@ -542,16 +542,37 @@ def update_quota_usage_task(username):
 
 
 @shared_task
-def update_web_services(services_url, api_token, timeout, res_id):
+def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     session = requests.Session()
     session.headers.update(
         {"Authorization": " ".join(("Token", str(api_token)))}
     )
-    rest_url = str(services_url) + "/update-services/?res_id=" + str(res_id)
+
+    rest_url = str(services_url) + "/" + str(res_id) + "/"
+
     try:
         response = session.post(rest_url, timeout=timeout)
-        logger.info(response)
+        resource = utils.get_resource_by_shortkey(res_id)
+        response_content = json.loads(response.content)
+
+        if publish_urls:
+            try:
+                for key, value in response_content["resource"].iteritems():
+                    resource.extra_metadata[key] = value
+                    resource.save()
+
+                for url in response_content["content"]:
+                    lf = resource.logical_files[[i.aggregation_name for i in
+                                                 resource.logical_files].index(url["layer_name"].encode("utf-8"))]
+                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                    lf.metadata.save()
+
+            except Exception as e:
+                logger.error(e)
+                return e
+
         return response
+
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
         return e
