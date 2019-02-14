@@ -298,7 +298,7 @@ class ResourceAccess(models.Model):
                     # See Subquery documentation for why this is necessary.
                     excluded = User.objects.filter(excl).values('pk')
                     return User.objects.filter(incl)\
-                                       .exclude(id__in=Subquery(excluded))\
+                                       .exclude(pk__in=Subquery(excluded))\
                                        .distinct()
                 else:
                     return User.objects.filter(incl)
@@ -344,7 +344,7 @@ class ResourceAccess(models.Model):
                     excluded = User.objects.filter(excl).values('pk')
                     return User.objects\
                             .filter(incl)\
-                            .exclude(id__in=Subquery(excluded))\
+                            .exclude(pk__in=Subquery(excluded))\
                             .distinct()
                 else:
                     return User.objects.filter(incl)

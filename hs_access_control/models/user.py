@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
@@ -942,8 +942,9 @@ class UserAccess(models.Model):
                 # Avoid races by excluding action in that case.
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2ugp__group=this_group,
-                                                       u2ugp__privilege=PrivilegeCodes.OWNER)
-                return access_group.members.exclude(pk__in=users_to_exclude)
+                                                       u2ugp__privilege=PrivilegeCodes.OWNER)\
+                                               .values('pk')
+                return access_group.members.exclude(pk__in=Subquery(users_to_exclude))
             else:
                 return access_group.members
 
@@ -1203,8 +1204,9 @@ class UserAccess(models.Model):
         selected = Group.objects\
             .filter(g2ugp__user=self.user,
                     g2ugp__privilege=this_privilege)\
-            .exclude(pk__in=Group.objects.filter(g2ugp__user=self.user,
-                                                 g2ugp__privilege__lt=this_privilege))
+            .exclude(pk__in=Subquery(Group.objects.filter(g2ugp__user=self.user,
+                                                          g2ugp__privilege__lt=this_privilege)
+                                                  .values("pk")))
 
         # filter out inactive groups for non owner privileges
         if this_privilege != PrivilegeCodes.OWNER:
@@ -1360,6 +1362,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        incl = None  # what to include
+        excl = None  # what to exclude
+
         if this_privilege == PrivilegeCodes.OWNER:
             if via_user:
                 return BaseResource.objects\
@@ -1372,28 +1377,24 @@ class UserAccess(models.Model):
         # CHANGE does not include immutable resources
         elif this_privilege == PrivilegeCodes.CHANGE:
 
-            finquery = None
-
-            # exclude owners; immutability doesn't matter for them
-            finexcl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
-                        r2urp__user=self.user)
-
-            # Nothing can be immutable if it has CHANGE privileges
-
+            # If something is immutable, CHANGE becomes VIEW
             if via_user:
-                uquery = Q(raccess__immutable=False,
-                           r2urp__privilege=PrivilegeCodes.CHANGE,
-                           r2urp__user=self.user)
-                finquery = uquery  # we know finquery is None
+                incl = Q(raccess__immutable=False,
+                         r2urp__privilege=PrivilegeCodes.CHANGE,
+                         r2urp__user=self.user)
+                # exclude owners; immutability doesn't matter for them
+                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                         r2urp__user=self.user)
 
             if via_group:
                 gquery = Q(raccess__immutable=False,
                            r2grp__privilege=PrivilegeCodes.CHANGE,
                            r2grp__group__g2ugp__user=self.user)
-                if finquery is not None:
-                    finquery = finquery | gquery
+                if incl is not None:
+                    incl = incl | gquery
                 else:
-                    finquery = gquery
+                    incl = gquery
+                # CHANGE is highest permission; no need to exclude anything
 
             # community permission is CHANGE only if both permissions are CHANGE
             # allow_view does not apply to CHANGE access.
@@ -1403,19 +1404,21 @@ class UserAccess(models.Model):
                            r2grp__group__gaccess__active=True,
                            r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
                            r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if finquery is not None:
-                    finquery = finquery | squery
+                if incl is not None:
+                    incl = incl | squery
                 else:
-                    finquery = squery
+                    incl = squery
+                # CHANGE is highest permission; no need to exclude anything
 
-            if finquery is not None:
-                if via_user:
+            if incl is not None:
+                if excl:
                     # exclude owners; immutability doesn't matter for them
-                    finexcl = BaseResource.objects.filter(r2urp__privilege=PrivilegeCodes.OWNER,
-                                                          r2urp__user=self.user)
-                    return BaseResource.objects.filter(finquery).exclude(pk__in=finexcl).distinct()
+                    excluded = BaseResource.objects.filter(excl).values('pk')
+                    return BaseResource.objects.filter(incl)\
+                                               .exclude(pk__in=Subquery(excluded))\
+                                               .distinct()
                 else:
-                    return BaseResource.objects.filter(finquery).distinct()
+                    return BaseResource.objects.filter(incl).distinct()
             else:
                 return BaseResource.objects.none()
 
@@ -1423,17 +1426,16 @@ class UserAccess(models.Model):
             # VIEW includes CHANGE+immutable as well as explicit VIEW
             # CHANGE does not include immutable resources
 
-            finquery = None
-
             # pick up change and owner, use to override VIEW for groups
             if via_user:
-                uquery = \
+                incl = \
                     Q(r2urp__privilege=PrivilegeCodes.VIEW,
                       r2urp__user=self.user) | \
                     Q(raccess__immutable=True,
                       r2urp__privilege=PrivilegeCodes.CHANGE,
                       r2urp__user=self.user)
-                finquery = uquery
+                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                         r2urp__user=self.user)\
 
             if via_group:
                 gquery = \
@@ -1444,15 +1446,24 @@ class UserAccess(models.Model):
                       r2grp__privilege=PrivilegeCodes.CHANGE,
                       r2grp__group__g2ugp__user=self.user,
                       r2grp__group__gaccess__active=True)
-                if finquery is not None:
-                    finquery = finquery | gquery
+                if incl is not None:
+                    incl = incl | gquery
                 else:
-                    finquery = gquery
+                    incl = gquery
+                # exclude groups with true CHANGE privilege
+                gexcl = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2ugp__user=self.user,
+                          r2grp__group__gaccess__active=True)
+                if excl is not None:
+                    excl = excl | gexcl
+                else:
+                    excl = gexcl
 
             # community permission is VIEW if at least one of the two permissions is VIEW
             # or if the resource is immutable and there is any path to it.
             if via_community:
-                squery = \
+                cquery = \
                     Q(r2grp__group__gaccess__active=True,
                       r2grp__privilege=PrivilegeCodes.VIEW,  # overrides CHANGE in all cases
                       r2grp__group__g2gcp__community__c2gcp__allow_view=True,
@@ -1467,20 +1478,35 @@ class UserAccess(models.Model):
                       r2grp__group__gaccess__active=True,
                       r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                       r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if finquery is not None:
-                    finquery = finquery | squery
+                if incl is not None:
+                    incl = incl | cquery
                 else:
-                    finquery = squery
+                    incl = cquery
 
-            if finquery is not None:
-                if via_user:
-                    # exclude owners; immutability doesn't matter for them
-                    finexcl = BaseResource.objects.filter(r2urp__privilege=PrivilegeCodes.OWNER,
-                                                          r2urp__user=self.user)
-
-                    return BaseResource.objects.filter(finquery).exclude(pk__in=finexcl).distinct()
+                # exclude groups with true community CHANGE privilege
+                cexcl = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__gaccess__active=True,
+                          r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                          r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
+                if excl is not None:
+                    excl = excl | cexcl
                 else:
-                    return BaseResource.objects.filter(finquery).distinct()
+                    excl = cexcl
+
+            if incl is not None:
+                if excl:
+                    # exclude higher privilege
+                    excluded = BaseResource.objects.filter(r2urp__privilege=PrivilegeCodes.OWNER,
+                                                           r2urp__user=self.user)\
+                                                   .values('pk')
+
+                    return BaseResource.objects.filter(incl)\
+                                               .exclude(pk__in=Subquery(excluded))\
+                                               .distinct()
+                else:
+                    return BaseResource.objects.filter(incl).distinct()
             else:
                 return BaseResource.objects.none()
 
@@ -2138,8 +2164,9 @@ class UserAccess(models.Model):
                 # Avoid races by excluding whole action in that case.
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2urp__resource=this_resource,
-                                                       u2urp__privilege=PrivilegeCodes.OWNER)
-                return access_resource.view_users.exclude(pk__in=users_to_exclude)
+                                                       u2urp__privilege=PrivilegeCodes.OWNER)\
+                                               .values('pk')
+                return access_resource.view_users.exclude(pk__in=Subquery(users_to_exclude))
             elif qholder:
                 return access_resource.view_users.exclude(id=qholder.id)
             else:
@@ -2232,8 +2259,9 @@ class UserAccess(models.Model):
             # get list of owners to exclude from main list
             users_to_exclude = User.objects.filter(is_active=True,
                                                    u2ugp__group=this_group,
-                                                   u2ugp__privilege=PrivilegeCodes.OWNER)
-            return candidates.exclude(pk__in=users_to_exclude)
+                                                   u2ugp__privilege=PrivilegeCodes.OWNER)\
+                                           .values('pk')
+            return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
 
@@ -2452,8 +2480,9 @@ class UserAccess(models.Model):
             # get list of owners to exclude from main list
             users_to_exclude = User.objects.filter(is_active=True,
                                                    u2urp__resource=this_resource,
-                                                   u2urp__privilege=PrivilegeCodes.OWNER)
-            return candidates.exclude(pk__in=users_to_exclude)
+                                                   u2urp__privilege=PrivilegeCodes.OWNER)\
+                                           .values('pk')
+            return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
 
