@@ -1,11 +1,30 @@
 {% load mezzanine_tags rating_tags i18n %}
-<h3>{% trans "Ratings" %}</h3>
-<span id="rating-{{ rating_object.id }}">
+
+<th>+1 Votes:</th>
+<td>
+    <span id="rating-{{ rating_object.id }}">
+    {% if rating_sum > 0 %}
+        {% if you_rated %}
+            {% if rating_sum == 1 %}
+                <span>You +1 this</span>
+            {% elif rating_sum == 2 %}
+                <span>You and 1 other +1 this</span>
+            {% else %}
+                <span class="label label-success">You and {{ rating_sum|add:-1 }}  others +1 this.</span>
+            {% endif %}
+        {% else %}
+            {% if rating_sum == 1 %}
+                <span>1 other +1 this</span>
+            {% else %}
+                <span>{{ rating_sum }} others +1 this</span>
+            {% endif %}
+        {% endif %}
+    {% endif %}
     {% if rating_sum <= 0 %}
         Be the first one to&nbsp;
     {% endif %}
     {% if request.user.is_authenticated %}
-        <form class="form-inline" role="form" method="post" action="/rating/">
+        <form class="form-inline" role="form" method="post" action="/rating/" style="display:inline;">
             {% nevercache %}
                 {% csrf_token %}
             {% endnevercache %}
@@ -14,32 +33,19 @@
             {{ rating_form.timestamp }}
             {{ rating_form.security_hash }}
             <input value="1" name="value" type="hidden"/>
-            <input type="submit" class="btn btn-default btn-sm" value={% if you_rated %} "Withdraw +1" {% else %} "+1" {% endif %}/>
+            <input type="submit" class="btn {% if you_rated %}btn-default{% else %}btn-success{% endif %} btn-xs"
+                   value={% if you_rated %} "Withdraw +1" {% else %} "+1" {% endif %}/>
         </form>
         {% if rating_sum <= 0 %}
             &nbsp;this.
         {% endif %}
-    {%  elif rating_sum <= 0 %}
+    {% elif rating_sum <= 0 %}
         +1 this.
     {% endif %}
-    {% if rating_sum > 0 %}
-        {% if you_rated %}
-            {% if rating_sum == 1 %}
-                You +1 this. &nbsp;
-            {% elif rating_sum == 2 %}
-                You and 1 other +1 this. &nbsp;
-            {% else %}
-                You and {{ rating_sum|add:-1 }}  others +1 this. &nbsp;
-            {% endif %}
-        {% else %}
-            {% if rating_sum == 1 %}
-                1 other +1 this. &nbsp;
-            {% else %}
-                {{ rating_sum }} others +1 this. &nbsp;
-            {% endif %}
-        {% endif %}
-    {% endif %}
+
     {% if not request.user.is_authenticated %}
         &nbsp;(<a href="{% url 'login' %}">You need to be logged in to rate this.</a>)
     {% endif %}
 </span>
+</td>
+

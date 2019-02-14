@@ -4,7 +4,7 @@
 
 {% block extra_head %}
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
-    <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
@@ -16,13 +16,16 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-        <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
+        <input type="hidden" id="resource-mode" value="{% if resource_edit_mode %}Edit{% else %}View{% endif %}" >
         <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
         <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
         <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
         <input type="hidden" id="keywords-string" value="{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}">
         <input type="hidden" id="short-id" value="{{ page.get_content_model.short_id }}">
         <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
+        {% if page.perms.change and resource_edit_mode %}
+        {% csrf_token %}
+        {% endif %}
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
             {% block error %}
@@ -65,15 +68,8 @@
             {# ======= Subject ======= #}
             {% include "resource-landing-page/subject.html" %}
 
-            {# ======= Citation ======= #}
-            {% if metadata_form %}
-                {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
-            {% else %}
-                {% include "resource-landing-page/citation.html" with resource_mode="view" %}
-            {% endif %}
-
             {# ======= Coverage ======= #}
-            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
                 {% include "resource-landing-page/coverage.html" %}
             {% endif %}
 
@@ -82,8 +78,8 @@
             {% if cm.resource_type != "ToolResource" %}
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
-                        <li id="btn-open" data-menu-name="open">
+                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
+                        <li id="btn-open" data-menu-name="open" data-fb-action="open">
                             <span class="fa fa-folder-open icon-blue"></span>
                             <span>Open</span>
                         </li>
@@ -91,111 +87,144 @@
                         <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
-                        {% if page.perms.change and metadata_form %}
-                            {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
-                                <li id="btn-cut" data-menu-name="cut">
-                                    <span class="fa fa-scissors icon-blue"></span>
-                                    <span>Cut</span>
-                                </li>
-
-                            <li data-menu-name="paste">
+                    {% if page.perms.change and resource_edit_mode %}
+                        {% if cm.resource_type == "CompositeResource" %}
+                            <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
+                                <span class="fa fa-scissors icon-blue"></span>
+                                <span>Cut</span>
+                            </li>
+                            <li data-menu-name="paste" data-fb-action="paste">
                                 <span class="fa fa-clipboard icon-blue"></span>
                                 <span>Paste</span>
                             </li>
-
                         {% endif %}
 
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
-                            <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
+                        {% if cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
+                            <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                 <span>Rename</span>
                             </li>
                         {% endif %}
 
-                        <li data-menu-name="delete" class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
+                        <li data-menu-name="delete" class="fb-files-remove"
+                            data-fb-action="delete" data-toggle="modal"
+                            data-target="#confirm-delete-dialog">
                             <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             <span>Delete</span>
                         </li>
 
-                        <li id="delete-separator" role="separator" class="divider"></li>
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
-                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
                             data-target="#zip-folder-dialog">
                             <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                            <span>Zip Folder...</span>
+                            <span>Zip folder...</span>
                         </li>
 
-                        <li id="btn-unzip" data-menu-name="unzip">
+                        <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
                             <span class="fa fa-file-archive-o icon-blue"></span>
                             <span>Unzip here</span>
                         </li>
 
-                        <li id="zip-separator" role="separator" class="divider"></li>
+                        <li role="separator" class="divider"></li>
+                    {% endif %}
 
-                    {% endif %}
-                    {% if cm.raccess.require_download_agreement %}
-                        <li id="btn-download-with-agreement" data-menu-name="download" data-toggle="modal" data-target="#license-agree-dialog-file">
-                            <span class="glyphicon glyphicon-download icon-blue"></span>
-                            <span>Download</span>
-                        </li>
-                    {% else %}
-                        <li id="btn-download" data-menu-name="download" >
-                            <span class="glyphicon glyphicon-download icon-blue"></span>
-                            <span>Download</span>
-                        </li>
-                        <li id="btn-download-zip" data-menu-name="download" >
-                            <span class="glyphicon glyphicon-download icon-blue"></span>
-                            <span>Download Zipped</span>
-                        </li>
-                    {% endif %}
-                    <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
+                    <li id="btn-download" data-menu-name="download" data-fb-action="download">
+                        <span class="glyphicon glyphicon-download icon-blue"></span>
+                        <span>Download</span>
+                    </li>
+                    <li data-menu-name="download" data-fb-action="downloadZipped" data-zipped="true">
+                        <span class="fa fa-download icon-blue"></span>
+                        <span>Download zipped</span>
+                    </li>
+                    <li id="btn-get-link" data-menu-name="get-link"
+                        data-fb-action="getLink" data-toggle="modal"
+                        data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
                     </li>
-                    <li id="btn-get-referenced-url" data-menu-name="get-ref-url" data-toggle="modal" data-target="#redirect-referenced-url-dialog" hidden>
-                        <span class="fa fa-link icon-blue"></span>
+                    <li data-fb-action="getRefUrl"
+                        data-toggle="modal" data-target="#redirect-referenced-url-dialog">
+                        <span class="fa fa-external-link icon-blue"></span>
                         <span>Open referenced URL</span>
                     </li>
-                    {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                        <li id="btn-edit-referenced-url" data-menu-name="update-ref-url" data-toggle="modal" data-target="#edit-referenced-url-dialog" hidden>
-                            <span class="fa fa-link icon-blue"></span>
+                    {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" %}
+                        <li data-fb-action="updateRefUrl"
+                            data-toggle="modal" data-target="#edit-referenced-url-dialog">
+                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
                             <span>Edit referenced URL</span>
                         </li>
-                        <li id="btn-set-generic-file-type" data-menu-name="setgenericfiletype" data-toggle="tooltip" title="Add metadata to an individual file">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Add metadata to file</span>
+                    {% endif %}
+                    <li id="content-type-separator" role="separator" class="divider"></li>
+                    {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                        {# ADD METADATA TO A FILE #}
+                        <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
                         </li>
-                        <li id="btn-set-fileset-file-type" data-menu-name="setfilesetfiletype" data-toggle="tooltip" title="Add metadata to a folder">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Add metadata to folder</span>
+                        {# ADD METADATA TO A FOLDER #}
+                        <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
+                            <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                            <span>Add metadata</span>
                         </li>
-                        <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype" data-toggle="tooltip" title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Convert to Geographic Raster</span>
+                        <li data-fb-action="subMenuSetContentType"
+                            class="dropdown-submenu submenu-trigger">
+                            <span tabindex="-1" class="">
+                                <i class="fa fa-exchange icon-blue" aria-hidden="true"></i>
+                                Set content type
+                                <span class="caret"></span>
+                            </span>
+                            <ul class="dropdown-menu">
+                                <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setGeoRasterFileType"
+                                    title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                     alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
+                                    <span>Geographic Raster</span>
+                                </li>
+                                <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setNetCDFFileType"
+                                    title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
+                                    <span>Multidimensional</span>
+                                </li>
+                                <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setGeoFeatureFileType"
+                                    title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                     alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
+                                    <span>Geographic Feature</span>
+                                </li>
+                                <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip"
+                                    data-placement="right" data-fb-action="setRefTimeseriesFileType"
+                                    title="Convert to a referenced time series dataset with metadata">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                     alt="Time Series Resource Icon" class="resource-type-icon"/>
+                                    <span>Referenced Time Series</span>
+                                </li>
+                                <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype"
+                                    data-toggle="tooltip" data-placement="right" data-fb-action="setTimeseriesFileType"
+                                    title="Convert to a time series dataset to which you can add metadata">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                     alt="Time Series Resource Icon" class="resource-type-icon"/>
+                                    <span>Time Series</span>
+                                </li>
+                            </ul>
                         </li>
-                        <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype" data-toggle="tooltip" title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Convert to Multidimensional</span>
-                        </li>
-                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype" data-toggle="tooltip" title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Convert to Geographic Feature</span>
-                        </li>
-                        <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip" title="Convert to a referenced time series dataset with metadata">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Convert to Referenced Time Series</span>
-                        </li>
-                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype" data-toggle="tooltip" title="Convert to a time series dataset to which you can add metadata">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Convert to Time Series</span>
-                        </li>
-                        <li id="btn-remove-aggregation" data-menu-name="removeaggregation" data-toggle="modal"
-                                data-target="#remove-aggregation-dialog">
-                            <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span data-toggle="tooltip" title="Remove the content type association and delete content-level metadata">Remove content type</span>
+                        <li data-fb-action="removeAggregation"
+                            data-toggle="modal"
+                            data-target="#remove-aggregation-dialog"
+                            data-placement="right">
+                            <span data-toggle="tooltip" data-placement="right"
+                                  title="Remove the content type association and delete content-level metadata">
+                                <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
+                                <span>Remove content type</span>
+                            </span>
                         </li>
                     {%  endif %}
                     {% if relevant_tools %}
+                        <li role="separator" class="divider"></li>
                         {% for tool in relevant_tools.tool_list %}
                             {% if tool.openwithlist %}
                                 {% if tool.agg_types %}
@@ -225,17 +254,23 @@
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
                 <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if page.perms.change and metadata_form %}
-                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                    {% if page.perms.change and resource_edit_mode %}
+                        {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                             <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
+                                data-fb-action="createFolder"
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder icon-blue"></span>
-                                <span>New Folder</span>
+                                <span>New folder</span>
                             </li>
-                            <li id="mnu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                            <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-fb-action="createFolder"
                                 data-target="#add-reference-url-dialog">
                                 <span class="fa fa-external-link icon-blue"></span>
                                 <span>Add content from the web</span>
+                            </li>
+                            <li data-menu-name="paste" data-fb-action="paste">
+                                <span class="fa fa-clipboard icon-blue"></span>
+                                <span>Paste</span>
                             </li>
                             <li role="separator" class="divider"></li>
                         {% endif %}
@@ -247,13 +282,11 @@
                     </li>
 
                     <li data-menu-name="select-all">
-                        <span class="fa fa-check-square icon-blue"></span>
-                        <span>Select All</span>
+                        <span class="fa fa-th-large icon-blue"></span>
+                        <span>Select all</span>
                     </li>
-                    {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
-
+                    {% if page.perms.change and resource_edit_mode and cm|resource_type == "CompositeResource"%}
                         <li role="separator" class="divider"></li>
-
                         <li data-menu-name="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
                             <span>Paste</span>
@@ -263,6 +296,71 @@
 
                 <div class="col-xs-12 content-block">
                     <h3>Content</h3>
+                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    If you upload a readme.txt or readme.md file at the root level in your
+                                    resource, it will be rendered automatically on the page. Markdown
+                                    formatting is allowed in readme.md.<br><strong><a
+                                        href="https://daringfireball.net/projects/markdown/basics"
+                                        target="_blank">Learn more about Markdown</a></strong>
+                                </em>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div id="ref_file_note" class="alert alert-warning space-top" role="alert"
+                            {% if not show_web_reference_note %} hidden {% endif %}>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <div class="flex">
+                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                            <em>
+                                This resource contains links to external content. Linked content is
+                                NOT stored in HydroShare, and we can't guarantee its availability, quality, or
+                                security.
+                            </em>
+                        </div>
+                    </div>
+
+                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                        <div id="fb-alerts">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>
+                                        <strong>Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </em>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if page.perms.change and resource_edit_mode %}
+                        {% if file_type_error %}
+                            <div class="alert alert-danger alert-dismissible" role="alert">
+                                <button id="validation-error-close" type="button" class="close"
+                                        data-dismiss="alert"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                            </div>
+                        {% endif %}
+                    {% endif %}
                     {% if show_content_files %}
                         {# ======= Modal window begins =======#}
                         <div class="modal fade" id="confirm-delete-dialog" tabindex="-1" role="dialog"
@@ -294,53 +392,58 @@
                         </div>
                         {# ======= Modal window ends =======#}
 
-                        <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents"
-                             {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
+                        <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path=""
+                             {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
                              data-supported-files="{{ cm.get_supported_upload_file_types }}"
                              data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
+                             {% if cm.raccess.require_download_agreement %}
+                                 data-agreement="true"
+                             {% endif %}
                              data-initial-file-count="{{ cm.files.all.count }}"
-                             {% if cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
-                             class="file-browser"
-                        >
+                             class="file-browser">
 
                             <div class="file-browser-container">
                                 <div id="fb-inner-controls">
                                     <div id="fb-inner-buttons">
-                                        <div class="row">
-                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                            <div class="col-xs-6 col-sm-3 col-md-3">
-                                                <button id="fb-move-back"
-                                                        class="btn btn-default fb-control-round disabled"
-                                                        title="Click to go back"><span
-                                                        class="glyphicon glyphicon-arrow-left"></span>
-                                                </button>
+                                        <div class="flex">
+                                            {# FOLDER NAVIGATION #}
+                                            {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                <div>
+                                                    <button id="fb-move-back"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go back"><span
+                                                            class="glyphicon glyphicon-arrow-left"></span>
+                                                    </button>
 
-                                                <button id="fb-move-forward"
-                                                        class="btn btn-default fb-control-round disabled"
-                                                        title="Click to go forward"><span
-                                                        class="glyphicon glyphicon-arrow-right"></span>
-                                                </button>
+                                                    <button id="fb-move-forward"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go forward"><span
+                                                            class="glyphicon glyphicon-arrow-right"></span>
+                                                    </button>
 
-                                                <button id="fb-move-up"
-                                                        class="btn btn-default fb-control-squared disabled"
-                                                        title="Click to go to parent directory"><span
-                                                        class="fa fa-level-up"></span></button>
-                                            </div>
+                                                    <button id="fb-move-up"
+                                                            class="btn btn-default fb-control-squared disabled"
+                                                            title="Click to go to parent directory"><span
+                                                            class="fa fa-level-up"></span></button>
+                                                </div>
                                             {% endif %}
 
-                                            <div class="{% if cm|resource_type == "Generic" %}col-xs-6{% else %}col-xs-12{% endif %} col-sm-4 col-md-3 pull-right text-right">
+                                            {# SORT AND VIEW CONTROLS #}
+                                            <div>
                                                 <div id="btn-group-view" class="btn-group" role="group">
                                                     <button data-view="list" data-toggle="tooltip"
                                                             data-placement="auto"
                                                             title='List'
                                                             type="button"
-                                                            class="btn btn-default"><i class='fa fa-list' aria-hidden='true'></i>
+                                                            class="btn btn-default"><i class='fa fa-list'
+                                                                                       aria-hidden='true'></i>
                                                     </button>
 
                                                     <button data-view="grid" data-toggle="tooltip"
                                                             data-placement="auto" type="button"
                                                             title='Grid'
-                                                            class="btn btn-default active"><i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
+                                                            class="btn btn-default active"><i
+                                                            class='fa fa-th' aria-hidden='true'></i>
                                                     </button>
                                                 </div>
 
@@ -349,7 +452,7 @@
                                                             class="btn btn-default dropdown-toggle"
                                                             data-toggle="dropdown" aria-haspopup="true"
                                                             aria-expanded="false">
-                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort by</span>&nbsp;<span
                                                             class="caret"></span>
                                                     </button>
 
@@ -368,57 +471,97 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6" style="display: inline-block;">
+                                            {# SEARCH FOR CURRENT DIRECTORY #}
+                                            <div class="text-center fb-search-directory">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
-                                                <span id="btn-clear-search-input"
-                                                      class="glyphicon glyphicon-remove-sign btn-clear-search"
-                                                      data-toggle="tooltip"
-                                                      data-placement="auto"
-                                                      title="Clear search"></span>
+                                                    <span id="btn-clear-search-input"
+                                                          class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                          data-toggle="tooltip"
+                                                          data-placement="auto"
+                                                          title="Clear search"></span>
                                                     <input type="text" id="txtDirSearch"
                                                            class="form-control fb-input-search"
                                                            placeholder="Search current directory">
                                                 </div>
                                             </div>
-
                                         </div>
                                         <div class="row">
-                                            <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
-                                                {% if page.perms.change and metadata_form %}
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-create-folder" class="fb-space-right disabled"
-                                                                data-toggle="modal"
-                                                                data-target="#create-folder-dialog"
-                                                            title="Create new folder">
-                                                        <span class="fa fa-folder icon-blue"></span>
-                                                        </button>
-                                                    {% endif %}
+                                            <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
+                                                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                                    <a type="button"
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle">
+                                                        <i class="fa fa-plus"></i> Add files
+                                                    </a>
 
-                                                    {% if cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-add-reference" class="fb-space-right disabled"
+                                                    <div id="irods-group" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                title="Add files from an iRODS server"
+                                                                aria-expanded="false">
+                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
+                                                        </button>
+
+                                                        <ul class="dropdown-menu text-left">
+                                                            <li id="btn-signin-irods" data-toggle="modal"
+                                                                data-target="#irodsSignin">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
+                                                                    in to iRODS
+                                                                </a>
+                                                            </li>
+
+                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                                data-toggle="modal" data-target="#irodsContent">
+                                                                <a>
+                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
+                                                                    files from iRODS...
+                                                                </a>
+                                                            </li>
+
+                                                            <li role="separator" class="divider hidden"></li>
+                                                            <li id="btn-signout-irods" class="hidden">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
+                                                                    out of iRODS
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+
+                                                {% if page.perms.change and resource_edit_mode %}
+                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-create-folder" class="disabled"
+                                                                data-fb-action="createFolder" data-toggle="modal"
+                                                                data-target="#create-folder-dialog"
+                                                                title="Create new folder">
+                                                            <span class="fa fa-folder icon-blue"></span>
+                                                        </button>
+                                                        {% if cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-add-reference" class="fb-space-right"
+                                                                data-fb-action="createFolder"
                                                                 data-toggle="modal"
                                                                 data-target="#add-reference-url-dialog"
                                                             title="Add content from the web">
                                                         <span class="fa fa-external-link icon-blue"></span>
                                                         </button>
+                                                        {% endif %}
+                                                        <button id="fb-cut" data-fb-action="cut"
+                                                                class="disabled"
+                                                                title="Cut">
+                                                            <span class="fa fa-scissors icon-blue"></span>
+                                                        </button>
+                                                        <button id="fb-paste" data-fb-action="paste"
+                                                                class="disabled fb-space-right"
+                                                                title="Paste">
+                                                            <span class="fa fa-clipboard icon-blue"></span>
+                                                        </button>
                                                     {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
-                                                            <button id="fb-cut"
-                                                                    class="disabled"
-                                                                    title="Cut">
-                                                                <span class="fa fa-scissors icon-blue"></span>
-                                                            </button>
-                                                            <button id="fb-paste"
-                                                                    class="disabled fb-space-right"
-                                                                    title="Paste">
-                                                                <span class="fa fa-clipboard icon-blue"></span>
-                                                            </button>
-                                                        {% endif %}
-
                                                     {% if cm|resource_type != "Web App Resource" and cm|resource_type != "Geographic Raster"  and cm|resource_type != "HIS Referenced Time Series"  and cm|resource_type != "Geographic Feature (ESRI Shapefiles)" %}
-                                                        <button id="fb-rename"
+                                                        <button id="fb-rename" data-fb-action="rename"
                                                                 class="disabled fb-space-right"
                                                                 title="Rename" data-toggle="modal"
                                                                 data-target="#rename-dialog">
@@ -426,15 +569,15 @@
                                                         </button>
                                                     {% endif %}
 
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
-                                                        <button id="fb-zip"
+                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                        <button id="fb-zip" data-fb-action="zip"
                                                                 class="disabled"
-                                                                title="Zip Folder" data-toggle="modal"
+                                                                title="Zip folder" data-toggle="modal"
                                                                 data-target="#zip-folder-dialog">
                                                             <span class="glyphicon glyphicon-compressed icon-blue"></span>
                                                         </button>
 
-                                                        <button id="fb-unzip"
+                                                        <button id="fb-unzip" data-fb-action="unzip"
                                                                 class="disabled fb-space-right"
                                                                 title="Unzip here">
                                                             <span class="fa fa-file-archive-o icon-blue"></span>
@@ -442,9 +585,18 @@
                                                     {% endif %}
                                                 {% endif %}
 
+                                                {% if page.perms.change and resource_edit_mode %}
+                                                    <button id="fb-delete" data-fb-action="delete"
+                                                            class="disabled fb-space-right"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                    </button>
+                                                {% endif %}
+
                                                 <button id="fb-select-all"
-                                                        title="Select All">
-                                                    <span class="fa fa-check-square icon-blue"></span>
+                                                        title="Select all">
+                                                    <span class="fa fa-th-large icon-blue"></span>
                                                 </button>
 
                                                 <button id="fb-refresh" class="fb-space-right"
@@ -452,26 +604,36 @@
                                                     <span class="fa fa-refresh icon-blue"></span>
                                                 </button>
 
-                                                <button id="fb-download"
-                                                        class="disabled"
-                                                        title="Download">
-                                                    <span class="glyphicon glyphicon-download icon-blue"></span>
-                                                </button>
-
-                                                <button id="fb-get-link" data-toggle="modal"
+                                                <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
                                                         class="disabled" data-target="#get-file-url-dialog"
                                                         title="Get file URL">
                                                     <span class="fa fa-link icon-blue"></span>
                                                 </button>
 
-                                                {% if page.perms.change and metadata_form %}
-                                                    <button id="fb-delete"
-                                                            class="disabled"
-                                                            title="Delete" data-toggle="modal"
-                                                            data-target="#confirm-delete-dialog">
-                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                    </button>
-                                                {% endif %}
+                                                <button id="fb-download"
+                                                        class="disabled" data-fb-action="download"
+                                                        title="Download">
+
+                                                    <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                </button>
+
+                                                <button class="disabled" data-fb-action="downloadZipped"
+                                                        title="Download zipped">
+                                                    <span class="fa fa-download icon-blue"></span>
+                                                </button>
+
+                                                {% for b in cm.bags.all %}
+                                                    <a id="btn-download-all" type="button"
+                                                       title="Download all content as Zipped BagIt Archive"
+                                                            {% if cm.raccess.require_download_agreement %}
+                                                       data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                       data-placement="auto"
+                                                       {% else %}href="{{ cm.bag_url }}"{% endif %}>
+                                                        <span class="fa fa-briefcase icon-blue"></span>
+                                                    </a>
+                                                    <a class="small" target="_blank"
+                                                       href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
+                                                {% endfor %}
                                             </div>
                                         </div>
                                     </div>
@@ -482,164 +644,125 @@
                                         </ol>
                                     </div>
                                 </div>
-                                <form id="hsDropzone"
-                                      class="files-container ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
-                                      method="POST">
-                                    {% csrf_token %}
+                                <div class="fb-content-wrapper">
+                                    <div class="fb-dropzone-wrapper{% if cm|resource_type|lower == "composite resource" %} ui-resizable{% endif %}">
+                                        <form id="hsDropzone"
+                                              class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
+                                              method="POST">
+                                            {% csrf_token %}
 
-                                    <div id="flag-uploading" class="hidden">
-                                        <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
-                                        <small class="uploading-message">
-                                            <strong>Uploading files to:</strong>&nbsp;
-                                            <span id="upload-folder-path"></span>
-                                            <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
-                                            <span id="upload-progress"></span></small>
+                                            <div id="flag-uploading" class="hidden">
+                                                <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                                <small class="uploading-message">
+                                                    <strong>Uploading files to:</strong>&nbsp;
+                                                    <span id="root-path">contents</span><span id="upload-folder-path"></span>
+                                                    <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                    <span id="upload-progress"></span>
+                                                </small>
+                                            </div>
+
+                                            <div class="fb-drag-flag">
+                                                <span class="fa fa-plus-square fa-5x"></span>
+                                            </div>
+
+                                            <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
+                                                <li class="fb-loading-spinner">
+                                                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                                </li>
+                                            </ul>
+                                        </form>
+
+                                        {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                            <div class="fb-upload-caption ">
+                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                smaller than 1GB in size by dragging & dropping, or click <a
+                                                    class="dz-clickable upload-toggle">here</a> to select them.
+                                            </div>
+                                        {% endif %}
                                     </div>
+                                    {% if cm|resource_type|lower == "composite resource" %}
+                                    <div id="fb-metadata-helper">
+                                        <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
+                                           data-fb-action="hide"
+                                           data-toggle="tooltip" data-placement="left" title="Hide"></i>
+                                        <i class="fa fa-caret-square-o-left fb-metadata-collapse hidden" aria-hidden="true"
+                                           data-fb-action="show"
+                                           data-toggle="tooltip" data-placement="left" title="Show"></i>
 
-                                    <div class="fb-drag-flag">
-                                        <span class="fa fa-plus-square fa-5x"></span>
+                                        <span class="ui-icon ui-icon-grip-dotted-vertical"></span>
                                     </div>
-
-                                    <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
-                                        <li class="fb-loading-spinner">
-                                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                        </li>
-                                    </ul>
-                                </form>
-
-                                <form id="fb-delete-files-form" class="hidden"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                      method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="file_ids" value=""/>
-                                </form>
-                            </div>
-                            <div id="ref_file_note" class="text-muted division-title-caption"
-                                    {% if not show_web_reference_note %} hidden {% endif %}>
-                            Please note: This resource contains links to external content. Linked content is NOT stored in
-                            HydroShare, and we can't guarantee its availability, quality, or security.
-                            </div>
-                            {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                                <div class="fb-upload-caption {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
-                                    <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
-                                        files smaller than 1GB in size by dragging & dropping, or click <a
-                                                id="upload-toggle" class="dz-clickable">here</a> to select them.
-                                    </span>
-
-                                    <hr>
-
-                                    <div id="log-into-irods">
-                                        <a id="btn-signin-irods" type="button" class="btn btn-info"
-                                           data-toggle="modal"
-                                           data-target="#irodsSignin">
-                                            <span class="glyphicon glyphicon-log-in"></span>
-                                            &nbsp;&nbsp;Log in to iRODS to add files from an iRODS server...
-                                        </a>
+                                    <div id="fb-metadata" class="fb-metadata h-100">
+                                        {% if cm.resource_type == "CompositeResource" %}
+                                            <div id="fileTypeMetaData">
+                                                <div id="#fb-metadata-default" class="text-center text-muted"
+                                                     role="alert">
+                                                    <div>Select a file to see file type metadata.</div>
+                                                    <hr>
+                                                    <span class="fa-stack fa-lg text-center">
+                                                        <i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
+                                                        <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"
+                                                           style="top: 14px;"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
                                     </div>
-
-                                    <div><a id="btn-select-irods-file" type="button"
-                                       class="btn btn-success row-selector hidden" data-toggle="modal"
-                                       data-target="#irodsContent">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label">
-                                            Add files from iRODS...</span></span>
-                                    </a></div>
-
-                                    <div id="sign-in-info">
-                                        <div id="sign-in-name"></div>
-                                    </div>
-                                    <a id="btn-signout-irods" type="button"
-                                       class="btn btn-default hidden-form">
-                                        <span class="glyphicon glyphicon-log-out"></span>
-                                        &nbsp;&nbsp;Log out of iRODS
-                                    </a>
-
-
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+
+                                {% if page.perms.change and resource_edit_mode %}
+                                    <form id="fb-delete-files-form" class="hidden"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
+                                          method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
-                            <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large
-                                Files</strong>
-                            <ul>
-                                <li><span>To learn how to download files larger than 1 GB see <a
-                                        href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
-                                        target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                            <div id="fb-alerts">
-                                <div class="alert alert-warning alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-
-                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Uploading</strong>
-                                    <ul>
-                                        <li><span id="file-types"></span></li>
-                                        <li><span id="file-multiple"></span></li>
-                                        {% block upload_message %}{% endblock %}
-                                    </ul>
-                                </div>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    <p><strong>Downloading LargeFiles</strong></p>
+                                    <p>To learn how to download files larger than 1 GB see <a
+                                            href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
+                                            target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</p>
+                                </em>
                             </div>
-                        {% endif %}
-
-                        {% if page.perms.change and metadata_form %}
-                            {% if file_type_error %}
-                                <div class="alert alert-danger alert-dismissible" role="alert">
-                                    <button id="validation-error-close" type="button" class="close"
-                                            data-dismiss="alert"
-                                            aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                    <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
-                                </div>
-                            {% endif %}
-                        {% endif %}
+                        </div>
 
                         <div class="files" id="previews"></div>
-                            {% block download_bag %}
-                        <div>
-                        {% if user_zone_account_exist %}
-                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
-                               data-target="#rep-resource-to-irods-dialog">
-                                <span class="glyphicon">
-                                   <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
-                                </span>
-                            </a>
-                        {% endif %}
-                        {% for b in cm.bags.all %}
+                        {% block download_bag %}
                             <div>
-                            {% if cm.raccess.require_download_agreement %}
-                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                data-target="#license-agree-dialog-bag" data-toggle="modal" data-placement="auto">
-                            {% else %}
-                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                   href="{{ cm.bag_url }}">
-                            {% endif %}
-                                <span class="glyphicon glyphicon-download-alt">
-                                    <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label"> Download All Content as Zipped BagIt Archive</span>
-                                </span>
+                            {% if user_zone_account_exist %}
+                                <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
+                                   data-target="#rep-resource-to-irods-dialog">
+                                    <span class="glyphicon">
+                                       <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
+                                    </span>
                                 </a>
+                            {% endif %}
+
+                            {% if user_zone_account_exist %}
+                                <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-success"></span>
+                                </div>
+                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-error"></span>
+                                </div>
+                            {% endif %}
                             </div>
-                            <div>
-                                <a target="_blank" href="https://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                            </div>
-                        {% endfor %}
-                        {% if user_zone_account_exist %}
-                            <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-success"></span>
-                            </div>
-                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <span id="rep-status-error"></span>
-                            </div>
-                        {% endif %}
-                        </div>
                         {% endblock %} {#  download_bag #}
+
+                        {# ======= Readme ======= #}
+                        {% if readme %}
+                            {% include "resource-landing-page/readme-file.html" %}
+                        {% endif %}
                     {% else %}
                         <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
                         <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
@@ -648,651 +771,54 @@
             {% endif %}
             {% endblock %} {# content_block #}
 
-            {# ======= Content tabs (code moved here because django does not render blocks inside included templates) ======= #}
-            <div class="col-sm-12">
-                <!-- === Tabs begin === -->
-                <div class="tab-elements">
-                    <div class="panel-tabs">
-                        <ul class="nav nav-tabs">
-                            {% if not is_resource_specific_tab_active %}
-                                <li class="active col-xs-2 col-md-2">
-                            {% else %}
-                               <li class="col-xs-2 col-md-2">
-                            {%  endif %}
-                                <a href="#contactTab" data-toggle="tab" title="Contact">
-                                    <span class="glyphicon glyphicon-user"> </span>
-                                    &nbspAuthorship
-                                </a>
-                            </li>
-                            {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
-                                        <span class="glyphicon glyphicon-book"></span>
-                                        &nbspRelated Resources
-                                    </a>
-                                </li>
-                            {% endif %}
-                            {% if extended_metadata_exists or metadata_form %}
-                                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource"%}
-                                        {% if  cm|resource_type|lower != "collection resource" %}
-                                            {% if is_resource_specific_tab_active %}
-                                                <li class="active col-xs-2 col-md-2">
-                                            {% else %}
-                                                <li class="col-xs-2 col-md-2">
-                                            {% endif %}
-                                                <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
-                                                    <span class="glyphicon glyphicon-folder-close"></span>
-                                                    &nbspResource Specific
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-                            {% if relevant_tools %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
-                                        <span class="glyphicon glyphicon-wrench"></span>
-                                        &nbsp; Web Apps
-                                    </a>
-                                </li>
-                            {% endif %}
-                            {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
-                                        <span class="glyphicon glyphicon-paperclip"> </span>
-                                        &nbspExtended Metadata
-                                    </a>
-                                 </li>
-                            {% endif %}
-                            {% if connections %}
-                                <li class="col-xs-2 col-md-2">
-                                    <a href="#connectionsTab" data-toggle="tab" title="Connections">
-                                        <span class="glyphicon glyphicon-fullscreen"> </span>
-                                        &nbspConnections
-                                    </a>
-                                 </li>
-                            {% endif %}
-                            {% if cm.resource_type == "CompositeResource" %}
-                                <li class="col-xs-2 col-md-2" style="min-width: 200px;">
-                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="Content Metadata">
-                                        <span class="glyphicon glyphicon-list-alt"> </span>
-                                        Content Metadata
-                                    </a>
-                                 </li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                    <div class="tabs-body">
-                        <!-- Tab panes -->
-                        <div class="tab-content">
-                            <!-- ========= CONTACT TAB ========= -->
-                            <div {% if not is_resource_specific_tab_active %}class="tab-pane active"
-                                 {% else %} class="tab-pane"{% endif %} id="contactTab">
-                                {% if not metadata_form %}
-                                    <h4>Authors </h4>
-                                    <div>
-                                        <small class="text-muted division-title-caption">The people
-                                            or organizations that created the intellectual content
-                                            of the resource.
-                                        </small>
-                                    </div>
-                                    <br>
-                                    <table class="table hs-table contact-table contact-table-view">
-                                        <thead>
-                                        <tr class="header-row">
-                                            <th>Name</th>
-                                            <th>Organization</th>
-                                            <th>Address</th>
-                                            <th>Phone</th>
-                                            <th>Author Identifiers</th>
-                                        </tr>
-                                        </thead>
+            {# ======= Resource Specific ======= #}
 
-                                        <tbody>
-                                        {% for cr in creators %}
-                                            <tr>
-                                                <td>{% if cr.description %}
-                                                    <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}
-                                                    {{ cr.name }}{% endif %}</td>
-                                                <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
-                                                <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
-                                                <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
-                                                <td>
-                                                    {% for name, link in cr.identifiers.items %}
-                                                        {{ identif.name }}
-                                                        <a href="{{ link }}"
-                                                           target="_blank">{{ name }}</a>
-                                                        {% if not forloop.last %}, {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-
-                                    {% if contributors %}
-                                        <hr>
-                                        <h4>Contributors</h4>
-                                        <div>
-                                            <small class="text-muted division-title-caption">People or
-                                                organizations that contributed technically, materially,
-                                                financially, or provided general support for the
-                                                creation of the resource's content but are not
-                                                considered authors.
-                                            </small>
-                                        </div>
-                                        <br>
-                                        <table class="table hs-table contact-table contact-table-view">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for cont in contributors %}
-                                                <tr>
-                                                    <td>{% if cont.description %}
-                                                        <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
-                                                        {{ cont.name }}{% endif %}</td>
-                                                    <td>{% if cont.organization %}
-                                                        {{ cont.organization }}{% endif %}</td>
-                                                    <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
-                                                    <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
-                                                    <td>
-                                                        {% for name, link in cont.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    {% endif %}
-
-                                {% else %}
-                                    <div class="tab-pane active" id="contactTab">
-                                        <h4>Authors</h4>
-                                        <div>
-                                            <small class="text-muted division-title-caption">The people
-                                                or organizations that created the intellectual content
-                                                of the resource.
-                                            </small>
-                                        </div>
-                                        <br>
-
-                                        <table id="authors-table" class="hs-table contact-table table">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th class="drag-indicator"></th>
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                                <th></th>
-                                            </tr>
-                                            </thead>
-                                            <tbody class="sortable">
-                                            {% for author in creator_formset.initial %}
-                                                <tr>
-                                                    <td class="drag-indicator">
-                                                        <i class="fa fa-arrows-v" aria-hidden="true"></i>
-                                                        <form class="hidden-form"
-                                                              action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                                                               enctype="multipart/form-data">
-                                                            {% csrf_token %}
-                                                            <input name="resource-mode" type="hidden" value="edit">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                                                   value="{% if author.name %}{{ author.name }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                                                   value="{% if author.description %}{{ author.description }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                                                   value="{% if author.organization %}{{ author.organization }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                                                   value="{% if author.email %}{{ author.email }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                                                   value="{% if author.address %}{{ author.address }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                                                   type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
-
-                                                            <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                                                   value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
-
-                                                            <input class="order-input"
-                                                                   name="creator-{{ author.order|add:"- 1" }}-order"
-                                                                   type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
-                                                        </form>
-                                                    </td>
-                                                    <td>
-                                                        {% if author.description %}
-                                                        <a href="{{ author.description }}">{{ author.name }}</a>{% else %}
-                                                        {{ author.name }}{% endif %}</td>
-                                                    <td>{% if  author.organization %}
-                                                        {{ author.organization }}{% endif %}</td>
-                                                    <td>{% if  author.address %}{{ author.address }}{% endif %}</td>
-                                                    <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
-                                                    <td>
-                                                        {% for name, link in author.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                                                           data-target="#edit-creator-dialog{{ author.id }}"
-                                                        ></a>
-
-                                                        {# Prevent deletion of last author #}
-                                                        {% if creator_formset.initial|length > 1 %}
-                                                            <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                                                               data-target="#delete-creator-dialog{{ author.id }}"></a>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-creator-dialog" multiple="multiple">
-                                                                <span class="glyphicon glyphicon-plus"><span
-                                                                        class="button-label"> Add Author</span></span>
-                                        </a>
-
-                                        <hr>
-
-                                        <h4>Contributors</h4>
-
-                                        <div>
-                                            <small class="text-muted division-title-caption">People or
-                                                organizations that contributed technically, materially,
-                                                financially, or provided general support for the
-                                                creation of the resource's content but are not
-                                                considered authors.
-                                            </small>
-                                        </div>
-                                        <br>
-
-                                        <table class="hs-table contact-table table">
-                                            <thead>
-                                            <tr class="header-row">
-                                                <th>Name</th>
-                                                <th>Organization</th>
-                                                <th>Address</th>
-                                                <th>Phone</th>
-                                                <th>Author Identifiers</th>
-                                                <th></th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for contributor in contributor_formset.initial %}
-                                                <tr>
-                                                    <td>{% if contributor.description %}
-                                                        <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
-                                                        {{ contributor.name }}{% endif %}</td>
-                                                    <td>{% if  contributor.organization %}
-                                                        {{ contributor.organization }}{% endif %}</td>
-                                                    <td>{% if  contributor.address %}
-                                                        {{ contributor.address }}{% endif %}</td>
-                                                    <td>{% if  contributor.phone %}
-                                                        {{ contributor.phone }}{% endif %}</td>
-                                                   <td>
-                                                        {% for name, link in contributor.identifiers.items %}
-                                                            {{ identif.name }}
-                                                            <a href="{{ link }}"
-                                                               target="_blank">{{ name }}</a>
-                                                            {% if not forloop.last %}, {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                                                           data-target="#edit-contributor-dialog{{ contributor.id }}"
-                                                        ></a>
-                                                        <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                                           data-target="#delete-contributor-dialog{{ contributor.id }}"
-                                                        ></a>
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-contributor-dialog" multiple="multiple">
-                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
-                                        </a>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <!-- ========= RELATED RESOURCES TAB ========= -->
-                            {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
-                                <div class="tab-pane" id="relatedResourcesTab">
-                                    {% if not metadata_form %}
-                                    {% if sources %}
-                                        <table class="table hs-table">
-                                            <legend>Sources</legend>
-                                            {% for source in sources %}
-                                            <tr>
-                                                <th class="dataset-label"><strong>Derived From:</strong></th>
-                                                <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </table>
-                                    {% endif %}
-                                    {% if show_relations_section %}
-                                        <table class="table hs-table" style="margin-bottom: 0;">
-                                            <legend>Relations</legend>
-                                            {% for relation in relations %}
-                                            {% if relation.type|lower != "haspart"%}
-                                            <tr>
-                                                <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
-                                                <td class="dataset-details">{{ relation.value|urlize }}</td>
-                                            </tr>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </table>
-                                    {% endif %}
+            {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
+                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                {% if cm|resource_type != "HIS Referenced Time Series" or not resource_edit_mode %}
+                    {% if cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
+                        <div class="col-xs-12 content-block">
+                            <h3>Resource Specific</h3>
+                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                 id="resourceSpecificTab">
+                                <div class="row">
+                                    {% if not resource_edit_mode %}
+                                        {% block extended_metadata %}{% endblock %}
                                     {% else %}
-                                        <div>
-                                            <table class="table hs-table" style="margin-bottom: 0;">
-                                                <tbody>
-                                                <legend>Sources</legend>
-                                                {% for source in source_formset.initial %}
-                                                    <tr>
-                                                        <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                                                        <td>
-                                                            <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                                                               data-target="#edit-source-dialog{{ source.id }}"></a>
-                                                        </td>
-                                                        <td>
-                                                            <a data-toggle="modal" data-placement="auto"
-                                                               title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                                                               data-target="#delete-source-element-dialog{{ source.id }}"></a>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-                                            <br>
-                                            <a id="add-source" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-source-dialog"><i
-                                                    class="fa fa-plus"></i> Add Source</a>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
-                                              class="glyphicon glyphicon-info-sign text-muted"></span>
-                                        </div>
-                                        <hr style="border: 0;">
-                                        <div>
-                                            <table class="table hs-table">
-                                                <tbody>
-                                                <legend>Relations</legend>
-                                                {% for relation in relation_formset.initial %}
-                                                    {% if  relation.type|lower != "haspart"%}
-                                                        <tr>
-                                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value|urlize }}</td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"></a>
-                                                            </td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto"
-                                                                   title="Remove"
-                                                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
-                                                            </td>
-                                                        </tr>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-
-                                            <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-relation-dialog">
-                                                <i class="fa fa-plus"></i> Add Relation</a>
-
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
-                                                  class="glyphicon glyphicon-info-sign text-muted"></span>
-                                            <hr style="border: 0;">
-                                        </div>
+                                        {% crispy metadata_form  %}
                                     {% endif %}
-                                    {% if belongs_to_collections %}
-                                        <legend>This resource belongs to the following collections:</legend>
-                                        <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Title</th>
-                                                    <th>Owners</th>
-                                                    <th>Sharing Status</th>
-                                                    <th>My Permission</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for res in belongs_to_collections %}
-                                                <tr id="{{ res.short_id }}">
-                                                    <td>
-                                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                            <strong>{{ res.metadata.title }}</strong>
-                                                        {% else %}
-                                                            <strong><a href="{{ res.get_absolute_url }}"
-                                                                       target="_blank">{{ res.metadata.title }}</a></strong>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% for owner in res.raccess.owners.all %}
-                                                            {% if forloop.counter0 > 0 %} · {% endif %}
-                                                            {% if owner.first_name %}
-                                                                <a href='/user/{{ owner.pk }}/'
-                                                                           target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a>
-                                                            {% else %}
-                                                                <a href='/user/{{ owner.pk }}/'
-                                                                           target="_blank">{{ owner.username }}</a>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>
-                                                        {% if res.raccess.published %}
-                                                            <strong class="label-public">&nbsp;Published</strong>
-                                                        {% elif res.raccess.public %}
-                                                            <strong class="label-public">&nbsp;Public</strong>
-                                                        {% elif res.raccess.discoverable %}
-                                                            <strong class="label-discoverable">
-                                                                &nbsp;Discoverable</strong>
-                                                        {% else %}
-                                                            <strong class="label-private">&nbsp;Private</strong>
-                                                        {% endif %}
-                                                        {% if res.raccess.published %}
-                                                            {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                                &#8210; Note that the DOI will not be available
-                                                                until
-                                                                it has been registered and activated.{% endif %}
-                                                        {% else %}
-                                                            &{% if res.raccess.shareable %}
-                                                            <strong style="color:#5cb85c">&nbsp;Shareable</strong>
-                                                        {% else %}<strong style="color:#d9534f">&nbsp;Not
-                                                                Shareable</strong>{% endif %}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                                        {% else %}
-                                                            {{ res|user_permission:request.user.pk }}
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
 
-                                        </tbody>
-                                    </table>
-                                    {% endif%}
+                                    {# add extra section for resource landing page #}
+                                    {% block extra_section %}{% endblock %}
                                 </div>
-                            {% endif %}
-                            <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-                            {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
-                                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                    {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
-                                        {% if  cm|resource_type|lower != "collection resource" %}
-                                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
-                                                 id="resourceSpecificTab">
-                                                {% if not metadata_form %}
-
-                                                    {% block extended_metadata %}
-
-                                                    {% endblock %}
-
-                                                {% else %}
-                                                    {% crispy metadata_form %}
-                                                {% endif %}
-                                                {% block extra_section %} {# add extra section for resource landing page #}
-                                                {% endblock %}
-                                            </div>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-
-                            <!-- ========= RELEVANT TOOLS TAB ========= -->
-                            {% if relevant_tools %}
-                                <div class="tab-pane" id="relevantTools">
-                                    {% if not metadata_form %}
-                                        <div class="row">
-                                            {% for tool in relevant_tools.tool_list %}
-                                                <div class="col-lg-3 col-md-4 col-sm-12">
-                                                    <div title="{{ tool.title }}" id="web-app-item">
-    						                         {% if tool.approved %}
-                                                         <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
-                                                             <img class="app-approved-icon-img" src="/static/img/approved_app.png">
-                                                         </a>
-                                                     {% endif %}
-                                                    <a href="/resource/{{ tool.res_id }}/" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open this WebApp resource">
-                                                        {% if tool.title|length > 20 %}
-                                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                        {% else %}
-                                                            <h4>{{ tool.title }}</h4>
-                                                        {% endif %}
-                                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                                    </a>
-                                                </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% else %}
-                                        ------- Relevant tools form here -------
-                                    {%  endif %}
-                                </div>
-                            {% endif %}
-
-                            <!-- ========= EXTRA METADATA TAB ========= -->
-                            {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
-                                <div class="tab-pane" id="extraMetaTab">
-                                    <legend>Extended Metadata</legend>
-                                    <table id="extraMetaTable" class="hs-table table" width="100%">
-                                        <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Value</th>
-                                            {% if metadata_form %}
-                                                <th></th>
-                                            {% endif %}
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for extra_meta_name, extra_meta_value in page.get_content_model.extra_metadata.items %}
-                                                <tr id="{{ forloop.counter0 }}">
-                                                    <td>
-                                                        {{ extra_meta_name }}
-                                                    </td>
-                                                    <td>
-                                                        {{ extra_meta_value|urlize }}
-                                                    </td>
-                                                    {% if metadata_form %}
-                                                        <td>
-                                                            <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
-                                                                  data-toggle="tooltip" data-placement="top"
-                                                                  title="Edit">
-                                                            </span>
-                                                            <span data-loop-counter="{{ forloop.counter0 }}"
-                                                                  class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
-                                                                  data-toggle="tooltip" data-placement="top"
-                                                                  title="Remove">
-                                                            </span>
-                                                        </td>
-                                                    {% endif %}
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-
-                                    <br>
-
-                                    {% if metadata_form %}
-                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                            <i class="fa fa-plus"></i> Add New Entry
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-
-                            {# ===========   File Type Metadata Tab ================== #}
-                            {% if cm.resource_type == "CompositeResource" %}
-                                <div class="tab-pane" id="fileTypeMetaDataTab">
-                                    <div class="alert alert-warning alert-dismissible" role="alert">
-                                        <h4>Select content in the file browser to see metadata specific to that content. Metadata will only display here when the the content is selected above. Content specific metadata does not display on the Discover page.</h4>
-                                    </div>
-                                </div>
-                            {% endif %}
                             </div>
                         </div>
-                     <!-- ==== Tabs end ==== -->
-                </div>
-            </div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+
+            {# ======= Additional Metadata ======= #}
+            {% include "resource-landing-page/additional-metadata.html" %}
+
+            {# ======= References ======= #}
+            {% include "resource-landing-page/references.html" %}
 
             {# ======= Credits ======= #}
             {% include "resource-landing-page/credits.html" %}
 
-            {# ======= Change quota holder ======= #}
-            {% include "resource-landing-page/quota.html" %}
-
-            {# ======= Ratings ======= #}
-            {% include "resource-landing-page/ratings.html" %}
+            {# ======= Citation ======= #}
+            {% if resource_edit_mode %}
+                {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+            {% else %}
+                {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+            {% endif %}
 
             {# ======= Comments ======= #}
             {% include "resource-landing-page/comments.html" %}
 
             {%  block modal %}
                 {% include "resource-landing-page/modals.html" %}
+                {% include "includes/author-preview.html" %}
                 {% include "resource-landing-page/coordinates_picker.html" %}
             {%  endblock %}
             </div>
@@ -1308,7 +834,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
-    <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 

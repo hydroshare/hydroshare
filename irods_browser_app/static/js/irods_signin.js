@@ -32,18 +32,32 @@ $('#btn-signin-irods').on('click',function() {
 });
 
 $('#btn-signout-irods').on('click', function() {
-    $("#sign-in-name").text('');
-    $("#sign-in-info").removeClass();
-    $("#sign-in-info").addClass("hidden");
-    sessionStorage.IRODS_signininfo = '';
-    $("#irods-sel-file").text('');
-    $("#btn-select-irods-file").toggleClass("hidden", true);
-    $("#log-into-irods").show();
-    $("#btn-signout-irods").hide();
-    $('#irods-copy-move').hide();
+    if ($("#irods-group").length) {
+        // Logic for resource landing page
+        $("#irods-group > .btn > span:first-child").text("iRODS");
+        $("#btn-signin-irods").toggleClass("hidden", false);
+        $("#btn-select-irods-file").toggleClass("hidden", true);
+        $("#btn-signout-irods").toggleClass("hidden", true);
+        $("#irods-group .divider").toggleClass("hidden", true);
+    }
+    else {
+        // Logic for Create Resource page
+        $("#sign-in-name").text('');
+        $("#sign-in-info").removeClass();
+        $("#sign-in-info").addClass("hidden");
+        sessionStorage.IRODS_signininfo = '';
+        $("#irods-sel-file").text('');
+        $("#btn-select-irods-file").toggleClass("hidden", true);
+        $("#log-into-irods").show();
+        $("#btn-signout-irods").toggleClass("hidden", true);
+        $('#irods-copy-move').hide();
+    }
 });
 
 function irods_login() {
+    $("#irodsSignin .btn-primary").text("Signing in...");
+    $("#irodsSignin .btn-primary").toggleClass("disabled", true);
+    $("#irodsLogin .modal-body .alert").remove();
     $.ajax({
         url: "/irods/login/",
         type: "POST",
@@ -56,16 +70,28 @@ function irods_login() {
         },
         success: function(json) {
             if(json.irods_loggedin) {
-                var signInStr = "Signed in as " + json.user;
-                $("#sign-in-info").removeClass();
-                $("#sign-in-info").addClass("alert alert-info");
-                $("#sign-in-name").text(signInStr);
-                $("#irods_content_label").text(json.user);
-                $('#root_store').val(json.datastore);
-                $("#log-into-irods").hide();
-                $("#btn-signout-irods").show();
-                $("#btn-select-irods-file").toggleClass("hidden", false);
-                $("#irods-sel-file").text("No file selected.");
+                if ($("#irods-group").length) {
+                    // Logic for resource landing page
+                    $("#irods-group > .btn > span:first-child").text("iRODS: " + json.user);
+                    $("#btn-signin-irods").toggleClass("hidden", true);
+                    $("#btn-select-irods-file").toggleClass("hidden", false);
+                    $("#btn-signout-irods").toggleClass("hidden", false);
+                    $("#irods-group .divider").toggleClass("hidden", false);
+                }
+                else {
+                    // Logic for Create Resource page
+                    var signInStr = "Signed in as " + json.user;
+                    $("#sign-in-info").removeClass();
+                    $("#sign-in-info").addClass("alert alert-info");
+                    $("#sign-in-name").text(signInStr);
+                    $("#irods_content_label").text(json.user);
+                    $('#root_store').val(json.datastore);
+                    $("#log-into-irods").hide();
+                    $("#btn-signout-irods").toggleClass("hidden", false);
+                    $("#btn-select-irods-file").toggleClass("hidden", false);
+                    $("#irods-sel-file").text("No file selected.");
+                }
+
                 sessionStorage.IRODS_signininfo = signInStr;
                 sessionStorage.IRODS_datastore = json.datastore;
                 sessionStorage.IRODS_username = json.user;
@@ -75,14 +101,27 @@ function irods_login() {
                 sessionStorage.IRODS_zone = json.zone;
             }
             else {
-                $("#sign-in-name").text('iRODS login failed');
-                $("#sign-in-info").removeClass();
-                $("#sign-in-info").addClass("alert alert-danger");
-                sessionStorage.IRODS_signininfo = '';
-                $("#btn-select-irods-file").toggleClass("hidden", true);
-                $("#irods-sel-file").text('');
+                if ($("#irods-group").length) {
+                    // Logic for resource landing page
+                    $("#irods-group > .btn > span:first-child").text("iRODS");
+                    $("#btn-signin-irods").toggleClass("hidden", false);
+                    $("#btn-select-irods-file").toggleClass("hidden", true);
+                    $("#btn-signout-irods").toggleClass("hidden", true);
+                    $("#irods-group .divider").toggleClass("hidden", true);
+                }
+                else {
+                    // Logic for Create Resource page
+                    $("#sign-in-name").text('iRODS login failed');
+                    $("#sign-in-info").removeClass();
+                    $("#sign-in-info").addClass("alert alert-danger");
+                    sessionStorage.IRODS_signininfo = '';
+                    $("#btn-select-irods-file").toggleClass("hidden", true);
+                    $("#irods-sel-file").text('');
+                }
             }
             $('#irodsSignin').modal('hide');
+            $("#irodsSignin .btn-primary").text("Sign in");
+            $("#irodsSignin .btn-primary").toggleClass("disabled", false);
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
@@ -93,12 +132,22 @@ function irods_login() {
             sessionStorage.IRODS_port = '1247';
             sessionStorage.IRODS_host = '';
             sessionStorage.IRODS_zone = '';
-            $("#sign-in-name").text('iRODS login failed');
-            $("#sign-in-info").removeClass();
-            $("#sign-in-info").addClass("alert alert-danger");
-            $("#btn-select-irods-file").toggleClass("hidden", true);
-            $("#irods-sel-file").text('');
-            $('#irodsSignin').modal('hide');
+
+            if ($("#irods-group").length) {
+                $("#irodsLogin .modal-body").append("<div class='alert alert-danger'>iRODS login failed</div>");
+            }
+            else {
+                $("#sign-in-name").text('iRODS login failed');
+                $("#sign-in-info").removeClass();
+                $("#sign-in-info").addClass("alert alert-danger");
+                $("#btn-select-irods-file").toggleClass("hidden", true);
+                $("#irods-sel-file").text('');
+                $('#irodsSignin').modal('hide');
+                $("#irodsSignin .btn-primary").text("Sign in");
+                $("#irodsSignin .btn-primary").toggleClass("disabled", false);
+            }
+            $("#irodsSignin .btn-primary").text("Sign in");
+            $("#irodsSignin .btn-primary").toggleClass("disabled", false);
         }
     });
 }

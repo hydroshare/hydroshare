@@ -125,7 +125,7 @@ def landing_page(request, page):
             element_id=content_model.metadata.general_elements.id
             if content_model.metadata.general_elements else None)
 
-        ext_md_layout = Layout(HTML("<div class='row'><div class='col-xs-12 col-sm-6'>"
+        ext_md_layout = Layout(HTML("<div class='col-xs-12 col-sm-6'>"
                                     "<div class='form-group' id='modeloutput'> "
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_output_form %} '
@@ -175,7 +175,7 @@ def landing_page(request, page):
                                HTML('<div class="form-group" id="modelcalibration"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_calibration_form %} '
-                                    '</div></div></div>')
+                                    '</div></div>')
                                )
 
         # get the context from hs_core
