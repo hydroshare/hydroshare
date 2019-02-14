@@ -2,12 +2,46 @@
 * Created by Mauriel on 3/9/2017.
 */
 
+var CHECK_PROFILE_IMAGE_SIZE = true;
+var PROFILE_IMAGE_SIZE_BYTE = 64000;
+var KILO_BYTE="KB";
+var PROFILE_IMAGE_SIZE_K = PROFILE_IMAGE_SIZE_BYTE/1000 + " " + KILO_BYTE;
+
+// avoid tying error, define it as variable
+var errorElementID = "errorSizeLoadFile";
+
+function clearSizeErrorMsg() {
+    $("#" + errorElementID).remove();
+}
+
+function displaySizeErrorMsg() {
+     let errorMsg = "Error: Photo size can not exceed " + PROFILE_IMAGE_SIZE_K;
+     let elementOpen = '<div style="display: block;" id="' + errorElementID + '"> <p ' +
+                       'class="label label-danger profile-photo-error">';
+     let elementClose = '</p></div>';
+     $(elementOpen + errorMsg + elementClose).insertAfter($("#photo-control"));;
+
+}
+
 // Preview profile picture
 function readURL(input) {
     if (input.files && input.files[0]) {
-        var reader = new FileReader();
+        let reader = new FileReader();
+        let file = input.files[0];
+
+        clearSizeErrorMsg();
+
         reader.onload = function (e) {
-            var profilePicContainer = $("#profile-pic-container");
+            if (
+                file.size > PROFILE_IMAGE_SIZE_BYTE &&
+                CHECK_PROFILE_IMAGE_SIZE === true
+            ) {
+                reader.abort();
+                displaySizeErrorMsg();
+                return;
+            }
+
+            let profilePicContainer = $("#profile-pic-container");
             profilePicContainer.empty();
             profilePicContainer.append(
                 '<div style="background-image: url(\'' + e.target.result +  '\')"' +

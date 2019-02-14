@@ -818,6 +818,13 @@ li.account p{
     display: block !important;
 }
 
+.profile-photo-error {
+    text-align: right;
+    margin-top: 20px;
+    margin-left: 20px;
+    padding: 10px 25px 10px 25px;
+}
+
 /* ===== Login box ===== */
 
 .form-box {
