@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
@@ -228,19 +228,19 @@ class ResourceAccess(models.Model):
         specified privilege via community privilege over the resource will be included in the list
         :return:
         """
-        incl = None
+        incl = None  # what to include
+        excl = None  # what to explicitly exclude
+
         if this_privilege == PrivilegeCodes.OWNER:
-            return self.owners  # groups cannot own
+            return self.owners  # groups and communities cannot own
 
         elif this_privilege == PrivilegeCodes.VIEW:
 
             if include_user_granted_access:
-                i = Q(u2urp__resource=self.resource,
-                      u2urp__privilege=PrivilegeCodes.VIEW) | \
-                    Q(u2urp__resource=self.resource,
-                      u2urp__privilege=PrivilegeCodes.CHANGE,
-                      u2urp__resource__immutable=True)
-                incl = i
+                incl = Q(u2urp__resource=self.resource,
+                         u2urp__privilege=PrivilegeCodes.VIEW)
+                excl = Q(u2urp__resource=self.resource,
+                         u2urp__privilege__lt=PrivilegeCodes.VIEW)
 
             if include_group_granted_access:
                 i = Q(u2ugp__group__g2grp__resource=self.resource,
@@ -249,11 +249,19 @@ class ResourceAccess(models.Model):
                     incl = incl | i
                 else:
                     incl = i
+                # exclude higher privilege
+                e = Q(u2ugp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2grp__privilege__lt=PrivilegeCodes.VIEW)
+                if excl is not None:
+                    excl = excl | e
+                else:
+                    excl = e
 
             if include_community_granted_access:
                 # view privilege results if either group or community privilege is view,
                 # but if community privilege is VIEW, then allow_view must be True
 
+                # include exact privilege
                 i = Q(u2ugp__group__gaccess__active=True,  # community is VIEW, allow_view=True
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
                       u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
@@ -271,17 +279,40 @@ class ResourceAccess(models.Model):
                 else:
                     incl = i
 
+                # exclude higher privilege
+                e = Q(u2ugp__group__gaccess__active=True,  # community is CHANGE
+                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                      u2ugp__group__g2gcp__privilege__lt=PrivilegeCodes.VIEW,
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege__lt=
+                            PrivilegeCodes.VIEW)
+                if excl is not None:
+                    excl = excl | e
+                else:
+                    excl = e
+
             if incl is not None:
-                return User.objects.filter(incl)
+                if excl is not None:
+                    # A subquery speeds up the execution of __in by eliminating
+                    # a postgresql invocation, but requires the values operator.
+                    # See Subquery documentation for why this is necessary.
+                    excluded = User.objects.filter(excl).values('pk')
+                    return User.objects.filter(incl)\
+                                       .exclude(id__in=Subquery(excluded))\
+                                       .distinct()
+                else:
+                    return User.objects.filter(incl)
+
             else:
                 return User.objects.none()
 
         elif this_privilege == PrivilegeCodes.CHANGE:
 
             if include_user_granted_access:
-                i = Q(u2urp__resource=self.resource,
-                      u2urp__privilege=PrivilegeCodes.CHANGE)
-                incl = i
+                incl = Q(u2urp__resource=self.resource,
+                         u2urp__privilege=PrivilegeCodes.CHANGE)
+                excl = Q(u2urp__resource=self.resource,
+                         u2urp__privilege=PrivilegeCodes.OWNER)
 
             if include_group_granted_access:
                 i = Q(u2ugp__group__gaccess__active=True,
@@ -291,6 +322,7 @@ class ResourceAccess(models.Model):
                     incl = incl | i
                 else:
                     incl = i
+                # There is no higher privilege than CHANGE, so there is no need to exclude
 
             if include_community_granted_access:
                 i = Q(u2ugp__group__gaccess__active=True,  # both group and community are CHANGE
@@ -302,13 +334,24 @@ class ResourceAccess(models.Model):
                     incl = incl | i
                 else:
                     incl = i
+                # There is no higher privilege than CHANGE, so there is no need to exclude
 
-            if incl is None:
-                return User.objects.none()
+            if incl is not None:
+                if excl is not None:
+                    # A subquery speeds up the execution of __in by eliminating
+                    # a postgresql invocation, but requires the values operator.
+                    # See Subquery documentation for why this is necessary.
+                    excluded = User.objects.filter(excl).values('pk')
+                    return User.objects\
+                            .filter(incl)\
+                            .exclude(id__in=Subquery(excluded))\
+                            .distinct()
+                else:
+                    return User.objects.filter(incl)
             else:
-                return User.objects.filter(incl).distinct()
+                return User.objects.none()
 
-        else:
+        else:  # invalid privilege given
             return User.objects.none()
 
     def __get_raw_user_privilege(self, this_user):
