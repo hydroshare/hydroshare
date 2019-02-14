@@ -8,9 +8,8 @@ from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from pprint import pprint
-# from hs_access_control.models.utilities import access_provenance, access_permissions, \
-#         coarse_permissions
+# from pprint import pprint
+# from hs_access_control.models.utilities import access_provenance
 
 
 class TestCommunities(MockIRODSTestCaseMixin, TestCase):
@@ -515,15 +514,6 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.dog.uaccess.share_group_with_community(self.dogs, self.pets, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_group_with_community(self.bats, self.pets, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_group_with_community(self.cats, self.pets, PrivilegeCodes.VIEW)
-        #### pprint(coarse_permissions(self.dog2, self.holes))
-        #### pprint(coarse_permissions(self.dog2, self.posts))
-        #### pprint(coarse_permissions(self.dog2, self.perches))
-        #### pprint(coarse_permissions(self.cat2, self.holes))
-        #### pprint(coarse_permissions(self.cat2, self.posts))
-        #### pprint(coarse_permissions(self.cat2, self.perches))
-        #### pprint(coarse_permissions(self.bat2, self.holes))
-        #### pprint(coarse_permissions(self.bat2, self.posts))
-        #### pprint(coarse_permissions(self.bat2, self.perches))
         #### print(access_provenance(self.dog2, self.holes))
         #### print(access_provenance(self.dog2, self.posts))
         #### print(access_provenance(self.dog2, self.perches))
@@ -633,39 +623,31 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
 
     def test_iteration(self):
         " iterate over resources in a community "
+
+        # This tests the mechanism by which we will display a community view
         self.dog.uaccess.share_group_with_community(self.dogs, self.pets, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_group_with_community(self.bats, self.pets, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_group_with_community(self.cats, self.pets, PrivilegeCodes.VIEW)
+
         comms = self.dog.uaccess.communities
         self.assertTrue(is_equal_to_as_set(comms, [self.pets]))
         comm = comms[0]
+
         groupc = comm.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)
         self.assertTrue(is_equal_to_as_set(groupc, []))
+
         groupv = comm.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
         self.assertTrue(is_equal_to_as_set(groupv, [self.cats, self.bats, self.dogs]))
 
         for group in groupv:
             resources = comm.get_resources_with_explicit_access(self.dog, group,
                                                                 PrivilegeCodes.CHANGE)
-            pprint("CHANGE")
-            pprint(group)
-            pprint(resources)
             for r in resources:
                 self.assertTrue(self.dog.uaccess.can_change_resource(r))
+                self.assertTrue(self.dog.uaccess.can_view_resource(r))
 
             resources = comm.get_resources_with_explicit_access(self.dog, group,
                                                                 PrivilegeCodes.VIEW)
-            pprint("VIEW")
-            pprint(group)
-            pprint(resources)
             for r in resources:
+                self.assertFalse(self.dog.uaccess.can_change_resource(r))
                 self.assertTrue(self.dog.uaccess.can_view_resource(r))
-
-        # The quandary here is that the privileges do not arise only from the community,
-        # but also from other sources. Thus it is NOT guaranteed that searching for something
-        # one can view would actually lead to something that one can't change BY OTHER MEANS,
-        # like, e.g., ownership. So, should we list group resources owned by the user, as
-        # well as accessible via the community?
-
-        # E.g., how do I handle the situation in which a resource is shared with the community
-        # as VIEW, but I actually OWN it? What do I show?

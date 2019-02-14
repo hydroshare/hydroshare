@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Subquery
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege, \
@@ -169,7 +169,7 @@ class GroupAccess(models.Model):
 
     @property
     def viewers(self):
-        """ a viewer is not necessarily a member """
+        """ a viewer is not necessarily a member, due to community influence """
         return User.objects.filter(
                 Q(is_active=True) &
                 (Q(u2ugp__group__gaccess__active=True,
@@ -239,12 +239,8 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         This includes directly accessible objects as well as objects accessible
-        by nature of the fact that the current group:
-
-        * is a parent of a community that can access the object
-        * is a community of a parent that can access the object
-        * is a community of a parent of a community that can access the object.
-        * being accessable to a community of the parent
+        by nature of the fact that the current group is a member of a community 
+        containing another group that can access the object.
 
         """
         return BaseResource.objects.filter(self.__view_resources_of_group |
@@ -293,38 +289,27 @@ class GroupAccess(models.Model):
         # b) There is no lower privilege in either group privileges for the object.
         # c) Thus X is the effective privilege of the object.
         if this_privilege == PrivilegeCodes.OWNER:
-            return BaseResource.objects.filter(r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects
-                                                .filter(r2grp__group=self.group,
-                                                        r2grp__privilege__lt=this_privilege))
+            return BaseResource.objects.none()  # groups cannot own resources 
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
             return BaseResource.objects.filter(raccess__immutable=False,
                                                r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects
-                                                .filter(r2grp__group=self.group,
-                                                        r2grp__privilege__lt=this_privilege))
+                                               r2grp__group=self.group)
+            # there are no excluded resources; maximum privilege is CHANGE
 
-        else:  # this_privilege == PrivilegeCodes.ViEW
+        else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
-            view = BaseResource.objects.filter(r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                .exclude(pk__in=BaseResource.objects.filter(r2grp__group=self.group,
-                                                            r2grp__privilege__lt=this_privilege))
-
-            immutable = BaseResource.objects.filter(raccess__immutable=True,
-                                                    r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                    r2grp__group=self.group)\
-                                            .exclude(pk__in=BaseResource.objects.filter(
-                                                raccess__immutable=True,
-                                                r2grp__group=self.group,
-                                                r2grp__privilege__lt=PrivilegeCodes.CHANGE))
-
-            return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
-
+            excluded = BaseResource.objects.filter(raccess__immutable=False,
+                                                   r2grp__privilege=PrivilegeCodes.CHANGE, 
+                                                   r2grp__group=self.group).values('pk')
+            return BaseResource.objects.filter(Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                                                 r2grp__group=self.group) |
+                                               Q(raccess__immutable=True,
+                                                 r2grp__privilege=PrivilegeCodes.CHANGE,
+                                                 r2grp__group=self.group))\
+                                       .exclude(pk__in=Subquery(excluded)).distinct()
+                        
     def get_users_with_explicit_access(self, this_privilege):
         """
         Get a list of users for which the group has the specified privilege

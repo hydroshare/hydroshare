@@ -167,13 +167,13 @@ def assertResourceEditorsAre(self, this_resource, these_users):
             u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
         self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(
-            this_resource not in u.uaccess .get_resources_with_explicit_access(
+            this_resource not in u.uaccess.get_resources_with_explicit_access(
                 PrivilegeCodes.OWNER))
         self.assertTrue(
-            this_resource in u.uaccess .get_resources_with_explicit_access(
+            this_resource in u.uaccess.get_resources_with_explicit_access(
                 PrivilegeCodes.CHANGE))
         self.assertTrue(
-            this_resource not in u.uaccess .get_resources_with_explicit_access(
+            this_resource not in u.uaccess.get_resources_with_explicit_access(
                 PrivilegeCodes.VIEW))
         self.assertTrue(u in this_resource.raccess.view_users)
         self.assertTrue(u not in this_resource.raccess.owners)
