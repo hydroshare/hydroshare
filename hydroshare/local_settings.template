@@ -1,10 +1,10 @@
-# Copy the contents of this file to a new file local_settings.py
-# Values here will serve as overrides when developing locally
-# local_settings.py will not be version controlled so storing keys is acceptable
+"""
+Copy the contents of this file to a new file local_settings.py
+Values here will serve as overrides when developing locally
+local_settings.py will not be version controlled so storing keys is acceptable
+"""
 
-import redis
 import os
-import yaml
 from kombu import Queue, Exchange
 
 DEBUG = True
@@ -25,35 +25,19 @@ COMMENTS_USE_RATINGS = True
 RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
-REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
-REDIS_PORT = 6379
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
 POSTGIS_PORT = 5432
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
 
-REDIS_CONNECTION = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=4)
-WMS_CACHE_DB = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=5)
-PERMISSIONS_DB = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=6)
-
 IPYTHON_SETTINGS = []
 IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
 IPYTHON_HOST = '127.0.0.1'
 
-# celery settings
-# customizations: we need a special queue for broadcast signals to all
-# docker daemons.  we also need a special queue for direct messages to all
-# docker daemons.
+# Celery settings
+# customizations: we need a special queue for broadcast signals to all docker daemons.
+# we also need a special queue for direct messages to all docker daemons.
 BROKER_URL = 'amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST,
                                                                            RABBITMQ_PORT=RABBITMQ_PORT)
 CELERY_ACCEPT_CONTENT = ['json']
@@ -70,10 +54,11 @@ CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
 
+# Docker settings
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
-# CartoCSS
+# CartoCSS settings
 CARTO_HOME = '/hs_tmp/node_modules/carto'
 
 USE_SOUTH = False
