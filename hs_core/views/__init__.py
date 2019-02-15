@@ -1166,7 +1166,7 @@ def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     page = request.GET.get('page')
     # TODO investigate iRODS performance issue; listing caps out at 10 resources per page, otherwise very slow loading
-    paginator = Paginator(resource_collection, 1000)
+    paginator = Paginator(resource_collection, 10)
     try:
         collection = paginator.page(page)
     except PageNotAnInteger:
