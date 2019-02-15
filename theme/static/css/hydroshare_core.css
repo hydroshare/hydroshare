@@ -1328,7 +1328,7 @@ a[data-toggle='tab']{
    margin-bottom: 10px;
 }
 
-#id_user-wrapper, #id_group-wrapper {
+#id_user-wrapper, #id_group-wrapper, #user-wrapper {
 	width: 100%;
 	border: 1px solid #CCC;
 	min-height: 34px;
@@ -1342,7 +1342,7 @@ a[data-toggle='tab']{
     padding: 15px 0;
 }
 
-#id_user-deck > span.hilight, #id_group-deck > span.hilight {
+#id_user-deck > span.hilight, #user-deck > span.hilight, #id_group-deck > span.hilight {
 	background: #EEE;
 	padding: 6px 12px;
 	padding-right: 16px !important;

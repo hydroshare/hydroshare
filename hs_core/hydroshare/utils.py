@@ -794,7 +794,13 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-    user_full_name = user.get_full_name()
+
+    if user_profile.middle_name:
+        user_full_name = '{} {} {}'.format(user.first_name, user_profile.middle_name,
+                                           user.last_name)
+    else:
+        user_full_name = user.get_full_name()
+
     if user_full_name:
         party_name = user_full_name
     else:
