@@ -719,8 +719,3 @@ SWAGGER_SETTINGS = {
 
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
-# HydroShare web services settings
-HSWS_URL = "http://10.37.155.109:8000/apps/hydroshare-web-services-manager/api"
-HSWS_API_TOKEN = "ee3844fc9814d2d23c9843e9a0717e58d0173a6f"
-HSWS_TIMEOUT = 20
