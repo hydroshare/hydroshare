@@ -1,7 +1,9 @@
 ## Custom
 local_settings.py
-*.pyc
-*.pyo
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
 *.db
 .bash_history
 .cache
