@@ -481,8 +481,8 @@ function share_resource_ajax_submit(form_id) {
     var shareType;
 
     if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
-        if ($("#id_user-deck > .hilight").length > 0) {
-            share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+        if ($("#user-deck > .hilight").length > 0) {
+            share_with = $("#user-deck > .hilight")[0].getAttribute("data-value");
             shareType = "user";
         }
         else {
@@ -1111,7 +1111,7 @@ function update_sqlite_file_ajax_submit() {
 
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
-    var entry = $(obj).closest("div[data-hs-user-type]").find("#id_user-deck > .hilight");
+    var entry = $(obj).closest("div[data-hs-user-type]").find("#user-deck > .hilight");
     if (entry.length < 1) {
         entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
         is_group = true;
