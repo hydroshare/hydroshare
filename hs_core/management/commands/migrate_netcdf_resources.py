@@ -8,7 +8,7 @@ from hs_core.models import ResourceFile, CoreMetaData, Coverage
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
 from hs_app_netCDF.models import NetcdfResource
 from hs_file_types.models import NetCDFLogicalFile
-from .utils import migrate_core_meta_elements
+from ..utils import migrate_core_meta_elements
 
 
 class Command(BaseCommand):
