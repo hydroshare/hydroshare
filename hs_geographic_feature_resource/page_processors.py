@@ -116,10 +116,8 @@ def landing_page(request, page):
                     for field_info in content_model.metadata.fieldinformations.all():
                         field_info.get_html(pretty=False)
 
-        ext_md_layout = Layout(HTML("<div class='row'>"),
-                               geom_information_layout,
+        ext_md_layout = Layout(geom_information_layout,
                                ori_coverage_layout,
-                               HTML("</div>"),
                                HTML(root_div.render()))
 
         context = page_processors.get_page_context(page,

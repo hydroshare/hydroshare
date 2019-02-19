@@ -1930,7 +1930,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
+            calls.push(unzip_irods_file_ajax_submit(resID, currentPath ? currentPath + "/" + fileName : fileName));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
