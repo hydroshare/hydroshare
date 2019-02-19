@@ -543,6 +543,16 @@ def update_quota_usage_task(username):
 
 @shared_task
 def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
+    """Update web services hosted by GeoServer and HydroServer.
+
+    This function sends a resource id to the HydroShare web services manager
+    application, which will check the current status of the resource and register
+    or unregister services hosted by GeoServer and HydroServer.
+    The HydroShare web services manager will return a list of endpoint URLs
+    for both the resource and individual aggregations. If publish_urls is set to
+    True, these endpoints will be added to the extra metadata fields of the
+    resource and aggregations.
+    """
     session = requests.Session()
     session.headers.update(
         {"Authorization": " ".join(("Token", str(api_token)))}
