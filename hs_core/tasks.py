@@ -562,18 +562,20 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 
     try:
         response = session.post(rest_url, timeout=timeout)
-        resource = utils.get_resource_by_shortkey(res_id)
-        response_content = json.loads(response.content)
 
-        if publish_urls:
+        if publish_urls == True and response.status_code == 201:
             try:
+
+                resource = utils.get_resource_by_shortkey(res_id)
+                response_content = json.loads(response.content)
+                
                 for key, value in response_content["resource"].iteritems():
                     resource.extra_metadata[key] = value
                     resource.save()
 
                 for url in response_content["content"]:
                     lf = resource.logical_files[[i.aggregation_name for i in
-                                                 resource.logical_files].index(url["layer_name"].encode("utf-8"))]
+                         resource.logical_files].index(url["layer_name"].encode("utf-8"))]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()
 
