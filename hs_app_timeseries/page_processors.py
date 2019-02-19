@@ -40,17 +40,12 @@ def landing_page(request, page):
             selected_series_id = series_ids.keys()[0]
         if 'series_id' in request.session:
             if selected_series_id != request.session['series_id']:
-                is_resource_specific_tab_active = True
                 request.session['series_id'] = selected_series_id
-            else:
-                is_resource_specific_tab_active = False
         else:
             request.session['series_id'] = selected_series_id
-            is_resource_specific_tab_active = False
     else:
         selected_series_id = series_ids.keys()[0] if series_ids.keys() else None
         request.session['series_id'] = selected_series_id
-        is_resource_specific_tab_active = False
 
     ts_result_value_count = None
     if content_model.metadata.series_names and selected_series_id is not None:
@@ -68,8 +63,6 @@ def landing_page(request, page):
         context = _get_resource_edit_context(page, request, content_model, selected_series_id,
                                              series_ids, ts_result_value_count,
                                              extended_metadata_exists)
-
-    context['is_resource_specific_tab_active'] = is_resource_specific_tab_active
 
     # TODO: can we refactor to make it impossible to skip adding the generic context
     hs_core_context = add_generic_context(request, page)
