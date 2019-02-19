@@ -1,24 +1,54 @@
+{% load hydroshare_tags %}
 {% if is_owner_user %}
-    <div class="col-sm-12 content-block">
-        <h3>Storage</h3>
-        <h5>The quota holder of this resource is:
-            {% if quota_holder|default_if_none:'' %}
-                {% if quota_holder.first_name %}
-                    <a href='/user/{{ quota_holder.pk }}/'
-                               target="_blank">{{ quota_holder.first_name }} {{ quota_holder.last_name }}</a>
-                {% else %}
-                    <a href='/user/{{ quota_holder.pk }}/'
-                               target="_blank">{{ quota_holder.username }}</a>
-                {% endif %}
-            {% endif %}
-        </h5>
-    </div>
-    {% if metadata_form and owners|length > 1 %}
-        <div class="col-sm-12 content-block">
-            <a id="btn-change-quota-holder" type="button" class="btn btn-info row-selector" data-toggle="modal"
-               data-target="#change_quota_holder">
-                <i class="fa fa-pie-chart" aria-hidden="true"></i> Change Quota Holder</span></span>
-            </a>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Storage</h3>
         </div>
-    {% endif %}
+        <div class="panel-body">
+            <span>The quota holder of this resource is:</span>
+            <span>
+                {% include "includes/profile-link.html" with user=quota_holder %}
+                {% include "includes/profile-card.html" %}
+            </span>
+
+            {% if owners|length > 1 %}
+                <button id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
+                        style="margin-left: 5px;"
+                    data-toggle="collapse" data-target="#form-quota-holder">
+                    Change
+                </button>
+
+                <form action="/hsapi/_internal/{{ cm.short_id }}/change-quota-holder/" method="POST"
+                      enctype="multipart/form-data" id="form-quota-holder" class="collapse">
+                    {% csrf_token %}
+                    <hr>
+                    <div class="form-group">
+                        <fieldset>
+                            <div id="div_id_type" class="control-group">
+                                <label for="id_type" class="control-label requiredField">
+                                    Change quota holder to another owner</label>
+                                <div class="controls">
+                                    <select class="form-control input-sm select" id="new_holder_username"
+                                            name="new_holder_username">
+                                        {% for owner in owners %}
+                                            {% if owner.username != quota_holder.username %}
+                                                <option value={{ owner.username }}>{{ owner|display_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <button type="button" class="btn btn-default" data-toggle="collapse"
+                            data-target="#form-quota-holder">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-change-quota-holder btn-disable-after-valid"
+                    style="margin-left: 5px;">Save Changes</button>
+                </form>
+            {% endif %}
+            <hr>
+            <p>The size of this resource is <strong>{{ cm.size|filesizeformat }}</strong>.</p>
+        </div>
+    </div>
 {% endif %}

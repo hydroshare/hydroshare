@@ -170,28 +170,27 @@ class OriginalCoverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls='content-block')
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
         with root_div:
             legend('Spatial Reference')
-            with table(cls='custom-table'):
-                with tbody():
-                    with tr():
-                        get_th('Coordinate Reference System')
-                        td(self.value.get('projection', ''))
-                    with tr():
-                        get_th('Datum')
-                        td(self.datum)
-                    with tr():
-                        get_th('Coordinate String Type')
-                        td(self.projection_string_type)
-                    with tr():
-                        get_th('Coordinate String Text')
-                        td(self.projection_string_text)
-            h4('Extent')
+            if self.value.get('projection', ''):
+                div('Coordinate Reference System', cls='text-muted')
+                div(self.value.get('projection', ''))
+            if self.datum:
+                div('Datum', cls='text-muted space-top')
+                div(self.datum)
+            if self.projection_string_type:
+                div('Coordinate String Type', cls='text-muted space-top')
+                div(self.projection_string_type)
+            if self.projection_string_text:
+                div('Coordinate String Text', cls='text-muted space-top')
+                div(self.projection_string_text)
+
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
@@ -270,7 +269,7 @@ class Variable(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -572,14 +571,12 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         form_action = "/hsapi/_internal/netcdf_update/{}/".\
             format(self.resource.short_id)
         style = "display:none;"
-        if self.is_dirty:
-            style = "margin-bottom:10px"
-        root_div = div(id="netcdf-file-update", cls="row", style=style)
+        root_div = div(id="netcdf-file-update", cls="space-bottom", style=style)
 
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    strong("NetCDF file needs to be synced with metadata changes.")
+                    div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
 
                     input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
                     with form(action=form_action, method="post", id="update-netcdf-file",):

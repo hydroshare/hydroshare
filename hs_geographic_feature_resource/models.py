@@ -32,25 +32,20 @@ class OriginalCoverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls="content-block")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
         with root_div:
             legend('Spatial Reference')
-            with table(cls='custom-table'):
-                with tbody():
-                    with tr():
-                        get_th('Coordinate Reference System')
-                        td(self.projection_name)
-                    with tr():
-                        get_th('Datum')
-                        td(self.datum)
-                    with tr():
-                        get_th('Coordinate String Text')
-                        td(self.projection_string)
-            h4('Extent')
+            div('Coordinate Reference System', cls='text-muted')
+            div(self.projection_name)
+            div('Datum', cls='text-muted space-top')
+            div(self.datum)
+            div('Coordinate String Text', cls='text-muted space-top')
+            div(self.projection_string)
+            h4('Extent', cls='space-top')
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
@@ -173,7 +168,7 @@ class GeometryInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 col-sm-12", style="margin-bottom:40px;")
+        root_div = div(cls="content-block", style="margin-bottom:40px;")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")

@@ -13,6 +13,14 @@ constraints = {
     }
 };
 
+// Displays error message if resource creation fails and restores UI state
+function showCreateError() {
+    showUniversalMessage("error", 'Failed to create resource.', 10000)();
+    $(".btn-create-resource").removeClass("disabled");
+    $(".btn-create-resource").text("Create Resource");
+    $(".btn-cancel-create-resource").removeClass("disabled");
+}
+
 $(document).ready(function () {
     var json_response_file_types = {};
     var json_response_multiple_file = {};
@@ -66,6 +74,9 @@ $(document).ready(function () {
             myDropzone = this;
             $(".btn-create-resource").click(function () {
                 $("html, #dz-container").css("cursor", "progress");
+                $(".btn-create-resource").text("Creating Resource...");
+                $(".btn-create-resource").addClass("disabled");
+                $(".btn-cancel-create-resource").addClass("disabled");
 
                 // Delete invalid files from queue before uploading
                 $(".dz-error .btn-remove").trigger("click");
@@ -91,9 +102,14 @@ $(document).ready(function () {
                             if (response.status == "success") {
                                 window.location = response['resource_url'];
                             }
+                            else {
+                                console.log(response);
+                                showCreateError();
+                            }
                         },
                         error: function (response) {
                             console.log(response);
+                            showCreateError();
                         }
                     });
                 }

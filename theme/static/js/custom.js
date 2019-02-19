@@ -136,21 +136,6 @@ $(document).ready(function () {
         return false;
     });
 
-    // Restyle keywords field
-    //===================
-    var keywords = $("#keywords").text().split(",");
-    var list = $("#list-keywords");
-    for (var i = 0; i < keywords.length; i++) {
-        if (keywords[i]) {
-            var li = $("<li><a class='tag'></a></li>");
-            li.find('a').attr("href", "/search/?q=&selected_facets=subject_exact:" + keywords[i]);
-            li.find('a').text(keywords[i]);
-            list.append(li);
-        }
-    }
-
-    $("#keywords").remove();
-
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 
@@ -191,7 +176,185 @@ $(document).ready(function () {
             }
         },
         error: showUniversalMessage()
-    })
+    });
+
+    // Event trigger for profile preview
+    $(".profile-preview").click(function () {
+        // Move the profile card below the clicked item
+        var profileCard = $(this).parent().find(".profile-card");
+        profileCard.css("top", ($(this).position().top + 30) + "px");
+        profileCard.css("left", ($(this).position().left - 175 + $(this).width()/2) + "px");
+
+        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
+        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+
+        resetProfilePreview(profileCard);
+        var data = jQuery.extend(true, {}, $(this).data());
+
+        // Populate subject areas
+        var areas = data.subjectareas.split(",");
+        for (var i = 0; i < areas.length; i++) {
+            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ");
+        }
+
+        // Populate profile button url
+        profileCard.find("[data-name]").attr("href", data.profileUrl);
+        profileCard.find("[data-url]").attr("href", data.profileUrl);
+
+        // Populate profile picture
+        var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
+        if (data.profilePicture) {
+            pic.toggleClass("dropdown-user-icon", false);
+            pic.css("background-image", "url('" + data.profilePicture + "')");
+        }
+        else {
+            pic.toggleClass("dropdown-user-icon", true);
+            pic.css("background-image", "none");
+        }
+
+        // Toggle wrappers visibility:
+
+        // State and Country
+        if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
+            $(".location-wrapper").show();
+        }
+
+        // Organization and Title
+        if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
+            $(".org-wrapper").show();
+        }
+
+        // Rest of the fields
+        for (var item in data) {
+            if ($.inArray(item, fields) != -1) {
+                var content = data[item];
+                var field = profileCard.find("[data-" + item + "]");
+                if (content && content != "Unspecified") {
+                    field.text(content);
+                    field.show();
+                }
+                else {
+                    profileCard.find("." + item + "-wrapper").hide();
+                    field.hide();
+                }
+            }
+            else if ($.inArray(item, identifiers) != -1) {
+                var ident = profileCard.find("[data-" + item + "]");
+                ident.show();
+                profileCard.find(".externalprofiles-wrapper").show();
+                ident.attr("href", data[item]);
+            }
+        }
+    });
+
+    function resetProfilePreview(profileCard) {
+        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
+        fields.forEach(function (f) {
+            profileCard.find("[data-" + f + "]").text("");
+            profileCard.find("." + f + "-wrapper").show();
+        });
+        profileCard.find(".identifier-icon").hide();
+        $(".profile-card .externalprofiles-wrapper").hide();
+        $(".profile-card .location-wrapper").hide();
+        $(".profile-card .org-wrapper").hide();
+    }
+
+    $(".author-preview").click(function() {
+        resetAuthorPreview();
+        var preview = $("#view-author-modal");
+        var data = jQuery.extend(true, {}, $(this).data());
+        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
+        var fields = ["name", "organization", "email", "address", "phone"];
+
+        // If entry is an organization, hide name and profile rows
+        preview.find("[data-name]").closest("tr").toggleClass("hidden", !data["name"]);
+        preview.find("[data-profileurl]").closest("tr").toggleClass("hidden", !data["profileurl"]);
+
+        // Populate profile url
+        if (data["profileurl"]) {
+            preview.find("[data-profileurl]").attr("href", data["profileurl"]);
+        }
+        delete data["profileurl"];
+
+        // Populate homepage url
+        if (data["homepage"]) {
+            preview.find("[data-homepage]").attr("href", data["homepage"]);
+            preview.find("[data-homepage]").text(data["homepage"]);
+            preview.find("[data-homepage]").show();
+        }
+        delete data["homepage"];
+
+        // Populate rest of the fields
+        for (var item in data) {
+            if ($.inArray(item, fields) != -1) {
+                var content = data[item];
+                var field = preview.find("[data-" + item + "]");
+                field.text(content);
+            }
+            else if ($.inArray(item, identifiers) != -1) {
+                var ident = preview.find("[data-" + item + "]");
+                ident.show();
+                preview.find(".externalprofiles-wrapper").show();
+                ident.attr("href", data[item]);
+            }
+        }
+    });
+
+    function resetAuthorPreview(){
+        var preview = $("#view-author-modal");
+        preview.find(".identifier-icon").hide();
+        preview.find("[data-name]").parent().show();
+        preview.find("[data-profileurl]").parent().show();
+    }
+
+    $(".submenu-trigger").click(function (e) {
+        $(this).next('ul').toggle();
+        e.stopPropagation();
+        e.preventDefault();
+    });
+
+    $(".profile-card").click(function (e) {
+        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
+    });
+
+    // Abstract collapse toggle
+    $(".toggle-abstract").click(function () {
+        if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
+            var block = $(this).parent().find(".activity-description");
+
+            block.css("max-height", "initial"); // Set max-height to initial temporarily.
+            var maxHeight = block.height();    // Save the max height
+            block.css("max-height", "50px");    // Restore
+
+            block.animate({'max-height': maxHeight}, 300); // Animate to max height
+        }
+        else {
+            $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
+        }
+    });
+
+    // Toggle for stats button
+    $(".btn-show-more").click(function() {
+        var caption = ["Show Less", "Show More"];
+        var current = $(this).text() == caption[0] ? 1 : 0;
+        $(this).text(caption[current]);
+    });
+
+    // Fixes positioning of user and group autocomplete input.
+    // Solution found here: https://github.com/yourlabs/django-autocomplete-light/issues/253#issuecomment-35863432
+    yourlabs.Autocomplete.prototype.fixPosition = function (html) {
+        // Make sure overflow won't hide the select
+        this.input.parents().filter(function () {
+            return $(this).css('overflow') === 'hidden';
+        }).first().css('overflow', 'visible');
+
+        this.box.insertAfter(this.input).css({top: 35, left: 0});
+    };
+
+    // Can be used to obtain an element's HTML including itself and not just its content
+    jQuery.fn.outerHTML = function () {
+        return jQuery('<div />').append(this.eq(0).clone()).html();
+    };
 });
 
 function showUniversalMessage(type, message, timeout) {
