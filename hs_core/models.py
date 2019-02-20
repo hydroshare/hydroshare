@@ -3157,7 +3157,7 @@ class BaseResource(Page, AbstractResource):
     objects = PublishedManager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
-    _size = models.IntegerField(default=0)
+    _size = models.BigIntegerField(default=0)
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
