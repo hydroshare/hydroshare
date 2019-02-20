@@ -3157,6 +3157,7 @@ class BaseResource(Page, AbstractResource):
     objects = PublishedManager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
+    _size = models.IntegerField(default=0)
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
@@ -3340,7 +3341,16 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def size(self):
-        """Return the total size of all data files in iRODS.
+        return self._size
+
+    @property
+    def calculate_size(self):
+        """
+        Recalculates Resource size and saves the value to the model.
+        Returns the newly caculated size.
+
+        ATTENTION!!!! Use this only when a file is uploaded or deleted, if you need the resource
+        size use the size property, it's already calculated.
 
         This size does not include metadata. Just files. Specifically,
         resourcemetadata.xml, systemmetadata.xml are not included in this
@@ -3350,7 +3360,9 @@ class BaseResource(Page, AbstractResource):
         """
         # compute the total file size for the resource
         f_sizes = [f.size for f in self.files.all()]
-        return sum(f_sizes)
+        self._size = sum(f_sizes)
+        self.save()
+        return self._size
 
     @property
     def verbose_name(self):

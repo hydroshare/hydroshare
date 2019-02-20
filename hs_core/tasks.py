@@ -471,6 +471,17 @@ def create_bag_by_irods(resource_id):
 
 
 @shared_task
+def calculate_resource_size(resource_id):
+    try:
+        resource = utils.get_resource_by_shortkey(resource_id)
+        resource.calculate_size
+    except:
+        logger.exception("Failed to calculate resource size for {}".format(resource.short_id))
+        return False
+    return True
+
+
+@shared_task
 def update_quota_usage_task(username):
     """update quota usage. This function runs as a celery task, invoked asynchronously with 1
     minute delay to give enough time for iRODS real time quota update micro-services to update

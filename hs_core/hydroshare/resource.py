@@ -62,6 +62,15 @@ def update_quota_usage(res=None, user=None):
     return
 
 
+def calculate_resource_size(res):
+    """
+    Runs calculate_resource_size asynchronously
+    :param res: A Resource object
+    """
+    from hs_core.tasks import calculate_resource_size
+    calculate_resource_size.apply_async((res,))
+
+
 def res_has_web_reference(res):
     """
     Check whether a resource includes web reference url file.
@@ -794,6 +803,7 @@ def add_resource_files(pk, *files, **kwargs):
             utils.check_aggregations(resource, new_folders, ret)
         # some file(s) added, need to update quota usage
         update_quota_usage(res=resource)
+        calculate_resource_size(resource)
     return ret
 
 
@@ -930,6 +940,7 @@ def delete_resource_file_only(resource, f):
     f.delete()
     # need to update quota usage when a file is deleted
     update_quota_usage(res=resource)
+    calculate_resource_size(resource)
     return short_path
 
 
