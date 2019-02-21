@@ -158,7 +158,7 @@ def get_resource_file(pk, filename):
     resource = utils.get_resource_by_shortkey(pk)
     filename = filename.strip("/")
     if not filename.startswith("data/contents/"):
-        filename = os.path.join("data/contents/", filename)
+        filename = os.path.join("data", "contents", filename)
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if f.resource_file.name.endswith(filename):
             return f
