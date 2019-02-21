@@ -941,7 +941,6 @@ def delete_resource_file_only(resource, f):
     f.delete()
     # need to update quota usage when a file is deleted
     update_quota_usage(res=resource)
-    calculate_resource_size(resource)
     return short_path
 
 
@@ -1040,6 +1039,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # generate bag
             utils.resource_modified(resource, user, overwrite_bag=False)
 
+            calculate_resource_size(resource)
             return filename_or_id
 
     # if execution gets here, file was not found

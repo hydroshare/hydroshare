@@ -23,17 +23,16 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
             groups=[]
         )
 
-        self.res = hydroshare.create_resource(resource_type='GenericResource',
-                                              owner=self.user,
-                                              title='Test Resource',
-                                              metadata=[],)
-
         test_file = open('myfile.txt', "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
         self.file = open('myfile.txt', 'r')
 
-        hydroshare.add_resource_files(self.res.short_id, self.file)
+        self.res = hydroshare.create_resource(resource_type='GenericResource',
+                                              owner=self.user,
+                                              title='Test Resource',
+                                              metadata=[],
+                                              files=[self.file])
 
     def tearDown(self):
         super(TestDeleteResourceFile, self).tearDown()
