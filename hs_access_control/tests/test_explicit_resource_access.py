@@ -4,7 +4,6 @@ from django.contrib.auth.models import Group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
-from hs_access_control.models.utilities import access_provenance
 
 
 class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
@@ -134,13 +133,12 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
 
         # at this point there should be 2 users with explicit view access to the resource:
         # user_B through user granted access and the user_C via group granted access
-        # user_A is excluded as it is an owner. 
+        # user_A is excluded as it is an owner.
         users = self.resource.raccess\
             .get_users_with_explicit_access(PrivilegeCodes.VIEW,
                                             include_user_granted_access=True,
                                             include_group_granted_access=True)
 
-        
         self.assertEqual(len(users), 2)
         self.assertIn(self.user_B, users)
         self.assertIn(self.user_C, users)

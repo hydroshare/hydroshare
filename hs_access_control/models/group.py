@@ -12,17 +12,17 @@ from hs_access_control.models.community import Community
 #
 # GroupAccess has a one-to-one correspondence with the Group object
 # and contains access control flags and methods specific to groups.
-# 
-# To avoid UI difficulties, there has been an explicit decision not to modify 
-# the display routines for groups to display communities of groups. 
+#
+# To avoid UI difficulties, there has been an explicit decision not to modify
+# the display routines for groups to display communities of groups.
 # Rather, communities are exposed through a separate module community.py
-# Only access-list functions have been modified for communities. 
-# * GroupAccess.view_resources and GroupAccess.edit_resources do reflect 
+# Only access-list functions have been modified for communities.
+# * GroupAccess.view_resources and GroupAccess.edit_resources do reflect
 #   community privileges, because they are used like access lists, while
-# * GroupAccess.get_resources_with_explicit_access does *not* reflect 
+# * GroupAccess.get_resources_with_explicit_access does *not* reflect
 #   community privileges, because it is used to display a group's resources
 #   on the group landing page. Including community resources would confuse this
-#   depiction. 
+#   depiction.
 #############################################
 
 
@@ -250,7 +250,7 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         This includes directly accessible objects as well as objects accessible
-        by nature of the fact that the current group is a member of a community 
+        by nature of the fact that the current group is a member of a community
         containing another group that can access the object.
 
         """
@@ -300,7 +300,7 @@ class GroupAccess(models.Model):
         # b) There is no lower privilege in either group privileges for the object.
         # c) Thus X is the effective privilege of the object.
         if this_privilege == PrivilegeCodes.OWNER:
-            return BaseResource.objects.none()  # groups cannot own resources 
+            return BaseResource.objects.none()  # groups cannot own resources
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
@@ -312,7 +312,7 @@ class GroupAccess(models.Model):
         else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
             excluded = BaseResource.objects.filter(raccess__immutable=False,
-                                                   r2grp__privilege=PrivilegeCodes.CHANGE, 
+                                                   r2grp__privilege=PrivilegeCodes.CHANGE,
                                                    r2grp__group=self.group).values('pk')
             return BaseResource.objects.filter(Q(r2grp__privilege=PrivilegeCodes.VIEW,
                                                  r2grp__group=self.group) |
@@ -320,7 +320,7 @@ class GroupAccess(models.Model):
                                                  r2grp__privilege=PrivilegeCodes.CHANGE,
                                                  r2grp__group=self.group))\
                                        .exclude(pk__in=Subquery(excluded)).distinct()
-                        
+
     def get_users_with_explicit_access(self, this_privilege):
         """
         Get a list of users for which the group has the specified privilege
