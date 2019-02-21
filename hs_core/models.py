@@ -2549,6 +2549,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+    _size = models.BigIntegerField(default=0)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
@@ -2675,30 +2676,35 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return content_object representing the resource from a resource file."""
         return self.content_object
 
+    def size(self):
+        return self._size
+
     # TODO: write unit test
     @property
-    def size(self):
+    def calculate_size(self):
         """Return file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
             try:
-                return self.fed_resource_file.size
+                self._size = self.fed_resource_file.size
             except SessionException:
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
-                return 0
+                self._size = 0
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             try:
-                return self.resource_file.size
+                self._size = self.resource_file.size
             except SessionException:
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
-                return 0
+                self._size = 0
+        self.save()
+        return self._size
 
     # TODO: write unit test
     @property
