@@ -3357,7 +3357,7 @@ class BaseResource(Page, AbstractResource):
         Raises SessionException if iRODS fails.
         """
         # compute the total file size for the resource
-        f_sizes = [f.size for f in self.files.all()]
+        f_sizes = [f.size() for f in self.files.all()]
         return sum(f_sizes)
 
     @property

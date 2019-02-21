@@ -28,7 +28,9 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
                                               title='Test Resource',
                                               metadata=[],)
 
-        open('myfile.txt', "w").close()
+        test_file = open('myfile.txt', "w")
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
         self.file = open('myfile.txt', 'r')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
