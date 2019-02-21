@@ -503,17 +503,17 @@ def assertOwnedGroupsAre(self, this_user, these_groups):
     self.assertTrue(
         is_equal_to_as_set(
             these_groups,
-            this_user.uaccess .get_groups_with_explicit_access(
+            this_user.uaccess.get_groups_with_explicit_access(
                 PrivilegeCodes.OWNER)))
     self.assertTrue(
         is_disjoint_from(
             these_groups,
-            this_user.uaccess .get_groups_with_explicit_access(
+            this_user.uaccess.get_groups_with_explicit_access(
                 PrivilegeCodes.CHANGE)))
     self.assertTrue(
         is_disjoint_from(
             these_groups,
-            this_user.uaccess .get_groups_with_explicit_access(
+            this_user.uaccess.get_groups_with_explicit_access(
                 PrivilegeCodes.VIEW)))
     for g in these_groups:
         self.assertTrue(this_user in g.gaccess.owners)

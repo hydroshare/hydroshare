@@ -385,7 +385,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if edit_permission:
         if group:
             group = group_from_id(group)
-            # TODO: couch: this includes community resources at this point
+            # Access control V3: this includes community-accessible resources
             q.append(Q(short_id__in=group.gaccess.edit_resources.values_list('short_id',
                                                                              flat=True)))
 
@@ -398,7 +398,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         if group:
             group = group_from_id(group)
-            # TODO: couch: this includes community resources at this point
+            # Access control V3: this includes community-accessible resources
             q.append(Q(short_id__in=group.gaccess.view_resources.values_list('short_id',
                                                                              flat=True)))
 
@@ -476,7 +476,7 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                         # if some non-admin authenticated user is asking for resources owned by another user then
                         # get other user's owned resources that are public or discoverable, or if requesting user
                         # has access to those private resources
-                        # TODO: couch: this includes community resources at this point
+                        # Access control V3: this includes community-accessible resources
                         query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
                                      Q(raccess__discoverable=True))
         else:

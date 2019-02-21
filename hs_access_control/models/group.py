@@ -12,6 +12,17 @@ from hs_access_control.models.community import Community
 #
 # GroupAccess has a one-to-one correspondence with the Group object
 # and contains access control flags and methods specific to groups.
+# 
+# To avoid UI difficulties, there has been an explicit decision not to modify 
+# the display routines for groups to display communities of groups. 
+# Rather, communities are exposed through a separate module community.py
+# Only access-list functions have been modified for communities. 
+# * GroupAccess.view_resources and GroupAccess.edit_resources do reflect 
+#   community privileges, because they are used like access lists, while
+# * GroupAccess.get_resources_with_explicit_access does *not* reflect 
+#   community privileges, because it is used to display a group's resources
+#   on the group landing page. Including community resources would confuse this
+#   depiction. 
 #############################################
 
 

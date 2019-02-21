@@ -75,7 +75,7 @@ class UserProfileView(TemplateView):
                     pass
                 else:
                     # filter out any resources to which the requesting user doesn't have access
-                    # couch: this now includes community privileges 
+                    # Access control V3: this now includes community-accessible resources 
                     resources = resources.filter(Q(pk__in=self.request.user.uaccess.view_resources) |
                                                  Q(raccess__public=True) | Q(raccess__discoverable=True))
 
