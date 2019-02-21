@@ -71,6 +71,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # resource should have 3 files
         self.assertEquals(res.files.all().count(), 3)
+        # pick up async change
         res.refresh_from_db()
         self.assertEqual(81, res.size)
 
