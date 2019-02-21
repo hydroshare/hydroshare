@@ -1146,7 +1146,7 @@ div.readme .readme-content {
 	overflow: auto;
 	padding: 2em;
 	resize: vertical;
-	margin: 0 1px;
+	margin: 0;
 	border: 0;
 	background-color: #FFF;
 	font-size: 14px;
