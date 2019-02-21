@@ -2677,6 +2677,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.content_object
 
     def size(self):
+        if self._size is 0:
+            self.calculate_size
         return self._size
 
     # TODO: write unit test
