@@ -131,7 +131,7 @@ urlpatterns += [
     # one out.
 
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "index.html"}, name="tests"),
+    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
 
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
