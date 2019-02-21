@@ -68,7 +68,7 @@ def calculate_resource_size(res):
     :param res: A Resource object
     """
     from hs_core.tasks import calculate_resource_size
-    calculate_resource_size.apply_async((res,))
+    calculate_resource_size.apply_async((res.short_id,))
 
 
 def res_has_web_reference(res):

@@ -476,7 +476,7 @@ def calculate_resource_size(resource_id):
         resource = utils.get_resource_by_shortkey(resource_id)
         resource.calculate_size
     except:
-        logger.exception("Failed to calculate resource size for {}".format(resource.short_id))
+        logger.exception("Failed to calculate resource size for {}".format(resource_id))
         return False
     return True
 
