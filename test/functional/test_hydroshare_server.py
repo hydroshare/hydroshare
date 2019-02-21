@@ -2,9 +2,8 @@ import pytest
 
 
 @pytest.mark.django_db
-def test_top_url(client):
-    response = client.get('tests/')
-    print(response.content)
-    assert response.status_code == 200
+def test_top_url(admin_client):
+    response = admin_client.get('/collaborate/', follow=True)
 
-# TODO figure out how to get the test url to work     url(r"^tests/$", direct_to_template, {"template": "index.html"}, name="tests")
+    print(response.content)
+    assert "My Groups" in response.content
