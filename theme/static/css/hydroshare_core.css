@@ -1143,9 +1143,15 @@ div.readme {
 div.readme .readme-content {
 	min-height: 200px;
 	height: 200px;
-    overflow: auto;
+	overflow: auto;
 	padding: 2em;
 	resize: vertical;
+	margin: 0 1px;
+	border: 0;
+	background-color: #FFF;
+	font-size: 14px;
+	font-family: 'Roboto', 'sans-serif';
+	word-break: break-word;
 }
 
 div.readme .readme-header {
