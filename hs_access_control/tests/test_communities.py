@@ -3,12 +3,13 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
-        GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance
-from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
+        GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
+        GroupResourcePrivilege
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, is_disjoint_from
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
-# from pprint import pprint
+from pprint import pprint
 # from hs_access_control.models.utilities import access_provenance
 
 
@@ -640,14 +641,29 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set(groupv, [self.cats, self.bats, self.dogs]))
 
         for group in groupv:
-            resources = comm.get_resources_with_explicit_access(self.dog, group,
-                                                                PrivilegeCodes.CHANGE)
-            for r in resources:
+            change_resources = comm.get_resources_with_explicit_access(self.dog, group,
+                                                                       PrivilegeCodes.CHANGE)
+            view_resources = comm.get_resources_with_explicit_access(self.dog, group,
+                                                                     PrivilegeCodes.VIEW)
+            print("change_resources:")
+            pprint(change_resources)
+            print("view_resources:")
+            pprint(view_resources)
+
+            self.assertTrue(is_disjoint_from(change_resources, view_resources))
+
+            for r in change_resources:
                 self.assertTrue(self.dog.uaccess.can_change_resource(r))
                 self.assertTrue(self.dog.uaccess.can_view_resource(r))
 
-            resources = comm.get_resources_with_explicit_access(self.dog, group,
-                                                                PrivilegeCodes.VIEW)
-            for r in resources:
-                self.assertFalse(self.dog.uaccess.can_change_resource(r))
+            for r in view_resources:
+                # if a resource can be changed by some other group, it can be changed.
+                # if self has administrative privilege over a group, and that group
+                # has CHANGE, it can be changed.
+                if not self.dog.uaccess.owns_resource(r) and\
+                   not GroupResourcePrivilege.objects.filter(
+                        resource=r,
+                        privilege=PrivilegeCodes.CHANGE,
+                        group__g2ugp__user=self.dog).exists():
+                    self.assertFalse(self.dog.uaccess.can_change_resource(r))
                 self.assertTrue(self.dog.uaccess.can_view_resource(r))
