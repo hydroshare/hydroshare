@@ -2,6 +2,7 @@
 
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
@@ -272,3 +273,34 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
             del storage_paths[index]
 
         self.assertEquals(0, len(storage_paths))
+
+    def test_auto_aggregate_csv_file_add_to_root(self):
+        """test adding a csv file to root folder should not create a timeseries aggregation"""
+
+        self._test_csv_file_add()
+
+    def test_auto_aggregate_csv_file_add_to_folder(self):
+        """test adding a csv file to a folder should not create a timeseries aggregation"""
+
+        self._test_csv_file_add(new_folder="csv_folder")
+
+    def _test_csv_file_add(self, new_folder=None):
+        self.create_composite_resource()
+        # no timeseries aggregation prior to adding the csv file to a folder
+        self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
+        if new_folder is not None:
+            # create a folder
+            hydroshare.ResourceFile.create_folder(self.composite_resource, folder=new_folder)
+        # upload the csv file to the folder (new-folder)
+        csv_file_name = "ODM2_One_Site_One_Series_Test.csv"
+        csv_file = open(self.test_file_path.format(csv_file_name), 'r')
+        files = [UploadedFile(file=csv_file, name=csv_file_name)]
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=files, user=self.user, folder=new_folder)
+
+        # check that the resource has one file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        csv_res_file = self.composite_resource.files.first()
+        self.assertEqual(csv_res_file.file_folder, new_folder)
+        # no timeseries aggregation after adding the scv file to a folder
+        self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
