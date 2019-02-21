@@ -3,9 +3,12 @@
 */
 
 var CHECK_PROFILE_IMAGE_SIZE = true;
-var PROFILE_IMAGE_SIZE_BYTE = 64000;
-var KILO_BYTE="KB";
-var PROFILE_IMAGE_SIZE_K = PROFILE_IMAGE_SIZE_BYTE/1000 + " " + KILO_BYTE;
+const KILO_BYTE = 1024;
+const MEGA_BYTE = KILO_BYTE * KILO_BYTE;
+const PROFILE_IMAGE_SIZE_BYTE_LIMIT = KILO_BYTE * KILO_BYTE * 2;
+const MEGA_BYTE_STR="MB";
+var PROFILE_IMAGE_SIZE_MB_LIMIT_MSG = PROFILE_IMAGE_SIZE_BYTE_LIMIT/MEGA_BYTE
+                + " " + MEGA_BYTE_STR;
 
 // avoid tying error, define it as variable
 var errorElementID = "errorSizeLoadFile";
@@ -15,7 +18,7 @@ function clearSizeErrorMsg() {
 }
 
 function displaySizeErrorMsg() {
-     let errorMsg = "Error: Photo size can not exceed " + PROFILE_IMAGE_SIZE_K;
+     let errorMsg = "Error: Photo size can not exceed " + PROFILE_IMAGE_SIZE_MB_LIMIT_MSG;
      let elementOpen = '<div style="display: block;" id="' + errorElementID + '"> <p ' +
                        'class="label label-danger profile-photo-error">';
      let elementClose = '</p></div>';
@@ -31,16 +34,17 @@ function readURL(input) {
 
         clearSizeErrorMsg();
 
-        reader.onload = function (e) {
-            if (
-                file.size > PROFILE_IMAGE_SIZE_BYTE &&
-                CHECK_PROFILE_IMAGE_SIZE === true
-            ) {
-                reader.abort();
-                displaySizeErrorMsg();
-                return;
-            }
+        if (
+            file.size > PROFILE_IMAGE_SIZE_BYTE_LIMIT &&
+            CHECK_PROFILE_IMAGE_SIZE === true
+        ) {
+            displaySizeErrorMsg();
+            // clear the file
+            input.value = "";
+            return;
+        }
 
+        reader.onload = function (e) {
             let profilePicContainer = $("#profile-pic-container");
             profilePicContainer.empty();
             profilePicContainer.append(
@@ -375,4 +379,3 @@ $(document).ready(function () {
         history.pushState('', document.title, window.location.pathname);
     }
 });
-
