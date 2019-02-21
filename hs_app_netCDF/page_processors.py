@@ -114,11 +114,9 @@ def landing_page(request, page):
             UpdateNetcdfLayout,
             HTML(
                 """
-                    <div class="row">
-                        <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
-                        {% load crispy_forms_tags %}
-                        {% crispy original_coverage_form %}
-                        </div>
+                    <div class="form-group col-xs-12" id="originalcoverage">
+                    {% load crispy_forms_tags %}
+                    {% crispy original_coverage_form %}
                     </div>
                 """
             ),
