@@ -2678,35 +2678,10 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def size(self):
+        """Return file size of the file.
+        Calculates the size first if it has not been calculated yet."""
         if self._size < 0:
-            self.calculate_size
-        return self._size
-
-    # TODO: write unit test
-    @property
-    def calculate_size(self):
-        """Return file size for federated or non-federated files."""
-        if self.resource.resource_federation_path:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            try:
-                self._size = self.fed_resource_file.size
-            except SessionException:
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                self._size = 0
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            try:
-                self._size = self.resource_file.size
-            except SessionException:
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                self._size = 0
-        self.save()
+            self.calculate_size()
         return self._size
 
     # TODO: write unit test
@@ -2755,6 +2730,30 @@ class ResourceFile(ResourceFileIRODSMixin):
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             return self.resource_file.name
+
+    def calculate_size(self):
+        """Reads the file size and saves to the DB"""
+        if self.resource.resource_federation_path:
+            if __debug__:
+                assert self.resource_file.name is None or \
+                    self.resource_file.name == ''
+            try:
+                self._size = self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                self._size = 0
+        else:
+            if __debug__:
+                assert self.fed_resource_file.name is None or \
+                    self.fed_resource_file.name == ''
+            try:
+                self._size = self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                self._size = 0
+        self.save()
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
