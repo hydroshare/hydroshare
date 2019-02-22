@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcefile',
             name='_size',
-            field=models.BigIntegerField(default=0),
+            field=models.BigIntegerField(default=-1),
         ),
     ]

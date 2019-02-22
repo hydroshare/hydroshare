@@ -2549,7 +2549,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
-    _size = models.BigIntegerField(default=0)
+    _size = models.BigIntegerField(default=-1)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
@@ -2677,7 +2677,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.content_object
 
     def size(self):
-        if self._size == 0:
+        if self._size < 0:
             self.calculate_size
         return self._size
 
