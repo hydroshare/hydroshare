@@ -159,7 +159,7 @@ Click this button to add a relationship to another resource, external website, o
                             {% elif relation.type == "IsReferencedBy" %}
                                 This resource is referenced by:
                             {% else %}
-                                {{ relation.type }}
+                                {{ relation.value }}
                             {% endif %}
                         </td>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
