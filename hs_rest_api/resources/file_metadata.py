@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.response import Response
 from rest_framework import generics
@@ -8,6 +8,7 @@ from rest_framework.exceptions import APIException, NotFound
 from hs_core.models import ResourceFile
 
 from hs_rest_api.permissions import CanViewOrEditResourceMetadata
+from hs_core import hydroshare
 
 
 # TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
@@ -34,13 +35,13 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     allowed_methods = ('GET', 'PUT',)
     permission_classes = (CanViewOrEditResourceMetadata,)
 
-    def get(self, request, pk, file_id):
+    def get(self, request, pk, pathname):
         """
         Get a resource file's metadata.
 
         ## Parameters
         * `id` - alphanumeric uuid of the resource, i.e. cde01b3898c94cdab78a2318330cf795
-        * `file_id` - integer id of the resource file. You can use the `/hsapi/resource/{id}/files`
+        * `pathname` - The pathname of the file
         to get these
 
         ## Returns
@@ -68,10 +69,16 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         }
         ```
         """
-        resource_file = get_object_or_404(ResourceFile, id=file_id)
+        try:
+            resource_file = hydroshare.get_resource_file(pk, pathname)
+        except ObjectDoesNotExist:
+            # Backwards compatibility for file_id
+            resource_file = ResourceFile.objects.get(id=pathname)
+        if resource_file is None:
+            raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
 
         if resource_file.metadata is None or not resource_file.has_logical_file:
-            raise NotFound()
+            raise NotFound("File {} in resource {} has no metadata".format(pathname, pk))
 
         title = resource_file.metadata.logical_file.dataset_name \
             if resource_file.metadata.logical_file else ""
@@ -93,7 +100,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             "temporal_coverage": temporal_coverage
         })
 
-    def put(self, request, pk, file_id):
+    def put(self, request, pk, pathname):
         """
         Update a resource file's metadata
 
@@ -101,8 +108,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
         ## Parameters
         * `id` - alphanumeric uuid of the resource, i.e. cde01b3898c94cdab78a2318330cf795
-        * `file_id` - integer id of the resource file. You can use the `/hsapi/resource/{id}/files`
-        to get these
+        * `pathname` - The pathname of the file
         * `data` - see the "returns" section for formatting
 
         ## Returns
@@ -135,7 +141,13 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
         try:
             title = file_serializer.data.pop("title", "")
-            resource_file = ResourceFile.objects.get(id=file_id)
+            try:
+                resource_file = hydroshare.get_resource_file(pk, pathname)
+            except ObjectDoesNotExist:
+                # Backwards compatibility for file_id
+                resource_file = ResourceFile.objects.get(id=pathname)
+            if resource_file is None:
+                raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
             resource_file.metadata.logical_file.dataset_name = title
             resource_file.metadata.logical_file.save()
 

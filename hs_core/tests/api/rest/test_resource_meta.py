@@ -26,7 +26,7 @@ class TestResourceMetadata(HSRESTTestCase):
 
     def test_get_sysmeta(self):
         # Get the resource system metadata
-        sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=self.pid)
+        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
