@@ -11,7 +11,7 @@ from collections import namedtuple
 import paramiko
 import logging
 from dateutil import parser
-from urllib2 import urlopen, HTTPError, URLError
+from urllib2 import Request, urlopen, HTTPError, URLError
 from tempfile import NamedTemporaryFile
 
 from django.core.urlresolvers import reverse
@@ -124,7 +124,11 @@ def validate_url(url):
 
     # validate url is valid, i.e., can be opened
     try:
-        urlopen(url)
+        # have to add a User-Agent header and pass in a Request to urlopen to test 
+        # whether a url can be resolved since some valid website URLs block web 
+        # spiders/bots, which raises a 403 Forbidden HTTPError
+        url_req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        urlopen(url_req)
     except (HTTPError, URLError):
         return False, error_message
 
