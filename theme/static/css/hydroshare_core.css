@@ -4483,7 +4483,7 @@ div#fb-inner-controls button, .file-browser-search {
 	margin-bottom: 8px;
 }
 
-#fb-file-operations-controls button,
+#fb-file-operations-controls > button,
 #fb-file-operations-controls #btn-download-all,
 #fb-file-operations-controls #rep-res-bag {
 	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
