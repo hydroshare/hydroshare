@@ -272,9 +272,14 @@ fieldset[disabled].form-group input {
   display: inline-block;
   width: 25%;
 }
-#comment > .input_id_comment > p.help-block, #comments .comment-reply-form > .input_id_comment > p.help-block {
+#comment > .input_comment > p.help-block, #comments .comment-reply-form > .input_comment > p.help-block {
     display: none;
 }
+
+.input_honeypot {
+    display: none !important;
+}
+
 .form-actions {
   background-color: #F8F8F8;
   border-top: 1px solid #E7E7E7;
