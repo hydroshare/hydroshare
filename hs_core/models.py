@@ -3356,9 +3356,12 @@ class BaseResource(Page, AbstractResource):
 
         Raises SessionException if iRODS fails.
         """
+        # trigger file size read for files that haven't been set yet
+        for f in self.files.filter(_size__lt=0):
+            f.size
         # compute the total file size for the resource
         res_size = self.files.aggregate(Sum('_size'))
-        return res_size
+        return res_size['_size__sum']
 
     @property
     def verbose_name(self):
