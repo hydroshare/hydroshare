@@ -72,9 +72,6 @@ fieldset[disabled].form-group input {
           MEZZANINE GENERIC
 ==========================================*/
 
-.rating {
-  margin:20px 0;
-}
 .rating span, .rating form {
   display: inline-block;
 }
