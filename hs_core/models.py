@@ -18,7 +18,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
@@ -2676,6 +2676,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return content_object representing the resource from a resource file."""
         return self.content_object
 
+    @property
     def size(self):
         if self._size < 0:
             self.calculate_size
@@ -3357,8 +3358,8 @@ class BaseResource(Page, AbstractResource):
         Raises SessionException if iRODS fails.
         """
         # compute the total file size for the resource
-        f_sizes = [f.size() for f in self.files.all()]
-        return sum(f_sizes)
+        res_size = self.files.aggregate(Sum('_size'))
+        return res_size
 
     @property
     def verbose_name(self):
