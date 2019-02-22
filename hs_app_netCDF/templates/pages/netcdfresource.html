@@ -142,16 +142,6 @@
                 {% endif %}
             {% endfor %}
     {% endif %}
-
-    {# Add THREDDS service #}
-    {% if nc_file_name %}
-        <div id="#thredds" class="col-sm-12 space-top">
-            <legend>THREDDS Data Service</legend>
-            <p>OPeNDAP: <a href="{{ opendap }}" target="_blank"> {{ nc_file_name }} </a></p>
-            <p>Visualize using IDV:Requires IDV <a href="https://www.unidata.ucar.edu/software/idv/" target="_blank">installation</a>, then use OPeNDAP service link as "URL" for IDV "Data Choosers"</p>
-        </div>
-    {% endif %}
-
 {% endblock %} {# extra block ends here #}
 
 {% block extra_js %}
