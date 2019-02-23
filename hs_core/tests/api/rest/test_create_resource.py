@@ -13,7 +13,7 @@ from .base import HSRESTTestCase
 
 class TestCreateResource(HSRESTTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_DEPRECATED_post_resource_get_sysmeta(self):
+    def test_UPLIFTED_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
@@ -30,7 +30,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # Get the resource system metadata to make sure the resource was
         # properly created.
-        sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=res_id)
+        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)

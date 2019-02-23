@@ -10,109 +10,108 @@
         }
     </style>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div>
-                {# Add the view mode html code below for resource extended meta tab #}
-                {% if extended_metadata_exists %}
-                    {# Add the geometry information meta #}
-                    <legend>Geometry Information</legend>
-                    <div style="margin-bottom:40px;">
-                        {% if geometry_information %}
-
-                            <table class="custom-table">
-                                <tbody>
-                                {% if geometry_information.geometryType %}
-                                    <tr><th class="text-muted">Geometry Type</th><td>{{ geometry_information.geometryType }}</td></tr>
-                                {% endif %}
-
-                                {% if geometry_information.featureCount %}
-                                    <tr><th class="text-muted">Feature Count</th><td>{{ geometry_information.featureCount }}</td></tr>
-                                {% endif %}
-                            </tbody>
-                            </table>
-
-                        {% else %}
-                            <p><i>Geometry information is not provided.</i></p>
+    <div class="col-md-12">
+        {# Add the view mode html code below for resource extended meta tab #}
+        {% if extended_metadata_exists %}
+            {# Add the geometry information meta #}
+            <legend>Geometry Information</legend>
+            <div class="space-bottom">
+                {% if geometry_information %}
+                    <table class="custom-table">
+                        <tbody>
+                        {% if geometry_information.geometryType %}
+                            <tr>
+                                <th class="text-muted">Geometry Type</th>
+                                <td>{{ geometry_information.geometryType }}</td>
+                            </tr>
                         {% endif %}
-                    </div>
 
-                    {# Add the original coverage meta #}
-                    <legend>Spatial Reference</legend>
-                    <div style="margin-bottom:40px;">
-                        {% if original_coverage %}
-                            {% if original_coverage.projection_string %}
-                                <table class="custom-table">
-                                    <tbody>
-                                        <tr><th class="text-muted">Coordinate Reference System</th><td>{{ original_coverage.projection_name }}</td></tr>
-                                        <tr><th class="text-muted">Datum</th><td>{{ original_coverage.datum }}</td></tr>
-                                        <tr><th class="text-muted">Unit</th><td>{{ original_coverage.unit }}</td></tr>
-                                        <tr><th class="text-muted">Coordinate String</th><td>{{ original_coverage.projection_string }}</td></tr>
-                                    </tbody>
-                                </table>
-                            {% endif %}
-                            <h4>Extent</h4>
-
-                            <table class="custom-table">
-                                <tbody>
-                                    {% if original_coverage.northlimit %}
-                                        <tr><th class="text-muted">North</th><td>{{ original_coverage.northlimit }}</td></tr>
-                                    {% endif %}
-
-                                    {% if original_coverage.eastlimit %}
-                                        <tr><th class="text-muted">East</th><td>{{ original_coverage.eastlimit }}</td></tr>
-                                    {% endif %}
-
-                                    {% if original_coverage.southlimit %}
-                                        <tr><th class="text-muted">South</th><td>{{ original_coverage.southlimit }}</td></tr>
-                                    {% endif %}
-
-                                    {% if original_coverage.westlimit %}
-                                        <tr><th class="text-muted">West</th><td>{{ original_coverage.westlimit }}</td></tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-
-                        {% else %}
-                            <p><i>Metadata information is not provided.</i></p>
+                        {% if geometry_information.featureCount %}
+                            <tr>
+                                <th class="text-muted">Feature Count</th>
+                                <td>{{ geometry_information.featureCount }}</td>
+                            </tr>
                         {% endif %}
-                    </div>
-
-                    {# Add the Field Information meta #}
-                    <legend>Field Information</legend>
-                    <div style="margin-bottom:40px;">
-                        {% if field_information %}
-                            <table class="field-table">
-                                <tr class="row">
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Width</th>
-                                    <th>Precision</th>
-                                </tr>
-                                {% for field_item in field_information %}
-                                    <tr class="row">
-                                        <td>{{ field_item.fieldName }}</td>
-                                        <td>{{ field_item.fieldType }}</td>
-                                        <td>{{ field_item.fieldWidth }}</td>
-                                        <td>{{ field_item.fieldPrecision }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        {% else %}
-                            <p><i>Metadata information is not provided.</i></p>
-                        {% endif %} {# variable section end #}
-                    </div>
-                {% endif %}{# extended meta section end #}
-                {# Add the view mode html code for resource extended meta tababove #}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p><i>Geometry information is not provided.</i></p>
+                {% endif %}
             </div>
-        </div>
+
+            {# Add the original coverage meta #}
+            <legend>Spatial Reference</legend>
+            <div class="space-bottom">
+                {% if original_coverage %}
+                    {% if original_coverage.projection_string %}
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Coordinate Reference System</th><td>{{ original_coverage.projection_name }}</td></tr>
+                                <tr><th class="text-muted">Datum</th><td>{{ original_coverage.datum }}</td></tr>
+                                <tr><th class="text-muted">Unit</th><td>{{ original_coverage.unit }}</td></tr>
+                                <tr><th class="text-muted">Coordinate String</th><td>{{ original_coverage.projection_string }}</td></tr>
+                            </tbody>
+                        </table>
+                    {% endif %}
+                    <h4>Extent</h4>
+
+                    <table class="custom-table">
+                        <tbody>
+                            {% if original_coverage.northlimit %}
+                                <tr><th class="text-muted">North</th><td>{{ original_coverage.northlimit }}</td></tr>
+                            {% endif %}
+
+                            {% if original_coverage.eastlimit %}
+                                <tr><th class="text-muted">East</th><td>{{ original_coverage.eastlimit }}</td></tr>
+                            {% endif %}
+
+                            {% if original_coverage.southlimit %}
+                                <tr><th class="text-muted">South</th><td>{{ original_coverage.southlimit }}</td></tr>
+                            {% endif %}
+
+                            {% if original_coverage.westlimit %}
+                                <tr><th class="text-muted">West</th><td>{{ original_coverage.westlimit }}</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                {% else %}
+                    <p><i>Metadata information is not provided.</i></p>
+                {% endif %}
+            </div>
+
+            {# Add the Field Information meta #}
+            <legend>Field Information</legend>
+            <div class="space-bottom">
+                {% if field_information %}
+                    <table class="field-table">
+                        <tr class="row">
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Width</th>
+                            <th>Precision</th>
+                        </tr>
+                        {% for field_item in field_information %}
+                            <tr class="row">
+                                <td>{{ field_item.fieldName }}</td>
+                                <td>{{ field_item.fieldType }}</td>
+                                <td>{{ field_item.fieldWidth }}</td>
+                                <td>{{ field_item.fieldPrecision }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    <p><i>Metadata information is not provided.</i></p>
+                {% endif %} {# variable section end #}
+            </div>
+        {% endif %}{# extended meta section end #}
+        {# Add the view mode html code for resource extended meta tababove #}
     </div>
 
     {#  Add the code of extended section on the landing page below #}
     {% block extended_section %}
     {% endblock %} {# extended block ends here #}
 {% endblock %}
-
 
 {% block extra_js %}
     {{ block.super }}

@@ -233,23 +233,30 @@ VariableLayoutEdit = Layout(
     HTML(
         """
         {% load crispy_forms_tags %}
-            {% if variable_formset.forms %}
-             <div id="variables" class="well"><div class="row">
-             {% for form in variable_formset.forms %}
-                 <div class="form-group col-xs-12 col-md-4">
-                 <form id={{form.form_id}} action="{{ form.action }}"
-                 method="POST" enctype="multipart/form-data">
-                 {% crispy form %}
-                <div class="row" style="margin-top:10px">
-                    <div class="col-md-10 col-xs-6">
-                        <button type="button" class="btn btn-primary btn-form-submit">
-                        Save Changes</button>
+        {% if variable_formset.forms %}
+            <div class="col-xs-12">
+                <div id="variables" class="well">
+                    <div class="row">
+                        {% for form in variable_formset.forms %}
+                            <div class="form-group col-xs-12 col-md-4">
+                                <form id={{ form.form_id }} action="{{ form.action }}"
+                                      method="POST" enctype="multipart/form-data">
+                                    {% crispy form %}
+                                    <div class="row" style="margin-top:10px">
+                                        <div class="col-md-10 col-xs-6">
+                                            <button type="button"
+                                                class="btn btn-primary btn-form-submit">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% crispy form.delete_modal_form %}
+                                </form>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% crispy form.delete_modal_form %}
-                </form>
-                </div>
-             {% endfor %}</div></div>
-             {% endif %}
+            </div>
+        {% endif %}
         """
         ))

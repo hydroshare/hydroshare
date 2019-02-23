@@ -644,7 +644,7 @@ function updateLabelCount() {
     });
 
     // Update filter badges count
-    $("#filter .badge[data-facet='owned']").text(ownedCount);
+    // $("#filter .badge[data-facet='owned']").text(ownedCount);
     $("#filter .badge[data-facet='shared']").text(sharedCount);
     $("#filter .badge[data-facet='discovered']").text(addedCount);
     $("#filter .badge[data-facet='favorites']").text(favorites);
