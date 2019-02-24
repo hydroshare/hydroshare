@@ -66,6 +66,8 @@ class ProvenanceBase(models.Model):
             UserResourceProvenance.get_current_record(resource={X}, user={Y})
             UserGroupProvenance.get_current_record(group={X}, user={Y})
             GroupResourceProvenance.get_current_record(resource={X}, group={Y})
+            UserCommunityProvenance.get_current_record(user={X}, community={Y})
+            GroupCommunityProvenance.get_current_record(group={X}, community={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
@@ -587,6 +589,7 @@ class GroupResourceProvenance(ProvenanceBase):
             assert isinstance(group, Group)
             assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+
         super(GroupResourceProvenance, cls).update(resource=resource,
                                                    group=group,
                                                    privilege=privilege,
@@ -671,7 +674,7 @@ class UserCommunityProvenance(ProvenanceBase):
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
         selected = User.objects.filter(u2ucq__community=community)\
-                               .annotate(start=Max('c2ucq__start'))\
+                               .annotate(start=Max('u2ucq__start'))\
                                .filter(u2ucq__start=F('start'),
                                        u2ucq__grantor=grantor,
                                        u2ucq__undone=False)

@@ -14,7 +14,7 @@ from hs_access_control.models.community import Community
 #############################################
 # Methods and data for users
 #
-# There is a one-one correspondence between isntances of UserAccess and instances of User.
+# There is a one-one correspondence between instances of UserAccess and instances of User.
 # UserAccess annotates each user with information and methods necessary for access control.
 #############################################
 
@@ -573,7 +573,7 @@ class UserAccess(models.Model):
 
             if my_user.can_share_group(some_group, PrivilegeCodes.VIEW, community=some_community):
                 # ...time passes, forms are created, requests are made...
-                my_user.share_group_with_community(some_group, some_community,
+                my_user.share_community_with_group(some_community, some_group,
                                                    PrivilegeCodes.VIEW)
 
 
@@ -965,218 +965,6 @@ class UserAccess(models.Model):
                 return User.objects.filter(uaccess=self)
         else:
             return User.objects.none()
-
-    ####################################
-    # (can_)share_group_with_community: check for and implement share
-    ####################################
-
-    def can_share_group_with_community(self, this_group, this_community,
-                                       this_privilege=PrivilegeCodes.VIEW):
-        """
-        Return True if a given user can share this group with a specified group
-        with a given privilege.
-
-        :param this_group: Group to be shared.
-        :param this_community: Group with which to share.
-        :param this_privilege: privilege to assign to user
-        :return: True if sharing is possible, otherwise false.
-
-        This determines whether the current user can share a group with a specific second group.
-
-        Usage:
-        ------
-
-            if my_user.can_share_group_with_community(some_group, some_community,
-                        PrivilegeCodes.VIEW):
-                # ...time passes, forms are created, requests are made...
-                my_user.share_group_with_community(some_group, some_community, PrivilegeCodes.VIEW)
-
-        In practice:
-        ------------
-
-        If this returns False, UserAccess.share_group_with_community will raise an exception
-        for the corresponding arguments -- *guaranteed*.
-        """
-        return self.can_share_group(this_group, this_privilege, community=this_community)
-
-    def share_group_with_community(self, this_group, this_community,
-                                   this_privilege=PrivilegeCodes.VIEW):
-        """
-        :param this_group: Group to be shared.
-        :param this_community: Group with which to share.
-        :param this_privilege: privilege to assign: 1-4
-        :return: none
-
-        User self must be one of:
-
-                * admin
-                * group owner
-                * group member with shareable=True
-
-        and have equivalent or greater privilege over group.
-
-        Usage:
-        ------
-
-            if my_user.can_share_group_with_community(group, community, PrivilegeCodes.CHANGE):
-                # ...time passes, forms are created, requests are made...
-                my_user.share_group_with_community(group, community, PrivilegeCodes.CHANGE)
-
-        In practice:
-        ------------
-
-        "can_share_group" is used to construct views with appropriate buttons or popups,
-        e.g., "share with...", while "share_group_with_user" is used in the form responder
-        to implement changes.  This is safe to do even if the state changes, because
-        "share_group_with_user" always rechecks permissions before implementing changes.
-        If -- in the interim -- one removes my_user's sharing privileges, "share_group_with_user"
-        will raise an exception.
-        """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group to be shared is not active")
-
-        # raise a PermissionDenied exception if user self is not allowed to do this.
-        self.__check_share_group(this_group, this_privilege, community=this_community)
-
-        GroupCommunityPrivilege.share(group=this_group, community=this_community,
-                                      grantor=self.user, privilege=this_privilege)
-
-    ####################################
-    # (can_)unshare_group_with_community: check for and implement unshare
-    ####################################
-
-    def unshare_group_with_community(self, this_group, this_community):
-        """
-        Remove a user from a group by removing privileges.
-
-        :param this_group: Group to be shared.
-        :param this_community: Group with which to share.
-        :return: None
-
-        This removes a user "this_community" from a group "this_group" if
-        one of the following is true:
-            * self is an administrator.
-            * self owns the group "this_group".
-
-        Usage:
-        ------
-
-            if my_user.can_unshare_group_with_community(some_group, some_community):
-                # ...time passes, forms are created, requests are made...
-                my_user.unshare_group_with_community(some_group, some_community)
-
-        In practice:
-        ------------
-
-        "can_unshare_*" is used to construct views with appropriate forms and
-        change buttons, while "unshare_*" is used to implement the responder to the
-        view's forms. "unshare_*" still checks for permission (again) in case
-        things have changed (e.g., through a stale form).
-        """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Affected Group is not active")
-
-        self.__check_unshare_group_with_community(this_group, this_community)
-        GroupCommunityPrivilege.unshare(group=this_group, community=this_community,
-                                        grantor=self.user)
-
-    def can_unshare_group_with_community(self, this_group, this_community):
-        """
-        Determines whether a group can be unshared.
-
-        :param this_group: group to be unshared.
-        :param this_community: group to which to deny access.
-        :return: Boolean: whether self can unshare this_group with this_community
-
-        Usage:
-        ------
-
-            if my_user.can_unshare_group_with_community(some_group, some_community):
-                # ...time passes, forms are created, requests are made...
-                my_user.unshare_group_with_community(some_group, some_community)
-
-        In practice:
-        ------------
-
-        If this routine returns False, UserAccess.unshare_group_with_community is *guaranteed*
-        to raise an exception.
-
-        Note that can_unshare_X is parallel to unshare_X and returns False exactly
-        when unshare_X will raise an exception.
-        """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        # these checks should not be caught by this routine
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group to be unshared is not active")
-        # TODO: make these error messages consistent
-
-        try:
-            self.__check_unshare_group_with_community(this_group, this_community)
-            return True
-        except PermissionDenied:
-            return False
-
-    def __check_unshare_group_with_community(self, this_group, this_community):
-        """ Check whether an unshare of a group with a community is permitted. """
-
-        if not self.user.uaccess.owns_community(this_community):
-            raise PermissionDenied("User is not an owner of the target group")
-
-        # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_group(this_group):
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
-
-        return True
-
-    def get_community_unshare_groups(self, this_community):
-        """
-        Get a QuerySet of groups who could be unshared from this group.
-
-        :param this_community: group to check.
-        :return: QuerySet of groups who could be removed by self.
-
-        A group can be unshared with a group if:
-            * Self is group owner.
-            * Self has admin privilege.
-
-        Usage:
-        ------
-
-            c = some_community
-            g = some_group
-            unshare_groups = self.get_community_unshare_groups(c)
-            if g in unshare_groups:
-                self.unshare_group_with_community(g, c)
-        """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-
-        if self.user.is_superuser or self.owns_community(this_community):
-            return this_community.member_groups
-        else:
-            return Group.objects.none()
 
     ####################################
     # get groups with specific access for a user
@@ -2346,103 +2134,6 @@ class UserAccess(models.Model):
                 raise PermissionDenied("User did not grant last privilege")
 
     ##################################
-    # undo for groups of groups
-    ##################################
-
-    def __get_community_undo_groups(self, this_community):
-        """
-        Get a list of groups whose privilege was granted by self and can be undone.
-
-        :param this_group: group to check.
-        :returns: QuerySet of groups
-
-        "undo_share" differs from "unshare" in that no special privilege is required to
-        "undo" a share; all that is required is that one granted the privilege initially.
-        Thus, one can undo a share that one no longer has the privilege to grant.
-        This excludes single owners from the list of undo groups to avoid removing last owner.
-
-        """
-        if __debug__:
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-
-        return GroupCommunityPrivilege.get_undo_groups(community=this_community, grantor=self.user)
-
-    def can_undo_share_group_with_community(self, this_group, this_community):
-        """
-        Check that a group share can be undone
-
-        :param this_group: shared group to check.
-        :param this_community: with group to check.
-        :returns: Boolean
-
-        "undo_share" differs from "unshare" in that no special privilege is required to
-        "undo" a share; all that is required is that one granted the privilege initially.
-        Thus -- under freakish circumstances --  one can undo a share that one no
-        longer has the privilege to grant.
-
-        Usage:
-        ------
-
-            s = some_group
-            w = some_other_group
-            if request_user.can_undo_share_group_with_community(s,w)
-                request_user.undo_share_group_with_community(s,w)
-        """
-        if __debug__:
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
-
-        return this_group in self.__get_community_undo_groups(this_community)
-
-    def undo_share_group_with_community(self, this_group, this_community):
-        """
-        Undo a share with a user that was granted by self
-
-        :param this_group: group for which to remove privilege.
-        :param this_community: user to remove from privilege.
-
-        This routine undoes a privilege previously granted by self.  Only the last granted
-        privilege for a group can be undone.  If some other user has granted a new (greater)
-        privilege, then the new privilege cannot be undone by the original user.
-
-        "undo_share" differs from "unshare" in that no special privilege is required to
-        "undo" a share; all that is required is that one granted the privilege initially.
-        Thus, **one can undo a share that one no longer has the privilege to grant.**
-
-        Usage:
-        ------
-
-            g = some_group
-            u = some_user
-            if request_user.can_undo_share_group_with_user(g, u)
-                request_user.undo_share_group_with_user(g, u)
-        """
-
-        if __debug__:
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
-
-        qual_undo = self.__get_community_undo_groups(this_community)
-        if this_group in qual_undo:
-            GroupCommunityPrivilege.undo_share(group=this_group, community=this_community,
-                                               grantor=self.user)
-        else:
-            raise PermissionDenied("Group did not grant last privilege")
-
-    ##################################
     # undo for resources
     ##################################
 
@@ -2656,7 +2347,7 @@ class UserAccess(models.Model):
             return self.share_group_with_user(kwargs['group'], kwargs['user'],
                                               kwargs['privilege'])
         elif 'group' in kwargs and 'community' in kwargs:
-            return self.share_group_with_community(kwargs['group'], kwargs['community'],
+            return self.share_community_with_group(kwargs['group'], kwargs['community'],
                                                    kwargs['privilege'])
         elif 'user' in kwargs and 'community' in kwargs:
             return self.share_user_with_community(kwargs['user'], kwargs['community'],
@@ -2677,7 +2368,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.unshare_group_with_user(kwargs['group'], kwargs['user'])
         elif 'group' in kwargs and 'community' in kwargs:
-            return self.unshare_group_with_community(kwargs['group'], kwargs['community'])
+            return self.unshare_community_with_group(kwargs['group'], kwargs['community'])
         elif 'user' in kwargs and 'community' in kwargs:
             return self.unshare_user_with_community(kwargs['user'], kwargs['community'])
         else:
@@ -2696,7 +2387,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.can_unshare_group_with_user(kwargs['group'], kwargs['user'])
         elif 'group' in kwargs and 'community' in kwargs:
-            return self.can_unshare_group_with_community(kwargs['group'], kwargs['community'])
+            return self.can_unshare_community_with_group(kwargs['group'], kwargs['community'])
         elif 'user' in kwargs and 'community' in kwargs:
             return self.can_unshare_user_with_community(kwargs['user'], kwargs['community'])
         else:
@@ -2715,7 +2406,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.undo_share_group_with_user(kwargs['group'], kwargs['user'])
         elif 'group' in kwargs and 'community' in kwargs:
-            return self.undo_share_group_with_community(kwargs['group'], kwargs['community'])
+            return self.undo_share_community_with_group(kwargs['group'], kwargs['community'])
         elif 'user' in kwargs and 'community' in kwargs:
             return self.undo_share_user_with_community(kwargs['user'], kwargs['community'])
         else:
@@ -2735,7 +2426,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.can_undo_share_group_with_user(kwargs['group'], kwargs['user'])
         elif 'group' in kwargs and 'community' in kwargs:
-            return self.can_undo_share_group_with_community(kwargs['group'], kwargs['community'])
+            return self.can_undo_share_community_with_group(kwargs['group'], kwargs['community'])
         elif 'user' in kwargs and 'community' in kwargs:
             return self.can_undo_share_user_with_community(kwargs['user'], kwargs['community'])
         else:
@@ -2795,7 +2486,7 @@ class UserAccess(models.Model):
                 # do something that requires community ownership
                 g.description='some description'
                 g.save()
-                my_user.unshare_group_with_community(another_user,g) # e.g.
+                my_user.unshare_community_with_group(another_user,g) # e.g.
 
         """
         if __debug__:  # during testing only, check argument types and preconditions
@@ -2967,3 +2658,703 @@ class UserAccess(models.Model):
         A user is a member of a community if the user is a member of one group in the community.
         """
         return Community.objects.filter(c2gcp__group__g2ugp__user=self.user)
+
+    ####################################
+    # (can_)share_community_with_user: check for and implement share
+    ####################################
+
+    def can_share_community_with_user(self, this_community, this_user, this_privilege):
+        """
+        Return True if a given user can share this community with a specified user
+        with a given privilege.
+
+        :param self: requesting user
+        :param this_community: community to check
+        :param this_user: user to check
+        :param this_privilege: privilege to assign to user
+        :return: True if sharing is possible, otherwise false.
+
+        This determines whether the current user can share a community with a specific user.
+
+        Usage:
+        ------
+
+            if my_user.can_share_community_with_user(some_community, some_user,
+                                                     PrivilegeCodes.VIEW):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_community_with_user(some_community, some_user, PrivilegeCodes.VIEW)
+
+        In practice:
+        ------------
+
+        If this returns False, UserAccess.share_community_with_user will raise an exception
+        for the corresponding arguments -- *guaranteed*.
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        try:
+            self.__check_share_community_with_user(this_community, this_user, this_privilege)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_share_community_with_user(self, this_community, this_user, this_privilege):
+        """
+
+        Raise exception if a given user cannot share this community with a given privilege
+        to a specific user.
+
+        :param this_community: community to check
+        :param this_privilege: privilege to assign
+        :return: True if sharing is possible, otherwise raise an exception.
+
+        This determines whether the current user can share a community with a specific user.
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+        if not self.owns_community(this_community):
+            raise PermissionDenied("User must own community")
+
+    def share_community_with_user(self, this_community, this_user, this_privilege):
+        """
+        :param this_community: Community to be affected.
+        :param this_user: User with whom to share community
+        :param this_privilege: privilege to assign: 1-4
+        :return: none
+
+        User self must be one of:
+
+                * admin
+                * community owner
+                * community member with shareable=True
+
+        and have equivalent or greater privilege over community.
+
+        Usage:
+        ------
+
+            if my_user.can_share_community(some_community, PrivilegeCodes.CHANGE):
+                # ...time passes, forms are created, requests are made...
+                share_community_with_user(some_community, some_user, PrivilegeCodes.CHANGE)
+
+        In practice:
+        ------------
+
+        "can_share_community" is used to construct views with appropriate buttons or popups,
+        e.g., "share with...", while "share_community_with_user" is used in the form responder
+        to implement changes.  This is safe to do even if the state changes, because
+        "share_community_with_user" always rechecks permissions before implementing changes.
+        If -- in the interim -- one removes my_user's sharing privileges,
+        "share_community_with_user" will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        # raise a PermissionDenied exception if user self is not allowed to do this.
+        self.__check_share_community_with_user(this_community, this_user, this_privilege)
+
+        UserCommunityPrivilege.share(community=this_community, user=this_user,
+                                     grantor=self.user, privilege=this_privilege)
+
+    ####################################
+    # (can_)unshare_community_with_user: check for and implement unshare
+    ####################################
+
+    def unshare_community_with_user(self, this_community, this_user):
+        """
+        Remove a user from a community by removing privileges.
+
+        :param this_community: Community to be affected.
+        :param this_user: User with whom to unshare community
+        :return: None
+
+        This removes a user "this_user" from a community if "this_user" is not the sole owner and
+        one of the following is true:
+            * self is an administrator.
+            * self owns the community.
+            * this_user is self.
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_community_with_user(some_community, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_community_with_user(some_community, some_user)
+
+        In practice:
+        ------------
+
+        "can_unshare_*" is used to construct views with appropriate forms and
+        change buttons, while "unshare_*" is used to implement the responder to the
+        view's forms. "unshare_*" still checks for permission (again) in case
+        things have changed (e.g., through a stale form).
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+
+        self.__check_unshare_community_with_user(this_community, this_user)
+        UserCommunityPrivilege.unshare(community=this_community, user=this_user, grantor=self.user)
+
+    ####################################
+    # (can_)unshare_community_with_user: check for and implement unshare
+    ####################################
+
+    def can_unshare_community_with_user(self, this_community, this_user):
+        """
+        Determines whether a community can be unshared.
+
+        :param this_community: community to be unshared.
+        :param this_user: user to which to deny access.
+        :return: Boolean: whether self can unshare this_community with this_user
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_community_with_user(some_community, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_community_with_user(some_community, some_user)
+
+        In practice:
+        ------------
+
+        If this routine returns False, UserAccess.unshare_community_with_user is *guaranteed*
+        to raise an exception.
+
+        Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        when unshare_X will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+
+        try:
+            self.__check_unshare_community_with_user(this_community, this_user)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_unshare_community_with_user(self, this_community, this_user):
+        """ Check whether an unshare of a community with a user is permitted. """
+
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+
+        # Check for sufficient privilege
+        if not self.user.is_superuser \
+                and not self.owns_community(this_community) \
+                and not this_user == self.user:
+            raise PermissionDenied("You do not have permission to remove this sharing setting")
+
+        # if this_user is not an OWNER, or there is another OWNER, OK.
+        if not UserCommunityPrivilege.objects.filter(community=this_community,
+                                                     privilege=PrivilegeCodes.OWNER,
+                                                     user=this_user).exists()\
+            or UserCommunityPrivilege.objects.filter(community=this_community,
+                                                     privilege=PrivilegeCodes.OWNER)\
+                                             .exclude(user=this_user).exists():
+            return True
+        else:
+            raise PermissionDenied("Cannot remove sole owner of community")
+
+    def get_community_unshare_users(self, this_community):
+        """
+        Get a QuerySet of users who could be unshared from this community.
+
+        :param this_community: community to check.
+        :return: QuerySet of users who could be removed by self.
+
+        A user can be unshared with a community if:
+
+            * The user is self
+            * Self is community owner.
+            * Self has admin privilege.
+
+        except that a user in the QuerySet cannot be the last owner of the community.
+
+        Usage:
+        ------
+
+            g = some_community
+            u = some_user
+            unshare_users = request_user.get_community_unshare_users(g)
+            if u in unshare_users:
+                self.unshare_community_with_user(g, u)
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        access_community = this_community
+
+        if self.user.is_superuser or self.owns_community(this_community):
+            # everyone who holds this community, minus potential sole owners
+            if access_community.owners.count() == 1:
+                # get list of owners to exclude from main list
+                # This should be one user but can be two due to race conditions.
+                # Avoid races by excluding action in that case.
+                users_to_exclude = User.objects.filter(is_active=True,
+                                                       u2ugp__community=this_community,
+                                                       u2ugp__privilege=PrivilegeCodes.OWNER)\
+                                               .values('pk')
+                return access_community.members.exclude(pk__in=Subquery(users_to_exclude))
+            else:
+                return access_community.members
+
+        # unprivileged user can only remove grants to self, if any
+        elif self.user in access_community.members:
+            if access_community.owners.count() == 1:
+                # if self is not an owner,
+                if not UserCommunityPrivilege.objects.filter(user=self.user,
+                                                             community=this_community,
+                                                             privilege=PrivilegeCodes.OWNER)\
+                                                     .exists():
+                    # return a QuerySet containing only self
+                    return User.objects.filter(uaccess=self)
+                else:
+                    # I can't unshare anyone
+                    return User.objects.none()
+            else:
+                # I can unshare self as a non-owner.
+                return User.objects.filter(uaccess=self)
+        else:
+            return User.objects.none()
+
+    ####################################
+    # (can_)share_community_with_group: check for and implement share
+    ####################################
+
+    def can_share_community_with_group(self, this_community, this_group,
+                                       this_privilege=PrivilegeCodes.VIEW):
+        """
+        Return True if a given user can share this group with a specified group
+        with a given privilege.
+
+        :param this_group: Group to be shared.
+        :param this_community: Group with which to share.
+        :param this_privilege: privilege to assign to user
+        :return: True if sharing is possible, otherwise false.
+
+        This determines whether the current user can share a group with a specific second group.
+
+        Usage:
+        ------
+
+            if my_user.can_share_community_with_group(some_community, some_group,
+                        PrivilegeCodes.VIEW):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_community_with_group(some_community, some_group, PrivilegeCodes.VIEW)
+
+        In practice:
+        ------------
+
+        If this returns False, UserAccess.share_community_with_group will raise an exception
+        for the corresponding arguments -- *guaranteed*.
+        """
+        return self.can_share_group(this_group, this_privilege, community=this_community)
+
+    def share_community_with_group(self, this_community, this_group,
+                                   this_privilege=PrivilegeCodes.VIEW):
+        """
+        :param this_group: Group to be shared.
+        :param this_community: Group with which to share.
+        :param this_privilege: privilege to assign: 1-4
+        :return: none
+
+        User self must be one of:
+
+                * admin
+                * group owner
+                * group member with shareable=True
+
+        and have equivalent or greater privilege over group.
+
+        Usage:
+        ------
+
+            if my_user.can_share_community_with_group(community, group, PrivilegeCodes.CHANGE):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_community_with_group(community, group, PrivilegeCodes.CHANGE)
+
+        In practice:
+        ------------
+
+        "can_share_group" is used to construct views with appropriate buttons or popups,
+        e.g., "share with...", while "share_group_with_user" is used in the form responder
+        to implement changes.  This is safe to do even if the state changes, because
+        "share_group_with_user" always rechecks permissions before implementing changes.
+        If -- in the interim -- one removes my_user's sharing privileges, "share_group_with_user"
+        will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group to be shared is not active")
+
+        # raise a PermissionDenied exception if user self is not allowed to do this.
+        self.__check_share_group(this_group, this_privilege, community=this_community)
+
+        GroupCommunityPrivilege.share(community=this_community, group=this_group,
+                                      grantor=self.user, privilege=this_privilege)
+
+    ####################################
+    # (can_)unshare_community_with_group: check for and implement unshare
+    ####################################
+
+    def unshare_community_with_group(self, this_community, this_group):
+        """
+        Remove a user from a group by removing privileges.
+
+        :param this_group: Group to be shared.
+        :param this_community: Group with which to share.
+        :return: None
+
+        This removes a user "this_community" from a group "this_group" if
+        one of the following is true:
+            * self is an administrator.
+            * self owns the group "this_group".
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_community_with_group(some_community, some_group):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_community_with_group(some_community, some_group)
+
+        In practice:
+        ------------
+
+        "can_unshare_*" is used to construct views with appropriate forms and
+        change buttons, while "unshare_*" is used to implement the responder to the
+        view's forms. "unshare_*" still checks for permission (again) in case
+        things have changed (e.g., through a stale form).
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Affected Group is not active")
+
+        self.__check_unshare_community_with_group(this_community, this_group)
+        GroupCommunityPrivilege.unshare(community=this_community, group=this_group,
+                                        grantor=self.user)
+
+    def can_unshare_community_with_group(self, this_community, this_group):
+        """
+        Determines whether a group can be unshared.
+
+        :param this_group: group to be unshared.
+        :param this_community: group to which to deny access.
+        :return: Boolean: whether self can unshare this_group with this_community
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_community_with_group(some_community, some_group):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_community_with_group(some_community, some_group)
+
+        In practice:
+        ------------
+
+        If this routine returns False, UserAccess.unshare_community_with_group is *guaranteed*
+        to raise an exception.
+
+        Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        when unshare_X will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        # these checks should not be caught by this routine
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group to be unshared is not active")
+        # TODO: make these error messages consistent
+
+        try:
+            self.__check_unshare_community_with_group(this_community, this_group)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_unshare_community_with_group(self, this_community, this_group):
+        """ Check whether an unshare of a group with a community is permitted. """
+
+        if not self.user.uaccess.owns_community(this_community):
+            raise PermissionDenied("User is not an owner of the target group")
+
+        # Check for sufficient privilege
+        if not self.user.is_superuser \
+                and not self.owns_group(this_group):
+            raise PermissionDenied("You do not have permission to remove this sharing setting")
+
+        return True
+
+    def get_community_unshare_groups(self, this_community):
+        """
+        Get a QuerySet of groups who could be unshared from this group.
+
+        :param this_community: group to check.
+        :return: QuerySet of groups who could be removed by self.
+
+        A group can be unshared with a group if:
+            * Self is group owner.
+            * Self has admin privilege.
+
+        Usage:
+        ------
+
+            c = some_community
+            g = some_group
+            unshare_groups = self.get_community_unshare_groups(c)
+            if g in unshare_groups:
+                self.unshare_community_with_group(c, g)
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if self.user.is_superuser or self.owns_community(this_community):
+            return this_community.member_groups
+        else:
+            return Group.objects.none()
+
+    ##################################
+    # undo for communities of groups
+    ##################################
+
+    def __get_community_undo_users(self, this_community):
+        """
+        Get a list of users whose privilege was granted by self and can be undone.
+
+        :param this_user: user to check.
+        :returns: QuerySet of users
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, one can undo a share that one no longer has the privilege to grant.
+        This excludes single owners from the list of undo users to avoid removing last owner.
+
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        candidates = UserCommunityPrivilege.get_undo_users(community=this_community,
+                                                           grantor=self.user)
+
+        # figure out if group has a single owner
+        if this_community.owners.count() == 1:
+            # get list of owners to exclude from main list
+            users_to_exclude = User.objects.filter(is_active=True,
+                                                   u2ucp__community=this_community,
+                                                   u2ucp__privilege=PrivilegeCodes.OWNER)\
+                                           .values('pk')
+            return candidates.exclude(pk__in=Subquery(users_to_exclude))
+        else:
+            return candidates
+
+    def can_undo_share_community_with_user(self, this_community, this_user):
+        """
+        Check that a user share can be undone
+
+        :param this_user: shared user to check.
+        :param this_community: with user to check.
+        :returns: Boolean
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus -- under freakish circumstances --  one can undo a share that one no
+        longer has the privilege to grant.
+
+        Usage:
+        ------
+
+            c = some_community
+            u = some_user
+            if request_user.can_undo_share_community_with_user(c,u)
+                request_user.undo_share_community_with_user(c,u)
+        """
+        if __debug__:
+            assert isinstance(this_user, User)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+
+        return this_user in self.__get_community_undo_users(this_community)
+
+    def undo_share_community_with_user(self, this_community, this_user):
+        """
+        Undo a share with a user that was granted by self
+
+        :param this_user: user for which to remove privilege.
+        :param this_community: community to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a user can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            c = some_community
+            g = some_user
+            if request_user.can_undo_share_community_with_user(c, g)
+                request_user.undo_share_community_with_user(c, g)
+        """
+
+        if __debug__:
+            assert isinstance(this_user, User)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+
+        qual_undo = self.__get_community_undo_users(this_community)
+        if this_user in qual_undo:
+            UserCommunityPrivilege.undo_share(user=this_user, community=this_community,
+                                              grantor=self.user)
+        else:
+            raise PermissionDenied("User did not grant last privilege")
+
+    def __get_community_undo_groups(self, this_community):
+        """
+        Get a list of groups whose privilege was granted by self and can be undone.
+
+        :param this_group: group to check.
+        :returns: QuerySet of groups
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, one can undo a share that one no longer has the privilege to grant.
+        This excludes single owners from the list of undo groups to avoid removing last owner.
+
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return GroupCommunityPrivilege.get_undo_groups(community=this_community, grantor=self.user)
+
+    def can_undo_share_community_with_group(self, this_community, this_group):
+        """
+        Check that a group share can be undone
+
+        :param this_group: shared group to check.
+        :param this_community: with group to check.
+        :returns: Boolean
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus -- under freakish circumstances --  one can undo a share that one no
+        longer has the privilege to grant.
+
+        Usage:
+        ------
+
+            s = some_group
+            w = some_other_group
+            if request_user.can_undo_share_community_with_group(s,w)
+                request_user.undo_share_community_with_group(s,w)
+        """
+        if __debug__:
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        return this_group in self.__get_community_undo_groups(this_community)
+
+    def undo_share_community_with_group(self, this_community, this_group):
+        """
+        Undo a share with a user that was granted by self
+
+        :param this_group: group for which to remove privilege.
+        :param this_community: user to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a group can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            c = some_community
+            g = some_group
+            if request_user.can_undo_share_group_with_user(c, g)
+                request_user.undo_share_group_with_user(c, g)
+        """
+
+        if __debug__:
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        qual_undo = self.__get_community_undo_groups(this_community)
+        if this_group in qual_undo:
+            GroupCommunityPrivilege.undo_share(group=this_group, community=this_community,
+                                               grantor=self.user)
+        else:
+            raise PermissionDenied("User did not grant last privilege")

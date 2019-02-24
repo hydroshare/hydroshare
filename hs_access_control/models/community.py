@@ -25,6 +25,13 @@ class Community(models.Model):
     def member_users(self):
         return User.objects.filter(is_active=True, u2ucp__community=self)
 
+    @property
+    def owners(self):
+        from hs_access_control.models.privilege import PrivilegeCodes
+        return User.objects.filter(is_active=True,
+                                   u2ucp__community=self,
+                                   u2ucp__privilege=PrivilegeCodes.OWNER)
+
     def get_groups_with_explicit_access(self, privilege, user=None):
         """
         Groups that contain resources that should be displayed for a community and/or user
