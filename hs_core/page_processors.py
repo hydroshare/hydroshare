@@ -208,7 +208,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
-                   'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
                    'show_web_reference_note': has_web_ref,
@@ -414,7 +413,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               if type_value != 'isReplacedBy' and
                                               type_value != 'isVersionOf' and
                                               type_value != 'hasPart'),
-               'is_resource_specific_tab_active': False,
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key

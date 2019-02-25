@@ -4,7 +4,7 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div id="div-series-selection" class="row">
+        <div id="div-series-selection">
             <div class="col-sm-12">
                 <strong>Select a timeseries to see corresponding metadata (Number of
                     timeseries:{{ series_ids.items|length }}):</strong>
@@ -25,29 +25,28 @@
                 <hr>
             </div>
         </div>
-        <div class="row">
+        <div>
             {% if sites or variables or methods %}
                 <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                     {% if sites %}
                          <legend>Site</legend>
                         {% for site in sites %}
-                             {% if not forloop.first %}
+                            {% if not forloop.first %}
                                 <legend></legend>
                             {% endif %}
-                        <table class="custom-table">
-                            <tbody>
-                                <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
-                                {% if site.site_name %}
-                                    <tr><th class="text-muted">Name </th><td>{{ site.site_name }}</td></tr>
-                                {% endif %}
-                                <tr><th class="text-muted">Elevation M </th><td>{{ site.elevation_m }}</td></tr>
-                                <tr><th class="text-muted">Elevation Datum </th><td>{{ site.elevation_datum }}</td></tr>
-                                <tr><th class="text-muted">Site Type </th><td>{{ site.site_type }}</td></tr>
-                                <tr><th class="text-muted">Latitude </th><td>{{ site.latitude }}</td></tr>
-                                <tr><th class="text-muted">Longitude </th><td>{{ site.longitude }}</td></tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                            <table class="custom-table space-bottom">
+                                <tbody>
+                                    <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
+                                    {% if site.site_name %}
+                                        <tr><th class="text-muted">Name </th><td>{{ site.site_name }}</td></tr>
+                                    {% endif %}
+                                    <tr><th class="text-muted">Elevation M </th><td>{{ site.elevation_m }}</td></tr>
+                                    <tr><th class="text-muted">Elevation Datum </th><td>{{ site.elevation_datum }}</td></tr>
+                                    <tr><th class="text-muted">Site Type </th><td>{{ site.site_type }}</td></tr>
+                                    <tr><th class="text-muted">Latitude </th><td>{{ site.latitude }}</td></tr>
+                                    <tr><th class="text-muted">Longitude </th><td>{{ site.longitude }}</td></tr>
+                                </tbody>
+                            </table>
                         {% endfor %}
                     {%  endif %}
 
@@ -57,7 +56,7 @@
                             {% if not forloop.first %}
                                 <legend></legend>
                             {% endif %}
-                            <table class="custom-table">
+                            <table class="custom-table space-bottom">
                                 <tbody>
                                     <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
                                     <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
@@ -67,7 +66,6 @@
                                     <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
                                 </tbody>
                             </table>
-                            <hr style="border:0">
                         {% endfor %}
                     {% endif %}
 
@@ -77,7 +75,7 @@
                             {% if not forloop.first %}
                                 <legend></legend>
                             {% endif %}
-                        <table class="custom-table">
+                        <table class="custom-table space-bottom">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ method.method_code }}</td></tr>
                                 <tr><th class="text-muted">Name </th><td>{{ method.method_name }}</td></tr>
@@ -90,7 +88,6 @@
                                 {% endif %}
                             </tbody>
                         </table>
-                        <hr style="border:0">
                         {% endfor %}
                     {% endif %}
                 </div>
@@ -104,7 +101,7 @@
                         {% if not forloop.first %}
                             <legend></legend>
                         {% endif %}
-                    <table class="custom-table">
+                    <table class="custom-table space-bottom">
                         <tbody>
                             <tr><th class="text-muted">Code </th><td>{{ processing_level.processing_level_code }}</td></tr>
                             {% if processing_level.definition %}
@@ -115,7 +112,6 @@
                             {% endif %}
                         </tbody>
                     </table>
-                    <hr style="border:0">
                     {% endfor %}
                 {% endif %}
 
@@ -125,7 +121,7 @@
                         {% if not forloop.first %}
                             <legend></legend>
                         {% endif %}
-                    <table class="custom-table">
+                    <table class="custom-table space-bottom">
                         <tbody>
                             <tr><th class="text-muted">Units Type </th><td>{{ timeseries_result.units_type }}</td></tr>
                             <tr><th class="text-muted">Units Name </th><td>{{ timeseries_result.units_name }}</td></tr>
@@ -141,7 +137,6 @@
                             {% endif %}
                         </tbody>
                     </table>
-                    <hr style="border:0">
                     {% endfor %}
                 {% endif %}
                 </div>

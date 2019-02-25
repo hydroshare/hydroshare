@@ -5,149 +5,141 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-            <div class="col-md-12">
-                {% if originalCoverage %}
-                    <div style="margin-bottom:40px;">
-                        <legend>Spatial Reference</legend>
-                        <table class="custom-table">
-                            <tbody>
-
-                                <tr>
-                                    <th class="text-muted">Coordinate Reference System</th>
-                                    <td>{{ originalCoverage.projection }}</td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">Datum</th>
-                                    <td>{{ originalCoverage.datum }}</td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">Coordinate String</th>
-                                    <td style="word-break:break-all">
-                                        {{ originalCoverage.projection_string }}
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">Coordinate Reference System Unit</th>
-                                    <td>{{ originalCoverage.units }}</td>
-                                </tr>
-
-                            </tbody>
-                        </table>
-
-                        <h4>Extent</h4>
-
-                        <table class="custom-table">
-                            <tbody>
-
-                                <tr>
-                                    <th class="text-muted">North</th>
-                                    <td>{{ originalCoverage.northlimit }}</td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">West</th>
-                                    <td>{{ originalCoverage.westlimit }}</td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">South</th>
-                                    <td>{{ originalCoverage.southlimit }}</td>
-                                </tr>
-
-                                <tr>
-                                    <th class="text-muted">East</th>
-                                    <td>{{ originalCoverage.eastlimit }}</td>
-                                </tr>
-
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
-
-                {% if cellInformation %}
-                    <div style="margin-bottom:40px;">
-                        <legend>Cell Information</legend>
-                        <table class="custom-table">
-                            <tbody>
+        <div class="col-md-12">
+            {% if originalCoverage %}
+                <div class="space-bottom">
+                    <legend>Spatial Reference</legend>
+                    <table class="custom-table">
+                        <tbody>
                             <tr>
-                                <th class="text-muted">Rows</th>
-                                <td>{{ cellInformation.rows }}</td>
+                                <th class="text-muted">Coordinate Reference System</th>
+                                <td>{{ originalCoverage.projection }}</td>
                             </tr>
 
                             <tr>
-                                <th class="text-muted">Columns</th>
-                                <td>{{ cellInformation.columns }}</td>
+                                <th class="text-muted">Datum</th>
+                                <td>{{ originalCoverage.datum }}</td>
                             </tr>
 
                             <tr>
-                                <th class="text-muted">CellSizeXValue</th>
-                                <td>{{ cellInformation.cellSizeXValue }}</td>
+                                <th class="text-muted">Coordinate String</th>
+                                <td style="word-break:break-all">
+                                    {{ originalCoverage.projection_string }}
+                                </td>
                             </tr>
 
                             <tr>
-                                <th class="text-muted">CellSizeYValue</th>
-                                <td>{{ cellInformation.cellSizeYValue }}</td>
+                                <th class="text-muted">Coordinate Reference System Unit</th>
+                                <td>{{ originalCoverage.units }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Extent</h4>
+
+                    <table class="custom-table">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted">North</th>
+                                <td>{{ originalCoverage.northlimit }}</td>
                             </tr>
 
                             <tr>
-                                <th class="text-muted">CellDataType</th>
-                                <td>{{ cellInformation.cellDataType }}</td>
+                                <th class="text-muted">West</th>
+                                <td>{{ originalCoverage.westlimit }}</td>
                             </tr>
 
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
+                            <tr>
+                                <th class="text-muted">South</th>
+                                <td>{{ originalCoverage.southlimit }}</td>
+                            </tr>
 
-                {% if bandInformation %}
-                    <div class="col-sm-12 pull-left" style="margin-bottom:40px;">
-                        <legend>Band Information</legend>
-                        <div id="variables" class="well clearfix">
-                            <div class="row">
-                                {% for band in bandInformation %}
-                                    <div class="col-xs-12 col-sm-6">
-                                        <div class="custom-well">
-                                            <strong>{{ band.name }}</strong>
-                                            <table class="custom-table">
-                                                <tbody>
+                            <tr>
+                                <th class="text-muted">East</th>
+                                <td>{{ originalCoverage.eastlimit }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
 
-                                                    <tr><th class="text-muted">VariableName</th><td>{{ band.variableName }}</td></tr>
+            {% if cellInformation %}
+                <div class="space-bottom">
+                    <legend>Cell Information</legend>
+                    <table class="custom-table">
+                        <tbody>
+                        <tr>
+                            <th class="text-muted">Rows</th>
+                            <td>{{ cellInformation.rows }}</td>
+                        </tr>
 
-                                                    <tr><th class="text-muted">VariableUnit</th><td>{{ band.variableUnit }}</td></tr>
+                        <tr>
+                            <th class="text-muted">Columns</th>
+                            <td>{{ cellInformation.columns }}</td>
+                        </tr>
 
-                                                    {% if band.noDataValue != None%}
-                                                        <tr><th class="text-muted">NoDataValue</th><td>{{ band.noDataValue }}</td></tr>
-                                                    {% endif %}
+                        <tr>
+                            <th class="text-muted">CellSizeXValue</th>
+                            <td>{{ cellInformation.cellSizeXValue }}</td>
+                        </tr>
 
-                                                    {% if band.maximumValue != None%}
-                                                        <tr><th class="text-muted">MaximumValue</th><td>{{ band.maximumValue }}</td></tr>
-                                                    {% endif %}
+                        <tr>
+                            <th class="text-muted">CellSizeYValue</th>
+                            <td>{{ cellInformation.cellSizeYValue }}</td>
+                        </tr>
 
-                                                    {% if band.minimumValue != None%}
-                                                        <tr><th class="text-muted">MinimumValue</th><td>{{ band.minimumValue }}</td></tr>
-                                                    {% endif %}
+                        <tr>
+                            <th class="text-muted">CellDataType</th>
+                            <td>{{ cellInformation.cellDataType }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
 
-                                                    {% if band.method %}
-                                                        <tr><th class="text-muted">Method</th><td>{{ band.method }}</td></tr>
-                                                    {% endif %}
+            {% if bandInformation %}
+                <div class="space-bottom">
+                    <legend>Band Information</legend>
+                    <div id="variables" class="well clearfix">
+                        <div class="row">
+                            {% for band in bandInformation %}
+                                <div class="col-xs-12 col-sm-6">
+                                    <div class="custom-well">
+                                        <strong>{{ band.name }}</strong>
+                                        <table class="custom-table">
+                                            <tbody>
+                                                <tr><th class="text-muted">VariableName</th><td>{{ band.variableName }}</td></tr>
 
-                                                    {% if band.comment %}
-                                                        <tr><th class="text-muted">Comment</th><td>{{ band.comment }}</td></tr>
-                                                    {% endif %}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                <tr><th class="text-muted">VariableUnit</th><td>{{ band.variableUnit }}</td></tr>
+
+                                                {% if band.noDataValue != None%}
+                                                    <tr><th class="text-muted">NoDataValue</th><td>{{ band.noDataValue }}</td></tr>
+                                                {% endif %}
+
+                                                {% if band.maximumValue != None%}
+                                                    <tr><th class="text-muted">MaximumValue</th><td>{{ band.maximumValue }}</td></tr>
+                                                {% endif %}
+
+                                                {% if band.minimumValue != None%}
+                                                    <tr><th class="text-muted">MinimumValue</th><td>{{ band.minimumValue }}</td></tr>
+                                                {% endif %}
+
+                                                {% if band.method %}
+                                                    <tr><th class="text-muted">Method</th><td>{{ band.method }}</td></tr>
+                                                {% endif %}
+
+                                                {% if band.comment %}
+                                                    <tr><th class="text-muted">Comment</th><td>{{ band.comment }}</td></tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}
