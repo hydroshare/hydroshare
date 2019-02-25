@@ -1176,7 +1176,7 @@ def my_resources(request, page):
 
     context = {
                 'collection': collection,
-                'numOwned': len(resource_collection)
+                'numOwned': resource_collection.count()
                }
 
     return context
