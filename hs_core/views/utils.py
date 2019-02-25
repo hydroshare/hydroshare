@@ -124,8 +124,8 @@ def validate_url(url):
 
     # validate url is valid, i.e., can be opened
     try:
-        # have to add a User-Agent header and pass in a Request to urlopen to test 
-        # whether a url can be resolved since some valid website URLs block web 
+        # have to add a User-Agent header and pass in a Request to urlopen to test
+        # whether a url can be resolved since some valid website URLs block web
         # spiders/bots, which raises a 403 Forbidden HTTPError
         url_req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         urlopen(url_req)
