@@ -32,6 +32,14 @@ class Community(models.Model):
                                    u2ucp__community=self,
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
 
+    def get_effective_user_privilege(self, this_user):
+        from hs_access_control.models.privilege import UserCommunityPrivilege
+        return UserCommunityPrivilege.get_privilege(user=this_user, community=self)
+
+    def get_effective_group_privilege(self, this_group):
+        from hs_access_control.models.privilege import GroupCommunityPrivilege
+        return GroupCommunityPrivilege.get_privilege(group=this_group, community=self)
+
     def get_groups_with_explicit_access(self, privilege, user=None):
         """
         Groups that contain resources that should be displayed for a community and/or user

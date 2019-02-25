@@ -363,21 +363,3 @@ class GroupAccess(models.Model):
             return p.privilege
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
-
-    def get_effective_community_privilege(self, this_community):
-        """
-        Return cumulative privilege over a community for a group.
-
-        * CHANGE means that the group can edit resources of a community
-        * VIEW means that the group can view resources of a community (default)
-
-        :param this_community: community to check
-        :return: Privilege code 1-4
-        """
-
-        try:
-            p = GroupCommunityPrivilege.objects.get(group=self.group,
-                                                    community=this_community)
-            return p.privilege
-        except GroupCommunityPrivilege.DoesNotExist:
-            return PrivilegeCodes.NONE

@@ -4,11 +4,11 @@ from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import \
     UserCommunityProvenance, UserCommunityPrivilege, \
+    GroupCommunityProvenance, GroupCommunityPrivilege, \
     PrivilegeCodes
     # UserResourceProvenance, UserResourcePrivilege,
     # GroupResourceProvenance, GroupResourcePrivilege,
     # UserGroupProvenance, UserGroupPrivilege,
-    # GroupCommunityProvenance, GroupCommunityPrivilege,
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -348,4 +348,268 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george.uaccess.undo_share_community_with_user(rebels, alva)
         self.assertEqual(
             UserCommunityPrivilege.get_privilege(community=rebels, user=alva),
+            PrivilegeCodes.NONE)
+
+    def test_groupcommunityprivilege_get_current_record(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        record = GroupCommunityProvenance.get_current_record(
+            community=rebels, group=bikers)
+        self.assertEqual(record.grantor, george)
+        self.assertEqual(record.community, rebels)
+        self.assertEqual(record.group, bikers)
+
+    def test_groupcommunityprivilege_get_undo_groups(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertTrue(
+            is_equal_to_as_set(
+                GroupCommunityProvenance.get_undo_groups(
+                    community=rebels,
+                    grantor=george),
+                [bikers]))
+
+    def test_groupcommunityprivilege_get_privilege(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+
+    def test_groupcommunityprivilege_update(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+
+    def test_groupcommunityprivilege_undo_share(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.NONE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.VIEW,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.VIEW)
+        GroupCommunityProvenance.undo_share(community=rebels, group=bikers, grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+
+        # no further undo is possible.
+        with self.assertRaises(PermissionDenied):
+            GroupCommunityProvenance.undo_share(community=rebels, group=bikers, grantor=george)
+        with self.assertRaises(PermissionDenied):
+            GroupCommunityProvenance.undo_share(community=rebels, group=bikers, grantor=george)
+
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.VIEW,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.VIEW)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+        GroupCommunityProvenance.undo_share(community=rebels, group=bikers, grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.VIEW)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.NONE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityProvenance.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityProvenance.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+
+    def test_groupcommunityresult_get_privilege(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityPrivilege.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+
+    def test_groupcommunityresult_update(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        GroupCommunityPrivilege.update(
+            community=rebels,
+            group=bikers,
+            privilege=PrivilegeCodes.CHANGE,
+            grantor=george)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(
+                community=rebels,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+
+    def test_can_undo_share_community_with_group(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertFalse(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.CHANGE)
+        self.assertTrue(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
+        george.uaccess.undo_share_community_with_group(rebels, bikers)
+
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertFalse(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.VIEW)
+        self.assertTrue(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
+        george.uaccess.undo_share_community_with_group(rebels, bikers)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertFalse(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
+
+    def test_undo_share_community_with_group(self):
+        george = self.george
+        rebels = self.rebels
+        bikers = self.bikers
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.CHANGE)
+        george.uaccess.undo_share_community_with_group(rebels, bikers)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
+            PrivilegeCodes.VIEW)
+        george.uaccess.undo_share_community_with_group(rebels, bikers)
+        self.assertEqual(
+            GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
             PrivilegeCodes.NONE)

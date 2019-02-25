@@ -550,7 +550,11 @@ class UserAccess(models.Model):
 
         return self.user.is_superuser or self.owns_group(this_group)
 
-    def can_share_group(self, this_group, this_privilege, user=None, community=None):
+    # TODO: this should be split into
+    #   can_share_group without optional arguments
+    #   can_share_group_with_user
+    #   can_share_community_with_group
+    def can_share_group(self, this_group, this_privilege, user=None):
         """
         Return True if a given user can share this group with a given privilege.
 
@@ -571,11 +575,6 @@ class UserAccess(models.Model):
                 # ...time passes, forms are created, requests are made...
                 my_user.share_group_with_user(some_group, some_user, PrivilegeCodes.VIEW)
 
-            if my_user.can_share_group(some_group, PrivilegeCodes.VIEW, community=some_community):
-                # ...time passes, forms are created, requests are made...
-                my_user.share_community_with_group(some_community, some_group,
-                                                   PrivilegeCodes.VIEW)
-
 
         In practice:
         ------------
@@ -592,8 +591,6 @@ class UserAccess(models.Model):
                 and this_privilege <= PrivilegeCodes.VIEW
             if user is not None:
                 assert isinstance(user, User)
-            if community is not None:
-                assert isinstance(community, Community)
 
         # TODO: these checks should not be caught by this routine
         # TODO: as they are caught above this level.
@@ -606,12 +603,16 @@ class UserAccess(models.Model):
                 raise PermissionDenied("Grantee user is not active")
 
         try:
-            self.__check_share_group(this_group, this_privilege, user=user, community=community)
+            self.__check_share_group(this_group, this_privilege, user=user)
             return True
         except PermissionDenied:
             return False
 
-    def __check_share_group(self, this_group, this_privilege, user=None, community=None):
+    # TODO: this needs to be split into
+    #  __check_share_group without optional arguments
+    #  __check_share_community_with_group
+    #  __check_share_group_with_user
+    def __check_share_group(self, this_group, this_privilege, user=None):
 
         """
         Raise exception if a given user cannot share this group with a given privilege.
@@ -619,7 +620,6 @@ class UserAccess(models.Model):
         :param this_group: group to check
         :param this_privilege: privilege to assign
         :param user: (optional) user with which to share.
-        :param community: (optional) group with which to share.
         :return: True if sharing is possible, otherwise raise an exception.
 
         This determines whether the current user can share a group, independent of
@@ -644,23 +644,12 @@ class UserAccess(models.Model):
         grantor_priv = access_group.get_effective_privilege(self.user)
         if user is not None:
             grantee_priv = access_group.get_effective_privilege(user)
-        elif community is not None:
-            grantee_priv = access_group.get_effective_community_privilege(community)
         else:
             grantee_priv = PrivilegeCodes.NONE
 
         # check for user authorization
         if self.user.is_superuser:
             pass  # admins can do anything
-
-        elif community is not None:  # share only for owners, so shareable flag is not relevant
-            # only owners of the original groups can share a group with a community
-            if this_privilege == PrivilegeCodes.OWNER:
-                raise PermissionDenied("Groups cannot own communities")
-            if not self.user.uaccess.owns_community(community):
-                raise PermissionDenied("User must own the community to be modified")
-            if not self.user.uaccess.owns_group(this_group):
-                raise PermissionDenied("User must own the group that will join a community")
 
         elif grantor_priv == PrivilegeCodes.OWNER:
             pass  # owner can do anything
@@ -2852,7 +2841,16 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_community_with_user(self, this_community, this_user):
-        """ Check whether an unshare of a community with a user is permitted. """
+        """
+        Check whether an unshare of a community with a user is permitted.
+
+        :param this_community: community with which to unshare a user.
+        :param this_user: user to unshare with.
+
+        The purpose of this utility routine is to assure that
+        can_unshare_community_with_user and unshare_community_with_user
+        have consistent behaviors.
+        """
 
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_community, Community)
@@ -2898,11 +2896,11 @@ class UserAccess(models.Model):
         Usage:
         ------
 
-            g = some_community
+            c = some_community
             u = some_user
-            unshare_users = request_user.get_community_unshare_users(g)
+            unshare_users = request_user.get_community_unshare_users(c)
             if u in unshare_users:
-                self.unshare_community_with_user(g, u)
+                self.unshare_community_with_user(c, u)
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_community, Community)
@@ -2976,7 +2974,32 @@ class UserAccess(models.Model):
         If this returns False, UserAccess.share_community_with_group will raise an exception
         for the corresponding arguments -- *guaranteed*.
         """
-        return self.can_share_group(this_group, this_privilege, community=this_community)
+        try:
+            self.__check_share_community_with_group(this_community, this_group, this_privilege)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_share_community_with_group(self, this_community, this_group,
+                                           this_privilege=PrivilegeCodes.VIEW):
+        """
+        Check whether an unshare of a group with a community is permitted.
+
+        :param this_community: Community with which to unshare group
+        :param this_group: Group to unshare
+
+        This utility routine's sole purpose is to ensure that
+        can_share_community_with_group and share_community_with_group
+        are consistent with one another.
+        """
+        self.__check_share_group(this_group, this_privilege)
+        # only owners of the original groups can share a group with a community
+        if this_privilege == PrivilegeCodes.OWNER:
+            raise PermissionDenied("Groups cannot own communities")
+        if not self.user.uaccess.owns_community(this_community):
+            raise PermissionDenied("User must own the community to be modified")
+        if not self.user.uaccess.owns_group(this_group):
+            raise PermissionDenied("User must own the group that will join a community")
 
     def share_community_with_group(self, this_community, this_group,
                                    this_privilege=PrivilegeCodes.VIEW):
@@ -3022,7 +3045,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group to be shared is not active")
 
         # raise a PermissionDenied exception if user self is not allowed to do this.
-        self.__check_share_group(this_group, this_privilege, community=this_community)
+        self.__check_share_community_with_group(this_community, this_group, this_privilege)
 
         GroupCommunityPrivilege.share(community=this_community, group=this_group,
                                       grantor=self.user, privilege=this_privilege)
@@ -3030,47 +3053,6 @@ class UserAccess(models.Model):
     ####################################
     # (can_)unshare_community_with_group: check for and implement unshare
     ####################################
-
-    def unshare_community_with_group(self, this_community, this_group):
-        """
-        Remove a user from a group by removing privileges.
-
-        :param this_group: Group to be shared.
-        :param this_community: Group with which to share.
-        :return: None
-
-        This removes a user "this_community" from a group "this_group" if
-        one of the following is true:
-            * self is an administrator.
-            * self owns the group "this_group".
-
-        Usage:
-        ------
-
-            if my_user.can_unshare_community_with_group(some_community, some_group):
-                # ...time passes, forms are created, requests are made...
-                my_user.unshare_community_with_group(some_community, some_group)
-
-        In practice:
-        ------------
-
-        "can_unshare_*" is used to construct views with appropriate forms and
-        change buttons, while "unshare_*" is used to implement the responder to the
-        view's forms. "unshare_*" still checks for permission (again) in case
-        things have changed (e.g., through a stale form).
-        """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Affected Group is not active")
-
-        self.__check_unshare_community_with_group(this_community, this_group)
-        GroupCommunityPrivilege.unshare(community=this_community, group=this_group,
-                                        grantor=self.user)
 
     def can_unshare_community_with_group(self, this_community, this_group):
         """
@@ -3100,13 +3082,6 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
             assert isinstance(this_community, Community)
 
-        # these checks should not be caught by this routine
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group to be unshared is not active")
-        # TODO: make these error messages consistent
-
         try:
             self.__check_unshare_community_with_group(this_community, this_group)
             return True
@@ -3114,7 +3089,24 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_community_with_group(self, this_community, this_group):
-        """ Check whether an unshare of a group with a community is permitted. """
+        """
+        Check whether an unshare of a group with a community is permitted.
+
+        :param this_community: Community with which to unshare group
+        :param this_group: Group to unshare
+
+        This utility routine's sole purpose is to ensure that
+        can_unshare_community_with_group and unshare_community_with_group
+        are consistent with one another.
+        """
+        if __debug__:
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group to be unshared is not active")
 
         if not self.user.uaccess.owns_community(this_community):
             raise PermissionDenied("User is not an owner of the target group")
@@ -3125,6 +3117,47 @@ class UserAccess(models.Model):
             raise PermissionDenied("You do not have permission to remove this sharing setting")
 
         return True
+
+    def unshare_community_with_group(self, this_community, this_group):
+        """
+        Remove a user from a group by removing privileges.
+
+        :param this_group: Group to be unshared.
+        :param this_community: Community with which to unshare.
+        :return: None
+
+        This removes a group "this_group" from a community "this_community" if
+        one of the following is true:
+            * self is an administrator.
+            * self owns the group "this_group" and the community "this_community"
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_community_with_group(some_community, some_group):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_community_with_group(some_community, some_group)
+
+        In practice:
+        ------------
+
+        "can_unshare_*" is used to construct views with appropriate forms and
+        change buttons, while "unshare_*" is used to implement the responder to the
+        view's forms. "unshare_*" still checks for permission (again) in case
+        things have changed (e.g., through a stale form).
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_group, Group)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Affected Group is not active")
+
+        self.__check_unshare_community_with_group(this_community, this_group)
+        GroupCommunityPrivilege.unshare(community=this_community, group=this_group,
+                                        grantor=self.user)
 
     def get_community_unshare_groups(self, this_community):
         """
