@@ -563,7 +563,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     try:
         response = session.post(rest_url, timeout=timeout)
 
-        if publish_urls is True and response.status_code == 201:
+        if publish_urls and response.status_code == status.HTTP_201_CREATED:
             try:
 
                 resource = utils.get_resource_by_shortkey(res_id)
