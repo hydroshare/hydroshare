@@ -283,7 +283,7 @@
                                 <td></td>
                             {% endif %}
                             <td class="col-labels">
-                                {% for label in res.labels %}
+                                {% for label in res|user_resource_labels:user %}
                                     {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
                                 {% endfor %}
                             </td>
