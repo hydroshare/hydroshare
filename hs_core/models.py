@@ -3360,8 +3360,13 @@ class BaseResource(Page, AbstractResource):
         for f in self.files.filter(_size__lt=0):
             f.calculate_size()
         # compute the total file size for the resource
-        res_size = self.files.aggregate(Sum('_size'))
-        return res_size['_size__sum']
+        res_size_dict = self.files.aggregate(Sum('_size'))
+        # handle case if no resource files
+        res_size = res_size_dict['_size__sum']
+        if not res_size:
+            # in case of no files
+            res_size = 0
+        return res_size
 
     @property
     def verbose_name(self):
