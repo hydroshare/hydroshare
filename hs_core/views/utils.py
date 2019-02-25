@@ -14,6 +14,7 @@ from dateutil import parser
 from urllib2 import urlopen, HTTPError, URLError
 from tempfile import NamedTemporaryFile
 
+from django.db.models import When, Case, Value, BooleanField
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -532,7 +533,8 @@ def create_form(formclass, request):
     return params
 
 
-def get_my_resources_list(request):
+# TODO : delete this function
+def get_my_resources_list_old(request):
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
@@ -584,6 +586,54 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources +
                            discovered_resources)
+
+    return resource_collection
+
+
+def get_my_resources_list(request):
+
+    user = request.user
+    # get a list of resources with effective OWNER privilege
+    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    # remove obsoleted resources from the owned_resources
+    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
+
+    # get a list of resources with effective CHANGE privilege (should include resources that the
+    # user has access to via group
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                         via_group=True)
+    # remove obsoleted resources from the editable_resources
+    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
+
+    # get a list of resources with effective VIEW privilege (should include resources that the
+    # user has access via group
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                         via_group=True)
+    # remove obsoleted resources from the viewable_resources
+    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
+
+    favorite_resources = user.ulabels.favorited_resources
+    discovered_resources = user.ulabels.my_resources
+    editable_resources = editable_resources.annotate(editable=Value(True, BooleanField()))
+    viewable_resources = viewable_resources.annotate(viewable=Value(True, BooleanField()))
+    discovered_resources = discovered_resources.annotate(discovered=Value(True, BooleanField()))
+    owned_resources = owned_resources.annotate(owned=Value(True, BooleanField()))
+    # join all queryset objects
+    resource_collection = owned_resources.distinct() | \
+        editable_resources.distinct() | \
+        viewable_resources.distinct() | \
+        discovered_resources.distinct()
+
+    resource_collection = resource_collection.annotate(
+        is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                              then=Value(True, BooleanField()))))
+
+    # NOTE: Could not create an annotated attribute (labels) to get a list of labels the user has
+    # used to mark some of the resources. So the resource labels are obtained via template custom
+    # filter
 
     return resource_collection
 
