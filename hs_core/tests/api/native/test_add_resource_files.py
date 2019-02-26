@@ -65,14 +65,14 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
                               title='Test Resource',
                               metadata=[],)
 
-        # delete all resource files for created resource
-        res.files.all().delete()
+        self.assertEqual(0, res.size)
 
         # add files - this is the api we are testing
         add_resource_files(res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         # resource should have 3 files
         self.assertEquals(res.files.all().count(), 3)
+        self.assertEqual(81, res.size)
 
         # add each file of resource to list
         file_list = []
