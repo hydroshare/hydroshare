@@ -1837,7 +1837,8 @@ $(document).ready(function () {
     // Open with method
     $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
-        var path = file.attr("data-url");
+        // get the path under the contents directory
+        var path = file.attr("data-url").split(new RegExp("resource/[a-z0-9]*/data/contents/"))[1];
         var fullURL;
         if ($(this).attr("url_aggregation")) {
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
