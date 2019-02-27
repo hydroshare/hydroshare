@@ -297,7 +297,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         return root_div
 
     def get_update_sqlite_file_html_form(self):
-        form_action = "/hsapi/_internal/{}/update-sqlite-file/".format(self.id)
+        form_action = "/hsapi/_internal/{}/update-sqlite-file/".format(self.logical_file.id)
         style = "display:none;"
         is_dirty = 'False'
         can_update_sqlite_file = 'False'

@@ -27,37 +27,6 @@ class TestSetAccessRules(HSRESTTestCase):
         self.secondUser.delete()
         self.testGroup.delete()
 
-    def test_DEPRECATED_set_access_rules(self):
-        rtype = 'GenericResource'
-        title = 'My Test resource'
-        keywords = ('foo', 'bar')
-        abstract = 'This is a resource used for testing /hsapi/accessRules'
-        new_res = resource.create_resource(rtype,
-                                           self.user,
-                                           title,
-                                           keywords=keywords)
-        new_res.metadata.create_element('description', abstract=abstract)
-        res_id = new_res.short_id
-        self.resources_to_delete.append(res_id)
-
-        sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=res_id)
-        response = self.client.get(sysmeta_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['resource_type'], rtype)
-        self.assertEqual(content['resource_title'], title)
-        self.assertFalse(content['public'])
-
-        access_url = "/hsapi/resource/accessRules/{res_id}/".format(res_id=res_id)
-        response = self.client.put(access_url, {'public': True})
-        # this test resource does not have content file, so it cannot be made public
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.client.get(sysmeta_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertFalse(content['public'])
-
     def test_get_access_rules_via_sysmeta(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
