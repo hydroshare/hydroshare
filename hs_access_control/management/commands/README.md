@@ -28,7 +28,7 @@ After this, the `community` command has the following forms:
 * `community {c-name} owner {o-name} add`  # add an owner
 * `community {c-name} owner {o-name} remove`  # remove an owner 
 
-Some important caveats: 
+## Some important caveats: 
 
 * **Group and community names need not be unique.**
 * You can use either the name or numeric id for either groups or communities. 
@@ -37,7 +37,7 @@ Some important caveats:
 * **This does not protect against violating access control rules.** E.g., you must assure that: 
     * Every community has at least one owner. 
 
-Examples: 
+## Examples: 
 
 * `community`  # lists communities 
 * `community foo`  # lists community "foo"
