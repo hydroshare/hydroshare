@@ -304,3 +304,18 @@ class Command(BaseCommand):
                 print("removing group '{}' (id={}) from community '{}' (id={})"
                       .format(group.name, str(group.id), community.name, str(community.id)))
                 GroupCommunityPrivilege.unshare(group=group, community=community, grantor=owner)
+
+            else:
+                print("unknown group command '{}'.".format(action))
+                usage()
+                exit(1)
+
+        elif command == 'remove':
+            community = community_from_name_or_id(cname)
+            print("removing community '{}' (id={}).".format(community.name, community.id))
+            community.delete()
+
+        else:
+            print("unknown command '{}'.".format(command))
+            usage()
+            exit(1)
