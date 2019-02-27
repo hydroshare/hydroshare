@@ -1,6 +1,9 @@
 """
 This allows creation of a community of groups without a graphical user interface.
-As these routines run in administrative mode, no access control is used.
+
+WARNING: As these routines run in administrative mode, no access control is used.
+Care must be taken to generate reasonable metadata, specifically, concerning
+who owns what. Non-sensical options are possible to create.
 This code is not a design pattern for actually interacting with communities.
 """
 
@@ -10,31 +13,96 @@ from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
         UserCommunityPrivilege, GroupCommunityPrivilege
 
+import re
+
+
+def usage():
+    print("Community usage:")
+    print("  community [{cname} [{request} [{options}]]]")
+    print("Where:")
+    print("  {cname} is a community name. Use '' to embed spaces.")
+    print("  {request} is one of:")
+    print("      list: print the configuration of a community.")
+    print("      create: create the community.")
+    print("      update: update metadata for community.")
+    print("      Options for create and update include:")
+    print("          --owner={username}: set an owner for the community.")
+    print("          --description='{description}': set the description to the text provided.")
+    print("          --purpose='{purpose}': set the purpose to the text provided.")
+    print("      group {gname} {request} {options}: group commands.")
+    print("          {gname}: group name.")
+    print("          {request} is one of:")
+    print("              add: add the group to the community.")
+    print("              update: update community metadata for the group.")
+    print("              remove: remove the group from the community.")
+    print("          Options for group metadata update include:")
+    print("              --prohibit_view: don't allow viewing of this group's resources.")
+    print("              --allow_edit: allow this group to edit other groups' resources.")
+
+
+def group_from_name_or_id(gname):
+    """ return a group object given either an id or a name """
+
+    RE_INT = re.compile(r'^([1-9]\d*|0)$')
+    if RE_INT.match(gname):
+        try:
+            gid = int(gname)
+            group = Group.objects.get(id=gid)
+            return group
+        except Group.DoesNotExist:
+            print("group with id {} does not exist.".format(str(gid)))
+            usage()
+            exit(1)
+
+    else:  # interpret as name
+        groups = Group.objects.filter(name=gname)
+        if groups.count() == 0:
+            print("group '{}' not found.".format(gname))
+            usage()
+            exit(1)
+        elif groups.count() == 1:
+            group = groups[0]
+            return group
+        else:
+            print("Group name {} is not unique. Please use group id instead:".format(gname))
+            for g in groups:
+                print("   '{}' (id={})".format(g.name, str(g.id)))
+            exit(1)
+
+
+def community_from_name_or_id(cname):
+    """ return a group object given either an id or a name """
+
+    RE_INT = re.compile(r'^([1-9]\d*|0)$')
+    if RE_INT.match(cname):
+        try:
+            cid = int(cname)
+            group = Community.objects.get(id=cid)
+            return group
+        except Community.DoesNotExist:
+            print("community with id {} does not exist.".format(str(cid)))
+            usage()
+            exit(1)
+
+    else:  # interpret as name
+        communities = Community.objects.filter(name=cname)
+        if communities.count() == 0:
+            print("community with name '{}' does not exist.".format(cname))
+            usage()
+            exit(1)
+        elif communities.count() == 1:
+            community = communities[0]
+            return community
+        else:
+            print("Community name '{}' is not unique. Please use community id instead:"
+                  .format(cname))
+            for g in communities:
+                print("   '{}' (id={})".format(g.name, str(g.id)))
+            exit(1)
+
 
 class Command(BaseCommand):
-    help = "Manage communities of groups."
-
-    def usage(self):
-        print("Community usage:")
-        print("  manage.py community {cname} {request} {options}")
-        print("Where:")
-        print("  {cname} is a community name. Use '' to embed spaces.")
-        print("  {request} is one of:")
-        print("      list: print the configuration of a community.")
-        print("      create: create the community.")
-        print("      update: update description (--description='...') for community.")
-        print("      Options for create and update include:")
-        print("          --owner={username}: set an owner for the community.")
-        print("          --description='{description}': set the description to the text provided.")
-        print("      group {gname} {request} {options}: group commands.")
-        print("          {gname}: group name.")
-        print("          {request} is one of:")
-        print("              add: add the group to the community.")
-        print("              update: update community metadata for the group.")
-        print("              remove: remove the group from the community.")
-        print("          Options for group requests include:")
-        print("              --prohibit_view: don't allow viewing of this group's resources.")
-        print("              --allow_edit: allow this group to edit other groups' resources.")
+    help = """Manage communities of groups."""
 
     def add_arguments(self, parser):
 
@@ -68,6 +136,12 @@ class Command(BaseCommand):
             help='description of community'
         )
 
+        parser.add_argument(
+            '--purpose',
+            dest='purpose',
+            help='purpose of community'
+        )
+
     def handle(self, *args, **options):
 
         if len(options['command']) > 0:
@@ -89,7 +163,7 @@ class Command(BaseCommand):
             owner = User.objects.get(username=oname)
         except User.DoesNotExist:
             print("owner {} does not exist.".format(oname))
-            self.usage()
+            usage()
             exit(1)
 
         if options['allow_edit']:  # this is a group privilege
@@ -97,44 +171,46 @@ class Command(BaseCommand):
         else:
             privilege = PrivilegeCodes.VIEW
 
-        # this should probably list the active communities
+        # not specifing a community lists active communities
         if cname is None:
-            print("No community specified.")
-            self.usage()
-            exit(1)
+            print("All communities:")
+            for c in Community.objects.all():
+                print("  '{}' (id={})".format(c.name, str(c.id)))
+            exit(0)
 
         if command is None or command == 'list':
-            try:
-                community = Community.objects.get(name=cname)
+            community = community_from_name_or_id(cname)
+            print("community '{}' (id={}):".format(community.name, community.id))
+            print("  description: {}".format(community.description))
+            print("  purpose: {}".format(community.purpose))
+            print("  owners:")
+            for ucp in UserCommunityPrivilege.objects.filter(community=community,
+                                                             privilege=PrivilegeCodes.OWNER):
+                print("    {} (grantor {})".format(ucp.user.username, ucp.grantor.username))
 
-                print("community {}:".format(community))
-                print("  description: {}".format(community.description))
-                print("  owners:")
-                for ucp in UserCommunityPrivilege.objects.filter(community=community,
-                                                                 privilege=PrivilegeCodes.OWNER):
-                    print("    {} (grantor {})".format(ucp.user.username, ucp.grantor.username))
+            print("  member groups:")
+            for gcp in GroupCommunityPrivilege.objects.filter(community=community):
+                if gcp.privilege == PrivilegeCodes.CHANGE:
+                    others = "can edit community resources"
+                else:
+                    others = "can view community resources"
+                if gcp.allow_view:
+                    myself = 'allows view of group resources'
+                else:
+                    myself = 'prohibits view of group resources'
+                print("     '{}' (id={}) (grantor={}):"
+                      .format(gcp.group.name, gcp.group.id, gcp.grantor.username))
+                print("         {}, {}.".format(myself, others))
 
-                print("  groups:")
-                for gcp in GroupCommunityPrivilege.objects.filter(community=community):
-                    if gcp.privilege == PrivilegeCodes.CHANGE:
-                        others = "can edit community resources"
-                    else:
-                        others = "can view community resources"
-                    if gcp.allow_view:
-                        myself = 'allows view of group resources'
-                    else:
-                        myself = 'prohibits view of group resources'
-                    print("     '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
-                    print("         {}, {}.".format(myself, others))
-
-            except Community.DoesNotExist:
-                print("No community {} found.".format(community))
-
+        # These are idempotent actions. Creating a community twice does nothing.
         if command == 'update' or command == 'create':
             try:
                 community = Community.objects.get(name=cname)
                 if options['description'] is not None:
                     community.description = options['description']
+                    community.save()
+                if options['purpose'] is not None:
+                    community.purpose = options['purpose']
                     community.save()
 
                 UserCommunityPrivilege.update(user=owner,
@@ -148,37 +224,44 @@ class Command(BaseCommand):
                     description = options['description']
                 else:
                     description = "No description"
+                purpose = options['purpose']
 
                 print("creating community '{}' with owner '{}' and description '{}'"
                       .format(cname, owner, description))
 
-                owner.uaccess.create_community(cname, description)
+                owner.uaccess.create_community(cname, description, purpose=purpose)
 
         elif command == 'group':
-            # TODO: this should probably list groups
-            if len(options['command']) < 3:
-                print("No group name specified.")
-                self.usage()
-                exit(1)
-            gname = options['command'][2]
+            # at this point, community must exist
 
             try:  # resolve community name
                 community = Community.objects.get(name=cname)
             except Community.DoesNotExist:
                 print("community '{}' does not exist.".format(cname))
-                self.usage()
+                usage()
                 exit(1)
 
-            try:  # resolve group name
-                group = Group.objects.get(name=gname)
-            except Group.DoesNotExist:
-                print("group '{}' not found.".format(gname))
-                self.usage()
-                exit(1)
+            # not specifying a group should list groups
+            if len(options['command']) < 3:
+                print("Community '{}' groups:")
+                for gcp in GroupCommunityPrivilege.objects.filter(community=community):
+                    if gcp.privilege == PrivilegeCodes.CHANGE:
+                        others = "can edit community resources"
+                    else:
+                        others = "can view community resources"
+                    if gcp.allow_view:
+                        myself = 'allows view of group resources'
+                    else:
+                        myself = 'prohibits view of group resources'
+                    print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
+                    print("         {}, {}.".format(myself, others))
+
+            gname = options['command'][2]
+            group = group_from_name_or_id(gname)
 
             if (len(options['command']) < 4):
                 print("No group action specified.")
-                self.usage()
+                usage()
                 exit(1)
 
             action = options['command'][3]
@@ -191,6 +274,8 @@ class Command(BaseCommand):
                     privilege = PrivilegeCodes.VIEW
 
                 try:
+                    print("Updating group '{}' (id={}) status in community '{}' (id={})."
+                          .format(gname, str(group.id), cname, str(community.id)))
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
                     if gcp.allow_view != (not options['prohibit_view']):
                         gcp.allow_view = not options['prohibit_view']
@@ -200,11 +285,9 @@ class Command(BaseCommand):
                         GroupCommunityPrivilege.share(group=group, community=community,
                                                       privilege=privilege, grantor=owner)
 
-                    print("updating group '{}' status in community '{}'".format(gname, cname))
-
                 except GroupCommunityPrivilege.DoesNotExist:
-
-                    print("adding group '{}' to community '{}'".format(gname, cname))
+                    print("Adding group '{}' (id={}) to community '{}' (id={})"
+                          .format(gname, str(group.id), cname, str(community.id)))
 
                     # create the privilege record
                     GroupCommunityPrivilege.share(group=group, community=community,
@@ -216,10 +299,8 @@ class Command(BaseCommand):
                         gcp.allow_view = not options['prohibit_view']
                         gcp.save()
 
-            elif action == 'list':
-                pass
-
             elif action == 'remove':
 
-                print("removing group '{}' from community '{}'".format(gname, cname))
+                print("removing group '{}' (id={}) from community '{}' (id={})"
+                      .format(group.name, str(group.id), community.name, str(community.id)))
                 GroupCommunityPrivilege.unshare(group=group, community=community, grantor=owner)
