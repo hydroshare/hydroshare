@@ -11,7 +11,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserCommunityPrivilege, GroupCommunityPrivilege
+        UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
 
 import re
 
@@ -38,6 +38,13 @@ def usage():
     print("          Options for group metadata update include:")
     print("              --prohibit_view: don't allow viewing of this group's resources.")
     print("              --allow_edit: allow this group to edit other groups' resources.")
+    print("      owner {oname} {request}: owner commands")
+    print("      owner {oname} {request}: owner commands")
+    print("          {oname}: owner name.")
+    print("          {request} is one of:")
+    print("              [blank]: list community owners")
+    print("              add: add an owner for the community.")
+    print("              remove: remove an owner from the community.")
 
 
 def group_from_name_or_id(gname):
@@ -101,6 +108,15 @@ def community_from_name_or_id(cname):
             exit(1)
 
 
+def user_from_name(uname):
+    try:
+        return User.objects.get(username=uname)
+    except User.DoesNotExist:
+        print("user with username '{}' does not exist.".format(uname))
+        usage()
+        exit(1)
+
+
 class Command(BaseCommand):
     help = """Manage communities of groups."""
 
@@ -159,12 +175,7 @@ class Command(BaseCommand):
             oname = options['owner']
         else:
             oname = 'admin'
-        try:
-            owner = User.objects.get(username=oname)
-        except User.DoesNotExist:
-            print("owner {} does not exist.".format(oname))
-            usage()
-            exit(1)
+        owner = user_from_name(oname)
 
         if options['allow_edit']:  # this is a group privilege
             privilege = PrivilegeCodes.CHANGE
@@ -201,6 +212,11 @@ class Command(BaseCommand):
                 print("     '{}' (id={}) (grantor={}):"
                       .format(gcp.group.name, gcp.group.id, gcp.grantor.username))
                 print("         {}, {}.".format(myself, others))
+                print("         '{}' (id={}) owners are:".format(gcp.group.name, str(gcp.group.id)))
+                for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
+                                                             privilege=PrivilegeCodes.OWNER):
+                    print("             {}".format(ugp.user.username))
+            exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
         if command == 'update' or command == 'create':
@@ -231,15 +247,44 @@ class Command(BaseCommand):
 
                 owner.uaccess.create_community(cname, description, purpose=purpose)
 
-        elif command == 'group':
+        elif command == 'owner':
             # at this point, community must exist
+            community = community_from_name_or_id(cname)
 
-            try:  # resolve community name
-                community = Community.objects.get(name=cname)
-            except Community.DoesNotExist:
-                print("community '{}' does not exist.".format(cname))
+            if len(options['command']) < 3:
+                # list owners
+                print("owners of community '{}' (id={})".format(community.name, str(community.id)))
+                for ucp in UserCommunityPrivilege.objects.filter(community=community,
+                                                                 privilege=PrivilegeCodes.OWNER):
+                    print("    {}".format(ucp.user.username))
+                exit(0)
+
+            oname = options['command'][2]
+            owner = user_from_name(oname)
+            if len(options['command']) < 4:
+                print("user {} owns community '{}' (id={})"
+                      .format(owner.username, community.name, str(community.id)))
+            action = options['command'][3]
+
+            if action == 'add':
+                print("adding {} as owner of {} (id={})"
+                      .format(owner.username, community.name, str(community.id)))
+                UserCommunityPrivilege.share(user=owner, community=community,
+                                             privilege=PrivilegeCodes.OWNER, grantor=owner)
+
+            elif action == 'remove':
+                print("removing {} as owner of {} (id={})"
+                      .format(owner.username, community.name, str(community.id)))
+                UserCommunityPrivilege.unshare(user=owner, community=community, grantor=owner)
+
+            else:
+                print("unknown owner action '{}'".format(action))
                 usage()
                 exit(1)
+
+        elif command == 'group':
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
 
             # not specifying a group should list groups
             if len(options['command']) < 3:
@@ -255,12 +300,13 @@ class Command(BaseCommand):
                         myself = 'prohibits view of group resources'
                     print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
                     print("         {}, {}.".format(myself, others))
+                exit(0)
 
             gname = options['command'][2]
             group = group_from_name_or_id(gname)
 
-            if (len(options['command']) < 4):
-                print("No group action specified.")
+            if len(options['command']) < 4:
+                print("community groups: no action specified.")
                 usage()
                 exit(1)
 
