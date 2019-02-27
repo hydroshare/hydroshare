@@ -18,7 +18,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
@@ -2551,6 +2551,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+    _size = models.BigIntegerField(default=-1)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
@@ -2677,30 +2678,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return content_object representing the resource from a resource file."""
         return self.content_object
 
-    # TODO: write unit test
     @property
     def size(self):
-        """Return file size for federated or non-federated files."""
-        if self.resource.resource_federation_path:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            try:
-                return self.fed_resource_file.size
-            except SessionException:
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                return 0
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            try:
-                return self.resource_file.size
-            except SessionException:
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                return 0
+        """Return file size of the file.
+        Calculates the size first if it has not been calculated yet."""
+        if self._size < 0:
+            self.calculate_size()
+        return self._size
 
     # TODO: write unit test
     @property
@@ -2748,6 +2732,30 @@ class ResourceFile(ResourceFileIRODSMixin):
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             return self.resource_file.name
+
+    def calculate_size(self):
+        """Reads the file size and saves to the DB"""
+        if self.resource.resource_federation_path:
+            if __debug__:
+                assert self.resource_file.name is None or \
+                    self.resource_file.name == ''
+            try:
+                self._size = self.fed_resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                self._size = 0
+        else:
+            if __debug__:
+                assert self.fed_resource_file.name is None or \
+                    self.fed_resource_file.name == ''
+            try:
+                self._size = self.resource_file.size
+            except SessionException:
+                logger = logging.getLogger(__name__)
+                logger.warn("file {} not found".format(self.storage_path))
+                self._size = 0
+        self.save()
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
@@ -3350,9 +3358,17 @@ class BaseResource(Page, AbstractResource):
 
         Raises SessionException if iRODS fails.
         """
+        # trigger file size read for files that haven't been set yet
+        for f in self.files.filter(_size__lt=0):
+            f.calculate_size()
         # compute the total file size for the resource
-        f_sizes = [f.size for f in self.files.all()]
-        return sum(f_sizes)
+        res_size_dict = self.files.aggregate(Sum('_size'))
+        # handle case if no resource files
+        res_size = res_size_dict['_size__sum']
+        if not res_size:
+            # in case of no files
+            res_size = 0
+        return res_size
 
     @property
     def verbose_name(self):
