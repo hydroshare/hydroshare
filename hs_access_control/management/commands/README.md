@@ -25,6 +25,8 @@ After this, the `community` command has the following forms:
     * `--owner={owner-username}`
     * `--prohibit_view`  # prohibit viewing of this group's resources by community. 
     * `--allow_edit`  # allow this group to edit resources of other groups in the community. 
+* `community {c-name} owner {o-name} add`  # add an owner
+* `community {c-name} owner {o-name} remove`  # remove an owner 
 
 Some important caveats: 
 
@@ -32,6 +34,8 @@ Some important caveats:
 * You can use either the name or numeric id for either groups or communities. 
 * **You are required to use an id** when a name is not unique. 
 * **All commands are idempotent.** Repeating a command has no effect. 
+* **This does not protect against violating access control rules.** E.g., you must assure that: 
+    * Every community has at least one owner. 
 
 Examples: 
 
