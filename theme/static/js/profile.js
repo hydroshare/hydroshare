@@ -263,7 +263,7 @@ $(document).ready(function () {
     });
 
     $(".btn-cancel-profile-edit").click(function () {
-        location.reload();
+        location.reload(true);
     });
 
     // Filter list listener

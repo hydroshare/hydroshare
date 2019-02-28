@@ -779,8 +779,7 @@
                     {% if cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
                         <div class="col-xs-12 content-block">
                             <h3>Resource Specific</h3>
-                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
-                                 id="resourceSpecificTab">
+                            <div id="resourceSpecificTab">
                                 <div class="row">
                                     {% if not resource_edit_mode %}
                                         {% block extended_metadata %}{% endblock %}

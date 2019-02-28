@@ -571,9 +571,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         form_action = "/hsapi/_internal/netcdf_update/{}/".\
             format(self.resource.short_id)
         style = "display:none;"
-        if self.is_dirty:
-            style = "margin-bottom:10px"
-        root_div = div(id="netcdf-file-update", cls="row", style=style)
+        root_div = div(id="netcdf-file-update", cls="space-bottom", style=style)
 
         with root_div:
             with div(cls="col-sm-12"):
