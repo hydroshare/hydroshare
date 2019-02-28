@@ -17,8 +17,10 @@ def coarse_permissions(u, r):
                        .format(u.username, r.title))
 
     # check whether members of peer group can view community
+    # we want to exclude cases where the peer group is self.
     if UserGroupPrivilege.objects\
             .filter(user=u, group__g2gcp__community__c2gcp__group__g2grp__resource=r)\
+            .exclude(pk__in=UserGroupPrivilege.objects.filter(user=u, group__g2grp__resource=r))\
             .exists():
         results.append("{} has user-group-community-group-resource privilege over '{}'"
                        .format(u.username, r.title))

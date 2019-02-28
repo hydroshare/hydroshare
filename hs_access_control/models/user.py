@@ -3391,3 +3391,59 @@ class UserAccess(models.Model):
                                                grantor=self.user)
         else:
             raise PermissionDenied("User did not grant last privilege")
+
+    ####################################
+    # get communities with specific access for a user
+    ####################################
+
+    def get_communities_with_explicit_access(self, this_privilege):
+        """
+        Get a QuerySet of communities for which the user has the specified privilege
+        Args:
+            this_privilege: one of the PrivilegeCodes
+
+        Returns: QuerySet of Community objects (QuerySet)
+        """
+        if __debug__:
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        # this query computes communities with effective privilege X as follows:
+        # a) There is a privilege of X for the object for user.
+        # b) There is no lower privilege for the object.
+        # c) Thus X is the effective privilege of the object.
+        selected = Community.objects\
+            .filter(c2ucp__user=self.user,
+                    c2ucp__privilege=this_privilege)\
+            .exclude(pk__in=Subquery(Community.objects.filter(
+                                        c2ucp__user=self.user,
+                                        c2ucp__privilege__lt=this_privilege)
+                                     .values("pk")))
+
+        return selected
+
+    def get_communities_with_explicit_membership(self, this_privilege):
+        """
+        Get a QuerySet of communities in which the user has explicit membership privilege
+        Args:
+            this_privilege: one of the PrivilegeCodes
+
+        Returns: QuerySet of Community objects (QuerySet)
+        """
+        if __debug__:
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        selected = Community.objects\
+            .filter(c2gcp__group__g2ugp__user=self.user,
+                    c2gcp__privilege=this_privilege)\
+            .exclude(pk__in=Subquery(Community.objects.filter(
+                                        c2gcp__group__g2ugp__user=self.user,
+                                        c2gcp__privilege__lt=this_privilege)
+                                     .values("pk")))
+
+        return selected

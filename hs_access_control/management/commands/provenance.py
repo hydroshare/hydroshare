@@ -1,0 +1,50 @@
+"""
+This prints the provenance of an access control relationship between a user and a resource.
+This is invaluable for access control debugging.
+
+"""
+
+from django.core.management.base import BaseCommand
+from hs_core.models import BaseResource
+from hs_access_control.models.utilities import access_provenance
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_access_control.management.utilities import user_from_name
+
+
+def usage():
+    print("Provenance usage:")
+    print("  provenance {username} {resource-id}")
+    print("Where:")
+    print("  {username} is a user name.")
+    print("  {resource-id} is a 32-character resource guid.")
+
+
+class Command(BaseCommand):
+    help = """Print access control provenance."""
+
+    def add_arguments(self, parser):
+
+        # a command to execute
+        parser.add_argument('arguments', nargs='*', type=str)
+
+    def handle(self, *args, **options):
+
+        if len(options['arguments']) != 2:
+            usage()
+            exit(1)
+
+        username = options['arguments'][0]
+        resourceid = options['arguments'][1]
+        user = user_from_name(username)
+        if user is None:
+            usage()
+            exit(1)
+
+        try:
+            resource = get_resource_by_shortkey(resourceid, or_404=False)
+        except BaseResource.DoesNotExist:
+            print("No such resource {}.".format(resourceid))
+            usage()
+            exit(1)
+
+        print(access_provenance(user, resource))
