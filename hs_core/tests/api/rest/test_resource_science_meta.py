@@ -81,7 +81,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -153,7 +153,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -202,7 +202,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -262,7 +262,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -312,7 +312,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -373,7 +373,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -438,7 +438,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -569,7 +569,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -675,7 +675,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -782,7 +782,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -877,7 +877,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -1062,7 +1062,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -1157,7 +1157,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
@@ -1310,7 +1310,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "CCC",
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
             "sources": [
                 {
                     "derived_from": "Source 3"
