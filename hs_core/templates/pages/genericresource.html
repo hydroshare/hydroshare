@@ -163,7 +163,7 @@
                             <span>Add metadata</span>
                         </li>
                         {# ADD METADATA TO A FOLDER #}
-                        <li id="btn-set-fileset-file-type" data-fb-action="setFileSetFileType">
+                        <li data-fb-action="setFileSetFileType">
                             <i class="fa fa-plus icon-green" aria-hidden="true"></i>
                             <span>Add metadata</span>
                         </li>
@@ -622,6 +622,16 @@
                                                     <span class="fa fa-download icon-blue"></span>
                                                 </button>
 
+                                                {% if user_zone_account_exist %}
+                                                    <a id="rep-res-bag" type="button"
+                                                       title="Copy Resource Bag to iRODS User Zone"
+                                                       data-target="#rep-resource-to-irods-dialog"
+                                                       data-toggle="modal"
+                                                       data-placement="auto">
+                                                        <span class="fa fa-clone icon-blue"></span>
+                                                    </a>
+                                                {% endif %}
+
                                                 {% for b in cm.bags.all %}
                                                     <a id="btn-download-all" type="button"
                                                        title="Download all content as Zipped BagIt Archive"
@@ -736,27 +746,22 @@
 
                         <div class="files" id="previews"></div>
                         {% block download_bag %}
-                            <div>
                             {% if user_zone_account_exist %}
-                                <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
-                                   data-target="#rep-resource-to-irods-dialog">
-                                    <span class="glyphicon">
-                                       <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
-                                    </span>
-                                </a>
-                            {% endif %}
-
-                            {% if user_zone_account_exist %}
-                                <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-success"></span>
-                                </div>
-                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-error"></span>
+                                <div>
+                                    <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                         role="alert" style="display:none">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span></button>
+                                        <span id="rep-status-success"></span>
+                                    </div>
+                                    <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                         style="display:none">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span></button>
+                                        <span id="rep-status-error"></span>
+                                    </div>
                                 </div>
                             {% endif %}
-                            </div>
                         {% endblock %} {#  download_bag #}
 
                         {# ======= Readme ======= #}

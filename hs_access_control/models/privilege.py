@@ -42,6 +42,19 @@ class PrivilegeCodes(object):
     # Names of privileges for printing
     NAMES = ('Unspecified', 'Owner', 'Change', 'View', 'None')
 
+    @classmethod
+    def from_string(self, privilege):
+        """ Converts a string representation to a PrivilegeCode """
+        if privilege.lower() == 'view':
+            return PrivilegeCodes.VIEW
+        if privilege.lower() == 'edit':
+            return PrivilegeCodes.CHANGE
+        if privilege.lower() == 'owner':
+            return PrivilegeCodes.OWNER
+        if privilege.lower() == 'none':
+            return PrivilegeCodes.NONE
+        return None
+
 
 class PrivilegeBase(models.Model):
     """
