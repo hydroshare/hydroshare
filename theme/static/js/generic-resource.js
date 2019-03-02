@@ -133,7 +133,7 @@ function updateKeywords() {
     var keywords = $("#lst-tags").find(".tag > span").map(function () {
         return $(this).text()
     }).get().join(",");
-    $("#id-subject").find("#id_value").val(keywords);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywords);
 }
 
 // function for adding keywords associated with file type
