@@ -251,7 +251,7 @@
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.title }}</a>
                                 </strong>
                             </td>
                             {# First Author #}
@@ -260,6 +260,7 @@
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
+                            {# Here we are hitting the database once for each resource that is listed #}
                             <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
                             <td>
                                 {# Here we are hitting the database once for each resource that is listed #}
@@ -295,7 +296,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"U" }}</td>
+                            <td>{{ res.last_updated|date:"U" }}</td>
                             <td>
                                 {% if res.raccess.published %}
                                     Published
