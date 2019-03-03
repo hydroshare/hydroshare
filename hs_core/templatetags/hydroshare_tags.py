@@ -34,7 +34,9 @@ def user_permission(content, arg):
 @register.filter
 def user_resource_labels(resource, user):
     # get a list of labels associated with a specified resource by a given user
-    return resource.rlabels.get_labels(user)
+    if resource.has_labels:
+        return resource.rlabels.get_labels(user)
+    return []
 
 
 @register.filter
