@@ -591,7 +591,11 @@ def get_my_resources_list_old(request):
 
 
 def get_my_resources_list(request):
-
+    """
+    Gets a QuerySet object for listing resources that belong to a given user.
+    :param request:
+    :return: an instance of QuerySet
+    """
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
@@ -615,6 +619,7 @@ def get_my_resources_list(request):
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
 
+    labeled_resources = user.ulabels.labeled_resources
     favorite_resources = user.ulabels.favorited_resources
     discovered_resources = user.ulabels.my_resources
     editable_resources = editable_resources.annotate(editable=Value(True, BooleanField()))
@@ -631,10 +636,19 @@ def get_my_resources_list(request):
         is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                               then=Value(True, BooleanField()))))
 
-    # NOTE: Could not create an annotated attribute (labels) to get a list of labels the user has
-    # used to mark some of the resources. So the resource labels are obtained via template custom
-    # filter
+    # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+    # resource has labels - that means we won't hit the DB for each resource listed on the page
+    # to get the list of labels for a resource
+    resource_collection = resource_collection.annotate(has_labels=Case(
+        When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+             then=Value(True, BooleanField()))))
 
+    resource_collection = resource_collection.only('short_id', 'resource_type', 'created',
+                                                   'updated')
+
+    # we won't hit the DB for each resource to know if it's status is public/private/discoverable
+    # etc
+    resource_collection = resource_collection.select_related('raccess')
     return resource_collection
 
 
