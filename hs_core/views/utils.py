@@ -647,8 +647,7 @@ def get_my_resources_list(request):
         When(short_id__in=labeled_resources.values_list('short_id', flat=True),
              then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.only('short_id', 'resource_type', 'created',
-                                                   'updated')
+    resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
 
     # we won't hit the DB for each resource to know if it's status is public/private/discoverable
     # etc
