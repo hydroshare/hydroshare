@@ -24,12 +24,12 @@
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
-                            data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}" >
+                            <ul class="list-group inputs-group"
+                                data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}">
                                 <li class="list-group-item">
-                                    <span data-facet="owned" class="badge">0</span>
+                                    <span class="badge">{{ numOwned }}</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
+                                        <input type="checkbox" value="Owned" checked>Owned
                                         by me</label>
                                 </li>
                                 <li class="list-group-item">
@@ -90,7 +90,8 @@
                             <div class="btn-group" role="group">
                                 <div class="dropdown dropdown-lg">
                                     <span id="btn-clear-search-input"
-                                          class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+                                          class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer">
+                                    </span>
 
                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                             aria-expanded="false"><span class="caret"></span></button>
@@ -259,7 +260,7 @@
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
+                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
                             <td>
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
@@ -309,13 +310,36 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <!-- pagination nav -->
+            {% if collection.has_other_pages %}
+                <ul class="pagination">
+                    {% if collection.has_previous %}
+                        <li><a href="?page={{ collection.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in collection.paginator.page_range %}
+                        {% if collection.number == i %}
+                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                            <li><a href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if collection.has_next %}
+                        <li><a href="?page={{ collection.next_page_number }}">&raquo;</a></li>
+                    {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
             <br>
             <div class="alert alert-info">
                 <strong>
                     <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
                 </strong>
-                <p>Public resources not owned are searchable from
-                    <strong><a href="/search">Discover</a></strong></p>
+                <p class="space-top">
+                    Search for public resources not owned by you on the <a href="/search"><strong>Discover</strong></a> page.
+                </p>
             </div>
             {% include "includes/legend.html" %}
         </div>

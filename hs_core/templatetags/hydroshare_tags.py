@@ -82,10 +82,17 @@ def contact(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
-                              fn=content.first_name,
-                              ln=content.last_name,
-                              uid=content.pk)
+        if content.userprofile.middle_name:
+            content = format_html("<a href='/user/{uid}/'>{fn} {mn} {ln}</a>",
+                                  fn=content.first_name,
+                                  mn=content.userprofile.middle_name,
+                                  ln=content.last_name,
+                                  uid=content.pk)
+        else:
+            content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
+                                  fn=content.first_name,
+                                  ln=content.last_name,
+                                  uid=content.pk)
     else:
         content = format_html("<a href='/user/{uid}/'>{un}</a>",
                               uid=content.pk,
@@ -104,8 +111,12 @@ def best_name(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = """{fn} {ln}""".format(fn=content.first_name, ln=content.last_name,
-                                         un=content.username)
+        if content.userprofile.middle_name:
+            content = "{fn} {mn} {ln}".format(fn=content.first_name,
+                                              mn=content.userprofile.middle_name,
+                                              ln=content.last_name)
+        else:
+            content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
     else:
         content = content.username
 

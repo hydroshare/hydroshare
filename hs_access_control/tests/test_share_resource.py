@@ -2302,3 +2302,10 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
                 group=meowers,
                 resource=holes))
         self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+
+    def test_privilege_to_string(self):
+        self.assertEquals(PrivilegeCodes.VIEW, PrivilegeCodes.from_string("view"))
+        self.assertEquals(PrivilegeCodes.CHANGE, PrivilegeCodes.from_string("edit"))
+        self.assertEquals(PrivilegeCodes.OWNER, PrivilegeCodes.from_string("owner"))
+        self.assertEquals(PrivilegeCodes.NONE, PrivilegeCodes.from_string("none"))
+        self.assertEquals(None, PrivilegeCodes.from_string("bads"))

@@ -22,7 +22,7 @@ def comments_for(context, obj):
     Provides a generic context variable name for the object that
     comments are being rendered for.
     """
-    form = ThreadedCommentForm(context["request"], obj)
+    form = ThreadedCommentForm(context["request"], obj, auto_id=True)
     try:
         context["posted_comment_form"]
     except KeyError:

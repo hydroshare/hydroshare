@@ -1150,9 +1150,15 @@ div.readme {
 div.readme .readme-content {
 	min-height: 200px;
 	height: 200px;
-    overflow: auto;
+	overflow: auto;
 	padding: 2em;
 	resize: vertical;
+	margin: 0;
+	border: 0;
+	background-color: #FFF;
+	font-size: 14px;
+	font-family: 'Roboto', 'sans-serif';
+	word-break: break-word;
 }
 
 div.readme .readme-header {
@@ -1335,7 +1341,7 @@ a[data-toggle='tab']{
    margin-bottom: 10px;
 }
 
-#id_user-wrapper, #id_group-wrapper {
+#id_user-wrapper, #id_group-wrapper, #user-wrapper {
 	width: 100%;
 	border: 1px solid #CCC;
 	min-height: 34px;
@@ -1349,7 +1355,7 @@ a[data-toggle='tab']{
     padding: 15px 0;
 }
 
-#id_user-deck > span.hilight, #id_group-deck > span.hilight {
+#id_user-deck > span.hilight, #user-deck > span.hilight, #id_group-deck > span.hilight {
 	background: #EEE;
 	padding: 6px 12px;
 	padding-right: 16px !important;
@@ -1696,9 +1702,9 @@ body > .main-container {
 	color: #428bca;
 }
 
-#btn-download-all {
+#fb-file-operations-controls #btn-download-all, #fb-file-operations-controls #rep-res-bag {
 	text-decoration: none;
-	padding: 0px 6px;
+	padding: 0 6px;
 	display: inline-block;
 }
 
@@ -2041,10 +2047,12 @@ a.tag:hover {
 }
 
 #discover-resource-search {
-	width: 100%;
-	margin-bottom: 20px;
-	margin-left: 10px;
-	float: right;
+    width: 100%;
+    margin-left: 10px;
+}
+
+#solr-help-info {
+	align-self: center;
 }
 
 .resource-search input {
@@ -3975,6 +3983,10 @@ div.group-add-photo {
 	border: 1px solid #DDD;
 }
 
+#discover-page-options-1 a, #discover-page-options-2 a {
+	cursor: pointer;
+}
+
 #geocoder-panel {
 	z-index: 5;
 	padding: 5px;
@@ -4490,7 +4502,9 @@ div#fb-inner-controls button, .file-browser-search {
 	margin-bottom: 8px;
 }
 
-#fb-file-operations-controls > button, #btn-download-all {
+#fb-file-operations-controls > button,
+#fb-file-operations-controls #btn-download-all,
+#fb-file-operations-controls #rep-res-bag {
 	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
@@ -4504,7 +4518,9 @@ div#fb-inner-controls button, .file-browser-search {
 	pointer-events: none;
 }
 
-#fb-file-operations-controls > button, #btn-download-all {
+#fb-file-operations-controls > button,
+#fb-file-operations-controls #btn-download-all,
+#fb-file-operations-controls #rep-res-bag {
 	margin-top: 8px;
 	text-shadow: 0 1px 0 #fff;
 	border: 1px solid transparent;
@@ -4518,7 +4534,9 @@ span.caption-file-type {
     font-size: 12px;
 }
 
-#fb-file-operations-controls > button:not(.disabled):hover, #btn-download-all:hover {
+#fb-file-operations-controls > button:not(.disabled):hover,
+#fb-file-operations-controls #btn-download-all:hover,
+#fb-file-operations-controls #rep-res-bag:hover {
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 3px #e2e2e2;
 	-webkit-box-shadow: 1px 1px 3px #e2e2e2;
@@ -5108,4 +5126,8 @@ a[data-toggle="modal"] {
 
 .border-gray {
 	border: 1px solid #DDD;
+}
+
+.c-pointer {
+	cursor: pointer;
 }

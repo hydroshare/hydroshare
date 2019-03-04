@@ -28,7 +28,9 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
                                               title='Test Resource',
                                               metadata=[],)
 
-        open('myfile.txt', "w").close()
+        test_file = open('myfile.txt', "w")
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
         self.file = open('myfile.txt', 'r')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
@@ -50,6 +52,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],
             msg='the test file is not added to the resource'
         )
+        self.assertEqual(27, self.res.size)
 
         # delete the resource file - this is the api we are testing
         hydroshare.delete_resource_file(self.res.short_id, self.file.name, self.user)
@@ -60,3 +63,4 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],
             msg='the added test file is not deleted from the resource'
         )
+        self.assertEqual(0, self.res.size)

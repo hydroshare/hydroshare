@@ -10,6 +10,8 @@ Effected files:
 
 ### How to use
 
+Generate a `local_settings.py` file by copying `hydroshare/local_settings.template` to `hydroshare/local_settings.py`
+
 From within the `irods` directory, run the script named **use-local-irods.sh**
 
 **NOTE:** This script requires that package `jq` be installed on the host from which the script is being run. If it's not present it can be installed by invoking `sudo apt-get install jq` in Ubuntu (or similar) environments. 
