@@ -622,7 +622,7 @@
                                                     <span class="fa fa-download icon-blue"></span>
                                                 </button>
 
-{#                                                {% if user_zone_account_exist %}#}
+                                                {% if user_zone_account_exist %}
                                                     <a id="rep-res-bag" type="button"
                                                        title="Copy Resource Bag to iRODS User Zone"
                                                        data-target="#rep-resource-to-irods-dialog"
@@ -630,7 +630,7 @@
                                                        data-placement="auto">
                                                         <span class="hs-icon-irods icon-blue"></span>
                                                     </a>
-{#                                                {% endif %}#}
+                                                {% endif %}
 
                                                 {% for b in cm.bags.all %}
                                                     <a id="btn-download-all" type="button"
