@@ -2083,7 +2083,7 @@ function setFileTypeMetadataFormsClickHandlers(){
 
 function updateResourceKeywords(keywordString) {
     // Update the value of the input used in form submission
-    $("#id-subject").find("#id_value").val(keywordString);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywordString);
 
     // Populate keywords field in the UI
     var keywords = keywordString.split(",");
