@@ -204,7 +204,8 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
     return status.HTTP_200_OK, 'success', f.id
 
 
-def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename):
+def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename,
+                                   validate_url_flag=True):
     """
     edit the referenced url in an url file
     :param user: requesting user
@@ -218,9 +219,11 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     ref_name = url_filename.lower()
     if not ref_name.endswith('.url'):
         return status.HTTP_400_BAD_REQUEST, 'url_filename in the request must have .url extension'
-    is_valid, err_msg = validate_url(new_ref_url)
-    if not is_valid:
-        return status.HTTP_400_BAD_REQUEST, err_msg
+
+    if validate_url_flag:
+        is_valid, err_msg = validate_url(new_ref_url)
+        if not is_valid:
+            return status.HTTP_400_BAD_REQUEST, err_msg
 
     istorage = res.get_irods_storage()
     # temp path to hold updated url file to be written to iRODS

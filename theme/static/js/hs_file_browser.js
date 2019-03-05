@@ -1617,8 +1617,9 @@ $(document).ready(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var refName = $("#ref_name_passover").val();
         var refURL = $("#ref_url_passover").val();
+        var newRefURL = $("#new_ref_url_passover").val();
+        var calls = [];
         if (refName && refURL) {
-            var calls = [];
             calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, false));
 
             // Disable the Cancel button until request has finished
@@ -1631,6 +1632,20 @@ $(document).ready(function () {
 
             $.when.apply($, calls).done(afterRequest);
             $.when.apply($, calls).fail(afterRequest);
+        }
+        else if (refName && newRefURL) {
+            var file = $("#fb-files-container li.ui-selected");
+            var oldurl = file.attr("data-ref-url");
+            if (oldurl != newRefURL) {
+                calls.push(update_ref_url_ajax_submit(resID, currentPath, refName, newRefURL, false));
+                $.when.apply($, calls).done(function () {
+                    refreshFileBrowser();
+                });
+
+                $.when.apply($, calls).fail(function () {
+                    refreshFileBrowser();
+                });
+            }
         }
         return false;
     });
@@ -1645,7 +1660,7 @@ $(document).ready(function () {
         var newurl = $("#txtNewRefURL").val().trim();
         if (oldurl != newurl) {
             var calls = [];
-            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl));
+            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
