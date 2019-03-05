@@ -1556,7 +1556,7 @@ $(document).ready(function () {
         var refURL = $("#txtRefURL").val();
         if (refName && refURL) {
             var calls = [];
-            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, true));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1565,6 +1565,32 @@ $(document).ready(function () {
                 refreshFileBrowser();
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            }
+
+            $.when.apply($, calls).done(afterRequest);
+            $.when.apply($, calls).fail(afterRequest);
+        }
+        return false;
+    });
+
+    // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
+    $("#btn-reference-url-without-validation").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var refName = $("#txtRefName").val();
+        var refURL = $("#txtRefURL").val();
+        if (refName && refURL) {
+            var calls = [];
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, false));
+
+            // Disable the Cancel button until request has finished
+            $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+
+            function afterRequest() {
+                refreshFileBrowser();
+                $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
+                $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+                $("#btn-reference-url-without-validation").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             }
 
             $.when.apply($, calls).done(afterRequest);
