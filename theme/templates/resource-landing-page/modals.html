@@ -612,8 +612,10 @@
                     <p>
                         Unable to validate URL link. This may be due to an error in the URL or password or automated bot
                         protection at the hosting site. If you still want to create referenced content using this invalid URL
-                        link, click <strong>Proceed</strong>. Otherwise, click <strong>Cancel</strong> to enter a valid URL link.
+                        link, click <strong>Proceed</strong>. Otherwise, click <strong>Cancel</strong>.
                     </p>
+                    <input type="hidden" id="ref_name_passover" value=""/>
+                    <input type="hidden" id="ref_url_passover" value=""/>
                 </div>
 
                 <div class="modal-footer">
@@ -674,6 +676,7 @@
                 </div>
 
                 <div class="modal-body">
+
                     <div class="row">
                         <fieldset class="col-sm-12">
                             <label>Name *</label>

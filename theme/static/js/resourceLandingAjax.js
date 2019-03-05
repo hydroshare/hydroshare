@@ -1391,19 +1391,24 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
         },
         success: function (result) {
             $('#add-reference-url-dialog').modal('hide');
+            $('#validate-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
             $("#txtRefURL").val("");
             $("#ref_file_note").show();
         },
         error: function(xhr, errmsg, err) {
-            // Response text is not yet user friendly enough to display in UI
             if(validate_url_flag) {
+                $('#add-reference-url-dialog').modal('hide');
                 // display warning modal dialog
+                $("#ref_name_passover").val($("#txtRefName").val());
+                $("#ref_url_passover").val($("#txtRefURL").val());
                 $('#validate-reference-url-dialog').modal('show');
             }
             else {
+                // Response text is not yet user friendly enough to display in UI
                 display_error_message('Error', "Failed to add reference content.");
                 $('#add-reference-url-dialog').modal('hide');
+                $('#validate-reference-url-dialog').modal('hide');
             }
         }
     });

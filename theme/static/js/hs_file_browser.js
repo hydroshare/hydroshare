@@ -1615,8 +1615,8 @@ $(document).ready(function () {
     $("#btn-reference-url-without-validation").click(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
-        var refName = $("#txtRefName").val();
-        var refURL = $("#txtRefURL").val();
+        var refName = $("#ref_name_passover").val();
+        var refURL = $("#ref_url_passover").val();
         if (refName && refURL) {
             var calls = [];
             calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, false));
@@ -1626,8 +1626,6 @@ $(document).ready(function () {
 
             function afterRequest() {
                 refreshFileBrowser();
-                $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
-                $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
                 $("#btn-reference-url-without-validation").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             }
 

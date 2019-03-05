@@ -328,7 +328,8 @@ def data_store_add_reference(request):
     curr_path = request.POST.get('curr_path', None)
     ref_name = request.POST.get('ref_name', None)
     ref_url = request.POST.get('ref_url', None)
-    validate_url_flag = request.POST.get('validate_url_flag', True)
+    validate_url_flag = request.POST.get('validate_url_flag', 'true')
+    validate_url_flag = True if validate_url_flag == 'true' else False
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
