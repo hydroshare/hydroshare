@@ -221,6 +221,32 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_create_aggregation_from_CSV_file_3(self):
+        # here we are using a valid CSV file that has the minimum required two rows of data
+        # for setting it to TimeSeries file type which includes metadata extraction
+        # here in this case the csv file is at the root
+
+        self.create_composite_resource()
+        valid_csv_file = 'hs_file_types/tests/data/valid_two_data_rows.csv'
+        self.add_file_to_resource(file_to_add=valid_csv_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, None)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # check that there is no TimeSeriesLogicalFile object
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
+
+        # set the CSV file to TimeSeries file type
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # aggregation folder is created from the uploaded csv file
+        new_aggr_folder = res_file.file_name[:-4]
+        self._test_CSV_aggregation(expected_aggr_folder=new_aggr_folder, value_count_by_series='2')
+
+        self.composite_resource.delete()
+
     def test_create_aggregation_from_sqlite_folder_1(self):
         # here we are testing that timeseries aggregation can be created from a folder that
         # contains a sqlite file
@@ -298,6 +324,14 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # This file has no data values
         invalid_csv_file_name = 'Invalid_Data_Test_5.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has date data as a number - not allowed
+        invalid_csv_file_name = 'Invalid_Date_Numeric.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has only one row of data - minimum 2 rows of data needed
+        invalid_csv_file_name = 'Invalid_One_Data_Row.csv'
         self._test_invalid_csv_file(invalid_csv_file_name)
 
     def test_aggregation_sqlite_metadata_update(self):
@@ -1011,15 +1045,15 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def _test_CSV_aggregation(self, expected_aggr_folder):
+    def _test_CSV_aggregation(self, expected_aggr_folder, value_count_by_series='20'):
         # test that the ODM2.sqlite blank file got added to the resource
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         csv_res_file = None
         sqlite_res_file = None
         for res_file in self.composite_resource.files.all():
-            if res_file.extension == '.sqlite':
+            if res_file.extension.lower() == '.sqlite':
                 sqlite_res_file = res_file
-            elif res_file.extension == '.csv':
+            elif res_file.extension.lower() == '.csv':
                 csv_res_file = res_file
 
         self.assertNotEqual(csv_res_file, None)
@@ -1045,8 +1079,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(set(logical_file.metadata.value_counts.keys()), csv_data_column_names)
 
         # there should be 20 data values for each series
-        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Mendon'], '20')
-        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Paradise'], '20')
+        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Mendon'],
+                         value_count_by_series)
+        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Paradise'],
+                         value_count_by_series)
 
         # the dataset name (title) must be set the name of the folder in which the CSV file exist
         expected_dataset_name = os.path.basename(csv_res_file.file_folder)

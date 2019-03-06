@@ -241,7 +241,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_westlimit" class="control-group space-bottom">
+                                <div id="div_id_westlimit" class="control-group">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">West Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -254,7 +254,7 @@
 
                                 {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
                                 <button id="btn-update-resource-spatial-coverage"
-                                        type="button" class="btn btn-info"
+                                        type="button" class="btn btn-info space-top"
                                         {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_spatial_coverage %}
                                         style="display: none"
                                         {% endif %}>
@@ -382,7 +382,7 @@
 
         {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
         <button id="btn-update-resource-temporal-coverage"
-                type="button" class="btn btn-info"
+                type="button" class="btn btn-info space-top"
                 {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_temporal_coverage %}
                 style="display: none"
                 {% endif %}>

@@ -1684,6 +1684,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return False
 
     @property
+    def last_updated(self):
+        """Return the last updated date stored in metadata"""
+        return self.metadata.dates.all().filter(type='modified')[0].start_date
+
+    @property
     def has_required_metadata(self):
         """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
