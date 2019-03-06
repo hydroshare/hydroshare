@@ -133,7 +133,7 @@ function updateKeywords() {
     var keywords = $("#lst-tags").find(".tag > span").map(function () {
         return $(this).text()
     }).get().join(",");
-    $("#id-subject").find("#id_value").val(keywords);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywords);
 }
 
 // function for adding keywords associated with file type
@@ -183,8 +183,7 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
-    var left = ($(window).width() / 2) - 150;
-    var style = "top:" + top + "px;left:" + left + "px";
+    var style = "top:" + top + "px";
     var alertTypes = {
         success: {class: "alert alert-success", icon: "fa fa-check"},
         error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
@@ -200,7 +199,7 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
             $(this).remove();
         });
     }, duration);
-    document.body.appendChild(el);
+    $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
 }
 

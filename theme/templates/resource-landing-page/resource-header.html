@@ -104,7 +104,7 @@
                 </tr>
                 <tr>
                     <th>Last updated:</th>
-                    <td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }}
+                    <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
                         {% if cm.last_changed_by %} by
                             {% include "includes/profile-link.html" with user=cm.last_changed_by %}
                         {% endif %}

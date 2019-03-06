@@ -470,14 +470,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @property
     def has_sqlite_file(self):
         for res_file in self.files.all():
-            if res_file.extension == '.sqlite':
+            if res_file.extension.lower() == '.sqlite':
                 return True
         return False
 
     @property
     def has_csv_file(self):
         for res_file in self.files.all():
-            if res_file.extension == '.csv':
+            if res_file.extension.lower() == '.csv':
                 return True
         return False
 
@@ -504,7 +504,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         # get sqlite resource file
         sqlite_file_to_update = None
         for res_file in self.files.all():
-            if res_file.extension == '.sqlite':
+            if res_file.extension.lower() == '.sqlite':
                 sqlite_file_to_update = res_file
                 break
         if sqlite_file_to_update is None:
@@ -523,7 +523,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             # no files or more than 1 file
             return ""
 
-        if files[0].extension not in cls.get_allowed_uploaded_file_types():
+        if files[0].extension.lower() not in cls.get_allowed_uploaded_file_types():
             return ""
 
         return cls.__name__
@@ -541,7 +541,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         temp_res_file = utils.get_file_from_irods(res_file)
         # hold on to temp dir for final clean up
         temp_dir = os.path.dirname(temp_res_file)
-        if res_file.extension == '.sqlite':
+        if res_file.extension.lower() == '.sqlite':
             validate_err_message = validate_odm2_db_file(temp_res_file)
         else:
             # file must be a csv file
@@ -852,6 +852,8 @@ def validate_csv_file(csv_file_path):
             return err_message
 
         # process data rows
+        date_data_error = False
+        data_row_count = 0
         for row in csv_reader:
             # check that data row has the same number of columns as the header
             if len(row) != len(header):
@@ -860,8 +862,17 @@ def validate_csv_file(csv_file_path):
                 return err_message
             # check that the first column data is of type datetime
             try:
-                parser.parse(row[0])
-            except Exception:
+                # some numeric values (e.g., 20080101, 1.602652223413681) are recognized by the
+                # the parser as valid date value - we don't allow any such value as valid date
+                float(row[0])
+                date_data_error = True
+            except ValueError:
+                try:
+                    parser.parse(row[0])
+                except ValueError:
+                    date_data_error = True
+
+            if date_data_error:
                 err_message += " Data for the first column must be a date value."
                 log.error(err_message)
                 return err_message
@@ -874,6 +885,12 @@ def validate_csv_file(csv_file_path):
                     err_message += " Data values must be numeric."
                     log.error(err_message)
                     return err_message
+            data_row_count += 1
+
+        if data_row_count < 2:
+            err_message += " There needs to be at least two rows of data."
+            log.error(err_message)
+            return err_message
 
     return None
 
@@ -1196,7 +1213,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     # find the csv file
     csv_res_file = None
     for f in target.files.all():
-        if f.extension == ".csv":
+        if f.extension.lower() == ".csv":
             csv_res_file = f
             break
     if csv_res_file is None:
