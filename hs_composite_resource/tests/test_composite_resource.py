@@ -202,6 +202,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                          self.composite_resource.short_id,
                                                          new_ref_url,
                                                          'data/contents',
+                                                         url_filename,
                                                          validate_url_flag=False)
         self.assertEqual(ret_status, status.HTTP_200_OK,
                          msg='Referenced URL should be updated with invalid URL when '
