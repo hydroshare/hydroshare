@@ -160,10 +160,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 def hs_update_web_services(sender, **kwargs):
     """Signal to update resource web services."""
 
-    update_web_services.apply_async((
-        settings.HSWS_URL,
-        settings.HSWS_API_TOKEN,
-        settings.HSWS_TIMEOUT,
-        settings.HSWS_PUBLISH_URLS,
-        kwargs.get("resource").short_id
-    ), countdown=1)
+    if settings.HSWS_ACTIVATED:
+        update_web_services.apply_async((
+            settings.HSWS_URL,
+            settings.HSWS_API_TOKEN,
+            settings.HSWS_TIMEOUT,
+            settings.HSWS_PUBLISH_URLS,
+            kwargs.get("resource").short_id
+        ), countdown=1)
