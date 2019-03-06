@@ -199,7 +199,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test resource referenced URL CAN be updated with an invalid url if validate_url_flag is
         # set to False
         ret_status, msg = edit_reference_url_in_resource(self.user,
-                                                         self.composite_resource.short_id,
+                                                         self.composite_resource,
                                                          new_ref_url,
                                                          'data/contents',
                                                          url_filename,
