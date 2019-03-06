@@ -329,7 +329,7 @@ def data_store_add_reference(request):
     ref_name = request.POST.get('ref_name', None)
     ref_url = request.POST.get('ref_url', None)
     validate_url_flag = request.POST.get('validate_url_flag', 'true')
-    validate_url_flag = True if validate_url_flag == 'true' else False
+    validate_url_flag = True if validate_url_flag.lower() == 'true' else False
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
@@ -372,7 +372,7 @@ def data_store_edit_reference_url(request):
     url_filename = request.POST.get('url_filename', None)
     new_ref_url = request.POST.get('new_ref_url', None)
     validate_url_flag = request.POST.get('validate_url_flag', 'true')
-    validate_url_flag = True if validate_url_flag == 'true' else False
+    validate_url_flag = True if validate_url_flag.lower() == 'true' else False
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
