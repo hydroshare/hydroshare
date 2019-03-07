@@ -2,13 +2,13 @@
 {% spaceless %}
 
 <ul class="nav navbar-nav">
-    <li class="" id="dropdown-menu-my-resources">
+    <li {% if request.get_full_path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
         <a href="/my-resources/">My Resources</a>
     </li>
-    <li class="" id="dropdown-menu-search">
+    <li {% if request.get_full_path == "/search/" %}class="active"{% endif %} id="dropdown-menu-search">
         <a href="/search/">Discover</a>
     </li>
-    <li class="" id="dropdown-menu-collaborate">
+    <li {% if request.get_full_path == "/collaborate/" %}class="active"{% endif %} id="dropdown-menu-collaborate">
         <a href="/collaborate/">Collaborate</a>
     </li>
     <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
