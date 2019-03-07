@@ -537,63 +537,6 @@ def create_form(formclass, request):
     return params
 
 
-# TODO : delete this function
-def get_my_resources_list_old(request):
-    user = request.user
-    # get a list of resources with effective OWNER privilege
-    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    # remove obsoleted resources from the owned_resources
-    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
-
-    # get a list of resources with effective CHANGE privilege (should include resources that the
-    # user has access to via group
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                                         via_group=True)
-    # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
-
-    # get a list of resources with effective VIEW privilege (should include resources that the
-    # user has access via group
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
-                                                                         via_group=True)
-    # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
-
-    owned_resources = list(owned_resources)
-    editable_resources = list(editable_resources)
-    viewable_resources = list(viewable_resources)
-    favorite_resources = list(user.ulabels.favorited_resources)
-    labeled_resources = list(user.ulabels.labeled_resources)
-    discovered_resources = list(user.ulabels.my_resources)
-
-    for res in owned_resources:
-        res.owned = True
-
-    for res in editable_resources:
-        res.editable = True
-
-    for res in viewable_resources:
-        res.viewable = True
-
-    for res in discovered_resources:
-        res.discovered = True
-
-    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
-        res.is_favorite = False
-        if res in favorite_resources:
-            res.is_favorite = True
-        if res in labeled_resources:
-            res.labels = res.rlabels.get_labels(user)
-
-    resource_collection = (owned_resources + editable_resources + viewable_resources +
-                           discovered_resources)
-
-    return resource_collection
-
-
 def get_my_resources_list(request):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
