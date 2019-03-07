@@ -2074,15 +2074,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def _get_metadata(self, metatdata_obj):
         """Get resource metadata from content_object."""
-        md_type = ContentType.objects.get_for_model(metatdata_obj)
-        res_type = ContentType.objects.get_for_model(self)
-        self.content_object = res_type.model_class().objects.get(id=self.id).content_object
+
         if self.content_object:
             return self.content_object
         else:
             metatdata_obj.save()
-            self.content_type = md_type
-            self.object_id = metatdata_obj.id
+            self.content_object = metatdata_obj
             self.save()
             return metatdata_obj
 
