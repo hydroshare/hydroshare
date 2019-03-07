@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load mezzanine_tags keyword_tags%}
+{% load mezzanine_tags keyword_tags inplace_edit%}
 
 {% block meta_title %}{{ page.meta_title }}{% endblock %}
 
@@ -16,6 +16,7 @@
 {% endmetablock %}{% endblock %}
 
 {% block title %}
+{#{% inplace_edit "page.title|linebreaksbr" %}#}
 {{ page.title|linebreaksbr }}
 {% endblock %}
 
