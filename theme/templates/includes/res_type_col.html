@@ -1,10 +1,11 @@
 {% load hydroshare_tags %}
 {% with resource_type=resource|resource_type %}
-    <span class="resource-type-text">{{ resource|resource_type }}</span>
-    {% if resource.resource_type == "GenericResource" %}
-        <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+    <span class="resource-type-text">{{ resource_type }}</span>
+    {% if resource.resource_type == "CompositeResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+             alt="{{ resource_type }}" title="{{ resource_type }}"
+             class="table-res-type-icon"/>
     {% elif resource.resource_type == "RasterResource" %}
         <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
              data-toggle="tooltip" data-placement="right"
@@ -55,11 +56,10 @@
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}"
              class="table-res-type-icon"/>
-    {% elif resource.resource_type == "CompositeResource" %}
-        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+    {% elif resource.resource_type == "GenericResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}"
-             class="table-res-type-icon"/>
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% endif %}
 {% endwith %}
 {#  Sharing Status icons #}
