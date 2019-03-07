@@ -289,9 +289,12 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    if request.method == 'GET':
+        return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
