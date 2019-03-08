@@ -536,8 +536,8 @@ def create_form(formclass, request):
     return params
 
 
-def get_my_resources_list(request):
-    user = request.user
+def get_my_resources_list(user):
+    # user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources

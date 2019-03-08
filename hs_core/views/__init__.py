@@ -1152,14 +1152,14 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-@processor_for('my-resources')
-@login_required
-def my_resources(request, page):
-
-    resource_collection = get_my_resources_list(request)
-    context = {'collection': resource_collection}
-
-    return context
+# @processor_for('my-resources')
+# @login_required
+# def my_resources(request, page):
+#
+#     resource_collection = get_my_resources_list(request)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 
 @processor_for(GenericResource)
@@ -1833,4 +1833,21 @@ class CollaborateView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
+        }
+
+
+class MyResourcesView(TemplateView):
+    template_name = 'pages/my-resources.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        resource_collection = get_my_resources_list(u)
+
+        return {
+            'collection': resource_collection
         }
