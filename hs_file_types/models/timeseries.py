@@ -1745,6 +1745,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
     :param  instance: an instance of either TimeSeriesLogicalFile or TimeSeriesResource
     """
 
+    instance.metadata.refresh_from_db()
     if not instance.metadata.is_dirty:
         return
     is_file_type = isinstance(instance, TimeSeriesLogicalFile)

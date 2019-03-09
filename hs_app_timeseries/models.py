@@ -971,6 +971,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         # uploaded csv file. This list becomes an empty list
         # once metadata changes are written to the blank sqlite file as
         # part of the sync operation.
+        self.refresh_from_db()
         return self.value_counts.keys()
 
     @property

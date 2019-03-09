@@ -166,6 +166,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def get_update_netcdf_file_html_form(self):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.logical_file.id)
         style = "display:none;"
+        self.refresh_from_db()
         if self.is_dirty:
             style = "margin-bottom:15px"
         root_div = div(id="div-netcdf-file-update", cls="row", style=style)

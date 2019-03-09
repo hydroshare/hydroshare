@@ -342,6 +342,7 @@ class NetcdfResource(BaseResource):
         return hs_term_dict
 
     def update_netcdf_file(self, user):
+        self.metadata.refresh_from_db()
         if not self.metadata.is_dirty:
             return
 
