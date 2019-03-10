@@ -612,17 +612,17 @@ function updateLabelCount() {
         // List of labels already applied to the resource;
         var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
         var dataColFavorite = this.data()[FAVORITE_COL].trim();
-        var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
+        // var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
 
-        if (dataColPermissionLevel == "Owned") {
-            ownedCount++;
-        }
-        else if (dataColPermissionLevel == "Discovered") {
-            addedCount++;
-        }
-        else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
-            sharedCount++;
-        }
+        // if (dataColPermissionLevel == "Owned") {
+        //     ownedCount++;
+        // }
+        // else if (dataColPermissionLevel == "Discovered") {
+        //     addedCount++;
+        // }
+        // else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
+        //     sharedCount++;
+        // }
 
         if (dataColFavorite == "Favorite") {
             favorites++;
@@ -645,8 +645,8 @@ function updateLabelCount() {
 
     // Update filter badges count
     // $("#filter .badge[data-facet='owned']").text(ownedCount);
-    $("#filter .badge[data-facet='shared']").text(sharedCount);
-    $("#filter .badge[data-facet='discovered']").text(addedCount);
+    //$("#filter .badge[data-facet='shared']").text(sharedCount);
+    //$("#filter .badge[data-facet='discovered']").text(addedCount);
     $("#filter .badge[data-facet='favorites']").text(favorites);
     $("#filter .badge[data-facet='recent']").text(recentCount);
 
