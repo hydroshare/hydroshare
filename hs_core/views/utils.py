@@ -541,9 +541,11 @@ def get_my_resources_list(request):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
     :param request:
-    :return: an instance of QuerySet
+    :return: an instance of QuerySet a dict of counts of resources the user owns, has edit/view
+    permission, marked as favorite resources
     """
     user = request.user
+    counts = {}
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
@@ -569,15 +571,33 @@ def get_my_resources_list(request):
     labeled_resources = user.ulabels.labeled_resources
     favorite_resources = user.ulabels.favorited_resources
     discovered_resources = user.ulabels.my_resources
-    editable_resources = editable_resources.annotate(editable=Value(True, BooleanField()))
-    viewable_resources = viewable_resources.annotate(viewable=Value(True, BooleanField()))
-    discovered_resources = discovered_resources.annotate(discovered=Value(True, BooleanField()))
-    owned_resources = owned_resources.annotate(owned=Value(True, BooleanField()))
+
+    # gather resource count by permission type
+    counts['owned'] = owned_resources.count()
+    counts['shared'] = viewable_resources.count() + editable_resources.count()
+    counts['favorite'] = favorite_resources.count()
+    counts['discovered'] = discovered_resources.count()
     # join all queryset objects
     resource_collection = owned_resources.distinct() | \
         editable_resources.distinct() | \
         viewable_resources.distinct() | \
         discovered_resources.distinct()
+
+    resource_collection = resource_collection.annotate(
+        owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
+                        then=Value(True, BooleanField()))))
+
+    resource_collection = resource_collection.annotate(
+        editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
+                      then=Value(True, BooleanField()))))
+
+    resource_collection = resource_collection.annotate(
+        viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
+                           then=Value(True, BooleanField()))))
+
+    resource_collection = resource_collection.annotate(
+        discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
+                        then=Value(True, BooleanField()))))
 
     resource_collection = resource_collection.annotate(
         is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
@@ -595,7 +615,7 @@ def get_my_resources_list(request):
     # we won't hit the DB for each resource to know if it's status is public/private/discoverable
     # etc
     resource_collection = resource_collection.select_related('raccess')
-    return resource_collection
+    return resource_collection, counts
 
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
