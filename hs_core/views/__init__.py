@@ -1163,9 +1163,9 @@ def my_resources(request, page):
     :param page: Mezzanine middleware in process_view sends <Page: My Resources>
     :return: html template render with page of resources
     """
-    resource_collection = get_my_resources_list(request)
+    resource_collection, counts = get_my_resources_list(request)
     page = request.GET.get('page')
-    # TODO investigate iRODS performance issue; listing caps out at 10 resources per page, otherwise very slow loading
+
     paginator = Paginator(resource_collection, 1000)
     try:
         collection = paginator.page(page)
@@ -1176,7 +1176,7 @@ def my_resources(request, page):
 
     context = {
                 'collection': collection,
-                'numOwned': resource_collection.count()
+                'counts': counts
                }
 
     return context
