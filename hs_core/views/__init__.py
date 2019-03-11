@@ -63,6 +63,9 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 
 from hs_collection_resource.models import CollectionDeletedResource
 
+from hs_access_control.management.utilities import user_from_name
+from hs_access_control.models.privilege import PrivilegeCodes
+
 logger = logging.getLogger(__name__)
 
 
@@ -1843,6 +1846,30 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
+        }
+
+
+class CommunityView(TemplateView):
+    template_name = 'pages/community.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommunityView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        user_id = User.objects.get(pk=self.request.user.id)
+        user = user_from_name(user_id)
+
+        community_id = kwargs['community_id']
+        # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community; later refactor for when multiple communities exist
+        # community = Group.objects.get(pk=community_id)
+
+        groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
+        communities_owner = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
+        return {
+            'user_id': user_id,
+            'groups_owner': groups_owner,
+            'communities_owner': communities_owner,
         }
 
 

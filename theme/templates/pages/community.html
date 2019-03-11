@@ -20,6 +20,9 @@
     </div>
 
     <div class="container">
+    TODO MOVE TO GROUP PICTURE AFTER RENAMING TO COMMUNITY PICTURE <br />
+        <img src="{{ STATIC_URL }}img/home-page/czo-christina.png" />
+
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
