@@ -639,12 +639,12 @@ function share_resource_ajax_submit(form_id) {
 }
 
 function metadata_update_ajax_submit(form_id){
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
+    let $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata updated.\
     </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+    let $alert_error = '<div class="alert alert-danger" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Error! </strong> \
         Metadata failed to update.\
@@ -655,7 +655,7 @@ function metadata_update_ajax_submit(form_id){
     }
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
     var resourceType = $("#resource-type").val();
-    $form = $('#' + form_id);
+    let $form = $('#' + form_id);
     var datastring = $form.serialize();
 
     // Disable button while request is being made
@@ -844,13 +844,13 @@ function metadata_update_ajax_submit(form_id){
                         }
                     }
                 }
-                $('body > .container').append($alert_success);
+                $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
                     this.remove();
                 });
-                $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                $("#success-alert").fadeTo(2000, 500).fadeOut(1000, function(){
                     $(document).trigger("submit-success");
-                    $(".alert-success").alert('close');
+                    $("#success-alert").alert('close');
                 });
             }
             else{
@@ -888,7 +888,7 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
 }
 
 function set_file_type_ajax_submit(url, folder_path) {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Selected content type creation was successful.\
@@ -906,8 +906,8 @@ function set_file_type_ajax_submit(url, folder_path) {
         success: function (result) {
             waitDialog.dialog("close");
             $("#fb-inner-controls").before($alert_success);
-            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                $(".alert-success").alert('close');
+            $("#success-alert").fadeTo(2000, 500).slideUp(1000, function(){
+                $("#success-alert").alert('close');
             });
         },
         error: function (xhr, textStatus, errorThrown) {
@@ -920,7 +920,7 @@ function set_file_type_ajax_submit(url, folder_path) {
 }
 
 function remove_aggregation_ajax_submit(url) {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Content type was removed successfully.\
@@ -936,8 +936,8 @@ function remove_aggregation_ajax_submit(url) {
         success: function (result) {
             waitDialog.dialog("close");
             $("#fb-inner-controls").before($alert_success);
-            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                $(".alert-success").alert('close');
+            $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                $("#success-alert").alert('close');
             });
         },
         error: function (xhr, textStatus, errorThrown) {
@@ -1048,7 +1048,7 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
 }
 
 function update_netcdf_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File update was successful.\
@@ -1065,8 +1065,8 @@ function update_netcdf_file_ajax_submit() {
                 $("#div-netcdf-file-update").hide();
                 $alert_success = $alert_success.replace("File update was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
                  showFileTypeMetadata(false, "");
@@ -1079,7 +1079,7 @@ function update_netcdf_file_ajax_submit() {
 }
 
 function update_sqlite_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File update was successful.\
@@ -1096,8 +1096,8 @@ function update_sqlite_file_ajax_submit() {
                 $("#div-sqlite-file-update").hide();
                 $alert_success = $alert_success.replace("File update was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
                 showFileTypeMetadata(false, "");
@@ -1774,22 +1774,35 @@ function updateEditCoverageStateFileType() {
     }
 }
 
-// act on spatial coverage type change
+// set form fields for spatial coverage for aggregation/file type
 function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker){
-    // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
 
     if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
-        // don't allow changing coverage type
+        // don't allow changing coverage type if aggregation type is not GenericLogicalFile or FileSetLogicalFile
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find(radioBoxSelector).attr('onclick', 'return false');
         $id_type_filetype_div.find(radioPointSelector).attr('onclick', 'return false');
-        if (logical_type !== "RefTimeseriesLogicalFile"){
-            $id_type_filetype_div.find(radioBoxSelector).attr('checked', 'checked');
+
+        var selectBoxTypeCoverage = false;
+        if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
+            logical_type === "NetCDFLogicalFile" || logical_type === "GeoRasterLogicalFile"){
+            selectBoxTypeCoverage = true;
         }
-        $id_type_filetype_div.find(radioPointSelector).attr('disabled', true);
-        $id_type_filetype_div.find(radioPointSelector).parent().closest("label").addClass("text-muted");
+        if (selectBoxTypeCoverage){
+            $id_type_filetype_div.find(radioPointSelector).attr('disabled', true);
+            $id_type_filetype_div.find(radioPointSelector).parent().closest("label").addClass("text-muted");
+        }
+        else {
+            $id_type_filetype_div.find(radioBoxSelector).attr('disabled', true);
+            $id_type_filetype_div.find(radioBoxSelector).parent().closest("label").addClass("text-muted");
+        }
+
         if (logical_type === "NetCDFLogicalFile" || logical_type === "GeoRasterLogicalFile"){
+            // set box type coverage checked
+            $id_type_filetype_div.find(radioBoxSelector).attr('checked', 'checked');
+
+            // enable spatial coordinate picker (google map interface)
             $("#id-spatial-coverage-file-type").attr('data-coordinates-type', 'rectangle');
             $("#id-spatial-coverage-file-type").coordinatesPicker();
             $("#id-origcoverage-file-type").attr('data-coordinates-type', 'rectangle');
@@ -1797,7 +1810,9 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         }
     }
     else {
-        // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
+        // file type is "GenericLogicalFile" or "FileSetLogicalFile"
+        // allow changing coverage type
+        // provide option to delete spatial coverage at the aggregation level
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageStateFileType);
         var onSpatialCoverageDelete = function () {
             var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
@@ -1822,35 +1837,23 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         // set spatial form attribute 'data-coordinates-type' to point or rectangle
         if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked"){
             $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'rectangle');
-            // check if spatial coverage exists
-            var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
-            if(!$btnDeleteSpatialCoverage.length) {
-                // delete option doesn't exist
-                $btnDeleteSpatialCoverage = addSpatialCoverageLink();
-            }
-            var formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
-            var url = formSpatialCoverage.attr('action');
-            if(url.indexOf('update-file-metadata') !== -1) {
-                onSpatialCoverageDelete();
-            }
-            else {
-                $btnDeleteSpatialCoverage.hide()
-            }
         }
         else {
             $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'point');
-            $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
-            if(!$btnDeleteSpatialCoverage.length) {
-                $btnDeleteSpatialCoverage = addSpatialCoverageLink();
-            }
-            formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
-            url = formSpatialCoverage.attr('action');
-            if(url.indexOf('update-file-metadata') !== -1) {
-                onSpatialCoverageDelete();
-            }
-            else {
-                $btnDeleteSpatialCoverage.hide()
-            }
+        }
+        // check if spatial coverage exists
+        var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
+        if(!$btnDeleteSpatialCoverage.length) {
+            // delete option doesn't exist
+            $btnDeleteSpatialCoverage = addSpatialCoverageLink();
+        }
+        var formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
+        var url = formSpatialCoverage.attr('action');
+        if(url.indexOf('update-file-metadata') !== -1) {
+            onSpatialCoverageDelete();
+        }
+        else {
+            $btnDeleteSpatialCoverage.hide()
         }
         if(bindCoordinatesPicker){
             $("#id-coverage-spatial-filetype").coordinatesPicker();
@@ -2080,7 +2083,7 @@ function setFileTypeMetadataFormsClickHandlers(){
 
 function updateResourceKeywords(keywordString) {
     // Update the value of the input used in form submission
-    $("#id-subject").find("#id_value").val(keywordString);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywordString);
 
     // Populate keywords field in the UI
     var keywords = keywordString.split(",");

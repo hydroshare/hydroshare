@@ -121,3 +121,4 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
         modified_date2 = self.res.metadata.dates.filter(type='modified').first()
         self.assertTrue((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
         self.assertEquals(self.res.last_changed_by, self.user2)
+        self.assertEquals(self.res.last_updated, modified_date2.start_date)

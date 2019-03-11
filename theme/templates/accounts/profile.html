@@ -55,7 +55,7 @@
 
                             {#        Profile picture upload controls       #}
                             {% if profile_user.id == user.id %}
-                                <div data-page-mode="edit" class="text-center">
+                                <div data-page-mode="edit" class="text-center" id="photo-control">
                                 {% if profile.picture and profile.picture.url %}
                                     <div class="btn-file btn-update-picture">
                                         <span class="glyphicon glyphicon-camera"></span>

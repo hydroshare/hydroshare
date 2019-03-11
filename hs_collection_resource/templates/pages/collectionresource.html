@@ -125,7 +125,7 @@
                 <div>
                     {% for b in cm.bags.all %}
                         <div>
-                            <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                            <a id="btn-download-all" type="button" class="btn btn-default row-selector space-bottom"
                                href="{{ bag_url }}">
                                     <span class="glyphicon glyphicon-download-alt">
                                         <span title='Download All Content as Zipped BagIt Archive'
@@ -138,7 +138,6 @@
                                 archive format</a>
                         </div>
                     {% endfor %}
-
                 </div>
             {% endblock %}
         </div>

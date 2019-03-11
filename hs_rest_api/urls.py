@@ -12,6 +12,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+from .views.hs_core import ShareResourceGroup, ShareResourceUser
+
 schema_view_yasg = get_schema_view(
    openapi.Info(
       title="Hydroshare API",
@@ -37,14 +39,6 @@ urlpatterns = [
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
 
-    # DEPRECATED: use from above instead
-    url(r'^resourceTypes/$', core_views.resource_rest_api.ResourceTypes.as_view(),
-        name='DEPRECATED_list_resource_types'),
-
-    # DEPRECATED: use GET /resource/ instead
-    url(r'^resourceList/$', core_views.resource_rest_api.ResourceList.as_view(),
-        name='DEPRECATED_list_resources'),
-
     url(r'^resource/$', core_views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
 
@@ -64,6 +58,12 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$',
         core_views.copy_resource_public, name='copy_resource_public'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/group/(?P<group_id>[\w.@+-]+)/$',
+        ShareResourceGroup.as_view(), name='share_resource_group_public'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/user/(?P<user_id>[\w.@+-]+)/$',
+        ShareResourceUser.as_view(), name='share_resource_user_public'),
+
     # DEPRECATED: use form above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',
         core_views.resource_rest_api.AccessRulesUpdate.as_view(),
@@ -72,11 +72,6 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/sysmeta/$',
         core_views.resource_rest_api.SystemMetadataRetrieve.as_view(),
         name='get_system_metadata'),
-
-    # DEPRECATED: use from above instead
-    url(r'^sysmeta/(?P<pk>[0-9a-f-]+)/$',
-        core_views.resource_rest_api.SystemMetadataRetrieve.as_view(),
-        name='DEPRECATED_get_system_metadata'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/$',
         core_views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
@@ -101,7 +96,7 @@ urlpatterns = [
         core_views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_resource_map'),
 
-    url(r'resource/(?P<pk>[0-9a-f-]+)/files/(?P<file_id>[0-9]+)/metadata/$',
+    url(r'resource/(?P<pk>[0-9a-f-]+)/files/metadata/(?P<pathname>.*)/$',
         FileMetaDataRetrieveUpdateDestroy.as_view(), name="get_update_resource_file_metadata"),
 
     # Patterns are now checked in the view class.
