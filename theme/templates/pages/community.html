@@ -18,11 +18,13 @@
             </div>
         </div>
     </div>
-
     <div class="container">
-    TODO MOVE TO GROUP PICTURE AFTER RENAMING TO COMMUNITY PICTURE <br />
-        <img src="{{ STATIC_URL }}img/home-page/czo-christina.png" />
-
+        {# TODO is this listing twice why #}
+        {% for community in communities_view %}
+        <div class="row">
+            Community {{ community.name }}
+        </div>
+        {%  endfor %}
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
@@ -41,7 +43,8 @@
                 {% endif %}
             {% endif %}
             <div class="col-sm-3">
-                {#  Group Picture #}
+            <!-- TODO community image instead of group image see Alva -->
+                {#  Community Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
                     <div class="group-image-wrapper group-image-wrapper-medium">
                         <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
@@ -97,12 +100,12 @@
                 </li>
                 {% endif %}
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public%}
+{#                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public%}#}
                 <li role="presentation">
                     <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-user"></i> MEMBERS</a>
                 </li>
-                {% endif %}
+{#                {% endif %}#}
             </ul>
 
             <!-- Tab panes -->
@@ -217,6 +220,9 @@
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-9">
+                        {% for group in groups_view %}
+                            <li>{{ group.name }}</li>
+                        {% endfor %}
                             {#  All members #}
                             <table data-edit-count="{{ edit_users|length }}"
                                    data-view-count="{{ view_users|length }}"
