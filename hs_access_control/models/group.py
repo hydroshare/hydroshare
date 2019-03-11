@@ -1,15 +1,28 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Subquery
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
+from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege, \
+        GroupCommunityPrivilege
+from hs_access_control.models.community import Community
 
 #############################################
 # Group access data.
 #
 # GroupAccess has a one-to-one correspondence with the Group object
 # and contains access control flags and methods specific to groups.
+#
+# To avoid UI difficulties, there has been an explicit decision not to modify
+# the display routines for groups to display communities of groups.
+# Rather, communities are exposed through a separate module community.py
+# Only access-list functions have been modified for communities.
+# * GroupAccess.view_resources and GroupAccess.edit_resources do reflect
+#   community privileges, because they are used like access lists, while
+# * GroupAccess.get_resources_with_explicit_access does *not* reflect
+#   community privileges, because it is used to display a group's resources
+#   on the group landing page. Including community resources would confuse this
+#   depiction.
 #############################################
 
 
@@ -78,12 +91,33 @@ class GroupAccess(models.Model):
 
         :return: list of users
 
-        This eliminates duplicates due to multiple invitations.
+        Users can only own groups via direct links. Community-based ownership is not possible.
         """
 
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
                                    u2ugp__privilege=PrivilegeCodes.OWNER)
+
+    @property
+    def __edit_users_of_group(self):
+        """
+        Q expression for users who can edit a group according to group privilege
+        """
+        return Q(is_active=True,
+                 u2ugp__group=self.group,
+                 u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
+
+    @property
+    def __edit_users_of_community(self):
+        """
+        Q expression for community members who can edit a group according to community privilege
+
+        Only members of a supergroup (with CHANGE privilege) can edit individual groups.
+        """
+        return Q(is_active=True,
+                 u2ugp__group__gaccess__active=True,
+                 u2ugp__group__g2gcp__community__c2gcp__group=self.group,
+                 u2ugp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
 
     @property
     def edit_users(self):
@@ -95,14 +129,45 @@ class GroupAccess(models.Model):
         This eliminates duplicates due to multiple invitations.
         """
 
-        return User.objects.filter(is_active=True,
-                                   u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
+        return User.objects.filter(self.__edit_users_of_group |
+                                   self.__edit_users_of_community).distinct()
+
+    @property
+    def __view_users_of_group(self):
+        """
+        Q expression for users who can view a group according to group privilege
+        """
+        return Q(is_active=True,
+                 u2ugp__group=self.group,
+                 u2ugp__privilege__lte=PrivilegeCodes.VIEW)
+
+    @property
+    def __view_users_of_community(self):
+        """
+        Q expression for community members who can view a group according to community privilege
+        """
+        return Q(is_active=True,
+                 u2ugp__group__gaccess__active=True,
+                 u2ugp__group__g2gcp__community__c2gcp__group=self.group)
+
+    @property
+    def view_users(self):
+        """
+        Return list of users who can add members to a group
+
+        :return: list of users
+
+        This eliminates duplicates due to multiple memberships, and includes community groups that
+        have access, unlike members, which just lists explicit group members.
+        """
+
+        return User.objects.filter(self.__view_users_of_group |
+                                   self.__view_users_of_community).distinct()
 
     @property
     def members(self):
         """
-        Return list of members for a group.
+        Return list of members for a group. This does not include communities.
 
         :return: list of users
 
@@ -114,23 +179,96 @@ class GroupAccess(models.Model):
                                    u2ugp__privilege__lte=PrivilegeCodes.VIEW)
 
     @property
+    def viewers(self):
+        """ a viewer is not necessarily a member, due to community influence """
+        return User.objects.filter(
+                Q(is_active=True) &
+                (Q(u2ugp__group__gaccess__active=True,
+                   u2ugp__group=self.group) |
+                 Q(u2ugp__group__gaccess__active=True,
+                   u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                   u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
+
+    def communities(self):
+        """
+        Return list of communities of which this group is a member.
+
+        :return: list of communities
+
+        """
+        return Community.objects.filter(c2gcp__group=self.group)
+
+    @property
+    def __view_resources_of_group(self):
+        """
+        resources viewable according to group privileges
+
+        Used in queries of BaseResource
+        """
+        return Q(r2grp__group=self.group)
+
+    @property
+    def __edit_resources_of_group(self):
+        """
+        resources editable according to group privileges
+
+        Used in queries of BaseResource
+        """
+        return Q(r2grp__group=self.group,
+                 raccess__immutable=False,
+                 r2grp__privilege__lte=PrivilegeCodes.CHANGE)
+
+    @property
+    def __view_resources_of_community(self):
+        """
+        Subquery Q expression for viewable resources according to community memberships
+
+        Used in BaseResource queries only
+        """
+        return Q(r2grp__group__gaccess__active=True,
+                 r2grp__group__g2gcp__allow_view=True,
+                 r2grp__group__g2gcp__community__c2gcp__group=self.group)
+
+    @property
+    def __edit_resources_of_community(self):
+        """
+        Subquery Q expression for editable resources according to community memberships
+
+        Used in BaseResource queries only.
+        """
+        return Q(raccess__immutable=False,
+                 r2grp__group__gaccess__active=True,
+                 r2grp__privilege=PrivilegeCodes.CHANGE,
+                 r2grp__group__g2gcp__community__c2gcp__group=self.group,
+                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
+
+    @property
     def view_resources(self):
         """
         QuerySet of resources held by group.
 
         :return: QuerySet of resource objects held by group.
+
+        This includes directly accessible objects as well as objects accessible
+        by nature of the fact that the current group is a member of a community
+        containing another group that can access the object.
+
         """
-        return BaseResource.objects.filter(r2grp__group=self.group)
+        return BaseResource.objects.filter(self.__view_resources_of_group |
+                                           self.__view_resources_of_community)
 
     @property
     def edit_resources(self):
         """
         QuerySet of resources that can be edited by group.
 
-        :return: List of resource objects that can be edited  by this group.
+        :return: List of resource objects that can be edited by this group.
+
+        These include resources that are directly editable, as well as those editable
+        due to oversight privileges over a community
         """
-        return BaseResource.objects.filter(r2grp__group=self.group, raccess__immutable=False,
-                                           r2grp__privilege__lte=PrivilegeCodes.CHANGE)
+        return BaseResource.objects.filter(self.__edit_resources_of_group |
+                                           self.__edit_resources_of_community)
 
     @property
     def group_membership_requests(self):
@@ -162,44 +300,35 @@ class GroupAccess(models.Model):
         # b) There is no lower privilege in either group privileges for the object.
         # c) Thus X is the effective privilege of the object.
         if this_privilege == PrivilegeCodes.OWNER:
-            return BaseResource.objects.filter(r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects
-                                                .filter(r2grp__group=self.group,
-                                                        r2grp__privilege__lt=this_privilege))
+            return BaseResource.objects.none()  # groups cannot own resources
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
             return BaseResource.objects.filter(raccess__immutable=False,
                                                r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects
-                                                .filter(r2grp__group=self.group,
-                                                        r2grp__privilege__lt=this_privilege))
+                                               r2grp__group=self.group)
+            # there are no excluded resources; maximum privilege is CHANGE
 
-        else:  # this_privilege == PrivilegeCodes.ViEW
+        else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
-            view = BaseResource.objects.filter(r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)\
-                .exclude(pk__in=BaseResource.objects.filter(r2grp__group=self.group,
-                                                            r2grp__privilege__lt=this_privilege))
-
-            immutable = BaseResource.objects.filter(raccess__immutable=True,
-                                                    r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                    r2grp__group=self.group)\
-                                            .exclude(pk__in=BaseResource.objects.filter(
-                                                raccess__immutable=True,
-                                                r2grp__group=self.group,
-                                                r2grp__privilege__lt=PrivilegeCodes.CHANGE))
-
-            return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
+            excluded = BaseResource.objects.filter(raccess__immutable=False,
+                                                   r2grp__privilege=PrivilegeCodes.CHANGE,
+                                                   r2grp__group=self.group).values('pk')
+            return BaseResource.objects.filter(Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                                                 r2grp__group=self.group) |
+                                               Q(raccess__immutable=True,
+                                                 r2grp__privilege=PrivilegeCodes.CHANGE,
+                                                 r2grp__group=self.group))\
+                                       .exclude(pk__in=Subquery(excluded)).distinct()
 
     def get_users_with_explicit_access(self, this_privilege):
         """
-            Get a list of users for which the group has the specified privilege
+        Get a list of users for which the group has the specified privilege
 
-            :param this_privilege: one of the PrivilegeCodes
-            :return: QuerySet of user objects (QuerySet)
+        :param this_privilege: one of the PrivilegeCodes
+        :return: QuerySet of user objects (QuerySet)
+
+        This does not account for community privileges. Just group privileges.
         """
 
         if __debug__:
@@ -211,7 +340,6 @@ class GroupAccess(models.Model):
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
                                        u2ugp__privilege=PrivilegeCodes.CHANGE)
-
         else:  # this_privilege == PrivilegeCodes.VIEW
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
@@ -223,6 +351,8 @@ class GroupAccess(models.Model):
 
         :param this_user: User to check
         :return: Privilege code 1-4
+
+        This does not account for community privileges. Just group privileges.
         """
 
         if not this_user.is_active:
