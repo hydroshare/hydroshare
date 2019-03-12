@@ -867,23 +867,23 @@ $.fn.dataTable.ext.search.push (
             }
         }
         else {
-            inFilters = true;    // If no checkboxes selected, display all
+            inFilters = true;    // Ignore if nothing selected
         }
 
         // Shared by - Used in group resource listing
         var grantors = $('#filter-shared-by .grantor:checked');
+        let inGrantors = false;
         if (grantors.length) {
-            var grantorFlag = false;
             for (var i = 0; i < grantors.length; i++) {
                 var user = parseInt($(grantors[i]).attr("data-grantor-id"));
                 if (parseInt(data[ACCESS_GRANTOR_COL]) == user) {
-                    grantorFlag = true;
+                    inGrantors = true;
+                    break;
                 }
             }
-
-            if (grantorFlag) {
-                return true;
-            }
+        }
+        else {
+            inGrantors = true;  // Ignore if nothing selected
         }
 
         // Labels - Check if the label exists in the table
@@ -904,9 +904,9 @@ $.fn.dataTable.ext.search.push (
             }
         }
         else {
-            inLabels = true;    // If no checkboxes selected, display all
+            inLabels = true;    // Ignore if nothing selected
         }
 
-        return inLabels && inFilters;
+        return inLabels && inFilters && inGrantors;
     }
 );
