@@ -133,7 +133,7 @@ function updateKeywords() {
     var keywords = $("#lst-tags").find(".tag > span").map(function () {
         return $(this).text()
     }).get().join(",");
-    $("#id-subject").find("#id_value").val(keywords);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywords);
 }
 
 // function for adding keywords associated with file type
@@ -566,7 +566,7 @@ $(document).ready(function () {
     });
 
     $("#list-roles a").click(onRoleSelect);
-    $("#add-access-form #id_user-autocomplete").attr("placeholder", "Search by name or username").addClass("form-control");
+    $("#add-access-form #id_user-autocomplete, #add-access-form #user-autocomplete").attr("placeholder", "Search by name or username").addClass("form-control");
     $("#id_group-autocomplete").attr("placeholder", "Search by group name").addClass("form-control");
 
     var file_types = $("#supported-file-types").attr('value');

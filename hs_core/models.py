@@ -1684,6 +1684,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return False
 
     @property
+    def last_updated(self):
+        """Return the last updated date stored in metadata"""
+        return self.metadata.dates.all().filter(type='modified')[0].start_date
+
+    @property
     def has_required_metadata(self):
         """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
@@ -2291,7 +2296,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if readme_file is not None:
             if readme_file.extension.lower() == '.md':
                 return {'content': markdown(readme_file.read().decode('utf-8')),
-                        'file_name': readme_file.file_name}
+                        'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
                 return {'content': readme_file.read(), 'file_name': readme_file.file_name}
         return readme_file
@@ -3597,7 +3602,7 @@ class CoreMetaData(models.Model):
             parsed_metadata.append({"language": {"code": metadata.pop('language')}})
 
         if 'rights' in keys_to_update:
-            parsed_metadata.append({"rights": {"statement": metadata.pop('rights')}})
+            parsed_metadata.append({"rights": metadata.pop('rights')})
 
         if 'sources' in keys_to_update:
             for source in metadata.pop('sources'):

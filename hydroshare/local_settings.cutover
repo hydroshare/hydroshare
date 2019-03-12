@@ -1,19 +1,21 @@
-# DEVELOPMENT - local_settings.py
-#    - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
-#    - The iRODS specific contents of this file contain username and password informaiton
-#      that is used for a HydroShare proxy user
+"""
+DEVELOPMENT - local_settings.py
+   - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
+   - The iRODS specific contents of this file contain username and password informaiton
+     that is used for a HydroShare proxy user
+"""
 
-import redis
 import os
 import yaml
 from kombu import Queue, Exchange
 
 DEBUG = True
 
-# DEVELOPMENT EXAMPLE ONLY
-# Make these unique, and don't share it with anybody
-SECRET_KEY = "9e2e3c2d-8282-41b2-a027-de304c0bc3d944963c9a-4778-43e0-947c-38889e976dcab9f328cb-1576-4314-bfa6-70c42a6e773c"
-NEVERCACHE_KEY = "7b205669-41dd-40db-9b96-c6f93b66123496a56be1-607f-4dbf-bf62-3315fb353ce6f12a7d28-06ad-4ef7-9266-b5ea66ed2519"
+# DEVELOPMENT EXAMPLE ONLY - make these unique, and don't share with anybody
+SECRET_KEY = \
+    "9e2e3c2d-8282-41b2-a027-de304c0bc3d944963c9a-4778-43e0-947c-38889e976dcab9f328cb-1576-4314-bfa6-70c42a6e773c"
+NEVERCACHE_KEY = \
+    "7b205669-41dd-40db-9b96-c6f93b66123496a56be1-607f-4dbf-bf62-3315fb353ce6f12a7d28-06ad-4ef7-9266-b5ea66ed2519"
 
 ALLOWED_HOSTS = "*"
 
@@ -25,42 +27,26 @@ COMMENTS_USE_RATINGS = True
 RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
-REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
-REDIS_PORT = 6379
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
 POSTGIS_PORT = 5432
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
 
-REDIS_CONNECTION = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=4)
-WMS_CACHE_DB = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=5)
-PERMISSIONS_DB= redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=6)
+IPYTHON_SETTINGS = []
+IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
+IPYTHON_HOST = '127.0.0.1'
 
-
-IPYTHON_SETTINGS=[]
-IPYTHON_BASE='/hydroshare/static/media/ipython-notebook'
-IPYTHON_HOST='127.0.0.1'
-
-# celery settings
+# Celery settings
 # customizations: we need a special queue for broadcast signals to all
-# docker daemons.  we also need a special queue for direct messages to all
-# docker daemons.
-BROKER_URL='amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST, RABBITMQ_PORT=RABBITMQ_PORT)
+# docker daemons.  we also need a special queue for direct messages to all docker daemons.
+BROKER_URL = 'amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST,
+                                                                           RABBITMQ_PORT=RABBITMQ_PORT)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_DEFAULT_QUEUE = 'default'
-DEFAULT_EXCHANGE=Exchange('default', type='topic')
+DEFAULT_EXCHANGE = Exchange('default', type='topic')
 
 CELERY_QUEUES = (
     Queue('default', DEFAULT_EXCHANGE, routing_key='task.default'),
@@ -70,19 +56,17 @@ CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
 
+# Docker settings
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
-
-# CartoCSS
-CARTO_HOME='/hs_tmp/node_modules/carto'
-
+# CartoCSS settings
+CARTO_HOME = '/hs_tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
 
 #############
 # DATABASES #
@@ -104,7 +88,7 @@ DATABASES = {
         "PORT": POSTGIS_PORT,
     }
 }
-POSTGIS_VERSION=(2,1,1)
+POSTGIS_VERSION = (2, 1, 1)
 
 # Local resource iRODS configuration
 USE_IRODS = True
@@ -124,7 +108,7 @@ IRODS_GLOBAL_SESSION = True
 REMOTE_USE_IRODS = False
 
 # iRODS customized bagit rule path
-IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
+IRODS_BAGIT_RULE = 'hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
@@ -173,19 +157,19 @@ HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-#EMAIL_HOST_USER = ''
-#EMAIL_HOST_PASSWORD = ''
-#EMAIL_HOST = ''
-#EMAIL_PORT = ''
-#EMAIL_USE_TLS = True
-#DEFAULT_FROM_EMAIL = ''
-#DEFAULT_SUPPORT_EMAIL=''
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_HOST = ''
+# EMAIL_PORT = ''
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = ''
+# DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
 TIME_ZONE = "Etc/UTC"
 
-#used by the mailchimp subscription job in hs_core/tasks.py
+# used by the mailchimp subscription job in hs_core/tasks.py
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
@@ -196,14 +180,16 @@ IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
 
-RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-RECAPTCHA_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify'
+RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
-with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
+# insert a google maps key here when in production
+MAPS_KEY = ''
+
+with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-# insert a google maps key here when in production
-MAPS_KEY= ''
+

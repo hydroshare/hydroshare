@@ -45,7 +45,7 @@ SENDFILE_IRODS_USER_ID: 20000
 SENDFILE_IRODS_GROUP_ID: 20000
 
 ### URIs in Nginx that activate reverse proxy service
-### These must agree with URIs in settings and local_settings.py
+### These must agree with URIs in local_settings.py
 IRODS_DATA_URI: irods-data
 IRODS_USER_URI: irods-user
 IRODS_CACHE_URI: irods-cache
