@@ -788,8 +788,6 @@ $.fn.dataTable.ext.search.push (
         var inputSubject = "";
         var inputAuthor = "";
 
-        var isFiltered = false;
-
         // Split the occurrences at ':' and move to an array.
         var collection = [];
         if (occurrences) {
@@ -825,26 +823,51 @@ $.fn.dataTable.ext.search.push (
             return false;
         }
 
-        //---------------- Facet filters --------------------
-        // Owned by me
-        if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-            if (data[PERM_LEVEL_COL] == "Owned") {
-                return true;
+        let inFilters = false;
+
+        if ($("#filter").find("input[type='checkbox']:checked").length) {
+            //---------------- Facet filters --------------------
+            // Owned by me
+            if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] == "Owned") {
+                    inFilters = true;
+                }
+            }
+
+            // Shared with me
+            if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                    inFilters = true;
+                }
+            }
+
+            // Added by me
+            if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] == "Discovered") {
+                    inFilters = true;
+                }
+            }
+
+            // Favorite
+            if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+                if (data[FAVORITE_COL] == "Favorite") {
+                    inFilters = true;
+                }
+            }
+
+            // Recent
+            if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
+                var cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 5);
+                cutoff = Math.floor(cutoff.getTime() / 1000); // Seconds since the unix epoch
+                // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
+                if (data[LAST_MODIF_SORT_COL] >= cutoff) {
+                    inFilters = true;
+                }
             }
         }
-
-        // Shared with me
-        if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
-                return true;
-            }
-        }
-
-        // Added by me
-        if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
-            if (data[PERM_LEVEL_COL] == "Discovered") {
-                return true;
-            }
+        else {
+            inFilters = true;    // If no checkboxes selected, display all
         }
 
         // Shared by - Used in group resource listing
@@ -864,47 +887,26 @@ $.fn.dataTable.ext.search.push (
         }
 
         // Labels - Check if the label exists in the table
-        var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
-        for (var i = 0; i < labelCheckboxes.length; i++) {
-            if ($(labelCheckboxes[i]).prop("checked") == true) {
-                isFiltered = true;
+        let inLabels = false;
+        var labelCheckboxes = $("#user-labels-left input[type='checkbox']:checked");
+        if (labelCheckboxes.length) {
+            for (var i = 0; i < labelCheckboxes.length; i++) {
                 var label = $(labelCheckboxes[i]).attr("data-label");
 
-                var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
+                var dataColLabels = data[LABELS_COL].replace(/\s+/g, ' ').split(",");
                 for (var h = 0; h < dataColLabels.length; h++) {
                     dataColLabels[h] = dataColLabels[h].trim();
                 }
 
                 if (dataColLabels.indexOf(label) >= 0) {
-                    return true;
+                    inLabels = true;
                 }
             }
         }
-
-        // Favorite
-        if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-            if (data[FAVORITE_COL] == "Favorite") {
-                return true;
-            }
+        else {
+            inLabels = true;    // If no checkboxes selected, display all
         }
 
-        // Recent
-        if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
-            var cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - 5);
-            cutoff = Math.floor(cutoff.getTime()/1000); // Seconds since the unix epoch
-            // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
-            if (data[LAST_MODIF_SORT_COL] >= cutoff) {
-                return true;
-            }
-        }
-
-        // If no filters selected, display all
-        if ($("#facets").find("input[type='checkbox']:checked").length === 0) {
-            return true;
-        }
-
-        // Default
-        return false;
+        return inLabels && inFilters;
     }
 );
