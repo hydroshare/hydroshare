@@ -76,8 +76,7 @@ $(document).ready(function () {
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
-    $(".btn-inline-favorite").click(label_ajax_submit);
-    $(".btn-label-remove").click(label_ajax_submit);
+    $("#item-selectors").on("click", ".btn-inline-favorite, .btn-label-remove", label_ajax_submit);
     $("#btn-create-label").click(label_ajax_submit);
 
     $("#resource-search-input").keyup(function () {
@@ -505,16 +504,19 @@ function updateLabelLists() {
     }
 
     // -----------------   Bind events   -----------------
-    $("#filter input[type='checkbox']").change(function(){
+    $("#filter input[type='checkbox']").change(function () {
         resourceTable.draw();
+        updateLabelLists(); // Needed in case labels changed during narrower filter
     });
 
     $("#filter-shared-by input[type='checkbox']").change(function(){
         resourceTable.draw();
+        updateLabelLists(); // Needed in case labels changed during narrower filter
     });
 
     $("#user-labels-left input[type='checkbox']").change(function () {
         resourceTable.draw();
+        updateLabelLists(); // Needed in case labels changed during narrower filter
     });
 
     $(".inline-dropdown input[type='checkbox']").change(label_ajax_submit);
@@ -587,7 +589,7 @@ function createLabel () {
 
         $(".btn-label-remove").click(label_ajax_submit);
         $("#modalCreateLabel").modal('hide');
-         $("#txtLabelName").val("");
+        $("#txtLabelName").val("");
         updateLabelLists();
     }
 }
