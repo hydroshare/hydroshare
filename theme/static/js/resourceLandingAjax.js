@@ -1376,7 +1376,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
+function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, validate_url_flag) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1386,23 +1386,36 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
             res_id: res_id,
             curr_path: curr_path,
             ref_name: ref_name,
-            ref_url: ref_url
+            ref_url: ref_url,
+            validate_url_flag: validate_url_flag
         },
         success: function (result) {
             $('#add-reference-url-dialog').modal('hide');
+            $('#validate-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
             $("#txtRefURL").val("");
             $("#ref_file_note").show();
         },
-        error: function(xhr, errmsg, err){
-            // Response text is not yet user friendly enough to display in UI
-            display_error_message('Error', "Failed to add reference content.");
-            $('#add-reference-url-dialog').modal('hide');
+        error: function(xhr, errmsg, err) {
+            if(validate_url_flag) {
+                $('#add-reference-url-dialog').modal('hide');
+                // display warning modal dialog
+                $("#ref_name_passover").val(ref_name);
+                $("#ref_url_passover").val(ref_url);
+                $("#new_ref_url_passover").val('');
+                $('#validate-reference-url-dialog').modal('show');
+            }
+            else {
+                // Response text is not yet user friendly enough to display in UI
+                display_error_message('Error', "Failed to add reference content.");
+                $('#add-reference-url-dialog').modal('hide');
+                $('#validate-reference-url-dialog').modal('hide');
+            }
         }
     });
 }
 
-function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url) {
+function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url, validate_url_flag) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1412,13 +1425,25 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
             res_id: res_id,
             curr_path: curr_path,
             url_filename: url_filename,
-            new_ref_url: new_ref_url
+            new_ref_url: new_ref_url,
+            validate_url_flag: validate_url_flag
         },
         success: function (result) {
+            $('#validate-reference-url-dialog').modal('hide');
         },
         error: function (xhr, errmsg, err) {
-            // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
-            display_error_message('Error: failed to edit reference URL.');
+            if (validate_url_flag) {
+                // display warning modal dialog
+                $("#ref_name_passover").val(url_filename);
+                $("#ref_url_passover").val('');
+                $("#new_ref_url_passover").val(new_ref_url);
+                $('#validate-reference-url-dialog').modal('show');
+            }
+            else {
+                // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
+                display_error_message('Error: failed to edit referenced URL.');
+                $('#validate-reference-url-dialog').modal('hide');
+            }
         }
     });
 }

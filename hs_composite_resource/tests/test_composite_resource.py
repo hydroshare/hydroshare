@@ -120,24 +120,52 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test invalid url fails to be added to an empty composite resource
         self.create_composite_resource()
-        url_file_base_name = 'test_url'
+        url_file_base_name = 'test_url_invalid'
         ret_status, msg, _ = add_reference_url_to_resource(self.user,
                                                            self.composite_resource.short_id,
                                                            self.invalid_url, url_file_base_name,
                                                            'data/contents')
-        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST, msg='Input referenced URL is '
-                                                                      'invalid')
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST,
+                         msg='Invalid referenced URL should not be added to resource if '
+                             'validate_url_flag is True')
+
+        # test invalid url CAN be added to the resource if validate_url_flag is turned off
+        ret_status, msg, _ = add_reference_url_to_resource(self.user,
+                                                           self.composite_resource.short_id,
+                                                           self.invalid_url, url_file_base_name,
+                                                           'data/contents',
+                                                           validate_url_flag=False)
+        self.assertEqual(ret_status, status.HTTP_200_OK,
+                         msg='Invalid referenced URL should be added to resource if '
+                             'validate_url_flag is False')
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # there should be one GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        res_file = self.composite_resource.files.first()
+        # url singlefile aggregation should have extra_data url field created
+        url_logical_file = res_file.logical_file
+        self.assertEqual(url_logical_file.extra_data['url'], self.invalid_url)
+
+        # delete the invalid_url resource file
+        hydroshare.delete_resource_file(self.composite_resource.short_id,
+                                        res_file.id, self.user)
+        self.assertEqual(self.composite_resource.files.count(), 0)
+        # there should be no GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # test valid url can be added to an empty composite resource
-        url_file_base_name = 'test_url'
+        url_file_base_name = 'test_url_valid'
         ret_status, msg, _ = add_reference_url_to_resource(self.user,
                                                            self.composite_resource.short_id,
                                                            self.valid_url, url_file_base_name,
                                                            'data/contents')
-        self.assertEqual(ret_status, status.HTTP_200_OK)
+        self.assertEqual(ret_status, status.HTTP_200_OK,
+                         msg='Valid URL should be added to resource')
         self.assertEqual(self.composite_resource.files.count(), 1)
         # there should be one GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
         # test valid url can be added to a subfolder of a composite resource
         new_folder_path = os.path.join("data", "contents", "my-new-folder")
         create_folder(self.composite_resource.short_id, new_folder_path)
@@ -163,9 +191,27 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
                                                          new_ref_url, 'data/contents',
                                                          url_filename)
-        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST, msg='Edited referenced URL is '
-                                                                      'invalid')
+        self.assertEqual(ret_status, status.HTTP_400_BAD_REQUEST, msg='Referenced URL should not '
+                                                                      'be updated with invalid URL '
+                                                                      'when validate_url_flag is '
+                                                                      'True')
 
+        # test resource referenced URL CAN be updated with an invalid url if validate_url_flag is
+        # set to False
+        ret_status, msg = edit_reference_url_in_resource(self.user,
+                                                         self.composite_resource,
+                                                         new_ref_url,
+                                                         'data/contents',
+                                                         url_filename,
+                                                         validate_url_flag=False)
+        self.assertEqual(ret_status, status.HTTP_200_OK,
+                         msg='Referenced URL should be updated with invalid URL when '
+                             'validate_url_flag is False')
+        res_file = self.composite_resource.files.all().first()
+        url_logical_file = res_file.logical_file
+        self.assertEqual(url_logical_file.extra_data['url'], new_ref_url)
+
+        # test resource referenced URL can be updated with a valid URL
         new_ref_url = 'https://www.yahoo.com'
         ret_status, msg = edit_reference_url_in_resource(self.user, self.composite_resource,
                                                          new_ref_url, 'data/contents',
