@@ -548,11 +548,10 @@ def get_my_resources_list(request):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
     :param request:
-    :return: an instance of QuerySet a dict of counts of resources the user owns, has edit/view
-    permission, marked as favorite resources
+    :return: an instance of QuerySet of resources
     """
     user = request.user
-    counts = {}
+
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
@@ -579,11 +578,6 @@ def get_my_resources_list(request):
     favorite_resources = user.ulabels.favorited_resources
     discovered_resources = user.ulabels.my_resources
 
-    # gather resource count by permission type
-    counts['owned'] = owned_resources.count()
-    counts['shared'] = viewable_resources.count() + editable_resources.count()
-    counts['favorite'] = favorite_resources.count()
-    counts['discovered'] = discovered_resources.count()
     # join all queryset objects
     resource_collection = owned_resources.distinct() | \
         editable_resources.distinct() | \
@@ -622,7 +616,7 @@ def get_my_resources_list(request):
     # we won't hit the DB for each resource to know if it's status is public/private/discoverable
     # etc
     resource_collection = resource_collection.select_related('raccess')
-    return resource_collection, counts
+    return resource_collection
 
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
