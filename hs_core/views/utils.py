@@ -159,7 +159,8 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
         return None
 
 
-def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
+def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
+                                  validate_url_flag=True):
     """
     Add a reference URL to a composite resource if URL is valid, otherwise, return error message
     :param user: requesting user
@@ -167,6 +168,8 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     :param ref_url: reference url to be added to the resource
     :param ref_name: file name of the referenced url in internet shortcut format
     :param curr_path: the folder path in the resource to add the referenced url to
+    :param validate_url_flag: optional with default being True, indicating whether url validation
+    needs to be performed or not
     :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
     return error status code, error message, and None (for file_id).
     """
@@ -179,9 +182,10 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     if not ref_name.endswith('.url'):
         ref_name += '.url'
 
-    is_valid, err_msg = validate_url(ref_url)
-    if not is_valid:
-        return status.HTTP_400_BAD_REQUEST, err_msg, None
+    if validate_url_flag:
+        is_valid, err_msg = validate_url(ref_url)
+        if not is_valid:
+            return status.HTTP_400_BAD_REQUEST, err_msg, None
 
     f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
 
@@ -201,7 +205,8 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path):
     return status.HTTP_200_OK, 'success', f.id
 
 
-def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename):
+def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filename,
+                                   validate_url_flag=True):
     """
     edit the referenced url in an url file
     :param user: requesting user
@@ -215,9 +220,11 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     ref_name = url_filename.lower()
     if not ref_name.endswith('.url'):
         return status.HTTP_400_BAD_REQUEST, 'url_filename in the request must have .url extension'
-    is_valid, err_msg = validate_url(new_ref_url)
-    if not is_valid:
-        return status.HTTP_400_BAD_REQUEST, err_msg
+
+    if validate_url_flag:
+        is_valid, err_msg = validate_url(new_ref_url)
+        if not is_valid:
+            return status.HTTP_400_BAD_REQUEST, err_msg
 
     istorage = res.get_irods_storage()
     # temp path to hold updated url file to be written to iRODS

@@ -251,7 +251,7 @@
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.title }}</a>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
                                 </strong>
                             </td>
                             {# First Author #}
@@ -313,28 +313,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <!-- pagination nav -->
-            {% if collection.has_other_pages %}
-                <ul class="pagination">
-                    {% if collection.has_previous %}
-                        <li><a href="?page={{ collection.previous_page_number }}">&laquo;</a></li>
-                    {% else %}
-                        <li class="disabled"><span>&laquo;</span></li>
-                    {% endif %}
-                    {% for i in collection.paginator.page_range %}
-                        {% if collection.number == i %}
-                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
-                        {% else %}
-                            <li><a href="?page={{ i }}">{{ i }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if collection.has_next %}
-                        <li><a href="?page={{ collection.next_page_number }}">&raquo;</a></li>
-                    {% else %}
-                        <li class="disabled"><span>&raquo;</span></li>
-                    {% endif %}
-                </ul>
-            {% endif %}
             <br>
             <div class="alert alert-info">
                 <strong>
