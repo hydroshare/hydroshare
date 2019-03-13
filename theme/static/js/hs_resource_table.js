@@ -338,11 +338,16 @@ function delete_multiple_resources_ajax_submit(indexes) {
     }
 
     // Wait for all asynchronous calls to finish
-    $.when.apply($, calls).done(function () {
-        resourceTable.draw();
-        updateLabelCount();
-        $("html").css("cursor", "initial"); // Restore default cursor
-    });
+    $.when.apply($, calls)
+      .done(function () {
+          resourceTable.draw();
+          updateLabelCount();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      })
+      .fail(function () {
+          showUniversalMessage("error", 'Failed to delete resource(s).', 10000)();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      });
 }
 
 function label_ajax_submit() {
