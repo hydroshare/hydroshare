@@ -1250,7 +1250,7 @@ $(document).ready(function () {
                 // console.log(response);
             },
             success: function (file, response) {
-                console.log(response);
+                // console.log(response);
             },
             successmultiple: function (files, response) {
                 // uploaded files can affect metadata in composite resource.
