@@ -781,7 +781,7 @@ li.account p{
 #cogs-menu,
 #profile-menu {
     display: none;
-    text-transform: initial;
+    text-transform: none;
 }
 
 #profile-menu > .dropdown-toggle {
