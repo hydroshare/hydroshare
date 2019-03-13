@@ -4033,7 +4033,7 @@ div.group-add-photo {
 }
 
 .center-radio-inline input[type='radio']{
-	float: initial;
+	float: none;
 	margin: 0;
 }
 
