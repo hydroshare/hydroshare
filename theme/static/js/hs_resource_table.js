@@ -183,7 +183,7 @@ $(document).ready(function () {
 
     // Categorizes the resources based on criteria about delete permissions.
     function inspectResources(indexes, notOwned, published) {
-        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr.data-row");
+        var selectedRows = $("#item-selectors .row-selector:checked").closest("tr.data-row");
         for (var i = 0; i < selectedRows.length; i++) {
             var index = resourceTable.row($(selectedRows[i])).index();
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
@@ -225,7 +225,7 @@ $(document).ready(function () {
 
         messageBody.empty();
 
-        // Resources that cannot be deleted becausse the current user does not own them
+        // Resources that cannot be deleted because the current user does not own them
         if (notOwned.length > 0) {
             var notOwnedTemplate = "";
             for (var i = 0; i < notOwned.length; i++) {
