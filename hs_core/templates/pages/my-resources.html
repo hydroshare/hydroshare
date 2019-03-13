@@ -24,27 +24,26 @@
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group" data-owned-count="{{ counts.owned }}"
-                                data-shared-count="{{ counts.shared }}" data-added-count="{{ counts.discovered }}">
+                            <ul class="list-group inputs-group">
                                 <li class="list-group-item">
-                                    <span data-facet="owned" class="badge">{{ counts.owned }}</span>
+                                    <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
                                         by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="shared" class="badge">{{ counts.shared }}</span>
+                                    <span data-facet="shared" class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="shared" value="Shared">Shared with me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="discovered" class="badge">{{ counts.discovered }}</span>
+                                    <span data-facet="discovered" class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="discovered" value="Discovered"
                                                checked>Added by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="favorites" class="badge">{{ counts.favorite }}</span>
+                                    <span data-facet="favorites" class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="favorites"
                                                value="Favorites" checked>Favorites</label>
