@@ -4600,9 +4600,10 @@ span.caption-file-type {
 }
 
 .ui-resizable-se {
-    background-color: #fff;
-    margin-right: -1px;
-    background-position: -81px -224px !important;
+	background-color: #fff;
+	margin-right: -1px;
+	background-position: -81px -224px !important;
+	z-index: 2 !important;
 }
 
 .ui-resizable-e {
