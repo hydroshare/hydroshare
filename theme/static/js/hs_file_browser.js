@@ -7,28 +7,28 @@ var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
 
-var file_metadata_alert = `
-    <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
-        <div>Select a file to see file type metadata.</div>
-        <hr>
-        <span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
-            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true" style="top: 14px;"></i>
-        </span>
-    </div>`;
+var file_metadata_alert =
+    '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
+        '<div>Select a file to see file type metadata.</div>' +
+        '<hr>' +
+        '<span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>' +
+            '<i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true" style="top: 14px;"></i>' +
+        '</span>' +
+    '</div>';
 
-var no_metadata_alert = `
-    <div class="alert alert-warning text-center" role="alert">
-        <div>No file type metadata exists for this file.</div>
-        <hr>
-        <i class="fa fa-eye-slash fa-3x" aria-hidden="true"></i>
-    </div>`;
+var no_metadata_alert =
+    '<div class="alert alert-warning text-center" role="alert">' +
+        '<div>No file type metadata exists for this file.</div>' +
+        '<hr>' +
+        '<i class="fa fa-eye-slash fa-3x" aria-hidden="true"></i>' +
+    '</div>';
 
-var loading_metadata_alert = `
-    <div class="text-center" role="alert">
-        <br>
-        <i class="fa fa-spinner fa-spin fa-3x fa-fw icon-blue"></i>
-        <span class="sr-only">Loading...</span>
-    </div>`;
+var loading_metadata_alert =
+    '<div class="text-center" role="alert">' +
+        '<br>' +
+        '<i class="fa fa-spinner fa-spin fa-3x fa-fw icon-blue"></i>' +
+        '<span class="sr-only">Loading...</span>' +
+    '</div>';
 
 const MAX_FILE_SIZE = 1024; // MB
 
@@ -1219,12 +1219,12 @@ $(document).ready(function () {
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
     if (mode === "edit") {
-        no_metadata_alert += `
-        <div class="text-center">
-            <a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">
-                <i class="fa fa-plus"></i> Add metadata
-            </a>
-        </div>`
+        no_metadata_alert +=
+        '<div class="text-center">' +
+            '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
+                '<i class="fa fa-plus"></i> Add metadata' +
+            '</a>' +
+        '</div>'
     };
 
     if (mode === "edit" && acceptedFiles.length > 0) {

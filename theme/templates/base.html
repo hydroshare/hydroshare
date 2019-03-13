@@ -17,7 +17,7 @@
 {% endifinstalled %}
 
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}"rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet" />
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}" />
 
@@ -143,7 +143,8 @@
                                     <div class="dropdown-footer">
                                         <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
                                         <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
-                                            <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out
+                                        </a>
                                     </div>
                                 </li>
                             </ul>
