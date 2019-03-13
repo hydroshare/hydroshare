@@ -207,7 +207,19 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {'validation_error': ex.message}
         return JsonResponse(msg, status=500)
 
-    return JsonResponse(data={}, status=200)
+    res_public_status = 'public' if resource.raccess.public else 'not public'
+
+    if resource.can_be_public_or_discoverable:
+        metadata_status = METADATA_STATUS_SUFFICIENT
+    else:
+        metadata_status = METADATA_STATUS_INSUFFICIENT
+
+    response_data = {
+        'res_public_status': res_public_status,
+        'metadata_status': metadata_status,
+    }
+
+    return JsonResponse(data=response_data, status=200)
     
 
 def _get_resource_sender(element_name, resource):

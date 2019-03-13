@@ -1250,7 +1250,7 @@ $(document).ready(function () {
                 // console.log(response);
             },
             success: function (file, response) {
-                // console.log(response);
+                console.log(response);
             },
             successmultiple: function (files, response) {
                 // uploaded files can affect metadata in composite resource.
@@ -1259,6 +1259,7 @@ $(document).ready(function () {
                 if (resourceType === 'Composite Resource') {
                     updateResourceUI();
                 }
+                showCompletedMessage(response);
             },
             init: function () {
                 // The user dragged a file onto the Dropzone
