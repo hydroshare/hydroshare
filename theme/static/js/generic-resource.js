@@ -189,10 +189,15 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
         error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
         info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
     };
+
+    let fadeDuration = 400;
+    let progressDuration = (duration - fadeDuration)/1000;
+
     el.setAttribute("style", style);
     el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
     alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
-        + alertTitle + '</strong><br>' + alertMessage;
+        + alertTitle + '</strong><br>' + alertMessage
+    + "<div class='alert-progress' style='animation: runProgress " + progressDuration + "s linear forwards 0.5s;'></div>";
     el.innerHTML = alertMessage;
     setTimeout(function () {
         $(el).fadeOut(300, function () {
@@ -200,7 +205,7 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
         });
     }, duration);
     $(el).appendTo("body > .main-container > .container");
-    $(el).hide().fadeIn(400);
+    $(el).hide().fadeIn(fadeDuration);
 }
 
 function showAddEditExtraMetaPopup(edit, row_id_str) {

@@ -1553,6 +1553,23 @@ body > .main-container {
     margin-top: 20px;
 }
 
+@keyframes runProgress {
+	0% {
+		width: 0;
+	}
+	100% {
+		width: 100%;
+	}
+}
+
+.custom-alert .alert-progress {
+	width: 0;
+	height: 4px;
+	background-color: rgba(0, 0, 0, 0.4);
+	margin-top: 20px;
+	border-radius: 4px;
+}
+
 .custom-well {
     min-height: 20px;
     padding: 19px;
