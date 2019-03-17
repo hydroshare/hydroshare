@@ -183,7 +183,7 @@ $(document).ready(function () {
 
     // Categorizes the resources based on criteria about delete permissions.
     function inspectResources(indexes, notOwned, published) {
-        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr.data-row");
+        var selectedRows = $("#item-selectors .row-selector:checked").closest("tr.data-row");
         for (var i = 0; i < selectedRows.length; i++) {
             var index = resourceTable.row($(selectedRows[i])).index();
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
@@ -225,7 +225,7 @@ $(document).ready(function () {
 
         messageBody.empty();
 
-        // Resources that cannot be deleted becausse the current user does not own them
+        // Resources that cannot be deleted because the current user does not own them
         if (notOwned.length > 0) {
             var notOwnedTemplate = "";
             for (var i = 0; i < notOwned.length; i++) {
@@ -338,11 +338,16 @@ function delete_multiple_resources_ajax_submit(indexes) {
     }
 
     // Wait for all asynchronous calls to finish
-    $.when.apply($, calls).done(function () {
-        resourceTable.draw();
-        updateLabelCount();
-        $("html").css("cursor", "initial"); // Restore default cursor
-    });
+    $.when.apply($, calls)
+      .done(function () {
+          resourceTable.draw();
+          updateLabelCount();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      })
+      .fail(function () {
+          showUniversalMessage("error", 'Failed to delete resource(s).', 10000)();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      });
 }
 
 function label_ajax_submit() {
