@@ -1839,8 +1839,10 @@ class CommunityView(TemplateView):
     def get_context_data(self, **kwargs):
         user_id = User.objects.get(pk=self.request.user.id)
         user = user_from_name(user_id)
+        groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
+        communities_owner = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
 
-        community_id = kwargs['community_id']
+        # community_id = kwargs['community_id']
         # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community; later refactor for when multiple communities exist
         # community = Group.objects.get(pk=community_id)
 
@@ -1849,11 +1851,13 @@ class CommunityView(TemplateView):
         groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
         # g = Group.objects.get(pk=groups_view.id)
         # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
+        pause = 1
         return {
             'user_id': user_id,
             'groups_owner': groups_owner,
             'groups_view': groups_view,
             'communities_view': communities_view,
+            'communities_owner': communities_owner,
         }
 
 
