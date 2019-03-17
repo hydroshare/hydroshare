@@ -851,10 +851,9 @@ class TimeSeriesResource(BaseResource):
         verbose_name = 'Time Series'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = TimeSeriesMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return TimeSeriesMetaData
 
     @property
     def has_sqlite_file(self):

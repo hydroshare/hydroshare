@@ -603,10 +603,9 @@ class MODFLOWModelInstanceResource(BaseResource):
         verbose_name = 'MODFLOW Model Instance Resource'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = MODFLOWModelInstanceMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return MODFLOWModelInstanceMetaData
 
     def check_content_files(self):
         """

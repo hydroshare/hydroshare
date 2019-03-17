@@ -308,10 +308,9 @@ class Variable(AbstractMetaDataElement):
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
-    @property
-    def metadata(self):
-        md = NetcdfMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return NetcdfMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):

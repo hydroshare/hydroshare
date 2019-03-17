@@ -2050,13 +2050,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def metadata(self):
-        """Return a pointer to the metadata object for this resource.
+        """Return the metadata object for this resource."""
+        return self.content_object
 
-        This object can vary based upon resource type. Please override this function to
-        return the appropriate object for each resource type.
-        """
-        md = CoreMetaData()  # only this line needs to be changed when you override
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return CoreMetaData
 
     @property
     def first_creator(self):
@@ -2073,17 +2072,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
-
-    def _get_metadata(self, metatdata_obj):
-        """Get resource metadata from content_object."""
-
-        if self.content_object:
-            return self.content_object
-        else:
-            metatdata_obj.save()
-            self.content_object = metatdata_obj
-            self.save()
-            return metatdata_obj
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
