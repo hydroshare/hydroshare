@@ -544,13 +544,12 @@ def create_form(formclass, request):
     return params
 
 
-def get_my_resources_list(request):
+def get_my_resources_list(user):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
-    :param request:
+    :param user: an instance of User - user who wants to see his/her resources
     :return: an instance of QuerySet of resources
     """
-    user = request.user
 
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
