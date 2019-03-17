@@ -259,16 +259,13 @@
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            {# Here we are hitting the database once for each resource that is listed #}
                             <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
                             <td>
-                                {# Here we are hitting the database once for each resource that is listed #}
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
                                 {% endfor %}
                             </td>
                             <td>
-                                {# Here we are hitting the database once for each resource that is listed #}
                                 {% for creator in res.metadata.creators.all %}
                                     {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
                                     {% if creator.description %}
