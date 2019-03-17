@@ -616,8 +616,12 @@ def get_my_resources_list(request):
     # we won't hit the DB for each resource to know if it's status is public/private/discoverable
     # etc
     resource_collection = resource_collection.select_related('raccess')
-    # prefetch metadata object (content_object)
-    resource_collection = resource_collection.prefetch_related('content_object')
+    # prefetch all the metadata elements used in my resources page - no need to prefetch
+    # 'content_object' by itself
+    resource_collection = resource_collection.prefetch_related('content_object__creators')
+    resource_collection = resource_collection.prefetch_related('content_object__subjects')
+    resource_collection = resource_collection.prefetch_related('content_object___title')
+    resource_collection = resource_collection.prefetch_related('content_object__dates')
     return resource_collection
 
 
