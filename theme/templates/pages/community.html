@@ -33,7 +33,6 @@
                         Recently changed resources will be displayed here
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
-
                     </div>
                 {% endif %}
             {% endif %}
@@ -53,15 +52,12 @@
                 <li role="presentation" class="active">
                     <a href="#overview" aria-controls="overview" role="tab"
                        data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i>&nbsp;OVERVIEW</a></li>
-{#                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}#}
                     <li role="presentation">
-                        <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-file"></i>&nbsp;Resources</a>
+                        <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
                     </li>
-{#                {% endif %}#}
                 <li role="presentation">
-                    <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
-                        GROUP</a>
+                    <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">&nbsp;GROUPS</a>
                 </li>
             </ul>
 
@@ -156,7 +152,7 @@
                     </div>
                 </div>
 
-                <div role="tabpanel" class="tab-pane fade" id="members">
+                <div role="tabpanel" class="tab-pane fade" id="groups">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
                             {% if profile_user.is_group_owner %}
@@ -424,9 +420,8 @@
                         </div>
                     </div>
                 </div>
-
 {#                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}#}
-                    <div role="tabpanel" class="tab-pane fade" id="resources">
+                    <div role="tabpanel" class="tab-pane fade" id="public">
                         <div class="row">
                             <div class="col-lg-2" id="facets">
                                 <div class="panel panel-default">
@@ -879,7 +874,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/community.js"></script>
     {#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}
