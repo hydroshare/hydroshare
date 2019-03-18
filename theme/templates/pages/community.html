@@ -333,7 +333,6 @@
 
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
-                                {% if group.gaccess.group_membership_requests %}
                                     {% for pendingrequest in group.gaccess.group_membership_requests %}
                                         {% if not pendingrequest.invitation_to %}
                                             <tr>
@@ -411,11 +410,6 @@
                                             </tr>
                                         {% endif %}
                                     {% endfor %}
-                                {% else %}
-                                    <tr class="no-pending-requests">
-                                        <td><i>No pending requests.</i></td>
-                                    </tr>
-                                {% endif %}
                             </table>
                         </div>
                     </div>
