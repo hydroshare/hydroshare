@@ -1849,6 +1849,8 @@ class CommunityView(TemplateView):
         groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
         communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
         groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
+        # TODO I think this is listing just for CZO Christina, modify to list for entire Community
+        community_resources = groups_view[0].gaccess.view_resources.filter()
         # g = Group.objects.get(pk=groups_view.id)
         # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
         pause = 1
@@ -1858,6 +1860,7 @@ class CommunityView(TemplateView):
             'groups_view': groups_view,
             'communities_view': communities_view,
             'communities_owner': communities_owner,
+            'community_resources': community_resources
         }
 
 

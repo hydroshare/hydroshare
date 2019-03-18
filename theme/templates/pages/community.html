@@ -37,14 +37,14 @@
                 {% endif %}
             {% endif %}
             <div class="col-sm-3">
-                <div>[Community Image]</div>
+                <div><img src="{{ STATIC_URL }}img/communities/czo-national.png" alt="CZO National"></div>
             </div>
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
                 <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
                 <p>{{ group.gaccess.description|linebreaks }}</p>
             </div>
-            <div>[Modals]</div>
+            <div><!-- [Modals] --></div>
         </div>
         <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
@@ -63,6 +63,7 @@
 
             <!-- Tab panes -->
             <div class="tab-content">
+                <!-- OVERVIEW -->
                 <div role="tabpanel" class="tab-pane fade in active" id="overview">
                     <div class="row">
                         <div class="col-sm-12">
@@ -152,270 +153,19 @@
                     </div>
                 </div>
 
+                <!-- GROUPS -->
                 <div role="tabpanel" class="tab-pane fade" id="groups">
                     <div class="row">
-                        <div class="col-sm-12 col-md-3">
-                            {% if profile_user.is_group_owner %}
-                                {% if group.gaccess.active %}
-                                    <div class="text-center">
-                                        <a href="#" class="btn btn-primary" role="button" data-toggle="modal"
-                                           data-target="#invite-dialog">Invite People</a></div>
-                                    <br>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                        <div class="col-sm-12 col-md-9">
+                        <div class="col-sm-12 col-md-9 text-left">
                             {% for group in groups_view %}
-                                <li>{{ group.name }}</li>
+                                <div>{{ group.name }}</div>
                             {% endfor %}
-                            {#  All members #}
-                            <table data-edit-count="{{ edit_users|length }}"
-                                   data-view-count="{{ view_users|length }}"
-                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
-                                   id="all-members-table" class="table-members-list active">
-
-                                {% for owner in group.gaccess.owners %}
-                                    <tr data-filter-by="edit-user">
-                                        <td>
-                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a>{{ owner|contact }}</a></strong></h4>
-                                            {% if  owner.userprofile.title %}
-                                                <span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
-                                        </td>
-
-                                        <td>
-                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
-                                                <div class="dropdown custom-dropdown">
-                                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                            aria-haspopup="true"
-                                                            aria-expanded="true">
-                                                        Owner
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu"
-                                                        aria-labelledby="roleDropDown-{{ member.id }}">
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                            </form>
-                                                        </li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                            </form>
-                                                        </li>
-                                                        <li role="separator" class="divider"></li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-unshare-group">Expel</a>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            {% else %}
-                                                Owner
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-
-                                {#  Template to generate subsequent rows after accepting join request   #}
-                                <tr data-filter-by="view-user" id="templateRow">
-                                    <td>
-                                        <h4><strong><a data-id="name"></a></strong></h4>
-                                        <span class="text-muted" data-id="title"></span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown custom-dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Member
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/owner/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-share-group"
-                                                           data-role="Owner">Owner</a>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/view/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-share-group"
-                                                           data-role="Member">Member</a>
-                                                    </form>
-                                                </li>
-                                                <li role="separator" class="divider"></li>
-                                                <li>
-                                                    <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/member_id/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-unshare-group">Expel</a>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-
-                                    </td>
-                                </tr>
-
-                                {% for member in view_users %}
-                                    <tr data-filter-by="view-user">
-                                        <td>
-                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a>{{ member|contact }}</a></strong></h4>
-                                            {% if  member.userprofile.title %}
-                                                <span class="text-muted">{{ member.userprofile.title }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
-                                                <div class="dropdown custom-dropdown">
-                                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                            aria-haspopup="true"
-                                                            aria-expanded="true">
-                                                        Member
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu"
-                                                        aria-labelledby="roleDropDown-{{ member.id }}">
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                            </form>
-                                                        </li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                            </form>
-                                                        </li>
-                                                        <li role="separator" class="divider"></li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-unshare-group">Expel</a>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            {% else %}
-                                                Member
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-
-                            {#  Pending invitation requests #}
-                            <table data-filter-by="pending" class="table-members-list">
-                                    {% for pendingrequest in group.gaccess.group_membership_requests %}
-                                        {% if not pendingrequest.invitation_to %}
-                                            <tr>
-                                                <td data-id="picture">
-                                                    {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <h4>
-                                                        <strong><a>{{ pendingrequest.request_from|contact }}</a></strong>
-                                                    </h4>
-                                                    {% if  pendingrequest.request_from.userprofile.title %}
-                                                        <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-success btn-act-on-request"
-                                                               data-user-action="Accept"
-                                                               data-member-id="{{ pendingrequest.request_from.id }}"
-                                                               data-name="{{ pendingrequest.request_from|best_name }}"
-                                                               data-title="
-                                                                       {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
-                                                                    class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-default btn-act-on-request"
-                                                               data-user-action="Reject"><span
-                                                                    class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td data-id="picture">
-                                                    {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
-                                                    </h4>
-                                                    {% if  pendingrequest.invitation_to.userprofile.title %}
-                                                        <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-default btn-act-on-request">Cancel
-                                                                Invitation</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                </td>
-                                            </tr>
-                                        {% endif %}
-                                    {% endfor %}
-                            </table>
                         </div>
                     </div>
                 </div>
-{#                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}#}
-                    <div role="tabpanel" class="tab-pane fade" id="public">
+
+                <!-- PUBLIC -->
+                <div role="tabpanel" class="tab-pane fade" id="public">
                         <div class="row">
                             <div class="col-lg-2" id="facets">
                                 <div class="panel panel-default">
@@ -558,7 +308,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for res in group_resources %}
+                                    {% for res in community_resources %}
                                         <tr class="data-row">
                                             {# Selection controls #}
                                             <td>
@@ -680,7 +430,6 @@
                             </div>
                         </div>
                     </div>
-{#                {% endif %}#}
             </div>
         </div>
     </div>
