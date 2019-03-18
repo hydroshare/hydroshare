@@ -6,6 +6,7 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+var isDownloadZipped = false;
 
 var file_metadata_alert = `
     <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
@@ -1046,6 +1047,7 @@ function onOpenFile() {
         // Check for download agreement
         if ($("#hs-file-browser").attr("data-agreement") == "true") {
             // Proceed to download through confirmation agreement
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
         }
         else {
@@ -1880,6 +1882,7 @@ $(document).ready(function () {
     // Download method
     $("[data-fb-action='download']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1890,6 +1893,7 @@ $(document).ready(function () {
     // Download zipped method
     $("[data-fb-action='downloadZipped']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = true;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1899,7 +1903,7 @@ $(document).ready(function () {
 
     $("#download-file-btn").click(function() {
         $("#license-agree-dialog-file").modal('hide');
-        startDownload(!!downloadData.zipped);
+        startDownload(isDownloadZipped);
     });
 
     // Get file URL method
