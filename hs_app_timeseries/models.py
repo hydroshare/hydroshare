@@ -851,10 +851,9 @@ class TimeSeriesResource(BaseResource):
         verbose_name = 'Time Series'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = TimeSeriesMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return TimeSeriesMetaData
 
     @property
     def has_sqlite_file(self):
@@ -971,6 +970,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         # uploaded csv file. This list becomes an empty list
         # once metadata changes are written to the blank sqlite file as
         # part of the sync operation.
+        self.refresh_from_db()
         return self.value_counts.keys()
 
     @property

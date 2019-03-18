@@ -76,9 +76,44 @@ $(document).ready(function () {
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
-    $(".btn-inline-favorite").click(label_ajax_submit);
-    $(".btn-label-remove").click(label_ajax_submit);
+    $("#item-selectors").on("click", ".btn-inline-favorite, .btn-label-remove", label_ajax_submit);
     $("#btn-create-label").click(label_ajax_submit);
+
+    $("#filter input[type='checkbox']").on("change", function () {
+        resourceTable.draw();
+        updateLabelDropdowns();
+        updateLabelCount();
+    });
+
+    $("#user-labels-left").on("change", "input[type='checkbox']", function () {
+        resourceTable.draw();
+        updateLabelDropdowns();
+        updateLabelCount();
+    });
+
+    $("#item-selectors").on("change", ".inline-dropdown input[type='checkbox']", label_ajax_submit);
+
+    $("#toolbar-labels-dropdown").on("change", "input[type='checkbox']", function () {
+        var inlineCheckboxes = $(".row-selector:checked")
+          .parent()
+          .find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']");
+        var status = $(this).prop("checked");
+
+        for (var i = 0; i < inlineCheckboxes.length; i++) {
+            if (status == false && $(inlineCheckboxes[i]).prop("checked") == true) {
+                $(inlineCheckboxes[i]).prop("checked", false);
+                $(inlineCheckboxes[i]).trigger("change");
+            }
+            else if (status == true && $(inlineCheckboxes[i]).prop("checked") == false) {
+                $(inlineCheckboxes[i]).prop("checked", true);
+                $(inlineCheckboxes[i]).trigger("change");
+            }
+        }
+    });
+
+    $("#filter-shared-by input[type='checkbox']").on("change", function () {
+        resourceTable.draw();
+    });
 
     $("#resource-search-input").keyup(function () {
         var searchString = removeQueryOccurrences($(this).val());
@@ -148,7 +183,7 @@ $(document).ready(function () {
 
     // Categorizes the resources based on criteria about delete permissions.
     function inspectResources(indexes, notOwned, published) {
-        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr.data-row");
+        var selectedRows = $("#item-selectors .row-selector:checked").closest("tr.data-row");
         for (var i = 0; i < selectedRows.length; i++) {
             var index = resourceTable.row($(selectedRows[i])).index();
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
@@ -190,7 +225,7 @@ $(document).ready(function () {
 
         messageBody.empty();
 
-        // Resources that cannot be deleted becausse the current user does not own them
+        // Resources that cannot be deleted because the current user does not own them
         if (notOwned.length > 0) {
             var notOwnedTemplate = "";
             for (var i = 0; i < notOwned.length; i++) {
@@ -269,7 +304,8 @@ $(document).ready(function () {
         e.stopPropagation();
     });
 
-    updateLabelLists();
+    updateLabelsList();
+    updateLabelDropdowns();
     updateLabelCount();
 });
 
@@ -302,11 +338,16 @@ function delete_multiple_resources_ajax_submit(indexes) {
     }
 
     // Wait for all asynchronous calls to finish
-    $.when.apply($, calls).done(function () {
-        resourceTable.draw();
-        updateLabelCount();
-        $("html").css("cursor", "initial"); // Restore default cursor
-    });
+    $.when.apply($, calls)
+      .done(function () {
+          resourceTable.draw();
+          updateLabelCount();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      })
+      .fail(function () {
+          showUniversalMessage("error", 'Failed to delete resource(s).', 10000)();
+          $("html").css("cursor", "initial"); // Restore default cursor
+      });
 }
 
 function label_ajax_submit() {
@@ -337,7 +378,8 @@ function label_ajax_submit() {
                                 '<tr class="no-items-found"><td>No labels found.</td></tr>'
                         )
                     }
-                    updateLabelLists();
+                    updateLabelsList();
+                    updateLabelDropdowns();
                     refreshToolbarCheckboxState();
                 }
                 else if (formType == "toggle-favorite") {
@@ -408,8 +450,34 @@ function label_ajax_submit() {
     return false;
 }
 
-function updateLabelLists() {
+// Updates the status of labels in the dropdowns of table rows
+function updateLabelsList() {
     $("#user-labels-left").empty();
+
+    var labels = $("#table-user-labels td.user-label");
+
+    if (labels.length === 0) {
+        $("#user-labels-left").append(
+          '<i class="list-group-item no-items-found"><h5>No labels found.</h5></i>'
+        );
+    }
+    else {
+        for (var h = 0; h < labels.length; h++) {
+            var curr = $(labels[h]).text();
+
+            $("#user-labels-left").append(
+              '<li class="list-group-item">' +
+              '<span class="badge">0</span>' +
+              '<label class="checkbox">' +
+              '<input data-label="' + curr + '" type="checkbox">' + curr + '</label>' +
+              '</li>'
+            );
+        }
+    }
+}
+
+// Updates the status of labels in the left panel
+function updateLabelDropdowns() {
     $(".inline-dropdown ul").empty();
     $("#toolbar-labels-dropdown ul :not(.persist)").empty();
     $(".btn-inline-label").removeClass("has-labels");
@@ -417,14 +485,6 @@ function updateLabelLists() {
     var labels = $("#table-user-labels td.user-label");
     for (var h = 0; h < labels.length; h++) {
         var curr = $(labels[h]).text();
-
-        $("#user-labels-left").append(
-                '<li class="list-group-item">' +
-                '<span class="badge">0</span>' +
-                '<label class="checkbox">' +
-                '<input data-label="' + curr + '" type="checkbox">' + curr + '</label>' +
-                '</li>'
-        );
 
         var dropdowns = $(".inline-dropdown ul");
 
@@ -490,10 +550,6 @@ function updateLabelLists() {
     }
 
     if (labels.length == 0) {
-        $("#user-labels-left").append(
-                '<i class="list-group-item no-items-found"><h5>No labels found.</h5></i>'
-        );
-
         $("#toolbar-labels-dropdown ul").prepend(
                  '<i class="no-items-found list-group-item"><h5>No labels found.</h5></i>'
         );
@@ -503,37 +559,6 @@ function updateLabelLists() {
     else {
         $(".btn-inline-label").attr("data-toggle", "dropdown");
     }
-
-    // -----------------   Bind events   -----------------
-    $("#filter input[type='checkbox']").change(function(){
-        resourceTable.draw();
-    });
-
-    $("#filter-shared-by input[type='checkbox']").change(function(){
-        resourceTable.draw();
-    });
-
-    $("#user-labels-left input[type='checkbox']").change(function () {
-        resourceTable.draw();
-    });
-
-    $(".inline-dropdown input[type='checkbox']").change(label_ajax_submit);
-
-    $("#toolbar-labels-dropdown input[type='checkbox']").change(function(){
-        var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']");
-        var status = $(this).prop("checked");
-
-        for (var i = 0; i < inlineCheckboxes.length; i++) {
-            if (status == false && $(inlineCheckboxes[i]).prop("checked") == true) {
-                $(inlineCheckboxes[i]).prop("checked", false);
-                $(inlineCheckboxes[i]).trigger("change");
-            }
-            else if (status == true && $(inlineCheckboxes[i]).prop("checked") == false) {
-                $(inlineCheckboxes[i]).prop("checked", true);
-                $(inlineCheckboxes[i]).trigger("change");
-            }
-        }
-    });
 
     // Prevents dropdown form getting dismissed when clicking on items
     $('.dropdown-menu label, .list-labels label').click(function (e) {
@@ -587,8 +612,9 @@ function createLabel () {
 
         $(".btn-label-remove").click(label_ajax_submit);
         $("#modalCreateLabel").modal('hide');
-         $("#txtLabelName").val("");
-        updateLabelLists();
+        $("#txtLabelName").val("");
+        updateLabelsList();
+        updateLabelDropdowns();
     }
 }
 
@@ -767,8 +793,6 @@ $.fn.dataTable.ext.search.push (
         var inputSubject = "";
         var inputAuthor = "";
 
-        var isFiltered = false;
-
         // Split the occurrences at ':' and move to an array.
         var collection = [];
         if (occurrences) {
@@ -804,92 +828,90 @@ $.fn.dataTable.ext.search.push (
             return false;
         }
 
-        //---------------- Facet filters --------------------
-        // Owned by me
-        if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-            isFiltered = true;
-            if (data[PERM_LEVEL_COL] == "Owned") {
-                return true;
+        let inFilters = false;
+
+        if ($("#filter").find("input[type='checkbox']:checked").length) {
+            //---------------- Facet filters --------------------
+            // Owned by me
+            if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] == "Owned") {
+                    inFilters = true;
+                }
+            }
+
+            // Shared with me
+            if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                    inFilters = true;
+                }
+            }
+
+            // Added by me
+            if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
+                if (data[PERM_LEVEL_COL] == "Discovered") {
+                    inFilters = true;
+                }
+            }
+
+            // Favorite
+            if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+                if (data[FAVORITE_COL] == "Favorite") {
+                    inFilters = true;
+                }
+            }
+
+            // Recent
+            if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
+                var cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 5);
+                cutoff = Math.floor(cutoff.getTime() / 1000); // Seconds since the unix epoch
+                // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
+                if (data[LAST_MODIF_SORT_COL] >= cutoff) {
+                    inFilters = true;
+                }
             }
         }
-
-        // Shared with me
-        if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
-            isFiltered = true;
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
-                return true;
-            }
-        }
-
-        // Added by me
-        if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
-            isFiltered = true;
-            if (data[PERM_LEVEL_COL] == "Discovered") {
-                return true;
-            }
+        else {
+            inFilters = true;    // Ignore if nothing selected
         }
 
         // Shared by - Used in group resource listing
         var grantors = $('#filter-shared-by .grantor:checked');
+        let inGrantors = false;
         if (grantors.length) {
-            isFiltered = true;
-            var grantorFlag = false;
             for (var i = 0; i < grantors.length; i++) {
                 var user = parseInt($(grantors[i]).attr("data-grantor-id"));
                 if (parseInt(data[ACCESS_GRANTOR_COL]) == user) {
-                    grantorFlag = true;
+                    inGrantors = true;
+                    break;
                 }
             }
-
-            if (grantorFlag) {
-                return true;
-            }
+        }
+        else {
+            inGrantors = true;  // Ignore if nothing selected
         }
 
         // Labels - Check if the label exists in the table
-        var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
-        for (var i = 0; i < labelCheckboxes.length; i++) {
-            if ($(labelCheckboxes[i]).prop("checked") == true) {
-                isFiltered = true;
+        let inLabels = false;
+        var labelCheckboxes = $("#user-labels-left input[type='checkbox']:checked");
+        if (labelCheckboxes.length) {
+            for (var i = 0; i < labelCheckboxes.length; i++) {
                 var label = $(labelCheckboxes[i]).attr("data-label");
 
-                var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
+                var dataColLabels = data[LABELS_COL].replace(/\s+/g, ' ').split(",");
                 for (var h = 0; h < dataColLabels.length; h++) {
                     dataColLabels[h] = dataColLabels[h].trim();
                 }
 
                 if (dataColLabels.indexOf(label) >= 0) {
-                    return true;
+                    inLabels = true;
                 }
             }
         }
-
-        // Favorite
-        if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-            isFiltered = true;
-            if (data[FAVORITE_COL] == "Favorite") {
-                return true;
-            }
+        else {
+            inLabels = true;    // Ignore if nothing selected
         }
 
-        // Recent
-        if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
-            isFiltered = true;
-            var cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - 5);
-            cutoff = Math.floor(cutoff.getTime()/1000); // Seconds since the unix epoch
-            // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
-            if (data[LAST_MODIF_SORT_COL] >= cutoff) {
-                return true;
-            }
-        }
-
-        // If no filters selected, display all
-        if (!isFiltered) {
-            return true;
-        }
-
-        // Default
-        return false;
+        return inLabels && inFilters && inGrantors;
     }
 );

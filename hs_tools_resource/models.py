@@ -50,10 +50,9 @@ class ToolResource(BaseResource):
         # resource can't have any files
         return False
 
-    @property
-    def metadata(self):
-        md = ToolMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return ToolMetaData
 
     @property
     def can_be_published(self):

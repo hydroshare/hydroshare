@@ -25,12 +25,10 @@ class ScriptResource(BaseResource):
         # one file type is supported
         return ".r", ".py", ".m"
 
+    @classmethod
+    def get_metadata_class(cls):
+        return ScriptMetaData
 
-
-    @property
-    def metadata(self):
-        md = ScriptMetaData()
-        return self._get_metadata(md)
 
 processor_for(ScriptResource)(resource_processor)
 
