@@ -787,38 +787,7 @@ function metadata_update_ajax_submit(form_id){
 
                 showCompletedMessage(json_response);
 
-                if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-                    if (json_response.res_public_status == "public"){
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-public").removeClass('active');
-                        $("#btn-public").prop("disabled", true);
-                    }
-                    if (json_response.res_discoverable_status == "discoverable"){
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-discoverable").removeClass('active');
-                        $("#btn-discoverable").prop("disabled", true);
-                    }
-                    if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable"){
-                        $("#btn-private").addClass('active');
-                        $("#btn-private").prop("disabled", true);
-                    }
-                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                }
+
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
                     this.remove();
@@ -883,6 +852,42 @@ function showCompletedMessage(json_response) {
                 }
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                 $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+            }
+        }
+    }
+
+    if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
+        if (json_response.res_public_status == "public") {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-public").removeClass('active');
+            $("#btn-public").prop("disabled", true);
+        }
+
+        if (json_response.res_discoverable_status == "discoverable") {
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-discoverable").removeClass('active');
+            $("#btn-discoverable").prop("disabled", true);
+        }
+
+        if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
+            $("#btn-private").addClass('active');
+            $("#btn-private").prop("disabled", true);
+        }
+
+        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
             }
         }
     }

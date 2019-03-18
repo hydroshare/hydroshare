@@ -208,6 +208,8 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     res_public_status = 'public' if resource.raccess.public else 'not public'
+    res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
+        else 'not discoverable'
 
     if resource.can_be_public_or_discoverable:
         metadata_status = METADATA_STATUS_SUFFICIENT
@@ -216,6 +218,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
     response_data = {
         'res_public_status': res_public_status,
+        'res_discoverable_status': res_discoverable_status,
         'metadata_status': metadata_status,
     }
 
