@@ -3,6 +3,7 @@ Utility functions for management commands for access control.
 """
 
 from django.contrib.auth.models import User, Group
+from hs_core.models import BaseResource
 from hs_access_control.models.community import Community
 import re
 
@@ -70,4 +71,12 @@ def user_from_name(uname):
         return User.objects.get(username=uname)
     except User.DoesNotExist:
         print("user with username '{}' does not exist.".format(uname))
+        return None
+
+
+def resource_from_id(id):
+    try:
+        return BaseResource.objects.get(short_id=id)
+    except BaseResource.DoesNotExist:
+        print("resource with id '{} does not exist.".format(id))
         return None

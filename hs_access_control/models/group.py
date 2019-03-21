@@ -3,8 +3,7 @@ from django.db import models
 from django.db.models import Q, Subquery
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege, \
-        GroupCommunityPrivilege
+from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
 
 #############################################
@@ -186,6 +185,7 @@ class GroupAccess(models.Model):
                 (Q(u2ugp__group__gaccess__active=True,
                    u2ugp__group=self.group) |
                  Q(u2ugp__group__gaccess__active=True,
+                   u2ugp__group__g2gcp__allow_view=True,
                    u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                    u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
 
@@ -227,6 +227,10 @@ class GroupAccess(models.Model):
         """
         return Q(r2grp__group__gaccess__active=True,
                  r2grp__group__g2gcp__allow_view=True,
+                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
+                 r2grp__group__g2gcp__community__c2gcp__group=self.group) |\
+               Q(r2grp__group__gaccess__active=True,
+                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
                  r2grp__group__g2gcp__community__c2gcp__group=self.group)
 
     @property

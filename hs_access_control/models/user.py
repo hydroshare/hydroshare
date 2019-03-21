@@ -265,7 +265,16 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER))
+                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
+                                    Q(gaccess__active=True,
+                                      g2gcp__allow_view=True,
+                                      g2gcp__community__c2gcp__group__gaccess__active=True,
+                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
+                                    Q(gaccess__active=True,
+                                      g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+                                      g2gcp__community__c2gcp__group__gaccess__active=True,
+                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
+                            .distinct()
 
     @property
     def edit_groups(self):
@@ -296,7 +305,13 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER))
+                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
+                                    # edit privilege inherited from community
+                                    Q(gaccess__active=True,
+                                      g2gcp__community__c2gcp__group__gaccess__active=True,
+                                      g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
+                            .distinct()
 
     @property
     def owned_groups(self):
@@ -327,7 +342,7 @@ class UserAccess(models.Model):
     # access checks for groups
     #################################
 
-    # There is a duality between listing and access for groups.
+    # There is a duality disparity between listing and access for groups.
     # The group interface requires owns_group, views_group, etc to concern
     # direct privilege. By contrast, the control functions can_*_group_*
     # must include indirect privilege. Thus the listing functions _all_*_groups
@@ -358,6 +373,11 @@ class UserAccess(models.Model):
                 # if user has access to a group in a community, grant access to whole community
                 Q(gaccess__active=True,
                   g2gcp__community__c2gcp__allow_view=True,
+                  g2gcp__community__c2gcp__group__gaccess__active=True,
+                  g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
+                # if the group's privilege over the community is CHANGE, override allow_view=False
+                Q(gaccess__active=True,
+                  g2gcp__privilege=PrivilegeCodes.CHANGE,
                   g2gcp__community__c2gcp__group__gaccess__active=True,
                   g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
 
