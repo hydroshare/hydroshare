@@ -62,7 +62,7 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 
 from hs_collection_resource.models import CollectionDeletedResource
 
-from hs_access_control.management.utilities import user_from_name
+from hs_access_control.management.utilities import user_from_name, community_from_name_or_id
 from hs_access_control.models.privilege import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
@@ -1842,9 +1842,8 @@ class CommunityView(TemplateView):
         groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
         communities_owner = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
 
-        # community_id = kwargs['community_id']
         # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community; later refactor for when multiple communities exist
-        # community = Group.objects.get(pk=community_id)
+        community_resources = community_from_name_or_id("CZO National").public_resource_list
 
         groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
         communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
@@ -1856,7 +1855,6 @@ class CommunityView(TemplateView):
         except:
             pass
 
-        community_resources = g.gaccess.view_resources.filter()
         # g = Group.objects.get(pk=groups_view.id)
         # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
         pause = 1
