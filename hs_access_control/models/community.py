@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
 from hs_core.models import BaseResource
-from django.db.models import Q
+from django.db.models import Q, F
 
 ###################################
 # Communities of groups
@@ -31,6 +31,26 @@ class Community(models.Model):
         return User.objects.filter(is_active=True,
                                    u2ucp__community=self,
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
+
+    @property
+    def public_resource_list(self):
+        return BaseResource.objects.filter(r2grp__group__g2gcp__community=self,
+                                           r2grp__group__gaccess__active=True)\
+                                   .annotate(group_id=F("r2grp__group__id"),
+                                             group_name=F("r2grp__group__name"),
+                                             resource_id=F("short_id"),
+                                             resource_title=F("title"),
+                                             published=F("raccess__published"),
+                                             public=F("raccess__public"),
+                                             discoverable=F("raccess__discoverable"))\
+                                   .values("group_id",
+                                           "group_name",
+                                           "resource_id",
+                                           "resource_title",
+                                           "resource_type",
+                                           "discoverable",
+                                           "public",
+                                           "published")
 
     def get_effective_user_privilege(self, this_user):
         from hs_access_control.models.privilege import UserCommunityPrivilege
