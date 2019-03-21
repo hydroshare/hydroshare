@@ -6,6 +6,7 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+var isDownloadZipped = false;
 
 var file_metadata_alert = `
     <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
@@ -1046,6 +1047,7 @@ function onOpenFile() {
         // Check for download agreement
         if ($("#hs-file-browser").attr("data-agreement") == "true") {
             // Proceed to download through confirmation agreement
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
         }
         else {
@@ -1594,7 +1596,7 @@ $(document).ready(function () {
         var refURL = $("#txtRefURL").val();
         if (refName && refURL) {
             var calls = [];
-            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, true));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1611,6 +1613,45 @@ $(document).ready(function () {
         return false;
     });
 
+    // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
+    $("#btn-reference-url-without-validation").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var refName = $("#ref_name_passover").val();
+        var refURL = $("#ref_url_passover").val();
+        var newRefURL = $("#new_ref_url_passover").val();
+        var calls = [];
+        if (refName && refURL) {
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, false));
+
+            // Disable the Cancel button until request has finished
+            $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+
+            function afterRequest() {
+                refreshFileBrowser();
+                $("#btn-reference-url-without-validation").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            }
+
+            $.when.apply($, calls).done(afterRequest);
+            $.when.apply($, calls).fail(afterRequest);
+        }
+        else if (refName && newRefURL) {
+            var file = $("#fb-files-container li.ui-selected");
+            var oldurl = file.attr("data-ref-url");
+            if (oldurl != newRefURL) {
+                calls.push(update_ref_url_ajax_submit(resID, currentPath, refName, newRefURL, false));
+                $.when.apply($, calls).done(function () {
+                    refreshFileBrowser();
+                });
+
+                $.when.apply($, calls).fail(function () {
+                    refreshFileBrowser();
+                });
+            }
+        }
+        return false;
+    });
+
     // Update reference URL method
     $("#btn-edit-url").click(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
@@ -1621,7 +1662,7 @@ $(document).ready(function () {
         var newurl = $("#txtNewRefURL").val().trim();
         if (oldurl != newurl) {
             var calls = [];
-            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl));
+            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1841,6 +1882,7 @@ $(document).ready(function () {
     // Download method
     $("[data-fb-action='download']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1851,6 +1893,7 @@ $(document).ready(function () {
     // Download zipped method
     $("[data-fb-action='downloadZipped']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = true;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1860,7 +1903,7 @@ $(document).ready(function () {
 
     $("#download-file-btn").click(function() {
         $("#license-agree-dialog-file").modal('hide');
-        startDownload(!!downloadData.zipped);
+        startDownload(isDownloadZipped);
     });
 
     // Get file URL method

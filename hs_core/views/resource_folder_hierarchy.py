@@ -328,6 +328,8 @@ def data_store_add_reference(request):
     curr_path = request.POST.get('curr_path', None)
     ref_name = request.POST.get('ref_name', None)
     ref_url = request.POST.get('ref_url', None)
+    validate_url_flag = request.POST.get('validate_url_flag', 'true')
+    validate_url_flag = True if validate_url_flag.lower() == 'true' else False
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
@@ -350,7 +352,8 @@ def data_store_add_reference(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     ret_status, msg, file_id = add_reference_url_to_resource(request.user, res_id, ref_url,
-                                                             ref_name, curr_path)
+                                                             ref_name, curr_path,
+                                                             validate_url_flag=validate_url_flag)
     if ret_status == status.HTTP_200_OK:
         return JsonResponse({'status': 'success', 'file_id': file_id})
     else:
@@ -368,6 +371,8 @@ def data_store_edit_reference_url(request):
     curr_path = request.POST.get('curr_path', None)
     url_filename = request.POST.get('url_filename', None)
     new_ref_url = request.POST.get('new_ref_url', None)
+    validate_url_flag = request.POST.get('validate_url_flag', 'true')
+    validate_url_flag = True if validate_url_flag.lower() == 'true' else False
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
@@ -391,7 +396,8 @@ def data_store_edit_reference_url(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     ret_status, msg = edit_reference_url_in_resource(request.user, res, new_ref_url,
-                                                     curr_path, url_filename)
+                                                     curr_path, url_filename,
+                                                     validate_url_flag=validate_url_flag)
     if ret_status == status.HTTP_200_OK:
         return JsonResponse({'status': 'success'})
     else:
