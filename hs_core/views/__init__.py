@@ -1170,7 +1170,7 @@ class GroupUpdateForm(GroupForm):
 @login_required
 def my_resources(request, page):
 
-    resource_collection = get_my_resources_list(request)
+    resource_collection = get_my_resources_list(request.user)
     context = {'collection': resource_collection}
 
     return context
