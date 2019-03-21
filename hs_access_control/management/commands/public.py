@@ -21,6 +21,17 @@ def shorten(title, length):
         return title[0:19]+'...'
 
 
+def access_type(thing):
+    if thing['published']:
+        return 'published'
+    elif thing['public']:
+        return 'public'
+    elif thing['discoverable']:
+        return 'discoverable'
+    else:
+        return 'private'
+
+
 class Command(BaseCommand):
     help = """List public resources."""
 
@@ -45,11 +56,12 @@ class Command(BaseCommand):
         print("community is {} (id={})".format(community.name, community.id))
         stuff = community.public_resource_list
         for r in stuff:
-            print("{} {} type='{}' group='{}' published={}, public={}, discoverable={}"
+            print("{} {} type='{}' group='{}' published={}, public={}, discoverable={} {}"
                   .format(r["resource_id"],
                           shorten(r["resource_title"], 20),
                           r["resource_type"],
                           r["group_name"],
                           r["published"],
                           r["public"],
-                          r["discoverable"]))
+                          r["discoverable"],
+                          access_type(r)))

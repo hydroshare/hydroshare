@@ -36,6 +36,9 @@ class Community(models.Model):
     def public_resource_list(self):
         return BaseResource.objects.filter(r2grp__group__g2gcp__community=self,
                                            r2grp__group__gaccess__active=True)\
+                                   .filter(Q(raccess__public=True) |
+                                           Q(raccess__published=True) |
+                                           Q(raccess__discoverable=True))\
                                    .annotate(group_id=F("r2grp__group__id"),
                                              group_name=F("r2grp__group__name"),
                                              resource_id=F("short_id"),
