@@ -1858,13 +1858,15 @@ class CommunityView(TemplateView):
         # g = Group.objects.get(pk=groups_view.id)
         # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
         pause = 1
+
+        # 'user_id': user_id,
+        # 'groups_owner': groups_owner,
+        # 'groups_view': groups_view,
+        # 'communities_view': communities_view,
+        # 'communities_owner': communities_owner,
+
         return {
-            'user_id': user_id,
-            'groups_owner': groups_owner,
-            'groups_view': groups_view,
-            'communities_view': communities_view,
-            'communities_owner': communities_owner,
-            'community_resources': community_resources
+
         }
 
 

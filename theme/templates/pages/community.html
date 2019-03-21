@@ -1,5 +1,5 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
@@ -11,8 +11,9 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">Groups</a>
-                        <a href="{% url "community" %}" class="collaborate-nav-item active">Communities</a>
+                        <a href="{% url "collaborate" %}" class="collaborate-nav-item active">Find Groups</a>
+                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+                        <a href="{% url "community" %}" class="collaborate-nav-item">My Community</a>
                     </div>
                 </div>
             </div>
@@ -37,7 +38,7 @@
                 {% endif %}
             {% endif %}
             <div class="col-sm-3">
-                <div><img src="{{ STATIC_URL }}img/communities/czo-national.png" alt="CZO National"></div>
+                <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/communities/czo-national.png" alt="CZO National"></a></div>
             </div>
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
@@ -49,121 +50,15 @@
         <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a href="#overview" aria-controls="overview" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i>&nbsp;OVERVIEW</a></li>
-                    <li role="presentation">
-                        <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
-                    </li>
                 <li role="presentation">
-                    <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">&nbsp;GROUPS</a>
+                    <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
                 </li>
+
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <!-- OVERVIEW -->
-                <div role="tabpanel" class="tab-pane fade in active" id="overview">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                                <h4>Recent Activity</h4>
-                                {% if group_resources %}
-                                    {% for res in group_resources %}
-                                        <div class="group-activity-block activity-block">
-                                            {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ res.grantor.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                            {% endif %}
-                                            <div>
-                                                <h5 class="text-muted pull-right">{{ res.date_granted|date:"M d, Y" }}
-                                                    at {{ res.date_granted|time }}</h5>
-                                                <div class="shared-resource-info">
-                                                    <strong><a>{{ res.grantor|contact }}</a></strong><span
-                                                        class="text-muted"> shared</span>
-                                                    <span><a
-                                                            href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                </div>
-                                                <h5><span
-                                                        class="text-muted">Resource type: </span>{{ res|resource_type }}
-                                                </h5>
-                                            </div>
-
-                                            {% if res.metadata.description %}
-                                                <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                                    <p class="description"><strong>ABSTRACT: </strong>
-                                                    </p> {{ res.metadata.description|linebreaks }}
-                                                </div>
-                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show
-                                                    More
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <i>No recent activity.</i>
-                                {% endif %}
-                            {% else %}
-                                {% if group.gaccess.active %}
-                                    <h4><i>You are not a member of this group.</i></h4>
-                                    {% if group.join_request_waiting_user_action %}
-                                        <div class="request-block pull-left">
-                                            <span class="flag-joined">You have been invited to join!</span>
-                                            <br><br>
-                                            <div class="height-fix">
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-success"
-                                                            data-user-action="Accept">Accept
-                                                    </button>
-                                                </form>
-
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-default">
-                                                        Decline
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    {% elif group.join_request_waiting_owner_action %}
-                                        <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
-                                            Sent</h4>
-                                    {% else %}
-                                        <form id="join-{{ group.id }}" method="post"
-                                              action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                {% else %}
-                                    <h4><i>[Recent Activity]</i></h4>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GROUPS -->
-                <div role="tabpanel" class="tab-pane fade" id="groups">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-9 text-left">
-                            {% for group in groups_view %}
-                                <div>{{ group.name }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
                 <!-- PUBLIC -->
                 <div role="tabpanel" class="tab-pane fade" id="public">
                         <div class="row">
@@ -314,24 +209,24 @@
                                             <td>
                                                 <input class="row-selector" type="checkbox">
                                                 {% if res.is_favorite %}
-                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                    <span data-form-id="form-favorite-{{ res.resource_id }}"
                                                           data-form-type="toggle-favorite"
                                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
+                                                          action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
                                                           method="post">
                                                         {% csrf_token %}
                                                         <input type="hidden" name="action" value="DELETE">
                                                         <input type="hidden" name="label_type" value="FAVORITE">
                                                     </form>
                                                 {% else %}
-                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                    <span data-form-id="form-favorite-{{ res.resource_id }}"
                                                           data-form-type="toggle-favorite"
                                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
+                                                          action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
                                                           method="post">
                                                         {% csrf_token %}
                                                         <input type="hidden" name="action" value="CREATE">
@@ -344,7 +239,7 @@
 
                                                 <div class="dropdown-menu inline-dropdown" role="menu">
                                                     <div class="panel-body" role="form">
-                                                        <ul data-resource-id="{{ res.short_id }}"
+                                                        <ul data-resource-id="{{ res.resource_id }}"
                                                             class="list-group list-labels">
                                                         </ul>
                                                     </div>
@@ -357,7 +252,7 @@
                                             {# Title #}
                                             <td>
                                                 <strong>
-                                                    <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                                    <a href="{{ res.get_absolute_url }}">{{ res.resource_title }}</a>
                                                 </strong>
                                             </td>
                                             {# First Author #}
@@ -408,11 +303,11 @@
                                             </td>
                                             <td>{{ res.updated|date:"U" }}</td>
                                             <td>
-                                                {% if res.raccess.published %}
+                                                {% if res.published %}
                                                     Published
-                                                {% elif res.raccess.public %}
+                                                {% elif res.public %}
                                                     Public
-                                                {% elif res.raccess.discoverable %}
+                                                {% elif res.discoverable %}
                                                     Discoverable
                                                 {% else %}
                                                     Private
