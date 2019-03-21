@@ -76,7 +76,7 @@
                                                       alt="{{ settings.SITE_TITLE }}"/></a>
             </div>
             <div class="collapse navbar-collapse">
-                {% page_menu "pages/menus/dropdown.html" %}
+                {% include "pages/menus/dropdown.html" %}
                 {% comment %}
                 <!-- Search form for extra small screens -->
                 <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">

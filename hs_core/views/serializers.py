@@ -156,6 +156,7 @@ class ResourceFileSerializer(serializers.Serializer):
     url = serializers.URLField(help_text='The url to download the file')
     size = serializers.IntegerField(help_text='The size of the file')
     content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
+    logical_file_type = serializers.CharField(max_length=255)
 
 
 class GroupPrivilegeSerializer(serializers.Serializer):
@@ -217,7 +218,8 @@ ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
                                'file_name',
                                'size',
-                               'content_type'])
+                               'content_type',
+                               'logical_file_type'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):
