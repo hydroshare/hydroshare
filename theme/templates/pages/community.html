@@ -1,5 +1,5 @@
 {% extends "pages/page.html" %}
-{% load pages_tags keyword_tags comment_tags hydroshare_tags %}
+{% load comment_tags  %}
 
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
@@ -26,24 +26,24 @@
             </div>
         {% endfor %}
         <div class="row">
-            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                {% if not group.gaccess.active %}
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        Recently changed resources will be displayed here
-                        <hr>
-                        <span class="glyphicon glyphicon-question-sign"></span>
-                    </div>
-                {% endif %}
-            {% endif %}
+{#            {% if profile_user.is_group_owner or profile_user.is_group_editor %}#}
+{#                {% if not group.gaccess.active %}#}
+{#                    <div class="alert alert-warning alert-dismissible" role="alert">#}
+{#                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span#}
+{#                                aria-hidden="true">&times;</span></button>#}
+{#                        Recently changed resources will be displayed here#}
+{#                        <hr>#}
+{#                        <span class="glyphicon glyphicon-question-sign"></span>#}
+{#                    </div>#}
+{#                {% endif %}#}
+{#            {% endif %}#}
             <div class="col-sm-3">
                 <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/communities/czo-national.png" alt="CZO National"></a></div>
             </div>
             <div class="col-sm-7">
-                <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
-                <p>{{ group.gaccess.description|linebreaks }}</p>
+{#                <h2 class="group-title">{{ group.name }}</h2>#}
+{#                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>#}
+{#                <p>{{ group.gaccess.description|linebreaks }}</p>#}
             </div>
             <div><!-- [Modals] --></div>
         </div>
@@ -80,10 +80,10 @@
                                             </div>
 
                                             <div id="grantors-list">
-                                                {% for res in group_resources %}
-                                                    <span data-grantor-id="{{ res.grantor.id }}"
-                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>
-                                                {% endfor %}
+{#                                                {% for res in group_resources %}#}
+{#                                                    <span data-grantor-id="{{ res.grantor.id }}"#}
+{#                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>#}
+{#                                                {% endfor %}#}
                                             </div>
                                         </div>
                                     </div>
@@ -247,26 +247,28 @@
                                             </td>
                                             {# Type #}
                                             <td data-col="resource-type">
-                                                {% include "includes/res_type_col.html" with resource=res %}
+                                                {{ res.resource_type }}
+{#                                                {% include "includes/res_type_col.html" with resource=res %}#}
                                             </td>
                                             {# Title #}
                                             <td>
                                                 <strong>
-                                                    <a href="{{ res.get_absolute_url }}">{{ res.resource_title }}</a>
+                                                    {{ res.resource_title }}
+{#                                                    <a href="{{ res.get_absolute_url }}">{{ res.resource_title }}</a>#}
                                                 </strong>
                                             </td>
                                             {# First Author #}
-                                            {% if res.first_creator.description %}
+{#                                            {% if res.first_creator.description %}#}
                                                 <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+{#                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
                                                 </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
+{#                                            {% else %}#}
+{#                                                <td>{{ res.first_creator.name }}</td>#}
+{#                                            {% endif %}#}
                                             {# Date Created #}
-                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
+{#                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>#}
                                             {# Last Modified #}
-                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
+{#                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>#}
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
                                                     {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
