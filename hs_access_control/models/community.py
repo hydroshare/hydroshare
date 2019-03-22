@@ -34,6 +34,12 @@ class Community(models.Model):
 
     @property
     def public_resource_list(self):
+        """
+        prepare a list of everything that gets displayed about each resource in a community.
+        """
+        # TODO: consider adding GenericRelation to expose reverse querying of metadata field.
+        # TODO: This would enable fast querying of first author.
+        # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
         return BaseResource.objects.filter(r2grp__group__g2gcp__community=self,
                                            r2grp__group__gaccess__active=True)\
                                    .filter(Q(raccess__public=True) |
@@ -53,7 +59,9 @@ class Community(models.Model):
                                            "resource_type",
                                            "discoverable",
                                            "public",
-                                           "published")
+                                           "published",
+                                           "created",
+                                           "updated")
 
     def get_effective_user_privilege(self, this_user):
         from hs_access_control.models.privilege import UserCommunityPrivilege
