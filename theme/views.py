@@ -87,6 +87,8 @@ class UserProfileView(TemplateView):
                 resources = resources.filter(Q(raccess__public=True) |
                                              Q(raccess__discoverable=True))
 
+        # get resource attributes used in profile page
+        resources = resources.only('title', 'resource_type', 'created')
         # prefetch resource metadata elements
         resources = resources.prefetch_related('content_object___title')
         resources = resources.prefetch_related('content_object___description')
