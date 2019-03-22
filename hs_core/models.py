@@ -760,17 +760,17 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
-        ('isHostedBy', 'Hosted By'),
-        ('isCopiedFrom', 'Copied From'),
-        ('isPartOf', 'Part Of'),
+        ('isHostedBy', 'The content of this resource is hosted by'),
+        ('isCopiedFrom', 'The content of this resource was copied from'),
+        ('isPartOf', 'The content of this resource is part of'),
         ('hasPart', 'Has Part'),
-        ('isExecutedBy', 'Executed By'),
-        ('isCreatedBy', 'Created By'),
+        ('isExecutedBy', 'The content of this resource can be executed by'),
+        ('isCreatedBy', 'The content of this resource was created by'),
         ('isVersionOf', 'Version Of'),
         ('isReplacedBy', 'Replaced By'),
-        ('isDataFor', 'Data For'),
-        ('cites', 'Cites'),
-        ('isDescribedBy', 'Described By'),
+        ('isDataFor', 'The content of this resource serves as the data for'),
+        ('cites', 'This resource cites'),
+        ('isDescribedBy', 'This resource is described by'),
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
