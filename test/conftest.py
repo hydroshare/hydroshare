@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import pytest
 from django.contrib.auth.models import Group
@@ -40,7 +41,8 @@ def resource_with_metadata():
     client.login(username='testuser', password='foobar')
 
     rtype = 'GenericResource'
-    title = 'Resource d49aebb3-4e64-4732-8ff2-5c43617effee'
+    res_uuid = str(uuid.uuid4())
+    title = 'Resource {}'.format(res_uuid)
     metadata = []
     metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
                                                               'end': '12/12/2010'}}})
@@ -104,6 +106,5 @@ def resource_with_metadata():
     rest_url = '/hsapi/resource/'
     response = client.post(rest_url, params)
     content = json.loads(response.content)
-    res_id = content['resource_id']
-    yield res_id
-    hydroshare.delete_resource(res_id)  # can resource = get_resource_by_shortkey(res_id) be used instead?
+    yield res_uuid
+    hydroshare.delete_resource(content['resource_id'])  # can resource = get_resource_by_shortkey(res_id) be used instead?
