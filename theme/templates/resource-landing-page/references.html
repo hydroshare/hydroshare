@@ -45,6 +45,10 @@
                                     This resource is described by:
                                 {% elif relation.type == "IsReferencedBy" %}
                                     This resource is referenced by:
+                                {% elif relation.type == "isVersionOf" %}
+                                    This resource updates and replaces previous version:
+                                {% elif relation.type == "isReplacedBy" %}
+                                    This resource has been replaced by newer version:
                                 {% else %}
                                     {{ relation.type }}
                                 {% endif %}
@@ -159,6 +163,10 @@ Click this button to add a relationship to another resource, external website, o
                                 This resource is described by:
                             {% elif relation.type == "IsReferencedBy" %}
                                 This resource is referenced by:
+                            {% elif relation.type == "isVersionOf" %}
+                                This resource updates and replaces previous version:
+                            {% elif relation.type == "isReplacedBy" %}
+                                This resource has been replaced by newer version:
                             {% else %}
                                 {{ relation.type }}
                             {% endif %}
