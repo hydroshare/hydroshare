@@ -7,7 +7,8 @@ from rest_framework.test import APIClient
 
 from hs_core import hydroshare
 from hs_core.hydroshare import users
-
+from hs_access_control.models import UserAccess
+from hs_core.hydroshare import create_account
 
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
@@ -30,13 +31,28 @@ def resource_with_metadata():
     """
     client = APIClient()
     group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-    user = users.create_account(
+    user = create_account(
         'test_user@email.com',
         username='testuser',
         password='foobar',
         first_name='some_first_name',
         last_name='some_last_name',
         superuser=False)
+
+    # email, username = None, first_name = None, last_name = None, superuser = None, groups = None,
+    # password = None, active = True, organization = None):
+
+    # TODO try with these args then see about retrying with admin_client to address the former PyTest admin_client has no uaccess to /hsapi/resource/
+
+    # user_access = UserAccess(user=user)
+    # user_access.save()
+    # user_labels = UserLabels(user=user)
+    # user_labels.save()
+    # user_profile = get_profile(u)
+
+
+
+
     client.force_authenticate(user=user)
     client.login(username='testuser', password='foobar')
 
