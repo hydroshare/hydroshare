@@ -56,7 +56,8 @@ class Command(BaseCommand):
         print("community is {} (id={})".format(community.name, community.id))
         stuff = community.public_resource_list
         for r in stuff:
-            print("{} {} type='{}' group='{}' published={}, public={}, discoverable={} {}"
+            print(("{} {} type='{}' group='{}' published={} public={} " +
+                  "discoverable={} access_type='{}' created='{}' updated='{}'")
                   .format(r["resource_id"],
                           shorten(r["resource_title"], 20),
                           r["resource_type"],
@@ -64,4 +65,6 @@ class Command(BaseCommand):
                           r["published"],
                           r["public"],
                           r["discoverable"],
-                          access_type(r)))
+                          access_type(r),
+                          r['created'],
+                          r['updated']))
