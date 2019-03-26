@@ -2282,7 +2282,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         readme_file = self.readme_file
         if readme_file is not None:
             if readme_file.extension.lower() == '.md':
-                return {'content': markdown(readme_file.read().decode('utf-8')),
+                markdown_file_content = markdown(readme_file.read().decode('utf-8', 'ignore'))
+                return {'content': markdown_file_content,
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
                 return {'content': readme_file.read(), 'file_name': readme_file.file_name}
