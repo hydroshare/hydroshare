@@ -107,4 +107,4 @@ def resource_with_metadata():
     response = client.post(rest_url, params)
     content = json.loads(response.content)
     yield res_uuid
-    hydroshare.delete_resource(content['resource_id'])  # can resource = get_resource_by_shortkey(res_id) be used instead?
+    hydroshare.delete_resource(content['resource_id'])
