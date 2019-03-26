@@ -173,6 +173,9 @@ $(document).ready(function () {
         formData.append("copy-or-move", "copy");
         formData.append("copy-move", "copy");
 
+        customAlert("Creating your resource", "Please wait...", "success", -1);
+        $("html").css("cursor", "progress");
+
         $.ajax({
             type: "POST",
             data: formData,
@@ -187,10 +190,12 @@ $(document).ready(function () {
                     console.log(response);
                     showCreateError();
                 }
+                $("html").css("cursor", "initial");
             },
             error: function (response) {
                 console.log(response);
                 showCreateError();
+                $("html").css("cursor", "initial");
             }
         });
     });
@@ -399,6 +404,7 @@ $(document).ready(function () {
 });
 
 // Alert Types: "error", "success", "info"
+// pass a duration value of -1 for persistent alerts
 function customAlert(alertTitle, alertMessage, alertType, duration) {
     alertType = alertType || "success";
     var el = document.createElement("div");
@@ -414,11 +420,13 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
         + alertTitle + '</strong><br>' + alertMessage;
     el.innerHTML = alertMessage;
-    setTimeout(function () {
-        $(el).fadeOut(300, function () {
-            $(this).remove();
-        });
-    }, duration);
+    if (duration !== -1) {
+        setTimeout(function () {
+            $(el).fadeOut(300, function () {
+                $(this).remove();
+            });
+        }, duration);
+    }
     $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
 }
