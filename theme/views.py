@@ -67,7 +67,8 @@ class UserProfileView(TemplateView):
         # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
 
-        # if requesting user is not the profile user, then show only resources that the requesting user has access
+        # if requesting user is not the profile user, then show only resources that the
+        # requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
                 if self.request.user.is_superuser:
@@ -75,12 +76,23 @@ class UserProfileView(TemplateView):
                     pass
                 else:
                     # filter out any resources the requesting user doesn't have access
-                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.view_resources) |
-                                                 Q(raccess__public=True) | Q(raccess__discoverable=True))
+                    resources = resources.filter(
+                        Q(pk__in=self.request.user.uaccess.view_resources) |
+                        Q(raccess__public=True) |
+                        Q(raccess__discoverable=True))
 
             else:
-                # for anonymous requesting user show only resources that are either public or discoverable
-                resources = resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
+                # for anonymous requesting user show only resources that are either public or
+                # discoverable
+                resources = resources.filter(Q(raccess__public=True) |
+                                             Q(raccess__discoverable=True))
+
+        # get resource attributes used in profile page
+        resources = resources.only('title', 'resource_type', 'created')
+        # prefetch resource metadata elements
+        resources = resources.prefetch_related('content_object___title')
+        resources = resources.prefetch_related('content_object___description')
+        resources = resources.prefetch_related('content_object__creators')
 
         return {
             'profile_user': u,
