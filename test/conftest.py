@@ -2,60 +2,17 @@ import json
 import uuid
 
 import pytest
-from django.contrib.auth.models import Group
-from rest_framework.test import APIClient
+from django.contrib.auth.models import User
 
-from hs_core import hydroshare
-from hs_core.hydroshare import users
 from hs_access_control.models import UserAccess
-from hs_core.hydroshare import create_account
+from hs_core import hydroshare
+from hs_labels.models import UserLabels
+
 
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
 def resource_with_metadata():
-    """
-    The followings are the core metadata elements that can be passed as part of the
-    'metadata' parameter when creating a resource:
-
-    coverage
-    creator
-    contributor
-    source,
-    relation,
-    identifier,
-    fundingagency
-
-    The statements after the yield statement will execute when the last test in the module has finished execution,
-    regardless of the exception status of the tests. https://docs.pytest.org/en/latest/fixture.html
-
-    """
-    client = APIClient()
-    group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-    user = create_account(
-        'test_user@email.com',
-        username='testuser',
-        password='foobar',
-        first_name='some_first_name',
-        last_name='some_last_name',
-        superuser=False)
-
-    # email, username = None, first_name = None, last_name = None, superuser = None, groups = None,
-    # password = None, active = True, organization = None):
-
-    # TODO try with these args then see about retrying with admin_client to address the former PyTest admin_client has no uaccess to /hsapi/resource/
-
-    # user_access = UserAccess(user=user)
-    # user_access.save()
-    # user_labels = UserLabels(user=user)
-    # user_labels.save()
-    # user_profile = get_profile(u)
-
-
-
-
-    client.force_authenticate(user=user)
-    client.login(username='testuser', password='foobar')
-
+    """Resource with metadata for testing"""
     rtype = 'GenericResource'
     res_uuid = str(uuid.uuid4())
     title = 'Resource {}'.format(res_uuid)
@@ -113,14 +70,21 @@ def resource_with_metadata():
     metadata.append({'fundingagency': {'agency_name': agency_name, 'award_title': award_title,
                                        'award_number': award_number, 'agency_url': agency_url}})
 
-    params = {'resource_type': rtype,
-              'title': title,
-              'metadata': json.dumps(metadata),
-              'file': ('cea.tif',
-                       open('assets/cea.tif'),
-                       'image/tiff')}
-    rest_url = '/hsapi/resource/'
-    response = client.post(rest_url, params)
-    content = json.loads(response.content)
+    user = User.objects.get(username='admin')
+
+    user_access = UserAccess(user=user)
+    user_access.save()
+    user_labels = UserLabels(user=user)
+    user_labels.save()
+
+    metadata = json.loads(json.dumps(metadata))
+
+    _res = hydroshare.create_resource(
+        resource_type=rtype,
+        owner=user,
+        title=title,
+        metadata=metadata,
+        files=(open('assets/cea.tif'),)
+    )
     yield res_uuid
-    hydroshare.delete_resource(content['resource_id'])
+    _res.delete()
