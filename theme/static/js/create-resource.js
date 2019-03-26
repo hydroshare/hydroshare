@@ -13,14 +13,6 @@ constraints = {
     }
 };
 
-// Displays error message if resource creation fails and restores UI state
-function showCreateError() {
-    showUniversalMessage("error", 'Failed to create resource.', 10000)();
-    $(".btn-create-resource").removeClass("disabled");
-    $(".btn-create-resource").text("Create Resource");
-    $(".btn-cancel-create-resource").removeClass("disabled");
-}
-
 $(document).ready(function () {
     var json_response_file_types = {};
     var json_response_multiple_file = {};

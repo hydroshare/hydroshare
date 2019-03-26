@@ -157,6 +157,44 @@ $(document).ready(function () {
         return false
     });
 
+    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+        var formData = new FormData();
+
+        formData.append("csrfmiddlewaretoken", csrf_token);
+        formData.append("title", "Untitled Resource");
+        formData.append("resource-type", $(this).attr("data-value"));
+        formData.append("irods-username", "");
+        formData.append("irods-password", "");
+        formData.append("irods-host", "");
+        formData.append("irods-port", "");
+        formData.append("irods-zone", "");
+        formData.append("irods_file_names", "");
+        formData.append("irods_federated", "");
+        formData.append("copy-or-move", "copy");
+        formData.append("copy-move", "copy");
+
+        $.ajax({
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            url: "/hsapi/_internal/create-resource/do/",
+            success: function (response) {
+                if (response.status == "success") {
+                    window.location = response['resource_url'];
+                }
+                else {
+                    console.log(response);
+                    showCreateError();
+                }
+            },
+            error: function (response) {
+                console.log(response);
+                showCreateError();
+            }
+        });
+    });
+
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
@@ -172,10 +210,13 @@ $(document).ready(function () {
                 var message = 'Your profile is nearly complete. Please fill in the '
                     + '<strong>Organization</strong> field'
                     + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
-                showUniversalMessage("warn", message, 10000)();
+
+                customAlert("Profile", message, "info", 10000);
             }
         },
-        error: showUniversalMessage()
+        error: function(response) {
+            console.log(response);
+        }
     });
 
     // Event trigger for profile preview
@@ -357,19 +398,35 @@ $(document).ready(function () {
     };
 });
 
-function showUniversalMessage(type, message, timeout) {
-    return function(response,returnType,content) {
-        if(!message) message = content;
-        if(!type) type = returnType;
-        if(!timeout) timeout = 5000;
+// Alert Types: "error", "success", "info"
+function customAlert(alertTitle, alertMessage, alertType, duration) {
+    alertType = alertType || "success";
+    var el = document.createElement("div");
+    var top = 200;
+    var style = "top:" + top + "px";
+    var alertTypes = {
+        success: {class: "alert alert-success", icon: "fa fa-check"},
+        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
+        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
+    };
+    el.setAttribute("style", style);
+    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
+    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + alertMessage;
+    el.innerHTML = alertMessage;
+    setTimeout(function () {
+        $(el).fadeOut(300, function () {
+            $(this).remove();
+        });
+    }, duration);
+    $(el).appendTo("body > .main-container > .container");
+    $(el).hide().fadeIn(400);
+}
 
-        $("#universalMessage span").html(message);
-        $("#universalMessage").attr('class','');
-        $("#universalMessage").addClass(type);
-        $("#universalMessage").slideDown();
-
-        setTimeout(function() {
-            $("#universalMessage a.um_close").click()
-        }, timeout)
-    }
+// Displays error message if resource creation fails and restores UI state
+function showCreateError() {
+    customAlert("Error", 'Failed to create resource.', "error", 10000)();
+    $(".btn-create-resource").removeClass("disabled");
+    $(".btn-create-resource").text("Create Resource");
+    $(".btn-cancel-create-resource").removeClass("disabled");
 }

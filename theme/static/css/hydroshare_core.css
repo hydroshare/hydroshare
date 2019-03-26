@@ -4922,7 +4922,7 @@ div#resource-content {
 	height: 26px;
 }
 
-.navbar-inverse #dropdown-resource-type .dropdown-menu .resource-type-icon {
+.navbar-inverse .res-dropdown .resource-type-icon {
 	height: 38px;
 	margin-right: 10px;
 }
@@ -4964,7 +4964,7 @@ div#resource-content {
 	width: 220px;
 }
 
-#dropdown-resource-type div.tooltip-inner {
+#dropdown-resource-type div.tooltip-inner, .res-dropdown div.tooltip-inner {
     width: 350px;
 }
 
