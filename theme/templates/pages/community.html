@@ -20,11 +20,6 @@
         </div>
     </div>
     <div class="container">
-        {% for community in communities_view %}
-            <div class="row">
-                Community {{ community.name }}
-            </div>
-        {% endfor %}
         <div class="row">
 {#            {% if profile_user.is_group_owner or profile_user.is_group_editor %}#}
 {#                {% if not group.gaccess.active %}#}
@@ -68,14 +63,13 @@
                                         <h4 class="panel-title">
                                             <span class="glyphicon glyphicon glyphicon-user"></span>
                                             <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                               href="#filter">&nbsp;Shared by</a></h4>
+                                               href="#filter">&nbsp;CZO Groups</a></h4>
                                     </div>
                                     <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                         <div class="panel-body">
                                             <div class="list-group">
                                                 <ul class="list-group inputs-group">
-                                                    <i class="list-group-item no-items-found">No resources have been
-                                                        shared with this group yet.</i>
+                                                    <i class="list-group-item no-items-found">TBD</i>
                                                 </ul>
                                             </div>
 
@@ -186,26 +180,25 @@
                                         <th>Date Created</th>
                                         <th>Last modified</th>
                                         <th>Subject</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Authors</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Permission Level</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Labels</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Favorite</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Last modified</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Sharing Status</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                         <th>Date Created</th>
-                                        {# Used in table processing #}
+                                        {# Needed for datatable to function properly #}
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {% for res in community_resources %}
-                                        <div name="temp">{{ res.resource_title }}</div>
                                         <tr class="data-row">
                                             {# Selection controls #}
                                             <td>
@@ -249,76 +242,41 @@
                                             </td>
                                             {# Type #}
                                             <td data-col="resource-type">
-                                                {{ res.resource_type }}
-                                                COMPOSITE ICON
-{#                                                {% include "includes/res_type_col.html" with resource=res %}#}
+                                                {% include "includes/res_type_col_community.html" with resource=res %}
                                             </td>
                                             {# Title #}
                                             <td>
                                                 <strong>
-                                                    {{ res.resource_title }}
-                                                    <a href="/">{{ res.resource_title }}</a>
-{#                                                    <a href="{{ res.get_absolute_url }}">{{ res.resource_title }}</a>#}
+                                                    <a href="{{ res.slug }}">{{ res.resource_title }}</a>
                                                 </strong>
                                             </td>
                                             {# First Author #}
-{#                                            {% if res.first_creator.description %}#}
+                                            {% if res.first_creator.description %}
                                                 <td>
-                                                    FIRST CREATOR (OR FIRST AUTHOR?)
 {#                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
                                                 </td>
-{#                                            {% else %}#}
-{#                                                <td>{{ res.first_creator.name }}</td>#}
-{#                                            {% endif %}#}
-                                            {# Date Created #}
-                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
-                                            {# Last Modified #}
-                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
-                                            <td>METADATA SUBJECTS
-{#                                                {% for kw in res.metadata.subjects.all %}#}
-{#                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}#}
-{#                                                {% endfor %}#}
-                                            </td>
-                                            <td>METADATA CREATORS
-{#                                                {% for creator in res.metadata.creators.all %}#}
-{#                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}#}
-{#                                                    {% if creator.description %}#}
-{#                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>#}
-{#                                                    {% else %}#}
-{#                                                        <span>{{ creator.name }}</span>#}
-{#                                                    {% endif %}#}
-{#                                                {% endfor %}#}
-                                            </td>
-                                            {% if res.owned %}
-                                                <td>Owned</td>
-                                            {% elif res.editable %}
-                                                <td>Editable</td>
-                                            {% elif res.viewable %}
-                                                <td>Viewable</td>
                                             {% else %}
-                                                <td></td>
+                                                <td>CREATOR</td>
+{#                                                <td>{{ res.first_creator.name }}</td>#}
                                             {% endif %}
-                                            <td class="col-labels">
-                                                <!-- Needed for datatable to function properly -->
-                                            </td>
-                                            <td class="col-is-favorite">
-                                                <!-- Needed for datatable to function properly -->
-                                            </td>
+                                            {# Date Created #}
+                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
+                                            {# Last Modified #}
+                                            <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
                                             <td>{{ res.updated|date:"U" }}</td>
-                                            <td>
-                                                <!-- Needed for datatable to function properly -->
-                                            </td>
+                                            <td><!-- Needed for datatable to function properly --></td>
                                             <td>{{ res.created|date:"U" }}</td>
-                                            <td>GRANTOR.ID
-{#                                                {{ res.grantor.id }}#}
-                                            </td>
+                                            <td><!-- Needed for datatable to function properly --></td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
-
                                 {% include "includes/legend.html" %}
-
                             </div>
                         </div>
                     </div>
