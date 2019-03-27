@@ -80,6 +80,7 @@
                                             </div>
 
                                             <div id="grantors-list">
+                                                GRANTOR.ID
 {#                                                {% for res in group_resources %}#}
 {#                                                    <span data-grantor-id="{{ res.grantor.id }}"#}
 {#                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>#}
@@ -249,41 +250,44 @@
                                             {# Type #}
                                             <td data-col="resource-type">
                                                 {{ res.resource_type }}
+                                                COMPOSITE ICON
 {#                                                {% include "includes/res_type_col.html" with resource=res %}#}
                                             </td>
                                             {# Title #}
                                             <td>
                                                 <strong>
                                                     {{ res.resource_title }}
+                                                    <a href="/">{{ res.resource_title }}</a>
 {#                                                    <a href="{{ res.get_absolute_url }}">{{ res.resource_title }}</a>#}
                                                 </strong>
                                             </td>
                                             {# First Author #}
 {#                                            {% if res.first_creator.description %}#}
                                                 <td>
+                                                    FIRST CREATOR (OR FIRST AUTHOR?)
 {#                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
                                                 </td>
 {#                                            {% else %}#}
 {#                                                <td>{{ res.first_creator.name }}</td>#}
 {#                                            {% endif %}#}
                                             {# Date Created #}
-{#                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>#}
+                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                                             {# Last Modified #}
-{#                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>#}
-                                            <td>
-                                                {% for kw in res.metadata.subjects.all %}
-                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
-                                                {% endfor %}
+                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
+                                            <td>METADATA SUBJECTS
+{#                                                {% for kw in res.metadata.subjects.all %}#}
+{#                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}#}
+{#                                                {% endfor %}#}
                                             </td>
-                                            <td>
-                                                {% for creator in res.metadata.creators.all %}
-                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                    {% if creator.description %}
-                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                    {% else %}
-                                                        <span>{{ creator.name }}</span>
-                                                    {% endif %}
-                                                {% endfor %}
+                                            <td>METADATA CREATORS
+{#                                                {% for creator in res.metadata.creators.all %}#}
+{#                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}#}
+{#                                                    {% if creator.description %}#}
+{#                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>#}
+{#                                                    {% else %}#}
+{#                                                        <span>{{ creator.name }}</span>#}
+{#                                                    {% endif %}#}
+{#                                                {% endfor %}#}
                                             </td>
                                             {% if res.owned %}
                                                 <td>Owned</td>
@@ -295,29 +299,19 @@
                                                 <td></td>
                                             {% endif %}
                                             <td class="col-labels">
-                                                {% for label in res.labels %}
-                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                                {% endfor %}
+                                                <!-- Needed for datatable to function properly -->
                                             </td>
                                             <td class="col-is-favorite">
-                                                {% if res.is_favorite %}
-                                                    Favorite
-                                                {% endif %}
+                                                <!-- Needed for datatable to function properly -->
                                             </td>
                                             <td>{{ res.updated|date:"U" }}</td>
                                             <td>
-                                                {% if res.published %}
-                                                    Published
-                                                {% elif res.public %}
-                                                    Public
-                                                {% elif res.discoverable %}
-                                                    Discoverable
-                                                {% else %}
-                                                    Private
-                                                {% endif %}
+                                                <!-- Needed for datatable to function properly -->
                                             </td>
                                             <td>{{ res.created|date:"U" }}</td>
-                                            <td>{{ res.grantor.id }}</td>
+                                            <td>GRANTOR.ID
+{#                                                {{ res.grantor.id }}#}
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
@@ -516,6 +510,5 @@
     {{ block.super }}
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/community.js"></script>
-    {#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}
