@@ -1866,7 +1866,7 @@ class CommunityView(TemplateView):
         # 'communities_owner': communities_owner,
 
         return {
-
+            'community_resources': community_resources
         }
 
 
