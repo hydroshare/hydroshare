@@ -1,5 +1,5 @@
 {% extends "pages/page.html" %}
-{% load comment_tags  %}
+{% load comment_tags %}
 
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
@@ -21,24 +21,11 @@
     </div>
     <div class="container">
         <div class="row">
-{#            {% if profile_user.is_group_owner or profile_user.is_group_editor %}#}
-{#                {% if not group.gaccess.active %}#}
-{#                    <div class="alert alert-warning alert-dismissible" role="alert">#}
-{#                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span#}
-{#                                aria-hidden="true">&times;</span></button>#}
-{#                        Recently changed resources will be displayed here#}
-{#                        <hr>#}
-{#                        <span class="glyphicon glyphicon-question-sign"></span>#}
-{#                    </div>#}
-{#                {% endif %}#}
-{#            {% endif %}#}
             <div class="col-sm-3">
-                <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/communities/czo-national.png" alt="CZO National"></a></div>
+                <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/communities/czo-national.png"
+                                                            alt="CZO National"></a></div>
             </div>
             <div class="col-sm-7">
-{#                <h2 class="group-title">{{ group.name }}</h2>#}
-{#                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>#}
-{#                <p>{{ group.gaccess.description|linebreaks }}</p>#}
             </div>
             <div><!-- [Modals] --></div>
         </div>
@@ -56,293 +43,232 @@
             <div class="tab-content">
                 <!-- PUBLIC -->
                 <div role="tabpanel" class="tab-pane fade in active" id="public">
-                        <div class="row">
-                            <div class="col-lg-2" id="facets">
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <span class="glyphicon glyphicon glyphicon-user"></span>
-                                            <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                               href="#filter">&nbsp;CZO Groups</a></h4>
-                                    </div>
-                                    <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                        <div class="panel-body">
-                                            <div class="list-group">
-                                                <ul class="list-group inputs-group">
-                                                    <i class="list-group-item no-items-found">TBD</i>
-                                                </ul>
-                                            </div>
+                    <div class="row">
+                        <div class="col-lg-2" id="facets">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <span class="glyphicon glyphicon glyphicon-user"></span>
+                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+                                           href="#filter">&nbsp;CZO Groups</a></h4>
+                                </div>
+                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
+                                    <div class="panel-body">
+                                        <div class="list-group">
+                                            <ul class="list-group inputs-group">
+                                                <i class="list-group-item no-items-found">TBD</i>
+                                            </ul>
+                                        </div>
 
-                                            <div id="grantors-list">
-                                                GRANTOR.ID
-{#                                                {% for res in group_resources %}#}
-{#                                                    <span data-grantor-id="{{ res.grantor.id }}"#}
-{#                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>#}
-{#                                                {% endfor %}#}
-                                            </div>
+                                        <div id="grantors-list">
+                                            GRANTOR.ID
+                                            {#                                                {% for res in group_resources %}#}
+                                            {#                                                    <span data-grantor-id="{{ res.grantor.id }}"#}
+                                            {#                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>#}
+                                            {#                                                {% endfor %}#}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-lg-10" id="items">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div id="search-container" class="input-group">
-                                            <span class="glyphicon glyphicon-search search-icon"></span>
-                                            <input id="resource-search-input" type="text" class="form-control"
-                                                   placeholder="Search"/>
-                                            <span id="btn-clear-search-input"
-                                                  class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
-
-                                            <div class="input-group-btn">
-                                                <div class="btn-group" role="group">
-                                                    <div class="dropdown dropdown-lg">
-                                                        <button type="button" class="btn btn-default dropdown-toggle"
-                                                                data-toggle="dropdown"
-                                                                aria-expanded="false"><span class="caret"></span>
-                                                        </button>
-
-                                                        <div class="shadow-md dropdown-menu dropdown-menu-left"
-                                                             role="menu">
-                                                            <form class="form-horizontal" role="form">
-                                                                <div class="form-group">
-                                                                    <label for="filter">Resource Type</label>
-                                                                    <select id="input-resource-type"
-                                                                            class="form-control pull-left">
-                                                                        <option value="" selected>All</option>
-                                                                        <option value="collection resource">Collection
-                                                                        </option>
-                                                                        <option value="composite resource">Composite
-                                                                        </option>
-                                                                        <option value="generic">Generic</option>
-                                                                        <option value="geographic feature">Geographic
-                                                                            Feature (ESRI Shapefiles)
-                                                                        </option>
-                                                                        <option value="geographic raster">Geographic
-                                                                            Raster
-                                                                        </option>
-                                                                        <option value="his referenced time series">HIS
-                                                                            Referenced Time Series
-                                                                        </option>
-                                                                        <option value="model instance resource">Model
-                                                                            Instance
-                                                                        </option>
-                                                                        <option value="model program">Model Program
-                                                                        </option>
-                                                                        <option value="modflow model instance resource">
-                                                                            MODFLOW Model Instance
-                                                                        </option>
-                                                                        <option value="multidimensional">
-                                                                            Multidimensional (NetCDF)
-                                                                        </option>
-                                                                        <option value="script resource">Script
-                                                                            Resource
-                                                                        </option>
-                                                                        <option value="swat model instance resource">
-                                                                            Swat Model Instance
-                                                                        </option>
-                                                                        <option value="time series">Time Series</option>
-                                                                        <option value="web app resource">Web App
-                                                                        </option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="contain">Author</label>
-                                                                    <input id="input-author" class="form-control"
-                                                                           type="text"/>
-                                                                    <span id="btn-clear-author-input"
-                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="contain">Subject</label>
-                                                                    <input id="input-subject" class="form-control"
-                                                                           type="text"/>
-                                                                    <span id="btn-clear-subject-input"
-                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- /input-group -->
-                                <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                                    <thead>
-                                    <tr>
-                                        <th><input class="all-rows-selector" type="checkbox"></th>
-                                        <th>Type</th>
-                                        <th>Title</th>
-                                        <th>First Author</th>
-                                        <th>Date Created</th>
-                                        <th>Last modified</th>
-                                        <th>Subject</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Authors</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Permission Level</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Labels</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Favorite</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Last modified</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Sharing Status</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Date Created</th>
-                                        {# Needed for datatable to function properly #}
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for res in community_resources %}
-                                        <tr class="data-row">
-                                            {# Selection controls #}
-                                            <td>
-                                                <input class="row-selector" type="checkbox">
-                                                {% if res.is_favorite %}
-                                                    <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                          data-form-type="toggle-favorite"
-                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                          action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                          method="post">
-                                                        {% csrf_token %}
-                                                        <input type="hidden" name="action" value="DELETE">
-                                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                                    </form>
-                                                {% else %}
-                                                    <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                          data-form-type="toggle-favorite"
-                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                          action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                          method="post">
-                                                        {% csrf_token %}
-                                                        <input type="hidden" name="action" value="CREATE">
-                                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                                    </form>
-                                                {% endif %}
-
-                                                <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                      data-toggle="dropdown" aria-expanded="false"></span>
-
-                                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                                    <div class="panel-body" role="form">
-                                                        <ul data-resource-id="{{ res.resource_id }}"
-                                                            class="list-group list-labels">
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            {# Type #}
-                                            <td data-col="resource-type">
-                                                {% include "includes/res_type_col_community.html" with resource=res %}
-                                            </td>
-                                            {# Title #}
-                                            <td>
-                                                <strong>
-                                                    <a href="/{{ res.slug }}/">{{ res.title }}</a>
-                                                </strong>
-                                            </td>
-                                            {# First Author #}
-                                            {% if res.first_creator.description %}
-                                                <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                                </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
-                                            {# Date Created #}
-                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
-                                            {# Last Modified #}
-                                            <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.updated|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.created|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% include "includes/legend.html" %}
                             </div>
                         </div>
+                        <div class="col-lg-10" id="items">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div id="search-container" class="input-group">
+                                        <span class="glyphicon glyphicon-search search-icon"></span>
+                                        <input id="resource-search-input" type="text" class="form-control"
+                                               placeholder="Search"/>
+                                        <span id="btn-clear-search-input"
+                                              class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+
+                                        <div class="input-group-btn">
+                                            <div class="btn-group" role="group">
+                                                <div class="dropdown dropdown-lg">
+                                                    <button type="button" class="btn btn-default dropdown-toggle"
+                                                            data-toggle="dropdown"
+                                                            aria-expanded="false"><span class="caret"></span>
+                                                    </button>
+
+                                                    <div class="shadow-md dropdown-menu dropdown-menu-left"
+                                                         role="menu">
+                                                        <form class="form-horizontal" role="form">
+                                                            <div class="form-group">
+                                                                <label for="filter">Resource Type</label>
+                                                                <select id="input-resource-type"
+                                                                        class="form-control pull-left">
+                                                                    <option value="" selected>All</option>
+                                                                    <option value="collection resource">Collection
+                                                                    </option>
+                                                                    <option value="composite resource">Composite
+                                                                    </option>
+                                                                    <option value="generic">Generic</option>
+                                                                    <option value="geographic feature">Geographic
+                                                                        Feature (ESRI Shapefiles)
+                                                                    </option>
+                                                                    <option value="geographic raster">Geographic
+                                                                        Raster
+                                                                    </option>
+                                                                    <option value="his referenced time series">HIS
+                                                                        Referenced Time Series
+                                                                    </option>
+                                                                    <option value="model instance resource">Model
+                                                                        Instance
+                                                                    </option>
+                                                                    <option value="model program">Model Program
+                                                                    </option>
+                                                                    <option value="modflow model instance resource">
+                                                                        MODFLOW Model Instance
+                                                                    </option>
+                                                                    <option value="multidimensional">
+                                                                        Multidimensional (NetCDF)
+                                                                    </option>
+                                                                    <option value="script resource">Script
+                                                                        Resource
+                                                                    </option>
+                                                                    <option value="swat model instance resource">
+                                                                        Swat Model Instance
+                                                                    </option>
+                                                                    <option value="time series">Time Series</option>
+                                                                    <option value="web app resource">Web App
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="contain">Author</label>
+                                                                <input id="input-author" class="form-control"
+                                                                       type="text"/>
+                                                                <span id="btn-clear-author-input"
+                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="contain">Subject</label>
+                                                                <input id="input-subject" class="form-control"
+                                                                       type="text"/>
+                                                                <span id="btn-clear-subject-input"
+                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- /input-group -->
+                            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
+                                <thead>
+                                <tr>
+                                    <th><input class="all-rows-selector" type="checkbox"></th>
+                                    <th>Type</th>
+                                    <th>Title</th>
+                                    <th>First Author</th>
+                                    <th>Date Created</th>
+                                    <th>Last modified</th>
+                                    <th>Subject</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Authors</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Permission Level</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Labels</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Favorite</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Last modified</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Sharing Status</th>
+                                    {# Needed for datatable to function properly #}
+                                    <th>Date Created</th>
+                                    {# Needed for datatable to function properly #}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for res in community_resources %}
+                                    <tr class="data-row">
+                                        {# Selection controls #}
+                                        <td>
+                                            <input class="row-selector" type="checkbox">
+                                            {% if res.is_favorite %}
+                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
+                                                      data-form-type="toggle-favorite"
+                                                      class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+
+                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
+                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
+                                                      method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="DELETE">
+                                                    <input type="hidden" name="label_type" value="FAVORITE">
+                                                </form>
+                                            {% else %}
+                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
+                                                      data-form-type="toggle-favorite"
+                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
+
+                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
+                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
+                                                      method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="CREATE">
+                                                    <input type="hidden" name="label_type" value="FAVORITE">
+                                                </form>
+                                            {% endif %}
+
+                                            <span class="glyphicon glyphicon-tag btn-inline-label"
+                                                  data-toggle="dropdown" aria-expanded="false"></span>
+
+                                            <div class="dropdown-menu inline-dropdown" role="menu">
+                                                <div class="panel-body" role="form">
+                                                    <ul data-resource-id="{{ res.resource_id }}"
+                                                        class="list-group list-labels">
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        {# Type #}
+                                        <td data-col="resource-type">
+                                            {% include "includes/res_type_col_community.html" with resource=res %}
+                                        </td>
+                                        {# Title #}
+                                        <td>
+                                            <strong>
+                                                <a href="/{{ res.slug }}/">{{ res.title }}</a>
+                                            </strong>
+                                        </td>
+                                        {# First Author #}
+                                        {% if res.first_creator.description %}
+                                            <td>
+                                                <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+                                            </td>
+                                        {% else %}
+                                            <td>{{ res.first_creator.name }}</td>
+                                        {% endif %}
+                                        {# Date Created #}
+                                        <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
+                                        {# Last Modified #}
+                                        <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td>{{ res.updated|date:"U" }}</td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td>{{ res.created|date:"U" }}</td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            {% include "includes/legend.html" %}
+                        </div>
                     </div>
+                </div>
             </div>
         </div>
     </div>
-
-    {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-        <!-- Invite to Group Modal -->
-        <div class="modal fade" id="invite-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Invite">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="Invite">Invite People</h4>
-                    </div>
-                    <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                        <div class="modal-body">
-                            <div id="div-invite-people">
-                                {% csrf_token %}
-                                {{ add_view_user_form.user }}
-                                <form action="">
-                                    <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
-                                            class="button-label">&nbsp;&nbsp;Send Invitation</span>
-                                    </a>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Delete/Inactive Group Modal -->
-        <div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Delete">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="Delete">Delete Group</h4>
-                    </div>
-                    <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
-                        <div class="modal-body">
-                            <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore
-                                it later.</h5>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    {% endif %}
 
     {% if profile_user.is_group_owner or profile_user.is_group_editor %}
         <!-- Edit Group Modal -->
@@ -409,8 +335,7 @@
                                         </div>
                                     </fieldset>
                                 </div>
-
-                                <br>
+                                <br />
 
                                 {# Privacy #}
                                 <fieldset class="col-sm-12">
