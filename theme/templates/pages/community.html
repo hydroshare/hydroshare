@@ -190,32 +190,17 @@
                                         {# Selection controls #}
                                         <td>
                                             <input class="row-selector" type="checkbox">
-                                            {% if res.is_favorite %}
-                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+                                            <span data-form-id="form-favorite-{{ res.resource_id }}"
+                                                  data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="DELETE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                            {% else %}
-                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="CREATE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                            {% endif %}
-
+                                            <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
+                                                  action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
+                                                  method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="CREATE">
+                                                <input type="hidden" name="label_type" value="FAVORITE">
+                                            </form>
                                             <span class="glyphicon glyphicon-tag btn-inline-label"
                                                   data-toggle="dropdown" aria-expanded="false"></span>
 
