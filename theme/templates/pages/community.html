@@ -247,17 +247,16 @@
                                             {# Title #}
                                             <td>
                                                 <strong>
-                                                    <a href="{{ res.slug }}">{{ res.resource_title }}</a>
+                                                    <a href="/{{ res.slug }}/">{{ res.title }}</a>
                                                 </strong>
                                             </td>
                                             {# First Author #}
                                             {% if res.first_creator.description %}
                                                 <td>
-{#                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>#}
+                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
                                                 </td>
                                             {% else %}
-                                                <td>CREATOR</td>
-{#                                                <td>{{ res.first_creator.name }}</td>#}
+                                                <td>{{ res.first_creator.name }}</td>
                                             {% endif %}
                                             {# Date Created #}
                                             <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
