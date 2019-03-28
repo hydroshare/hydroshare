@@ -1,8 +1,13 @@
 """Signal receivers for the hs_core app."""
 
 from django.dispatch import receiver
-from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
+from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
+    post_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
+    post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
+    post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change
+from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Party
+from django.conf import settings
 from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -141,3 +146,25 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+
+
+@receiver(post_add_generic_aggregation)
+@receiver(post_add_geofeature_aggregation)
+@receiver(post_add_raster_aggregation)
+@receiver(post_add_netcdf_aggregation)
+@receiver(post_add_timeseries_aggregation)
+@receiver(post_add_reftimeseries_aggregation)
+@receiver(post_remove_file_aggregation)
+@receiver(post_delete_resource)
+@receiver(post_raccess_change)
+def hs_update_web_services(sender, **kwargs):
+    """Signal to update resource web services."""
+
+    if settings.HSWS_ACTIVATED:
+        update_web_services.apply_async((
+            settings.HSWS_URL,
+            settings.HSWS_API_TOKEN,
+            settings.HSWS_TIMEOUT,
+            settings.HSWS_PUBLISH_URLS,
+            kwargs.get("resource").short_id
+        ), countdown=1)
