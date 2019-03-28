@@ -33,35 +33,26 @@ class Community(models.Model):
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
 
     @property
-    def public_resource_list(self):
+    def public_resources(self):
         """
         prepare a list of everything that gets displayed about each resource in a community.
         """
         # TODO: consider adding GenericRelation to expose reverse querying of metadata field.
         # TODO: This would enable fast querying of first author.
         # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
-        return BaseResource.objects.filter(r2grp__group__g2gcp__community=self,
-                                           r2grp__group__gaccess__active=True)\
-                                   .filter(Q(raccess__public=True) |
-                                           Q(raccess__published=True) |
-                                           Q(raccess__discoverable=True))\
-                                   .annotate(group_id=F("r2grp__group__id"),
-                                             group_name=F("r2grp__group__name"),
-                                             resource_id=F("short_id"),
-                                             resource_title=F("title"),
-                                             published=F("raccess__published"),
-                                             public=F("raccess__public"),
-                                             discoverable=F("raccess__discoverable"))\
-                                   .values("group_id",
-                                           "group_name",
-                                           "resource_id",
-                                           "resource_title",
-                                           "resource_type",
-                                           "discoverable",
-                                           "public",
-                                           "published",
-                                           "created",
-                                           "updated")
+        res = BaseResource.objects.filter(r2grp__group__g2gcp__community=self,
+                                          r2grp__group__gaccess__active=True)\
+                                  .filter(Q(raccess__public=True) |
+                                          Q(raccess__published=True) |
+                                          Q(raccess__discoverable=True))\
+                                  .annotate(group_name=F("r2grp__group__name"),
+                                            group_id=F("r2grp__group__id"))
+
+        res = res.only('title', 'resource_type', 'created', 'updated')
+        res = res.prefetch_related("content_object___title",
+                                   "content_object___description",
+                                   "content_object__creators")
+        return res
 
     def get_effective_user_privilege(self, this_user):
         from hs_access_control.models.privilege import UserCommunityPrivilege

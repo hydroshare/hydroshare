@@ -627,6 +627,9 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.holes in self.cats.gaccess.view_resources)
         self.assertTrue(self.holes not in self.cats.gaccess.edit_resources)
 
+        self.assertTrue(self.dogs in self.cats.gaccess.view_groups)
+        self.assertTrue(self.dogs in self.cats.gaccess.edit_groups)
+
         # VIEW privileges are squashed by allow_view=False
         # (dog2 has only the privileges of the group dogs)
         self.assertTrue(self.posts not in self.dog2.uaccess.view_resources)
@@ -644,3 +647,6 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.posts not in self.dogs.gaccess.edit_resources)
         self.assertTrue(self.claus not in self.dogs.gaccess.view_resources)
         self.assertTrue(self.claus not in self.dogs.gaccess.edit_resources)
+
+        self.assertTrue(self.cats not in self.dogs.gaccess.view_groups)
+        self.assertTrue(self.cats not in self.dogs.gaccess.edit_groups)

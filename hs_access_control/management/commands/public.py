@@ -54,17 +54,23 @@ class Command(BaseCommand):
             exit(1)
 
         print("community is {} (id={})".format(community.name, community.id))
-        stuff = community.public_resource_list
+        stuff = community.public_resources
         for r in stuff:
-            print(("{} {} type='{}' group='{}' published={} public={} " +
-                  "discoverable={} access_type='{}' created='{}' updated='{}'")
-                  .format(r["resource_id"],
-                          shorten(r["resource_title"], 20),
-                          r["resource_type"],
-                          r["group_name"],
-                          r["published"],
-                          r["public"],
-                          r["discoverable"],
-                          access_type(r),
-                          r['created'],
-                          r['updated']))
+            print(("{} {} type='{}' group='{}' (id={}) published={} public={} " +
+                  "discoverable={} created='{}' updated='{}' first author='{}'")
+                  .format(r.short_id,
+                          shorten(r.title, 20),
+                          # shorten(r.content_object._title.first().value, 20),
+                          # shorten(r.description, 20),
+                          # shorten(r.content_object._description.first().value, 20),
+                          r.resource_type,
+                          r.group_name,
+                          r.group_id,
+                          r.raccess.published,
+                          r.raccess.public,
+                          r.raccess.discoverable,
+                          r.created,
+                          r.updated,
+                          r.first_creator
+                          # r.content_object.creators.filter(order=1).first()
+                          ))
