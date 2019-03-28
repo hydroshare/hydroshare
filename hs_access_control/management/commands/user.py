@@ -29,15 +29,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('arguments', nargs='*', type=str)
+        parser.add_argument('username', type=str)
 
     def handle(self, *args, **options):
 
-        if len(options['arguments']) != 1:
+        if options['username'] is None:
             usage()
             exit(1)
 
-        username = options['arguments'][0]
+        username = options['username']
 
         user = user_from_name(username)
         if user is None:

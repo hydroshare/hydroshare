@@ -315,15 +315,11 @@ class GroupAccess(models.Model):
 
         else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
-            excluded = BaseResource.objects.filter(raccess__immutable=False,
-                                                   r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                   r2grp__group=self.group).values('pk')
             return BaseResource.objects.filter(Q(r2grp__privilege=PrivilegeCodes.VIEW,
                                                  r2grp__group=self.group) |
                                                Q(raccess__immutable=True,
                                                  r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                 r2grp__group=self.group))\
-                                       .exclude(pk__in=Subquery(excluded)).distinct()
+                                                 r2grp__group=self.group)).distinct()
 
     def get_users_with_explicit_access(self, this_privilege):
         """

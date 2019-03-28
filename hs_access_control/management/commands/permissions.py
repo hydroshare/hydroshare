@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_access_control.models.utilities import coarse_permissions
-from hs_access_control.management import user_from_name
+from hs_access_control.management.utilities import user_from_name
 
 
 def usage():
@@ -25,16 +25,17 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('arguments', nargs='*', type=str)
+        parser.add_argument('username', type=str)
+        parser.add_argument('resource_id', type=str)
 
     def handle(self, *args, **options):
 
-        if len(options['arguments']) != 2:
+        if options['username'] is None or options['resource_id'] is None:
             usage()
             exit(1)
 
-        username = options['arguments'][0]
-        resourceid = options['arguments'][1]
+        username = options['username']
+        resource_id = options['resource_id']
 
         user = user_from_name(username)
         if user is None:
@@ -42,9 +43,9 @@ class Command(BaseCommand):
             exit(1)
 
         try:
-            resource = get_resource_by_shortkey(resourceid, or_404=False)
+            resource = get_resource_by_shortkey(resource_id, or_404=False)
         except BaseResource.DoesNotExist:
-            print("No such resource {}.".format(resourceid))
+            print("No such resource {}.".format(resource_id))
             usage()
             exit(1)
 
