@@ -1,5 +1,5 @@
 {% load hydroshare_tags %}
-{#{% with resource_type=resource|resource_type %}#}
+{% with resource_type=resource.resource_type %}
     <span class="resource-type-text">{{ resource_type }}</span>
     {% if resource.resource_type == "CompositeResource" %}
         <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
@@ -61,7 +61,7 @@
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% endif %}
-{#{% endwith %}#}
+{% endwith %}
 {#  Sharing Status icons #}
 <div class="access-icon-wrapper">
     {% if resource.published %}
