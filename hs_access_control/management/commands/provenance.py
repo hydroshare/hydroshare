@@ -25,25 +25,26 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('arguments', nargs='*', type=str)
+        parser.add_argument('username', type=str)
+        parser.add_argument('resource_id', type=str)
 
     def handle(self, *args, **options):
 
-        if len(options['arguments']) != 2:
+        if options['username'] is None or options['resource_id'] is None:
             usage()
             exit(1)
 
-        username = options['arguments'][0]
-        resourceid = options['arguments'][1]
+        username = options['username']
+        resource_id = options['resource_id']
         user = user_from_name(username)
         if user is None:
             usage()
             exit(1)
 
         try:
-            resource = get_resource_by_shortkey(resourceid, or_404=False)
+            resource = get_resource_by_shortkey(resource_id, or_404=False)
         except BaseResource.DoesNotExist:
-            print("No such resource {}.".format(resourceid))
+            print("No such resource {}.".format(resource_id))
             usage()
             exit(1)
 

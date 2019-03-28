@@ -2,6 +2,7 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 from hs_core.models import BaseResource
 from django.db.models import Q, F
+from django.contrib.contenttypes.models import ContentType
 
 ###################################
 # Communities of groups
@@ -49,9 +50,40 @@ class Community(models.Model):
                                             group_id=F("r2grp__group__id"))
 
         res = res.only('title', 'resource_type', 'created', 'updated')
-        res = res.prefetch_related("content_object___title",
-                                   "content_object___description",
-                                   "content_object__creators")
+        # # Can't do the following because the content model is polymorphic.
+        # # This is documented as only working for monomorphic content_type
+        # res = res.prefetch_related("content_object___title",
+        #                            "content_object___description",
+        #                            "content_object__creators")
+        # We want something that is not O(# resources + # content types).
+        # O(# content types) is sufficiently faster.
+        # The following strategy is documented here:
+        # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
+
+        generics = {}
+        for item in res:
+            generics.setdefault(item.content_type.id, set()).add(item.object_id)
+
+        # fetch all content types in one query
+        content_types = ContentType.objects.in_bulk(generics.keys())
+
+        # build a map between content types and the objects that use them.
+        relations = {}
+        for ct, fk_list in generics.items():
+            ct_model = content_types[ct].model_class()
+            relations[ct] = ct_model.objects.in_bulk(list(fk_list))
+
+        # force-populate the cache of content type objects.
+        for item in res:
+            setattr(item, '_content_object_cache',
+                    relations[item.content_type.id][item.object_id])
+
+        # Detailed notes:
+        # This subverts chained lookup by pre-populating the content object cache
+        # that is populated by an object reference. It is very dependent upon the
+        # implementation of GenericRelation and its pre-fetching strategy.
+        # Thus it is quite brittle and vulnerable to major revisions of Generics.
+
         return res
 
     def get_effective_user_privilege(self, this_user):

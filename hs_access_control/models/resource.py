@@ -436,7 +436,7 @@ class ResourceAccess(models.Model):
         if community_priv['privilege__min'] is None or \
            community_priv['group__g2gcp__community__c2gcp__privilege__min'] is None:
             return PrivilegeCodes.NONE
-        elif community_priv['privilege_min'] == PrivilegeCodes.CHANGE and \
+        elif community_priv['privilege__min'] == PrivilegeCodes.CHANGE and \
             community_priv['group__g2gcp__community__c2gcp__privilege__min'] == \
                 PrivilegeCodes.CHANGE:
             return PrivilegeCodes.CHANGE
