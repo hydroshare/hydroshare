@@ -8,10 +8,12 @@ from hs_access_control.models.community import Community
 import re
 
 
+RE_INT = re.compile(r'^([1-9]\d*|0)$')
+
+
 def group_from_name_or_id(gname):
     """ return a group object given either an id or a name """
 
-    RE_INT = re.compile(r'^([1-9]\d*|0)$')
     if RE_INT.match(gname):
         try:
             gid = int(gname)
@@ -39,7 +41,6 @@ def group_from_name_or_id(gname):
 def community_from_name_or_id(cname):
     """ return a group object given either an id or a name """
 
-    RE_INT = re.compile(r'^([1-9]\d*|0)$')
     if RE_INT.match(cname):
         try:
             cid = int(cname)

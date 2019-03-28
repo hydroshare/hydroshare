@@ -98,36 +98,3 @@ def access_provenance(u, r):
                               .format(verbs[e.privilege], e.group.name)
 
     return output
-
-# Map of possible privilege sources
-#
-# * direct resource privilege
-#   User UserResourcePrivilege,
-#         Resource
-#
-# * direct group privilege
-#   User UserGroupPrivilege
-#         (group=group) GroupResourcePrivilege
-#         Resource
-#
-# * community privilege via a group
-#   User UserGroupPrivilege
-#         (group=group) GroupCommunityPrivilege  # privilege operative
-#         (community=community) GroupCommunityPrivilege  # privilege NOT operative,
-#                                                        # allow_view operative
-#         (group=group) GroupResourcePrivilege  # privilege operative
-#         Resource
-
-# The minimal solution for communities requires some form of checking, some business model,
-# and some way of listing resources available via a community.
-# The appropriate pattern is;
-# For communities to which the user belongs,
-#    [uaccess.communities]
-#    for groups within that community,
-#        [community.get_groups_with_explicit_access(privilege)]
-#        for resources in that group the user can change:
-#            [community.get_resources_with_explicit_access(group, privilege=CHANGE)]
-#            show resources
-#        for resources in that group the user cannot change:
-#            [community.get_resources_with_explicit_access(group, privilege=VIEW)]
-#            show resources
