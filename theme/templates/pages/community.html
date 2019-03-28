@@ -59,7 +59,6 @@
                                                 <i class="list-group-item no-items-found">TBD</i>
                                             </ul>
                                         </div>
-
                                         <div id="grantors-list">
                                             GRANTOR.ID
                                             {#                                                {% for res in group_resources %}#}
@@ -80,82 +79,9 @@
                                                placeholder="Search"/>
                                         <span id="btn-clear-search-input"
                                               class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
-
-                                        <div class="input-group-btn">
-                                            <div class="btn-group" role="group">
-                                                <div class="dropdown dropdown-lg">
-                                                    <button type="button" class="btn btn-default dropdown-toggle"
-                                                            data-toggle="dropdown"
-                                                            aria-expanded="false"><span class="caret"></span>
-                                                    </button>
-
-                                                    <div class="shadow-md dropdown-menu dropdown-menu-left"
-                                                         role="menu">
-                                                        <form class="form-horizontal" role="form">
-                                                            <div class="form-group">
-                                                                <label for="filter">Resource Type</label>
-                                                                <select id="input-resource-type"
-                                                                        class="form-control pull-left">
-                                                                    <option value="" selected>All</option>
-                                                                    <option value="collection resource">Collection
-                                                                    </option>
-                                                                    <option value="composite resource">Composite
-                                                                    </option>
-                                                                    <option value="generic">Generic</option>
-                                                                    <option value="geographic feature">Geographic
-                                                                        Feature (ESRI Shapefiles)
-                                                                    </option>
-                                                                    <option value="geographic raster">Geographic
-                                                                        Raster
-                                                                    </option>
-                                                                    <option value="his referenced time series">HIS
-                                                                        Referenced Time Series
-                                                                    </option>
-                                                                    <option value="model instance resource">Model
-                                                                        Instance
-                                                                    </option>
-                                                                    <option value="model program">Model Program
-                                                                    </option>
-                                                                    <option value="modflow model instance resource">
-                                                                        MODFLOW Model Instance
-                                                                    </option>
-                                                                    <option value="multidimensional">
-                                                                        Multidimensional (NetCDF)
-                                                                    </option>
-                                                                    <option value="script resource">Script
-                                                                        Resource
-                                                                    </option>
-                                                                    <option value="swat model instance resource">
-                                                                        Swat Model Instance
-                                                                    </option>
-                                                                    <option value="time series">Time Series</option>
-                                                                    <option value="web app resource">Web App
-                                                                    </option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="contain">Author</label>
-                                                                <input id="input-author" class="form-control"
-                                                                       type="text"/>
-                                                                <span id="btn-clear-author-input"
-                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="contain">Subject</label>
-                                                                <input id="input-subject" class="form-control"
-                                                                       type="text"/>
-                                                                <span id="btn-clear-subject-input"
-                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- /input-group -->
                             <table id="item-selectors" class="table-hover table-striped resource-custom-table">
                                 <thead>
@@ -255,11 +181,11 @@
         </div>
     </div>
 
-{% endblock %}
+{% endblock main %}
 
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/community.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table_community.js"></script>
 {% endblock %}
