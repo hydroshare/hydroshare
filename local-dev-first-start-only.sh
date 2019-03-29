@@ -29,19 +29,53 @@ clear
 
 echo
 echo '########################################################################################################################'
-echo -e " `red 'All containers, images and volumes will be deleted'`"
+echo -e " `red 'For less problem while setup: all containers, images and volumes should be deleted'`"
 echo '########################################################################################################################'
 echo
-echo -ne " `red 'Are you sure'` `green '(if you not sure, do not select \"y\", it will deleted all your docker data)'` `red '[y/N]?'` "; read A
+echo -e " Enter `green '\"y\"'` will remove your docker data"
+echo -e " Enter `green '\"N\"'` (default) will continue without remove"
+echo -e " Enter `green '\"e\"'` or other will exit to the command prompt"
+echo
+echo -ne " Remove all running containers `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
 echo
 
-if [ "$A" == "y" ] || [ "$A" = "Y" ]; then
+if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
 	docker rm -f `docker ps -aq`  2>/dev/null
+else
+	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
+		exit 1
+	fi
+fi
+
+echo
+echo -ne " Remove all current volumes `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
+echo
+
+if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
 	yes | docker volume prune     2>/dev/null
+else
+	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
+		exit 1
+	fi
+fi
+
+echo
+echo -ne " Remove all existed images `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
+echo
+
+if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
 	yes | docker system prune -a  2>/dev/null
 else
-	exit 1
+	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
+		exit 1
+	fi
 fi
+
+grep -v CMD Dockerfile > Dockerfile-defaultworker
+grep -v CMD Dockerfile > Dockerfile-hydroshare
+
+cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
+cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
@@ -103,7 +137,11 @@ docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate -
 sleep 2
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
 sleep 2
-docker $DOCKER_PARAM exec hydroshare python manage.py build_solr_schema -f schema.xml
+docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
+sleep 2
+docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
+sleep 2
+docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 sleep 2
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
 sleep 2
