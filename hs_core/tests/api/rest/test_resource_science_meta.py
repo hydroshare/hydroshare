@@ -100,11 +100,35 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 }
             ],
+            "funding_agencies": [
+                 {
+                     "agency_name": "NSF",
+                     "award_title": "Cyber Infrastructure",
+                     "award_number": "NSF-101-20-6789",
+                     "agency_url": "https://www.nsf.gov",
+                 },
+                 {
+                     "agency_name": "NSF2",
+                     "award_title": "Cyber Infrastructure2",
+                     "award_number": "NSF-123",
+                     "agency_url": "https://www.google.com",
+                 }
+            ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.sources.all().count(), 2)
+        self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
+        self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
+        self.assertEqual(str(self.resource.metadata.language), "fre")
+        self.assertEqual(self.resource.metadata.coverages.all().count(), 1)
+        self.assertEqual(self.resource.metadata.creators.all().count(), 2)
+        self.assertEqual(self.resource.metadata.contributors.all().count(), 2)
+        self.assertEqual(self.resource.metadata.subjects.all().count(), 3)
+        self.assertEqual(str(self.resource.metadata.description), "New Description")
+        self.assertEqual(str(self.resource.metadata.title), "New Title")
 
     def test_put_scimeta_generic_resource_double_none(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
@@ -210,10 +234,45 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 {
                     "derived_from": "Source 2"
                 }
+            ],
+            "relations": [
+                {
+                    "type": "isCopiedFrom",
+                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                },
+                {
+                    "type": "isExecutedBy",
+                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                }
+            ],
+            "funding_agencies": [
+                 {
+                     "agency_name": "NSF",
+                     "award_title": "Cyber Infrastructure",
+                     "award_number": "NSF-101-20-6789",
+                     "agency_url": "https://www.nsf.gov",
+                 },
+                 {
+                     "agency_name": "NSF2",
+                     "award_title": "Cyber Infrastructure2",
+                     "award_number": "NSF-123",
+                     "agency_url": "https://www.google.com",
+                 }
             ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(self.resource.metadata.dates.all().count(), 3)
+        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
+        self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
+        self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
+        self.assertEqual(str(self.resource.metadata.language), "fre")
+        self.assertEqual(self.resource.metadata.creators.all().count(), 1)
+        self.assertEqual(self.resource.metadata.contributors.all().count(), 2)
+        self.assertEqual(self.resource.metadata.subjects.all().count(), 3)
+        self.assertEqual(str(self.resource.metadata.description), "New Description")
+        self.assertEqual(str(self.resource.metadata.title), "New Title")
         self.resource.delete()
 
     def test_put_scimeta_composite_resource_with_core_metadata_and_coverage(self):

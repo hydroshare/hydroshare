@@ -1,6 +1,0 @@
-[submodule "hs_docker_base"]
-	path = hs_docker_base
-	url = https://github.com/hydroshare/hs_docker_base.git
-[submodule "hs_postgres"]
-	path = hs_postgres
-	url = https://github.com/hydroshare/hs_postgres.git

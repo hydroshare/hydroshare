@@ -27,6 +27,7 @@ from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, 
     set_dirty_bag_flag, add_file_to_resource, resource_modified
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.signals import post_remove_file_aggregation
 
 
 class AbstractFileMetaData(models.Model):
@@ -1254,6 +1255,11 @@ class AbstractLogicalFile(models.Model):
         if parent_fs_aggr is not None:
             for res_file in res_files:
                 parent_fs_aggr.add_resource_file(res_file)
+        post_remove_file_aggregation.send(
+            sender=self.__class__,
+            resource=self.resource,
+            res_files=self.files.all()
+        )
 
     def get_parent(self):
         """Find the parent fileset aggregation of this aggregation

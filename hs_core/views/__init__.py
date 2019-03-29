@@ -22,7 +22,6 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -289,9 +288,12 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    if request.method == 'GET':
+        return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -586,6 +588,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -606,6 +609,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -1159,33 +1163,14 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-@processor_for('my-resources')
-@login_required
-def my_resources(request, page):
-    """
-    TODO parameterize and give user control of listings per page, saved in user preferences
-    Template processor for my-resources.html resources listing for user
-    :param request: WSGI GET request for endpoint
-    :param page: Mezzanine middleware in process_view sends <Page: My Resources>
-    :return: html template render with page of resources
-    """
-    resource_collection = get_my_resources_list(request)
-    page = request.GET.get('page')
-    # TODO investigate iRODS performance issue; listing caps out at 10 resources per page, otherwise very slow loading
-    paginator = Paginator(resource_collection, 1000)
-    try:
-        collection = paginator.page(page)
-    except PageNotAnInteger:
-        collection = paginator.page(1)
-    except EmptyPage:
-        collection = paginator.page(paginator.num_pages)
-
-    context = {
-                'collection': collection,
-                'numOwned': len(resource_collection)
-               }
-
-    return context
+# @processor_for('my-resources')
+# @login_required
+# def my_resources(request, page):
+#
+#     resource_collection = get_my_resources_list(request)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 
 @processor_for(GenericResource)
@@ -1863,4 +1848,21 @@ class CollaborateView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
+        }
+
+
+class MyResourcesView(TemplateView):
+    template_name = 'pages/my-resources.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        resource_collection = get_my_resources_list(u)
+
+        return {
+            'collection': resource_collection
         }

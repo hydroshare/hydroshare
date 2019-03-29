@@ -90,11 +90,9 @@ class ModelProgramResource(BaseResource):
         verbose_name = 'Model Program Resource'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = ModelProgramMetaData()
-        meta = self._get_metadata(md)
-        return meta
+    @classmethod
+    def get_metadata_class(cls):
+        return ModelProgramMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):

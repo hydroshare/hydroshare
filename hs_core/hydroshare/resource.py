@@ -477,6 +477,12 @@ def create_resource(
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
 
+        # get the metadata class specific to resource type to set resource
+        # content_object (metadata) attribute
+        metadata_class = cls.get_metadata_class()
+        metadata_obj = metadata_class()
+        metadata_obj.save()
+
         # create the resource
         resource = cls.objects.create(
             resource_type=resource_type,
@@ -485,6 +491,7 @@ def create_resource(
             title=title,
             last_changed_by=owner,
             in_menus=[],
+            content_object=metadata_obj,
             **kwargs
         )
 

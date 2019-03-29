@@ -593,6 +593,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertEqual(site_element.is_dirty, True)
 
         # the 'is_dirty' flag of metadata be True
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         self.resTimeSeries.metadata.update_element(
@@ -611,7 +612,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
                          'Concentration of oxygen dissolved in water.')
         self.assertEqual(variable_element.speciation, 'Applicable')
         self.assertEqual(variable_element.is_dirty, True)
-
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO ' \
@@ -630,7 +631,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertEqual(method_element.method_description, method_desc)
         self.assertEqual(method_element.method_link, 'http://www.ex-water.com')
         self.assertEqual(method_element.is_dirty, True)
-
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         self.resTimeSeries.metadata.update_element(
@@ -643,6 +644,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertEqual(proc_level_element.explanation, exp_text + 'some more text')
         self.assertEqual(proc_level_element.is_dirty, True)
 
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         self.resTimeSeries.metadata.update_element(
@@ -661,6 +663,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertEqual(ts_result_element.aggregation_statistics, 'Mean')
         self.assertEqual(ts_result_element.is_dirty, True)
 
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         # delete
@@ -704,6 +707,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         title = self.resTimeSeries.metadata.title
         self.resTimeSeries.metadata.update_element('title', title.id, value="New Resource Title")
         # at this point the is_dirty be set to true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
         # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
@@ -733,12 +737,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         site = self.resTimeSeries.metadata.sites.filter(id=site.id).first()
         self.assertEqual(site.is_dirty, True)
         # at this point the is_dirty for metadata must be true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         # rest metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # at this point the is_dirty must be false for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
         # test 'is_dirty' with update of the Variable element
@@ -755,11 +761,13 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         variable = self.resTimeSeries.metadata.variables.filter(id=variable.id).first()
         self.assertEqual(variable.is_dirty, True)
         # at this point the is_dirty must be true for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
         # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # at this point the is_dirty must be false for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
         # test 'is_dirty' with update of the Method element
@@ -776,11 +784,13 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         method = self.resTimeSeries.metadata.methods.filter(id=method.id).first()
         self.assertEqual(method.is_dirty, True)
         # at this point the is_dirty must be true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
         # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # at this point the is_dirty must be false for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
         # test 'is_dirty' with update of the ProcessingLevel element
@@ -793,11 +803,13 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         proc_level = self.resTimeSeries.metadata.processing_levels.filter(id=proc_level.id).first()
         self.assertEqual(proc_level.is_dirty, True)
         # at this point the is_dirty must be true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
         # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # at this point the is_dirty must be false for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
         # test 'is_dirty' with update of the TimeSeriesResult element
@@ -811,10 +823,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         ts_result = self.resTimeSeries.metadata.time_series_results.filter(id=ts_result.id).first()
         self.assertEqual(ts_result.is_dirty, True)
         # at this point the is_dirty must be true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
         # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
         # at this point the is_dirty must be false for metadata
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
     def test_cv_lookup_tables_for_new_terms(self):
@@ -996,6 +1010,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         site = self.resTimeSeries.metadata.sites.filter(id=site.id).first()
         self.assertEqual(site.is_dirty, True)
         # at this point the is_dirty for metadata must be true
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         # delete content file that we added above
@@ -1004,6 +1019,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # there should not be any file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
         # at this point the is_dirty for metadata must be false
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
     def test_metadata_is_dirty_on_csv_file_delete(self):
@@ -1044,6 +1060,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # there should  be 1 file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
         # at this point the is_dirty for metadata must be false
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
     def test_has_sqlite_file(self):
@@ -1505,6 +1522,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self._test_sqlite_file_has_data()
 
         # test that the value_count is rest
+        self.resTimeSeries.metadata.refresh_from_db()
         self.assertEqual(len(self.resTimeSeries.metadata.value_counts), 0)
 
         # test series_names is empty
