@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-
 from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 from mezzanine.pages.views import page
@@ -95,6 +94,7 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
+    url("^manish/", include("hs_manish.urls")),
     url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
@@ -109,7 +109,6 @@ urlpatterns += [
     url('^hsapi/', include('hs_file_types.urls')),
     url('^hsapi/', include('hs_app_netCDF.urls')),
     url('^hsapi/', include('hs_composite_resource.urls')),
-    url('^manish/', include('hs_manish.urls')),
 ]
 
 # robots.txt URLs for django-robots

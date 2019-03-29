@@ -2,8 +2,27 @@
 <html>
 <head>
 	<title>Resource Landing Page</title>
+	<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous">
+	</script>
 </head>
 <body>
-	<h1> Resource Landing Page </h1>
+<h3> Resource Landing Page </h3>
+<p> The total number resources downloaded in the system are: {{total_downloads}} </p>
+<p> The total number of resources viewed in the system are: {{total_views}} </p>
+
+	{% for resource in resources %}
+	<div>
+        <a href = {{resource.url}}>
+                <p> <span style="font-weight:bold"> Resource Name: </span> {{resource.title}} </p>
+        </a>
+               	<ul>
+                <li>Shared with users: {{resource.shared_user}} </li>
+                <li>Shared with group: {{resource.shared_group}} </li>	
+                <li> Total access: {{resource.total_access}} </li>
+                <li> Frequency: {{resource.frequency}} over {{resource.number_days}} days </li>
+               </ul>
+         </div>
+        <br>
+        {% endfor %}
 </body>
 </html>

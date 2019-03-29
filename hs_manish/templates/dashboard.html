@@ -2,8 +2,20 @@
 <html>
 <head>
 	<title>Dashboard Page</title>
+	<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous">
+	</script>
 </head>
 <body>
-	<h1> Dashboard  Page</h1>
+<h1> Here's a demo statistics of the user. click on them to check their dashboard!</h1>
+<p> The total users in the system are: {{user_count}}</p>
+<p> The total variales in the system are: {{variale_count}} </p>
+{% for user in users %}
+<a href = "{% url 'user_dashboard' username=user.username %}">
+        <div>
+                <p> {{user.last_name}},  {{user.first_name}} </p>
+        </div>
+</a>
+{% endfor %}
+
 </body>
 </html>

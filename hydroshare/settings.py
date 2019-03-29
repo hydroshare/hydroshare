@@ -267,6 +267,7 @@ INSTALLED_APPS = (
     "theme",
     "theme.blog_mods",
     "heartbeat",
+    "hs_manish",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
@@ -307,7 +308,6 @@ INSTALLED_APPS = (
     "hs_dictionary",
     "security",
     "hs_explore", 
-    "hs_manish", 
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
