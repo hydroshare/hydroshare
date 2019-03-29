@@ -94,14 +94,14 @@ POSTGIS_VERSION = (2, 1, 1)
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_HOST = 'cuahsi-irods-1.hydroshare.org'
 IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
-IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
-IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
-IRODS_ZONE = 'hydrotest41Zone'
-IRODS_USERNAME = 'hsproxy'
-IRODS_AUTH = 'hydroshare123'
+IRODS_DEFAULT_RESOURCE = 'cuahsi1ReplResc'
+IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi1DataProxy'
+IRODS_CWD = '/hydroshareZone/home/cuahsi1DataProxy'
+IRODS_ZONE = 'hydroshareZone'
+IRODS_USERNAME = 'cuahsi1DataProxy'
+IRODS_AUTH = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
@@ -132,27 +132,26 @@ HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = ''
-HS_USER_ZONE_PROXY_USER = ''
-HS_USER_ZONE_PROXY_USER_PWD = ''
-HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
-HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
-HS_USER_ZONE_PRODUCTION_PATH = '/hydroshareuserZone/home/localHydroProxy'
+HS_USER_ZONE_HOST = 'cuahsi-irods-2.hydroshare.org'
+HS_USER_ZONE_PROXY_USER = 'cuahsi1LinuxProxy'
+HS_USER_ZONE_PROXY_USER_PWD = 'aena3eijeiheir7iqu3mai7peun7aeRo'
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = '/home/cuahsi1LinuxProxy/create_user.sh'
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = '/home/cuahsi1LinuxProxy/delete_user.sh'
 
 # the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
-HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
+HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'cuahsi1UserProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not
-HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
+HS_WWW_IRODS_PROXY_USER = 'cuahsi1DataProxy'
 # credentials for HydroShare proxy user iRODS account which is set to have own access control
 # to all collections in any federated zone with HydroShare zone, which is only useful when
 # testing HydroShare federated zone in local test development environment since in www
 # production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
-HS_WWW_IRODS_PROXY_USER_PWD = ''
-HS_WWW_IRODS_HOST = ''
-HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
-HS_WWW_IRODS_ZONE = ''
+HS_WWW_IRODS_PROXY_USER_PWD = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
+HS_WWW_IRODS_HOST = 'cuahsi-irods-1.hydroshare.org'
+HS_IRODS_LOCAL_ZONE_DEF_RES = 'cuahsi1LocalResc'
+HS_WWW_IRODS_ZONE = 'hydroshareZone'
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
@@ -184,10 +183,27 @@ RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
+<<<<<<< Updated upstream:hydroshare/local_settings.cutover
 # insert a google maps key here when in production
 MAPS_KEY = ''
 
 with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
+=======
+MAILCHIMP_ACTIVE_SUBSCRIBERS = "67cebeeaba"
+MAILCHIMP_SUBSCRIBERS = "fd13ab2270"
+MAILCHIMP_PASSWORD = "e57be8a67b26f5e24a51a22309f7ed5b-us3"
+
+GOOGLE_COOKIE_HASH="129=Gtjo6C0LrHWQny618XLC-r8OA4OQNy0_m6qsoPvQpf-8td5303jx8A92gvAAC8iIW4QOad37VWPxxXfODfISc7blw2imYJqQfDnxydvICCjxvYs1cOCiWKDOpPkKLX_W"
+
+SENDFILE_ON = False
+IRODS_USER_URI = "/irods-user"
+IRODS_DATA_URI = "/irods-data"
+LOCAL_CACHE_URI = "/local-cache"  # unused; future feature
+
+FQDN_OR_IP = "cuahsi-dev-1.hydroshare.org"
+PROD_FQDN_OR_IP = "www.hydroshare.org"
+
+with open(os.path.dirname(os.path.abspath(__file__))  + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
         EXTERNAL_CONFIG = yaml.load(stream)
     except yaml.YAMLError as exc:
@@ -199,3 +215,6 @@ HSWS_API_TOKEN = "d1caabf3059ef7ffd99d890aba57100da2e0efc8"
 HSWS_TIMEOUT = 3
 HSWS_PUBLISH_URLS = False
 HSWS_ACTIVATED = False
+
+# insert a google maps key here when in production
+#MAPS_KEY=''

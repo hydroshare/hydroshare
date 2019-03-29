@@ -63,7 +63,7 @@ def capture_download(**kwargs):
     msg = Variable.format_kwargs(**fields)
 
     # record the download action
-    session.record('download', value=msg)
+    session.record('download', value=msg, resource_id=kwargs['resource'].short_id)
 
 
 @receiver(post_create_resource)
@@ -84,9 +84,10 @@ def capture_resource_create(**kwargs):
 
     # format the 'download' kwargs
     msg = Variable.format_kwargs(**fields)
+    resource_id = kwargs['resource'].short_id
 
     # record the create action
-    session.record('create', value=msg)
+    session.record('download', value=msg, resource_id=resource_id)
 
 
 @receiver(post_delete_resource)
@@ -106,6 +107,7 @@ def capture_resource_delete(**kwargs):
 
     # format the delete message
     msg = Variable.format_kwargs(**fields)
+    resource_id = kwargs['resource_shortkey']
 
     # record the delete action
-    session.record('delete', value=msg)
+    session.record('download', value=msg, resource_id=resource_id)

@@ -2,6 +2,10 @@ from .models import Session
 import utils
 
 
+def get_resource_id_from_url(request):
+    return None
+
+
 class Tracking(object):
     """The default tracking middleware logs all successful responses as a 'visit' variable with
     the URL path as its value."""
@@ -37,7 +41,10 @@ class Tracking(object):
                          'user_email_domain=%s' % emaildomain,
                          'request_url=%s' % request.path]])
 
+        # TODO: record resource-specific actions in a special resource-id field
+
+        resource_id = get_resource_id_from_url(request.path)
         # save the activity in the database
-        session.record('visit', msg)
+        session.record('visit', value=msg, resource_id=resource_id)
 
         return response

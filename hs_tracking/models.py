@@ -123,6 +123,7 @@ class Variable(models.Model):
     # change value to TextField to be less restrictive as max_length of CharField has been
     # exceeded a couple of times
     value = models.TextField()
+    resource_id = models.CharField(null=True, max_length=32)
 
     def get_value(self):
         v = self.value
@@ -146,7 +147,7 @@ class Variable(models.Model):
         return '|'.join(msg_items)
 
     @classmethod
-    def record(cls, session, name, value=None):
+    def record(cls, session, name, value=None, resource_id=None):
         for i, (label, coercer) in enumerate(cls.TYPES, 0):
             try:
                 if value == coercer(value):
@@ -158,7 +159,7 @@ class Variable(models.Model):
             raise TypeError("Unable to record variable of unrecognized type %s",
                             type(value).__name__)
         return Variable.objects.create(session=session, name=name, type=type_code,
-                                       value=cls.encode(value))
+                                       value=cls.encode(value), resource_id=resource_id)
 
     @classmethod
     def encode(cls, value):
