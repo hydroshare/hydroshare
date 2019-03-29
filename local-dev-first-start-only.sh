@@ -2,7 +2,7 @@
 
 function blue() {
     local TEXT="$1"
-    echo -n "\e[1;34m${TEXT}\e[0m"
+    echo -n "\x1B[1;34m${TEXT}\x1B[0m"
 }
 
 function green() {
@@ -12,7 +12,7 @@ function green() {
     else
         TEXT="$1"
     fi
-    echo -n "\e[1;32m${TEXT}\e[0m"
+    echo -n "\x1B[1;32m${TEXT}\x1B[0m"
 }
 
 function red() {
@@ -22,7 +22,7 @@ function red() {
     else
         TEXT="$1"
     fi
-    echo -n "\e[31m${TEXT}\e[0m"
+    echo -n "\x1B[31m${TEXT}\x1B[0m"
 }
 
 clear
