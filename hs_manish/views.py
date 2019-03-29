@@ -14,7 +14,7 @@ from django.http import HttpResponse
 
 import logging
 
-test_offset = 30
+test_offset = 60
 days_to_report = 50
 logger = logging.getLogger('hydroshare')
 
