@@ -18,15 +18,9 @@ test_offset = 60
 days_to_report = 50
 logger = logging.getLogger('hydroshare')
 
-'''
-renders index.html page that has link to list of users and list of resources
-'''
 def index(request):
         return render(request, 'index.html')
 
-'''
-based on the user provided returns the statistics about him
-'''
 def user_stats(request, username):
         start_date =datetime.datetime.now() - datetime.timedelta( days = test_offset + days_to_report )
         end_date = datetime.datetime.now() - datetime.timedelta( days = test_offset )
@@ -38,10 +32,10 @@ def user_stats(request, username):
         re_compiler ={  "visit": re.compile('/resource/([^/]+)/'), \
                         "download": re.compile('\|resource_guid=([^|]+)\|'),\
                          "app_launch": re.compile('\|resourceid=([^|]+)\|')}
-        
+
         map_resources = {}
         num_resources = 0
-        
+
         for v in Variable.objects.filter(query).order_by("-timestamp"):
             value = v.get_value()
             m = re_compiler[v.name].search(value)
@@ -79,9 +73,24 @@ def user_stats(request, username):
                                                 else:
                                                         caption = "You app launched the resource"
                                                 url = "https://dev-hs-3.cuahsi.org/resource/" + resource_id + "/"
-                                                map_resources[ resource_id ] = { "count" : 1, "name" : v.name, "url" : url, "value" : caption, "title": res.title, "resource_type": res.resource_type,  "first_accessed": v.timestamp, "last_accessed": v.timestamp } 
-                         
-        return render(request, 'user_stats.html',     
+
+                                                map_resources[ resource_id ] = { "count" : 1, "name" : v.name, "url" : url, \
+                                                "value" : caption, "title": res.title, "resource_type": res.resource_type, \
+                                                "first_accessed": v.timestamp, "last_accessed": v.timestamp }
+        for resource in map_resources.values():
+            current_time = datetime.datetime.now()
+            last_time = resource.last_accessed
+            time_difference = (current_time - last_time).days
+            months = math.floor(time_difference/ 30)
+            weeks = math.floor(time_difference/ 7)
+            if ( months != 0):
+                map_resources["time"] = str(months) + "months ago"
+            else if( weeks != 0):
+                map_resources["time"] = str(weeks) + "weeks ago"
+            else
+                map_resources["time"] = str(time_difference) + "days ago"
+
+        return render(request, 'user_stats.html',
                       context = { "total_count": num_resources,
                                  "username":  username, "resources": map_resources.values()})
 
@@ -108,7 +117,7 @@ def addFrequency(map_resources):
                 if (num_days == 0):
                         num_days = 1
                 map_resources[resource_id]["frequency"] = math.ceil(total_access / num_days)
-                map_resources[resource_id]["number_days"] = num_days 
+                map_resources[resource_id]["number_days"] = num_days
 
 def resource_landing(request):
         start_date = datetime.datetime.now() - datetime.timedelta(days=test_offset+days_to_report)
@@ -137,11 +146,11 @@ def resource_landing(request):
             if (m and m.group(1)):
                 resource_id = m.group(1)
                 if resource_id is not None:
-                    try: 
+                    try:
                         resource = get_resource_by_shortkey(resource_id, or_404=False)
-                    except BaseResource.DoesNotExist: 
+                    except BaseResource.DoesNotExist:
                         resource = None
-                    if resource is not None: 
+                    if resource is not None:
                         if ( resource_id in map_resources.keys() ):
                                 map_resources[ resource_id ]["first_accessed"] = v.timestamp
                                 map_resources[ resource_id ]["total_access"] += 1
@@ -159,18 +168,14 @@ def resource_landing(request):
                                 "total_access" : 1,
                                 "first_accessed" : v.timestamp,
                                 "last_accessed": v.timestamp
-                                }       
-                else:   
+                                }
+                else:
                     logger.error("resource_id={} does not exist".format(resource_id))
         addFrequency(map_resources)
         resource_values = sorted(map_resources.values(), key=lambda d: d['total_access'], reverse=True)
-        return render( request, 'resource_landing.html', context={ "resources": resource_values, "total_views": total_views, "total_downloads": total_downloads } ) 
+        return render( request, 'resource_landing.html', context={ "resources": resource_values, "total_views": total_views, "total_downloads": total_downloads } )
 
 
-
-'''
-Displays all the users on the page
-'''
 def dashboard(request):
         users = []
         user_count = User.objects.all().count()
@@ -190,13 +195,13 @@ def dashboard(request):
                   name='app_launch'))\
             .distinct()\
             .values_list('session__visitor__user', flat=True)
-        for user_id in users_list: 
-            try: 
+        for user_id in users_list:
+            try:
                 user = User.objects.get(id=user_id)
-                users.append({"first_name": user.first_name, 
-                              "username": user.username, 
+                users.append({"first_name": user.first_name,
+                              "username": user.username,
                               "last_name":  user.last_name})
 
-            except User.DoesNotExist: 
+            except User.DoesNotExist:
                 pass
         return render(request, "dashboard.html", context={"variale_count":variable_count, "user_count": user_count, "users": users})

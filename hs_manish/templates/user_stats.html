@@ -5,19 +5,19 @@
         <body>
                <h1> {{username}}</h1>
                 <p> Total user downloads: {{total_count}} </p>
-                
+
                 <h2> Most recently accessed resources by the user </h2>
                 {% for res in resources %}
                                 <div>
                                 <a href = {{res.url}}>
-                                
-                                <p> Resource Name:<span style="font-weight:bold"> {{res.title}} ||  
-</a>                                
-<span style="font-weight:bold" > Counts: </span> {{res.count}}   </p>
+                                <p> Resource Name:<span style="font-weight:bold"> {{res.title}} ||  </a>
+                                <span style="font-weight:bold" > Counts: </span> {{res.count}}   </p>
                                 <p> <span style="font-weight:bold"> Type of Resource </span> {{res.resource_type}} </p>
-                                <p> <span style="font-weight:bold" > Last accessed: </span> 
-                                 {{ res.last_accessed }} </p>      
+
+                                <p> <span style="font-weight:bold" > Accessed: </span>
+                                 {{ res.time }} </p>
                                 <p>{{res.value}} {{res.count}} times since {{res.first_accessed}}</p>
+
                                 </div>
                                  <br>
                 {% endfor %}
