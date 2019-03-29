@@ -32,7 +32,7 @@ echo '##########################################################################
 echo -e " `red 'All containers, images and volumes will be deleted'`"
 echo '########################################################################################################################'
 echo
-echo -ne " `red 'Are you sure [y/N]?'` "; read A
+echo -ne " `red 'Are you sure'` `green '(if you not sure, do not select \"y\", it will deleted all your docker data)'` `red '[y/N]?'` "; read A
 echo
 
 if [ "$A" == "y" ] || [ "$A" = "Y" ]; then
