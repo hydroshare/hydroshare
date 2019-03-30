@@ -248,7 +248,7 @@ class IrodsStorage(Storage):
 
     def _open(self, name, mode='rb'):
         tmp = NamedTemporaryFile()
-        :
+        self.session.run("iget", None, '-f', name, tmp.name)
         return tmp
 
     def _save(self, name, content):
