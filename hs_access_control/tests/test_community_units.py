@@ -6,9 +6,6 @@ from hs_access_control.models import \
     UserCommunityProvenance, UserCommunityPrivilege, \
     GroupCommunityProvenance, GroupCommunityPrivilege, \
     PrivilegeCodes
-    # UserResourceProvenance, UserResourcePrivilege,
-    # GroupResourceProvenance, GroupResourcePrivilege,
-    # UserGroupProvenance, UserGroupPrivilege,
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin

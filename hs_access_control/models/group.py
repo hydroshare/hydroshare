@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q, Subquery
+from django.db.models import Q
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
