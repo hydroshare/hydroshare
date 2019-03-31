@@ -63,6 +63,7 @@ class Community(models.Model):
         # The following strategy is documented here:
         # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
 
+        # collect generics from resources
         generics = {}
         for item in res:
             generics.setdefault(item.content_type.id, set()).add(item.object_id)
