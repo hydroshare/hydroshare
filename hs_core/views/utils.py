@@ -540,6 +540,7 @@ def create_form(formclass, request):
 
     return params
 
+
 def get_metadata_contenttypes():
     """Gets a list of all metadata content types"""
     meta_contenttypes = []
