@@ -1,95 +1,98 @@
 {% extends "base.html" %}
 
-{% load mezzanine_tags static blog_tags accounts_tags %}
+{% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n %}
 
+{% comment %}
+
+These data should be given fast without ajax.
+The dashboard template assumes context dictionary has the following keys
+timestamp
+title
+first author
+first author id
+resource id
+content type
+privacy;;
+
+timestamp should go with a template tags to convert to a human readble day.
+{% endcomment %}
 
 {% block main %}
     <div>
-        <div class="container" style="background: #FFFFFF; border-radius: 10px; border: #F4F4F4 solid 1px; margin-bottom: 20px;">
-        <span>
-            <h2 style="float: left;">Recently Visited </h2> <a
-                style="float: right; margin-top: 20px; margin-right: 80px;" class="btn btn-primary"
-                href="https://127.0.0.1/hsapi/_internal/create-resource">Upload</a>
-        </span>
-            <table class="table">
+        <div class="container dashboard_section_container">
+            <!--
+             style="background: #FFFFFF; border-radius: 10px; border: #F4F4F4  1px; margin-bottom: 20px; margin-top: 10px;">
+             -->
+            <div class="row" style="margin-left: 20px; margin-right: 2px; margin-bottom: 10px;">
+                <span>
+                 <h3 class="home-page-block-title" style="float: left;">Recently Visited </h3>
+                    <span style="float: right">
+                    <a style="margin-top: 20px; margin-right: 10px;" class="btn btn-primary"
+                       href="/search">Discover</a>
+                    <a style="margin-top: 20px; margin-right: 20px;" class="btn btn-primary"
+                       href="/hsapi/_internal/create-resource">Create</a>
+                    </span>
+                </span>
+            </div>
+            <table class="table-hover table-striped resource-custom-table" id="recently-visited-resources"
+                   style="width: 100%;">
                 <thead>
                 <tr>
                     <th>Accessed</th>
-                    <th>Authors</th>
                     <th>Title</th>
+                    <th>First Author</th>
                     <th>Type</th>
-                    <th>Privacy</th>
+                    <th>Visibility</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td>Today</td>
-                    <td>Doe</td>
-                    <td>Hurrican Harvey Collection</td>
-                    <td>Composite</td>
-                    <td>public</td>
-                </tr>
-                <tr>
-                    <td>Today</td>
-                    <td>Doe</td>
-                    <td>Hurrican Harvey Collection</td>
-                    <td>Composite</td>
-                    <td>public</td>
-                </tr>
-                <tr>
-                    <td>Today</td>
-                    <td>Doe</td>
-                    <td>Hurrican Harvey Collection</td>
-                    <td>Composite</td>
-                    <td>public</td>
-                </tr>
-                </tbody>
+
             </table>
         </div>
 
-        <div class="container" style="background: #FFFFFF; border-radius: 10px; border: #F4F4F4 solid 1px;; ">
-            <div class="row" style="margin-left: 20px;">
-         <span>
-            <h2 style="float: left;">CUAHSI Data Center</h2>
-         </span></div>
-            <div class="row" style="margin-left: 20px;">
-                <div class="col-md-2">
-                    <img style="width: 120px; height: 120px;"
-                         src="https://www.cuahsi.org/images/made/uploads/pages/img/binary-data-sea_1_335_335auto_s_c1.jpg"
-                         alt=""
-                         class="img-circle"></div>
-                <div class="col-md-4">
-                    <blockquote>
-                        <a href="https://data.cuahsi.org">Data Uploader</a>
-                        <small><cite title="Source Title">Load data from your research to national repos. <i
-                                class="icon-map-marker"></i></cite>
-                        </small>
-                    </blockquote>
-                    <p>
-                        <i class="icon-envelope"></i> CUAHIS data CUAHIS data CUAHIS data <br>
-                        <i class="icon-globe"></i> CUAHIS data www.bootsnipp.com <br>
-                        <i class="icon-gift"></i> JCUAHIS data anuary 30, 1974
-                    </p>
-                </div>
 
-                <div class="col-md-2">
-                    <img style="width: 120px; height: 120px;"
-                         src="https://www.cuahsi.org/images/made/uploads/pages/img/binary-data-sea_1_335_335auto_s_c1.jpg"
-                         alt=""
-                         class="img-circle">
-                </div>
-                <div class="col-md-4">
-                    <blockquote>
-                        <p>Bruce Wayne</p>
-                        <small><cite title="Source Title">Gotham, United Kingdom <i class="icon-map-marker"></i></cite>
-                        </small>
-                    </blockquote>
-                    <p>
-                        <i class="icon-envelope"></i> masterwayne@batman.com <br>
-                        <i class="icon-globe"></i> www.bootsnipp.com <br>
-                        <i class="icon-gift"></i> January 30, 1974
-                    </p>
-                </div>
+        {# CUAHSI developed apps #}
+        <div class="container dashboard_section_container">
+          {% trans "CUAHSI-Developed Time Series Apps" as whole_title %}
+          {% include "includes/apps_block_title.html" %}
+            <div class="row big-app-row">
+            {% trans "HydroClient" as title_name %}
+            {% trans "https://data.cuahsi.org" as title_url %}
+            {% trans "/static/img/hydro_client.png" as app_image %}
+            {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+
+            {% trans "Uploader" as title_name %}
+            {% trans "http://hydroserver.cuahsi.org" as title_url %}
+            {% trans "/static/img/hydro_server.png" as app_image %}
+            {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+            </div>
+        </div>
+
+
+        <div class="container dashboard_section_container">
+            {% trans "Community-Developed CUAHSI-Approved Apps" as whole_title %}
+            {% include "includes/apps_block_title.html" %}
+            <div class="row big-app-row">
+            {% trans "CUAHSI JupyterHub" as title_name %}
+            {% trans "https://jupyter.cuahsi.org/user/_/tree/notebooks" as title_url %}
+            {% trans "/static/img/jupiterhub.png" as app_image %}
+            {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+
+            {% trans "Data Rods Explorerhydro server" as title_name %}
+            {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
+            {% trans "/static/img/data_rods_explorer.png" as app_image %}
+            {% trans "Browse several NASA-hosted data sets using a simple mapping interface that enables data visualization and download." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+            </div>
+
+            <div class="row big-app-row">
+                {% trans "National Water Model Viewer" as title_name %}
+                {% trans "https://www.yahoo.com" as title_url %}
+                {% trans "/static/img/nwm_forecasts.png" as app_image %}
+                {% trans "Retrieve and preview National Water Model data. " as app_content %}
+                {% include "includes/big_image_button_app.html" %}
             </div>
         </div>
     </div>
@@ -255,4 +258,18 @@
     ]
 }
 </script>
+{% endblock %}
+
+
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/dashboard.css">
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/dashboard.js"></script>
 {% endblock %}

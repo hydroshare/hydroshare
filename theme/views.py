@@ -475,6 +475,8 @@ def home_router(request):
 
 @login_required
 def dashboard(request, template="pages/dashboard.html"):
+    #type_icon={'generic': '__GENERIC__', 'composite': '__COMPOSITE'}
+    #context = {'icon_dict', type_icon}
     return render(request, template)
 
 

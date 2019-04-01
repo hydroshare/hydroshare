@@ -6,7 +6,7 @@
 <ul class="nav navbar-nav">
     <li class="active" id="dropdown-menu-home">
         <a href="/dashboard">{% trans "Home" %}</a>
-    </li> -->
+    </li>
     {% for page in page_branch %}
     {% if not has_home and page.is_primary and forloop.first %}
         <!--
