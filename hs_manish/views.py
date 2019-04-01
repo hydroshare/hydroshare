@@ -5,6 +5,7 @@ from hs_tracking.models import Variable
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 import datetime
 import re
+from django.utils import timezone
 from matplotlib import pylab
 from pylab import *
 import PIL, StringIO
@@ -22,16 +23,16 @@ def index(request):
         return render(request, 'index.html')
 
 def user_stats(request, username):
-        start_date =datetime.datetime.now() - datetime.timedelta( days = test_offset + days_to_report )
-        end_date = datetime.datetime.now() - datetime.timedelta( days = test_offset )
+        start_date =datetime.datetime.now() - datetime.timedelta(days = test_offset + days_to_report)
+        end_date = datetime.datetime.now() - datetime.timedelta(days = test_offset)
 
-        query = (Q(name="app_launch") | Q(name="visit") | Q(name="download" ) ) \
+        query = (Q(name="app_launch") | Q(name="visit") | Q(name="download")) \
                  & Q(timestamp__range=[start_date, end_date])
 
         user = User.objects.get(username__iexact=username)
-        re_compiler ={  "visit": re.compile('/resource/([^/]+)/'), \
-                        "download": re.compile('\|resource_guid=([^|]+)\|'),\
-                         "app_launch": re.compile('\|resourceid=([^|]+)\|')}
+        re_compiler = {"visit": re.compile('/resource/([^/]+)/'), \
+                       "download": re.compile('\|resource_guid=([^|]+)\|'),\
+                       "app_launch": re.compile('\|resourceid=([^|]+)\|')}
 
         map_resources = {}
         num_resources = 0
@@ -54,13 +55,13 @@ def user_stats(request, username):
 
                                 if(res is not None):
                                         num_resources += 1
-                                        if ( resource_id in map_resources.keys() ):
-                                                map_resources[ resource_id ]["count"] += 1
-                                                map_resources[ resource_id ]["first_accessed"] = v.timestamp
+                                        if (resource_id in map_resources.keys()):
+                                                map_resources[resource_id]["count"] += 1
+                                                map_resources[resource_id]["first_accessed"] = v.timestamp
                                         else:
                                                 caption = ""
                                                 if(v.name == "visit"):
-                                                        if (re.search("/[0-9a-z-]{32}/.*add", value )):
+                                                        if (re.search("/[0-9a-z-]{32}/.*add", value)):
                                                                 caption = "You added this resource"
                                                         elif(re.search("/[0-9a-z-]{32}/.*update", value)):
                                                                 caption = "You updated the resource"
@@ -74,25 +75,32 @@ def user_stats(request, username):
                                                         caption = "You app launched the resource"
                                                 url = "https://dev-hs-3.cuahsi.org/resource/" + resource_id + "/"
 
-                                                map_resources[ resource_id ] = { "count" : 1, "name" : v.name, "url" : url, \
-                                                "value" : caption, "title": res.title, "resource_type": res.resource_type, \
-                                                "first_accessed": v.timestamp, "last_accessed": v.timestamp }
+                                                map_resources[resource_id] = {
+                                                    "count": 1,
+                                                    "name": v.name,
+                                                    "url": url,
+                                                    "value": caption,
+                                                    "title": res.title,
+                                                    "resource_type": res.resource_type,
+                                                    "first_accessed": v.timestamp,
+                                                    "last_accessed": v.timestamp}
         for resource in map_resources.values():
-            current_time = datetime.datetime.now()
-            last_time = resource.last_accessed
+            current_time = timezone.now()
+            last_time = resource["last_accessed"]
             time_difference = (current_time - last_time).days
-            months = math.floor(time_difference/ 30)
-            weeks = math.floor(time_difference/ 7)
-            if ( months != 0):
+            months = math.floor(time_difference / 30)
+            weeks = math.floor(time_difference / 7)
+            if months != 0:
                 map_resources["time"] = str(months) + "months ago"
-            else if( weeks != 0):
+            elif weeks != 0:
                 map_resources["time"] = str(weeks) + "weeks ago"
-            else
+            else:
                 map_resources["time"] = str(time_difference) + "days ago"
 
         return render(request, 'user_stats.html',
-                      context = { "total_count": num_resources,
-                                 "username":  username, "resources": map_resources.values()})
+                      context = {"total_count": num_resources,
+                                 "username": username,
+                                 "resources": map_resources.values()})
 
 def showHistogram(request):
         t = arange(0.0, 2.0, 0.01)
@@ -151,29 +159,29 @@ def resource_landing(request):
                     except BaseResource.DoesNotExist:
                         resource = None
                     if resource is not None:
-                        if ( resource_id in map_resources.keys() ):
-                                map_resources[ resource_id ]["first_accessed"] = v.timestamp
-                                map_resources[ resource_id ]["total_access"] += 1
+                        if (resource_id in map_resources.keys()):
+                                map_resources[resource_id]["first_accessed"] = v.timestamp
+                                map_resources[resource_id]["total_access"] += 1
                         else:
                                 shared_user = User.objects.filter(
                                         Q(u2urp__resource=resource)).count()
-                                shared_group= Group.objects.filter(
+                                shared_group = Group.objects.filter(
                                         Q(g2grp__resource=resource)).count()
                                 url = "https://dev-hs-3.cuahsi.org/resource/" + resource_id + "/"
-                                map_resources[ resource_id ] = {
-                                "title" : resource.title,
-                                "url" : url,
-                                "shared_user" : shared_user,
-                                "shared_group" : shared_group,
-                                "total_access" : 1,
-                                "first_accessed" : v.timestamp,
-                                "last_accessed": v.timestamp
-                                }
+                                map_resources[resource_id] = {
+                                    "title": resource.title,
+                                    "url": url,
+                                    "shared_user": shared_user,
+                                    "shared_group": shared_group,
+                                    "total_access": 1,
+                                    "first_accessed": v.timestamp,
+                                    "last_accessed": v.timestamp
+                               }
                 else:
                     logger.error("resource_id={} does not exist".format(resource_id))
         addFrequency(map_resources)
         resource_values = sorted(map_resources.values(), key=lambda d: d['total_access'], reverse=True)
-        return render( request, 'resource_landing.html', context={ "resources": resource_values, "total_views": total_views, "total_downloads": total_downloads } )
+        return render(request, 'resource_landing.html', context={"resources": resource_values, "total_views": total_views, "total_downloads": total_downloads})
 
 
 def dashboard(request):
@@ -204,4 +212,4 @@ def dashboard(request):
 
             except User.DoesNotExist:
                 pass
-        return render(request, "dashboard.html", context={"variale_count":variable_count, "user_count": user_count, "users": users})
+        return render(request, "dashboard.html", context={"variable_count": variable_count, "user_count": user_count, "users": users})
