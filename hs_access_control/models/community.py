@@ -47,7 +47,10 @@ class Community(models.Model):
                                           Q(raccess__published=True) |
                                           Q(raccess__discoverable=True))\
                                   .annotate(group_name=F("r2grp__group__name"),
-                                            group_id=F("r2grp__group__id"))
+                                            group_id=F("r2grp__group__id"),
+                                            public=F("raccess__public"),
+                                            published=F("raccess__published"),
+                                            discoverable=F("raccess__discoverable"))
 
         res = res.only('title', 'resource_type', 'created', 'updated')
         # # Can't do the following because the content model is polymorphic.
@@ -60,6 +63,7 @@ class Community(models.Model):
         # The following strategy is documented here:
         # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
 
+        # collect generics from resources
         generics = {}
         for item in res:
             generics.setdefault(item.content_type.id, set()).add(item.object_id)

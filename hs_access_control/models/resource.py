@@ -4,7 +4,7 @@ from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, \
+from hs_access_control.models.privilege import PrivilegeCodes as PC, \
         UserResourcePrivilege, GroupResourcePrivilege
 
 #############################################
@@ -94,7 +94,7 @@ class ResourceAccess(models.Model):
         return Q(is_active=True,
                  u2urp__resource=self.resource,
                  u2urp__resource__raccess__immutable=False,
-                 u2urp__privilege__lte=PrivilegeCodes.CHANGE)
+                 u2urp__privilege__lte=PC.CHANGE)
 
     @property
     def __edit_users_from_group(self):
@@ -102,18 +102,18 @@ class ResourceAccess(models.Model):
                  u2ugp__group__gaccess__active=True,
                  u2ugp__group__g2grp__resource=self.resource,
                  u2ugp__group__g2grp__resource__raccess__immutable=False,
-                 u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE)
+                 u2ugp__group__g2grp__privilege__lte=PC.CHANGE)
 
     @property
     def __edit_users_from_community(self):
         return Q(
             is_active=True,
             u2ugp__group__gaccess__active=True,
-            u2ugp__group__g2gcp__privilege=PrivilegeCodes.CHANGE,
+            u2ugp__group__g2gcp__privilege=PC.CHANGE,
             u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
             u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
             u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource__raccess__immutable=False,
-            u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PrivilegeCodes.CHANGE)
+            u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE)
 
     @property
     def edit_users(self):
@@ -165,16 +165,16 @@ class ResourceAccess(models.Model):
         return Q(gaccess__active=True,
                  g2grp__resource=self.resource,
                  g2grp__resource__raccess__immutable=False,
-                 g2grp__privilege__lte=PrivilegeCodes.CHANGE)
+                 g2grp__privilege__lte=PC.CHANGE)
 
     @property
     def __edit_groups_from_community(self):
         return Q(gaccess__active=True,
-                 g2gcp__privilege=PrivilegeCodes.CHANGE,
+                 g2gcp__privilege=PC.CHANGE,
                  g2gcp__community__c2gcp__group__gaccess__active=True,
                  g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
                  g2gcp__community__c2gcp__group__g2grp__resource__raccess__immutable=False,
-                 g2gcp__community__c2gcp__group__g2grp__privilege=PrivilegeCodes.CHANGE)
+                 g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE)
 
     @property
     def edit_groups(self):
@@ -205,7 +205,7 @@ class ResourceAccess(models.Model):
         For immutable resources, owners are not modified, but do not have CHANGE privilege.
         """
         return User.objects.filter(is_active=True,
-                                   u2urp__privilege=PrivilegeCodes.OWNER,
+                                   u2urp__privilege=PC.OWNER,
                                    u2urp__resource=self.resource)
 
     def get_users_with_explicit_access(self, this_privilege,
@@ -231,27 +231,27 @@ class ResourceAccess(models.Model):
         incl = None  # what to include
         excl = None  # what to explicitly exclude
 
-        if this_privilege == PrivilegeCodes.OWNER:
+        if this_privilege == PC.OWNER:
             return self.owners  # groups and communities cannot own
 
-        elif this_privilege == PrivilegeCodes.VIEW:
+        elif this_privilege == PC.VIEW:
 
             if include_user_granted_access:
                 incl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PrivilegeCodes.VIEW)
+                         u2urp__privilege=PC.VIEW)
                 excl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege__lt=PrivilegeCodes.VIEW)
+                         u2urp__privilege__lt=PC.VIEW)
 
             if include_group_granted_access:
                 i = Q(u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege=PrivilegeCodes.VIEW)
+                      u2ugp__group__g2grp__privilege=PC.VIEW)
                 if incl is not None:
                     incl = incl | i
                 else:
                     incl = i
                 # exclude higher privilege
                 e = Q(u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege__lt=PrivilegeCodes.VIEW)
+                      u2ugp__group__g2grp__privilege__lt=PC.VIEW)
                 if excl is not None:
                     excl = excl | e
                 else:
@@ -266,13 +266,12 @@ class ResourceAccess(models.Model):
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
                       u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                       u2ugp__group__g2gcp__community__c2gcp__allow_view=True,
-                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.VIEW) | \
+                      u2ugp__group__g2gcp__privilege=PC.VIEW) | \
                     Q(u2ugp__group__gaccess__active=True,  # community is CHANGE, group is VIEW
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
                       u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.CHANGE,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=
-                            PrivilegeCodes.VIEW)
+                      u2ugp__group__g2gcp__privilege=PC.CHANGE,
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PC.VIEW)
 
                 if incl is not None:
                     incl = incl | i
@@ -282,10 +281,9 @@ class ResourceAccess(models.Model):
                 # exclude higher privilege
                 e = Q(u2ugp__group__gaccess__active=True,  # community is CHANGE
                       u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege__lt=PrivilegeCodes.VIEW,
+                      u2ugp__group__g2gcp__privilege__lt=PC.VIEW,
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege__lt=
-                            PrivilegeCodes.VIEW)
+                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege__lt=PC.VIEW)
                 if excl is not None:
                     excl = excl | e
                 else:
@@ -306,18 +304,18 @@ class ResourceAccess(models.Model):
             else:
                 return User.objects.none()
 
-        elif this_privilege == PrivilegeCodes.CHANGE:
+        elif this_privilege == PC.CHANGE:
 
             if include_user_granted_access:
                 incl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PrivilegeCodes.CHANGE)
+                         u2urp__privilege=PC.CHANGE)
                 excl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PrivilegeCodes.OWNER)
+                         u2urp__privilege=PC.OWNER)
 
             if include_group_granted_access:
                 i = Q(u2ugp__group__gaccess__active=True,
                       u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege=PrivilegeCodes.CHANGE)
+                      u2ugp__group__g2grp__privilege=PC.CHANGE)
                 if incl is not None:
                     incl = incl | i
                 else:
@@ -328,8 +326,8 @@ class ResourceAccess(models.Model):
                 i = Q(u2ugp__group__gaccess__active=True,  # both group and community are CHANGE
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
                       u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege=PrivilegeCodes.CHANGE,
-                      u2ugp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
+                      u2ugp__group__g2gcp__privilege=PC.CHANGE,
+                      u2ugp__group__g2gcp__community__c2gcp__privilege=PC.CHANGE)
                 if incl is not None:
                     incl = incl | i
                 else:
@@ -371,7 +369,7 @@ class ResourceAccess(models.Model):
             raise PermissionDenied("Grantee user is not active")
 
         if this_user.is_superuser:
-            return PrivilegeCodes.OWNER
+            return PC.OWNER
 
         # compute simple user privilege over resource
         try:
@@ -379,7 +377,7 @@ class ResourceAccess(models.Model):
                                                   user=this_user)
             response1 = p.privilege
         except UserResourcePrivilege.DoesNotExist:
-            response1 = PrivilegeCodes.NONE
+            response1 = PC.NONE
 
         return response1
 
@@ -407,7 +405,7 @@ class ResourceAccess(models.Model):
 
         response2 = group_priv['privilege__min']
         if response2 is None:
-            response2 = PrivilegeCodes.NONE
+            response2 = PC.NONE
         return response2
 
     def __get_raw_community_privilege(self, this_user):
@@ -427,21 +425,21 @@ class ResourceAccess(models.Model):
                       group__g2gcp__community__c2gcp__group__g2ugp__user=this_user) |
                     Q(resource=self.resource,
                       group__gaccess__active=True,
-                      privilege=PrivilegeCodes.CHANGE,
-                      group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+                      privilege=PC.CHANGE,
+                      group__g2gcp__community__c2gcp__privilege=PC.CHANGE,
                       group__g2gcp__community__c2gcp__group__g2ugp__user=this_user)) \
             .aggregate(models.Min('privilege'),
                        models.Min('group__g2gcp__community__c2gcp__privilege'))
 
         if community_priv['privilege__min'] is None or \
            community_priv['group__g2gcp__community__c2gcp__privilege__min'] is None:
-            return PrivilegeCodes.NONE
-        elif community_priv['privilege__min'] == PrivilegeCodes.CHANGE and \
+            return PC.NONE
+        elif community_priv['privilege__min'] == PC.CHANGE and \
             community_priv['group__g2gcp__community__c2gcp__privilege__min'] == \
-                PrivilegeCodes.CHANGE:
-            return PrivilegeCodes.CHANGE
+                PC.CHANGE:
+            return PC.CHANGE
         else:
-            return PrivilegeCodes.VIEW
+            return PC.VIEW
 
     def get_effective_user_privilege(self, this_user):
         """
@@ -453,8 +451,8 @@ class ResourceAccess(models.Model):
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
         user_priv = self.__get_raw_user_privilege(this_user)
-        if self.immutable and user_priv == PrivilegeCodes.CHANGE:
-            return PrivilegeCodes.VIEW
+        if self.immutable and user_priv == PC.CHANGE:
+            return PC.VIEW
         else:
             return user_priv
 
@@ -468,8 +466,8 @@ class ResourceAccess(models.Model):
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
         group_priv = self.__get_raw_group_privilege(this_user)
-        if self.immutable and group_priv == PrivilegeCodes.CHANGE:
-            return PrivilegeCodes.VIEW
+        if self.immutable and group_priv == PC.CHANGE:
+            return PC.VIEW
         else:
             return group_priv
 
@@ -483,8 +481,8 @@ class ResourceAccess(models.Model):
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
         community_priv = self.__get_raw_community_privilege(this_user)
-        if self.immutable and community_priv == PrivilegeCodes.CHANGE:
-            return PrivilegeCodes.VIEW
+        if self.immutable and community_priv == PC.CHANGE:
+            return PC.VIEW
         else:
             return community_priv
 

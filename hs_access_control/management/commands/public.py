@@ -66,9 +66,9 @@ class Command(BaseCommand):
                           r.resource_type,
                           r.group_name,
                           r.group_id,
-                          r.raccess.published,
-                          r.raccess.public,
-                          r.raccess.discoverable,
+                          r.published,
+                          r.public,
+                          r.discoverable,
                           r.created,
                           r.updated,
                           r.first_creator
