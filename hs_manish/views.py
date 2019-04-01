@@ -91,11 +91,11 @@ def user_stats(request, username):
             months = math.floor(time_difference / 30)
             weeks = math.floor(time_difference / 7)
             if months != 0:
-                map_resources["time"] = str(months) + "months ago"
+                map_resources["access_time"] = str(months) + "months ago"
             elif weeks != 0:
-                map_resources["time"] = str(weeks) + "weeks ago"
+                map_resources["access_time"] = str(weeks) + "weeks ago"
             else:
-                map_resources["time"] = str(time_difference) + "days ago"
+                map_resources["access_time"] = str(time_difference) + "days ago"
 
         return render(request, 'user_stats.html',
                       context = {"total_count": num_resources,
