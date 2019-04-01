@@ -84,18 +84,19 @@ def user_stats(request, username):
                                                     "resource_type": res.resource_type,
                                                     "first_accessed": v.timestamp,
                                                     "last_accessed": v.timestamp}
-        for resource in map_resources.values():
+        for resource_id in map_resources.keys():
+            resource = map_resources[resource_id]
             current_time = timezone.now()
             last_time = resource["last_accessed"]
             time_difference = (current_time - last_time).days
-            months = math.floor(time_difference / 30)
-            weeks = math.floor(time_difference / 7)
+            months = int(time_difference / 30)
+            weeks = int(time_difference / 7)
             if months != 0:
-                map_resources["access_time"] = str(months) + "months ago"
+                map_resources[resource_id]["access_time"] = str(months) + "months ago"
             elif weeks != 0:
-                map_resources["access_time"] = str(weeks) + "weeks ago"
+                map_resources[resource_id]["access_time"] = str(weeks) + "weeks ago"
             else:
-                map_resources["access_time"] = str(time_difference) + "days ago"
+                map_resources[resource_id]["access_time"] = str(time_difference) + "days ago"
 
         return render(request, 'user_stats.html',
                       context = {"total_count": num_resources,
