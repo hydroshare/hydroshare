@@ -25,50 +25,82 @@ function red() {
     echo -n "\x1B[31m${TEXT}\x1B[0m"
 }
 
+
+REMOVE_CONTAINER=YES
+REMOVE_VOLUME=YES
+REMOVE_IMAGE=NO
+
+while [ 1 -eq 1 ]
+do
+
 clear
 
 echo
 echo '########################################################################################################################'
-echo -e " `red 'For less problem while setup: all containers, images and volumes should be deleted'`"
+echo -e " `red 'For fewer problems during setup all HydroShare containers, images and volumes should be deleted.\n Make sure you understand the impact of this is not reversible and could result in the loss of work.'`"
 echo '########################################################################################################################'
 echo
-echo -e " Enter `green '\"y\"'` will remove your docker data"
-echo -e " Enter `green '\"N\"'` (default) will continue without remove"
-echo -e " Enter `green '\"e\"'` or other will exit to the command prompt"
+echo -e " (1) Remove all HydroShare container: `green $REMOVE_CONTAINER`"
+echo -e " (2) Remove all HydroShare volume:    `green $REMOVE_VOLUME`"
+echo -e " (3) Remove all HydroShare image:     `green $REMOVE_IMAGE`"
 echo
-echo -ne " Remove all running containers `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
+echo -ne " There are three options you can combine to make a configuratin. What you see here is the default. Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
 echo
 
-if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
-	docker rm -f `docker ps -aq`  2>/dev/null
-else
-	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
-		exit 1
-	fi
+case "$A" in
+  1)  if [ "$REMOVE_CONTAINER" == "YES" ]; then
+        REMOVE_CONTAINER=NO
+      else
+        REMOVE_CONTAINER=YES
+      fi
+  ;;
+  2)  if [ "$REMOVE_VOLUME" == "YES" ]; then
+        REMOVE_VOLUME=NO
+      else
+        REMOVE_VOLUME=YES
+      fi
+  ;;
+  3)  if [ "$REMOVE_IMAGE" == "YES" ]; then
+        REMOVE_IMAGE=NO
+      else
+        REMOVE_IMAGE=YES
+      fi
+  ;;
+  c)  break
+  ;;
+  C)  break
+  ;;
+esac
+
+done
+
+DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
+HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
+HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+
+if [ "$REMOVE_CONTAINER" == "YES" ]; then
+  echo "  Removing HydroShare container..."
+  for i in "${HYDROSHARE_CONTAINERS[@]}"; do
+    echo "    Removing $i container if existed..."
+    docker rm -f $i 2>/dev/null 1>&2
+  done
 fi
 
-echo
-echo -ne " Remove all current volumes `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
-echo
-
-if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
-	yes | docker volume prune     2>/dev/null
-else
-	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
-		exit 1
-	fi
+if [ "$REMOVE_VOLUME" == "YES" ]; then
+  echo "  Removing HydroShare volume..."
+  for i in "${HYDROSHARE_VOLUMES[@]}"; do
+    echo "    Removing $i volume if existed..."
+    docker rmi -f $i 2>/dev/null 1>&2
+  done
 fi
 
-echo
-echo -ne " Remove all existed images `red '[ (y)es / (N)o / (e)xit ]?'` "; read A
-echo
-
-if [ "$A" == "y" ] || [ "$A" == "Y" ]; then
-	yes | docker system prune -a  2>/dev/null
-else
-	if [ "$A" != "n" ] && [ "$A" != "N" ]; then
-		exit 1
-	fi
+if [ "$REMOVE_IMAGE" == "YES" ]; then
+  echo "  Removing HydroShare image..."
+  for i in "${HYDROSHARE_IMAGES[@]}"; do
+    echo "    Removing $i image if existed..."
+    docker volume rm $i 2>/dev/null 1>&2
+  done
 fi
 
 grep -v CMD Dockerfile > Dockerfile-defaultworker
@@ -82,17 +114,27 @@ mkdir -p hydroshare/static/media 2>/dev/null
 mkdir log 2>/dev/null
 chmod -R 777 log 2>/dev/null
 
+while [ 1 -eq 1 ]
+do
+
+clear
+
 echo
 echo '########################################################################################################################'
-echo -e " `blue  ' System is cleaned.'` `red 'DO NOT CLOSE this windows'` `blue ', please open a new terminal window then run the below command:'`"
+echo -e  " `blue  ' System is cleaned.'` `red 'DO NOT CLOSE this window'` `blue ', please open a new terminal window then run the below command:'`"
 echo
-echo -e " `green '     docker-compose -f local-dev.yml up --build '`"
+echo -e  " `green '     docker-compose -f local-dev.yml up --build '`"
 echo
-echo -e " `blue  ' Waitting a bit long :) util you can see the two textboxes'` `green '\"iRODS is installed and running\"'` `blue 'of '` `green 'data.local.org'` `blue 'and'` `green 'users.local.org'`"
+echo -e  " `blue  ' Please continue to wait, util you can see the two textboxes'` `green '\"iRODS is installed and running\"'` `blue 'of '` `green 'data.local.org'` `blue 'and'` `green 'users.local.org'`"
 echo
-echo -e " `blue  ' If you can see the two textboxes, please press '` `green 'ENTER on this window'` `blue 'to continue...'`"
+echo -en " `blue  ' Once you can see these two textboxes, please press '` `green '\"OK\" on this window'` `blue 'to continue... '`"
 
 read A
+if [ "$A" == "OK" ] || [ "$A" == "ok" ]; then
+  break
+fi
+
+done
 
 echo
 echo '########################################################################################################################'
@@ -115,11 +157,11 @@ docker $DOCKER_PARAM restart hydroshare defaultworker
 
 echo
 echo '########################################################################################################################'
-echo -e " `blue 'Now waiting 20 seconds for the first restarting with new configuration'`"
+echo -e " `blue '30 seconds for new configuration to initialize with first Docker restart'`"
 echo '########################################################################################################################'
 echo
 
-for pc in $(seq 20 -1 1); do
+for pc in $(seq 30 -1 1); do
     echo -ne "$pc ...\033[0K\r" && sleep 1;
 done
 
@@ -127,7 +169,7 @@ cd ..
 
 echo
 echo '########################################################################################################################'
-echo -e " `blue 'Migrating data and reindexing'`"
+echo -e " `blue 'Migrating data and reindexing SOLR'`"
 echo '########################################################################################################################'
 echo
 
