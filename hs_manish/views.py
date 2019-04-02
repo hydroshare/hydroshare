@@ -74,7 +74,16 @@ def user_stats(request, username):
                                                 else:
                                                         caption = "You app launched the resource"
                                                 url = "https://dev-hs-3.cuahsi.org/resource/" + resource_id + "/"
-
+                                                #inserting the access type of resources
+                                                access_type = ""
+                                                if(res.raccess.discoverable):
+                                                        access_type = "discoverable"
+                                                elif(res.raccess.published):
+                                                        access_type = "pubblished"
+                                                elif(res.raccess.public):
+                                                        access_type = "public"
+                                                else:
+                                                        access_type = "private"
                                                 map_resources[resource_id] = {
                                                     "count": 1,
                                                     "name": v.name,
@@ -83,7 +92,8 @@ def user_stats(request, username):
                                                     "title": res.title,
                                                     "resource_type": res.resource_type,
                                                     "first_accessed": v.timestamp,
-                                                    "last_accessed": v.timestamp}
+                                                    "last_accessed": v.timestamp,
+                                                     "access_type": access_type}
         for resource_id in map_resources.keys():
             resource = map_resources[resource_id]
             current_time = timezone.now()
