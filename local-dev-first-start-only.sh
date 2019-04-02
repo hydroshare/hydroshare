@@ -82,7 +82,8 @@ HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
   for i in "${HYDROSHARE_CONTAINERS[@]}"; do
-    echo "    Removing $i container if existed..."
+    echo -e "    Removing $i container if existed..."
+    echo -e "      docker rm -f `green $i`"
     docker rm -f $i 2>/dev/null 1>&2
   done
 fi
@@ -90,16 +91,18 @@ fi
 if [ "$REMOVE_VOLUME" == "YES" ]; then
   echo "  Removing HydroShare volume..."
   for i in "${HYDROSHARE_VOLUMES[@]}"; do
-    echo "    Removing $i volume if existed..."
-    docker rmi -f $i 2>/dev/null 1>&2
+    echo -e "    Removing $i volume if existed..."
+    echo -e "      docker volume rm `green $i`"
+    docker volume rm $i 2>/dev/null 1>&2
   done
 fi
 
 if [ "$REMOVE_IMAGE" == "YES" ]; then
   echo "  Removing HydroShare image..."
   for i in "${HYDROSHARE_IMAGES[@]}"; do
-    echo "    Removing $i image if existed..."
-    docker volume rm $i 2>/dev/null 1>&2
+    echo -e "    Removing $i image if existed..."
+    echo -e "      docker rmi -f `green $i`"
+    docker rmi -f $i 2>/dev/null 1>&2
   done
 fi
 
