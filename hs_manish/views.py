@@ -76,14 +76,22 @@ def user_stats(request, username):
                                                 url = "https://dev-hs-3.cuahsi.org/resource/" + resource_id + "/"
                                                 #inserting the access type of resources
                                                 access_type = ""
-                                                if(res.raccess.discoverable):
-                                                        access_type = "discoverable"
-                                                elif(res.raccess.published):
-                                                        access_type = "pubblished"
+                                                if(res.raccess.published):
+                                                        access_type = "published"
                                                 elif(res.raccess.public):
                                                         access_type = "public"
+                                                elif(res.raccess.discoverable):
+                                                        access_type = "discoverable"
                                                 else:
                                                         access_type = "private"
+                                                authors = res.raccess.owners
+                                                owner = "  "
+                                                for author in authors:
+                                                        owner += author.first_name + " " + author.last_name + ", "
+                                                owner = owner[:-2]
+                                                abstract = ""
+                                                if (res.metadata != None):
+                                                        abstract = res.metadata.description.abstract
                                                 map_resources[resource_id] = {
                                                     "count": 1,
                                                     "name": v.name,
@@ -93,7 +101,9 @@ def user_stats(request, username):
                                                     "resource_type": res.resource_type,
                                                     "first_accessed": v.timestamp,
                                                     "last_accessed": v.timestamp,
-                                                     "access_type": access_type}
+                                                    "access_type": access_type,
+                                                    "owner": owner,
+                                                    "abstract": abstract}
         for resource_id in map_resources.keys():
             resource = map_resources[resource_id]
             current_time = timezone.now()
@@ -102,11 +112,11 @@ def user_stats(request, username):
             months = int(time_difference / 30)
             weeks = int(time_difference / 7)
             if months != 0:
-                map_resources[resource_id]["access_time"] = str(months) + "months ago"
+                map_resources[resource_id]["access_time"] = str(months) + " months ago"
             elif weeks != 0:
-                map_resources[resource_id]["access_time"] = str(weeks) + "weeks ago"
+                map_resources[resource_id]["access_time"] = str(weeks) + " weeks ago"
             else:
-                map_resources[resource_id]["access_time"] = str(time_difference) + "days ago"
+                map_resources[resource_id]["access_time"] = str(time_difference) + " days ago"
 
         return render(request, 'user_stats.html',
                       context = {"total_count": num_resources,
