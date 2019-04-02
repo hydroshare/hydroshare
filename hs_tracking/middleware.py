@@ -5,10 +5,9 @@ import re
 RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')
 
 
-def get_resource_id_from_request(request):
+def get_resource_id_from_url(request):
 
-    url = request.path
-    m = RESOURCE_RE.search(url)
+    m = RESOURCE_RE.search(request)
     if (m and m.group(1)):
         resource_id = m.group(1)
         return resource_id
@@ -51,7 +50,7 @@ class Tracking(object):
                          'user_email_domain=%s' % emaildomain,
                          'request_url=%s' % request.path]])
 
-        resource_id = get_resource_id_from_request(request.path)
+        resource_id = get_resource_id_from_url(request.path)
         # save the activity in the database
         session.record('visit', value=msg, resource_id=resource_id)
 

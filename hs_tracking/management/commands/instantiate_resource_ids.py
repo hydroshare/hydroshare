@@ -5,6 +5,8 @@ from django.core.management.base import BaseCommand
 import re
 from datetime import datetime, timedelta
 from hs_tracking.models import Variable
+from hs_core.hydroshare import get_resource_by_shortkey
+from hs_core.models import BaseResource
 
 
 RE_COMPILER = {"visit": re.compile('resource/([0-9a-f]{32})/'),
@@ -26,7 +28,12 @@ def instantiate_timestamp_range(start, end):
             if (m and m.group(1)):
                 resource_id = m.group(1)
                 if(resource_id is not None):
-                    v.resource_id = resource_id
+                    v.last_resource_id = resource_id
+                    try:
+                        resource = get_resource_by_shortkey(resource_id, or_404=False)
+                        v.resource = resource
+                    except BaseResource.DoesNotExist:
+                        pass
                     v.save()
                     # print("{} for '{}' ".format(resource_id, value))
                     ids = ids + 1

@@ -1,12 +1,15 @@
 from datetime import datetime, timedelta
 
 from django.db import models
+from django.db.models import F
 from django.core import signing
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from theme.models import UserProfile
 from utils import get_std_log_fields
+from hs_core.models import BaseResource
+from hs_core.hydroshare import get_resource_by_shortkey
 
 SESSION_TIMEOUT = settings.TRACKING_SESSION_TIMEOUT
 PROFILE_FIELDS = settings.TRACKING_PROFILE_FIELDS
@@ -116,6 +119,8 @@ class Variable(models.Model):
         enumerate(label for (label, coercer) in TYPES)
     ]
 
+    from hs_core.models import BaseResource
+
     session = models.ForeignKey(Session)
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
@@ -123,7 +128,10 @@ class Variable(models.Model):
     # change value to TextField to be less restrictive as max_length of CharField has been
     # exceeded a couple of times
     value = models.TextField()
-    resource_id = models.CharField(null=True, max_length=32)
+
+    # If a resource no longer exists, last_resource_id remains valid but resource is NULL
+    resource = models.ForeignKey(BaseResource, null=True, on_delete=models.SET_NULL)
+    last_resource_id = models.CharField(null=True, max_length=32)
 
     def get_value(self):
         v = self.value
@@ -147,7 +155,7 @@ class Variable(models.Model):
         return '|'.join(msg_items)
 
     @classmethod
-    def record(cls, session, name, value=None, resource_id=None):
+    def record(cls, session, name, value=None, resource=None, resource_id=None):
         for i, (label, coercer) in enumerate(cls.TYPES, 0):
             try:
                 if value == coercer(value):
@@ -158,8 +166,16 @@ class Variable(models.Model):
         else:
             raise TypeError("Unable to record variable of unrecognized type %s",
                             type(value).__name__)
+        if resource is None and resource_id is not None: 
+            try: 
+                resource = get_resource_by_shortkey(resource_id, or_404=False)
+            except BaseResource.DoesNotExist: 
+                pass
+                
         return Variable.objects.create(session=session, name=name, type=type_code,
-                                       value=cls.encode(value), resource_id=resource_id)
+                                       value=cls.encode(value),
+                                       last_resource_id=resource_id,
+                                       resource=resource)
 
     @classmethod
     def encode(cls, value):
@@ -172,3 +188,15 @@ class Variable(models.Model):
         else:
             raise ValueError("Unknown type (%s) for tracking variable: %r",
                              type(value).__name__, value)
+
+    @classmethod
+    def recent_resources(cls, user, n):
+        """ fetch the most recent n resources with which a specific user has interacted """
+        days_to_check = 60
+        recent = Variable.objects.filter(resource__isnull=False,
+                                         session__visitor__user=user,
+                                         timestamp__gte=datetime.now()-timedelta(days_to_check))\
+                                 .values(resource_id=F('resource__short_id'))\
+                                 .annotate(last_accessed=models.Max('timestamp'))\
+                                 .order_by('-last_accessed')[:n]
+        return recent
