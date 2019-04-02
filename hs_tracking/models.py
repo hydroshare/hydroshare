@@ -90,7 +90,7 @@ class Visitor(models.Model):
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    visitor = models.ForeignKey(Visitor)
+    visitor = models.ForeignKey(Visitor, related_name='tracking_session')
 
     objects = SessionManager()
 
@@ -130,7 +130,9 @@ class Variable(models.Model):
     value = models.TextField()
 
     # If a resource no longer exists, last_resource_id remains valid but resource is NULL
-    resource = models.ForeignKey(BaseResource, null=True, on_delete=models.SET_NULL)
+    resource = models.ForeignKey(BaseResource, null=True,
+                                 related_name='tracking_variable',
+                                 on_delete=models.SET_NULL)
     last_resource_id = models.CharField(null=True, max_length=32)
 
     def get_value(self):
@@ -166,12 +168,12 @@ class Variable(models.Model):
         else:
             raise TypeError("Unable to record variable of unrecognized type %s",
                             type(value).__name__)
-        if resource is None and resource_id is not None: 
-            try: 
+        if resource is None and resource_id is not None:
+            try:
                 resource = get_resource_by_shortkey(resource_id, or_404=False)
-            except BaseResource.DoesNotExist: 
+            except BaseResource.DoesNotExist:
                 pass
-                
+
         return Variable.objects.create(session=session, name=name, type=type_code,
                                        value=cls.encode(value),
                                        last_resource_id=resource_id,
@@ -190,13 +192,15 @@ class Variable(models.Model):
                              type(value).__name__, value)
 
     @classmethod
-    def recent_resources(cls, user, n):
+    def recent_resources(cls, user, n_resources=5, days=60):
         """ fetch the most recent n resources with which a specific user has interacted """
-        days_to_check = 60
-        recent = Variable.objects.filter(resource__isnull=False,
-                                         session__visitor__user=user,
-                                         timestamp__gte=datetime.now()-timedelta(days_to_check))\
-                                 .values(resource_id=F('resource__short_id'))\
-                                 .annotate(last_accessed=models.Max('timestamp'))\
-                                 .order_by('-last_accessed')[:n]
+        recent = BaseResource.objects.filter(
+                tracking_variable__session__visitor__user=user,
+                tracking_variable__timestamp__gte=(datetime.now()-timedelta(days)))\
+            .only('short_id', 'created', 'updated').distinct()\
+            .annotate(public=F('raccess__public'),
+                      discoverable=F('raccess__discoverable'),
+                      published=F('raccess__published'),
+                      last_accessed=models.Max('tracking_variable__timestamp'))\
+            .order_by('-last_accessed')[:n_resources]
         return recent
