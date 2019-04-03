@@ -208,7 +208,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     return JsonResponse(data={}, status=200)
-    
+
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -1203,7 +1203,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
+        # Reuse the same class AddGroupForm() leads to duplicated IDs.
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1805,23 +1805,11 @@ class GroupView(TemplateView):
         g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        group_resources = []
-        # for each of the resources this group has access to, set resource dynamic
-        # attributes (grantor - group member who granted access to the resource) and (date_granted)
-        # Access control V3: these now include community-accessible resources
-        for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
-            res.grantor = grp.grantor
-            res.date_granted = grp.start
-            group_resources.append(res)
-
-        # TODO: need to sort this resource list using the date_granted field
-
         return {
             'profile_user': u,
             'group': g,
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-            'group_resources': group_resources,
+            'group_resources': g.gaccess.group_resources,
             'add_view_user_form': AddUserForm(),
         }
 

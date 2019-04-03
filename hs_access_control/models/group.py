@@ -247,6 +247,23 @@ class GroupAccess(models.Model):
                  r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
 
     @property
+    def group_resources(self):
+        """
+        QuerySet of resources held by group.
+
+        :return: QuerySet of resource objects held by group.
+
+        This includes directly accessible objects as well as objects accessible
+        by nature of the fact that the current group is a member of a community
+        containing another group that can access the object.
+
+        """
+        return BaseResource.objects.filter(self.__view_resources_of_group)\
+                                   .annotate(grantor=F('r2grp__grantor'),
+                                             date_granted=F('r2grp__start'))
+                                   .order_by('date_granted')
+
+    @property
     def view_resources(self):
         """
         QuerySet of resources held by group.
@@ -259,7 +276,7 @@ class GroupAccess(models.Model):
 
         """
         return BaseResource.objects.filter(self.__view_resources_of_group |
-                                           self.__view_resources_of_community)
+                                           self.__view_resources_of_community).distinct()
 
     @property
     def edit_resources(self):
@@ -272,7 +289,7 @@ class GroupAccess(models.Model):
         due to oversight privileges over a community
         """
         return BaseResource.objects.filter(self.__edit_resources_of_group |
-                                           self.__edit_resources_of_community)
+                                           self.__edit_resources_of_community).distinct()
 
     @property
     def group_membership_requests(self):
