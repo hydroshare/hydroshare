@@ -2277,16 +2277,20 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
-        then the content of the readme.md file is returned, othewise None
+        then the content of the readme.md file is returned, otherwise None
+
+        Note: The user uploaded readme file if originally not encoded as utf-8, then any non-ascii
+        characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
         if readme_file is not None:
+            readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
-                markdown_file_content = markdown(readme_file.read().decode('utf-8', 'ignore'))
+                markdown_file_content = markdown(readme_file_content)
                 return {'content': markdown_file_content,
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
-                return {'content': readme_file.read(), 'file_name': readme_file.file_name}
+                return {'content': readme_file_content, 'file_name': readme_file.file_name}
         return readme_file
 
     @property
