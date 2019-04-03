@@ -1,67 +1,67 @@
 {% load hydroshare_tags %}
-
-<span class="resource-type-text">{{ resource|resource_type }}</span>
-{% if resource|resource_type == "Generic" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Geographic Raster" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Model Program Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Model Instance Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "SWAT Model Instance Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Multidimensional (NetCDF)" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Time Series" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Web App Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "HIS Referenced Time Series" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Script Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}" class="table-res-type-icon"/>
-{% elif resource|resource_type == "Collection Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}"
-         class="table-res-type-icon"/>
-{% elif resource|resource_type == "MODFLOW Model Instance Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}"
-         class="table-res-type-icon"/>
-{% elif resource|resource_type == "Composite Resource" %}
-    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-         data-toggle="tooltip" data-placement="right"
-         alt="{{ resource|resource_type }}" title="{{ resource|resource_type }}"
-         class="table-res-type-icon"/>
-{% endif %}
-
+{% with resource_type=resource|resource_type %}
+    <span class="resource-type-text">{{ resource_type }}</span>
+    {% if resource.resource_type == "CompositeResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}"
+             class="table-res-type-icon"/>
+    {% elif resource.resource_type == "RasterResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "ModelProgramResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "ModelInstanceResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "SWATModelInstanceResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "NetcdfResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "TimeSeriesResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "GeographicFeatureResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "ToolResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "RefTimeSeriesResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "ScriptResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% elif resource.resource_type == "CollectionResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}"
+             class="table-res-type-icon"/>
+    {% elif resource.resource_type == "MODFLOWModelInstanceResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}"
+             class="table-res-type-icon"/>
+    {% elif resource.resource_type == "GenericResource" %}
+        <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+             data-toggle="tooltip" data-placement="right"
+             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+    {% endif %}
+{% endwith %}
 {#  Sharing Status icons #}
 <div class="access-icon-wrapper">
     {% if resource.raccess.published %}

@@ -18,19 +18,34 @@ class TestCustomScimetaEndpoint(HSRESTTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
-    def test_set_custom_metadata_multiple(self):
-        set_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
+    def test_custom_metadata_multiple(self):
+        custom_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
 
-        response = self.client.post(set_metadata, {
+        response = self.client.post(custom_metadata, {
             "foo": "bar",
             "foo2": "bar2"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_set_custom_metadata_single(self):
-        set_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
-        response = self.client.post(set_metadata, {
+        response = self.client.get(custom_metadata)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, '{"foo": "bar", "foo2": "bar2"}')
+
+    def test_custom_metadata_single(self):
+        custom_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
+        response = self.client.post(custom_metadata, {
             "foo": "bar"
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(custom_metadata)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, '{"foo": "bar"}')
+
+    def test_custom_metadata_empty(self):
+        custom_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
+
+        response = self.client.get(custom_metadata)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, '{}')

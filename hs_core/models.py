@@ -760,17 +760,17 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
-        ('isHostedBy', 'Hosted By'),
-        ('isCopiedFrom', 'Copied From'),
-        ('isPartOf', 'Part Of'),
+        ('isHostedBy', 'The content of this resource is hosted by'),
+        ('isCopiedFrom', 'The content of this resource was copied from'),
+        ('isPartOf', 'The content of this resource is part of'),
         ('hasPart', 'Has Part'),
-        ('isExecutedBy', 'Executed By'),
-        ('isCreatedBy', 'Created By'),
+        ('isExecutedBy', 'The content of this resource can be executed by'),
+        ('isCreatedBy', 'The content of this resource was created by'),
         ('isVersionOf', 'Version Of'),
         ('isReplacedBy', 'Replaced By'),
-        ('isDataFor', 'Data For'),
-        ('cites', 'Cites'),
-        ('isDescribedBy', 'Described By'),
+        ('isDataFor', 'The content of this resource serves as the data for'),
+        ('cites', 'This resource cites'),
+        ('isDescribedBy', 'This resource is described by'),
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
@@ -1783,6 +1783,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         # avoid import loop
         from hs_core.views.utils import run_script_to_update_hyrax_input_files
+        from hs_core.signals import post_raccess_change
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -1812,6 +1813,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             if value:  # can't be public without being discoverable
                 self.raccess.discoverable = value
             self.raccess.save()
+            post_raccess_change.send(sender=self, resource=self)
 
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
@@ -2048,13 +2050,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def metadata(self):
-        """Return a pointer to the metadata object for this resource.
+        """Return the metadata object for this resource."""
+        return self.content_object
 
-        This object can vary based upon resource type. Please override this function to
-        return the appropriate object for each resource type.
-        """
-        md = CoreMetaData()  # only this line needs to be changed when you override
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return CoreMetaData
 
     @property
     def first_creator(self):
@@ -2071,20 +2072,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
-
-    def _get_metadata(self, metatdata_obj):
-        """Get resource metadata from content_object."""
-        md_type = ContentType.objects.get_for_model(metatdata_obj)
-        res_type = ContentType.objects.get_for_model(self)
-        self.content_object = res_type.model_class().objects.get(id=self.id).content_object
-        if self.content_object:
-            return self.content_object
-        else:
-            metatdata_obj.save()
-            self.content_type = md_type
-            self.object_id = metatdata_obj.id
-            self.save()
-            return metatdata_obj
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
@@ -3612,6 +3599,16 @@ class CoreMetaData(models.Model):
             for subject in metadata.pop('subjects'):
                 parsed_metadata.append({"subject": {"value": subject['value']}})
 
+        if 'funding_agencies' in keys_to_update:
+            for agency in metadata.pop("funding_agencies"):
+                # using fundingagency instead of funding_agency to be consistent with UI
+                # add-metadata logic as well as the term for the metadata element.
+                parsed_metadata.append({"fundingagency": agency})
+
+        if 'relations' in keys_to_update:
+            for relation in metadata.pop('relations'):
+                parsed_metadata.append({"relation": relation})
+
     @classmethod
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
@@ -3765,7 +3762,7 @@ class CoreMetaData(models.Model):
         """
         from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            SourceValidationForm, RelationValidationForm
+            SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -3774,7 +3771,8 @@ class CoreMetaData(models.Model):
                                     'creator': CreatorValidationForm,
                                     'contributor': ContributorValidationForm,
                                     'source': SourceValidationForm,
-                                    'relation': RelationValidationForm
+                                    'relation': RelationValidationForm,
+                                    'fundingagency': FundingAgencyValidationForm
                                     }
         # updating non-repeatable elements
         with transaction.atomic():
@@ -3864,6 +3862,22 @@ class CoreMetaData(models.Model):
                             self.identifiers.filter(name=id_item[element_name]['name']).delete()
                             self.create_element(element_model_name=element_name,
                                                 **id_item[element_name])
+
+            element_name = 'fundingagency'
+            identifier_list = [id_dict for id_dict in metadata if element_name in id_dict]
+            if len(identifier_list) > 0:
+                for id_item in identifier_list:
+                    validation_form = validation_forms_mapping[element_name](
+                        id_item[element_name])
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
+                # update_repeatable_elements will append an 's' to element_name before getattr,
+                # unless property_name is provided.  I'd like to remove English grammar rules from
+                # our codebase, but in the interest of time, I'll just add a special case for
+                # handling funding_agencies
+                self.update_repeatable_element(element_name=element_name, metadata=metadata,
+                                               property_name="funding_agencies")
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""

@@ -818,6 +818,13 @@ li.account p{
     display: block !important;
 }
 
+.profile-photo-error {
+    text-align: right;
+    margin-top: 20px;
+    margin-left: 20px;
+    padding: 10px 25px 10px 25px;
+}
+
 /* ===== Login box ===== */
 
 .form-box {
@@ -1532,7 +1539,7 @@ body > .main-container {
 	cursor: default;
 }
 
-#success-alert, #error-alert {
+#success-alert, #error-alert, .custom-alert {
     position: fixed;
     z-index: 999;
     margin-right: auto;
@@ -1540,11 +1547,6 @@ body > .main-container {
     left: 50%;
     margin-left: -25%;
     top: 60px;
-}
-
-.custom-alert {
-	position: fixed;
-	z-index: 2;
 }
 
 .alert-dismissible {
@@ -2040,10 +2042,12 @@ a.tag:hover {
 }
 
 #discover-resource-search {
-	width: 100%;
-	margin-bottom: 20px;
-	margin-left: 10px;
-	float: right;
+    width: 100%;
+    margin-left: 10px;
+}
+
+#solr-help-info {
+	align-self: center;
 }
 
 .resource-search input {
@@ -3974,6 +3978,10 @@ div.group-add-photo {
 	border: 1px solid #DDD;
 }
 
+#discover-page-options-1 a, #discover-page-options-2 a {
+	cursor: pointer;
+}
+
 #geocoder-panel {
 	z-index: 5;
 	padding: 5px;
@@ -5113,4 +5121,8 @@ a[data-toggle="modal"] {
 
 .border-gray {
 	border: 1px solid #DDD;
+}
+
+.c-pointer {
+	cursor: pointer;
 }
