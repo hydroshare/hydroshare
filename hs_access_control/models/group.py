@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
@@ -260,7 +260,7 @@ class GroupAccess(models.Model):
         """
         return BaseResource.objects.filter(self.__view_resources_of_group)\
                                    .annotate(grantor=F('r2grp__grantor'),
-                                             date_granted=F('r2grp__start'))
+                                             date_granted=F('r2grp__start'))\
                                    .order_by('date_granted')
 
     @property
