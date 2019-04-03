@@ -249,13 +249,12 @@ class GroupAccess(models.Model):
     @property
     def group_resources(self):
         """
-        QuerySet of resources held by group.
+        QuerySet of resources held by group, for generating views.
 
         :return: QuerySet of resource objects held by group.
 
-        This includes directly accessible objects as well as objects accessible
-        by nature of the fact that the current group is a member of a community
-        containing another group that can access the object.
+        This includes directly accessible objects but not community-accessible objects.
+        This includes annotation of the view fields grantor, date_granted.
 
         """
         return BaseResource.objects.filter(self.__view_resources_of_group)\
@@ -275,8 +274,7 @@ class GroupAccess(models.Model):
         containing another group that can access the object.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group |
-                                           self.__view_resources_of_community).distinct()
+        return BaseResource.objects.filter(self.__view_resources_of_group)
 
     @property
     def edit_resources(self):
@@ -288,8 +286,7 @@ class GroupAccess(models.Model):
         These include resources that are directly editable, as well as those editable
         due to oversight privileges over a community
         """
-        return BaseResource.objects.filter(self.__edit_resources_of_group |
-                                           self.__edit_resources_of_community).distinct()
+        return BaseResource.objects.filter(self.__edit_resources_of_group)
 
     @property
     def group_membership_requests(self):
