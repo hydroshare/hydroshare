@@ -470,7 +470,7 @@ def home_router(request):
     if request.user.is_authenticated():
         return dashboard(request)
     else:
-        return redirect('general')
+        return render(request, "pages/homepage.html")
 
 
 @login_required

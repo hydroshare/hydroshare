@@ -8,15 +8,15 @@ function initializeTable() {
     var colDefs = [
         {
             "targets": [RESOURCE_TYPE_COL],     // Resource type
-            "width": "10%"
+            "width": "100px"
         },
         {
             "targets": [TITLE_COL],     // Resource type
-            "width": "20%"
+            "width": "500px"
         },
         {
             "targets": [OWNER_COL],     // Resource type
-            "width": "10%"
+            "width": "100px"
         },
         {
             "targets": [DATE_CREATED_COL]     // Date created
@@ -54,7 +54,7 @@ function initializeTable() {
                 let timestamp = 1548997005696;
                 let readable_time_ago = get_time_ago_by_timestamp(timestamp);
                 let timestamp_2 = "1548997005696";
-                let title = "Hurrican Hurvey";
+                let title = "Hurrican <p>Hurvey is the one that caused flodding. In the west country";
                 let readable_time_ago_2 = build_title_HTML_element(title, timestamp_2);
                 let author = "David Tarboton";
                 let resource_type = "Composite";
@@ -99,7 +99,7 @@ function get_resource_url_by_id(id) {
 }
 
 function build_title_HTML_element(title, id) {
-    return "<a " + get_resource_url_by_id(id) + ">" + title + "</a>";
+    return "<a " + get_resource_url_by_id(id) + ">" + title.toString() + "</a>";
 }
 
 function get_time_ago_by_timestamp(previous) {

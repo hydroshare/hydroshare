@@ -18,6 +18,14 @@ timestamp should go with a template tags to convert to a human readble day.
 {% endcomment %}
 
 {% block main %}
+    <div class="container dashboard_section_container">
+    <h3> Getting Started</h3>
+        <div>
+    <a href="" style="margin-top: 10px; display: inline-block">Look at a sample resource</a></div>
+        <div><a href="" style="margin-top: 10px; display: inline-block" >Create my first resource</a> </div>
+        <div><a href="" style="margin-top: 10px; display: inline-block" >Browser Help Pages</a> </div>
+        <div><a href="" style="margin-top: 10px; display: inline-block" >Show me public resources</a> </div>
+    </div>
     <div>
         <div class="container dashboard_section_container">
             <!--
@@ -49,29 +57,8 @@ timestamp should go with a template tags to convert to a human readble day.
             </table>
         </div>
 
-
-        {# CUAHSI developed apps #}
         <div class="container dashboard_section_container">
-          {% trans "CUAHSI-Developed Time Series Apps" as whole_title %}
-          {% include "includes/apps_block_title.html" %}
-            <div class="row big-app-row">
-            {% trans "HydroClient" as title_name %}
-            {% trans "https://data.cuahsi.org" as title_url %}
-            {% trans "/static/img/hydro_client.png" as app_image %}
-            {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
-
-            {% trans "Uploader" as title_name %}
-            {% trans "http://hydroserver.cuahsi.org" as title_url %}
-            {% trans "/static/img/hydro_server.png" as app_image %}
-            {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
-            </div>
-        </div>
-
-
-        <div class="container dashboard_section_container">
-            {% trans "Community-Developed CUAHSI-Approved Apps" as whole_title %}
+            {% trans "Featured HydroShare Apps" as whole_title %}
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
             {% trans "CUAHSI JupyterHub" as title_name %}
@@ -95,6 +82,28 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% include "includes/big_image_button_app.html" %}
             </div>
         </div>
+
+        {# CUAHSI developed apps #}
+        <div class="container dashboard_section_container">
+          {% trans "Other CUAHSI Data Services" as whole_title %}
+          {% include "includes/apps_block_title.html" %}
+            <div class="row big-app-row">
+            {% trans "HydroClient" as title_name %}
+            {% trans "https://data.cuahsi.org" as title_url %}
+            {% trans "/static/img/hydro_client.png" as app_image %}
+            {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+
+            {% trans "Uploader" as title_name %}
+            {% trans "http://hydroserver.cuahsi.org" as title_url %}
+            {% trans "/static/img/hydro_server.png" as app_image %}
+            {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
+            {% include "includes/big_image_button_app.html" %}
+            </div>
+        </div>
+
+
+
     </div>
 {% endblock %}
 
