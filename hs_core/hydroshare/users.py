@@ -399,7 +399,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         if group:
             group = group_from_id(group)
-            q.append(Q(short_id__in=group.gaccess.view_resources.values_list('short_id',
+            q.append(Q(short_id__in=group.gaccess.group_resources.values_list('short_id',
                                                                              flat=True)))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
