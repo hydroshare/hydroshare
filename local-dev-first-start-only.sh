@@ -25,6 +25,10 @@ function red() {
     echo -n "\x1B[31m${TEXT}\x1B[0m"
 }
 
+function getImageID() {
+    docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
+}
+
 
 REMOVE_CONTAINER=YES
 REMOVE_VOLUME=YES
@@ -99,10 +103,13 @@ fi
 
 if [ "$REMOVE_IMAGE" == "YES" ]; then
   echo "  Removing HydroShare image..."
-  for i in "${HYDROSHARE_IMAGES[@]}"; do
+  for i in "${HYDROSHARE_IMAGES[@]}"; do    
     echo -e "    Removing $i image if existed..."
-    echo -e "      docker rmi -f `green $i`"
-    docker rmi -f $i 2>/dev/null 1>&2
+    IMAGE_ID=`getImageID $i`
+    if [ "$IMAGE_ID" != "" ]; then
+      echo -e "      docker rmi -f `green $IMAGE_ID`"
+      docker rmi -f $IMAGE_ID 2>/dev/null 1>&2
+    fi
   done
 fi
 
@@ -120,7 +127,7 @@ chmod -R 777 log 2>/dev/null
 while [ 1 -eq 1 ]
 do
 
-clear
+#clear
 
 echo
 echo '########################################################################################################################'
