@@ -219,9 +219,8 @@ class ParseSQ(object):
         search_field = mat.group(1)
         search_operator = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
-            raise FieldNotRecognizedError(
-                "Field delimiter '{}' is not recognized."
-                .format(search_field))
+            self.handle_normal_query()  # treat as a keyword with colon intact
+
         if search_field in self.REPLACE_BY:
             search_field = self.REPLACE_BY[search_field]
 
