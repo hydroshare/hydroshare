@@ -43,7 +43,7 @@ sleep 1s
 
 echo "INFO: iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
 #TODO this throws error but succeeds research as low priority work
-echo "echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit" | docker exec -i -u hsuserproxy users.local.org /bin/bash
+echo "echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit" | docker exec -u hsuserproxy users.local.org bash
 
 echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
 echo "iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser" | $RUN_ON_USER

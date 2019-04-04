@@ -1,6 +1,6 @@
 
-RUN usermod -u 1000 hydro-service
-RUN groupmod -g 1000 storage-hydro
+RUN usermod -u {HS_SERVICE_UID} hydro-service
+RUN groupmod -g {HS_SERVICE_GID} storage-hydro
 RUN mkdir /hs_tmp
 RUN mkdir /shared_tmp
 RUN chown -R hydro-service:storage-hydro /hydroshare
