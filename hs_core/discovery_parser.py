@@ -189,6 +189,7 @@ class ParseSQ(object):
 
     # Paterns without more precise control of __exact keyword
     Pattern_Field_Query = re.compile(r"^(\w+)(:|[<>]=?)", re.U)
+    Pattern_Field_Query_Qualified = re.compile(r"^(\w+)(:|[<>]=?)(.)", re.U)
     Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
     Pattern_Operator = re.compile(r"^(AND|OR|NOT|\-|\+)\s*", re.U)
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
@@ -215,12 +216,21 @@ class ParseSQ(object):
         return new_sq
 
     def handle_field_query(self):
-        mat = re.search(self.Pattern_Field_Query, self.query)
+        mat = re.search(self.Pattern_Field_Query_Qualified, self.query)
+        if not mat:  # no text following field
+            print("detected normal query {}".format(self.query))
+            self.handle_normal_query()  # handle this as a keyword
+            return
         search_field = mat.group(1)
         search_operator = mat.group(2)
+        next_character = mat.group(3)
+        if next_character == ' ': 
+            self.handle_normal_query()
+            return
         if search_field not in self.KNOWN_FIELDS:
-            self.handle_normal_query()  # treat as a keyword with colon intact
-
+            raise FieldNotRecognizedError(
+                "Field name '{}' is not recognized."
+                .format(search_field))
         if search_field in self.REPLACE_BY:
             search_field = self.REPLACE_BY[search_field]
 
