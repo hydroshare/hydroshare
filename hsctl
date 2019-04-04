@@ -11,7 +11,6 @@ case "$machine" in
   *)       export SED_EXT=''   ;;
 esac
 
-
 ### Local Config ###
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'

@@ -13,6 +13,8 @@ CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 
 # Read hydroshare-config.yaml into environment
 sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
+echo "HS_SERVICE_UID=`id -u`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
+echo "HS_SERVICE_GID=`id -g`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 function blue() {
@@ -140,13 +142,14 @@ grep -v CMD Dockerfile > Dockerfile-hydroshare
 cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
 cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
-sed -i $SED_EXT s/\{HS_SERVICE_UID\}/${HS_SERVICE_UID}/g Dockerfile-hydroshare
-sed -i $SED_EXT s/\{HS_SERVICE_GID\}/${HS_SERVICE_GID}/g Dockerfile-hydroshare
+sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
+sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
+rm -fr log .irods 2>/dev/null
 mkdir log 2>/dev/null
-chmod -R 777 log 2>/dev/null
+#chmod -R 777 log 2>/dev/null
 
 echo
 echo '########################################################################################################################'
@@ -158,7 +161,7 @@ docker-compose -f local-dev.yml up -d $REBUILD_IMAGE
 
 echo
 echo '########################################################################################################################'
-echo " Please wait for iRODS container is up for first time"
+echo " Waiting for iRODS containers up"
 echo '########################################################################################################################'
 echo
 
@@ -180,7 +183,7 @@ done
 
 echo
 echo '########################################################################################################################'
-echo -e " Setting up iRODS containers"
+echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
@@ -191,29 +194,48 @@ sleep 2
 
 echo
 echo '########################################################################################################################'
-echo -e " Setting up POSTGRESQL and Importing Django DB"
+echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
 
+echo
+echo "  -docker $DOCKER_PARAM exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
+echo
 docker $DOCKER_PARAM exec -u postgres postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+
+echo
+echo "  - docker $DOCKER_PARAM exec -u postgres postgis psql -c \"SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();\""
+echo
 docker $DOCKER_PARAM exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
 
+echo
 echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
 
+echo
 echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 sleep 2
 
@@ -223,17 +245,20 @@ echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate sites --noinput
 
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
 
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
-
-echo "  - docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
 
 echo
 echo '########################################################################################################################'
@@ -241,13 +266,24 @@ echo " Reindexing SOLR"
 echo '########################################################################################################################'
 echo
 
+echo
+echo "  - docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
+echo
+docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
+
+echo
 echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
+echo
 docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
 
+echo
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput"
+echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
 
 docker-compose -f local-dev.yml down
