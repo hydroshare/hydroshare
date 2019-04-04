@@ -1,14 +1,18 @@
 #!/bin/bash
 
+machine="`uname -s`"
+case "$machine" in
+  Linux*)  export SED_EXT=''   ;;
+  Darwin*) export SED_EXT='""' ;;
+  *)       export SED_EXT=''   ;;
+esac
+
 ### Local Config ###
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
-HOME_DIR=${PWD}
 
 # Read hydroshare-config.yaml into environment
-sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} > $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/#.*$//' ${CONFIG_DIRECTORY}/hydroshare-config.sh
-sed -i '/^\s*$/d' ${CONFIG_DIRECTORY}/hydroshare-config.sh
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 function blue() {
@@ -136,8 +140,8 @@ grep -v CMD Dockerfile > Dockerfile-hydroshare
 cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
 cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
-sed -i s/\{HS_SERVICE_UID\}/${HS_SERVICE_UID}/g Dockerfile-hydroshare
-sed -i s/\{HS_SERVICE_GID\}/${HS_SERVICE_GID}/g Dockerfile-hydroshare
+sed -i $SED_EXT s/\{HS_SERVICE_UID\}/${HS_SERVICE_UID}/g Dockerfile-hydroshare
+sed -i $SED_EXT s/\{HS_SERVICE_GID\}/${HS_SERVICE_GID}/g Dockerfile-hydroshare
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
