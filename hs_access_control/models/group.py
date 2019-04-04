@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
@@ -128,8 +128,7 @@ class GroupAccess(models.Model):
         This eliminates duplicates due to multiple invitations.
         """
 
-        return User.objects.filter(self.__edit_users_of_group |
-                                   self.__edit_users_of_community).distinct()
+        return User.objects.filter(self.__edit_users_of_group)
 
     @property
     def __view_users_of_group(self):
@@ -160,8 +159,7 @@ class GroupAccess(models.Model):
         have access, unlike members, which just lists explicit group members.
         """
 
-        return User.objects.filter(self.__view_users_of_group |
-                                   self.__view_users_of_community).distinct()
+        return User.objects.filter(self.__view_users_of_group)
 
     @property
     def members(self):
