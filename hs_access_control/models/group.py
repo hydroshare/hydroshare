@@ -247,22 +247,6 @@ class GroupAccess(models.Model):
                  r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
 
     @property
-    def group_resources(self):
-        """
-        QuerySet of resources held by group, for generating views.
-
-        :return: QuerySet of resource objects held by group.
-
-        This includes directly accessible objects but not community-accessible objects.
-        This includes annotation of the view fields grantor, date_granted.
-
-        """
-        return BaseResource.objects.filter(self.__view_resources_of_group)\
-                                   .annotate(grantor=F('r2grp__grantor'),
-                                             date_granted=F('r2grp__start'))\
-                                   .order_by('date_granted')
-
-    @property
     def view_resources(self):
         """
         QuerySet of resources held by group.
