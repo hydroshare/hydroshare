@@ -5,6 +5,7 @@
     <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
         <a href="/my-resources/">My Resources</a>
     </li>
+    {% if not user.is_anonymous %}
     <li class="dropdown res-dropdown">
         <a id="select-resource-type" href="#" class="dropdown-toggle" data-toggle="dropdown"
            role="button" aria-haspopup="true" aria-expanded="false">Create
@@ -76,6 +77,7 @@
             </li>
         </ul>
     </li>
+    {% endif %}
     <li {% if request.path == "/search/" %}class="active"{% endif %} id="dropdown-menu-search">
         <a href="/search/">Discover</a>
     </li>
