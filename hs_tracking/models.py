@@ -196,7 +196,8 @@ class Variable(models.Model):
         """ fetch the most recent n resources with which a specific user has interacted """
         recent = BaseResource.objects.filter(
                 tracking_variable__session__visitor__user=user,
-                tracking_variable__timestamp__gte=(datetime.now()-timedelta(days)))\
+                tracking_variable__timestamp__gte=(datetime.now()-timedelta(days)),
+                tracking_variable__resource__isnull=False)\
             .only('short_id', 'created', 'updated').distinct()\
             .annotate(public=F('raccess__public'),
                       discoverable=F('raccess__discoverable'),
