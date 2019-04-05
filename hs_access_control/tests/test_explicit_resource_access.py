@@ -104,6 +104,7 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
                                             include_user_granted_access=True,
                                             include_group_granted_access=True)
         self.assertEqual(len(users), 1)
+        self.assertIn(self.user_B, users)
 
         # make user C a member of the test_group with view permission
         self.user_A.uaccess.share_group_with_user(self.group_test, self.user_C,
@@ -118,6 +119,7 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
                                             include_user_granted_access=True,
                                             include_group_granted_access=False)
         self.assertEqual(len(users), 1)
+        self.assertIn(self.user_B, users)
 
         # at this point there should be 2 users (user_A and user_C) (since the group has 2 members)
         # with explicit view access to the resource (group granted access)
@@ -129,15 +131,15 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
         self.assertIn(self.user_A, users)
         self.assertIn(self.user_C, users)
 
-        # at this point there should be 3 users with explicit view access to the resource one
-        # (user_B) through user granted access and the other 2s (user_A and user_C)
-        # via group granted access
+        # at this point there should be 2 users with explicit view access to the resource:
+        # user_B through user granted access and the user_C via group granted access
+        # user_A is excluded as it is an owner.
         users = self.resource.raccess\
             .get_users_with_explicit_access(PrivilegeCodes.VIEW,
                                             include_user_granted_access=True,
                                             include_group_granted_access=True)
-        self.assertEqual(len(users), 3)
-        self.assertIn(self.user_A, users)
+
+        self.assertEqual(len(users), 2)
         self.assertIn(self.user_B, users)
         self.assertIn(self.user_C, users)
 
@@ -189,13 +191,12 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
         self.assertIn(self.user_C, users)
 
         # at this point there should be 2 users with explicit edit access (via
-        # group granted access)
+        # group granted access) and one excluded by being an owner
         users = self.resource.raccess\
             .get_users_with_explicit_access(PrivilegeCodes.CHANGE,
                                             include_user_granted_access=True,
                                             include_group_granted_access=True)
-        self.assertEqual(len(users), 2)
-        self.assertIn(self.user_A, users)
+        self.assertEqual(len(users), 1)
         self.assertIn(self.user_C, users)
 
         # remove user C from group membership
