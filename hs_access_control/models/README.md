@@ -1,14 +1,15 @@
 Access control classes for hydroshare.
--------------------------
 
 This module implements access control for hydroshare.  Privilege models act on users,
 groups, and resources, and determine what objects are accessible to which users.  These models:
 
-* determine three kinds of privilege
+* determine four kinds of privilege
 
-   1) user membership in and privilege over groups.
-   2) user privilege over resources.
+   1) user privilege over resources.
+   2) user membership in and privilege over groups.
    3) group privilege over resources.
+   4) user ownership of communities.
+   5) community membership of and privilege over groups.
 
 * track the provenance of privilege granting to:
 

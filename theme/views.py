@@ -79,7 +79,6 @@ class UserProfileView(TemplateView):
                         Q(pk__in=self.request.user.uaccess.view_resources) |
                         Q(raccess__public=True) |
                         Q(raccess__discoverable=True))
-
             else:
                 # for anonymous requesting user show only resources that are either public or
                 # discoverable
