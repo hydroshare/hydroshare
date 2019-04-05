@@ -128,8 +128,7 @@ class GroupAccess(models.Model):
         This eliminates duplicates due to multiple invitations.
         """
 
-        return User.objects.filter(self.__edit_users_of_group |
-                                   self.__edit_users_of_community).distinct()
+        return User.objects.filter(self.__edit_users_of_group)
 
     @property
     def __view_users_of_group(self):
@@ -160,8 +159,7 @@ class GroupAccess(models.Model):
         have access, unlike members, which just lists explicit group members.
         """
 
-        return User.objects.filter(self.__view_users_of_group |
-                                   self.__view_users_of_community).distinct()
+        return User.objects.filter(self.__view_users_of_group)
 
     @property
     def members(self):
@@ -258,8 +256,7 @@ class GroupAccess(models.Model):
         containing another group that can access the object.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group |
-                                           self.__view_resources_of_community)
+        return BaseResource.objects.filter(self.__view_resources_of_group)
 
     @property
     def edit_resources(self):
@@ -271,8 +268,7 @@ class GroupAccess(models.Model):
         These include resources that are directly editable, as well as those editable
         due to oversight privileges over a community
         """
-        return BaseResource.objects.filter(self.__edit_resources_of_group |
-                                           self.__edit_resources_of_community)
+        return BaseResource.objects.filter(self.__edit_resources_of_group)
 
     @property
     def group_membership_requests(self):
