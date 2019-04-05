@@ -188,12 +188,14 @@ $(document).ready(function () {
                 }
                 else {
                     console.log(response);
+                    $(".custom-alert").alert('close');  // Dismiss previous alert
                     customAlert("Error", 'Failed to create resource.', "error", 6000);
                 }
                 $("html").css("cursor", "initial");
             },
             error: function (response) {
                 console.log(response);
+                $(".custom-alert").alert('close');  // Dismiss previous alert
                 customAlert("Error", 'Failed to create resource.', "error", 6000);
                 $("html").css("cursor", "initial");
             }
