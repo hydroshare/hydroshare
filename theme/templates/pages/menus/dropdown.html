@@ -6,8 +6,9 @@
         <a href="/my-resources/">My Resources</a>
     </li>
     <li class="dropdown res-dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-           aria-expanded="false">Create <span class="caret"></span>
+        <a id="select-resource-type" href="#" class="dropdown-toggle" data-toggle="dropdown"
+           role="button" aria-haspopup="true" aria-expanded="false">Create
+            <i class="fa fa-caret-down" aria-hidden="true"></i>
         </a>
         <ul class="dropdown-menu" aria-labelledby="select-resource-type">
             <li>
@@ -84,12 +85,21 @@
     <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
         <a href="https://www.hydroshare.org/apps/">Apps</a>
     </li>
-    <li class="" id="dropdown-menu-https:--help.hydroshare.org">
-        <a href="http://help.hydroshare.org">HELP</a>
+    <li class="dropdown help-dropdown">
+        <a href="#" id="select-help" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+           aria-expanded="false">Help <i class="fa fa-caret-down" aria-hidden="true"></i>
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="select-help">
+            <li class="" id="dropdown-menu-https:--help.hydroshare.org">
+                <a href="http://help.hydroshare.org">HydroShare Support</a>
+            </li>
+            <li class="" id="dropdown-menu-https:--help.hydroshare.org-about-hydroshare-">
+                <a href="https://help.hydroshare.org/about-hydroshare/">About HydroShare</a>
+            </li>
+        </ul>
     </li>
-    <li class="" id="dropdown-menu-https:--help.hydroshare.org-about-hydroshare-">
-        <a href="https://help.hydroshare.org/about-hydroshare/">About</a>
-    </li>
+
+
     {% if not user.is_anonymous %}
         <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
     {% endif %}

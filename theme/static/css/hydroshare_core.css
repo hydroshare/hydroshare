@@ -75,6 +75,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .navbar-inverse .resource-type-name,
+.navbar-inverse .help-dropdown li a,
 .navbar-inverse .navbar-nav > li > a,
 .navbar-inverse .navbar-nav > .open > a,
 .navbar-inverse .navbar-nav > .open > a:hover,
@@ -167,13 +168,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .navbar-inverse .tooltip {
 	text-transform: none;
-}
-
-.navbar-inverse .navbar-nav > .open > a .caret,
-.navbar-inverse .navbar-nav > .open > a:hover .caret,
-.navbar-inverse .navbar-nav > .open > a:focus .caret {
-	border-top-color: unset !important;
-	border-bottom-color: unset !important;
 }
 
 .navbar-inverse .navbar-nav > .open > a,
@@ -2160,7 +2154,9 @@ table.user-scope tr {
     border-bottom: 1px solid #ddd;
 }
 
-.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .undo-share-form, .access-table tr.hide-actions .caret {
+.access-table tr.hide-actions .remove-user-form,
+.access-table tr.hide-actions .undo-share-form,
+.access-table tr.hide-actions .caret {
 	display: none;
 }
 
