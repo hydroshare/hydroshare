@@ -29,5 +29,11 @@ class Command(BaseCommand):
 
         recent = Variable.recent_resources(user, days=days, n_resources=n_resources)
         for v in recent:
-            print("last_access={} short_id={}"
-                  .format(v.last_accessed.strftime("%Y-%m-%d %H:%M:%S"), v.short_id))
+            print("last_access={} short_id={} action={} created={} updated={} published={} public={} discoverable={}"
+                  .format(v.last_accessed.strftime("%Y-%m-%d %H:%M:%S"), 
+                          v.short_id, v.action, 
+                          v.created.strftime("%Y-%m-%d %H:%M:%S"), 
+                          v.updated.strftime("%Y-%m-%d %H:%M:%S"), 
+                          v.published, 
+                          v.public, 
+                          v.discoverable))

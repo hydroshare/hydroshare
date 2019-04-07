@@ -5,6 +5,7 @@ from django.db.models import F
 from django.core import signing
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.contrib.auth.models import User
 
 from theme.models import UserProfile
 from utils import get_std_log_fields
@@ -66,7 +67,9 @@ class SessionManager(models.Manager):
 
 class Visitor(models.Model):
     first_seen = models.DateTimeField(auto_now_add=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True,
+                                on_delete=models.SET_NULL,
+                                related_name='visitor')
 
     def export_visitor_information(self):
         """Exports visitor profile information."""
@@ -90,7 +93,7 @@ class Visitor(models.Model):
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    visitor = models.ForeignKey(Visitor, related_name='tracking_session')
+    visitor = models.ForeignKey(Visitor, related_name='session')
 
     objects = SessionManager()
 
@@ -121,7 +124,7 @@ class Variable(models.Model):
 
     from hs_core.models import BaseResource
 
-    session = models.ForeignKey(Session)
+    session = models.ForeignKey(Session, related_name='variable')
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)
@@ -131,7 +134,7 @@ class Variable(models.Model):
 
     # If a resource no longer exists, last_resource_id remains valid but resource is NULL
     resource = models.ForeignKey(BaseResource, null=True,
-                                 related_name='tracking_variable',
+                                 related_name='variable',
                                  on_delete=models.SET_NULL)
     last_resource_id = models.CharField(null=True, max_length=32)
 
@@ -193,15 +196,51 @@ class Variable(models.Model):
 
     @classmethod
     def recent_resources(cls, user, n_resources=5, days=60):
-        """ fetch the most recent n resources with which a specific user has interacted """
-        recent = BaseResource.objects.filter(
-                tracking_variable__session__visitor__user=user,
-                tracking_variable__timestamp__gte=(datetime.now()-timedelta(days)),
-                tracking_variable__resource__isnull=False)\
-            .only('short_id', 'created', 'updated').distinct()\
+        """
+        fetch the most recent n resources with which a specific user has interacted
+
+        :param user: The user to document.
+        :param n_resources: the number of resources to return.
+        :param days: the number of days to scan.
+
+        The reason for the parameter `days` is that the runtime of this method
+        is very dependent upon the days that one scans. Thus, there is a tradeoff
+        between reporting history and timely responsiveness of the dashboard.
+        """
+        # TODO: document actions like labeling and commenting (currently these are 'visit's)
+        return BaseResource.objects.filter(
+                variable__session__visitor__user=user,
+                variable__timestamp__gte=(datetime.now()-timedelta(days)),
+                variable__resource__isnull=False)\
+            .only('short_id', 'created', 'updated')\
+            .distinct()\
             .annotate(public=F('raccess__public'),
                       discoverable=F('raccess__discoverable'),
                       published=F('raccess__published'),
-                      last_accessed=models.Max('tracking_variable__timestamp'))\
+                      last_accessed=models.Max('variable__timestamp'))\
+            .filter(variable__timestamp=F('last_accessed'))\
+            .annotate(action=F('variable__name'))\
             .order_by('-last_accessed')[:n_resources]
-        return recent
+
+    @classmethod
+    def recent_users(cls, resource, n_users=5, days=60):
+        """
+        fetch the identities of the most recent users who have accessed a resource
+
+        :param resource: The resource to document.
+        :param n_users: the number of users to return.
+        :param days: the number of days to scan.
+
+        The reason for the parameter `days` is that the runtime of this method
+        is very dependent upon the number of days that one scans. Thus, there is a
+        tradeoff between reporting history and timely responsiveness of the dashboard.
+        """
+        return User.objects\
+            .filter(visitor__session__variable__resource=resource,
+                    visitor__session__variable__timestamp__gte=(datetime.now() -
+                                                                         timedelta(days)))\
+            .distinct()\
+            .annotate(last_accessed=models.Max('visitor__session__variable__timestamp'))\
+            .filter(visitor__session__variable__timestamp=F('last_accessed'))\
+            .annotate(action=F('visitor__session__variable__name'))\
+            .order_by('-last_accessed')[:n_users]
