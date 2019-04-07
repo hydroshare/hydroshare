@@ -78,9 +78,8 @@ class ParseSQ(object):
     OP = {
         'AND': operator.and_,
         'OR': operator.or_,
-        'NOT': operator.inv,
-        '+': operator.and_,
-        '-': operator.inv,
+        'NOT': operator.inv,  # alias '-' removed 4/5/2019
+        # alias '+' (for include) removed 4/5/2019
     }
 
     # Translation table for inequalities
@@ -190,7 +189,7 @@ class ParseSQ(object):
     # Paterns without more precise control of __exact keyword
     Pattern_Field_Query = re.compile(r"^(\w+)(:|[<>]=?)", re.U)
     Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
-    Pattern_Operator = re.compile(r"^(AND|OR|NOT|\-|\+)\s*", re.U)
+    Pattern_Operator = re.compile(r"^(AND|OR|NOT)\s*", re.U)  # '-', '+' removed 4/5/2019
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
     Pattern_Unquoted_Text = re.compile(r"^(\w*)\s*", re.U)
 
@@ -203,11 +202,11 @@ class ParseSQ(object):
 
     @current.setter
     def current(self, current):
-        self._prev = self._current if current in ['-', 'NOT'] else None
+        self._prev = self._current if current in ['NOT'] else None
         self._current = current
 
     def apply_operand(self, new_sq):
-        if self.current in ['-', 'NOT']:
+        if self.current in ['NOT']:
             new_sq = self.OP[self.current](new_sq)
             self.current = self._prev
         if self.sq:
