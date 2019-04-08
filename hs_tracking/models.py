@@ -140,17 +140,26 @@ class Variable(models.Model):
 
     def get_value(self):
         v = self.value
-        t = self.TYPES[self.type][0]
-        if t == 'Integer':
-            return int(v)
-        elif t == 'Floating Point':
-            return float(v)
-        elif t == 'Text':
-            return v
-        elif t == 'Flag':
-            return v == 'true'
-        elif t == 'None':
-            return None
+        if self.type == 3: 
+            if v == 'true': 
+                return True
+            else:
+                return False
+        else: 
+            t = self.TYPES[self.type][1]
+            return t(v)
+        # if t == 'Integer':
+        #     return int(v)
+        # elif t == 'Floating Point':
+        #     return float(v)
+        # elif t == 'Text':
+        #     return v
+        # elif t == 'Flag':
+        #     return v == 'true'
+        # elif t == 'None':
+        #     return None
+        # else:
+        #     return None
 
     @classmethod
     def format_kwargs(cls, **kwargs):
@@ -185,9 +194,9 @@ class Variable(models.Model):
     @classmethod
     def encode(cls, value):
         if value is None:
-            return 'none'
+            return ''
         elif isinstance(value, bool):
-            return 'true' if value else 'false'
+            return '1' if value else '0'  # only empty strings are False 
         elif isinstance(value, (int, float, str, unicode)):
             return unicode(value)
         else:
