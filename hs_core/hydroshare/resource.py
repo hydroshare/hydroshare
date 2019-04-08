@@ -156,9 +156,12 @@ def get_resource_file(pk, filename):
     Exception.ServiceFailure - The service is unable to process the request
     """
     resource = utils.get_resource_by_shortkey(pk)
+    filename = filename.strip("/")
+    if not filename.startswith("data/contents/"):
+        filename = os.path.join("data", "contents", filename)
     for f in ResourceFile.objects.filter(object_id=resource.id):
-        if os.path.basename(f.resource_file.name) == filename:
-            return f.resource_file
+        if f.resource_file.name.endswith(filename):
+            return f
     raise ObjectDoesNotExist(filename)
 
 
@@ -474,6 +477,12 @@ def create_resource(
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
 
+        # get the metadata class specific to resource type to set resource
+        # content_object (metadata) attribute
+        metadata_class = cls.get_metadata_class()
+        metadata_obj = metadata_class()
+        metadata_obj.save()
+
         # create the resource
         resource = cls.objects.create(
             resource_type=resource_type,
@@ -482,6 +491,7 @@ def create_resource(
             title=title,
             last_changed_by=owner,
             in_menus=[],
+            content_object=metadata_obj,
             **kwargs
         )
 

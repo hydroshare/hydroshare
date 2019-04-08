@@ -117,10 +117,9 @@ class ModelInstanceResource(BaseResource):
         verbose_name = 'Model Instance Resource'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = ModelInstanceMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return ModelInstanceMetaData
 
 processor_for(ModelInstanceResource)(resource_processor)
 

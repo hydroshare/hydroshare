@@ -10,6 +10,8 @@ Effected files:
 
 ### How to use
 
+Generate a `local_settings.py` file by copying `hydroshare/local_settings.template` to `hydroshare/local_settings.py`
+
 From within the `irods` directory, run the script named **use-local-irods.sh**
 
 **NOTE:** This script requires that package `jq` be installed on the host from which the script is being run. If it's not present it can be installed by invoking `sudo apt-get install jq` in Ubuntu (or similar) environments. 
@@ -53,9 +55,8 @@ $ docker ps
 CONTAINER ID        IMAGE                               COMMAND                  CREATED             STATUS              PORTS                                                                                 NAMES
 5af966576bff        hydroshare_defaultworker            "/bin/bash init-defau"   17 minutes ago      Up 9 minutes                                                                                              defaultworker
 7047505e0374        hydroshare_hydroshare               "/bin/bash init-hydro"   17 minutes ago      Up 9 minutes        0.0.0.0:8000->8000/tcp, 0.0.0.0:1338->2022/tcp                                        hydroshare
-3132355d9d4b        redis:2.8                           "docker-entrypoint.sh"   17 minutes ago      Up 17 minutes       6379/tcp                                                                              redis
 82aefa42b4f6        makuk66/docker-solr:4.10.4          "sh -c '/bin/bash /op"   17 minutes ago      Up 17 minutes       0.0.0.0:32786->8983/tcp                                                               solr
-e67b799315ab        mjstealey/hs_postgres:9.4.7         "/docker-entrypoint.s"   17 minutes ago      Up 17 minutes       5432/tcp                                                                              postgis
+e67b799315ab        hydroshare/hs_postgres:9.4.7         "/docker-entrypoint.s"   17 minutes ago      Up 17 minutes       5432/tcp                                                                              postgis
 52c67ebb6b57        rabbitmq:3.5                        "/docker-entrypoint.s"   17 minutes ago      Up 17 minutes       4369/tcp, 5671-5672/tcp, 25672/tcp                                                    rabbitmq
 0b1a6c66a585        mjstealey/docker-irods-icat:4.1.8   "/irods-docker-entryp"   22 minutes ago      Up 22 minutes       1248/tcp, 5432/tcp, 20000-20199/tcp, 0.0.0.0:32785->22/tcp, 0.0.0.0:32784->1247/tcp   users.local.org
 a4d976bcdeb7        mjstealey/docker-irods-icat:4.1.8   "/irods-docker-entryp"   22 minutes ago      Up 22 minutes       1248/tcp, 5432/tcp, 20000-20199/tcp, 0.0.0.0:32783->1247/tcp                          data.local.org

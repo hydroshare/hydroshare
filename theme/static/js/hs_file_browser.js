@@ -6,32 +6,30 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+var isDownloadZipped = false;
+
 var file_metadata_alert = `
     <div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">
         <div>Select a file to see file type metadata.</div>
         <hr>
         <span class="fa-stack fa-lg text-center"><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
-            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"style="top: 14px;"></i>
+            <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true" style="top: 14px;"></i>
         </span>
-    </div>
-`;
+    </div>`;
 
 var no_metadata_alert = `
     <div class="alert alert-warning text-center" role="alert">
         <div>No file type metadata exists for this file.</div>
         <hr>
         <i class="fa fa-eye-slash fa-3x" aria-hidden="true"></i>
-    </div>
-`;
+    </div>`;
 
 var loading_metadata_alert = `
     <div class="text-center" role="alert">
         <br>
         <i class="fa fa-spinner fa-spin fa-3x fa-fw icon-blue"></i>
         <span class="sr-only">Loading...</span>
-    </div>
-`;
-
+    </div>`;
 
 const MAX_FILE_SIZE = 1024; // MB
 
@@ -469,7 +467,7 @@ function updateSelectionMenuContext() {
     });
 
     $("#open-separator").toggleClass("hidden", uiActionStates.open.fileMenu.hidden);
-    $("#content-type-separator").toggleClass("hidden", uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
+    $("#content-type-separator").toggleClass("hidden", mode !== "edit" || uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
     $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
 }
 
@@ -639,9 +637,11 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
         $(".selection-menu").hide();
     });
+
     var timer = 0;
     var delay = 200;
     var prevent = false;
+
     $("#hs-file-browser li.fb-folder").dblclick(function () {
         clearTimeout(timer);
         prevent = true;
@@ -737,6 +737,13 @@ function showFileTypeMetadata(file_type_time_series, url){
     var logical_file_id = selectedItem.attr("data-logical-file-id");
     if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
         $("#fileTypeMetaData").html(no_metadata_alert);
+        // Set corresponding action for "Add metadata" button in side bar
+        if (selectedItem.hasClass("fb-file")) {
+            $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
+        }
+        else {
+            $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+        }
         return;
     }
 
@@ -749,6 +756,8 @@ function showFileTypeMetadata(file_type_time_series, url){
         // file type metadata when a file is selected
         if (logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile") {
             $("#fileTypeMetaData").html(no_metadata_alert);
+            $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
+            updateSelectionMenuContext();
             return;
         }
     }
@@ -1038,6 +1047,7 @@ function onOpenFile() {
         // Check for download agreement
         if ($("#hs-file-browser").attr("data-agreement") == "true") {
             // Proceed to download through confirmation agreement
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
         }
         else {
@@ -1114,7 +1124,8 @@ function updateNavigationState() {
 }
 
 // Reload the current folder structure
-function refreshFileBrowser() {
+// Optional argument: file name or folder name to select after reload
+function refreshFileBrowser(name) {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var currentPath = $("#hs-file-browser").attr("data-current-path");
     var calls = [];
@@ -1124,8 +1135,25 @@ function refreshFileBrowser() {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
-        updateSelectionMenuContext();
+
         $("#fileTypeMetaData").html(file_metadata_alert);
+
+        if (name) {
+            // Find the item and trigger its selection
+            let items = $("#fb-files-container li");
+            for (let i = 0; i < items.length; i++) {
+                let text = $(items[i]).find(".fb-file-name").text().trim();
+                if (text === name) {
+                    // Trigger all relevant events
+                    $(items[i]).trigger("mousedown");
+                    $(items[i]).trigger("mouseup");
+                    $(items[i]).trigger("click");
+                    break;
+                }
+            }
+        }
+
+        updateSelectionMenuContext();
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1165,7 +1193,6 @@ $(document).ready(function () {
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
-
         if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
             sessionStorage.currentBrowsepath = '';
         }
@@ -1193,7 +1220,16 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode == "edit" && acceptedFiles.length > 0) {
+    if (mode === "edit") {
+        no_metadata_alert += `
+        <div class="text-center">
+            <a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">
+                <i class="fa fa-plus"></i> Add metadata
+            </a>
+        </div>`
+    };
+
+    if (mode === "edit" && acceptedFiles.length > 0) {
         var allowMultiple = null;
         if ($("#hs-file-browser").attr("data-allow-multiple-files") != "True") {
             allowMultiple = 1;
@@ -1402,8 +1438,13 @@ $(document).ready(function () {
         $('#file_redirect_url').prop('href', ref_url);
     });
 
+    $("[data-fb-action='zip']").click(function() {
+         var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        $("#txtZipName").val(folderName);
+    });
+
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
-        $('#txtFolderName').focus();
+        $('#txtZipName').focus();
 
         // Select the file name by default
         var input = document.getElementById("txtZipName");
@@ -1426,7 +1467,6 @@ $(document).ready(function () {
 
     $('#edit-referenced-url-dialog').on('shown.bs.modal', function () {
         var file = $("#fb-files-container li.ui-selected");
-        var fileName = file.children(".fb-file-name").text();
         var ref_url = file.attr("data-ref-url");
         $('#txtNewRefURL').val(ref_url);
         $('#txtNewRefURL').focus();
@@ -1556,7 +1596,7 @@ $(document).ready(function () {
         var refURL = $("#txtRefURL").val();
         if (refName && refURL) {
             var calls = [];
-            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL));
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, true));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1573,6 +1613,45 @@ $(document).ready(function () {
         return false;
     });
 
+    // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
+    $("#btn-reference-url-without-validation").click(function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var refName = $("#ref_name_passover").val();
+        var refURL = $("#ref_url_passover").val();
+        var newRefURL = $("#new_ref_url_passover").val();
+        var calls = [];
+        if (refName && refURL) {
+            calls.push(add_ref_content_ajax_submit(resID, currentPath, refName, refURL, false));
+
+            // Disable the Cancel button until request has finished
+            $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+
+            function afterRequest() {
+                refreshFileBrowser();
+                $("#btn-reference-url-without-validation").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            }
+
+            $.when.apply($, calls).done(afterRequest);
+            $.when.apply($, calls).fail(afterRequest);
+        }
+        else if (refName && newRefURL) {
+            var file = $("#fb-files-container li.ui-selected");
+            var oldurl = file.attr("data-ref-url");
+            if (oldurl != newRefURL) {
+                calls.push(update_ref_url_ajax_submit(resID, currentPath, refName, newRefURL, false));
+                $.when.apply($, calls).done(function () {
+                    refreshFileBrowser();
+                });
+
+                $.when.apply($, calls).fail(function () {
+                    refreshFileBrowser();
+                });
+            }
+        }
+        return false;
+    });
+
     // Update reference URL method
     $("#btn-edit-url").click(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
@@ -1583,7 +1662,7 @@ $(document).ready(function () {
         var newurl = $("#txtNewRefURL").val().trim();
         if (oldurl != newurl) {
             var calls = [];
-            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl));
+            calls.push(update_ref_url_ajax_submit(resID, currentPath, oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1803,6 +1882,7 @@ $(document).ready(function () {
     // Download method
     $("[data-fb-action='download']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = false;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1813,6 +1893,7 @@ $(document).ready(function () {
     // Download zipped method
     $("[data-fb-action='downloadZipped']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
+            isDownloadZipped = true;
             $("#license-agree-dialog-file").modal('show');
             return;
         }
@@ -1822,7 +1903,7 @@ $(document).ready(function () {
 
     $("#download-file-btn").click(function() {
         $("#license-agree-dialog-file").modal('hide');
-        startDownload(!!downloadData.zipped);
+        startDownload(isDownloadZipped);
     });
 
     // Get file URL method
@@ -1837,7 +1918,8 @@ $(document).ready(function () {
     // Open with method
     $(".btn-open-with").click(function () {
         var file = $("#fb-files-container li.ui-selected");
-        var path = file.attr("data-url");
+        // get the path under the contents directory
+        var path = file.attr("data-url").split(new RegExp("resource/[a-z0-9]*/data/contents/"))[1];
         var fullURL;
         if ($(this).attr("url_aggregation")) {
             fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
@@ -1856,43 +1938,43 @@ $(document).ready(function () {
     });
 
     // set generic file type method
-     $("#btn-set-generic-file-type").click(function () {
-         setFileType("SingleFile");
-      });
+    $("#hs-file-browser, #right-click-menu").on("click", "[data-fb-action='setGenericFileType']", function () {
+        setFileType("SingleFile");
+    });
 
     // set fileset file type method
-     $("#btn-set-fileset-file-type").click(function () {
-         setFileType("FileSet");
-      });
+    $("#hs-file-browser, #right-click-menu").on("click", "[data-fb-action='setFileSetFileType']", function () {
+        setFileType("FileSet");
+    });
 
     // set geo raster file type method
-     $("#btn-set-geo-file-type").click(function () {
-         setFileType("GeoRaster");
-      });
+    $("#btn-set-geo-file-type").click(function () {
+        setFileType("GeoRaster");
+    });
 
     // set NetCDF file type method
-     $("#btn-set-netcdf-file-type").click(function () {
-         setFileType("NetCDF");
-     });
+    $("#btn-set-netcdf-file-type").click(function () {
+        setFileType("NetCDF");
+    });
 
     // set GeoFeature file type method
-     $("#btn-set-geofeature-file-type").click(function () {
-         setFileType("GeoFeature");
-     });
+    $("#btn-set-geofeature-file-type").click(function () {
+        setFileType("GeoFeature");
+    });
     // set RefTimeseries file type method
-     $("#btn-set-refts-file-type").click(function () {
-         setFileType("RefTimeseries");
-     });
+    $("#btn-set-refts-file-type").click(function () {
+        setFileType("RefTimeseries");
+    });
 
-     // set Timeseries file type method
-     $("#btn-set-timeseris-file-type").click(function () {
-         setFileType("TimeSeries");
-     });
+    // set Timeseries file type method
+    $("#btn-set-timeseris-file-type").click(function () {
+        setFileType("TimeSeries");
+    });
 
-     // set remove aggregation (file type) method
-     $("#btnRemoveAggregation").click(function () {
-         removeAggregation();
-     });
+    // set remove aggregation (file type) method
+    $("#btnRemoveAggregation").click(function () {
+        removeAggregation();
+    });
 
     // Zip method
     $("#btn-confirm-zip").click(function () {
@@ -1917,11 +1999,6 @@ $(document).ready(function () {
         }
     });
 
-    $("#btn-zip").click(function() {
-        var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        $("#txtZipName").val(folderName);
-    });
-
     // Unzip method
     $("#btn-unzip, #fb-unzip").click(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
@@ -1930,7 +2007,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
+            calls.push(unzip_irods_file_ajax_submit(resID, currentPath ? currentPath + "/" + fileName : fileName));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
@@ -2013,13 +2090,16 @@ function setFileType(fileType){
     var resID = $("#hs-file-browser").attr("data-res-id");
     var url;
     var folderPath = "";
-    if($("#fb-files-container li.ui-selected").hasClass('fb-file')){
-        var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+    let selected = $("#fb-files-container li.ui-selected");
+    let name = $("#fb-files-container li.ui-selected").find(".fb-file-name").text().trim();
+
+    if(selected.hasClass('fb-file')){
+        var file_id = selected.attr("data-pk");
         url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
     }
     else {
         // this must be folder selection for aggregation creation
-        folderPath = $("#fb-files-container li.ui-selected").children('span.fb-file-type').attr("data-folder-short-path");
+        folderPath = selected.children('span.fb-file-type').attr("data-folder-short-path");
         url = "/hsapi/_internal/" + resID + "/" + fileType + "/set-file-type/";
     }
 
@@ -2036,7 +2116,9 @@ function setFileType(fileType){
         if (json_response.status === 'success') {
             // Use resource level metadata in json_response to update resource level UI
             updateResourceUI();
-            refreshFileBrowser();
+
+            // Select the clicked element to view metadata entry form after reloading structure
+            refreshFileBrowser(name);
         }
     });
 }

@@ -288,9 +288,12 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    if request.method == 'GET':
+        return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -585,6 +588,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -605,6 +609,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -1152,14 +1157,14 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-@processor_for('my-resources')
-@login_required
-def my_resources(request, page):
-
-    resource_collection = get_my_resources_list(request)
-    context = {'collection': resource_collection}
-
-    return context
+# @processor_for('my-resources')
+# @login_required
+# def my_resources(request, page):
+#
+#     resource_collection = get_my_resources_list(request)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 
 @processor_for(GenericResource)
@@ -1171,14 +1176,28 @@ def add_generic_context(request, page):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
+    class AddUserContriForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'contri'}))
+
+    class AddUserInviteForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'invite'}))
+
+    class AddUserHSForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'hs-user'}))
+
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
-        'add_owner_user_form': AddUserForm(),
+        'add_view_contrib_user_form': AddUserContriForm(),
+        'add_view_invite_user_form': AddUserInviteForm(),
+        'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        'add_edit_user_form': AddUserForm(),
+        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1819,4 +1838,21 @@ class CollaborateView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
+        }
+
+
+class MyResourcesView(TemplateView):
+    template_name = 'pages/my-resources.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        resource_collection = get_my_resources_list(u)
+
+        return {
+            'collection': resource_collection
         }

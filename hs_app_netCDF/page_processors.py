@@ -114,11 +114,9 @@ def landing_page(request, page):
             UpdateNetcdfLayout,
             HTML(
                 """
-                    <div class="row">
-                        <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
-                        {% load crispy_forms_tags %}
-                        {% crispy original_coverage_form %}
-                        </div>
+                    <div class="form-group col-xs-12" id="originalcoverage">
+                    {% load crispy_forms_tags %}
+                    {% crispy original_coverage_form %}
                     </div>
                 """
             ),
@@ -131,18 +129,6 @@ def landing_page(request, page):
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form
-
-    # add thredds service links if the resource is public
-    if content_model.raccess.public:
-        for f in content_model.files.all():
-            if '.nc' in f.resource_file.name[-3:]:
-                ip = 'http://hyrax.hydroshare.org'
-                shortkey = content_model.short_id
-                nc_file_name = f.resource_file.name.split('/')[-1]
-
-                context['opendap'] = '{}/opendap/{}/data/contents/{}.html'\
-                    .format(ip, shortkey, nc_file_name)
-                context['nc_file_name'] = nc_file_name
 
     # get hs_core context
     hs_core_context = add_generic_context(request, page)

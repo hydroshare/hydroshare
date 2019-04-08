@@ -719,3 +719,5 @@ SWAGGER_SETTINGS = {
 
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
+HSWS_ACTIVATED = False

@@ -9,6 +9,7 @@ from dominate.tags import div, form, button, hr, i
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
+from hs_core.signals import post_add_generic_aggregation
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
@@ -252,6 +253,11 @@ class GenericLogicalFile(AbstractLogicalFile):
         res_file.save()
         logical_file.create_aggregation_xml_documents()
         log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+        post_add_generic_aggregation.send(
+            sender=AbstractLogicalFile,
+            resource=resource,
+            file=logical_file
+        )
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
