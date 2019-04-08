@@ -215,7 +215,7 @@ class ParseSQ(object):
 
     def handle_field_query(self):
         mat = re.search(self.Pattern_Field_Query, self.query)
-        search_field = mat.group(1).lower()
+        search_field = mat.group(1)
         search_operator = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
             self.handle_normal_query()
