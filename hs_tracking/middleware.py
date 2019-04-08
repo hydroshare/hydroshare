@@ -25,9 +25,8 @@ class Tracking(object):
         if request.path.startswith('/heartbeat/'):
             return response
 
-        is_human = getattr(request, 'is_human', False)
-
         # filter out web crawlers
+        is_human = getattr(request, 'is_human', False)
         if not is_human:
             return response
 
@@ -51,6 +50,7 @@ class Tracking(object):
                          'request_url=%s' % request.path]])
 
         resource_id = get_resource_id_from_url(request.path)
+
         # save the activity in the database
         session.record('visit', value=msg, resource_id=resource_id)
 
