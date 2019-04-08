@@ -140,26 +140,15 @@ class Variable(models.Model):
 
     def get_value(self):
         v = self.value
-        if self.type == 3: 
-            if v == 'true': 
+        print("type={}, name={}".format(self.type, type(self.value)))
+        if self.type == 3:  # boolean types don't coerce reflexively
+            if v == 'true':
                 return True
             else:
                 return False
-        else: 
+        else:
             t = self.TYPES[self.type][1]
             return t(v)
-        # if t == 'Integer':
-        #     return int(v)
-        # elif t == 'Floating Point':
-        #     return float(v)
-        # elif t == 'Text':
-        #     return v
-        # elif t == 'Flag':
-        #     return v == 'true'
-        # elif t == 'None':
-        #     return None
-        # else:
-        #     return None
 
     @classmethod
     def format_kwargs(cls, **kwargs):
@@ -170,23 +159,13 @@ class Variable(models.Model):
 
     @classmethod
     def record(cls, session, name, value=None, resource=None, resource_id=None):
-        for i, (label, coercer) in enumerate(cls.TYPES, 0):
-            try:
-                if value == coercer(value):
-                    type_code = i
-                    break
-            except (ValueError, TypeError):
-                continue
-        else:
-            raise TypeError("Unable to record variable of unrecognized type %s",
-                            type(value).__name__)
         if resource is None and resource_id is not None:
             try:
                 resource = get_resource_by_shortkey(resource_id, or_404=False)
             except BaseResource.DoesNotExist:
-                pass
-
-        return Variable.objects.create(session=session, name=name, type=type_code,
+                resource = None
+        return Variable.objects.create(session=session, name=name,
+                                       type=cls.encode_type(value),
                                        value=cls.encode(value),
                                        last_resource_id=resource_id,
                                        resource=resource)
@@ -196,12 +175,28 @@ class Variable(models.Model):
         if value is None:
             return ''
         elif isinstance(value, bool):
-            return '1' if value else '0'  # only empty strings are False 
+            return 'true' if value else 'false'  # only empty strings are False
         elif isinstance(value, (int, float, str, unicode)):
             return unicode(value)
         else:
             raise ValueError("Unknown type (%s) for tracking variable: %r",
                              type(value).__name__, value)
+
+    @classmethod
+    def encode_type(cls, value):
+        if value is None:
+            return 4
+        elif isinstance(value, bool):
+            return 3
+        elif isinstance(value, (str, unicode)):
+            return 2
+        elif isinstance(value, float):
+            return 1
+        elif isinstance(value, int):
+            return 0
+        else:
+            raise TypeError("Unable to record variable of unrecognized type %s",
+                            type(value).__name__)
 
     @classmethod
     def recent_resources(cls, user, n_resources=5, days=60):
