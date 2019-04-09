@@ -87,20 +87,9 @@
     <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
         <a href="https://www.hydroshare.org/apps/">Apps</a>
     </li>
-    <li class="dropdown help-dropdown">
-        <a href="#" id="select-help" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-           aria-expanded="false">Help <i class="fa fa-caret-down" aria-hidden="true"></i>
-        </a>
-        <ul class="dropdown-menu" aria-labelledby="select-help">
-            <li class="" id="dropdown-menu-https:--help.hydroshare.org">
-                <a href="http://help.hydroshare.org">HydroShare Support</a>
-            </li>
-            <li class="" id="dropdown-menu-https:--help.hydroshare.org-about-hydroshare-">
-                <a href="https://help.hydroshare.org/about-hydroshare/">About HydroShare</a>
-            </li>
-        </ul>
+    <li class="" id="dropdown-menu-https:--help.hydroshare.org">
+        <a href="http://help.hydroshare.org">Help</a>
     </li>
-
 
     {% if not user.is_anonymous %}
         <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
