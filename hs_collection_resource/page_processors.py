@@ -14,7 +14,7 @@ def landing_page(request, page):
 
     user = request.user
     if user.is_authenticated():
-        user_all_accessible_resource_list = get_my_resources_list(request)
+        user_all_accessible_resource_list = get_my_resources_list(user)
     else:  # anonymous user
         user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
 
