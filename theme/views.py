@@ -112,6 +112,9 @@ class UserPasswordResetView(TemplateView):
         context = super(UserPasswordResetView, self).get_context_data(**kwargs)
         return context
 
+def general(request, template="pages/homepage.html"):
+    return render(request, template)
+
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
 def comment(request, template="generic/comments.html"):
@@ -473,6 +476,20 @@ def send_verification_mail_for_password_reset(request, user):
     send_mail_template(subject, "email/reset_password",
                        settings.DEFAULT_FROM_EMAIL, user.email,
                        context=context)
+
+
+def home_router(request):
+    if request.user.is_authenticated():
+        return dashboard(request)
+    else:
+        return render(request, "pages/homepage.html")
+
+
+@login_required
+def dashboard(request, template="pages/dashboard.html"):
+    #type_icon={'generic': '__GENERIC__', 'composite': '__COMPOSITE'}
+    #context = {'icon_dict', type_icon}
+    return render(request, template)
 
 
 def login(request, template="accounts/account_login.html",

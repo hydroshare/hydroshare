@@ -2,6 +2,9 @@
 {% spaceless %}
 
 <ul class="nav navbar-nav">
+    <li {% if request.path == "/dashboard/" %}class="active"{% endif %} id="dropdown-menu-home">
+        <a href="/dashboard/">Home</a>
+    </li>
     <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
         <a href="/my-resources/">My Resources</a>
     </li>
