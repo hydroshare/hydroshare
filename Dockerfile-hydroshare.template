@@ -10,5 +10,4 @@ RUN mkdir /hs_tmp /shared_tmp \
  && setfacl -R -m d:g:storage-hydro:rwx /tmp \
  && setfacl -R -m g:storage-hydro:rwx /tmp
 
-CMD ["runuser", "-p", "-u", "root", "-g", "root", "supervisord", "-n"]
-#CMD ["runuser", "-p", "-u", "root", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["runuser", "-p", "-u", "hydro-service", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]

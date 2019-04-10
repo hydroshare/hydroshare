@@ -177,7 +177,7 @@ sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
 cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-cp -fr nginx/Dockerfile.template nginx/Dockerfile-nginx
+cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 
 sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
