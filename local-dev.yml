@@ -113,10 +113,30 @@ services:
       - "8983:8983"
     stdin_open: true
     tty: true
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile-nginx
+    hostname: nginx
+    container_name: nginx
+    links:
+      - hydroshare:hydroshare
+    depends_on:
+      - hydroshare
+    ports:
+      - "80:80"
+    volumes:
+      - "./log/nginx:/var/log/nginx"
+      - ".:/hydroshare"
+      - "temp_vol:/hs_tmp"
+      - "share_vol:/irods/cache"
+      - "idata_vault_vol:/irods/data"
+      - "iuser_vault_vol:/irods/user"
   hydroshare:
     build:
       context: .
-      dockerfile: Dockerfile-hydroshare
+      dockerfile: Dockerfile
+#      dockerfile: Dockerfile-hydroshare
     container_name: hydroshare
     hostname: hydroshare
     devices:
@@ -161,10 +181,12 @@ services:
       - users.local.org
     stdin_open: true
     tty: true
+    command: /bin/bash init-hydroshare
   defaultworker:
     build:
       context: .
-      dockerfile: Dockerfile-defaultworker
+      dockerfile: Dockerfile
+#      dockerfile: Dockerfile-defaultworker
     container_name: defaultworker
     hostname: defaultworker
     environment:
@@ -197,10 +219,7 @@ services:
       - users.local.org
     stdin_open: true
     tty: true
-### Docker Volumes https://docs.docker.com/storage/volumes/
-### tldr;
-### docker volume ps | grep pgdatavol
-### docker volume rm hydroshare_pgdatavol
+    command: /bin/bash init-defaultworker
 volumes:
   idata_iconf_vol:
   idata_vault_vol:

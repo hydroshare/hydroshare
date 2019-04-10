@@ -11,8 +11,13 @@ WORKDIR /hydroshare
 RUN userdel hydro-service \
  && groupdel storage-hydro \
  && echo "storage-hydro:x:214400513:" >> /etc/group \
- && echo "hydro-service:x:214401701:214400513::/hydroshare:/bin/bash" >> /etc/passwd \
- && mkdir /hs_tmp /shared_tmp \
- && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp
+ && echo "hydro-service:x:214401701:214400513::/hydroshare:/bin/bash" >> /etc/passwd
 
-CMD ["runuser", "-p", "-u", "hydro-service", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+COPY hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
+RUN mkdir /hs_tmp /shared_tmp \
+ && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
+ && setfacl -R -m d:g:storage-hydro:rwx /tmp \
+ && setfacl -R -m g:storage-hydro:rwx /tmp
+
+CMD ["runuser", "-p", "-u", "root", "-g", "root", "supervisord", "-n"]
+#CMD ["runuser", "-p", "-u", "root", "-g", "storage-hydro", "python", "manage.py", "runserver", "0.0.0.0:8000"]
