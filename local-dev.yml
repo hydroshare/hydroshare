@@ -21,7 +21,6 @@ services:
       IRODS_PORT: '1247'
       IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
       IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy' breaking change for 4.1.8 to 4.2.4
       IRODS_ZONE: 'hydroshareZone'
       IRODS_USERNAME: 'wwwHydroProxy'
       IRODS_AUTH: 'wwwHydroProxy'
@@ -63,7 +62,6 @@ services:
       IRODS_PORT: '1247'
       IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
       IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-#      IRODS_CWD: '/hydroshareZone/home/wwwHydroProxy' breaking change for 4.1.8 to 4.2.4
       IRODS_ZONE: 'hydroshareZone'
       IRODS_USERNAME: 'wwwHydroProxy'
       IRODS_AUTH: 'wwwHydroProxy'
@@ -136,7 +134,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#      dockerfile: Dockerfile-hydroshare
     container_name: hydroshare
     hostname: hydroshare
     devices:
@@ -186,7 +183,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#      dockerfile: Dockerfile-defaultworker
     container_name: defaultworker
     hostname: defaultworker
     environment:

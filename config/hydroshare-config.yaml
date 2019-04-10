@@ -7,7 +7,7 @@ HS_SERVICE_UID: 1000
 HS_SERVICE_GID: 1000
 
 ### Deployment Options ###
-USE_NGINX: false
+USE_NGINX: true
 USE_SSL: false
 USE_SECURITY: false
 USE_HTTP_AUTH: false

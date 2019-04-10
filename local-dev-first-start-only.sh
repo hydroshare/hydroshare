@@ -150,11 +150,11 @@ fi
 ### Preparing                                                                                            
 ###############################################################################################################
 
-grep -v CMD Dockerfile > Dockerfile-defaultworker
-grep -v CMD Dockerfile > Dockerfile-hydroshare
+#grep -v CMD Dockerfile > Dockerfile-defaultworker
+#grep -v CMD Dockerfile > Dockerfile-hydroshare
 
-cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
-cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
+#cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
+#cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
@@ -168,11 +168,11 @@ sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydrosha
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
+#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
+#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
 
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
+#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
+#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
 
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
