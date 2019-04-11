@@ -585,9 +585,14 @@ def create_irods_account(request):
     if request.method == 'POST':
         try:
             user = request.user
-            pwd = str(request.POST.get('password'))
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
-                                            user.username, pwd)
+            exec_cmd = "{0} {1} {2} {3} {4} {5}".format(
+                settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+                user.username,
+                user.id,
+                settings.IRODS_USERNAME,
+                settings.IRODS_ZONE,
+                settings.HS_USER_IRODS_ZONE
+            )
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
                                      uname=settings.HS_USER_ZONE_PROXY_USER,
                                      pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
