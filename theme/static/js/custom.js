@@ -72,16 +72,16 @@ $(document).ready(function () {
         $("#search-box").toggleClass('display-block animated fadeInUp');
     });
 
-	// Smooth scrolling for UI elements page
-	// =====================================
+    // Smooth scrolling for UI elements page
+    // =====================================
 
-	$('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
-		var anchor = $(this);
-		$('html, body').stop().animate({
-			scrollTop: $(anchor.attr('href')).offset().top
-		}, 1000);
-		e.preventDefault();
-	});
+    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+        var anchor = $(this);
+        $('html, body').stop().animate({
+            scrollTop: $(anchor.attr('href')).offset().top
+        }, 1000);
+        e.preventDefault();
+    });
 
     // Check if a resource needs to be created through URL parameters from redirect
     let pageURL = window.location.search.substring(1);
