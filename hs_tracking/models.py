@@ -214,15 +214,15 @@ class Variable(models.Model):
         return BaseResource.objects.filter(
                 variable__session__visitor__user=user,
                 variable__timestamp__gte=(datetime.now()-timedelta(days)),
-                variable__resource__isnull=False)\
-            .only('short_id', 'created', 'updated')\
+                variable__resource__isnull=False, 
+                variable__name='visit')\
+            .only('short_id', 'created')\
             .distinct()\
             .annotate(public=F('raccess__public'),
                       discoverable=F('raccess__discoverable'),
                       published=F('raccess__published'),
                       last_accessed=models.Max('variable__timestamp'))\
             .filter(variable__timestamp=F('last_accessed'))\
-            .annotate(action=F('variable__name'))\
             .order_by('-last_accessed')[:n_resources]
 
     @classmethod
@@ -240,10 +240,10 @@ class Variable(models.Model):
         """
         return User.objects\
             .filter(visitor__session__variable__resource=resource,
+                    visitor__session__variable__name='visit',
                     visitor__session__variable__timestamp__gte=(datetime.now() -
-                                                                         timedelta(days)))\
+                                                                timedelta(days)))\
             .distinct()\
             .annotate(last_accessed=models.Max('visitor__session__variable__timestamp'))\
             .filter(visitor__session__variable__timestamp=F('last_accessed'))\
-            .annotate(action=F('visitor__session__variable__name'))\
             .order_by('-last_accessed')[:n_users]

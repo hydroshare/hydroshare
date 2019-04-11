@@ -2,9 +2,8 @@
 Check tracking functions for proper output.
 """
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
 from hs_tracking.models import Variable
-from hs_core.models import BaseResource 
+from hs_core.models import BaseResource
 from hs_core.hydroshare import get_resource_by_shortkey
 
 
@@ -24,12 +23,12 @@ class Command(BaseCommand):
         n_users = options['n_users']
 
         try:
-            resource = get_resource_by_shortkey(resource_id, or_404=False) 
+            resource = get_resource_by_shortkey(resource_id, or_404=False)
         except BaseResource.DoesNotExist:
             print("resource '{}' not found".format(resource_id))
             exit(1)
 
         recent = Variable.recent_users(resource,  days=days, n_users=n_users)
         for v in recent:
-            print("username={} last_access={} action={}"
-                  .format(v.username, v.last_accessed.strftime("%Y-%m-%d %H:%M:%S"), v.action))
+            print("username={} last_access={}"
+                  .format(v.username, v.last_accessed.strftime("%Y-%m-%d %H:%M:%S")))
