@@ -1834,7 +1834,10 @@ class CommunityView(TemplateView):
 
         # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community; later refactor for when multiple communities exist
         community_resources = community_from_name_or_id("CZO National Community").public_resources  # fail gracefully
-
+# group is the object
+        #__name=
+        #__id=
+        community_resources_luquillo = community_resources.filter(r2grp__group__name="CZO Luquillo")
         groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
         communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
         groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
