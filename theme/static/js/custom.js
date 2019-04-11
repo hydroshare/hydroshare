@@ -83,6 +83,7 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
+
     // Check if a resource needs to be created through URL parameters from redirect
     let pageURL = window.location.search.substring(1);
     let URLVariables = pageURL.split('&');
@@ -98,7 +99,16 @@ $(document).ready(function () {
         let parameterName = URLVariables[i].split('=');
         // Check against the resource types to prevent conflicts of such parameter being used in other pages
         if (parameterName[0] == "create" && $.inArray(parameterName[1], resTypes) >= 0) {
-            createResource(parameterName[1]);
+            // Ignore the parameter if the page was not accessed through navigation
+            if (window.performance) {
+                if (window.performance.navigation.type == window.performance.navigation.TYPE_NAVIGATE) {
+                    createResource(parameterName[1]);
+                }
+            }
+            else {
+                // In case window.performance is not supported in the browser
+                createResource(parameterName[1]);
+            }
             break;
         }
     }
