@@ -140,7 +140,6 @@ class Variable(models.Model):
 
     def get_value(self):
         v = self.value
-        print("type={}, name={}".format(self.type, type(self.value)))
         if self.type == 3:  # boolean types don't coerce reflexively
             if v == 'true':
                 return True
