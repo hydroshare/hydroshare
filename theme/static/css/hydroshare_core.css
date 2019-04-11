@@ -4907,6 +4907,10 @@ div#resource-content {
     cursor: pointer;
 }
 
+.navbar-inverse .res-dropdown .dropdown-menu.disabled li {
+	pointer-events: none;
+}
+
 #dropdown-resource-type .dropdown-menu > li > a {
 	padding: 2px 16px;
 	cursor: default;

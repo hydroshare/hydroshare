@@ -83,6 +83,26 @@ $(document).ready(function () {
 		e.preventDefault();
 	});
 
+    // Check if a resource needs to be created through URL parameters from redirect
+    let pageURL = window.location.search.substring(1);
+    let URLVariables = pageURL.split('&');
+    let resTypes = [];
+    let items = $("#select-resource-type").parent().find("a[data-value]");
+
+    // Get a list of the supported resource types from the UI
+    for (let i = 0; i < items.length; i++) {
+        resTypes.push($(items[i]).attr("data-value"));
+    }
+
+    for (let i = 0; i < URLVariables.length; i++) {
+        let parameterName = URLVariables[i].split('=');
+        // Check against the resource types to prevent conflicts of such parameter being used in other pages
+        if (parameterName[0] == "create" && $.inArray(parameterName[1], resTypes) >= 0) {
+            createResource(parameterName[1]);
+            break;
+        }
+    }
+
     // 404 error page
     // ====================
     $('#search-404').on('click', function () {
@@ -158,11 +178,22 @@ $(document).ready(function () {
     });
 
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+        if ($("#select-resource-type").attr("data-anonymous")) {
+            window.location = "/accounts/login/?next=/my-resources/?create=" + $(this).attr("data-value");
+        }
+        else {
+            createResource($(this).attr("data-value"));
+        }
+    });
+
+    function createResource(type) {
+        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);   // Disable while we proccess the request
+
         var formData = new FormData();
 
         formData.append("csrfmiddlewaretoken", csrf_token);
         formData.append("title", "Untitled Resource");
-        formData.append("resource-type", $(this).attr("data-value"));
+        formData.append("resource-type", type);
         formData.append("irods-username", "");
         formData.append("irods-password", "");
         formData.append("irods-host", "");
@@ -173,7 +204,7 @@ $(document).ready(function () {
         formData.append("copy-or-move", "copy");
         formData.append("copy-move", "copy");
 
-        customAlert("Creating your resource", "Please wait...", "success", -1);
+        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
 
         $.ajax({
@@ -190,17 +221,20 @@ $(document).ready(function () {
                     console.log(response);
                     $(".custom-alert").alert('close');  // Dismiss previous alert
                     customAlert("Error", 'Failed to create resource.', "error", 6000);
+                    $("html").css("cursor", "initial");
+                    $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
-                $("html").css("cursor", "initial");
+
             },
             error: function (response) {
                 console.log(response);
                 $(".custom-alert").alert('close');  // Dismiss previous alert
                 customAlert("Error", 'Failed to create resource.', "error", 6000);
                 $("html").css("cursor", "initial");
+                $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
             }
         });
-    });
+    }
 
     $.ajax({
         url: "/hsapi/userInfo/",
