@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+chown hydro-service:storage-hydro * -R
+
+exit 0;

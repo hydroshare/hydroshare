@@ -239,6 +239,8 @@ echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
+docker exec hydroshare /usr/bin/env bash scripts/chown-root-items
+
 cd conf_irods/
 ./partial_build.sh 
 cd ..
