@@ -308,8 +308,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
             spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
 
-    metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
-                                         extended_metadata_layout=extended_metadata_layout)
+    if extended_metadata_layout:
+        metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
+                                             extended_metadata_layout=extended_metadata_layout)
+    else:
+        metadata_form = None
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
