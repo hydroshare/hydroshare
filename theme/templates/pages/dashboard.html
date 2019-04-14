@@ -9,7 +9,6 @@ The dashboard template assumes context dictionary has the following keys
 timestamp
 title
 first author
-first author id
 resource id
 content type
 privacy;;
@@ -18,16 +17,6 @@ timestamp should go with a template tags to convert to a human readble day.
 {% endcomment %}
 
 {% block main %}
-    <!--
-    <div class="container dashboard_section_container">
-        <h3> Getting Started</h3>
-        <div>
-            <a href="" style="margin-top: 10px; display: inline-block">Look at a sample resource</a></div>
-        <div><a href="" style="margin-top: 10px; display: inline-block">Create my first resource</a></div>
-        <div><a href="" style="margin-top: 10px; display: inline-block">Browser Help Pages</a></div>
-        <div><a href="" style="margin-top: 10px; display: inline-block">Show me public resources</a></div>
-    </div>
-    -->
     <div class="container  collapse dashboard_section_container" id="getStarted">
         <div class="row" style="margin-left: 20px; margin-right: 2px; margin-bottom: 10px;">
                 <span>
@@ -120,7 +109,7 @@ timestamp should go with a template tags to convert to a human readble day.
         </div>
 
         <div class="container dashboard_section_container">
-            {% trans "Featured HydroShare Apps" as whole_title %}
+            {% trans "Featured Apps" as whole_title %}
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
                 {% trans "CUAHSI JupyterHub" as title_name %}
@@ -129,25 +118,31 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
 
-                {% trans "Data Rods Explorerhydro server" as title_name %}
-                {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
-                {% trans "/static/img/data_rods_explorer.png" as app_image %}
-                {% trans "Browse several NASA-hosted data sets using a simple mapping interface that enables data visualization and download." as app_content %}
+                {% trans "National Water Model Viewer" as title_name %}
+                {% trans "https://hs-apps.hydroshare.org/apps/nwm-forecasts/" as title_url %}
+                {% trans "/static/img/nwm_forecasts.png" as app_image %}
+                {% trans "Retrieve and preview National Water Model data. " as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
 
             <div class="row big-app-row">
-                {% trans "National Water Model Viewer" as title_name %}
-                {% trans "https://www.yahoo.com" as title_url %}
-                {% trans "/static/img/nwm_forecasts.png" as app_image %}
-                {% trans "Retrieve and preview National Water Model data. " as app_content %}
+                {% trans "THREDDS Data Archive" as title_name %}
+                {% trans "https://www.unidata.ucar.edu/downloads/thredds/index.jsp" as title_url %}
+                {% trans "/static/img/THREDDS.png" as app_image %}
+                {% trans "Access National Water Model data and more in the THREDDS Data Archive." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
+
+                {% trans "OPenDAP (NetCDF)" as title_name %}
+                {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
+                {% trans "/static/img/NetCDF.png" as app_image %}
+                {% trans "OpeNDAP web service for multidimensional space-time data resources in HydroShare." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
         </div>
 
         #{# CUAHSI developed apps #}
         <div class="container dashboard_section_container">
-            {% trans "Other CUAHSI Data Services" as whole_title %}
+            {% trans "Other CUAHSI Water Data Services" as whole_title %}
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
                 {% trans "HydroClient" as title_name %}
