@@ -18,14 +18,55 @@ timestamp should go with a template tags to convert to a human readble day.
 {% endcomment %}
 
 {% block main %}
+    <!--
     <div class="container dashboard_section_container">
-    <h3> Getting Started</h3>
+        <h3> Getting Started</h3>
         <div>
-    <a href="" style="margin-top: 10px; display: inline-block">Look at a sample resource</a></div>
-        <div><a href="" style="margin-top: 10px; display: inline-block" >Create my first resource</a> </div>
-        <div><a href="" style="margin-top: 10px; display: inline-block" >Browser Help Pages</a> </div>
-        <div><a href="" style="margin-top: 10px; display: inline-block" >Show me public resources</a> </div>
+            <a href="" style="margin-top: 10px; display: inline-block">Look at a sample resource</a></div>
+        <div><a href="" style="margin-top: 10px; display: inline-block">Create my first resource</a></div>
+        <div><a href="" style="margin-top: 10px; display: inline-block">Browser Help Pages</a></div>
+        <div><a href="" style="margin-top: 10px; display: inline-block">Show me public resources</a></div>
     </div>
+    -->
+    <div class="container  collapse dashboard_section_container" id="getStarted">
+        <div class="row" style="margin-left: 20px; margin-right: 2px; margin-bottom: 10px;">
+                <span>
+                 <h3 class="home-page-block-title" style="float: left;">Get Started</h3>
+                </span>
+        </div>
+        <div id="row-1" class="row">
+            <div class="col-xs-12 col-sm-4  get_started_cell">
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
+                   class="get_started_link">Check out tutorials.</a>
+            </div>
+            <div class="col-xs-12 col-sm-4  get_started_cell">
+                <a href="/user/" class="get_started_link">Complete profile.</a>
+            </div>
+            <div class="col-xs-12 col-sm-4  get_started_cell">
+                <a href="/search/" class="get_started_link">Browse data.</a>
+            </div>
+        </div>
+
+        <div id="row-2" class="row">
+            <div class="col-xs-12 col-sm-4 get_started_cell">
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/" class="get_started_link">How does
+                    HydroShare work?</a>
+            </div>
+            <div class="col-xs-12 col-sm-4 get_started_cell">
+                <a href="/resource/fef58369046c4a64a2d7564c4e7e1fd0/" class="get_started_link">Review an example
+                    resource.</a>
+            </div>
+            <div class="col-xs-12 col-sm-4 get_started_cell">
+                <a href="https://help.hydroshare.org/about-hydroshare/releases/" class="get_started_link">What's
+                    new?</a>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
     <div>
         <div class="container dashboard_section_container">
             <!--
@@ -35,10 +76,8 @@ timestamp should go with a template tags to convert to a human readble day.
                 <span>
                  <h3 class="home-page-block-title" style="float: left;">Recently Visited </h3>
                     <span style="float: right">
-                    <a style="margin-top: 20px; margin-right: 10px;" class="btn btn-primary"
-                       href="/search">Discover</a>
-                    <a style="margin-top: 20px; margin-right: 20px;" class="btn btn-primary"
-                       href="/hsapi/_internal/create-resource">Create</a>
+                    <a href="#" id="change_me" style="display: inline-block; margin-top: 20px; margin-right: 20px;"
+                       data-toggle="collapse" data-target="#getStarted">Show get started</a>
                     </span>
                 </span>
             </div>
@@ -53,6 +92,29 @@ timestamp should go with a template tags to convert to a human readble day.
                     <th>Visibility</th>
                 </tr>
                 </thead>
+                {# ====================================== #}
+                {# == Here comes the data from backend == #}
+                {# ====================================== #}
+                <tbody>
+                {% for r in recent %}
+                    <tr class="data-row">
+                        <td>{{ r.last_accessed | just_in_time }}</td>
+                        <td>
+                            {% autoescape off %}
+                                {% resource_link_builder r.title r.short_id %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{{ r.first_creator }}</td>
+                        <td>
+                            {% autoescape off %}
+                                {% resource_img_url_builder STATIC_URL r.resource_type %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
 
             </table>
         </div>
@@ -61,17 +123,17 @@ timestamp should go with a template tags to convert to a human readble day.
             {% trans "Featured HydroShare Apps" as whole_title %}
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
-            {% trans "CUAHSI JupyterHub" as title_name %}
-            {% trans "https://jupyter.cuahsi.org/user/_/tree/notebooks" as title_url %}
-            {% trans "/static/img/jupiterhub.png" as app_image %}
-            {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
+                {% trans "CUAHSI JupyterHub" as title_name %}
+                {% trans "https://jupyter.cuahsi.org/user/_/tree/notebooks" as title_url %}
+                {% trans "/static/img/jupiterhub.png" as app_image %}
+                {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
 
-            {% trans "Data Rods Explorerhydro server" as title_name %}
-            {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
-            {% trans "/static/img/data_rods_explorer.png" as app_image %}
-            {% trans "Browse several NASA-hosted data sets using a simple mapping interface that enables data visualization and download." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
+                {% trans "Data Rods Explorerhydro server" as title_name %}
+                {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
+                {% trans "/static/img/data_rods_explorer.png" as app_image %}
+                {% trans "Browse several NASA-hosted data sets using a simple mapping interface that enables data visualization and download." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
             </div>
 
             <div class="row big-app-row">
@@ -83,25 +145,24 @@ timestamp should go with a template tags to convert to a human readble day.
             </div>
         </div>
 
-        {# CUAHSI developed apps #}
+        #{# CUAHSI developed apps #}
         <div class="container dashboard_section_container">
-          {% trans "Other CUAHSI Data Services" as whole_title %}
-          {% include "includes/apps_block_title.html" %}
+            {% trans "Other CUAHSI Data Services" as whole_title %}
+            {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
-            {% trans "HydroClient" as title_name %}
-            {% trans "https://data.cuahsi.org" as title_url %}
-            {% trans "/static/img/hydro_client.png" as app_image %}
-            {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
+                {% trans "HydroClient" as title_name %}
+                {% trans "https://data.cuahsi.org" as title_url %}
+                {% trans "/static/img/hydro_client.png" as app_image %}
+                {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
 
-            {% trans "Uploader" as title_name %}
-            {% trans "http://hydroserver.cuahsi.org" as title_url %}
-            {% trans "/static/img/hydro_server.png" as app_image %}
-            {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
-            {% include "includes/big_image_button_app.html" %}
+                {% trans "Uploader" as title_name %}
+                {% trans "http://hydroserver.cuahsi.org" as title_url %}
+                {% trans "/static/img/hydro_server.png" as app_image %}
+                {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
             </div>
         </div>
-
 
 
     </div>

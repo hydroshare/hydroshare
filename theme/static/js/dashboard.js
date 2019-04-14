@@ -25,7 +25,6 @@ function initializeTable() {
             "targets": [LAST_MODIFIED_COL]     // Last modified
         },
     ];
-    /*
 
     $('#recently-visited-resources').DataTable({
         "paging": false,
@@ -37,8 +36,8 @@ function initializeTable() {
 
         "columnDefs": colDefs
     });
-    */
 
+    /*
     $('#recently-visited-resources').DataTable({
         "paging": false,
         "searching": false,
@@ -84,12 +83,43 @@ function initializeTable() {
             withCredentials: false
         }
     });
+    */
 }
 
 $(document).ready(function () {
     initializeTable();
 
     $('[data-toggle="DT_popover"]').popover({container: 'body'});
+
+    if (localStorage.openStatus == "closed") {
+        $("#getStarted").addClass("collapse");
+        $("#change_me").html("Show get started");
+    } else if (localStorage.openStatus == "opened") {
+        $("#getStarted").addClass("in");
+        $("#change_me").html("Hide get started");
+    } else {
+        $("#getStarted").addClass("in");
+        $("#change_me").html("Hide get started");
+    }
+    // add action handler
+    $("#change_me").click(function () {
+        $("#change_me").text(function (i, old) {
+            // if the button displays at the time of click is Open (meaning open it), set the next action
+            // to Close (meaning close it)
+
+            // assign future status to
+            var statusChangedTo = old == 'Show get started' ? 'Hide get started' : 'Show get started';
+
+            if (statusChangedTo == "Hide get started") {
+                localStorage.openStatus = "opened";
+            } else if (statusChangedTo == "Show get started") {
+                localStorage.openStatus = "closed";
+            } else {
+                localStorage.openStatus = "opened";
+            }
+            return statusChangedTo;
+        });
+    });
 });
 
 
@@ -128,5 +158,4 @@ function get_time_ago_by_timestamp(previous) {
         return Math.round(elapsed / msPerYear) + ' years ago';
     }
 }
-
 

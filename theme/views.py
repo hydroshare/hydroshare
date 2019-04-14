@@ -33,6 +33,7 @@ from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_access_control.models import GroupMembershipRequest
 from hs_dictionary.models import University, UncategorizedTerm
+from hs_tracking.models import Variable
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
@@ -487,9 +488,13 @@ def home_router(request):
 
 @login_required
 def dashboard(request, template="pages/dashboard.html"):
-    #type_icon={'generic': '__GENERIC__', 'composite': '__COMPOSITE'}
-    #context = {'icon_dict', type_icon}
-    return render(request, template)
+    my_username = request.user.username
+    user = User.objects.get(username=my_username)
+    my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+
+    context = {'recent': my_recent}
+    return render(request, template, context)
+    #return render(request, template)
 
 
 def login(request, template="accounts/account_login.html",
