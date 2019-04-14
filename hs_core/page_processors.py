@@ -1,16 +1,11 @@
 """Page processors for hs_core app."""
 
-from functools import partial, wraps
-
 from dateutil import parser
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.forms.models import formset_factory
 from mezzanine.pages.page_processors import processor_for
 
-from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
-    SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
-    ExtendedMetadataForm
+from forms import ExtendedMetadataForm
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
@@ -232,44 +227,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if not can_change:
         raise PermissionDenied()
 
-    keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change,
-                                 res_short_id=content_model.short_id, element_id=None)
-
-    abstract_form = AbstractForm(instance=content_model.metadata.description,
-                                 allow_edit=can_change, res_short_id=content_model.short_id,
-                                 element_id=content_model.metadata.description.id if
-                                 content_model.metadata.description else None)
-
-    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm,
-                                                                    allow_edit=can_change)),
-                                         formset=BaseCreatorFormSet, extra=0)
-
-    creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(),
-                                         prefix='creator')
-
-    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm,
-                                                                            allow_edit=can_change)),
-                                             formset=BaseContributorFormSet, extra=0)
-    contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().
-                                                 values(), prefix='contributor')
-
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm,
-                                                                      allow_edit=can_change)),
-                                          formset=BaseFormSet, extra=0)
-    relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(),
-                                           prefix='relation')
-
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm,
-                                                                  allow_edit=can_change)),
-                                        formset=BaseFormSet, extra=0)
-    source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(),
-                                       prefix='source')
-
-    FundingAgencyFormSetEdit = formset_factory(wraps(FundingAgencyForm)(partial(
-        FundingAgencyForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
-    fundingagency_formset = FundingAgencyFormSetEdit(
-        initial=content_model.metadata.funding_agencies.all().values(), prefix='fundingagency')
+    keywords_string = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
 
     temporal_coverage = content_model.metadata.temporal_coverage
     temporal_coverage_data_dict = {}
@@ -319,17 +277,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     context = {
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creator_formset': creator_formset,
+               'creators': content_model.metadata.creators.all(),
                'title': content_model.metadata.title,
                'readme': readme,
-               'abstract_form': abstract_form,
-               'contributor_formset': contributor_formset,
-               'relation_formset': relation_formset,
-               'source_formset': source_formset,
-               'fundingagnency_formset': fundingagency_formset,
+               'contributors': content_model.metadata.contributors.all(),
+               'relations': content_model.metadata.relations.all(),
+               'sources': content_model.metadata.sources.all(),
+               'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
-               'subjects_form': subjects_form,
+               'keywords_string': keywords_string,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
