@@ -20,8 +20,8 @@
         <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
         <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
         <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
-        <input type="hidden" id="keywords-string" value="{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}">
-        <input type="hidden" id="short-id" value="{{ page.get_content_model.short_id }}">
+        <input type="hidden" id="keywords-string" value="{{ keywords_string }}">
+        <input type="hidden" id="short-id" value="{{ cm.short_id }}">
         <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
         {% if page.perms.change and resource_edit_mode %}
         {% csrf_token %}
@@ -78,7 +78,7 @@
             {% if cm.resource_type != "ToolResource" %}
                 {# POPUP MENU - Right clicking items #}
                 <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
+                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-open" data-menu-name="open" data-fb-action="open">
                             <span class="fa fa-folder-open icon-blue"></span>
                             <span>Open</span>
@@ -99,7 +99,7 @@
                             </li>
                         {% endif %}
 
-                        {% if cm|resource_type == "Time Series" or cm|resource_type == "Composite Resource" %}
+                        {% if cm.resource_type == "TimeSeriesResource" or cm.resource_type == "CompositeResource" %}
                             <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                 <span>Rename</span>
@@ -255,7 +255,7 @@
                 {# POPUP MENU - Right clicking empty space in file browser #}
                 <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
                     {% if page.perms.change and resource_edit_mode %}
-                        {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                        {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                             <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                                 data-fb-action="createFolder"
                                 data-target="#create-folder-dialog">
@@ -285,7 +285,7 @@
                         <span class="fa fa-th-large icon-blue"></span>
                         <span>Select all</span>
                     </li>
-                    {% if page.perms.change and resource_edit_mode and cm|resource_type == "CompositeResource"%}
+                    {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li role="separator" class="divider"></li>
                         <li data-menu-name="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
@@ -407,7 +407,7 @@
                                     <div id="fb-inner-buttons">
                                         <div class="flex">
                                             {# FOLDER NAVIGATION #}
-                                            {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                            {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                 <div>
                                                     <button id="fb-move-back"
                                                             class="btn btn-default fb-control-round disabled"
@@ -532,7 +532,7 @@
                                                 {% endif %}
 
                                                 {% if page.perms.change and resource_edit_mode %}
-                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-create-folder" class="disabled"
                                                                 data-fb-action="createFolder" data-toggle="modal"
                                                                 data-target="#create-folder-dialog"
@@ -560,7 +560,7 @@
                                                         </button>
                                                     {% endif %}
 
-                                                    {% if cm|resource_type != "Web App Resource" and cm|resource_type != "Geographic Raster"  and cm|resource_type != "HIS Referenced Time Series"  and cm|resource_type != "Geographic Feature (ESRI Shapefiles)" %}
+                                                    {% if cm.resource_type != "ToolResource" and cm.resource_type != "RasterResource"  and cm.resource_type != "RefTimeSeriesResource"  and cm.resource_type != "GeographicFeatureResource" %}
                                                         <button id="fb-rename" data-fb-action="rename"
                                                                 class="disabled fb-space-right"
                                                                 title="Rename" data-toggle="modal"
@@ -569,7 +569,7 @@
                                                         </button>
                                                     {% endif %}
 
-                                                    {% if cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                                                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-zip" data-fb-action="zip"
                                                                 class="disabled"
                                                                 title="Zip folder" data-toggle="modal"
@@ -655,7 +655,7 @@
                                     </div>
                                 </div>
                                 <div class="fb-content-wrapper">
-                                    <div class="fb-dropzone-wrapper{% if cm|resource_type|lower == "composite resource" %} ui-resizable{% endif %}">
+                                    <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                         <form id="hsDropzone"
                                               class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
                                               action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
@@ -691,7 +691,7 @@
                                             </div>
                                         {% endif %}
                                     </div>
-                                    {% if cm|resource_type|lower == "composite resource" %}
+                                    {% if cm.resource_type == "CompositeResource" %}
                                     <div id="fb-metadata-helper">
                                         <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
                                            data-fb-action="hide"
@@ -780,8 +780,8 @@
 
             {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
                 {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                {% if cm|resource_type != "HIS Referenced Time Series" or not resource_edit_mode %}
-                    {% if cm.resource_type != "CompositeResource" and cm|resource_type|lower != "collection resource" %}
+                {% if cm.resource_type != "RefTimeSeriesResource" or not resource_edit_mode %}
+                    {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
                         <div class="col-xs-12 content-block">
                             <h3>Resource Specific</h3>
                             <div id="resourceSpecificTab">
