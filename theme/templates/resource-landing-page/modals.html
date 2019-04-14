@@ -823,7 +823,7 @@
     </div>
 
     <!-- Edit credit source Modal -->
-    {% for agency in fundingagnency_formset.initial %}
+    {% for agency in fundingagencies %}
         <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
              aria-labelledby="add-funding-label" aria-hidden="true">
             <div class="modal-dialog">
@@ -915,7 +915,7 @@
         </div>
     {% endfor %}
 
-    {% for source in source_formset.initial %}
+    {% for source in sources %}
     <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-source" aria-hidden="false">
         <div class="modal-dialog">
@@ -975,7 +975,7 @@
     </div>
     {% endfor %}
 
-    {% for relation in relation_formset.initial %}
+    {% for relation in relations %}
     <div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-relation" aria-hidden="false">
         <div class="modal-dialog">
@@ -1049,7 +1049,7 @@
     </div>
     {% endfor %}
 
-    {% for contributor in contributor_formset.initial %}
+    {% for contributor in contributors %}
     <div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
          aria-labelledby="edit-contributor" aria-hidden="true">
         <div class="modal-dialog">

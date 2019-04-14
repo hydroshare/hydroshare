@@ -19,7 +19,7 @@
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
                         <span class="authors-wrapper sortable">
-                            {% for author in creator_formset.initial %}
+                            {% for author in creators %}
                                 <span>
                                     <a title="Edit {{ author.name }}"
                                        class="author-modal-trigger" data-id="{{ author.id }}"
