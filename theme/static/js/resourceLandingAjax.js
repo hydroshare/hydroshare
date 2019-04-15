@@ -413,7 +413,67 @@ function promptSelfRemovingAccess(form_id){
     });
 }
 
-function change_share_permission_ajax_submit(form_id) {
+function promptChangeSharePermission(form_id){
+    // close the manage access panel (modal)
+    $("#manage-access").modal('hide');
+
+    // display change share permission confirmation dialog
+    $("#dialog-confirm-change-share-permission").dialog({
+        resizable: false,
+        draggable: false,
+        height: "auto",
+        width: 500,
+        modal: true,
+        dialogClass: 'noclose',
+        buttons: {
+            Cancel: function () {
+                $(this).dialog("close");
+		// show manage access control panel again
+		$("#manage-access").modal('show');
+            },
+            "Confirm": function () {
+                $(this).dialog("close");
+                change_share_permission_ajax_submit(form_id, false);
+		$("#manage-access").modal('show');
+            }
+        },
+	open: function () {
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:first") // the first button
+                .addClass("btn btn-default");
+
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .addClass("btn btn-danger");
+        }
+    });
+}
+
+function isSharePermissionPromptRequired(form_id) {
+    const REQUIRED = true;
+    const NOT_REQUIRED = false;
+
+    let formIDParts = form_id.split('-');
+    let userID = parseInt(formIDParts[formIDParts.length -1]);
+    let currentUserID = parseInt($("#current-user-id").val());
+
+    let $form = $('#' + form_id);
+    let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
+    let clickedAccess = $form.closest("form").attr("data-access-type");
+
+    if (currentUserID == userID 
+        && previousAccess == "Is owner" 
+	&& previousAccess != clickedAccess){
+         return REQUIRED;
+    }
+    return NOT_REQUIRED;
+}
+function change_share_permission_ajax_submit(form_id, check_permission=true) {
+    if (check_permission && isSharePermissionPromptRequired(form_id)) {
+	promptChangeSharePermission(form_id);
+	return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var url = $form.attr('action');
@@ -474,7 +534,53 @@ function change_share_permission_ajax_submit(form_id) {
     });
 }
 
+function isUserInvited(userID) { 
+    const INVITED = true;
+    const NOT_INVITED = false;
+ 
+    if (userID < 1) {
+       /* invalid user, treat invalid user as not invited */
+       return NOT_INVITED;
+    } 
+
+    /* found a matching entry */
+    if($(".access-table #row-id-" + userID).length > 0) {
+        return INVITED;
+    } 
+    
+    return NOT_INVITED;
+}
+
+/* get the user id  that is already populated in the invitee text field */
+function getUserIDIntendToInvite() {
+    let share_with = -1;
+    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
+        if ($("#id_user-deck > .hilight").length > 0) {
+            share_with = parseInt($("#id_user-deck > .hilight")[0].getAttribute("data-value"));
+        }
+    }
+
+    return share_with;
+}
+
+/*return the current login user. */
+function getCurrentUser() {
+    return parseInt($("#current-user-id").val());
+}
+
+function promptUserInShareList() {
+    let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
+    $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+    $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
+
+}
+
 function share_resource_ajax_submit(form_id) {
+    if(isUserInvited(getUserIDIntendToInvite())) {
+	promptUserInShareList();
+        return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var share_with;

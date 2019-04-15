@@ -421,6 +421,16 @@ a.sign-out-inline:hover {
 	overflow: hidden;
 }
 
+/* warning access removal dialog title */
+.access-dialog-title {
+	display: none;
+}
+/* warning access removal dialog content */
+.access-warning {
+	float:left; 
+	margin:12px 12px 50px 0;
+}
+
 /* Inbox */
 
 .pm-search {
@@ -2409,6 +2419,14 @@ table.table.access-table {
 
 #div-invite-people .label-danger {
 	font-size: 12px;
+}
+
+.label-block {
+	padding: .2em .6em .3em;
+  	line-height: 1;
+  	color: #ffffff;
+  	vertical-align: baseline;
+  	border-radius: .25em;
 }
 
 #list-roles > li > a {
@@ -5126,3 +5144,4 @@ a[data-toggle="modal"] {
 .c-pointer {
 	cursor: pointer;
 }
+
