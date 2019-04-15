@@ -3,7 +3,7 @@
 machine="`uname -s`"
 case "$machine" in
   Linux*)  export SED_EXT=''   ;;
-  Darwin*) export SED_EXT='""' ;;
+  Darwin*) export SED_EXT='.hydro-bk' ;;
   *)       export SED_EXT=''   ;;
 esac
 
@@ -163,7 +163,8 @@ sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
-sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
+sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
+#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
@@ -176,7 +177,7 @@ sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
-cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-local-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 
 sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
@@ -202,6 +203,8 @@ mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
+
+find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
 echo
 echo '########################################################################################################################'
@@ -288,6 +291,23 @@ echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 sleep 2
+
+echo
+echo '########################################################################################################################'
+echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
+echo '########################################################################################################################'
+echo
+
+docker restart hydroshare defaultworker
+
+COUNT=0
+SECOND=0
+while [ $SECOND -lt 10 ]
+do
+  SECOND=$(($SECOND + 1))
+  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
+done
+echo
 
 echo
 echo '########################################################################################################################'

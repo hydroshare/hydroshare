@@ -43,6 +43,6 @@ echo -e " Restart defaultworker to make sure it is able to connect to iRODS cont
 echo '########################################################################################################################'
 echo
 
-docker restart defaultworker
+docker restart defaultworker hydroshare
 
 
