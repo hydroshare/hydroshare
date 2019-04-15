@@ -3,7 +3,7 @@
 machine="`uname -s`"
 case "$machine" in
   Linux*)  export SED_EXT=''   ;;
-  Darwin*) export SED_EXT='.hydro-bk' ;;
+  Darwin*) export SED_EXT='""' ;;
   *)       export SED_EXT=''   ;;
 esac
 
@@ -65,7 +65,7 @@ echo -e " (1) Remove all HydroShare container: `green $REMOVE_CONTAINER`"
 echo -e " (2) Remove all HydroShare volume:    `green $REMOVE_VOLUME`"
 echo -e " (3) Remove all HydroShare image:     `green $REMOVE_IMAGE`"
 echo
-echo -ne " There are three options you can combine to make a configuratin. What you see here is the default.\n\n Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
+echo -ne " There are three options you can combine to make a configuratin. What you see here is the default. Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
 echo
 
 case "$A" in
@@ -102,9 +102,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -125,18 +125,8 @@ if [ "$REMOVE_VOLUME" == "YES" ]; then
 fi
 
 if [ "$REMOVE_IMAGE" == "YES" ]; then
-  echo "  Removing all HydroShare image..."
+  echo "  Removing HydroShare image..."
   for i in "${HYDROSHARE_IMAGES[@]}"; do    
-    echo -e "    Removing $i image if existed..."
-    IMAGE_ID=`getImageID $i`
-    if [ "$IMAGE_ID" != "" ]; then
-      echo -e "     - docker rmi -f `green $IMAGE_ID`"
-      docker rmi -f $IMAGE_ID 2>/dev/null 1>&2
-    fi
-  done
-else
-  echo "  Removing only hydroshare_nginx hydroshare_hydroshare and hydroshare_defaultwoker image..."
-  for i in hydroshare_nginx hydroshare_hydroshare hydroshare_defaultworker; do    
     echo -e "    Removing $i image if existed..."
     IMAGE_ID=`getImageID $i`
     if [ "$IMAGE_ID" != "" ]; then
@@ -146,65 +136,20 @@ else
   done
 fi
 
-###############################################################################################################
-### Preparing                                                                                            
-###############################################################################################################
+grep -v CMD Dockerfile > Dockerfile-defaultworker
+grep -v CMD Dockerfile > Dockerfile-hydroshare
 
-#grep -v CMD Dockerfile > Dockerfile-defaultworker
-#grep -v CMD Dockerfile > Dockerfile-hydroshare
+cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
+cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
-#cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
-#cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
-
-cp scripts/templates/init-defaultworker.template init-defaultworker
-cp scripts/templates/init-hydroshare.template    init-hydroshare
-
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
-
-sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
-sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
-
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
-
-NGINX_CONFIG_DIRECTORY=nginx/config-files
-cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
-cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-local-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
-
-sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-
-sed -i $SED_EXT 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_CACHE_URI!'${IRODS_CACHE_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-
-sed -i $SED_EXT 's!IRODS_DATA_ROOT!'${IRODS_DATA_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_CACHE_ROOT!'${IRODS_CACHE_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-
-sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
-sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
-
-sed -i $SED_EXT 's!SENDFILE_IRODS_USER_ID!'${SENDFILE_IRODS_USER_ID}'!g' nginx/Dockerfile-nginx
-sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP_ID!'${SENDFILE_IRODS_GROUP_ID}'!g' nginx/Dockerfile-nginx
-sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' nginx/Dockerfile-nginx
-sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' nginx/Dockerfile-nginx
+sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
+sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
-mkdir -p log/nginx 2>/dev/null
+mkdir log 2>/dev/null
 #chmod -R 777 log 2>/dev/null
-
-find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
 echo
 echo '########################################################################################################################'
@@ -242,8 +187,6 @@ echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
-docker exec hydroshare /usr/bin/env bash scripts/chown-root-items
-
 cd conf_irods/
 ./partial_build.sh 
 cd ..
@@ -255,6 +198,7 @@ echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
 
+echo
 echo "  -docker $DOCKER_PARAM exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
 docker $DOCKER_PARAM exec -u postgres postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
@@ -264,10 +208,12 @@ echo "  - docker $DOCKER_PARAM exec -u postgres postgis psql -c \"SELECT pid, pg
 echo
 docker $DOCKER_PARAM exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
 
+echo
 echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
@@ -282,6 +228,7 @@ echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgi
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
 
+echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
@@ -294,30 +241,9 @@ sleep 2
 
 echo
 echo '########################################################################################################################'
-echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
-echo '########################################################################################################################'
-echo
-
-docker restart hydroshare defaultworker
-
-COUNT=0
-SECOND=0
-while [ $SECOND -lt 10 ]
-do
-  SECOND=$(($SECOND + 1))
-  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-done
-echo
-
-echo
-echo '########################################################################################################################'
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
-
-echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
-echo
-docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
@@ -340,6 +266,7 @@ echo " Reindexing SOLR"
 echo '########################################################################################################################'
 echo
 
+echo
 echo "  - docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
@@ -349,6 +276,7 @@ echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schem
 echo
 docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
 
+echo
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"

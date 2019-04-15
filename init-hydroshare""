@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# init-hydroshare
+# HydroShare container intiliaization script
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+sleep 3s
+cp /hydroshare/hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
+userdel hydro-service \
+ && groupdel storage-hydro \
+ && echo "storage-hydro:x:20:" >> /etc/group \
+ && echo "hydro-service:x:501:20::/hydroshare:/bin/bash" >> /etc/passwd \
+ && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
+ && chmod -R 3777 /hs_tmp /shared_tmp /tmp \
+ && setfacl -Rm d:g:storage-hydro:rwx /hs_tmp /shared_tmp /tmp \
+ && setfacl -Rm g:storage-hydro:rwx /hs_tmp /shared_tmp /tmp 
+HS_DJANGO_SERVER
