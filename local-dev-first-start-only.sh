@@ -315,6 +315,8 @@ echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
+docker exec hydroshare /usr/bin/env bash scripts/chown-root-items
+
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput

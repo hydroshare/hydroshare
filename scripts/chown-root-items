@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
 chown hydro-service:storage-hydro * -R
+chmod g+rwx /tmp -R
 
 exit 0;
