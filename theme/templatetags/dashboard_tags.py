@@ -6,18 +6,6 @@ from django.utils import timezone as django_timezone
 register = template.Library()
 
 
-@register.filter(name='icon_name_lookup')
-def lookup(dict_icon_type, index):
-    if index in dict_icon_type:
-        return dict_icon_type[index]
-    return ''
-
-
-@register.filter(name='new_date')
-def lookup(datetime_obj):
-    return ''
-
-
 @register.filter(name='just_in_time')
 def date_time_pac(in_datetime):
     now_what = django_timezone.now()
