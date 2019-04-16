@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from django import template
 import timeago
-from datetime import datetime
 from django.utils import timezone as django_timezone
 register = template.Library()
 
@@ -17,12 +16,10 @@ def lookup(dict_icon_type, index):
 @register.filter(name='new_date')
 def lookup(datetime_obj):
     return ''
-    #return datatime_obj
+
 
 @register.filter(name='just_in_time')
 def date_time_pac(in_datetime):
-    #now_now = datetime.datetime.now()
-    #return in_datetime.strftime("%Y-%m %H:%M:%S")
     now_what = django_timezone.now()
     return timeago.format(in_datetime, now_what)
 
