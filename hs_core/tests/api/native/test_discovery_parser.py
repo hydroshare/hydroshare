@@ -75,16 +75,20 @@ class SimpleTest(TestCase):
 
     def test_operators(self):
         testcase = {
+            # removed '+', '-' syntaxes 4/5/2019.
+            # test cases modified accordingly.
             "note": str(SQ(content="note")),
-            # removed '-' 4/5/2019 "need -note": str(SQ(content="need") & ~SQ(content="note")),
-            # removed '+' 4/5/2019 "need +note": str(SQ(content="need") & SQ(content="note")),
-            # removed '+' 4/5/2019 "need+note": str(SQ(content="need+note")),
+            "need -note": str(SQ(content="need") & SQ(content="-note")),
+            "need +note": str(SQ(content="need") & SQ(content="+note")),
+            "need+note": str(SQ(content="need+note")),
             "iphone AND NOT subject:10": str(SQ(content="iphone") & ~SQ(subject="10")),
             "iphone OR NOT subject:10": str(SQ(content="iphone") | ~SQ(subject="10")),
             "NOT subject:10": str(~SQ(subject="10")),
             "subject:10": str(SQ(subject="10")),
-            # removed 4/5/2019 "-subject:10": str(~SQ(subject="10")),
+            "-subject:10": str(SQ(content='-') & SQ(subject="10")),
             "subject:-10": str(SQ(subject="-10")),
+            # all keywords accepted, non-matches are treated literally
+            "foo:bar": str(SQ(content="foo:bar")),
         }
         parser = ParseSQ()
         for case in testcase.keys():
@@ -142,7 +146,7 @@ class SimpleTest(TestCase):
 
     def test_exceptions(self):
         testcase = {
-            # removed 4/5/2019 "foo:bar": FieldNotRecognizedError,
+            # This exception removed 4/5/2019: "foo:bar": FieldNotRecognizedError,
             "created:20170": MalformedDateError,
             "created:2017-30": MalformedDateError,
             "created:2017-12-64": MalformedDateError,

@@ -78,8 +78,9 @@ class ParseSQ(object):
     OP = {
         'AND': operator.and_,
         'OR': operator.or_,
-        'NOT': operator.inv,  # alias '-' removed 4/5/2019
-        # alias '+' (for include) removed 4/5/2019
+        'NOT': operator.inv,
+        # aliases '+' (for include) and '-' (for NOT) removed 4/5/2019
+        # due to potential collision with valid titles for resources.
     }
 
     # Translation table for inequalities
@@ -189,7 +190,8 @@ class ParseSQ(object):
     # Paterns without more precise control of __exact keyword
     Pattern_Field_Query = re.compile(r"^(\w+)(:|[<>]=?)", re.U)
     Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
-    Pattern_Operator = re.compile(r"^(AND|OR|NOT)\s*", re.U)  # '-', '+' removed 4/5/2019
+    Pattern_Operator = re.compile(r"^(AND|OR|NOT)\s*", re.U)
+    # '-', '+' removed 4/5/2019 to avoid potential collision with valid resource titles
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
     Pattern_Unquoted_Text = re.compile(r"^(\w*)\s*", re.U)
 
