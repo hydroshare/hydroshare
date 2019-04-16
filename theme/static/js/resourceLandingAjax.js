@@ -890,66 +890,10 @@ function metadata_update_ajax_submit(form_id){
                         $res_title.text(updated_title);
                     }
                 }
-                if (json_response.hasOwnProperty('metadata_status')) {
-                    if (json_response.metadata_status !== $('#metadata-status').text()) {
-                        $('#metadata-status').text(json_response.metadata_status);
-                        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                            if(resourceType != 'Web App Resource' && resourceType != 'Collection Resource' )
-                                promptMessage = "All required fields are completed. The resource can now be made discoverable " + 
-                                                "or public. To permanently publish the resource and obtain a DOI, the resource " +
-                                                "must first be made public.";
-                            else
-                                promptMessage = "All required fields are completed. It can now be made discoverable " + 
-                                                "or public.";
-                            if (!metadata_update_ajax_submit.resourceSatusDisplayed){
-                                metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                                if (json_response.hasOwnProperty('res_public_status')) {
-                                    if (json_response.res_public_status.toLowerCase() === "not public") {
-                                        // if the resource is already public no need to show the following alert message
-                                        customAlert("Resource Status:", promptMessage, "success", 3000);
-                                    }
-                                }
-                                else {
-                                    customAlert("Resource Status:", promptMessage, "success", 3000);
-                                }
-                            }
-                            $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                            $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-                        }
-                    }
-                }
-                if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-                    if (json_response.res_public_status == "public"){
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-public").removeClass('active');
-                        $("#btn-public").prop("disabled", true);
-                    }
-                    if (json_response.res_discoverable_status == "discoverable"){
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-discoverable").removeClass('active');
-                        $("#btn-discoverable").prop("disabled", true);
-                    }
-                    if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable"){
-                        $("#btn-private").addClass('active');
-                        $("#btn-private").prop("disabled", true);
-                    }
-                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                }
+
+                showCompletedMessage(json_response);
+
+
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
                     this.remove();
@@ -984,6 +928,75 @@ function metadata_update_ajax_submit(form_id){
     });
     //don't submit the form
     return false;
+}
+
+function showCompletedMessage(json_response) {
+    if (json_response.hasOwnProperty('metadata_status')) {
+        if (json_response.metadata_status !== $('#metadata-status').text()) {
+            $('#metadata-status').text(json_response.metadata_status);
+            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                let resourceType = $("#resource-type").val();
+                let promptMessage = "";
+                if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                      "must first be made public.";
+                else
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public.";
+                if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
+                    metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                    if (json_response.hasOwnProperty('res_public_status')) {
+                        if (json_response.res_public_status.toLowerCase() === "not public") {
+                            // if the resource is already public no need to show the following alert message
+                            customAlert("Resource Status:", promptMessage, "success", 8000);
+                        }
+                    }
+                    else {
+                        customAlert("Resource Status:", promptMessage, "success", 8000);
+                    }
+                }
+                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+            }
+        }
+    }
+
+    if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
+        if (json_response.res_public_status == "public") {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-public").removeClass('active');
+            $("#btn-public").prop("disabled", true);
+        }
+
+        if (json_response.res_discoverable_status == "discoverable") {
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-discoverable").removeClass('active');
+            $("#btn-discoverable").prop("disabled", true);
+        }
+
+        if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
+            $("#btn-private").addClass('active');
+            $("#btn-private").prop("disabled", true);
+        }
+
+        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
+            }
+        }
+    }
 }
 
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){

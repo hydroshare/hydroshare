@@ -1259,6 +1259,7 @@ $(document).ready(function () {
                 if (resourceType === 'Composite Resource') {
                     updateResourceUI();
                 }
+                showCompletedMessage(response);
             },
             init: function () {
                 // The user dragged a file onto the Dropzone
