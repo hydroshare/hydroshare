@@ -62,6 +62,9 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 
 from hs_collection_resource.models import CollectionDeletedResource
 
+from hs_access_control.management.utilities import user_from_name, community_from_name_or_id
+from hs_access_control.models.privilege import PrivilegeCodes
+
 logger = logging.getLogger(__name__)
 
 
@@ -1813,6 +1816,50 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
+        }
+
+
+class CommunityView(TemplateView):
+    template_name = 'pages/community.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommunityView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        user_id = User.objects.get(pk=self.request.user.id)
+        user = user_from_name(user_id)
+        groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
+        communities_owner = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
+
+        # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community; later refactor for when multiple communities exist
+        community_resources = community_from_name_or_id("CZO National Community").public_resources  # fail gracefully
+# group is the object
+        #__name=
+        #__id=
+        community_resources_luquillo = community_resources.filter(r2grp__group__name="CZO Luquillo")
+        groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
+        communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
+        groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
+        # TODO I think this is listing just for CZO Christina, modify to list for entire Community
+
+        try:
+            g = groups_view[0]
+        except:
+            pass
+
+        # g = Group.objects.get(pk=groups_view.id)
+        # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
+        pause = 1
+
+        # 'user_id': user_id,
+        # 'groups_owner': groups_owner,
+        # 'groups_view': groups_view,
+        # 'communities_view': communities_view,
+        # 'communities_owner': communities_owner,
+
+        return {
+            'community_resources': community_resources
         }
 
 
