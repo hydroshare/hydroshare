@@ -18,55 +18,49 @@ timestamp should go with a template tags to convert to a human readble day.
 
 {% block main %}
     <div class="container  collapse dashboard_section_container" id="getStarted">
-        <div class="row" style="margin-left: 20px; margin-right: 2px; margin-bottom: 10px;">
-                <span>
-                 <h3 class="home-page-block-title" style="float: left;">Get Started</h3>
-                </span>
-        </div>
+        {% trans "Getting Started" as whole_title %}
+        {% include "includes/apps_block_title.html" %}
         <div id="row-1" class="row">
             <div class="col-xs-12 col-sm-4  get_started_cell">
                 <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
-                   class="get_started_link">Check out tutorials.</a>
+                   class="get_started_link">Check out tutorials</a>
             </div>
             <div class="col-xs-12 col-sm-4  get_started_cell">
-                <a href="/user/" class="get_started_link">Complete profile.</a>
+                <a href="/user/" class="get_started_link">Complete profile</a>
             </div>
             <div class="col-xs-12 col-sm-4  get_started_cell">
-                <a href="/search/" class="get_started_link">Browse data.</a>
+                <a href="/search/" class="get_started_link">Browse data and models</a>
             </div>
         </div>
 
         <div id="row-2" class="row">
             <div class="col-xs-12 col-sm-4 get_started_cell">
                 <a href="https://help.hydroshare.org/introduction-to-hydroshare/" class="get_started_link">How does
-                    HydroShare work?</a>
+                    HydroShare work</a>
             </div>
             <div class="col-xs-12 col-sm-4 get_started_cell">
-                <a href="/resource/fef58369046c4a64a2d7564c4e7e1fd0/" class="get_started_link">Review an example
-                    resource.</a>
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
+                   class="get_started_link">Review an example
+                    resource</a>
             </div>
             <div class="col-xs-12 col-sm-4 get_started_cell">
-                <a href="https://help.hydroshare.org/about-hydroshare/releases/" class="get_started_link">What's
-                    new?</a>
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
+                   class="get_started_link">What's
+                    new</a>
             </div>
         </div>
 
     </div>
 
 
-
-
     <div>
         <div class="container dashboard_section_container">
-            <!--
-             style="background: #FFFFFF; border-radius: 10px; border: #F4F4F4  1px; margin-bottom: 20px; margin-top: 10px;">
-             -->
-            <div class="row" style="margin-left: 20px; margin-right: 2px; margin-bottom: 10px;">
+            <div class="row dashboard_section_container_title_row">
                 <span>
-                 <h3 class="home-page-block-title" style="float: left;">Recently Visited </h3>
+                 <h3 class="home-page-block-title">Recently Visited </h3>
                     <span style="float: right">
-                    <a href="#" id="change_me" style="display: inline-block; margin-top: 20px; margin-right: 20px;"
-                       data-toggle="collapse" data-target="#getStarted">Show get started</a>
+                    <a href="#" id="change_me" class="get_started_toggle" data-toggle="collapse"
+                       data-target="#getStarted">Show get started</a>
                     </span>
                 </span>
             </div>
@@ -113,34 +107,34 @@ timestamp should go with a template tags to convert to a human readble day.
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
                 {% trans "CUAHSI JupyterHub" as title_name %}
-                {% trans "https://jupyter.cuahsi.org/user/_/tree/notebooks" as title_url %}
+                {% trans "https://jupyter.cuahsi.org" as title_url %}
                 {% trans "/static/img/jupiterhub.png" as app_image %}
                 {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
 
-                {% trans "National Water Model Viewer" as title_name %}
+                {% trans "National Water Model Forecast Viewer" as title_name %}
                 {% trans "https://hs-apps.hydroshare.org/apps/nwm-forecasts/" as title_url %}
                 {% trans "/static/img/nwm_forecasts.png" as app_image %}
-                {% trans "Retrieve and preview National Water Model data. " as app_content %}
+                {% trans "Retrieve and preview National Water Model data." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
 
             <div class="row big-app-row">
                 {% trans "THREDDS Data Archive" as title_name %}
-                {% trans "https://www.unidata.ucar.edu/downloads/thredds/index.jsp" as title_url %}
+                {% trans "http://thredds.hydroshare.org/thredds/catalog.html" as title_url %}
                 {% trans "/static/img/THREDDS.png" as app_image %}
                 {% trans "Access National Water Model data and more in the THREDDS Data Archive." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
 
                 {% trans "OPenDAP (NetCDF)" as title_name %}
-                {% trans "https://apps.hydroshare.org/apps/data-rods-explorer/" as title_url %}
+                {% trans "http://hyrax.hydroshare.org/opendap/hyrax/" as title_url %}
                 {% trans "/static/img/NetCDF.png" as app_image %}
                 {% trans "OpeNDAP web service for multidimensional space-time data resources in HydroShare." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
         </div>
 
-        #{# CUAHSI developed apps #}
+        {# CUAHSI developed apps #}
         <div class="container dashboard_section_container">
             {% trans "Other CUAHSI Water Data Services" as whole_title %}
             {% include "includes/apps_block_title.html" %}
