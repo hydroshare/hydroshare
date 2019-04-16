@@ -83,4 +83,6 @@ class TestDashboard(TestCase):
         self.assertEqual(stuff.count(), 1)
         r = stuff[0]
         self.assertEqual(r.short_id, self.holes.short_id)
-        self.assertEqual(r.action, 'visit')
+        self.assertEqual(r.public, False)
+        self.assertEqual(r.published, False)
+        self.assertEqual(r.discoverable, False)
