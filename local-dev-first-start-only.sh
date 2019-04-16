@@ -242,7 +242,7 @@ echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
-docker exec hydroshare /usr/bin/env bash scripts/chown-root-items
+docker exec hydroshare bash scripts/chown-root-items
 
 cd conf_irods/
 ./partial_build.sh 
@@ -314,6 +314,8 @@ echo '##########################################################################
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
+
+docker exec hydroshare bash scripts/chown-root-items
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
