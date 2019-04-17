@@ -600,6 +600,35 @@
     </div>
 </div>
 
+    <div class="modal fade in" id="validate-reference-url-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="validate-reference-url" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="validate-url-title">Unable to validate URL</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Unable to validate URL link. This may be due to an error in the URL or password or automated bot
+                        protection at the hosting site. If you still want to create referenced content using this invalid URL
+                        link, click <strong>Proceed</strong>. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="ref_name_passover" value=""/>
+                    <input type="hidden" id="ref_url_passover" value=""/>
+                    <input type="hidden" id="new_ref_url_passover" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-reference-url-without-validation" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade in" id="add-reference-url-dialog" tabindex="-1" role="dialog"
          aria-labelledby="add-reference" aria-hidden="false">
         <div class="modal-dialog">
@@ -648,6 +677,7 @@
                 </div>
 
                 <div class="modal-body">
+
                     <div class="row">
                         <fieldset class="col-sm-12">
                             <label>Name *</label>
@@ -982,7 +1012,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group">
+                                <div id="div_id_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Relation type<span class="asteriskField">*</span></label>
 
@@ -1321,7 +1351,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group">
+                                <div id="div_id_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Type of relationship<span class="asteriskField">*</span></label>
 
@@ -1824,7 +1854,7 @@
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Invite</h3>
+                            <h3 class="panel-title">Give access</h3>
                         </div>
                         <div id="div-invite-people" class="panel-body">
                             <div id="invite-flag" class="btn-group" role="group"
@@ -1998,15 +2028,21 @@
     </div>
     {#======= Manage access modal  window ends =======#}
 
-    {% block delete-self-access-to-resource %}
-        <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access" style="display:none">
-            <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
-                This action will remove your access to this resource and you will no longer be able to
-                access it without someone else sharing it with you again. This is not reversible,
-                so <strong>Remove</strong> with caution.
-            </p>
-        </div>
-    {% endblock %}
+    <div id="dialog-confirm-delete-self-access" class="access-dialog-title" title="Warning! Loss of access"> 
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+            This action will remove your access to this resource and you will no longer be able to
+            access it without someone else sharing it with you again. This is not reversible,
+            so <strong>Remove</strong> with caution.
+        </p>
+    </div>
+    
+    <div id="dialog-confirm-change-share-permission" class="access-dialog-title" title="Warning! Loss of owner access">
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+        This action will remove your owner access to this resource. This removal is not reversible. Owner 
+        access can only be retrieved by another owner later granting you owner access. <strong>Remove</strong> with caution.
+        </p>
+    </div>
+
 {% endif %}
 
 <div class="modal fade" id="redirect-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">

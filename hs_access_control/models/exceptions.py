@@ -1,5 +1,5 @@
 #############################################
-# utility classes
+# exceptions
 #
 # These are used by all access control classes.
 #############################################

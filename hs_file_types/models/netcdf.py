@@ -19,6 +19,7 @@ from dominate.tags import div, legend, form, button, p, textarea, input
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.signals import post_add_netcdf_aggregation
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -166,6 +167,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def get_update_netcdf_file_html_form(self):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.logical_file.id)
         style = "display:none;"
+        self.refresh_from_db()
         if self.is_dirty:
             style = "margin-bottom:15px"
         root_div = div(id="div-netcdf-file-update", cls="row", style=style)
@@ -515,6 +517,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                            folder_created=aggregation_folder_created,
                                            res_files_to_delete=res_files_to_delete)
                     file_type_success = True
+                    post_add_netcdf_aggregation.send(
+                        sender=AbstractLogicalFile,
+                        resource=resource,
+                        file=logical_file
+                    )
                 except Exception as ex:
                     msg = msg.format(ex.message)
                     log.exception(msg)

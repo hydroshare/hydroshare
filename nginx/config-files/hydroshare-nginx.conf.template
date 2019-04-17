@@ -72,8 +72,8 @@ server {
             return 503;
         }
         try_files $uri @proxy;
-        AUTH_BASIC;
-        AUTH_BASIC_USER_FILE;
+#        AUTH_BASIC;
+#        AUTH_BASIC_USER_FILE;
     }
 
     location @proxy {

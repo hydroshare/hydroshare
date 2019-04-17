@@ -24,12 +24,11 @@
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group"
-                                data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}">
+                            <ul class="list-group inputs-group">
                                 <li class="list-group-item">
-                                    <span class="badge">{{ numOwned }}</span>
+                                    <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" value="Owned" checked>Owned
+                                        <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
                                         by me</label>
                                 </li>
                                 <li class="list-group-item">
@@ -284,7 +283,7 @@
                                 <td></td>
                             {% endif %}
                             <td class="col-labels">
-                                {% for label in res.labels %}
+                                {% for label in res|user_resource_labels:user %}
                                     {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
                                 {% endfor %}
                             </td>
@@ -293,7 +292,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"U" }}</td>
+                            <td>{{ res.last_updated|date:"U" }}</td>
                             <td>
                                 {% if res.raccess.published %}
                                     Published
@@ -310,28 +309,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <!-- pagination nav -->
-            {% if collection.has_other_pages %}
-                <ul class="pagination">
-                    {% if collection.has_previous %}
-                        <li><a href="?page={{ collection.previous_page_number }}">&laquo;</a></li>
-                    {% else %}
-                        <li class="disabled"><span>&laquo;</span></li>
-                    {% endif %}
-                    {% for i in collection.paginator.page_range %}
-                        {% if collection.number == i %}
-                            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
-                        {% else %}
-                            <li><a href="?page={{ i }}">{{ i }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if collection.has_next %}
-                        <li><a href="?page={{ collection.next_page_number }}">&raquo;</a></li>
-                    {% else %}
-                        <li class="disabled"><span>&raquo;</span></li>
-                    {% endif %}
-                </ul>
-            {% endif %}
             <br>
             <div class="alert alert-info">
                 <strong>

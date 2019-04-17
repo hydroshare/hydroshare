@@ -1,55 +1,36 @@
-{% load i18n pages_tags mezzanine_tags %}
+{% load mezzanine_tags %}
 {% spaceless %}
-{% if page_branch_in_menu %}
 
-{% if branch_level == 0 %}
 <ul class="nav navbar-nav">
-    {% for page in page_branch %}
-    {% if not has_home and page.is_primary and forloop.first %}
-    <li class="{% if on_home %} active{% endif %}" id="dropdown-menu-home">
-        <a href="{% url "home" %}">{% trans "Home" %}</a>
+    <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
+        <a href="/my-resources/">My Resources</a>
     </li>
-    {% endif %}
-    {% if page.in_menu %}
-    <li class="{% if page.has_children_in_menu %}dropdown{% endif %}{% if page.is_current_or_ascendant %} active{% endif %}"
-        id="dropdown-menu-{{ page.html_id }}">
-        <a href="{{ page.get_absolute_url }}">
-            {{ page.title }}
-            {% if page.has_children_in_menu %}<span class="caret"></span>{% endif %}
-        </a>
-        {% if page.has_children_in_menu %}{% page_menu page %}{% endif %}
+    <li {% if request.path == "/search/" %}class="active"{% endif %} id="dropdown-menu-search">
+        <a href="/search/">Discover</a>
     </li>
+    <li {% if request.path == "/collaborate/" %}class="active"{% endif %} id="dropdown-menu-collaborate">
+        <a href="/collaborate/">Collaborate</a>
+    </li>
+    <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
+        <a href="https://www.hydroshare.org/apps/">Apps</a>
+    </li>
+    <li class="" id="dropdown-menu-https:--help.hydroshare.org">
+        <a href="http://help.hydroshare.org">HELP</a>
+    </li>
+    <li class="" id="dropdown-menu-https:--help.hydroshare.org-about-hydroshare-">
+        <a href="https://help.hydroshare.org/about-hydroshare/">About</a>
+    </li>
+    {% if not user.is_anonymous %}
+        <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
     {% endif %}
-    {% if forloop.last %}
+
+    {% ifinstalled mezzanine.accounts %}
+        <!-- Profile links for extra small screens -->
         {% if not user.is_anonymous %}
-            <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
+            <li class="visible-xs"><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
+        {% else %}
+            <li class="visible-xs"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
         {% endif %}
-
-        {% ifinstalled mezzanine.accounts %}
-            <!-- Profile links for extra small screens -->
-            {% if not user.is_anonymous %}
-                <li class="visible-xs"><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
-            {% else %}
-                <li class="visible-xs"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
-            {% endif %}
-        {% endifinstalled %}
-    {% endif %}
-    {% endfor %}
+    {% endifinstalled %}
 </ul>
-{% else %}
-<ul class="dropdown-menu">
-    {% for page in page_branch %}
-    {% if page.in_menu %}
-    <li class="{% if page.has_children_in_menu %}dropdown dropdown-submenu{% endif %}
-               {% if page.is_current_or_ascendant %}active{% endif %}"
-        id="{{ page.html_id }}">
-        <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>
-        {% if page.has_children_in_menu %}{% page_menu page %}{% endif %}
-    </li>
-    {% endif %}
-    {% endfor %}
-</ul>
-{% endif %}
-
-{% endif %}
 {% endspaceless %}

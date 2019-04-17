@@ -172,7 +172,7 @@ MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
 # sendfile support for large files
 # These must match settings in nginx
-SENDFILE_ON = False
+SENDFILE_ON = True
 IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
@@ -182,5 +182,26 @@ RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
-# insert a google maps key here when in production
+# Insert a google maps key here when in production
+# On local device google maps will show error in resource view since API key is blank here
 MAPS_KEY = ''
+
+# HydroShare web services settings
+HSWS_URL = "http://10.37.142.23:8060/his/services/update"
+HSWS_API_TOKEN = "d1caabf3059ef7ffd99d890aba57100da2e0efc8"
+HSWS_TIMEOUT = 3
+HSWS_PUBLISH_URLS = False
+HSWS_ACTIVATED = False
+
+# Uncomment the following code if you want to suppress some warnings on a local laptop
+# TIME_ZONE = 'Etc/UTC'
+# USE_TZ = False
+
+"""
+Silence ForeignKey Warnings:
+hs_tracking.Visitor.user:(fields.W342) Setting unique=True on a ForeignKey has the same effect as using a OneToOneField.
+hydroshare | HINT: ForeignKey(unique=True) is usually better served by a OneToOneField.
+hydroshare | security.PasswordExpiry.user: (fields.W342) Setting unique=True on a ForeignKey has the same effect as
+using a OneToOneField.
+"""
+# SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
