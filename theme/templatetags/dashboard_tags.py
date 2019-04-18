@@ -45,21 +45,19 @@ def build_privacy_status(is_published, is_public, is_discoverable):
         return "Private"
 
 
-@register.filter(name='resource_img_urlize')
-def resource_img_urlize(index):
-    if index in ResourceNameDBToUIMap.dict:
-        url_pre = "/{{STATIC_URL}}/img/resource-icons/"
-        url_post = "48x48.png"
-        return url_pre + ResourceNameDBToUIMap.dict[index] + url_post
-    return ''
-
-
 @register.simple_tag(name='resource_img_url_builder')
 def resource_img_url_builder(static_url, rsc_type):
     if rsc_type in ResourceNameDBToUIMap.dict:
         url_pre = "<img " + "src=\"" + static_url + "/img/resource-icons/"
         url_post = "48x48.png\">"
         return url_pre + ResourceNameDBToUIMap.dict[rsc_type] + url_post
+    return ''
+
+
+@register.simple_tag(name='resource_verbose_name_builder')
+def resource_verbose_name_builder(rsc_type):
+    if rsc_type in ResourceNameDBToUIMap.dict:
+        return ResourceNameDBToUIMap.dict_verbose_name[rsc_type]
     return ''
 
 
@@ -80,3 +78,20 @@ class ResourceNameDBToUIMap:
         'MODFLOWModelInstanceResource': 'modflow',
         'GenericResource': 'generic'
     }
+    dict_verbose_name = {
+        'CompositeResource': 'Composite',
+        'RasterResource': 'Geographic Raster',
+        'RefTimeSeriesResource': 'HIS Referenced Time Series',
+        'ScriptResource': 'Script',
+        'ModelProgramResource': 'Model Program',
+        'ModelInstanceResource': 'Model Instance',
+        'SWATModelInstanceResource': 'SWAT Model Instance',
+        'NetcdfResource': 'Multidimensional (NetCDF)',
+        'Time Series': 'Time Series',
+        'GeographicFeatureResouce': 'Geographic Feature',
+        'ToolResource': 'Web App',
+        'CollectionResource': 'Collection',
+        'MODFLOWModelInstanceResource': 'MODFLOW Model Instance',
+        'GenericResource': 'Generic'
+    }
+

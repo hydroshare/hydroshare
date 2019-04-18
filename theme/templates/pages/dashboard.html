@@ -71,7 +71,7 @@ timestamp should go with a template tags to convert to a human readble day.
                     <th>Accessed</th>
                     <th>Title</th>
                     <th>First Author</th>
-                    <th>Type</th>
+                    <th>Resource Type</th>
                     <th>Visibility</th>
                 </tr>
                 </thead>
@@ -90,7 +90,7 @@ timestamp should go with a template tags to convert to a human readble day.
                         <td>{{ r.first_creator }}</td>
                         <td>
                             {% autoescape off %}
-                                {% resource_img_url_builder STATIC_URL r.resource_type %}
+                                {% resource_verbose_name_builder r.resource_type %}
                             {% endautoescape %}
                         </td>
                         <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
@@ -119,19 +119,6 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% include "includes/big_image_button_app.html" %}
             </div>
 
-            <div class="row big-app-row">
-                {% trans "THREDDS Data Archive" as title_name %}
-                {% trans "http://thredds.hydroshare.org/thredds/catalog.html" as title_url %}
-                {% trans "/static/img/THREDDS.png" as app_image %}
-                {% trans "Access National Water Model data and more in the THREDDS Data Archive." as app_content %}
-                {% include "includes/big_image_button_app.html" %}
-
-                {% trans "OPenDAP (NetCDF)" as title_name %}
-                {% trans "http://hyrax.hydroshare.org/opendap/hyrax/" as title_url %}
-                {% trans "/static/img/NetCDF.png" as app_image %}
-                {% trans "OpeNDAP web service for multidimensional space-time data resources in HydroShare." as app_content %}
-                {% include "includes/big_image_button_app.html" %}
-            </div>
         </div>
 
         {# CUAHSI developed apps #}
@@ -142,10 +129,10 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% trans "HydroClient" as title_name %}
                 {% trans "https://data.cuahsi.org" as title_url %}
                 {% trans "/static/img/hydro_client.png" as app_image %}
-                {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, ,academic scientists, and volunteer monitoring organizations." as app_content %}
+                {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, academic scientists, and volunteer monitoring organizations." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
 
-                {% trans "Uploader" as title_name %}
+                {% trans "Time Series Data Uploader" as title_name %}
                 {% trans "http://hydroserver.cuahsi.org" as title_url %}
                 {% trans "/static/img/hydro_server.png" as app_image %}
                 {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
