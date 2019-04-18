@@ -67,7 +67,7 @@ class ResourceToListItemMixin(object):
                                                           immutable=r.raccess.immutable,
                                                           published=r.raccess.published,
                                                           date_created=r.created,
-                                                          date_last_updated=r.updated,
+                                                          date_last_updated=r.last_updated,
                                                           bag_url=bag_url,
                                                           coverages=coverages,
                                                           science_metadata_url=science_metadata_url,
