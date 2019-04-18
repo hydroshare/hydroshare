@@ -5,8 +5,6 @@ from hs_core import hydroshare
 from rest_framework import status
 import socket
 from django.test import Client
-from pprint import pprint
-
 
 
 class TestDashboard(TestCase):
@@ -79,19 +77,12 @@ class TestDashboard(TestCase):
         """ a view gets recorded """
 
         response = self.client.get(self.resource_url.format(res_id=self.holes.short_id))
-        pprint(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # for f in Variable.objects.all():
-        #     u = f.session.visitor.user
-        #     if u is not None:
-        #         username = u.username
-        #     else:
-        #         username = 'NONE'
-        #     print("name={}, type={}, value={} user={}".format(f.name, f.type, f.value, username))
         stuff = Variable.recent_resources(self.dog)
         self.assertEqual(stuff.count(), 1)
         r = stuff[0]
         self.assertEqual(r.short_id, self.holes.short_id)
-        self.assertEqual(r.action, 'visit')
-        
+        self.assertEqual(r.public, False)
+        self.assertEqual(r.published, False)
+        self.assertEqual(r.discoverable, False)

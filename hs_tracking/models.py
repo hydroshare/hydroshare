@@ -214,7 +214,7 @@ class Variable(models.Model):
         return BaseResource.objects.filter(
                 variable__session__visitor__user=user,
                 variable__timestamp__gte=(datetime.now()-timedelta(days)),
-                variable__resource__isnull=False, 
+                variable__resource__isnull=False,
                 variable__name='visit')\
             .only('short_id', 'created')\
             .distinct()\
