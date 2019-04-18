@@ -96,8 +96,9 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .dropdown-menu.profile-card {
     width: 350px;
-    height: unset;
+    height: auto;
     margin: unset;
+
 }
 
 .profile-card .flex > div {
@@ -791,7 +792,7 @@ li.account p{
 #cogs-menu,
 #profile-menu {
     display: none;
-    text-transform: initial;
+    text-transform: none;
 }
 
 #profile-menu > .dropdown-toggle {
@@ -814,10 +815,17 @@ li.account p{
     border-bottom-left-radius: 4px
 }
 
-#profile-menu #profile-menu-fullname { font-weight: bold; }
+#profile-menu #profile-menu-fullname {
+	font-weight: bold;
+}
 
 #profile-menu > .dropdown-toggle:hover, #profile-menu > .dropdown-toggle:focus {
     background:none;
+}
+
+#profile-menu #profile-menu-email, #profile-menu #profile-menu-fullname {
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .display-none {
@@ -4043,7 +4051,7 @@ div.group-add-photo {
 }
 
 .center-radio-inline input[type='radio']{
-	float: initial;
+	float: none;
 	margin: 0;
 }
 
@@ -4611,9 +4619,10 @@ span.caption-file-type {
 }
 
 .ui-resizable-se {
-    background-color: #fff;
-    margin-right: -1px;
-    background-position: -81px -224px !important;
+	background-color: #fff;
+	margin-right: -1px;
+	background-position: -81px -224px !important;
+	z-index: 2 !important;
 }
 
 .ui-resizable-e {

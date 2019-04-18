@@ -1356,21 +1356,20 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
-                    $('#fb-files-container').append(`
-                        <div>
-                            <span class="text-muted fb-empty-dir">This directory is empty</span>
-                            <br><br>
-                            <div class="hs-upload-indicator text-center">
-                                <i class="fa fa-file" aria-hidden="true"></i>
-                                <h4>Drop files here or click "Add files" to upload</h4>
-                            </div>
-                        </div>
-                    `);
+                    $('#fb-files-container').append(
+                        '<div>' +
+                            '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
+                            '<div class="hs-upload-indicator text-center">' +
+                                '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                '<h4>Drop files here or click "Add files" to upload</h4>' +
+                            '</div>' +
+                        '</div>'
+                    );
                 }
                 else {
-                    $('#fb-files-container').append(`
-                        <span class="text-muted fb-empty-dir">This directory is empty</span>
-                    `);
+                    $('#fb-files-container').append(
+                        '<span class="text-muted fb-empty-dir">This directory is empty</span>'
+                    );
                 }
             }
             if (can_be_public) {
