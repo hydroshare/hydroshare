@@ -2,7 +2,7 @@
 {% block main %}
     {% if group_owner %}
         <p>{% trans "Dear " %}{{ group_owner.first_name }}</p>
-        <p>{% trans "User " %}{{ user.first_name }} has requested to join your HydroShare group ({{ group.name }}).</p>
+        <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }}, {{ organization }} {{ title }} has requested to join your HydroShare group ({{ group.name }}).</p>
         <p>Click<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}"> here </a>to find information about the requesting user.</p>
         <p>Click on the link below to accept this request.</p>
     {% else %}

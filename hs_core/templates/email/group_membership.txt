@@ -2,7 +2,7 @@
 {% block main %}
     {% if group_owner %}
         {% trans "Dear " %}{{ group_owner.first_name }}
-        {% trans "User " %}{{ user.first_name }} has requested to join your HydroShare group ({{ group.name }}).
+        {% trans "User " %}{{ user.first_name }} {{ user.last_name }}, has requested to join your HydroShare group ({{ group.name }}).
         {{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}
         Click on the link below to accept this request.
     {% else %}
