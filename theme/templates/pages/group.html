@@ -87,7 +87,7 @@
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
                 <li role="presentation" class="active">
                     <a href="#overview" aria-controls="overview" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> Overview</a></li>
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                 <li role="presentation">
                     <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
@@ -98,7 +98,7 @@
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public%}
                 <li role="presentation">
                     <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-user"></i> MEMBERS</a>
+                        <i class="glyphicon glyphicon-user"></i> Members</a>
                 </li>
                 {% endif %}
             </ul>
@@ -553,7 +553,7 @@
                                     <th>Title</th>
                                     <th>First Author</th>
                                     <th>Date Created</th>
-                                    <th>Last modified</th>
+                                    <th>Last Modified</th>
                                     <th>Subject</th>
                                     {# Used in table processing #}
                                     <th>Authors</th>
