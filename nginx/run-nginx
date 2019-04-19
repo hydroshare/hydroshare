@@ -10,11 +10,11 @@ NGINX_DOCKER_CNTR='nginx'
 
 display_usage() {
 	echo "*** run-nginx control script ***"
-	echo "usage: $0 maint_off   # removes maintenance page"
-	echo "usage: $0 maint_on    # displays maintenance page"
-	echo "usage: $0 restart     # restarts docker nginx"
-	echo "usage: $0 start       # starts docker nginx"
-	echo "usage: $0 stop        # stops docker nginx"
+	echo "usage: $0 maint_off                     # removes GLOBAL MESSAGE page"
+	echo "usage: $0 maint_on [<maint> <DateTime>] # displays GLOBAL MESSAGE page"
+	echo "usage: $0 restart                       # restarts docker nginx"
+	echo "usage: $0 start                         # starts docker nginx"
+	echo "usage: $0 stop                          # stops docker nginx"
 }
 
 preflight_nginx() {
@@ -123,6 +123,7 @@ restart_nginx() {
 
 maint_on_nginx() {
     echo "MAINT ON:"
+    echo $1
     echo "  - cp maintenance_on.html ../hydroshare/static/maintenance_on.html"
     cp maintenance_on.html ../hydroshare/static/maintenance_on.html
 }
@@ -134,7 +135,7 @@ maint_off_nginx() {
 }
 
 ### Display usage if exactly one argument is not provided ###
-if [  $# -ne 1 ]
+if [  $# -eq 0 ]
 then
     display_usage
     exit 1
@@ -147,7 +148,7 @@ case "$1" in
         ;;
     stop) stop_nginx $1
         ;;
-    maint_on) maint_on_nginx $1
+    maint_on) maint_on_nginx $2 $3
         ;;
     maint_off) maint_off_nginx $1
         ;;

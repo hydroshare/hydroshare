@@ -360,6 +360,10 @@ echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
 
+NGINX_IP=`docker network inspect hydroshare_default | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+mkdir -p tmp
+echo $NGINX_IP > tmp/nginx_ip
+
 docker-compose -f local-dev.yml down
 
 echo
