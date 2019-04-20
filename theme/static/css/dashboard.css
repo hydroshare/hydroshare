@@ -58,7 +58,7 @@ container for app image
 }
 
 div.img-div > .img-circle {
-    margin-top: 20px;
+    margin-top: 10px;
     margin-left: 5px;
     border-radius: 50%;
 }
