@@ -167,6 +167,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
+                   'cm': content_model,
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
@@ -275,6 +276,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
     context = {
+               'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
                'creators': content_model.metadata.creators.all(),
