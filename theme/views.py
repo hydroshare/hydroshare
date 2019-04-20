@@ -113,7 +113,7 @@ class UserPasswordResetView(TemplateView):
         context = super(UserPasswordResetView, self).get_context_data(**kwargs)
         return context
 
-def general(request, template="pages/homepage.html"):
+def landingPage(request, template="pages/homepage.html"):
     return render(request, template)
 
 
@@ -481,9 +481,11 @@ def send_verification_mail_for_password_reset(request, user):
 
 def home_router(request):
     if request.user.is_authenticated():
-        return dashboard(request)
+        #return dashboard(request)
+        return redirect("dashboard")
     else:
-        return render(request, "pages/homepage.html")
+        #return render(request, "pages/homepage.html")
+        return redirect("landing_page")
 
 
 @login_required
@@ -494,7 +496,6 @@ def dashboard(request, template="pages/dashboard.html"):
 
     context = {'recent': my_recent}
     return render(request, template, context)
-    #return render(request, template)
 
 
 def login(request, template="accounts/account_login.html",

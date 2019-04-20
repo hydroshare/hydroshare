@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% block meta_title %}Home{% endblock %}
 {% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n %}
 
 {% comment %}
@@ -39,12 +39,12 @@ timestamp should go with a template tags to convert to a human readble day.
                     HydroShare work</a>
             </div>
             <div class="col-xs-12 col-sm-4 get_started_cell">
-                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
-                   class="get_started_link">Review an example
-                    resource</a>
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/example-resources/"
+                   class="get_started_link">Review example resources
+                </a>
             </div>
             <div class="col-xs-12 col-sm-4 get_started_cell">
-                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
+                <a href="https://help.hydroshare.org/about-hydroshare/releases/"
                    class="get_started_link">What's
                     new</a>
             </div>
@@ -68,11 +68,11 @@ timestamp should go with a template tags to convert to a human readble day.
                    style="width: 100%;">
                 <thead>
                 <tr>
-                    <th>Accessed</th>
-                    <th>Title</th>
-                    <th>First Author</th>
-                    <th>Resource Type</th>
-                    <th>Visibility</th>
+                    <th style="padding-left: 10px;">Accessed</th>
+                    <th style="padding-left: 10px;">Title</th>
+                    <th style="padding-left: 10px;">First Author</th>
+                    <th style="padding-left: 10px;">Resource Type</th>
+                    <th style="padding-left: 10px;">Visibility</th>
                 </tr>
                 </thead>
                 {# ====================================== #}
@@ -129,13 +129,13 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% trans "HydroClient" as title_name %}
                 {% trans "https://data.cuahsi.org" as title_url %}
                 {% trans "/static/img/hydro_client.png" as app_image %}
-                {% trans "CUAHSI’s data discovery platform for time series. Explore and retrieve earth observations and time series data from federal agencies, academic scientists, and volunteer monitoring organizations." as app_content %}
+                {% trans "Explore and retrieve time series data from federal agencies, academic scientists, & volunteer monitoring organizations." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
 
                 {% trans "Time Series Data Uploader" as title_name %}
                 {% trans "http://hydroserver.cuahsi.org" as title_url %}
                 {% trans "/static/img/hydro_server.png" as app_image %}
-                {% trans "CUAHSI’s tool for sharing time series data. Request a database, format your data, and make it discoverable in HydroClient." as app_content %}
+                {% trans "Share your time series data. Request a database and upload your formatted data to make it available in HydroClient." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
         </div>

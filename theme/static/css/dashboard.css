@@ -97,9 +97,6 @@ the brief for the app
 
 .app-text-block-brief {
     width: 280px;
-    /*
-    max-width: 320px;
-    */
 }
 
 .get_started_cell {
@@ -126,3 +123,4 @@ the brief for the app
     margin-top: 20px;
     margin-right: 20px;
 }
+
