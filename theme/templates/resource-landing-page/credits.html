@@ -1,4 +1,4 @@
-{% if not metadata_form %}
+{% if not resource_edit_mode %}
     {% if fundingagencies or contributors %}
         <div class="col-xs-12 content-block">
             <h3>Credits</h3>
@@ -95,7 +95,7 @@
             </a>
         </h4>
         <p><i>This resource was created using funding from the following sources:</i></p>
-        {% if fundingagnency_formset.initial|length > 0 %}
+        {% if fundingagencies %}
             <table class="table hs-table table-striped funding-agencies-table">
                 <tbody>
                 <tr class="header-row">
@@ -105,7 +105,7 @@
                     <th></th>
                 </tr>
 
-                {% for agency in fundingagnency_formset.initial %}
+                {% for agency in fundingagencies %}
                     <tr data-index="{{ forloop.counter0 }}">
                         <td>
                             {% if agency.agency_url %}
@@ -149,7 +149,7 @@
             considered authors.
         </i></p>
 
-        {% if contributor_formset.initial|length > 0 %}
+        {% if contributors %}
             <table class="hs-table contact-table table d-block">
                 <thead>
                 <tr class="header-row">
@@ -162,7 +162,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for contributor in contributor_formset.initial %}
+                {% for contributor in contributors %}
                     <tr>
                         <td>{% if contributor.description %}
                             <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}

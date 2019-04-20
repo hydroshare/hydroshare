@@ -1,6 +1,6 @@
 {% load hydroshare_tags crispy_forms_tags %}
 
-{% if not metadata_form %}
+{% if not resource_edit_mode %}
     {% if sources or show_relations_section %}
         <div class="col-xs-12 content-block">
             <h3>References</h3>
@@ -87,10 +87,10 @@ If this resource was derived from another resource, click this button to create 
             </div>
         </div>
 
-        {% if source_formset.initial|length > 0 %}
+        {% if sources %}
         <table class="table hs-table">
             <tbody>
-            {% for source in source_formset.initial %}
+            {% for source in sources %}
                 <tr>
                     <td scope="row" class="dataset-label">Derived From:</td>
                     <td class="dataset-details">{{ source.derived_from|urlize }}</td>
@@ -138,10 +138,10 @@ Click this button to add a relationship to another resource, external website, o
             </div>
         </div>
 
-        {% if relation_formset.initial %}
+        {% if relations %}
         <table class="table hs-table">
             <tbody>
-            {% for relation in relation_formset.initial %}
+            {% for relation in relations %}
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
                         <td scope="row" class="dataset-label">
