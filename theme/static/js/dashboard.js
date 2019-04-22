@@ -45,10 +45,10 @@ function initializeTable() {
 $(document).ready(function () {
     initializeTable();
 
-    if (localStorage.openStatus == "closed") {
+    if (localStorage.openStatus === "closed") {
         $("#getStarted").addClass("collapse");
         $("#change_me").html("Show get started");
-    } else if (localStorage.openStatus == "opened") {
+    } else if (localStorage.openStatus === "opened") {
         $("#getStarted").addClass("in");
         $("#change_me").html("Hide get started");
     } else {
@@ -58,11 +58,11 @@ $(document).ready(function () {
     // add action handler
     $("#change_me").click(function () {
         $("#change_me").text(function (i, old) {
-            var statusChangedTo = old == 'Show get started' ? 'Hide get started' : 'Show get started';
+            var statusChangedTo = old === 'Show get started' ? 'Hide get started' : 'Show get started';
 
-            if (statusChangedTo == "Hide get started") {
+            if (statusChangedTo === "Hide get started") {
                 localStorage.openStatus = "opened";
-            } else if (statusChangedTo == "Show get started") {
+            } else if (statusChangedTo === "Show get started") {
                 localStorage.openStatus = "closed";
             } else {
                 localStorage.openStatus = "opened";
