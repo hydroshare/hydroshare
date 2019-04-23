@@ -28,7 +28,6 @@ class Command(BaseCommand):
             if r_res.metadata.cellInformation is not None:
                 # get the vrt file name which needs to be used to create a new folder for
                 # raster aggregation
-                tif_file = None
                 vrt_file = None
                 for res_file in r_res.files.all():
                     if res_file.extension.lower() == '.vrt':
