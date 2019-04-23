@@ -6,6 +6,7 @@ Modify the resource id of an existing resource
 """
 
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ObjectDoesNotExist
 from hs_core.models import BaseResource, short_id
 from uuid import UUID
 from django.db import transaction, IntegrityError
@@ -17,9 +18,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_id', nargs='*', type=str, help=('Required. The existing id (short_id)'
-                                                                      ' of the resource'))
-        parser.add_argument('new_resource_id', nargs='*', type=str,
+        parser.add_argument('resource_id', type=str, help=('Required. The existing id (short_id) of'
+                                                           ' the resource'))
+        parser.add_argument('new_resource_id', type=str,
                             help=('Optional. The new id (short_id) for the resource. A random one '
                                   'is generated if none is provided. Must be a valid string '
                                   'representation of a uuid hex'))
@@ -29,22 +30,26 @@ class Command(BaseCommand):
         if not options['resource_id']:
             raise CommandError('resource_id argument is required')
         res_id = options['resource_id']
-        res = BaseResource.objects.get(short_id=res_id)
-        if not res:
+        try:
+            res = BaseResource.objects.get(short_id=res_id)
+        except ObjectDoesNotExist:
             raise CommandError("No Resource found for id {}".format(res_id))
 
         if options['new_resource_id']:
             try:
                 UUID(options['new_resource_id'])
                 new_res_id = options['new_resource_id']
-            except:
+            except Exception as e:
                 raise CommandError('new_resource_id {} must be a valid uuid hex string'
-                                   .format(options['new_resource_id']))
+                                   .format(options['new_resource_id']), e)
 
-            if BaseResource.objects.get(short_id=new_res_id):
-                raise CommandError('resource with id {} already exists'.format(new_res_id))
+            try:
+                if BaseResource.objects.get(short_id=new_res_id):
+                    raise CommandError('resource with id {} already exists'.format(new_res_id))
+            except ObjectDoesNotExist:
+                pass
         else:
-            new_res_id = short_id
+            new_res_id = short_id()
 
         try:
             with transaction.atomic():
