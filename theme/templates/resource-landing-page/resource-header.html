@@ -6,7 +6,7 @@
             <table id="left-header-table" class="info-table">
                 <tr>
                     <th>Authors:</th>
-                    {% if not metadata_form %}
+                    {% if not resource_edit_mode %}
                         <td class="authors-wrapper">
                             {% for author in creators %}
                                 {% include "includes/author-link.html" with author=author %}
@@ -19,7 +19,7 @@
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
                         <span class="authors-wrapper sortable">
-                            {% for author in creator_formset.initial %}
+                            {% for author in creators %}
                                 <span>
                                     <a title="Edit {{ author.name }}"
                                        class="author-modal-trigger" data-id="{{ author.id }}"

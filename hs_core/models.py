@@ -3546,6 +3546,14 @@ class CoreMetaData(models.Model):
         return self.coverages.filter(type='period').first()
 
     @property
+    def spatial_coverage_default_projection(self):
+        return 'WGS 84 EPSG:4326'
+
+    @property
+    def spatial_coverage_default_units(self):
+        return 'Decimal degrees'
+
+    @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self
         Note: Subclass must override this property
