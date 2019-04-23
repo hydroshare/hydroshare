@@ -1,0 +1,103 @@
+# hydroshare-nginx.conf                                                         
+
+# $external is 1 if the URI is external and 0 if it cannot possibly be 
+# external due to use of RFC-1918 addressing. This enables loopback
+# testing of reverse proxy in management commands. 
+
+geo $external {
+  default 1;
+  192.168.0.0/24 0;
+  172.17.0.0/24 0;
+  127.0.0.0/8 0;
+  10.0.0.0/8 0;
+}
+
+server {
+    listen          80;
+    server_name     FQDN_OR_IP;
+    root            /hydroshare/hydroshare/static/;
+
+    # Compute whether we need to rewrite an address. Rewrite all erronious 
+    # external addresses but avoid rewriting internal references (from django 
+    # management commands). 
+     
+    set $need_rewrite 0;
+
+    if ($http_host != "FQDN_OR_IP") {
+        set $need_rewrite 1;
+    }
+
+    if ($external) {
+        set $need_rewrite "${need_rewrite}1";
+    }
+
+    if ($need_rewrite = 11) {
+        rewrite ^ http://FQDN_OR_IP$request_uri permanent;
+    }
+
+    access_log      /var/log/nginx/access.log combined;
+    error_log       /var/log/nginx/error.log error;
+    error_log       /var/log/nginx/system.log notice;
+    # Uncomment the following line to generate debugging log entries
+    # error_log       /var/log/nginx/system.log debug;
+
+    charset         utf-8;
+    client_max_body_size 4096m;
+
+    location /static/ {
+        alias /hydroshare/hydroshare/static/;
+    }
+
+    location /media/ {
+        alias /hydroshare/hydroshare/static/media/;
+    }
+
+    location /IRODS_DATA_URI/ {
+        internal; 
+        alias IRODS_DATA_ROOT/;
+    }
+
+    location /IRODS_USER_URI/ {
+        internal; 
+        alias IRODS_USER_ROOT/;
+    }
+
+    location /IRODS_CACHE_URI/ {
+        internal; 
+        alias IRODS_CACHE_ROOT/;
+    }
+
+    location / {
+        if (-f $document_root/maintenance_on.html) {
+            return 503;
+        }
+        try_files $uri @proxy;
+#        AUTH_BASIC;
+#        AUTH_BASIC_USER_FILE;
+    }
+
+    location @proxy {
+        proxy_pass  http://FQDN_OR_IP:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Django-Reverse-Proxy true;
+
+        client_max_body_size 4096m;
+        client_body_buffer_size 1m;
+        proxy_intercept_errors on;
+        proxy_buffering on;
+        proxy_buffer_size 128k;
+        proxy_buffers 256 16k;
+        proxy_busy_buffers_size 256k;
+        proxy_temp_file_write_size 256k;
+        proxy_max_temp_file_size 0;
+        proxy_connect_timeout 300s;
+        proxy_read_timeout 300;
+    }
+
+    error_page 503 @maintenance;
+    location @maintenance {
+        rewrite ^(.*)$ /maintenance_on.html break;
+    }
+}

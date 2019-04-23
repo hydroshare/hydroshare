@@ -2277,15 +2277,20 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
-        then the content of the readme.md file is returned, othewise None
+        then the content of the readme.md file is returned, otherwise None
+
+        Note: The user uploaded readme file if originally not encoded as utf-8, then any non-ascii
+        characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
         if readme_file is not None:
+            readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
-                return {'content': markdown(readme_file.read().decode('utf-8')),
+                markdown_file_content = markdown(readme_file_content)
+                return {'content': markdown_file_content,
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
-                return {'content': readme_file.read(), 'file_name': readme_file.file_name}
+                return {'content': readme_file_content, 'file_name': readme_file.file_name}
         return readme_file
 
     @property
@@ -2693,12 +2698,11 @@ class ResourceFile(ResourceFileIRODSMixin):
             return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
-    @property
     def read(self):
         if self.resource.is_federated:
-            return self.fed_resource_file.read
+            return self.fed_resource_file.read()
         else:
-            return self.resource_file.read
+            return self.resource_file.read()
 
     @property
     def storage_path(self):
@@ -3540,6 +3544,14 @@ class CoreMetaData(models.Model):
     @property
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
+
+    @property
+    def spatial_coverage_default_projection(self):
+        return 'WGS 84 EPSG:4326'
+
+    @property
+    def spatial_coverage_default_units(self):
+        return 'Decimal degrees'
 
     @property
     def serializer(self):

@@ -18,10 +18,13 @@ __pycache__/
 /nginx/.htpasswd
 /nginx/htpasswd
 /nginx/Dockerfile
+/nginx/Dockerfile-nginx
 /nginx/config-files/hs-nginx.conf
 /nginx/config-files/nginx.conf-default
 /static
 /tmp
+Dockerfile-defaultworker
+Dockerfile-hydroshare
 celeryd.pid
 docker-compose.yml
 init-defaultworker
