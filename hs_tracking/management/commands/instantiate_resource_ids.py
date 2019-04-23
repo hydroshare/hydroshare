@@ -39,10 +39,6 @@ def instantiate_timestamp_range(start, end):
                     ids = ids + 1
                     if ids % 1000 == 0:
                         print("{} of {}".format(ids, events))
-                # else:
-                #    print("NONE for '{}'".format(value))
-            # else:
-            #     print("NONE for '{}'".format(value))
     print("resource ids found for {} of {} events".format(ids, events))
 
 
