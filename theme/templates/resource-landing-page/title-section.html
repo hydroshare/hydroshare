@@ -74,7 +74,7 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
-                {% if not metadata_form %}
+                {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
                     <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
@@ -106,7 +106,7 @@
                     </ul>
                 {% endfor %}
 
-                {% if not metadata_form %}
+                {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
                     <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
@@ -146,7 +146,7 @@
 
 {# ======= Title ======= #}
 <div class="col-xs-12">
-    {% if not metadata_form %}
+    {% if not resource_edit_mode %}
         <h2 id="resource-title">{{ title }}</h2>
         <hr>
         {% if tool_homepage_url %}

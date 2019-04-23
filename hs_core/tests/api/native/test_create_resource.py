@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import tempfile
 import zipfile
@@ -29,6 +30,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             'test_user@email.com',
             username='mytestuser',
             first_name='some_first_name',
+            middle_name='ì', # testing international character
             last_name='some_last_name',
             superuser=False,
             groups=[self.hs_group]
