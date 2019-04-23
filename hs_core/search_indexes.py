@@ -38,7 +38,7 @@ def normalize_name(name):
     `nameparser`.
 
     """
-    sname = name.encode('utf-8').strip()  # remove spaces
+    sname = name.strip()  # remove spaces
     try:
         _, type = probablepeople.tag(sname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
