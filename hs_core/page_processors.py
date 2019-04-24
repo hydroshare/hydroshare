@@ -123,8 +123,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if temporal_coverage:
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
-            temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
+            temporal_coverage_data_dict['start_date'] = \
+                '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(start_date)
+            temporal_coverage_data_dict['end_date'] = \
+                '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(end_date)
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
 
         spatial_coverage = content_model.metadata.spatial_coverage
@@ -235,8 +237,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if temporal_coverage:
         start_date = parser.parse(temporal_coverage.value['start'])
         end_date = parser.parse(temporal_coverage.value['end'])
-        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
-        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['start'] = \
+            '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(start_date)
+        temporal_coverage_data_dict['end'] = \
+            '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(end_date)
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
 
