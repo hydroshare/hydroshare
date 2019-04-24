@@ -58,7 +58,8 @@ class Command(BaseCommand):
             comp_res = nc_res.get_content_model()
 
             # set CoreMetaData object for the composite resource
-            comp_res.content_object = CoreMetaData()
+            core_meta_obj = CoreMetaData.objects.create()
+            comp_res.content_object = core_meta_obj
             comp_res.save()
             # migrate netcdf resource core metadata elements to composite resource
             migrate_core_meta_elements(nc_metadata_obj, comp_res)
