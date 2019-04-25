@@ -83,35 +83,10 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-
-    // Check if a resource needs to be created through URL parameters from redirect
-    let pageURL = window.location.search.substring(1);
-    let URLVariables = pageURL.split('&');
-    let resTypes = [];
-    let items = $("#select-resource-type").parent().find("a[data-value]");
-
-    // Get a list of the supported resource types from the UI
-    for (let i = 0; i < items.length; i++) {
-        resTypes.push($(items[i]).attr("data-value"));
-    }
-
-    for (let i = 0; i < URLVariables.length; i++) {
-        let parameterName = URLVariables[i].split('=');
-        // Check against the resource types to prevent conflicts of such parameter being used in other pages
-        if (parameterName[0] == "create" && $.inArray(parameterName[1], resTypes) >= 0) {
-            // Ignore the parameter if the page was not accessed through navigation
-            if (window.performance) {
-                if (window.performance.navigation.type == window.performance.navigation.TYPE_NAVIGATE) {
-                    createResource(parameterName[1]);
-                }
-            }
-            else {
-                // In case window.performance is not supported in the browser
-                createResource(parameterName[1]);
-            }
-            break;
-        }
-    }
+    // Prevent hover event from triggering the dropdown
+    $("#select-resource-type").on('mouseenter', function (event) {
+        event.stopPropagation();
+    });
 
     // 404 error page
     // ====================
@@ -188,16 +163,12 @@ $(document).ready(function () {
     });
 
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
-        if ($("#select-resource-type").attr("data-anonymous")) {
-            window.location = "/accounts/login/?next=/my-resources/?create=" + $(this).attr("data-value");
-        }
-        else {
-            createResource($(this).attr("data-value"));
-        }
+        createResource($(this).attr("data-value"));
     });
 
     function createResource(type) {
-        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);   // Disable while we proccess the request
+        // Disable dropdown items while we process the request
+        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
 
@@ -234,7 +205,6 @@ $(document).ready(function () {
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
-
             },
             error: function (response) {
                 console.log(response);
