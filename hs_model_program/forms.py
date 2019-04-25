@@ -88,7 +88,7 @@ class mp_form(ModelForm):
                     'modelDocumentation',
                     'modelSoftware',
                     'modelEngine']
-        labels = {'modelProgramLanguage': 'Programming language'}
+        labels = {'modelProgramLanguage': 'Programming Language'}
         exclude = ['content_object']
 
 
