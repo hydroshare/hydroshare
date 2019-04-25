@@ -31,7 +31,7 @@
             <br>
 
             {# ======= Sharing ======= #}
-            {% if not metadata_form %}
+            {% if not resource_edit_mode %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -126,7 +126,7 @@
             {% endif %}
         </div>
 
-        {% if metadata_form %}
+        {% if resource_edit_mode %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
             {% if is_owner_user %}

@@ -10,7 +10,6 @@ Test common search query syntax.
 from unittest import TestCase
 from haystack.query import SQ
 from hs_core.discovery_parser import ParseSQ, \
-    FieldNotRecognizedError, \
     MalformedDateError, \
     InequalityNotAllowedError, \
     MatchingBracketsNotFoundError
@@ -76,16 +75,22 @@ class SimpleTest(TestCase):
 
     def test_operators(self):
         testcase = {
-            "note": str(SQ(content="note")),
-            "need -note": str(SQ(content="need") & ~SQ(content="note")),
-            "need +note": str(SQ(content="need") & SQ(content="note")),
-            "need+note": str(SQ(content="need+note")),
-            "iphone AND NOT subject:10": str(SQ(content="iphone") & ~SQ(
-                subject="10")),
-            "NOT subject:10": str(~SQ(subject="10")),
-            "subject:10": str(SQ(subject="10")),
-            "-subject:10": str(~SQ(subject="10")),
-            "subject:-10": str(SQ(subject="-10")),
+            # removed '+', '-' syntaxes 4/5/2019.
+            # test cases modified accordingly.
+            'note': str(SQ(content='note')),
+            '"note"': str(SQ(content__exact='note')),
+            'need -note': str(SQ(content='need') & SQ(content='-note')),
+            '"need -note"': str(SQ(content__exact='need -note')),
+            'need +note': str(SQ(content='need') & SQ(content='+note')),
+            'need+note': str(SQ(content='need+note')),
+            'iphone AND NOT subject:10': str(SQ(content='iphone') & ~SQ(subject='10')),
+            'iphone OR NOT subject:10': str(SQ(content='iphone') | ~SQ(subject='10')),
+            'NOT subject:10': str(~SQ(subject='10')),
+            'subject:10': str(SQ(subject='10')),
+            '-subject:10': str(SQ(content='-subject:10')),
+            'subject:-10': str(SQ(subject='-10')),
+            # all keywords accepted, non-matches are treated literally
+            'foo:bar': str(SQ(content='foo:bar')),
         }
         parser = ParseSQ()
         for case in testcase.keys():
@@ -143,7 +148,7 @@ class SimpleTest(TestCase):
 
     def test_exceptions(self):
         testcase = {
-            "foo:bar": FieldNotRecognizedError,
+            # This exception removed 4/5/2019: "foo:bar": FieldNotRecognizedError,
             "created:20170": MalformedDateError,
             "created:2017-30": MalformedDateError,
             "created:2017-12-64": MalformedDateError,

@@ -457,34 +457,6 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 # }
 
 
-##################
-# LOCAL SETTINGS #
-##################
-
-# Allow any settings to be defined in local_settings.py which should be
-# ignored in your version control system allowing for settings to be
-# defined per machine.
-local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
-for k in dir(local_settings):
-    locals()[k] = getattr(local_settings, k)
-
-####################
-# DYNAMIC SETTINGS #
-####################
-
-# set_dynamic_settings() will rewrite globals based on what has been
-# defined so far, in order to provide some better defaults where
-# applicable. We also allow this settings module to be imported
-# without Mezzanine installed, as the case may be when using the
-# fabfile, where setting the dynamic settings below isn't strictly
-# required.
-try:
-    from mezzanine.utils.conf import set_dynamic_settings
-except ImportError:
-    pass
-else:
-    set_dynamic_settings(globals())
-
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
@@ -721,3 +693,35 @@ SWAGGER_SETTINGS = {
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
+
+####################################
+# DO NOT PLACE SETTINGS BELOW HERE #
+####################################
+
+##################
+# LOCAL SETTINGS #
+##################
+
+# Allow any settings to be defined in local_settings.py which should be
+# ignored in your version control system allowing for settings to be
+# defined per machine.
+local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
+for k in dir(local_settings):
+    locals()[k] = getattr(local_settings, k)
+
+####################
+# DYNAMIC SETTINGS #
+####################
+
+# set_dynamic_settings() will rewrite globals based on what has been
+# defined so far, in order to provide some better defaults where
+# applicable. We also allow this settings module to be imported
+# without Mezzanine installed, as the case may be when using the
+# fabfile, where setting the dynamic settings below isn't strictly
+# required.
+try:
+    from mezzanine.utils.conf import set_dynamic_settings
+except ImportError:
+    pass
+else:
+    set_dynamic_settings(globals())

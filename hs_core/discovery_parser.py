@@ -79,8 +79,8 @@ class ParseSQ(object):
         'AND': operator.and_,
         'OR': operator.or_,
         'NOT': operator.inv,
-        '+': operator.and_,
-        '-': operator.inv,
+        # aliases '+' (for include) and '-' (for NOT) removed 4/5/2019
+        # due to potential collision with valid titles for resources.
     }
 
     # Translation table for inequalities
@@ -190,7 +190,8 @@ class ParseSQ(object):
     # Paterns without more precise control of __exact keyword
     Pattern_Field_Query = re.compile(r"^(\w+)(:|[<>]=?)", re.U)
     Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
-    Pattern_Operator = re.compile(r"^(AND|OR|NOT|\-|\+)\s*", re.U)
+    Pattern_Operator = re.compile(r"^(AND|OR|NOT)\s*", re.U)
+    # '-', '+' removed 4/5/2019 to avoid potential collision with valid resource titles
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
     Pattern_Unquoted_Text = re.compile(r"^(\w*)\s*", re.U)
 
@@ -203,11 +204,11 @@ class ParseSQ(object):
 
     @current.setter
     def current(self, current):
-        self._prev = self._current if current in ['-', 'NOT'] else None
+        self._prev = self._current if current in ['NOT'] else None
         self._current = current
 
     def apply_operand(self, new_sq):
-        if self.current in ['-', 'NOT']:
+        if self.current in ['NOT']:
             new_sq = self.OP[self.current](new_sq)
             self.current = self._prev
         if self.sq:
@@ -219,9 +220,11 @@ class ParseSQ(object):
         search_field = mat.group(1)
         search_operator = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
-            raise FieldNotRecognizedError(
-                "Field delimiter '{}' is not recognized."
-                .format(search_field))
+            self.handle_normal_query()
+            return
+            # raise FieldNotRecognizedError(
+            #     "Field name '{}' is not recognized."
+            #     .format(search_field))
         if search_field in self.REPLACE_BY:
             search_field = self.REPLACE_BY[search_field]
 
@@ -341,6 +344,6 @@ class ParseSQ(object):
                 self.handle_normal_query()
             elif self.query and self.query[0] == "(":
                 self.handle_brackets()
-            elif self.query:
-                self.query = self.query[1:]
+            else:
+                self.handle_normal_query()
         return self.sq

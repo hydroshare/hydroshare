@@ -189,10 +189,13 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
         error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
         info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
     };
+
     el.setAttribute("style", style);
     el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
-    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
-        + alertTitle + '</strong><br>' + alertMessage;
+    alertMessage =
+      '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
+      '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+      + alertTitle + '</strong><br>' + alertMessage;
     el.innerHTML = alertMessage;
     setTimeout(function () {
         $(el).fadeOut(300, function () {
