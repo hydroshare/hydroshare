@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from hs_core.models import BaseResource, short_id
 from uuid import UUID
 from django.db import transaction, IntegrityError
+from django_irods.icommands import SessionException
 
 
 class Command(BaseCommand):
@@ -51,11 +52,22 @@ class Command(BaseCommand):
         else:
             new_res_id = short_id()
 
+        storage = res.get_irods_storage()
+
+        if storage.exists(res.bag_path):
+            try:
+                storage.delete(res.bag_path)
+                print("{} deleted".format(res.bag_path))
+            except SessionException as ex:
+                print("{} delete failed: {}".format(res.bag_path, ex.stderr))
+                raise EnvironmentError()
+
         try:
             with transaction.atomic():
                 print("Deleting existing bag")
                 res.bags.all().delete()
                 res.setAVU("bag_modified", True)
+                res.setAVU('metadata_dirty', 'true')
 
                 print("Updating BaseResource short_id from {} to {}".format(res_id, new_res_id))
                 res.short_id = new_res_id
@@ -76,7 +88,6 @@ class Command(BaseCommand):
         except IntegrityError:
             raise EnvironmentError("Error occurred  while updating")
 
-        storage = res.get_irods_storage()
         print("Moving Resource files")
         storage.moveFile(res_id, new_res_id)
 
