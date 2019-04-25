@@ -413,7 +413,67 @@ function promptSelfRemovingAccess(form_id){
     });
 }
 
-function change_share_permission_ajax_submit(form_id) {
+function promptChangeSharePermission(form_id){
+    // close the manage access panel (modal)
+    $("#manage-access").modal('hide');
+
+    // display change share permission confirmation dialog
+    $("#dialog-confirm-change-share-permission").dialog({
+        resizable: false,
+        draggable: false,
+        height: "auto",
+        width: 500,
+        modal: true,
+        dialogClass: 'noclose',
+        buttons: {
+            Cancel: function () {
+                $(this).dialog("close");
+		// show manage access control panel again
+		$("#manage-access").modal('show');
+            },
+            "Confirm": function () {
+                $(this).dialog("close");
+                change_share_permission_ajax_submit(form_id, false);
+		$("#manage-access").modal('show');
+            }
+        },
+	open: function () {
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:first") // the first button
+                .addClass("btn btn-default");
+
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .addClass("btn btn-danger");
+        }
+    });
+}
+
+function isSharePermissionPromptRequired(form_id) {
+    const REQUIRED = true;
+    const NOT_REQUIRED = false;
+
+    let formIDParts = form_id.split('-');
+    let userID = parseInt(formIDParts[formIDParts.length -1]);
+    let currentUserID = parseInt($("#current-user-id").val());
+
+    let $form = $('#' + form_id);
+    let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
+    let clickedAccess = $form.closest("form").attr("data-access-type");
+
+    if (currentUserID == userID 
+        && previousAccess == "Is owner" 
+	&& previousAccess != clickedAccess){
+         return REQUIRED;
+    }
+    return NOT_REQUIRED;
+}
+function change_share_permission_ajax_submit(form_id, check_permission=true) {
+    if (check_permission && isSharePermissionPromptRequired(form_id)) {
+	promptChangeSharePermission(form_id);
+	return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var url = $form.attr('action');
@@ -474,7 +534,53 @@ function change_share_permission_ajax_submit(form_id) {
     });
 }
 
+function isUserInvited(userID) { 
+    const INVITED = true;
+    const NOT_INVITED = false;
+ 
+    if (userID < 1) {
+       /* invalid user, treat invalid user as not invited */
+       return NOT_INVITED;
+    } 
+
+    /* found a matching entry */
+    if($(".access-table #row-id-" + userID).length > 0) {
+        return INVITED;
+    } 
+    
+    return NOT_INVITED;
+}
+
+/* get the user id  that is already populated in the invitee text field */
+function getUserIDIntendToInvite() {
+    let share_with = -1;
+    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
+        if ($("#id_user-deck > .hilight").length > 0) {
+            share_with = parseInt($("#id_user-deck > .hilight")[0].getAttribute("data-value"));
+        }
+    }
+
+    return share_with;
+}
+
+/*return the current login user. */
+function getCurrentUser() {
+    return parseInt($("#current-user-id").val());
+}
+
+function promptUserInShareList() {
+    let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
+    $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+    $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
+
+}
+
 function share_resource_ajax_submit(form_id) {
+    if(isUserInvited(getUserIDIntendToInvite())) {
+	promptUserInShareList();
+        return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var share_with;
@@ -784,66 +890,10 @@ function metadata_update_ajax_submit(form_id){
                         $res_title.text(updated_title);
                     }
                 }
-                if (json_response.hasOwnProperty('metadata_status')) {
-                    if (json_response.metadata_status !== $('#metadata-status').text()) {
-                        $('#metadata-status').text(json_response.metadata_status);
-                        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                            if(resourceType != 'Web App Resource' && resourceType != 'Collection Resource' )
-                                promptMessage = "All required fields are completed. The resource can now be made discoverable " + 
-                                                "or public. To permanently publish the resource and obtain a DOI, the resource " +
-                                                "must first be made public.";
-                            else
-                                promptMessage = "All required fields are completed. It can now be made discoverable " + 
-                                                "or public.";
-                            if (!metadata_update_ajax_submit.resourceSatusDisplayed){
-                                metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                                if (json_response.hasOwnProperty('res_public_status')) {
-                                    if (json_response.res_public_status.toLowerCase() === "not public") {
-                                        // if the resource is already public no need to show the following alert message
-                                        customAlert("Resource Status:", promptMessage, "success", 3000);
-                                    }
-                                }
-                                else {
-                                    customAlert("Resource Status:", promptMessage, "success", 3000);
-                                }
-                            }
-                            $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                            $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-                        }
-                    }
-                }
-                if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-                    if (json_response.res_public_status == "public"){
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-public").removeClass('active');
-                        $("#btn-public").prop("disabled", true);
-                    }
-                    if (json_response.res_discoverable_status == "discoverable"){
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-discoverable").removeClass('active');
-                        $("#btn-discoverable").prop("disabled", true);
-                    }
-                    if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable"){
-                        $("#btn-private").addClass('active');
-                        $("#btn-private").prop("disabled", true);
-                    }
-                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                }
+
+                showCompletedMessage(json_response);
+
+
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
                     this.remove();
@@ -878,6 +928,75 @@ function metadata_update_ajax_submit(form_id){
     });
     //don't submit the form
     return false;
+}
+
+function showCompletedMessage(json_response) {
+    if (json_response.hasOwnProperty('metadata_status')) {
+        if (json_response.metadata_status !== $('#metadata-status').text()) {
+            $('#metadata-status').text(json_response.metadata_status);
+            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                let resourceType = $("#resource-type").val();
+                let promptMessage = "";
+                if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                      "must first be made public.";
+                else
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public.";
+                if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
+                    metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                    if (json_response.hasOwnProperty('res_public_status')) {
+                        if (json_response.res_public_status.toLowerCase() === "not public") {
+                            // if the resource is already public no need to show the following alert message
+                            customAlert("Resource Status:", promptMessage, "success", 8000);
+                        }
+                    }
+                    else {
+                        customAlert("Resource Status:", promptMessage, "success", 8000);
+                    }
+                }
+                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+            }
+        }
+    }
+
+    if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
+        if (json_response.res_public_status == "public") {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-public").removeClass('active');
+            $("#btn-public").prop("disabled", true);
+        }
+
+        if (json_response.res_discoverable_status == "discoverable") {
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
+            }
+        }
+        else {
+            $("#btn-discoverable").removeClass('active');
+            $("#btn-discoverable").prop("disabled", true);
+        }
+
+        if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
+            $("#btn-private").addClass('active');
+            $("#btn-private").prop("disabled", true);
+        }
+
+        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+            if (!$("#btn-public").hasClass('active')) {
+                $("#btn-public").prop("disabled", false);
+            }
+            if (!$("#btn-discoverable").hasClass('active')) {
+                $("#btn-discoverable").prop("disabled", false);
+            }
+        }
+    }
 }
 
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
@@ -1237,21 +1356,20 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
-                    $('#fb-files-container').append(`
-                        <div>
-                            <span class="text-muted fb-empty-dir">This directory is empty</span>
-                            <br><br>
-                            <div class="hs-upload-indicator text-center">
-                                <i class="fa fa-file" aria-hidden="true"></i>
-                                <h4>Drop files here or click "Add files" to upload</h4>
-                            </div>
-                        </div>
-                    `);
+                    $('#fb-files-container').append(
+                        '<div>' +
+                            '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
+                            '<div class="hs-upload-indicator text-center">' +
+                                '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                '<h4>Drop files here or click "Add files" to upload</h4>' +
+                            '</div>' +
+                        '</div>'
+                    );
                 }
                 else {
-                    $('#fb-files-container').append(`
-                        <span class="text-muted fb-empty-dir">This directory is empty</span>
-                    `);
+                    $('#fb-files-container').append(
+                        '<span class="text-muted fb-empty-dir">This directory is empty</span>'
+                    );
                 }
             }
             if (can_be_public) {

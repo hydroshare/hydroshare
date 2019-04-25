@@ -6,12 +6,11 @@
 
 sleep 3s
 cp /hydroshare/hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
-usermod -u HS_SERVICE_UID hydro-service
-groupmod -g HS_SERVICE_GID storage-hydro
-chown -R hydro-service:storage-hydro /etc/ssh
-chown -R hydro-service:storage-hydro /hs_tmp
-chown -R hydro-service:storage-hydro /shared_tmp
-sed -i "/\<UsePrivilegeSeparation\>/c\UsePrivilegeSeparation no" /etc/ssh/sshd_config
-sed -i "/\<Port 22\>/c\Port 2022" /etc/ssh/sshd_config
-HS_SSH_SERVER
+userdel hydro-service \
+ && groupdel storage-hydro \
+ && echo "storage-hydro:x:HS_SERVICE_GID:" >> /etc/group \
+ && echo "hydro-service:x:HS_SERVICE_UID:HS_SERVICE_GID::/hydroshare:/bin/bash" >> /etc/passwd \
+ && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
+ && chmod -R 3777 /hs_tmp /shared_tmp /tmp 
+
 HS_DJANGO_SERVER

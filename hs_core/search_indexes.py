@@ -38,7 +38,7 @@ def normalize_name(name):
     `nameparser`.
 
     """
-    sname = name.strip()  # remove spaces
+    sname = name.encode('utf-8').strip()  # remove spaces
     try:
         _, type = probablepeople.tag(sname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
@@ -80,7 +80,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created')
-    modified = indexes.DateTimeField(model_attr='updated')
+    modified = indexes.DateTimeField(model_attr='last_updated')
     organization = indexes.MultiValueField(faceted=True)
     creator_email = indexes.MultiValueField()
     publisher = indexes.CharField(faceted=True)
@@ -159,7 +159,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     def prepare_modified(self, obj):
-        return obj.updated.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return obj.last_updated.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
