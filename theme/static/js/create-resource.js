@@ -76,7 +76,15 @@ $(document).ready(function () {
                 $("html, #dz-container").css("cursor", "progress");
                 $(".btn-create-resource").text("Creating Resource...");
                 $(".btn-create-resource").addClass("disabled");
-                $(".btn-cancel-create-resource").addClass("disabled");
+                $(":text").attr("disabled", true);
+                $(".dropdown").css("pointer-events", "none");
+                $("#btn-remove-all-files").addClass("disabled");
+                $(".hs-dropzone-wrapper").css("pointer-events", "none");
+                $("#btn-signin-irods").addClass("disabled");
+
+
+
+
 
                 // Delete invalid files from queue before uploading
                 $(".dz-error .btn-remove").trigger("click");
