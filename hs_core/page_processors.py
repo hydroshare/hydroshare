@@ -402,6 +402,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'current_user': user,
+               'current_irods_store': '/' + settings.HS_USER_IRODS_ZONE + '/home/' + user.username,
                'show_content_files': show_content_files,
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,

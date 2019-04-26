@@ -1,3 +1,19 @@
+$('#btn-add-file-from-irods-user-space').on('click',function(event) {
+    $('#res_type').val($("#form-resource-type").val());
+    $('#file_struct').children().remove();
+    $('.ajax-loader').hide();
+    var store = $('#root_store').val();
+    // Setting up the view tab
+    $('#file_struct').attr('name',store);
+    $('#irods_view_store').val(store);
+
+    $('body').off('click');
+    $('body').on('click', '.folder', click_folder_opr);
+
+    get_token();
+
+});
+
 $('#btn-select-irods-file').on('click',function(event) {
     $('#res_type').val($("#form-resource-type").val());
     $('#file_struct').children().remove();
@@ -18,6 +34,39 @@ $('#btn-select-irods-file').on('click',function(event) {
     $('body').off('click');
     $('body').on('click', '.folder', click_folder_opr);
 });
+
+function get_token() {
+    $.ajax({
+        mode: "queue",
+        url: '/irods/get_oauth_token/',
+        async: true,
+        type: "POST",
+        data: {},
+        success: function (json) {
+            if ("token" in json) {
+                $('#token').val(json.token);
+                var store = $('#root_store').val();
+                // loading file structs
+                var parent = $('#file_struct');
+                get_store(store, parent, 0);
+            }
+            if ("error" in json) {
+                $("#sign-in-name").text(json.error);
+                $("#sign-in-info").show();
+            }
+            if ('authorization_url' in json) {
+                $('#irodsContent').modal('hide');
+                window.open(json.authorization_url, "Refreshing your token...", "top=400, left=400, width=400, height=400");
+            }
+        },
+
+        error: function (xhr, errmsg, err) {
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $("#sign-in-name").text(errmsg);
+            $("#sign-in-info").show();
+        }
+    });
+}
 
 function set_store_display(store, parent, margin, json) {
     var files = json.files;

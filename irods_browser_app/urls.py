@@ -6,4 +6,5 @@ urlpatterns = [
     url(r'^store/$',views.store, name='irods_store'),
     url(r'^upload/$',views.upload, name='irods_upload'),
     url(r'^upload_add/$',views.upload_add, name='irods_upload_add'),
+    url(r'^get_oauth_token/$', views.get_oauth_token, name='get_oauth_token'),
  ]

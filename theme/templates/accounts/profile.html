@@ -931,21 +931,15 @@
                                 <div class="row">
                                     <div class="col-sm-10 col-xs-12">
                                         <div>A corresponding iRODS user account with the same username <strong>{{ profile_user.username }}</strong> will be created
-                                            in the HydroShare user zone when you confirm this action. You will have to input a password below for your
-                                            iRODS user account, which does not have to be the same as your current HydroShare password. <strong>The password
-                                            is required to be composed of at least 8 characters.</strong> Please keep your iRODS user account password in a
-                                            secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="id_irods_password">Password: </label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Password" type="password">
+                                            in the HydroShare user zone when you confirm this action. The new iRODS user account will be authenticated and authorized via OAuth2
+                                            framework against HydroShare. You can access your account in the HydroShare user zone using iRODS clients such as icommands.
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
+                                <button id="btn-create-irods-account" class="btn btn-primary">Confirm</button>
                             </div>
                         </form>
                     </div>

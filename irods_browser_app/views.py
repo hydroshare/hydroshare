@@ -1,7 +1,13 @@
 import json
 import os
 import string
-from django.http import HttpResponse, HttpResponseRedirect
+import requests
+
+from rest_framework import status
+
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
@@ -10,6 +16,8 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils
+from irods_browser_app.utils import check_upload_files
+
 
 def search_ds(coll):
     store = {}
@@ -26,25 +34,6 @@ def search_ds(coll):
     store['folder'] = folder
     return store
 
-def check_upload_files(resource_cls, fnames_list):
-    file_types = resource_cls.get_supported_upload_file_types()
-    valid = False
-    ext = ''
-    if file_types == ".*":
-        valid = True
-    else:
-        for fname in fnames_list:
-            ext = os.path.splitext(fname)[1].lower()
-            if ext == file_types:
-                valid = True
-            else:
-                for index in range(len(file_types)):
-                    file_type_str = file_types[index].strip().lower()
-                    if file_type_str == ".*" or ext == file_type_str:
-                        valid = True
-                        break
-
-    return (valid, ext)
 
 # Create your views here.
 def login(request):
@@ -92,6 +81,42 @@ def login(request):
             content_type="application/json"
         )
 
+
+@login_required
+def get_oauth_token(request):
+    uid = request.user.id
+    response_data = {}
+    if not uid:
+        response_data['error'] = "cannot retrieve request user's id to request token"
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+    url = 'token?uid={}&provider=hydroshare'.format(uid)
+    # note that trailing slash should not be added to return_to url
+    # return_url = '&return_to={}://{}/irods/openid_return'.format(request.scheme, request.get_host())
+    # req_url = '{}{}{}'.format(settings.OAUTH_SERVICE_SERVER_URL, url, return_url)
+    req_url = '{}{}'.format(settings.OAUTH_SERVICE_SERVER_URL, url)
+    auth_header_str = 'Basic {}'.format(settings.OAUTH_APP_KEY)
+    response = requests.get(req_url,
+                            headers={'Authorization': auth_header_str},
+                            verify=False)
+    if response.status_code == status.HTTP_401_UNAUTHORIZED:
+        # the user is not authorized
+        return_data = json.loads(response.text)
+        response_data['authorization_url'] = return_data['authorization_url']
+        return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
+    elif response.status_code == status.HTTP_200_OK:
+        # the user is already authorized, directly use the returned token
+        return_data = json.loads(response.content)
+        if 'access_token' in return_data:
+            response_data['token'] = return_data['access_token']
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
+        else:
+            response_data['error'] = 'no access_token is returned from token request:' + response.content
+            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        response_data['error'] = response.text
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+
 def store(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
@@ -115,6 +140,7 @@ def store(request):
         jsondump,
         content_type = "application/json"
     )
+
 
 def upload(request):
     if request.method == 'POST':
@@ -146,6 +172,7 @@ def upload(request):
             json.dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
+
 
 def upload_add(request):
     # add irods file into an existing resource
@@ -212,4 +239,3 @@ def upload_add(request):
 
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
