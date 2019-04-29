@@ -477,22 +477,28 @@
                                             </ul>
                                         </div>
 
-                                        <div id="grantors-list">
-                                            {% for res in group_resources %}
-                                                <span data-grantor-id="{{ res.grantor.id }}"
-                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>
-                                            {% endfor %}
+{#                                        <div id="grantors-list">#}
+{#                                            {% for res in group_resources %}#}
+{#                                                <span data-grantor-id="{{ res.grantor.id }}"#}
+{#                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>#}
+{#                                            {% endfor %}#}
+{##}
+{#                                        </div>#}
+                                        <div id="app">
+{#                                            <input type="button" value="Click" @click="updateCount"/>#}
+                                            {% templatetag openvariable %} message {% templatetag closevariable %}afsdfasddfssfad
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-10" id="items">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div id="search-container" class="input-group">
-                                        <span class="glyphicon glyphicon-search search-icon"></span>
-                                        <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
+                         <div class="col-lg-10" id="items">
+                             <div class="row">
+                                 <div class="col-sm-12">
+                                     <div id="search-container" class="input-group">
+                                         <span class="glyphicon glyphicon-search search-icon"></span>
+                                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
                                         <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
 
                                         <div class="input-group-btn">
@@ -865,6 +871,7 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>

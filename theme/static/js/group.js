@@ -338,4 +338,34 @@ $(document).ready(function () {
         input.val(label);
     });
 
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello mahesh!'
+        }
+    })
+
+
+        var vm = new Vue({
+        el: '#vm',
+        template: `<div>{% templatetag openvariable %} item.count {% templatetag closevariable %}<input type="button" value="Click" @click="updateCount"/></div>`,
+        data: {
+            item: {}
+        },
+        beforeMount() {
+            this.$data.item = {
+                count: 0
+            };
+        },
+        methods: {
+            updateCount() {
+                // JavaScript object is updated but
+                // the component template is not rendered again
+                this.$data.item.count++;
+            }
+        }
+    });
+
+
+
 });
