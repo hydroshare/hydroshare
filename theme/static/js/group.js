@@ -312,26 +312,6 @@ $(document).ready(function () {
     // Initialize filters counters
     updateMembersLabelCount();
 
-    // Initialize Shared By filter
-    var grantors = $("#grantors-list span");
-    if (grantors.length)
-        $("#filter-shared-by .no-items-found").remove();
-    for (var i = 0; i < grantors.length; i++) {
-        var id = $(grantors[i]).attr("data-grantor-id");
-        if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
-            var count = $("#grantors-list span[data-grantor-id='" + id + "']").length;
-            var name = $(grantors[i]).attr("data-grantor-name").trim();
-
-            $("#filter-shared-by .inputs-group").append('<li class="list-group-item">' +
-                                                            '<span data-facet="owned" class="badge">' + count + '</span>' +
-                                                            '<label class="checkbox noselect">' +
-                                                            '<input type="checkbox" class="grantor" data-grantor-id="' + id + '">' + name + '</label>' +
-                                                        '</li>')
-        }
-    }
-
-    $("#grantors-list").remove();   // Remove temporary list
-
     // File name preview for picture field, file select method
     $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
         var input = $(this).parents('.input-group').find(':text');
@@ -341,23 +321,11 @@ $(document).ready(function () {
     let vm = new Vue({
         el: "#app",
         data: {
-            // declare message with an empty value
-            message: '',
-            contribs: [13, 17]
+            contribs: []
         },
         methods: {
-            loadContribs(contribId) {
-
-            },
             showFrom(contributorId) {
-                // console.log(contributorId);
-                // this.$data.contribs.push(contributorId);
-                if (this.$data.contribs.indexOf(contributorId) > -1) {
-                    return true
-                }
-                else {
-                    return false
-                }
+                return this.$data.contribs.indexOf(contributorId) < 0;
             },
             updateContribs(contribId) {  // if not in the display list remove it otherwise add it effectively toggle
                 let loc = this.$data.contribs.indexOf(contribId);
@@ -367,64 +335,7 @@ $(document).ready(function () {
                 else {
                    this.$data.contribs.splice(loc, 1);
                 }
-
-                console.log(this.$data.contribs)
             }
         }
-
     });
-    vm.message = 'Hello!';
-
-
-
-
-    // var vm = new Vue({
-    //     el: '#app',
-    //     data: {},
-    //     beforeMount() {
-    //         this.$data.item = {
-    //             visible: false
-    //         };
-    //     },
-    //     methods: {
-    //         isBool() {
-    //             return this.$data.item.visible
-    //         },
-    //         updateClick(grantorId) {
-    //             this.$data.item = {
-    //                 visible: !this.$data.item.visible
-    //             };
-    //             console.log(this.$data.item.visible)
-    //         }
-    //     }
-    // });
-    //
-    // var app2 = new Vue({
-    //     el: '#app2',
-    //     data: {
-    //         message: ''
-    //     },
-    //     beforeMount() {
-    //         this.$data.message = {
-    //
-    //         };
-    //     },
-    //     template: '<div>{{ message }}</div>'
-    // });
-    // app2.message = "asdf"
-
-
-    // var app = new Vue({
-    //     el: '#app',
-    //     data: {
-    //         message: 'hello mahesh!'
-    //     }
-    // })
-
-        // template: `<div>{% templatetag openvariable %} item.count {% templatetag closevariable %}<input type="button" value="Click" @click="updateCount"/></div>`,
-
-
-
-    // https://stackoverflow.com/questions/43564875/making-django-vue-js-work-together-with-verbatim
-
 });

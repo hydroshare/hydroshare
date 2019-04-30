@@ -472,7 +472,7 @@
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                            href="#filter">&nbsp;Shared by</a></h4>
-                                            {% if res.all %}
+                                            {% if not grantors %}
                                                 <i class="list-group-item no-items-found">No resources have been shared
                                                     with this group yet.</i>
                                             {% else %}
