@@ -338,34 +338,38 @@ $(document).ready(function () {
         input.val(label);
     });
 
-    var app = new Vue({
-        el: '#app',
-        data: {
-            message: 'hello mahesh!'
-        }
-    })
+    // var app = new Vue({
+    //     el: '#app',
+    //     data: {
+    //         message: 'hello mahesh!'
+    //     }
+    // })
 
+        // template: `<div>{% templatetag openvariable %} item.count {% templatetag closevariable %}<input type="button" value="Click" @click="updateCount"/></div>`,
 
         var vm = new Vue({
-        el: '#vm',
-        template: `<div>{% templatetag openvariable %} item.count {% templatetag closevariable %}<input type="button" value="Click" @click="updateCount"/></div>`,
+        el: '#shared-by',
         data: {
-            item: {}
+
         },
         beforeMount() {
             this.$data.item = {
-                count: 0
+                visible: false
             };
         },
+        isOpen() {
+            return this.$data.item.visible;
+        },
         methods: {
-            updateCount() {
-                // JavaScript object is updated but
-                // the component template is not rendered again
-                this.$data.item.count++;
+            updateClick(grantorId) {
+                this.$data.item = {
+                    visible: !this.$data.item.visible
+                }
+                console.log(this.$data.item.visible)
             }
         }
     });
 
-
+// https://stackoverflow.com/questions/43564875/making-django-vue-js-work-together-with-verbatim
 
 });

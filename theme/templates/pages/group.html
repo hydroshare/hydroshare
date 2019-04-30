@@ -465,17 +465,35 @@
                         <div class="col-lg-2" id="facets">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
+
+                                        <div id="shared-by">
                                     <h4 class="panel-title">
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
-                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Shared by</a></h4>
-                                </div>
-                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                    <div class="panel-body">
-                                        <div class="list-group">
-                                            <ul class="list-group inputs-group">
-                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>
-                                            </ul>
-                                        </div>
+                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+                                           href="#filter">&nbsp;Shared by</a></h4>
+                                            {% if res.all %}
+
+                                                <i class="list-group-item no-items-found">No resources have been shared
+                                                    with this group yet.</i>
+                                            {% else %}
+                                                {% for res in group_resources %}
+                                                    <label for="{{ res.grantor.id }}">{{ res.grantor|best_name }}</label>
+                                                    <input type="checkbox" id="{{ res.grantor.id }}" value="Click"
+                                                           @click="updateClick({{ res.grantor.id }})"/><br/>
+                                                {% endfor %}
+                                            {% endif %}
+
+
+{#                                     {% templatetag openvariable %} message {% templatetag closevariable %}#}
+
+{#                                </div>#}
+{#                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">#}
+{#                                    <div class="panel-body">#}
+{#                                        <div class="list-group">#}
+{#                                            <ul class="list-group inputs-group">#}
+{#                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>#}
+{#                                            </ul>#}
+{#                                        </div>#}
 
 {#                                        <div id="grantors-list">#}
 {#                                            {% for res in group_resources %}#}
@@ -484,15 +502,13 @@
 {#                                            {% endfor %}#}
 {##}
 {#                                        </div>#}
-                                        <div id="app">
-{#                                            <input type="button" value="Click" @click="updateCount"/>#}
-                                            {% templatetag openvariable %} message {% templatetag closevariable %}afsdfasddfssfad
-                                        </div>
+
 
                                     </div>
                                 </div>
                             </div>
                         </div>
+                         <h1 v-if="awesome">Vue is awesome!</h1>
                          <div class="col-lg-10" id="items">
                              <div class="row">
                                  <div class="col-sm-12">
