@@ -236,29 +236,26 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
 
 
 function showRemoveExtraMetaPopup(row_id_str) {
-    $("#edit_extra_meta_row_id").val('');
-    $("#old_extra_meta_name").val('');
-    $("#extra_meta_name_input").val('');
-    $("#extra_meta_value_input").val('');
-
-    // Restore validation UI state
-    $("#extra_meta_msg").hide();
-    $("#extra_meta_name_input").removeClass("form-invalid");
-
     // retrieving values from underlying data table
-        var t = $('#extraMetaTable').DataTable();
-        var row_to_edit = t.row("#" + row_id_str);
-        var oldname = row_to_edit.data()[0];
-        var oldvalue = row_to_edit.data()[1];
-        $("#edit_extra_meta_row_id").val(row_id_str);
-        $("#old_extra_meta_name").val(oldname);
-        $("#delete_extra_meta_name_input").val(oldname);
-        $("#delete_extra_meta_value_input").val(oldvalue);
+    let t = $('#extraMetaTable').DataTable();
 
-    $('#removeExtraMetaDialog').modal('show');
+    // get the row object via the row_id_str passed in
+    let row_to_delete = t.row("#" + row_id_str);
 
-    // removeExtraMetadataFromTable(row_id_str);
-    // saveExtraMetadata();
+    // get the row content - name and value
+    let name = row_to_delete.data()[0];
+    let value = row_to_delete.data()[1];
+
+    // this is a hidden HTML element to store the row_id_str
+    $("#delete_extra_meta_row_id").val(row_id_str);
+
+    $("#old_extra_meta_name").val(name);
+
+    // set the value. readonly is set in the modal element, not here
+    $("#delete_extra_meta_name_input").val(name);
+    $("#delete_extra_meta_value_input").val(value);
+
+    $('#deleteExtraMetaDialog').modal('show');
 }
 
 function addEditExtraMeta2Table() {
@@ -318,11 +315,9 @@ function addEditExtraMeta2Table() {
 }
 
 function removeExtraMetaTable(table) {
-    var t = $('#extraMetaTable').DataTable();
-    var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
-    var row_to_edit = t.row("#" + edit_extra_meta_row_id);
-    removeExtraMetadataFromTable(edit_extra_meta_row_id);
-    $("#removeExtraMetaDialog").modal('hide');
+    $("#deleteExtraMetaDialog").modal('hide');
+
+    removeExtraMetadataFromTable($("#delete_extra_meta_row_id").val().trim());
     saveExtraMetadata();
 }
 

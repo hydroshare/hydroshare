@@ -572,7 +572,7 @@
         </div>
     </div>
 
-    <div class="modal fade in" id="removeExtraMetaDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
+    <div class="modal fade in" id="deleteExtraMetaDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form enctype="multipart/form-data">
@@ -586,14 +586,14 @@
                             <input id="delete_extra_meta_row_id" type="hidden" />
                             <input id="old_extra_meta_name" type="hidden" />
                             <div id="div_extra_meta_name" class="control-group">
-                                <label for="extra_meta_name" class="control-label requiredField">Name</label>
+                                <label for="delete_extra_meta_name" class="control-label requiredField">Name</label>
                                 <div class="controls">
                                     <input class="form-control input-sm textinput textInput" readonly required
                                            id="delete_extra_meta_name_input" maxlength="100" name="name" type="text">
                                 </div>
                             </div>
                             <div id="div_extra_meta_value" class="control-group">
-                                <label for="extra_meta_value" class="control-label">Value</label>
+                                <label for="delete_extra_meta_value" class="control-label">Value</label>
                                 <div class="controls">
                                     <textarea readonly required class="form-control input-sm textarea" cols="40"
                                                         id="delete_extra_meta_value_input" name="value"
@@ -605,7 +605,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button id="btn-confirm-delete-extended-metadata" type="button" class="btn btn-danger">Delete Changes</button>
+                        <button id="btn-confirm-delete-extended-metadata" type="button" class="btn btn-danger">Delete</button>
                     </div>
                 </form>
             </div>
