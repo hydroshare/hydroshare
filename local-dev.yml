@@ -1,0 +1,230 @@
+version: '3'
+services:
+  data.local.org:
+    image: hydroshare/hs-irods:latest
+    container_name: data.local.org
+    hostname: data.local.org
+    links:
+      - users.local.org:users.local.org
+    ports:
+      - "1247:1247"
+    volumes:
+      - "idata_iconf_vol:/etc/irods"
+      - "idata_vault_vol:/var/lib/irods"
+      - "idata_pgres_vol:/var/lib/postgresql/data"
+    environment:
+      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
+      USE_IRODS: 'True'
+      IRODS_ROOT: '/tmp'
+      IRODS_ICOMMANDS_PATH: '/usr/bin'
+      IRODS_HOST: 'data.local.org'
+      IRODS_PORT: '1247'
+      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
+      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
+      IRODS_ZONE: 'hydroshareZone'
+      IRODS_USERNAME: 'wwwHydroProxy'
+      IRODS_AUTH: 'wwwHydroProxy'
+      IRODS_GLOBAL_SESSION: 'True'
+      REMOTE_USE_IRODS: 'True'
+      HS_USER_ZONE_HOST: 'users.local.org'
+      HS_USER_ZONE_PROXY_USER: 'hsuserproxy'
+      HS_USER_ZONE_PROXY_USER_PWD: 'hsuserproxy'
+      HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD: '/home/hsuserproxy/create_user.sh'
+      HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD: '/home/hsuserproxy/delete_user.sh'
+      HS_LOCAL_PROXY_USER_IN_FED_ZONE: 'localHydroProxy'
+      HS_WWW_IRODS_PROXY_USER: 'wwwHydroProxy'
+      HS_WWW_IRODS_PROXY_USER_PWD: 'wwwHydroProxy'
+      HS_WWW_IRODS_HOST: 'data.local.org'
+      HS_IRODS_LOCAL_ZONE_DEF_RES: 'hydroshareLocalResc'
+      HS_WWW_IRODS_ZONE: 'hydroshareZone'
+      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
+      IRODS_ZONE_NAME: 'hydroshareZone'
+      IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
+      IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
+      IRODS_USER_NAME: 'rods'
+      IRODS_PASSWORD: 'rods'
+    stdin_open: true
+    tty: true
+  users.local.org:
+    image: hydroshare/hs-irods:latest
+    container_name: users.local.org
+    hostname: users.local.org
+    volumes:
+      - "iuser_iconf_vol:/etc/irods"
+      - "iuser_vault_vol:/var/lib/irods"
+      - "iuser_pgres_vol:/var/lib/postgresql/data"
+    environment:
+      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
+      USE_IRODS: 'True'
+      IRODS_ROOT: '/tmp'
+      IRODS_ICOMMANDS_PATH: '/usr/bin'
+      IRODS_HOST: 'users.local.org'
+      IRODS_PORT: '1247'
+      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
+      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
+      IRODS_ZONE: 'hydroshareZone'
+      IRODS_USERNAME: 'wwwHydroProxy'
+      IRODS_AUTH: 'wwwHydroProxy'
+      IRODS_GLOBAL_SESSION: 'True'
+      REMOTE_USE_IRODS: 'True'
+      HS_USER_ZONE_HOST: 'users.local.org'
+      HS_USER_ZONE_PROXY_USER: 'hsuserproxy'
+      HS_USER_ZONE_PROXY_USER_PWD: 'hsuserproxy'
+      HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD: '/home/hsuserproxy/create_user.sh'
+      HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD: '/home/hsuserproxy/delete_user.sh'
+      HS_LOCAL_PROXY_USER_IN_FED_ZONE: 'localHydroProxy'
+      HS_WWW_IRODS_PROXY_USER: 'wwwHydroProxy'
+      HS_WWW_IRODS_PROXY_USER_PWD: 'wwwHydroProxy'
+      HS_WWW_IRODS_HOST: 'data.local.org'
+      HS_IRODS_LOCAL_ZONE_DEF_RES: 'hydroshareLocalResc'
+      HS_WWW_IRODS_ZONE: 'hydroshareZone'
+      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
+      IRODS_ZONE_NAME: 'hydroshareuserZone'
+      IRODS_SERVER_ZONE_KEY: 'hydroshareuserZone_KEY'
+      IRODS_DATABASE_SERVER_HOSTNAME: 'users.local.org'
+      IRODS_USER_NAME: 'rods'
+      IRODS_PASSWORD: 'rods'
+    stdin_open: true
+    tty: true
+  postgis:
+    image: hydroshare/hs_postgres:9.5.0
+    container_name: postgis
+    hostname: postgis
+    volumes:
+      - "postgis_data_vol:/var/lib/postgresql/data"
+    ports:
+      - "54322:5432"
+    stdin_open: true
+    tty: true
+  rabbitmq:
+    image: rabbitmq:3.5
+    container_name: rabbitmq
+    volumes:
+      - "rabbitmq_data_vol:/var/lib/rabbitmq"
+  solr:
+    image: hydroshare/hs-solr:latest
+    container_name: solr
+    hostname: solr
+    volumes:
+      - "solr_data_vol:/opt/solr/server/solr/collection1"
+    ports:
+      - "8983:8983"
+    stdin_open: true
+    tty: true
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile-nginx
+    hostname: nginx
+    container_name: nginx
+    links:
+      - hydroshare:hydroshare
+    depends_on:
+      - hydroshare
+    ports:
+      - "80:80"
+    volumes:
+      - "./log/nginx:/var/log/nginx"
+      - ".:/hydroshare"
+      - "temp_vol:/hs_tmp"
+      - "share_vol:/irods/cache"
+      - "idata_vault_vol:/irods/data"
+      - "iuser_vault_vol:/irods/user"
+  hydroshare:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hydroshare
+    hostname: hydroshare
+    devices:
+      - "/dev/fuse"
+    privileged: true
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      TMP: /hs_tmp
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+    volumes:
+      # hydroshare repository
+      - ".:/hydroshare"
+      # shared location for gunicorn.sock between containers
+      - "temp_vol:/hs_tmp"
+      # temp directory shared with celery workers
+      - "share_vol:/shared_tmp"
+    ports:
+      - "1338:2022"
+      - "8000:8000"
+    links:
+      - postgis:postgis
+      - solr:solr
+      - rabbitmq:rabbitmq
+      - data.local.org:data.local.org
+      - users.local.org:users.local.org
+    depends_on:
+      - postgis
+      - solr
+      - rabbitmq
+      - data.local.org
+      - users.local.org
+    stdin_open: true
+    tty: true
+    command: /bin/bash init-hydroshare
+  defaultworker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: defaultworker
+    hostname: defaultworker
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+    volumes:
+      - ".:/hydroshare"
+    links:
+      - postgis:postgis
+      - rabbitmq:rabbitmq
+      - data.local.org:data.local.org
+      - users.local.org:users.local.org
+    depends_on:
+      - hydroshare
+      - postgis
+      - solr
+      - rabbitmq
+      - data.local.org
+      - users.local.org
+    stdin_open: true
+    tty: true
+    command: /bin/bash init-defaultworker
+volumes:
+  idata_iconf_vol:
+  idata_vault_vol:
+  idata_pgres_vol:
+  iuser_iconf_vol:
+  iuser_vault_vol:
+  iuser_pgres_vol:
+  postgis_data_vol:
+  solr_data_vol:
+  temp_vol:
+  share_vol:
+  rabbitmq_data_vol:

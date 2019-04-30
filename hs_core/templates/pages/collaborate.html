@@ -42,11 +42,11 @@
                                 <div class="group-preview-image group-preview-image-default" style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                             {% endif %}
                             <div class="group-caption">
-                                <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
-                                <small class="text-muted group-keywords">{{ group.gaccess.purpose|linebreaks }}</small>
-
-                                <div class="group-description"> <p>{{ group.gaccess.description|linebreaks }}</p></div>
-
+                                <h3 class="group-name" style="overflow-y: auto"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
+                                <div class="group-purpose" style="overflow-y: auto">
+                                    <p>{{ group.gaccess.purpose|linebreaks}}</p>
+                                </div>
+                                <div class="group-description"><p>{{ group.gaccess.description|linebreaks }}</p></div>
 
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
@@ -195,8 +195,8 @@
                             {# Group Name #}
                             <fieldset class="col-sm-12">
                                 <label>Group Name *</label>
-                                <small class="text-muted">150 characters or less</small>
-                                <input class="form-control" required="required" name="name" maxlength="150">
+                                <small class="text-muted">79 characters or less</small>
+                                <textarea class="form-control" required="required" name="name" maxlength="79"></textarea>
                             </fieldset>
 
                             {# Purpose #}

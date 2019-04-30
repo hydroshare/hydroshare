@@ -207,7 +207,22 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {'validation_error': ex.message}
         return JsonResponse(msg, status=500)
 
-    return JsonResponse(data={}, status=200)
+    res_public_status = 'public' if resource.raccess.public else 'not public'
+    res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
+        else 'not discoverable'
+
+    if resource.can_be_public_or_discoverable:
+        metadata_status = METADATA_STATUS_SUFFICIENT
+    else:
+        metadata_status = METADATA_STATUS_INSUFFICIENT
+
+    response_data = {
+        'res_public_status': res_public_status,
+        'res_discoverable_status': res_discoverable_status,
+        'metadata_status': metadata_status,
+    }
+
+    return JsonResponse(data=response_data, status=200)
     
 
 def _get_resource_sender(element_name, resource):
@@ -1157,14 +1172,14 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-@processor_for('my-resources')
-@login_required
-def my_resources(request, page):
-
-    resource_collection = get_my_resources_list(request.user)
-    context = {'collection': resource_collection}
-
-    return context
+# @processor_for('my-resources')
+# @login_required
+# def my_resources(request, page):
+#
+#     resource_collection = get_my_resources_list(request)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 
 @processor_for(GenericResource)
@@ -1838,4 +1853,21 @@ class CollaborateView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
+        }
+
+
+class MyResourcesView(TemplateView):
+    template_name = 'pages/my-resources.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        resource_collection = get_my_resources_list(u)
+
+        return {
+            'collection': resource_collection
         }

@@ -1584,7 +1584,7 @@
                                 {% else %}
                                     <span>{{ rights.statement|linebreaks }}</span>
                                 {% endif %}
-                                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                                 <p>
                                 In copying this resource you are ethically bound to respect the terms of this license.
                                 Please confirm that you accept the terms of this license below before you can copy this resource.
@@ -1622,7 +1622,7 @@
                 {% else %}
                     <span>{{ rights.statement|linebreaks }}</span>
                 {% endif %}
-                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                 <p style="margin-top: 5px">
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
@@ -1656,7 +1656,7 @@
                 {% else %}
                     <span>{{ rights.statement|linebreaks }}</span>
                 {% endif %}
-                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                 <p style="margin-top: 5px">
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
@@ -1763,20 +1763,23 @@
                                     <tr id="templateRow">
                                         <td>
                                             <table class="user-scope">
-                                                <td>
-                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                                    <div class="group-image-wrapper extra-small">
-                                                        <div class="group-image-extra-small group-preview-image-default"
-                                                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div data-col="name" class="user-name">
-                                                        <a href="#"></a>
-                                                    </div>
-                                                    <div class="badge you-flag">You</div>
-                                                    <div data-col="user-name" class="user-username-content"></div>
-                                                </td>
+                                                <tr>
+                                                    <td>
+                                                        <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                        <div class="group-image-wrapper extra-small">
+                                                            <div class="group-image-extra-small group-preview-image-default"
+                                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div data-col="name" class="user-name">
+                                                            <a href="#"></a>
+                                                        </div>
+                                                        <div class="badge you-flag">You</div>
+                                                        <div data-col="user-name" class="user-username-content"></div>
+                                                    </td>
+                                                </tr>
                                             </table>
                                         </td>
 
@@ -1854,7 +1857,7 @@
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Invite</h3>
+                            <h3 class="panel-title">Give access</h3>
                         </div>
                         <div id="div-invite-people" class="panel-body">
                             <div id="invite-flag" class="btn-group" role="group"
@@ -1902,7 +1905,7 @@
                                             <div class="col-xs-6">
                                                 <a id="btn-confirm-add-access"
                                                    class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd</span></a>
+                                                        class="button-label">&nbsp;Add</span></a>
                                             </div>
                                         </div>
                                     </div>
@@ -2028,15 +2031,21 @@
     </div>
     {#======= Manage access modal  window ends =======#}
 
-    {% block delete-self-access-to-resource %}
-        <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access" style="display:none">
-            <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
-                This action will remove your access to this resource and you will no longer be able to
-                access it without someone else sharing it with you again. This is not reversible,
-                so <strong>Remove</strong> with caution.
-            </p>
-        </div>
-    {% endblock %}
+    <div id="dialog-confirm-delete-self-access" class="access-dialog-title" title="Warning! Loss of access"> 
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+            This action will remove your access to this resource and you will no longer be able to
+            access it without someone else sharing it with you again. This is not reversible,
+            so <strong>Remove</strong> with caution.
+        </p>
+    </div>
+    
+    <div id="dialog-confirm-change-share-permission" class="access-dialog-title" title="Warning! Loss of owner access">
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+        This action will remove your owner access to this resource. This removal is not reversible. Owner 
+        access can only be retrieved by another owner later granting you owner access. <strong>Remove</strong> with caution.
+        </p>
+    </div>
+
 {% endif %}
 
 <div class="modal fade" id="redirect-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">

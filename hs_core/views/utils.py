@@ -1,51 +1,48 @@
 from __future__ import absolute_import
 
-import json
-import os
-import string
-
 import errno
-import shutil
-
-from collections import namedtuple
-import paramiko
+import json
 import logging
-from dateutil import parser
-from urllib2 import Request, urlopen, HTTPError, URLError
+import os
+import shutil
+import string
+from collections import namedtuple
 from tempfile import NamedTemporaryFile
+from urllib2 import Request, urlopen, HTTPError, URLError
+from uuid import uuid4
 
-from django.db.models import When, Case, Value, BooleanField
-from django.core.urlresolvers import reverse
+import paramiko
+from dateutil import parser
+from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from django.utils.http import int_to_base36
-from django.http import HttpResponse, QueryDict
+from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
-
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from rest_framework import status
-
+from django.db.models import When, Case, Value, BooleanField, Prefetch
+from django.db.models.query import prefetch_related_objects
+from django.http import HttpResponse, QueryDict
+from django.utils.http import int_to_base36
+from mezzanine.conf import settings
 from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
 from mezzanine.utils.urls import next_url
-from mezzanine.conf import settings
+from rest_framework import status
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from hs_core import hydroshare
-from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations
-from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-    ResourceFile, get_user
-from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.hydroshare.utils import get_file_mime_type
-from hs_file_types.utils import set_logical_file_type
+from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
+from hs_core import hydroshare
 from hs_core.hydroshare import add_resource_files
-from django_irods.icommands import SessionException
-from uuid import uuid4
-
+from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.hydroshare.utils import check_aggregations
+from hs_core.hydroshare.utils import get_file_mime_type
+from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
+    ResourceFile, get_user, CoreMetaData
+from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_file_types.utils import set_logical_file_type
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -544,6 +541,15 @@ def create_form(formclass, request):
     return params
 
 
+def get_metadata_contenttypes():
+    """Gets a list of all metadata content types"""
+    meta_contenttypes = []
+    for model in apps.get_models():
+        if model == CoreMetaData or issubclass(model, CoreMetaData):
+            meta_contenttypes.append(ContentType.objects.get_for_model(model))
+    return meta_contenttypes
+
+
 def get_my_resources_list(user):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
@@ -615,6 +621,17 @@ def get_my_resources_list(user):
     # we won't hit the DB for each resource to know if it's status is public/private/discoverable
     # etc
     resource_collection = resource_collection.select_related('raccess')
+    # prefetch metadata items - creators, keywords(subjects), dates and title
+    meta_contenttypes = get_metadata_contenttypes()
+    for ct in meta_contenttypes:
+        # get a list of resources having metadata that is an instance of a specific
+        # metadata class (e.g., CoreMetaData)
+        res_list = [res for res in resource_collection if res.content_type == ct]
+        prefetch_related_objects(res_list,
+                                 Prefetch('content_object__creators'),
+                                 Prefetch('content_object__subjects'),
+                                 Prefetch('content_object___title'),
+                                 Prefetch('content_object__dates'))
     return resource_collection
 
 

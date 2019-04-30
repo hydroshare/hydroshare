@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
-        password=None, active=True, organization=None):
+        password=None, active=True, organization=None, middle_name=None):
     """
     Create a new user within the HydroShare system.
 
@@ -96,6 +96,10 @@ def create_account(
             except ObjectDoesNotExist:
                 new_term = UncategorizedTerm(name=dict_item)
                 new_term.save()
+
+    if middle_name:
+        user_profile.middle_name = middle_name
+        user_profile.save()
 
     # create default UserQuota object for the new user
     uq = UserQuota.objects.create(user=u)
