@@ -90,6 +90,7 @@ $(document).ready(function() {
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
+    $("#btn-confirm-delete-extended-metadata").click(removeExtraMetaTable);
 
     $("#btn-confirm-add-access").click(function () {
         var formID = $(this).closest("form").attr("id");

@@ -233,6 +233,34 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $('#extraMetaDialog').modal('show');
 }
 
+
+
+function showRemoveExtraMetaPopup(row_id_str) {
+    $("#edit_extra_meta_row_id").val('');
+    $("#old_extra_meta_name").val('');
+    $("#extra_meta_name_input").val('');
+    $("#extra_meta_value_input").val('');
+
+    // Restore validation UI state
+    $("#extra_meta_msg").hide();
+    $("#extra_meta_name_input").removeClass("form-invalid");
+
+    // retrieving values from underlying data table
+        var t = $('#extraMetaTable').DataTable();
+        var row_to_edit = t.row("#" + row_id_str);
+        var oldname = row_to_edit.data()[0];
+        var oldvalue = row_to_edit.data()[1];
+        $("#edit_extra_meta_row_id").val(row_id_str);
+        $("#old_extra_meta_name").val(oldname);
+        $("#delete_extra_meta_name_input").val(oldname);
+        $("#delete_extra_meta_value_input").val(oldvalue);
+
+    $('#removeExtraMetaDialog').modal('show');
+
+    // removeExtraMetadataFromTable(row_id_str);
+    // saveExtraMetadata();
+}
+
 function addEditExtraMeta2Table() {
     // Restore validation UI state
     $("#extra_meta_msg").hide();
@@ -286,6 +314,15 @@ function addEditExtraMeta2Table() {
 
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
     $("#extraMetaDialog").modal('hide');
+    saveExtraMetadata();
+}
+
+function removeExtraMetaTable(table) {
+    var t = $('#extraMetaTable').DataTable();
+    var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
+    var row_to_edit = t.row("#" + edit_extra_meta_row_id);
+    removeExtraMetadataFromTable(edit_extra_meta_row_id);
+    $("#removeExtraMetaDialog").modal('hide');
     saveExtraMetadata();
 }
 
@@ -743,8 +780,7 @@ $(document).ready(function () {
 
     $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
-        removeExtraMetadataFromTable(loopCounter);
-        saveExtraMetadata();
+        showRemoveExtraMetaPopup(loopCounter);
     });
 
     $("#extraMetaTable").on("click", ".btn-edit-extra-metadata", function () {
