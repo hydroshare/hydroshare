@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block main %}
+    <div id="app">
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -472,43 +473,19 @@
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                            href="#filter">&nbsp;Shared by</a></h4>
                                             {% if res.all %}
-
                                                 <i class="list-group-item no-items-found">No resources have been shared
                                                     with this group yet.</i>
                                             {% else %}
-                                                {% for res in group_resources %}
-                                                    <label for="{{ res.grantor.id }}">{{ res.grantor|best_name }}</label>
-                                                    <input type="checkbox" id="{{ res.grantor.id }}" value="Click"
-                                                           @click="updateClick({{ res.grantor.id }})"/><br/>
+                                                {% for grantor in grantors %}
+                                                    <label for="{{ grantor.id }}">{{ grantor|best_name }}</label>
+                                                    <input type="checkbox" id="{{ grantor.id }}" value="Click"
+                                                           @click="updateContribs({{ grantor.id }})" checked /><br/>
                                                 {% endfor %}
                                             {% endif %}
-
-
-{#                                     {% templatetag openvariable %} message {% templatetag closevariable %}#}
-
-{#                                </div>#}
-{#                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">#}
-{#                                    <div class="panel-body">#}
-{#                                        <div class="list-group">#}
-{#                                            <ul class="list-group inputs-group">#}
-{#                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>#}
-{#                                            </ul>#}
-{#                                        </div>#}
-
-{#                                        <div id="grantors-list">#}
-{#                                            {% for res in group_resources %}#}
-{#                                                <span data-grantor-id="{{ res.grantor.id }}"#}
-{#                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>#}
-{#                                            {% endfor %}#}
-{##}
-{#                                        </div>#}
-
-
                                     </div>
                                 </div>
                             </div>
                         </div>
-                         <h1 v-if="awesome">Vue is awesome!</h1>
                          <div class="col-lg-10" id="items">
                              <div class="row">
                                  <div class="col-sm-12">
@@ -594,7 +571,7 @@
                                 </thead>
                                 <tbody>
                                     {% for res in group_resources %}
-                                        <tr class="data-row">
+                                        <tr class="data-row" v-show="showFrom({{ res.grantor.id }})">
                                             {# Selection controls #}
                                             <td>
                                                 <input class="row-selector" type="checkbox">
@@ -882,7 +859,7 @@
             </div>
         </div>
     {% endif %}
-
+    </div>
 {% endblock %}
 
 {% block extra_js %}

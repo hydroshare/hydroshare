@@ -338,6 +338,82 @@ $(document).ready(function () {
         input.val(label);
     });
 
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            // declare message with an empty value
+            message: '',
+            contribs: [13, 17]
+        },
+        methods: {
+            loadContribs(contribId) {
+
+            },
+            showFrom(contributorId) {
+                // console.log(contributorId);
+                // this.$data.contribs.push(contributorId);
+                if (this.$data.contribs.indexOf(contributorId) > -1) {
+                    return true
+                }
+                else {
+                    return false
+                }
+            },
+            updateContribs(contribId) {  // if not in the display list remove it otherwise add it effectively toggle
+                let loc = this.$data.contribs.indexOf(contribId);
+                if (loc < 0) {
+                    this.$data.contribs.push(contribId)
+                }
+                else {
+                   this.$data.contribs.splice(loc, 1);
+                }
+
+                console.log(this.$data.contribs)
+            }
+        }
+
+    });
+    vm.message = 'Hello!';
+
+
+
+
+    // var vm = new Vue({
+    //     el: '#app',
+    //     data: {},
+    //     beforeMount() {
+    //         this.$data.item = {
+    //             visible: false
+    //         };
+    //     },
+    //     methods: {
+    //         isBool() {
+    //             return this.$data.item.visible
+    //         },
+    //         updateClick(grantorId) {
+    //             this.$data.item = {
+    //                 visible: !this.$data.item.visible
+    //             };
+    //             console.log(this.$data.item.visible)
+    //         }
+    //     }
+    // });
+    //
+    // var app2 = new Vue({
+    //     el: '#app2',
+    //     data: {
+    //         message: ''
+    //     },
+    //     beforeMount() {
+    //         this.$data.message = {
+    //
+    //         };
+    //     },
+    //     template: '<div>{{ message }}</div>'
+    // });
+    // app2.message = "asdf"
+
+
     // var app = new Vue({
     //     el: '#app',
     //     data: {
@@ -347,29 +423,8 @@ $(document).ready(function () {
 
         // template: `<div>{% templatetag openvariable %} item.count {% templatetag closevariable %}<input type="button" value="Click" @click="updateCount"/></div>`,
 
-        var vm = new Vue({
-        el: '#shared-by',
-        data: {
 
-        },
-        beforeMount() {
-            this.$data.item = {
-                visible: false
-            };
-        },
-        isOpen() {
-            return this.$data.item.visible;
-        },
-        methods: {
-            updateClick(grantorId) {
-                this.$data.item = {
-                    visible: !this.$data.item.visible
-                }
-                console.log(this.$data.item.visible)
-            }
-        }
-    });
 
-// https://stackoverflow.com/questions/43564875/making-django-vue-js-work-together-with-verbatim
+    // https://stackoverflow.com/questions/43564875/making-django-vue-js-work-together-with-verbatim
 
 });
