@@ -1,19 +1,46 @@
-{% if not resource_edit_mode %}
+
+    		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		<script>
+
+		$(document).ready(function () {
+    // Warning
+    $(window).on('beforeunload', function(){
+        return "Any changes will be lost";
+    });
+
+    // Form Submit
+    $(document).on("submit", "form", function(){
+        // disable warning
+        $(window).off('beforeunload');
+    });
+    });
+		</script>
+
+{% if not metadata_form %}
+
     {% if abstract %}
-        <div class="col-xs-12 content-block">
+
+        <div class="col-xs-12 content-block" id="changes">
             <h3>Abstract</h3>
             <span class="abstract">{{ abstract|urlize|linebreaks }}</span>
         </div>
     {% endif %}
 {% else %}
     <div class="col-xs-12 content-block">
+
         <h3>Abstract</h3>
+
+
         {% if cm.metadata.description %}
+
         <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
               id="id-description" method="post">
             {% csrf_token %}
             <fieldset>
+
+
                 <div id="div_id_abstract" class="control-group">
+
                     <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
                                                     id="id_abstract" name="abstract"
                                                     rows="10">{{ cm.metadata.description }}</textarea></div>
@@ -47,3 +74,4 @@
         {% endif %}
     </div>
 {% endif %}
+

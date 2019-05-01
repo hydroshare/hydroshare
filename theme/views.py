@@ -487,6 +487,12 @@ def login(request, template="accounts/account_login.html",
     """
     form = form_class(request.POST or None)
     if request.method == "POST" and form.is_valid():
+        print(dir(request));
+        print("request is ", request)
+        print(request.get_raw_uri)
+        print(request.META['HTTP_REFERER'])
+        # print('referer', HttpResponseRedirect(request.META['HTTP_REFERER']))
+        # return HttpResponseRedirect(request.META['HTTP_REFERER'])
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
         add_msg = get_quota_message(authenticated_user)
@@ -495,6 +501,7 @@ def login(request, template="accounts/account_login.html",
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)
+        # print(login_redirect)
     context = {"form": form, "title": _("Log in")}
     context.update(extra_context or {})
     return TemplateResponse(request, template, context)
