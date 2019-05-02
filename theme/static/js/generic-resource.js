@@ -242,18 +242,18 @@ function showRemoveExtraMetaPopup(row_id_str) {
     // get the row object via the row_id_str passed in
     let row_to_delete = t.row("#" + row_id_str);
 
-    // get the row content - name and value
-    let name = row_to_delete.data()[0];
-    let value = row_to_delete.data()[1];
+    // get the row content - meta_name and meta_value
+    let meta_name = row_to_delete.data()[0];
+    let meta_value = row_to_delete.data()[1];
 
     // this is a hidden HTML element to store the row_id_str
     $("#delete_extra_meta_row_id").val(row_id_str);
 
-    $("#old_extra_meta_name").val(name);
+    $("#old_extra_meta_name").val(meta_name);
 
-    // set the value. readonly is set in the modal element, not here
-    $("#delete_extra_meta_name_input").val(name);
-    $("#delete_extra_meta_value_input").val(value);
+    // set the meta_value.
+    $("#delete_extra_meta_name_input").val(meta_name);
+    $("#delete_extra_meta_value_input").val(meta_value);
 
     $('#deleteExtraMetaDialog').modal('show');
 }
