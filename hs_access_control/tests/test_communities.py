@@ -632,3 +632,35 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.posts in self.dogs.gaccess.edit_resources)
         self.assertFalse(self.claus in self.dogs.gaccess.view_resources)
         self.assertFalse(self.claus in self.dogs.gaccess.edit_resources)
+
+    def test_public_resources(self):
+        """ public resources contain those resources that are public and discoverable """
+        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
+        self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
+        res = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set(res, []))
+        self.holes.raccess.public = True
+        self.holes.raccess.discoverable = True
+        self.holes.raccess.save()  # this avoids regular requirements for "public"
+        res = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set(res, [self.holes]))
+        for r in res:
+            self.assertEqual(r.public, r.raccess.public)
+            self.assertEqual(r.discoverable, r.raccess.discoverable)
+            self.assertEqual(r.published, r.raccess.published)
+            self.assertEqual(r.group_name, self.dogs.name)
+            self.assertEqual(r.group_id, self.dogs.id)
+        self.posts.raccess.discoverable = True
+        self.posts.raccess.save()
+        res = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set(res, [self.holes, self.posts]))
+        for r in res:
+            self.assertEqual(r.public, r.raccess.public)
+            self.assertEqual(r.discoverable, r.raccess.discoverable)
+            self.assertEqual(r.published, r.raccess.published)
+            if r.id == self.posts.id:
+                self.assertEqual(r.group_name, self.cats.name)
+                self.assertEqual(r.group_id, self.cats.id)
+            else:
+                self.assertEqual(r.group_name, self.dogs.name)
+                self.assertEqual(r.group_id, self.dogs.id)

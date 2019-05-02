@@ -8,8 +8,8 @@ from hs_access_control.management.utilities import community_from_name_or_id
 
 
 def usage():
-    print("public usage:")
-    print("  public {community-name-or-id}")
+    print("community_public usage:")
+    print("  community_public {community-name-or-id}")
     print("Where:")
     print("  {community-name-or-id} is a community name or numeric id.")
 
