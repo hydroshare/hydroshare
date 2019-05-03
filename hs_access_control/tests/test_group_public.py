@@ -83,4 +83,3 @@ class T09GroupPublic(MockIRODSTestCaseMixin, TestCase):
             self.assertEqual(r.published, r.raccess.published)
             self.assertEqual(r.group_name, self.canines.name)
             self.assertEqual(r.group_id, self.canines.id)
-
