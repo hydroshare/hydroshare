@@ -1074,6 +1074,9 @@ def create_folder(res_id, folder_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
+    # check for duplicate folder path
+    if istorage.exists(coll_path):
+        raise ValidationError("Folder already exists")
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
