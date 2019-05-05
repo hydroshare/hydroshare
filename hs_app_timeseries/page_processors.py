@@ -1,14 +1,13 @@
-from django.contrib import messages
-
-from mezzanine.pages.page_processors import processor_for
-
 from crispy_forms.layout import Layout, HTML
+from django.contrib import messages
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from forms import UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, \
     UTCOffSetLayout, UTCOffSetForm
+from hs_app_timeseries.models import TimeSeriesResource
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from hs_app_timeseries.models import TimeSeriesResource
 
 
 @processor_for(TimeSeriesResource)
@@ -58,6 +57,9 @@ def landing_page(request, page):
         # resource in VIEW Mode
         context = _get_resource_view_context(page, request, content_model, selected_series_id,
                                              series_ids, extended_metadata_exists)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
     else:
         # resource in EDIT Mode
         context = _get_resource_edit_context(page, request, content_model, selected_series_id,

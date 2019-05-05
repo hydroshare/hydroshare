@@ -1,13 +1,12 @@
-from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-
-from hs_modelinstance.models import ModelInstanceResource
 from hs_modelinstance.forms import ModelOutputForm, ExecutedByForm
+from hs_modelinstance.models import ModelInstanceResource
 
-from mezzanine.pages.page_processors import processor_for
 
 @processor_for(ModelInstanceResource)
 def landing_page(request, page):
@@ -18,6 +17,9 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, request=request, resource_edit=edit_resource,
                                                    extended_metadata_layout=None)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
         extended_metadata_exists = False
         if content_model.metadata.model_output or \
                 content_model.metadata.executed_by:
