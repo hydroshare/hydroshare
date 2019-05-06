@@ -2,17 +2,34 @@ from .models import Session
 import utils
 import re
 
-RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')
+RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')  # parser for resource id
+LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
+INTERNAL_RE = re.compile('/_internal/')  # reference to an internal page
 
 
-def get_resource_id_from_url(request):
-
-    m = RESOURCE_RE.search(request)
+def get_resource_id_from_url(path):
+    m = RESOURCE_RE.search(path)
     if (m and m.group(1)):
         resource_id = m.group(1)
         return resource_id
     else:
         return None
+
+
+def get_internal_from_url(path):
+    m = INTERNAL_RE.search(path)
+    if m:
+        return True
+    else:
+        return False
+
+
+def get_landing_from_url(path):
+    m = LANDING_RE.search(path)
+    if m:
+        return True
+    else:
+        return False
 
 
 class Tracking(object):
@@ -50,8 +67,11 @@ class Tracking(object):
                          'request_url=%s' % request.path]])
 
         resource_id = get_resource_id_from_url(request.path)
+        internal = get_internal_from_url(request.path)
+        landing = get_landing_from_url(request.path)
 
         # save the activity in the database
-        session.record('visit', value=msg, resource_id=resource_id)
+        session.record('visit', value=msg, resource_id=resource_id,
+                       landing=landing, internal=internal)
 
         return response
