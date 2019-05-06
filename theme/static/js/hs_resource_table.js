@@ -73,11 +73,25 @@ $(document).ready(function () {
         $("#txtLabelName").focus();
     });
 
+    $('#id-form-create-label').submit(function (event) {
+       if (!are_restrictions_passed()) {
+            $("#labelErrorMsg").css("display", "block");
+            $("#labelErrorMsg").html(get_illegal_tag_name_message());
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    });
+
+    $('#txtLabelName').on('keyup', function (event) {
+        $("#labelErrorMsg").css("display", "none");
+    });
+
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
     $("#item-selectors").on("click", ".btn-inline-favorite, .btn-label-remove", label_ajax_submit);
-    $("#btn-create-label").click(label_ajax_submit);
+    $("#btn-create-label").click(lable_ajax_submit_precheck) ;
 
     $("#filter input[type='checkbox']").on("change", function () {
         resourceTable.draw();
@@ -350,8 +364,19 @@ function delete_multiple_resources_ajax_submit(indexes) {
       });
 }
 
+function lable_ajax_submit_precheck(event) {
+    if (!are_restrictions_passed()) {
+        $("#labelErrorMsg").css("display", "block");
+        $("#labelErrorMsg").html(get_illegal_tag_name_message());
+        event.preventDefault();
+        return false;
+    }
+    label_ajax_submit();
+    return true;
+
+}
 function label_ajax_submit() {
-    var el = $(this);
+    var el = $("#btn-create-label"); //$(this);
     var form = $("form[data-id='" + el.attr("data-form-id") + "']");
     var datastring = form.serialize();
     var url = form.attr('action');
@@ -915,3 +940,21 @@ $.fn.dataTable.ext.search.push (
         return inLabels && inFilters && inGrantors;
     }
 );
+
+function are_restrictions_passed() {
+    let input_label_value = $('#txtLabelName').val().trim();
+    return !(input_label_value.length === 0 ||
+        has_long_single_word(input_label_value) ||
+        input_label_value.length > 64 ||
+        input_label_value.indexOf('<') > -1 ||
+        input_label_value.indexOf('>') > -1
+    )
+}
+
+function has_long_single_word(input_str) {
+    return input_str.indexOf(' ') < 0 && input_str.length > 32;
+}
+
+function get_illegal_tag_name_message() {
+    return "Tag names are invalid: it can't be empty, contain special characters < or >, or have a single word longer than 32 characters.";
+}

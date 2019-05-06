@@ -326,7 +326,7 @@
                 <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
             </div>
             <div class="modal-body">
-                <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
+                <form id="id-form-create-label" data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
                       method="post">
                     {% csrf_token %}
                     <div class="form-group">
@@ -334,6 +334,7 @@
                         <input id="txtLabelName" name="label" type="text" class="form-control">
                         <input type="hidden" name="label_type" value="SAVEDLABEL">
                         <input type="hidden" name="action" value="CREATE">
+                        <div id="labelErrorMsg" class="alert alert-danger" role="alert" style="display: none"></div>
                     </div>
                 </form>
             </div>
