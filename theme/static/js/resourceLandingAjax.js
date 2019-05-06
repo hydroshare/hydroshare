@@ -1481,6 +1481,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
             folder_path: folder_path
         },
         success: function (result) {
+            $("#fb-alerts .upload-failed-alert").remove();
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
                 $('#create-folder-dialog').modal('hide');

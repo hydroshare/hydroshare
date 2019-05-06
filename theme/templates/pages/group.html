@@ -110,6 +110,7 @@
                         {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                             <h4>Recent Activity</h4>
                             {% if group_resources %}
+                                <h2> {{ group_resources.date_granted | time }} </h2>
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
                                         {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
