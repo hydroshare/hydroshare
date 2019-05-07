@@ -55,7 +55,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if user.is_authenticated():
             raise PermissionDenied()
         return redirect_to_login(request.path)
-        
+
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False
