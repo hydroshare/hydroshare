@@ -1290,7 +1290,7 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
-            spatial_coverage_dict['name'] = spatial_coverage.value['name']
+            spatial_coverage_dict['name'] = spatial_coverage.value.get('name', "")
             spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']
