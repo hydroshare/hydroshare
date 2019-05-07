@@ -1,6 +1,6 @@
 /**
-* Created by Mauriel on 3/9/2017.
-*/
+ * Created by Mauriel on 3/9/2017.
+ */
 
 function request_join_group_ajax_submit() {
     var target = $(this);
@@ -41,8 +41,7 @@ function act_on_request_ajax_submit() {
             target.parent().parent().parent().remove();
             if (target.attr("data-user-action") == "Accept") {
                 container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4></div>');
-            }
-            else {
+            } else {
                 container.append('<div class="text-center"><h4 class="flag-declined"><span class="glyphicon glyphicon-remove"></span> You have declined to join this group.</h4></div>');
             }
         },
@@ -65,7 +64,7 @@ function fixViewPort(current) {
     var containers = $('.group-thumbnails').find('div.group-container');
 
     var maxHeight = 0;
-    for (var i = 0; i < containers.length; i ++) {
+    for (var i = 0; i < containers.length; i++) {
         maxHeight = Math.max($(containers[i]).height() + $(containers[i]).find(".group-thumbnail-footer").height(), maxHeight);
     }
 
@@ -85,9 +84,12 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
+    set_feedback_visible(false);
     $(".btn-ask-to-join").click(request_join_group_ajax_submit);
     $(".btn-act-on-request").click(act_on_request_ajax_submit);
     $("#txt-search-groups").keyup(function () {
+        set_feedback_visible(false);
+        let num_match_found = 0;
         var searchString = $("#txt-search-groups").val().toLowerCase();
         $(".group-container").show();
         var groups = $(".group-container");
@@ -95,9 +97,16 @@ $(document).ready(function () {
             var groupName = $(groups[i]).find(".group-name").text().toLowerCase();
             if (groupName.indexOf(searchString) < 0) {
                 $(groups[i]).hide();
+            } else {
+                num_match_found++;
             }
         }
+        if (num_match_found == 0 && searchString.trim().length > 0) {
+            set_feedback_visible(true);
+            show_not_found(searchString);
+        }
     });
+
 
     // File name preview for picture field, file select method
     $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
@@ -107,6 +116,30 @@ $(document).ready(function () {
 
 });
 
+/**
+ * hide or show search feedback message
+ * @param visible
+ */
+function set_feedback_visible(visible = false) {
+    let display_status = "none";
+
+    if (visible == true) {
+        display_status = "block";
+    }
+
+    $("#id-Group-Search-Result-Msg").css("display", display_status);
+}
+
+/**
+ * display search feedback
+ * @param searchString
+ */
+function show_not_found(searchString) {
+    let not_found_message = "We couldn't find anything for \"" + searchString + "\".";
+    $("#id-Group-Search-Result-Msg").html(not_found_message);
+}
+
+
 // Uses bootstrap toolkit to trigger FixViewPort on bootstrap responsive breakpoints
 (function ($, viewport) {
     $(document).ready(function () {
@@ -115,9 +148,9 @@ $(document).ready(function () {
 
         // Executes each time window size changes
         $(window).resize(
-                viewport.changed(function () {
-                    fixViewPort(viewport.current());
-                })
+            viewport.changed(function () {
+                fixViewPort(viewport.current());
+            })
         );
     });
 })(jQuery, ResponsiveBootstrapToolkit);
