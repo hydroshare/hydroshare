@@ -84,12 +84,13 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
-    set_feedback_visible(false);
+    $("#id-Group-Search-Result-Msg").hide();
     $(".btn-ask-to-join").click(request_join_group_ajax_submit);
     $(".btn-act-on-request").click(act_on_request_ajax_submit);
+
     $("#txt-search-groups").keyup(function () {
-        set_feedback_visible(false);
-        let num_match_found = 0;
+        $("#id-Group-Search-Result-Msg").hide();
+        let is_match_found = false;
         var searchString = $("#txt-search-groups").val().toLowerCase();
         $(".group-container").show();
         var groups = $(".group-container");
@@ -98,11 +99,11 @@ $(document).ready(function () {
             if (groupName.indexOf(searchString) < 0) {
                 $(groups[i]).hide();
             } else {
-                num_match_found++;
+                is_match_found = true;
             }
         }
-        if (num_match_found == 0 && searchString.trim().length > 0) {
-            set_feedback_visible(true);
+        if (!is_match_found && searchString.trim().length > 0) {
+            $("#id-Group-Search-Result-Msg").show();
             show_not_found(searchString);
         }
     });
@@ -115,20 +116,6 @@ $(document).ready(function () {
     });
 
 });
-
-/**
- * hide or show search feedback message
- * @param visible
- */
-function set_feedback_visible(visible = false) {
-    let display_status = "none";
-
-    if (visible == true) {
-        display_status = "block";
-    }
-
-    $("#id-Group-Search-Result-Msg").css("display", display_status);
-}
 
 /**
  * display search feedback
