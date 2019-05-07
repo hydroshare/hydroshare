@@ -230,7 +230,7 @@ class Variable(models.Model):
             .order_by('-last_accessed')[:n_resources]
 
     @classmethod
-    def popular_resources(cls, n_resources=5, days=60):
+    def popular_resources(cls, n_resources=5, days=60, today=None):
         """
         fetch the most recent n resources with which a specific user has interacted
 
@@ -242,8 +242,11 @@ class Variable(models.Model):
         between reporting history and timely responsiveness of the dashboard.
         """
         # TODO: document actions like labeling and commenting (currently these are 'visit's)
+        if today is None:
+            today = datetime.now()
         return BaseResource.objects.filter(
-                variable__timestamp__gte=(datetime.now()-timedelta(days)),
+                variable__timestamp__gte=(today-timedelta(days)),
+                variable__timestamp__lt=(today),
                 variable__resource__isnull=False,
                 variable__name='visit')\
             .distinct()\
