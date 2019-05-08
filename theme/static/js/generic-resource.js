@@ -233,6 +233,31 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     $('#extraMetaDialog').modal('show');
 }
 
+
+
+function showRemoveExtraMetaPopup(row_id_str) {
+    // retrieving values from underlying data table
+    let t = $('#extraMetaTable').DataTable();
+
+    // get the row object via the row_id_str passed in
+    let row_to_delete = t.row("#" + row_id_str);
+
+    // get the row content - meta_name and meta_value
+    let meta_name = row_to_delete.data()[0];
+    let meta_value = row_to_delete.data()[1];
+
+    // this is a hidden HTML element to store the row_id_str
+    $("#delete_extra_meta_row_id").val(row_id_str);
+
+    $("#old_extra_meta_name").val(meta_name);
+
+    // set the meta_value.
+    $("#delete_extra_meta_name_input").val(meta_name);
+    $("#delete_extra_meta_value_input").val(meta_value);
+
+    $('#deleteExtraMetaDialog').modal('show');
+}
+
 function addEditExtraMeta2Table() {
     // Restore validation UI state
     $("#extra_meta_msg").hide();
@@ -286,6 +311,13 @@ function addEditExtraMeta2Table() {
 
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
     $("#extraMetaDialog").modal('hide');
+    saveExtraMetadata();
+}
+
+function removeExtraMetaTable(table) {
+    $("#deleteExtraMetaDialog").modal('hide');
+
+    removeExtraMetadataFromTable($("#delete_extra_meta_row_id").val().trim());
     saveExtraMetadata();
 }
 
@@ -743,8 +775,7 @@ $(document).ready(function () {
 
     $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
-        removeExtraMetadataFromTable(loopCounter);
-        saveExtraMetadata();
+        showRemoveExtraMetaPopup(loopCounter);
     });
 
     $("#extraMetaTable").on("click", ".btn-edit-extra-metadata", function () {
