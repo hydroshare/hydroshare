@@ -3,23 +3,32 @@ import utils
 import re
 
 RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')  # parser for resource id
+BAG_RE = re.compile('bags/([0-9a-f]{32})\.zip')  # parser for resource id
 LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
-INTERNAL_RE = re.compile('/_internal/')  # reference to an internal page
+REST_RE = re.compile('/hsapi/')  # reference to REST or internal
+INTERNAL_RE = re.compile('/hsapi/_internal/')  # reference to an internal page
 
 
 def get_resource_id_from_url(path):
+    """ read a resource id from a URL """
     m = RESOURCE_RE.search(path)
-    if (m and m.group(1)):
-        resource_id = m.group(1)
-        return resource_id
-    else:
-        return None
+    if m and m.group(1):
+        return m.group(1)
+    m = BAG_RE.search(path)
+    if m and m.group(1):
+        return m.group(1)
+    return None
 
 
-def get_internal_from_url(path):
-    m = INTERNAL_RE.search(path)
+def get_rest_from_url(path):
+    """ determine whether a URL is a REST call or not """
+    m = REST_RE.search(path)
     if m:
-        return True
+        n = INTERNAL_RE.search(path)
+        if n:
+            return False
+        else:
+            return True
     else:
         return False
 
@@ -67,11 +76,11 @@ class Tracking(object):
                          'request_url=%s' % request.path]])
 
         resource_id = get_resource_id_from_url(request.path)
-        internal = get_internal_from_url(request.path)
+        rest = get_rest_from_url(request.path)
         landing = get_landing_from_url(request.path)
 
         # save the activity in the database
-        session.record('visit', value=msg, resource_id=resource_id,
-                       landing=landing, internal=internal)
+        session.record('visit', value=msg, last_resource_id=resource_id,
+                       landing=landing, rest=rest)
 
         return response

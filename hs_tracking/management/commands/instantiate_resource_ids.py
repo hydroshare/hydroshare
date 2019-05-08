@@ -12,10 +12,16 @@ from hs_core.models import BaseResource
 # a base RE for identifying the resource_id in a request.
 RESOURCE_RE = {"visit": re.compile('resource/([0-9a-f]{32})/'),
                "download": re.compile('id=([0-9a-f]{32})\|'),
-               "app_launch": re.compile('id=([0-9a-f]{32})\|')}
+               "app_launch": re.compile('id=([0-9a-f]{32})\|'),
+               "create": re.compile('id=([0-9a-f]{32})\|'),
+               "delete": re.compile('id=([0-9a-f]{32})\|')}
 # these two REs identify specific kinds of visits
+
+# TODO: Move hostname to session variable to reduce runtime.
+# TODO: IP_RE = re.compile('user_ip=([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\|')
 LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
-INTERNAL_RE = re.compile('/_internal/')  # reference to an internal page
+REST_RE = re.compile('/hsapi/')  # reference to a REST call, except for __internal
+INTERNAL_RE = re.compile('/hsapi/_internal/')  # reference to an internal page
 
 
 def instantiate_timestamp_range(start, end):
@@ -42,16 +48,32 @@ def instantiate_timestamp_range(start, end):
                     ids = ids + 1
                     if ids % 1000 == 0:
                         print("{} of {}".format(ids, events))
+
                     if v.name == 'visit':  # for visits, classify kind of visit
                         if LANDING_RE.search(value):
                             v.landing = True
                         else:
                             v.landing = False
+                    else:
+                        v.landing = False
+
+                    if REST_RE.search(value):
                         if INTERNAL_RE.search(value):
-                            v.internal = True
+                            v.rest = False
                         else:
-                            v.internal = False
+                            v.rest = True
+
+                    # Search for IP address and convert to hostname
+                    # m = IP_RE.search(value)
+                    # if m and m.group(1):
+                    #     ip_address = m.group(1)
+                    #     try:
+                    #         hostname, aliases, addresses = socket.gethostbyaddr(ip_address)
+                    #         v.hostname = hostname
+                    #     except Exception as e:
+                    #         v.hostname = None
                     v.save()
+
                 # else:
                 #    print("NONE for '{}'".format(value))
             # else:

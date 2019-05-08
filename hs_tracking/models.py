@@ -94,6 +94,7 @@ class Visitor(models.Model):
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
     visitor = models.ForeignKey(Visitor, related_name='session')
+    # TODO: hostname = models.CharField(null=True, default=None, max_length=256)
 
     objects = SessionManager()
 
@@ -139,8 +140,9 @@ class Variable(models.Model):
     last_resource_id = models.CharField(null=True, max_length=32)
 
     # flags describe kind of visit. False for non-visits
-    internal = models.BooleanField(null=False, default=False)
     landing = models.BooleanField(null=False, default=False)
+    rest = models.BooleanField(null=False, default=False)
+    # REDUNDANT: internal = models.BooleanField(null=False, default=False)
 
     def get_value(self):
         v = self.value
