@@ -178,34 +178,6 @@ function onRemoveKeywordFileType(event) {
     $("#id-keywords-filetype-msg").hide();
 }
 
-// Alert Types: "error", "success", "info"
-function customAlert(alertTitle, alertMessage, alertType, duration) {
-    alertType = alertType || "success";
-    var el = document.createElement("div");
-    var top = 200;
-    var style = "top:" + top + "px";
-    var alertTypes = {
-        success: {class: "alert alert-success", icon: "fa fa-check"},
-        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
-        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
-    };
-
-    el.setAttribute("style", style);
-    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
-    alertMessage =
-      '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
-      '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
-      + alertTitle + '</strong><br>' + alertMessage;
-    el.innerHTML = alertMessage;
-    setTimeout(function () {
-        $(el).fadeOut(300, function () {
-            $(this).remove();
-        });
-    }, duration);
-    $(el).appendTo("body > .main-container > .container");
-    $(el).hide().fadeIn(400);
-}
-
 function showAddEditExtraMetaPopup(edit, row_id_str) {
     $("#edit_extra_meta_row_id").val('');
     $("#old_extra_meta_name").val('');
