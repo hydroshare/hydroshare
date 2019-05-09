@@ -86,3 +86,11 @@ class TestDashboard(TestCase):
         self.assertEqual(r.public, False)
         self.assertEqual(r.published, False)
         self.assertEqual(r.discoverable, False)
+
+        # there's only one record!
+        stuff = Variable.objects.filter(resource=self.holes)
+        one = stuff[0]
+        # the record describes the request above
+        self.assertEqual(one.last_resource_id, self.holes.short_id)
+        self.assertEqual(one.landing, True)
+        self.assertEqual(one.rest, False)
