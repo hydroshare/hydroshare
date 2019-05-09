@@ -10,6 +10,7 @@ from lxml import etree
 
 
 class RefTimeSeriesResource(BaseResource):
+    archived_model = True
     objects = ResourceManager("RefTimeSeriesResource")
 
     discovery_content_type = "Reference to HIS Time Series"  # used during discovery

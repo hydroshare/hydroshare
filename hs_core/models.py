@@ -3437,6 +3437,7 @@ class BaseResource(Page, AbstractResource):
 # TODO Deprecated
 class GenericResource(BaseResource):
     """Define GenericResource model."""
+    archived_model = True
 
     objects = ResourceManager('GenericResource')
 

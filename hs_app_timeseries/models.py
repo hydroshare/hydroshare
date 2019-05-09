@@ -843,6 +843,7 @@ class CVAggregationStatistic(AbstractCVLookupTable):
 
 # TODO Deprecated
 class TimeSeriesResource(BaseResource):
+    archived_model = True
     objects = ResourceManager("TimeSeriesResource")
 
     discovery_content_type = 'Time Series'  # used during discovery

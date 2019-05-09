@@ -340,6 +340,8 @@ class CellInformation(AbstractMetaDataElement):
 # TODO Deprecated
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
+    archived_model = True
+
     objects = ResourceManager("RasterResource")
 
     discovery_content_type = 'Geographic Raster'  # used during discovery
