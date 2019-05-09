@@ -91,7 +91,8 @@ $(document).ready(function () {
     $("#txt-search-groups").keyup(function () {
         $("#id-Group-Search-Result-Msg").hide();
         let is_match_found = false;
-        var searchString = $("#txt-search-groups").val().toLowerCase();
+        var searchStringOrig = $("#txt-search-groups").val();
+        var searchString = searchStringOrig.toLowerCase();
         $(".group-container").show();
         var groups = $(".group-container");
         for (var i = 0; i < groups.length; i++) {
@@ -104,7 +105,7 @@ $(document).ready(function () {
         }
         if (!is_match_found && searchString.trim().length > 0) {
             $("#id-Group-Search-Result-Msg").show();
-            show_not_found(searchString);
+            show_not_found(searchStringOrig);
         }
     });
 
@@ -122,7 +123,7 @@ $(document).ready(function () {
  * @param searchString
  */
 function show_not_found(searchString) {
-    let not_found_message = "We couldn't find anything for \"" + searchString + "\".";
+    let not_found_message = "We couldn't find anything for <strong>" + searchString + "</strong>.";
     $("#id-Group-Search-Result-Msg").html(not_found_message);
 }
 
