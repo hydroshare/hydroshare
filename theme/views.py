@@ -486,11 +486,9 @@ def send_verification_mail_for_password_reset(request, user):
 
 def home_router(request):
     if request.user.is_authenticated():
-        #return dashboard(request)
         return redirect("dashboard")
     else:
-        #return render(request, "pages/homepage.html")
-        return redirect("landing_page")
+        return render(request, "pages/homepage.html")
 
 
 @login_required
