@@ -163,7 +163,8 @@ class Variable(models.Model):
         return '|'.join(msg_items)
 
     @classmethod
-    def record(cls, session, name, value=None, resource=None, resource_id=None):
+    def record(cls, session, name, value=None, resource=None, resource_id=None,
+               rest=False, landing=False):
         if resource is None and resource_id is not None:
             try:
                 resource = get_resource_by_shortkey(resource_id, or_404=False)
@@ -173,7 +174,9 @@ class Variable(models.Model):
                                        type=cls.encode_type(value),
                                        value=cls.encode(value),
                                        last_resource_id=resource_id,
-                                       resource=resource)
+                                       resource=resource,
+                                       rest=rest,
+                                       landing=landing)
 
     @classmethod
     def encode(cls, value):

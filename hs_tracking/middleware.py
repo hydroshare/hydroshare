@@ -80,7 +80,7 @@ class Tracking(object):
         landing = get_landing_from_url(request.path)
 
         # save the activity in the database
-        session.record('visit', value=msg, last_resource_id=resource_id,
+        session.record('visit', value=msg, resource_id=resource_id,
                        landing=landing, rest=rest)
 
         return response

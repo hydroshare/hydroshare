@@ -54,14 +54,13 @@ def instantiate_timestamp_range(start, end):
                             v.landing = True
                         else:
                             v.landing = False
-                    else:
-                        v.landing = False
-
-                    if REST_RE.search(value):
-                        if INTERNAL_RE.search(value):
-                            v.rest = False
+                        if REST_RE.search(value):
+                            if INTERNAL_RE.search(value):
+                                v.rest = False
+                            else:
+                                v.rest = True
                         else:
-                            v.rest = True
+                            v.rest = False
 
                     # Search for IP address and convert to hostname
                     # m = IP_RE.search(value)
