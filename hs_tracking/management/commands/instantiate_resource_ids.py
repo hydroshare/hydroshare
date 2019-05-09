@@ -62,15 +62,6 @@ def instantiate_timestamp_range(start, end):
                         else:
                             v.rest = False
 
-                    # Search for IP address and convert to hostname
-                    # m = IP_RE.search(value)
-                    # if m and m.group(1):
-                    #     ip_address = m.group(1)
-                    #     try:
-                    #         hostname, aliases, addresses = socket.gethostbyaddr(ip_address)
-                    #         v.hostname = hostname
-                    #     except Exception as e:
-                    #         v.hostname = None
                     v.save()
 
                 # else:
