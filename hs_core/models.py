@@ -31,6 +31,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page
 from mezzanine.core.managers import PublishedManager
@@ -287,6 +288,10 @@ class AbstractMetaDataElement(models.Model):
     def metadata(self):
         """Return content object that describes metadata."""
         return self.content_object
+
+    @property
+    def dict(self):
+        return {self.__class__.__name__ : model_to_dict(self)}
 
     @classmethod
     def create(cls, **kwargs):
