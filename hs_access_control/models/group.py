@@ -373,6 +373,8 @@ class GroupAccess(models.Model):
                                   .filter(Q(raccess__public=True) |
                                           Q(raccess__published=True) |
                                           Q(raccess__discoverable=True))\
+                                  .filter(r2urp__privilege=PrivilegeCodes.OWNER,
+                                          r2urp__user__u2ugp__group=self.group)\
                                   .annotate(group_name=F("r2grp__group__name"),
                                             group_id=F("r2grp__group__id"),
                                             public=F("raccess__public"),
