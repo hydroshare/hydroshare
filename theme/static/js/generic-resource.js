@@ -572,8 +572,8 @@ $(document).ready(function () {
     });
 
     $("#list-roles a").click(onRoleSelect);
-    $("#add-access-form #id_user-autocomplete, #add-access-form #user-autocomplete").attr("placeholder", "Search by name or username").addClass("form-control");
-    $("#id_group-autocomplete").attr("placeholder", "Search by group name").addClass("form-control");
+    $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
+    $("input[name='group-autocomplete']").attr("placeholder", "Search by group name").addClass("form-control");
 
     var file_types = $("#supported-file-types").attr('value');
     if (file_types != ".*") {
