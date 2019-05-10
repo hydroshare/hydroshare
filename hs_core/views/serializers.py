@@ -10,6 +10,7 @@ from .utils import validate_json, validate_user, validate_group
 from hs_access_control.models import PrivilegeCodes
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
+CONTENT_TYPES = [ctype.__name__ for ctype in utils.get_content_types()]
 
 
 class StringListField(serializers.ListField):
@@ -66,6 +67,12 @@ class ResourceTypesSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100, required=True,
                                           validators=[lambda x: x in RESOURCE_TYPES],
                                           help_text='list of resource types')
+
+
+class ContentTypesSerializer(serializers.Serializer):
+    content_type = serializers.CharField(max_length=100, required=True,
+                                          validators=[lambda x: x in CONTENT_TYPES],
+                                          help_text='list of content types')
 
 
 class TaskStatusSerializer(serializers.Serializer):
@@ -191,6 +198,11 @@ class UserPrivilegeSerializer(serializers.Serializer):
 class ResourceType(object):
     def __init__(self, resource_type):
         self.resource_type = resource_type
+
+
+class ContentType(object):
+    def __init__(self, content_type):
+        self.content_type = content_type
 
 
 ResourceListItem = namedtuple('ResourceListItem',

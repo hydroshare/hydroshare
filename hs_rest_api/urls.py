@@ -39,6 +39,9 @@ urlpatterns = [
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
 
+    url(r'^resource/content_types/$', core_views.resource_rest_api.ContentTypes.as_view(),
+        name='list_contenttypes'),
+
     url(r'^resource/$', core_views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
 

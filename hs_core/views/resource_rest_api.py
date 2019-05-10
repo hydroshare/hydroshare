@@ -22,7 +22,8 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
+from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
+    get_content_types
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
@@ -72,7 +73,8 @@ class ResourceToListItemMixin(object):
                                                           coverages=coverages,
                                                           science_metadata_url=science_metadata_url,
                                                           resource_map_url=resource_map_url,
-                                                          resource_url=resource_url)
+                                                          resource_url=resource_url,
+                                                          content_types=r.aggregation_types)
         return resource_list_item
 
 
@@ -114,6 +116,22 @@ class ResourceTypes(generics.ListAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceTypesSerializer
+
+
+class ContentTypes(generics.ListAPIView):
+    pagination_class = None
+
+    @swagger_auto_schema(operation_description="List Content Types",
+                         responses={200: serializers.ContentTypesSerializer})
+    def get(self, request):
+        return self.list(request)
+
+    def get_queryset(self):
+        return [serializers.ContentType(content_type=ctype.__name__) for ctype in
+                get_content_types()]
+
+    def get_serializer_class(self):
+        return serializers.ContentTypesSerializer
 
 
 class CheckTaskStatus(generics.RetrieveAPIView):
