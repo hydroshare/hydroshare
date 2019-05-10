@@ -3,8 +3,8 @@ from django.conf.urls import url
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
-from hs_core.views.resource_folder_hierarchy import data_store_add_reference, \
-    data_store_edit_reference_url
+from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
+    data_store_edit_reference_url_public
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -112,10 +112,10 @@ urlpatterns = [
         name='list_create_resource_file'),
 
     url(r'^resource/data-store-add-reference/$',
-        data_store_add_reference),
+        data_store_add_reference_public),
 
     url(r'^resource/data_store_edit_reference_url/$',
-        data_store_edit_reference_url),
+        data_store_edit_reference_url_public),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$',
         core_views.resource_folder_rest_api.ResourceFolders.as_view(),

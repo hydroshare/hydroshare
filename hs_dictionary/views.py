@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import University
+from drf_yasg.utils import swagger_auto_schema
 
 
 class ListUniversities(APIView):
@@ -11,6 +12,7 @@ class ListUniversities(APIView):
     View to list all known universities in the system
     """
 
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, format=None, query=None):
         """
         Return a list of all vocabulary items
