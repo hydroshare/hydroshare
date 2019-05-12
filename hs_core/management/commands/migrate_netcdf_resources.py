@@ -24,6 +24,15 @@ class Command(BaseCommand):
         print(">> {}".format(msg))
 
         for nc_res in NetcdfResource.objects.all():
+            # check resource exists on irods
+            istorage = nc_res.get_irods_storage()
+            if not istorage.exists(nc_res.root_path):
+                err_msg = "NetCDF resource not found in irods (ID: {})".format(nc_res.short_id)
+                logger.error(err_msg)
+                print("Error:>> {}".format(err_msg))
+                # skip this netcdf resource
+                continue
+
             # get the nc file name which needs to be used to create a new folder
             nc_file = None
             txt_file = None
@@ -36,19 +45,44 @@ class Command(BaseCommand):
 
             create_nc_aggregation = nc_file is not None and txt_file is not None
             if create_nc_aggregation:
+                # check resource files exist on irods
+                file_missing = False
+                for res_file in nc_res.files.all():
+                    file_path = res_file.public_path
+                    if not istorage.exists(file_path):
+                        err_msg = "File path not found in irods:{}".format(file_path)
+                        logger.error(err_msg)
+                        err_msg = "Failed to convert netcdf resource (ID: {}). Resource file is " \
+                                  "missing on irods".format(nc_res.short_id)
+                        print("Error:>> {}".format(err_msg))
+                        file_missing = True
+                        break
+                if file_missing:
+                    # skip this corrupt netcdf resource
+                    continue
+
                 # create a new folder based on nc file name
                 folder_name = nc_file.file_name[:-3]
                 ResourceFile.create_folder(nc_res, folder=folder_name)
                 # move the the two resource files to this new folder
-                istorage = nc_res.get_irods_storage()
+                file_move_failed = False
                 for res_file in nc_res.files.all():
                     tgt_path = 'data/contents/{}/{}'.format(folder_name, res_file.file_name)
                     src_full_path = res_file.public_path
                     tgt_full_path = os.path.join(nc_res.root_path, tgt_path)
-
-                    istorage.moveFile(src_full_path, tgt_full_path)
-                    rename_irods_file_or_folder_in_django(nc_res, src_full_path, tgt_full_path)
-
+                    try:
+                        istorage.moveFile(src_full_path, tgt_full_path)
+                        rename_irods_file_or_folder_in_django(nc_res, src_full_path, tgt_full_path)
+                    except Exception as ex:
+                        file_move_failed = True
+                        logger.error(ex.message)
+                        err_msg = "Failed to convert netcdf resource (ID: {}). {} ".format(
+                            nc_res.short_id, ex.message)
+                        print("Error:>> {}".format(err_msg))
+                        break
+                if file_move_failed:
+                    # skip this netcdf resource
+                    continue
             # change the resource_type
             nc_metadata_obj = nc_res.metadata
             nc_res.resource_type = to_resource_type
@@ -111,7 +145,14 @@ class Command(BaseCommand):
                 logger.info(msg)
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
-            set_dirty_bag_flag(comp_res)
+            try:
+                set_dirty_bag_flag(comp_res)
+            except Exception as ex:
+                err_msg = 'Failed to set bag flag dirty for the converted resource (ID: {})'
+                err_msg = err_msg.format(nc_res.short_id)
+                logger.error(err_msg)
+                print("Error:>> {}".format(err_msg))
+
             resource_counter += 1
             # delete the instance of NetCdfMetaData that was part of the original netcdf resource
             nc_metadata_obj.delete()
