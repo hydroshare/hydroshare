@@ -12,8 +12,6 @@
             </h2>
         </div>
         <div class="col-lg-2" id="facets">
-            <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
-
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
@@ -24,8 +22,7 @@
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
-                            data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}" >
+                            <ul class="list-group inputs-group">
                                 <li class="list-group-item">
                                     <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
@@ -90,7 +87,8 @@
                             <div class="btn-group" role="group">
                                 <div class="dropdown dropdown-lg">
                                     <span id="btn-clear-search-input"
-                                          class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+                                          class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer">
+                                    </span>
 
                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                             aria-expanded="false"><span class="caret"></span></button>
@@ -104,22 +102,15 @@
                                                     <option value="collection resource">Collection</option>
                                                     <option value="composite resource">Composite Resource</option>
                                                     <option value="generic">Generic</option>
-                                                    <option value="geographic feature">Geographic Feature (ESRI
-                                                        Shapefiles)
-                                                    </option>
+                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                     <option value="geographic raster">Geographic Raster</option>
-                                                    <option value="his referenced time series">HIS Referenced Time
-                                                        Series
-                                                    </option>
+                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
                                                     <option value="model instance resource">Model Instance</option>
                                                     <option value="model program">Model Program</option>
-                                                    <option value="modflow model instance resource">MODFLOW Model
-                                                        Instance
-                                                    </option>
+                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
                                                     <option value="multidimensional">Multidimensional (NetCDF)</option>
                                                     <option value="script resource">Script Resource</option>
-                                                    <option value="swat model instance resource">Swat Model Instance
-                                                    </option>
+                                                    <option value="swat model instance resource">Swat Model Instance</option>
                                                     <option value="time series">Time Series</option>
                                                     <option value="web app resource">Web App</option>
                                                 </select>
@@ -185,13 +176,13 @@
                     <th>Title</th>
                     <th>First Author</th>
                     <th>Date Created</th>
-                    <th>Last modified</th>
+                    <th>Last Modified</th>
                     <th>Subject</th>            {# Used in table processing #}
                     <th>Authors</th>            {# Used in table processing #}
                     <th>Permission Level</th>   {# Used in table processing #}
                     <th>Labels</th>             {# Used in table processing #}
                     <th>Favorite</th>           {# Used in table processing #}
-                    <th>Last modified</th>      {# Used in table processing #}
+                    <th>Last Modified</th>      {# Used in table processing #}
                     <th>Sharing Status</th>     {# Used in table processing #}
                     <th>Date Created</th>       {# Used in table processing #}
                 </tr>
@@ -259,7 +250,7 @@
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
+                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
                             <td>
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
@@ -283,7 +274,7 @@
                                 <td></td>
                             {% endif %}
                             <td class="col-labels">
-                                {% for label in res.labels %}
+                                {% for label in res|user_resource_labels:user %}
                                     {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
                                 {% endfor %}
                             </td>
@@ -292,7 +283,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"U" }}</td>
+                            <td>{{ res.last_updated|date:"U" }}</td>
                             <td>
                                 {% if res.raccess.published %}
                                     Published
@@ -314,8 +305,9 @@
                 <strong>
                     <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
                 </strong>
-                <p>Public resources not owned are searchable from
-                    <strong><a href="/search">Discover</a></strong></p>
+                <p class="space-top">
+                    Search for public resources not owned by you on the <a href="/search"><strong>Discover</strong></a> page.
+                </p>
             </div>
             {% include "includes/legend.html" %}
         </div>

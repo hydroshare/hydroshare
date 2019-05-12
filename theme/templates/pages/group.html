@@ -27,8 +27,7 @@
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                                 aria-hidden="true">&times;</span></button>
                         This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
-                        cannot
-                        be shared with the group and other users cannot be invited.
+                        cannot be shared with the group and other users cannot be invited.
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
                         <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) below
@@ -86,7 +85,7 @@
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
                 <li role="presentation" class="active">
                     <a href="#overview" aria-controls="overview" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> Overview</a></li>
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                 <li role="presentation">
                     <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
@@ -97,7 +96,7 @@
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public%}
                 <li role="presentation">
                     <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-user"></i> MEMBERS</a>
+                        <i class="glyphicon glyphicon-user"></i> Members</a>
                 </li>
                 {% endif %}
             </ul>
@@ -110,6 +109,7 @@
                         {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                             <h4>Recent Activity</h4>
                             {% if group_resources %}
+                                <h2> {{ group_resources.date_granted | time }} </h2>
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
                                         {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
@@ -552,7 +552,7 @@
                                     <th>Title</th>
                                     <th>First Author</th>
                                     <th>Date Created</th>
-                                    <th>Last modified</th>
+                                    <th>Last Modified</th>
                                     <th>Subject</th>
                                     {# Used in table processing #}
                                     <th>Authors</th>
@@ -633,57 +633,18 @@
                                                 <td>{{ res.first_creator.name }}</td>
                                             {% endif %}
                                             {# Date Created #}
-                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
+                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
                                             {# Last Modified #}
-                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
-                                            <td>
-                                                {% for kw in res.metadata.subjects.all %}
-                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
-                                                {% endfor %}
-                                            </td>
-                                            <td>
-                                                {% for creator in res.metadata.creators.all %}
-                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                    {% if creator.description %}
-                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                    {% else %}
-                                                        <span>{{ creator.name }}</span>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </td>
-                                            {% if res.owned %}
-                                                <td>Owned</td>
-                                            {% elif res.editable %}
-                                                <td>Editable</td>
-                                            {% elif res.viewable %}
-                                                <td>Viewable</td>
-                                            {% else %}
-                                                <td></td>
-                                            {% endif %}
-                                            <td class="col-labels">
-                                                {% for label in res.labels %}
-                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                                {% endfor %}
-                                            </td>
-                                            <td class="col-is-favorite">
-                                                {% if res.is_favorite %}
-                                                    Favorite
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ res.updated|date:"U" }}</td>
-                                            <td>
-                                                {% if res.raccess.published %}
-                                                    Published
-                                                {% elif res.raccess.public %}
-                                                    Public
-                                                {% elif res.raccess.discoverable %}
-                                                    Discoverable
-                                                {% else %}
-                                                    Private
-                                                {% endif %}
-                                            </td>
+                                            <td>{{ res.last_updated|date:"d M Y" }} {{ res.last_updated|time }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.last_updated|date:"U" }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
                                             <td>{{ res.created|date:"U" }}</td>
-                                            <td>{{ res.grantor.id }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -907,6 +868,5 @@
     {{ block.super }}
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-{#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}

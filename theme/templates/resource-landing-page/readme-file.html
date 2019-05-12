@@ -5,5 +5,9 @@
             <span>{{ readme.file_name }}</span>
         </h4>
     </div>
-    <div class="readme-content">{{ readme.content|safe }}</div>
+    {% if readme.file_type == 'md' %}
+        <div class="readme-content">{{ readme.content|safe }}</div>
+    {% else %}
+        <pre class="readme-content">{{ readme.content|safe }}</pre>
+    {% endif %}
 </div>

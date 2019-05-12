@@ -1,7 +1,7 @@
-from mezzanine.pages.page_processors import processor_for
-
 from crispy_forms.layout import Layout, HTML
+from django.http import HttpResponseRedirect
 from dominate.tags import legend, table, tbody, tr, th, div
+from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
@@ -19,6 +19,10 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=None, request=request)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
+
         extended_metadata_exists = False
 
         if content_model.metadata.originalcoverage:
@@ -116,10 +120,8 @@ def landing_page(request, page):
                     for field_info in content_model.metadata.fieldinformations.all():
                         field_info.get_html(pretty=False)
 
-        ext_md_layout = Layout(HTML("<div class='row'>"),
-                               geom_information_layout,
+        ext_md_layout = Layout(geom_information_layout,
                                ori_coverage_layout,
-                               HTML("</div>"),
                                HTML(root_div.render()))
 
         context = page_processors.get_page_context(page,

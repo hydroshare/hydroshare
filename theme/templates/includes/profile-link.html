@@ -1,11 +1,8 @@
+{% load hydroshare_tags %}
+
 <a class="profile-preview" data-toggle="dropdown"
    href="#"
-   data-name="{% if user.first_name or user.last_name %}
-    {{ user.first_name }} {% if user.middle_name %}
-    {{ user.middle_name }}{% endif %} {{ user.last_name }}
-    {% else %}
-    {{ user.username }}
-    {% endif %}"
+   data-name="{{ user|best_name }}"
    data-email="{{ user.email }}"
    data-organization="{{ user.userprofile.organization|default:"" }}"
    data-title="{{ user.userprofile.title|default:"" }}"
@@ -20,10 +17,5 @@
    data-profile-picture="{{ user.userprofile.picture.url }}"
         {% endif %}
    data-profile-url="/user/{{ user.id }}">
-    {% if user.first_name or user.last_name %}
-        {{ user.first_name }} {% if user.middle_name %}
-        {{ user.middle_name }}{% endif %} {{ user.last_name }}
-    {% else %}
-        {{ user.username }}
-    {% endif %}
+    {{ user|best_name }}
 </a>

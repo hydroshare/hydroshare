@@ -1,43 +1,44 @@
 from json import dumps
 
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
-from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
-from django.views.generic import TemplateView
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.contrib.messages import info, error
-from django.utils.translation import ugettext_lazy as _
-from django.db.models import Q
-from django.db import transaction
-from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.messages import info, error
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.mail import send_mail
-from django.utils.http import int_to_base36
+from django.core.urlresolvers import reverse
+from django.db import transaction
+from django.db.models import Q, Prefetch
+from django.db.models.query import prefetch_related_objects
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
+from django.shortcuts import render
 from django.template.response import TemplateResponse
-
+from django.utils.http import int_to_base36
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic import TemplateView
+from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
-from mezzanine.utils.views import set_cookie, is_spam
 from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.accounts.forms import LoginForm
-from django.shortcuts import render
+from mezzanine.utils.views import set_cookie, is_spam
 
-from hs_core.views.utils import run_ssh_command
+from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
-from hs_access_control.models import GroupMembershipRequest
+from hs_core.views.utils import run_ssh_command, get_metadata_contenttypes
 from hs_dictionary.models import University, UncategorizedTerm
+from hs_tracking.models import Variable
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
+from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
-
 from .forms import SignupForm
 
 
@@ -67,7 +68,8 @@ class UserProfileView(TemplateView):
         # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
 
-        # if requesting user is not the profile user, then show only resources that the requesting user has access
+        # if requesting user is not the profile user, then show only resources that the
+        # requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
                 if self.request.user.is_superuser:
@@ -75,13 +77,29 @@ class UserProfileView(TemplateView):
                     pass
                 else:
                     # filter out any resources the requesting user doesn't have access
-                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.view_resources) |
-                                                 Q(raccess__public=True) | Q(raccess__discoverable=True))
-
+                    resources = resources.filter(
+                        Q(pk__in=self.request.user.uaccess.view_resources) |
+                        Q(raccess__public=True) |
+                        Q(raccess__discoverable=True))
             else:
-                # for anonymous requesting user show only resources that are either public or discoverable
-                resources = resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
+                # for anonymous requesting user show only resources that are either public or
+                # discoverable
+                resources = resources.filter(Q(raccess__public=True) |
+                                             Q(raccess__discoverable=True))
 
+        # get resource attributes used in profile page
+        resources = resources.only('title', 'resource_type', 'created')
+        # prefetch resource metadata elements
+        meta_contenttypes = get_metadata_contenttypes()
+        for ct in meta_contenttypes:
+            # get a list of resources having metadata that is an instance of a specific
+            # metadata class (e.g., CoreMetaData)
+            res_list = [res for res in resources if res.content_type == ct]
+            prefetch_related_objects(res_list,
+                                     Prefetch('content_object__creators'),
+                                     Prefetch('content_object___description'),
+                                     Prefetch('content_object___title')
+                                     )
         return {
             'profile_user': u,
             'resources': resources,
@@ -99,6 +117,9 @@ class UserPasswordResetView(TemplateView):
             raise ValidationError('Unauthorised access to reset password')
         context = super(UserPasswordResetView, self).get_context_data(**kwargs)
         return context
+
+def landingPage(request, template="pages/homepage.html"):
+    return render(request, template)
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
@@ -461,6 +482,23 @@ def send_verification_mail_for_password_reset(request, user):
     send_mail_template(subject, "email/reset_password",
                        settings.DEFAULT_FROM_EMAIL, user.email,
                        context=context)
+
+
+def home_router(request):
+    if request.user.is_authenticated():
+        return redirect("dashboard")
+    else:
+        return render(request, "pages/homepage.html")
+
+
+@login_required
+def dashboard(request, template="pages/dashboard.html"):
+    my_username = request.user.username
+    user = User.objects.get(username=my_username)
+    my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+
+    context = {'recent': my_recent}
+    return render(request, template, context)
 
 
 def login(request, template="accounts/account_login.html",

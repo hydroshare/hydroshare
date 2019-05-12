@@ -221,10 +221,9 @@ class GeometryInformation(AbstractMetaDataElement):
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")
 
-    @property
-    def metadata(self):
-        md = GeographicFeatureMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return GeographicFeatureMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):

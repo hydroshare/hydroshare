@@ -83,9 +83,7 @@ def create_bag_files(resource):
     # create resourcemetadata.xml in local directory and upload it to iRODS
     from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
-        # resources that don't support file types this would write only resource level metadata
-        # resource types that support file types this would write resource level metadata
-        # as well as file type metadata
+        # write resource level metadata
         out.write(resource.get_metadata_xml())
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)

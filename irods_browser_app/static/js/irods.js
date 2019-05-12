@@ -184,11 +184,11 @@ $('#iget_irods').on('click',function() {
         selected.push($(this).attr('name'));
     });
     $('#upload_store').val(selected);
-    $("#irods-username").val(sessionStorage.IRODS_username)
-    $("#irods-password").val(sessionStorage.IRODS_password)
-    $("#irods-host").val(sessionStorage.IRODS_host)
-    $("#irods-zone").val(sessionStorage.IRODS_zone)
-    $("#irods-port").val(sessionStorage.IRODS_port)
+    $("#irods-username").val(sessionStorage.IRODS_username);
+    $("#irods-password").val(sessionStorage.IRODS_password);
+    $("#irods-host").val(sessionStorage.IRODS_host);
+    $("#irods-zone").val(sessionStorage.IRODS_zone);
+    $("#irods-port").val(sessionStorage.IRODS_port);
     $('#irodsContent .modal-backdrop.up-load').show();
     $('#irodsContent .ajax-loader').show();
 });

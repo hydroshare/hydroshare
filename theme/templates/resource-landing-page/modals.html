@@ -106,7 +106,7 @@
                     {#  Existing HydroShare User  #}
                     <div data-hs-person-type="hs_user">
                         <div class="modal-body">
-                            {{ add_view_user_form.user }}
+                            {{ add_view_hs_user_form.user }}
                         </div>
 
                         <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
@@ -135,81 +135,99 @@
                     </div>
 
                     {# Other Person #}
-                    <div data-hs-person-type="other_person" style="display:none;">
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                              enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input name="resource-mode" type="hidden" value="edit">
-                            <div class="modal-body">
+                    {% with "person-type-other-person" as div_id %}
+                        <div data-hs-person-type="other_person" style="display:none;">
+                            <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                                  enctype="multipart/form-data">
                                 {% csrf_token %}
-                                <div class="form-group">
+                                <input name="resource-mode" type="hidden" value="edit">
+                                <div class="modal-body">
                                     {% csrf_token %}
-                                    <fieldset>
-                                        <div id="div_id_name" class="control-group">
-                                            <label for="id_name" class="control-label requiredField" >Name<span
-                                                    class="asteriskField">*</span></label>
+                                    <div class="form-group">
+                                        {% csrf_token %}
+                                        <fieldset>
+                                            <div id="{{ div_id }}_name" class="control-group">
+                                                <label for="{{ div_id }}_input_name"
+                                                       class="control-label requiredField" >Name<span
+                                                        class="asteriskField">*</span>
+                                                </label>
 
-                                            <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                         id="id_name" maxlength="100" name="name"
-                                                                         required="required" type="text" placeholder="e.g. 'Smith, John Arnold'">
+                                                <div class="controls">
+                                                    <input class="form-control input-sm textinput textInput"
+                                                           id="{{ div_id }}_input_name" maxlength="100" name="name"
+                                                           required="required" type="text"
+                                                           placeholder="e.g. 'Smith, John Arnold'">
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div id="div_id_organization" class="control-group">
-                                            <label for="id_organization" class="control-label">Organization</label>
-                                            <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                         id="id_organization" maxlength="200"
-                                                                         name="organization" type="text"></div>
-                                        </div>
-                                        <div id="div_id_email" class="control-group">
-                                            <label for="id_email" class="control-label">Email</label>
+                                            <div id="{{ div_id }}_organization" class="control-group">
+                                                <label for="{{ div_id }}_input_organization"
+                                                       class="control-label">Organization</label>
+                                                <div class="controls">
+                                                    <input class="form-control input-sm textinput textInput"
+                                                           id="{{ div_id }}_input_organization" maxlength="200"
+                                                           name="organization" type="text">
+                                                </div>
+                                            </div>
+                                            <div id="{{ div_id }}_email" class="control-group">
+                                                <label for="{{ div_id }}_input_email"
+                                                       class="control-label">Email</label>
 
-                                            <div class="controls">
-                                                <input class="form-control input-sm emailinput"
-                                                       id="id_email" maxlength="75" name="email"
-                                                       type="email">
+                                                <div class="controls">
+                                                    <input class="form-control input-sm emailinput"
+                                                           id="{{ div_id }}_input_email" maxlength="75" name="email"
+                                                           type="email">
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div id="div_id_address" class="control-group">
-                                            <label for="id_address" class="control-label">Address</label>
-                                            <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="id_address" maxlength="250" name="address"
-                                                       type="text">
+                                            <div id="{{ div_id }}_address" class="control-group">
+                                                <label for="{{ div_id }}_input_address"
+                                                       class="control-label">Address</label>
+                                                <div class="controls">
+                                                    <input class="form-control input-sm textinput textInput"
+                                                           id="{{ div_id }}_input_address" maxlength="250"
+                                                           name="address"
+                                                           type="text">
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div id="div_id_phone" class="control-group">
-                                            <label for="id_phone" class="control-label">Phone</label>
-                                            <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="id_phone" maxlength="25" name="phone"
-                                                       type="text">
+                                            <div id="{{ div_id }}_phone" class="control-group">
+                                                <label for="{{ div_id }}_input_phone"
+                                                       class="control-label">Phone</label>
+                                                <div class="controls">
+                                                    <input class="form-control input-sm textinput textInput"
+                                                           id="{{ div_id }}_input_phone" maxlength="25" name="phone"
+                                                           type="text">
+                                                </div>
                                             </div>
+                                            <div id="{{ div_id }}_homepage" class="control-group">
+                                                <label for="{{ div_id }}_input_homepage"
+                                                       class="control-label">Homepage</label>
+                                                <div class="controls">
+                                                    <input class="form-control input-sm urlinput"
+                                                           id="{{ div_id }}_input_homepage" maxlength="200"
+                                                           name="homepage"
+                                                           type="url">
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <label class="control-label">Author Identifiers</label>
+                                        <div class="modal-identifiers-container height-fix">
+                                            {% include "includes/identifiers-form.html" %}
                                         </div>
-                                        <div id="div_id_homepage" class="control-group">
-                                            <label for="id_homepage" class="control-label">Homepage</label>
-                                            <div class="controls"><input class="form-control input-sm urlinput"
-                                                                         id="id_homepage" maxlength="200" name="homepage"
-                                                                         type="url"></div>
-                                        </div>
-                                    </fieldset>
-                                    <label class="control-label">Author Identifiers</label>
-                                    <div class="modal-identifiers-container height-fix">
-                                        {% include "includes/identifiers-form.html" %}
                                     </div>
                                 </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endwith %}
                 </div>
 
                 {#  Organization  #}
                 <div data-hs-user-type="organization" style="display:none">
                     {#  Other Organization  #}
+                    {% with "org-type-other-org" as div_id %}
                     <div data-hs-org-type="other_organization">
                         <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
                               enctype="multipart/form-data">
@@ -220,52 +238,61 @@
                                 <div class="form-group">
                                     {% csrf_token %}
                                     <fieldset>
-                                        <div id="div_id_name" class="control-group" style="display:none">
-                                            <label for="id_name" class="control-label">Name</label>
-
-                                            <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                         id="id_name" maxlength="100" name="name"
-                                                                          type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
-                                            </div>
-                                        </div>
-                                        <div id="div_id_organization" class="control-group">
-                                            <label for="id_organization" class="control-label requiredField">Organization Name<span
-                                                    class="asteriskField">*</span></label>
-                                            <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                         id="id_organization" maxlength="200"
-                                                                         name="organization" type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'"
-                                                                         required="required"></div>
-                                        </div>
-                                        <div id="div_id_email" class="control-group">
-                                            <label for="id_email" class="control-label">Email</label>
+                                        <div id="{{ div_id }}_name" class="control-group" style="display:none">
+                                            <label for="{{ div_id }}_input_name" class="control-label">Name</label>
 
                                             <div class="controls">
+                                                <input class="form-control input-sm textinput textInput"
+                                                       id="{{ div_id }}_input_name" maxlength="100" name="name"
+                                                       type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
+                                            </div>
+                                        </div>
+                                        <div id="{{ div_id }}_organization" class="control-group">
+                                            <label for="{{ div_id }}_input_organizatio"
+                                                   class="control-label requiredField">Organization Name<span
+                                                    class="asteriskField">*</span>
+                                            </label>
+                                            <div class="controls">
+                                                <input class="form-control input-sm textinput textInput"
+                                                       id="{{ div_id }}_input_organizatio" maxlength="200"
+                                                       name="organization" type="text"
+                                                       placeholder="e.g. 'U.S. Army Corps of Engineers'"
+                                                       required="required">
+                                            </div>
+                                        </div>
+                                        <div id="{{ div_id }}_email" class="control-group">
+                                            <label for="{{ div_id }}_input_email" class="control-label">Email</label>
+                                            <div class="controls">
                                                 <input class="form-control input-sm emailinput"
-                                                       id="id_email" maxlength="75" name="email"
+                                                       id="{{ div_id }}_input_email" maxlength="75" name="email"
                                                        type="email">
                                             </div>
                                         </div>
-                                        <div id="div_id_address" class="control-group">
-                                            <label for="id_address" class="control-label">Address</label>
+                                        <div id="{{ div_id }}_address" class="control-group">
+                                            <label for="{{ div_id }}_input_address"
+                                                   class="control-label">Address</label>
                                             <div class="controls">
                                                 <input class="form-control input-sm textinput textInput"
-                                                       id="id_address" maxlength="250" name="address"
+                                                       id="{{ div_id }}_input_address" maxlength="250" name="address"
                                                        type="text">
                                             </div>
                                         </div>
-                                        <div id="div_id_phone" class="control-group">
-                                            <label for="id_phone" class="control-label">Phone</label>
+                                        <div id="{{ div_id }}_phone" class="control-group">
+                                            <label for="{{ div_id }}_input_phone" class="control-label">Phone</label>
                                             <div class="controls">
                                                 <input class="form-control input-sm textinput textInput"
-                                                       id="id_phone" maxlength="25" name="phone"
+                                                       id="{{ div_id }}_input_phone" maxlength="25" name="phone"
                                                        type="text">
                                             </div>
                                         </div>
-                                        <div id="div_id_homepage" class="control-group">
-                                            <label for="id_homepage" class="control-label">Homepage</label>
-                                            <div class="controls"><input class="form-control input-sm urlinput"
-                                                                         id="id_homepage" maxlength="200" name="homepage"
-                                                                         type="url"></div>
+                                        <div id="{{ div_id }}_homepage" class="control-group">
+                                            <label for="{{ div_id }}_input_homepage"
+                                                   class="control-label">Homepage</label>
+                                            <div class="controls">
+                                                <input class="form-control input-sm urlinput"
+                                                       id="{{ div_id }}_input_homepage" maxlength="200"
+                                                       name="homepage" type="url">
+                                            </div>
                                         </div>
                                     </fieldset>
                                 </div>
@@ -276,6 +303,7 @@
                             </div>
                         </form>
                     </div>
+                    {% endwith %}
                 </div>
             </div>
         </div>
@@ -323,9 +351,10 @@
                 </div>
 
                 {#  Existing HydroShare User  #}
+                {% with "user-type-hs-user" as div_id %}
                 <div data-hs-user-type="hs_user">
                     <div class="modal-body">
-                        {{ add_view_user_form.user }}
+                        {{ add_view_contrib_user_form.user }}
                     </div>
 
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
@@ -335,63 +364,75 @@
                         <div class="modal-body" style="display:none;">
                             <div class="form-group">
                                 <fieldset>
-                                    <div id="div_id_name" class="control-group">
-                                        <label for="id_name" class="control-label requiredField">Name<span
+                                    <div id="{{ div_id }}_name" class="control-group">
+                                        <label for="{{ div_id }}_input_name"
+                                               class="control-label requiredField">Name<span
                                                 class="asteriskField">*</span></label>
 
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_name" maxlength="100" name="name"
-                                                                     required="required" type="text"></div>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="{{ div_id }}_input_name" maxlength="100" name="name"
+                                                   required="required" type="text"></div>
                                     </div>
 
-                                    <div id="div_id_description" class="control-group">
-                                        <label for="id_description" class="control-label">HydroShare User Identifier
-                                            (URL)</label>
-                                        <div class="controls"><input class="form-control input-sm urlinput"
-                                                                     id="id_description" maxlength="200"
-                                                                     name="description" type="url"></div>
+                                    <div id="{{ div_id }}_description" class="control-group">
+                                        <label for="{{ div_id }}_input_description"
+                                               class="control-label">HydroShare User Identifier (URL)</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm urlinput"
+                                                   id="{{ div_id }}_input_description" maxlength="200"
+                                                   name="description" type="url">
+                                        </div>
                                     </div>
 
-                                    <div id="div_id_organization" class="control-group">
-                                        <label for="id_organization" class="control-label">Organization</label>
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_organization" maxlength="200"
-                                                                     name="organization" type="text"></div>
+                                    <div id="{{ div_id }}_organization" class="control-group">
+                                        <label for="{{ div_id }}_input_organization"
+                                               class="control-label">Organization</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="{{ div_id }}_input_organization" maxlength="200"
+                                                   name="organization" type="text">
+                                        </div>
                                     </div>
 
-                                    <div id="div_id_email" class="control-group">
-                                        <label for="id_email" class="control-label">Email</label>
+                                    <div id="{{ div_id }}_email" class="control-group">
+                                        <label for="{{ div_id }}_input_email" class="control-label">Email</label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm emailinput"
-                                                   id="id_email" maxlength="75" name="email"
+                                                   id="{{ div_id }}_input_email" maxlength="75" name="email"
                                                    type="email">
                                         </div>
                                     </div>
 
-                                    <div id="div_id_address" class="control-group">
-                                        <label for="id_address" class="control-label">Address</label>
+                                    <div id="{{ div_id }}_address" class="control-group">
+                                        <label for="{{ div_id }}_input_address"
+                                               class="control-label">Address</label>
                                         <div class="controls">
                                             <input class="form-control input-sm textinput textInput"
-                                                   id="id_address" maxlength="250" name="address"
+                                                   id="{{ div_id }}_input_address" maxlength="250"
+                                                   name="address"
                                                    type="text">
                                         </div>
                                     </div>
 
-                                    <div id="div_id_phone" class="control-group">
-                                        <label for="id_phone" class="control-label">Phone</label>
+                                    <div id="{{ div_id }}_phone" class="control-group">
+                                        <label for="{{ div_id }}_input_phone" class="control-label">Phone</label>
                                         <div class="controls">
                                             <input class="form-control input-sm textinput textInput"
-                                                   id="id_phone" maxlength="25" name="phone"
+                                                   id="{{ div_id }}_input_phone" maxlength="25" name="phone"
                                                    type="text">
                                         </div>
                                     </div>
 
-                                    <div id="div_id_homepage" class="control-group">
-                                        <label for="id_homepage" class="control-label">Homepage</label>
-                                        <div class="controls"><input class="form-control input-sm urlinput"
-                                                                     id="id_homepage" maxlength="200" name="homepage"
-                                                                     type="url"></div>
+                                    <div id="{{ div_id }}_homepage" class="control-group">
+                                        <label for="{{ div_id }}_input_homepage"
+                                               class="control-label">Homepage</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm urlinput"
+                                                   id="{{ div_id }}_input_homepage" maxlength="200"
+                                                   name="homepage" type="url">
+                                        </div>
                                     </div>
                                 </fieldset>
                             </div>
@@ -402,8 +443,10 @@
                         </div>
                     </form>
                 </div>
+                {% endwith %}
 
                 {#  Other Person #}
+                {% with "user-type-other-user" as div_id %}
                 <div data-hs-user-type="other" style="display:none">
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
                           enctype="multipart/form-data">
@@ -412,51 +455,63 @@
                         <div class="modal-body">
                             <div class="form-group">
                                 <fieldset>
-                                    <div id="div_id_name" class="control-group">
-                                        <label for="id_name" class="control-label requiredField">Name<span
+                                    <div id="{{ div_id }}_name" class="control-group">
+                                        <label for="{{ div_id }}_input_name"
+                                               class="control-label requiredField">Name<span
                                                 class="asteriskField">*</span></label>
 
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_name" maxlength="100" name="name"
-                                                                     required="required" type="text"></div>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="{{ div_id }}_input_name" maxlength="100" name="name"
+                                                   required="required" type="text">
+                                        </div>
                                     </div>
 
-                                    <div id="div_id_organization" class="control-group">
-                                        <label for="id_organization" class="control-label">Organization</label>
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_organization" maxlength="200"
-                                                                     name="organization" type="text"></div>
+                                    <div id="{{ div_id }}_organization" class="control-group">
+                                        <label for="{{ div_id }}_input_organization"
+                                               class="control-label">Organization</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="{{ div_id }}_input_organization" maxlength="200"
+                                                   name="organization" type="text">
+                                        </div>
                                     </div>
-                                    <div id="div_id_email" class="control-group">
-                                        <label for="id_email" class="control-label">Email</label>
+                                    <div id="{{ div_id }}_email" class="control-group">
+                                        <label for="{{ div_id }}_input_email"
+                                               class="control-label">Email</label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm emailinput"
-                                                   id="id_email" maxlength="75" name="email"
+                                                   id="{{ div_id }}_input_email" maxlength="75" name="email"
                                                    type="email">
                                         </div>
                                     </div>
-                                    <div id="div_id_address" class="control-group">
-                                        <label for="id_address" class="control-label">Address</label>
+                                    <div id="{{ div_id }}_address" class="control-group">
+                                        <label for="{{ div_id }}_input_address"
+                                               class="control-label">Address</label>
                                         <div class="controls">
                                             <input class="form-control input-sm textinput textInput"
-                                                   id="id_address" maxlength="250" name="address"
+                                                   id="{{ div_id }}_input_address" maxlength="250"
+                                                   name="address" type="text">
+                                        </div>
+                                    </div>
+                                    <div id="{{ div_id }}_phone" class="control-group">
+                                        <label for="{{ div_id }}_input_phone"
+                                               class="control-label">Phone</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="{{ div_id }}_input_phone" maxlength="25" name="phone"
                                                    type="text">
                                         </div>
                                     </div>
-                                    <div id="div_id_phone" class="control-group">
-                                        <label for="id_phone" class="control-label">Phone</label>
+                                    <div id="{{ div_id }}_homepage" class="control-group">
+                                        <label for="{{ div_id }}_input_homepage"
+                                               class="control-label">Homepage</label>
                                         <div class="controls">
-                                            <input class="form-control input-sm textinput textInput"
-                                                   id="id_phone" maxlength="25" name="phone"
-                                                   type="text">
+                                            <input class="form-control input-sm urlinput"
+                                                   id="{{ div_id }}_input_homepage" maxlength="200"
+                                                   name="homepage" type="url">
                                         </div>
-                                    </div>
-                                    <div id="div_id_homepage" class="control-group">
-                                        <label for="id_homepage" class="control-label">Homepage</label>
-                                        <div class="controls"><input class="form-control input-sm urlinput"
-                                                                     id="id_homepage" maxlength="200" name="homepage"
-                                                                     type="url"></div>
                                     </div>
                                 </fieldset>
 
@@ -472,6 +527,7 @@
                         </div>
                     </form>
                 </div>
+                {% endwith %}
             </div>
         </div>
     </div>
@@ -516,6 +572,46 @@
         </div>
     </div>
 
+    <div class="modal fade in" id="deleteExtraMetaDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form enctype="multipart/form-data">
+                    <input name="resource-mode" type="hidden" value="edit">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="extra_meta_title"> Delete Extended Metadata </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input id="delete_extra_meta_row_id" type="hidden" />
+                            <input id="old_extra_meta_name" type="hidden" />
+                            <div id="div_extra_meta_name" class="control-group">
+                                <label for="delete_extra_meta_name" class="control-label requiredField">Name</label>
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput" readonly required
+                                           id="delete_extra_meta_name_input" maxlength="100" name="name" type="text">
+                                </div>
+                            </div>
+                            <div id="div_extra_meta_value" class="control-group">
+                                <label for="delete_extra_meta_value" class="control-label">Value</label>
+                                <div class="controls">
+                                    <textarea readonly required class="form-control input-sm textarea" cols="40"
+                                                        id="delete_extra_meta_value_input" name="value"
+                                                        rows="10"></textarea>
+                                </div>
+                            </div>
+                            <div id="extra_meta_msg" style="display: None"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button id="btn-confirm-delete-extended-metadata" type="button" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade in" id="create-folder-dialog" tabindex="-1" role="dialog"
      aria-labelledby="create-folder" aria-hidden="false">
     <div class="modal-dialog">
@@ -543,6 +639,35 @@
         </div>
     </div>
 </div>
+
+    <div class="modal fade in" id="validate-reference-url-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="validate-reference-url" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="validate-url-title">Unable to validate URL</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Unable to validate URL link. This may be due to an error in the URL or password or automated bot
+                        protection at the hosting site. If you still want to create referenced content using this invalid URL
+                        link, click <strong>Proceed</strong>. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="ref_name_passover" value=""/>
+                    <input type="hidden" id="ref_url_passover" value=""/>
+                    <input type="hidden" id="new_ref_url_passover" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-reference-url-without-validation" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade in" id="add-reference-url-dialog" tabindex="-1" role="dialog"
          aria-labelledby="add-reference" aria-hidden="false">
@@ -592,6 +717,7 @@
                 </div>
 
                 <div class="modal-body">
+
                     <div class="row">
                         <fieldset class="col-sm-12">
                             <label>Name *</label>
@@ -737,7 +863,7 @@
     </div>
 
     <!-- Edit credit source Modal -->
-    {% for agency in fundingagnency_formset.initial %}
+    {% for agency in fundingagencies %}
         <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
              aria-labelledby="add-funding-label" aria-hidden="true">
             <div class="modal-dialog">
@@ -829,7 +955,7 @@
         </div>
     {% endfor %}
 
-    {% for source in source_formset.initial %}
+    {% for source in sources %}
     <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-source" aria-hidden="false">
         <div class="modal-dialog">
@@ -889,7 +1015,7 @@
     </div>
     {% endfor %}
 
-    {% for relation in relation_formset.initial %}
+    {% for relation in relations %}
     <div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-relation" aria-hidden="false">
         <div class="modal-dialog">
@@ -926,7 +1052,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group">
+                                <div id="div_id_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Relation type<span class="asteriskField">*</span></label>
 
@@ -943,10 +1069,12 @@
                                     <label for="id_value" class="control-label requiredField">
                                     Related to<span class="asteriskField">*</span></label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput" id="id_relation-{{ forloop.counter0 }}-value"
-                                            maxlength="500" name="relation-{{ forloop.counter0 }}-value" type="text"
-                                            value="{{ relation.value }}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput"
+                                               id="id_relation-{{ forloop.counter0 }}-value"
+                                               maxlength="500" name="relation-{{ forloop.counter0 }}-value"
+                                               type="text" value="{{ relation.value }}">
+                                    </div>
                                 </div>
                             </fieldset>
                         </div>
@@ -961,7 +1089,7 @@
     </div>
     {% endfor %}
 
-    {% for contributor in contributor_formset.initial %}
+    {% for contributor in contributors %}
     <div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
          aria-labelledby="edit-contributor" aria-hidden="true">
         <div class="modal-dialog">
@@ -1263,7 +1391,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group">
+                                <div id="div_id_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Type of relationship<span class="asteriskField">*</span></label>
 
@@ -1276,14 +1404,14 @@
                                     </div>
                                 </div>
                                 <div id="div_id_value" class="control-group">
-                                    <label for="id_value" class="control-label requiredField">
+                                    <label for="id_related_to_input" class="control-label requiredField">
                                         Full text citation, URL link for, or description of the related resource
                                         <span class="asteriskField">*</span>
                                     </label>
 
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput"
-                                               id="id_value" maxlength="500" name="value" required="required"
+                                               id="id_related_to_input" maxlength="500" name="value" required="required"
                                                type="text">
                                     </div>
                                 </div>
@@ -1305,15 +1433,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title">Remove content type</h4></div>
-                <div class="modal-body"><strong>Removing the content type will remove the metadata associated with this
-                    content. Are you sure you want to do this?</strong>
+                    <h4 class="modal-title">Remove content type</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Removing the content type will remove the metadata associated with this
+                    content.</p>
+                    <p>Are you sure you want to do this?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="btnCancelRemoveAggregation" class="btn btn-default" data-dismiss="modal">
-                        Cancel
+                    <button type="button" id="btnCancelRemoveAggregation" class="btn btn-default"
+                            data-dismiss="modal">Cancel
                     </button>
-                    <button type="button" id="btnRemoveAggregation" class="btn btn-danger" data-dismiss="modal">Remove
+                    <button type="button" id="btnRemoveAggregation" class="btn btn-danger"
+                            data-dismiss="modal">Remove
                     </button>
                 </div>
             </div>
@@ -1492,7 +1624,7 @@
                                 {% else %}
                                     <span>{{ rights.statement|linebreaks }}</span>
                                 {% endif %}
-                                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                                 <p>
                                 In copying this resource you are ethically bound to respect the terms of this license.
                                 Please confirm that you accept the terms of this license below before you can copy this resource.
@@ -1530,7 +1662,7 @@
                 {% else %}
                     <span>{{ rights.statement|linebreaks }}</span>
                 {% endif %}
-                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                 <p style="margin-top: 5px">
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
@@ -1564,7 +1696,7 @@
                 {% else %}
                     <span>{{ rights.statement|linebreaks }}</span>
                 {% endif %}
-                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                 <p style="margin-top: 5px">
                 In downloading this resource contents you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
@@ -1671,20 +1803,23 @@
                                     <tr id="templateRow">
                                         <td>
                                             <table class="user-scope">
-                                                <td>
-                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                                    <div class="group-image-wrapper extra-small">
-                                                        <div class="group-image-extra-small group-preview-image-default"
-                                                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div data-col="name" class="user-name">
-                                                        <a href="#"></a>
-                                                    </div>
-                                                    <div class="badge you-flag">You</div>
-                                                    <div data-col="user-name" class="user-username-content"></div>
-                                                </td>
+                                                <tr>
+                                                    <td>
+                                                        <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                        <div class="group-image-wrapper extra-small">
+                                                            <div class="group-image-extra-small group-preview-image-default"
+                                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div data-col="name" class="user-name">
+                                                            <a href="#"></a>
+                                                        </div>
+                                                        <div class="badge you-flag">You</div>
+                                                        <div data-col="user-name" class="user-username-content"></div>
+                                                    </td>
+                                                </tr>
                                             </table>
                                         </td>
 
@@ -1762,7 +1897,7 @@
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Invite</h3>
+                            <h3 class="panel-title">Give access</h3>
                         </div>
                         <div id="div-invite-people" class="panel-body">
                             <div id="invite-flag" class="btn-group" role="group"
@@ -1777,7 +1912,7 @@
 
                                 <div class="row">
                                     <div class="add-view-user-form col-xs-12">
-                                        {{ add_view_user_form.user }}
+                                        {{ add_view_invite_user_form.user }}
                                     </div>
 
                                     <div class="add-view-group-form col-xs-12">
@@ -1810,7 +1945,7 @@
                                             <div class="col-xs-6">
                                                 <a id="btn-confirm-add-access"
                                                    class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd</span></a>
+                                                        class="button-label">&nbsp;Add</span></a>
                                             </div>
                                         </div>
                                     </div>
@@ -1841,7 +1976,6 @@
                                 {% endif %}
 
                                 {% if can_change_resource_flags %}
-
                                     {# -------- PUBLIC -------- #}
                                     <form id="form-change-access" class="disabled"
                                           action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
@@ -1937,15 +2071,21 @@
     </div>
     {#======= Manage access modal  window ends =======#}
 
-    {% block delete-self-access-to-resource %}
-        <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access" style="display:none">
-            <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
-                This action will remove your access to this resource and you will no longer be able to
-                access it without someone else sharing it with you again. This is not reversible,
-                so <strong>Remove</strong> with caution.
-            </p>
-        </div>
-    {% endblock %}
+    <div id="dialog-confirm-delete-self-access" class="access-dialog-title" title="Warning! Loss of access">
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+            This action will remove your access to this resource and you will no longer be able to
+            access it without someone else sharing it with you again. This is not reversible,
+            so <strong>Remove</strong> with caution.
+        </p>
+    </div>
+
+    <div id="dialog-confirm-change-share-permission" class="access-dialog-title" title="Warning! Loss of owner access">
+        <p><span class="ui-icon ui-icon-alert access-warning"></span>
+        This action will remove your owner access to this resource. This removal is not reversible. Owner
+        access can only be retrieved by another owner later granting you owner access. <strong>Remove</strong> with caution.
+        </p>
+    </div>
+
 {% endif %}
 
 <div class="modal fade" id="redirect-referenced-url-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">

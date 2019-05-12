@@ -348,10 +348,9 @@ class RasterResource(BaseResource):
         verbose_name = 'Geographic Raster'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = RasterMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return RasterMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):

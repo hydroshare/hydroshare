@@ -8,6 +8,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 
 from lxml import etree
 
+
 class RefTimeSeriesResource(BaseResource):
     objects = ResourceManager("RefTimeSeriesResource")
 
@@ -17,10 +18,9 @@ class RefTimeSeriesResource(BaseResource):
         verbose_name = "HIS Referenced Time Series"
         proxy = True
 
-    @property
-    def metadata(self):
-        md = RefTSMetadata()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return RefTSMetadata
 
     @classmethod
     def get_supported_upload_file_types(cls):

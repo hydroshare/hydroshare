@@ -361,10 +361,9 @@ class SWATModelInstanceResource(BaseResource):
         verbose_name = 'SWAT Model Instance Resource'
         proxy = True
 
-    @property
-    def metadata(self):
-        md = SWATModelInstanceMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return SWATModelInstanceMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):

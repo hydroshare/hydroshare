@@ -1,18 +1,18 @@
 from functools import partial, wraps
-from django.forms import formset_factory
+
 from crispy_forms.layout import Layout, HTML
+from django.forms import formset_factory
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
-from hs_core.views import add_generic_context
 from hs_core.forms import BaseFormSet, MetaDataElementDeleteForm
-
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
+from hs_core.views import add_generic_context
 from hs_modflow_modelinstance.forms import ModelOutputForm, ExecutedByForm, StudyAreaForm, \
     GridDimensionsForm, StressPeriodForm, GroundWaterFlowForm, BoundaryConditionForm, \
     ModelCalibrationForm, ModelInputForm, GeneralElementsForm, ModelInputLayoutEdit, \
     ModalDialogLayoutAddModelInput
-
-from mezzanine.pages.page_processors import processor_for
+from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 
 
 @processor_for(MODFLOWModelInstanceResource)
@@ -27,6 +27,10 @@ def landing_page(request, page):
                                                    request=request,
                                                    resource_edit=edit_resource,
                                                    extended_metadata_layout=None)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
+
         extended_metadata_exists = False
         if content_model.metadata.model_output or \
                 content_model.metadata.executed_by or \

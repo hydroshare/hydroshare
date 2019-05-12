@@ -794,7 +794,13 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-    user_full_name = user.get_full_name()
+
+    if user_profile.middle_name:
+        user_full_name = '%s %s %s' % (user.first_name, user_profile.middle_name,
+                                       user.last_name)
+    else:
+        user_full_name = user.get_full_name()
+
     if user_full_name:
         party_name = user_full_name
     else:
@@ -941,6 +947,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     # TODO: generate this from data in ResourceFile rather than extension
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
+    ret.calculate_size()
 
     return ret
 
@@ -1075,6 +1082,16 @@ def check_aggregations(resource, folders, res_files):
                 # need relative folder path for creating aggregation from folder
                 fol = fol[len(resource.file_path) + 1:]
             agg_type = resource.get_folder_aggregation_type_to_set(folder)
+
+            if agg_type == 'TimeSeriesLogicalFile':
+                # check if the folder (fol) contains a csv file
+                res_files = ResourceFile.list_folder(resource=resource, folder=fol,
+                                                     sub_folders=False)
+                # there can be only one file in the folder
+                # if that file is a csv file - don't use the folder to create aggregation
+                if res_files[0].extension.lower() == '.csv':
+                    continue
+
             if agg_type and agg_type != "FileSetLogicalFile":
                 agg_type = agg_type.replace('LogicalFile', '')
                 set_logical_file_type(res=resource, user=None, file_id=None,

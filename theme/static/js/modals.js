@@ -90,13 +90,14 @@ $(document).ready(function() {
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
+    $("#btn-confirm-delete-extended-metadata").click(removeExtraMetaTable);
 
     $("#btn-confirm-add-access").click(function () {
         var formID = $(this).closest("form").attr("id");
         share_resource_ajax_submit(formID);
     });
 
-    $("input#id_user-autocomplete").addClass("form-control");
+    $("input#user-autocomplete").addClass("form-control");
 
     $('#usage-info').on('hidden.bs.collapse', function () {
         $("a[data-target='#usage-info']").text("Show More");

@@ -1,11 +1,9 @@
-## iRODS
-rods@data.local.org.env
-rods@users.local.org.env
-
 ## Custom
 local_settings.py
-*.pyc
-*.pyo
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
 *.db
 .bash_history
 .cache
@@ -20,10 +18,13 @@ local_settings.py
 /nginx/.htpasswd
 /nginx/htpasswd
 /nginx/Dockerfile
+/nginx/Dockerfile-nginx
 /nginx/config-files/hs-nginx.conf
 /nginx/config-files/nginx.conf-default
 /static
 /tmp
+Dockerfile-defaultworker
+Dockerfile-hydroshare
 celeryd.pid
 docker-compose.yml
 init-defaultworker

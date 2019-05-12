@@ -58,6 +58,9 @@ urlpatterns = i18n_patterns(
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
     url(r'^accounts/login/$', theme.login, name='login'),
+    url(r'^landingPage/$', theme.landingPage, name='landing_page'),
+    url(r'^home/$', theme.dashboard, name='dashboard'),
+    url(r'^$', theme.home_router, name='home_router'),
     url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
         theme.email_verify, name='email_verify'),
     url(r'^email_verify_password_reset/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
@@ -70,6 +73,7 @@ urlpatterns = i18n_patterns(
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
@@ -145,7 +149,7 @@ urlpatterns += [
     # doesn't apply here, since we can't have a template called
     # "/.html" - so for this case, the template "pages/index.html"
     # should be used if you want to customize the homepage's template.
-
+    # Any impact on this with the new home routing mechanism.
     url("^$", page, {"slug": "/"}, name="home"),
 
     # HOMEPAGE FOR A BLOG-ONLY SITE

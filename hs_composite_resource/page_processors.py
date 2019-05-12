@@ -1,11 +1,10 @@
 from django.contrib import messages
 from django.contrib.messages import get_messages
-
+from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-
 from .models import CompositeResource
 
 
@@ -50,10 +49,15 @@ def landing_page(request, page):
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)
 
+    if isinstance(context, HttpResponseRedirect):
+        # sending user to login page
+        return context
+
     file_type_missing_metadata = {'file_type_missing_metadata':
                                   content_model.get_missing_file_type_metadata_info()}
     context.update(file_type_missing_metadata)
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
 
+    # sending user to resource landing page
     return context

@@ -14,14 +14,14 @@ class ScriptFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
             HTML('<legend>General</legend>'),
-            HTML('<div class="col-sm-6 col-xs-12">'),
+            HTML('<div class="row"><div class="col-sm-6 col-xs-12">'),
             Field('languageVersion', css_class=field_width),
             Field('scriptVersion', css_class=field_width),
             Field('scriptDependencies', css_class=field_width),
             Field('scriptReleaseDate', css_class=field_width, style="display:none"),
             HTML('<input type="text" class="' + field_width + '" id="scriptReleaseDate_picker">'),
             Field('scriptCodeRepository', css_class=field_width),
-            HTML('</div>')
+            HTML('</div></div>')
         )
         super(ScriptFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
                                                layout, element_name_label='  ', *args, **kwargs)

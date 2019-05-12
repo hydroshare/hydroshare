@@ -1,114 +1,107 @@
 {% extends "pages/genericresource.html" %}
 
 {% block download_bag %}
-      <a id="btn-download-all" type="button" class="btn btn-default" href="{{ download_files_url }}">
+    <a id="btn-download-all" type="button" class="btn btn-default" href="{{ download_files_url }}">
         <span class="glyphicon glyphicon-download-alt">
           <span title='Download HIS Time Series Data' class="button-label">Download HIS Time Series Data</span>
         </span>
-     </a>
+    </a>
 {% endblock download_bag %}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-            <div class="col-md-12">
-                <div>
-                    {% if referenceURL %}
-                        <h4><strong>Reference URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>URL:</strong></div>
-                            <div class="col-sm-8">{{ referenceURL.value }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Type:</strong></div>
-                            <div class="col-sm-8">{{ referenceURL.type }}</div>
-                        </div>
-                    <hr style="border:0">
-                    {%  endif %}
+        <div class="col-md-12">
+            {% if referenceURL %}
+                <legend>Reference URL</legend>
+                <div class="space-bottom">
+                    <div class="row">
+                        <div class="col-sm-4"><strong>URL:</strong></div>
+                        <div class="col-sm-8">{{ referenceURL.value }}</div>
+                    </div>
+                    <div class="row space-bottom">
+                        <div class="col-sm-4"><strong>Type:</strong></div>
+                        <div class="col-sm-8">{{ referenceURL.type }}</div>
+                    </div>
                 </div>
-                <div>
-                    {% if site and site.code or site and site.name or site and site.net_work %}
-                        <h4><strong>Site:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if site.code %}
+            {% endif %}
+
+            {% if site and site.code or site and site.name or site and site.net_work %}
+                 <legend>Site</legend>
+                <div class="space-bottom">
+                    {% if site.code %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ site.code }}</div>
                         </div>
-                        {%  endif %}
-                        {% if site.name %}
+                    {% endif %}
+                    {% if site.name %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Name:</strong></div>
                             <div class="col-sm-8">{{ site.name }}</div>
                         </div>
-                        {%  endif %}
-                        {% if site.net_work %}
+                    {% endif %}
+                    {% if site.net_work %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Network:</strong></div>
                             <div class="col-sm-8">{{ site.net_work }}</div>
                         </div>
-                        {%  endif %}
-                    <hr style="border:0">
-                    {%  endif %}
+                    {% endif %}
                 </div>
-                <div>
-                    {% if variable and variable.code or variable and variable.name %}
-                        <h4><strong>Variable:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if variable.code %}
+            {% endif %}
+
+            {% if variable and variable.code or variable and variable.name %}
+                <legend>Variable</legend>
+                <div class="space-bottom">
+                    {% if variable.code %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ variable.code }}</div>
                         </div>
-                        {% endif %}
-                        {% if variable.name %}
+                    {% endif %}
+                    {% if variable.name %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Name:</strong></div>
                             <div class="col-sm-8">{{ variable.name }}</div>
                         </div>
-                        {% endif %}
                     {% endif %}
-                    <hr style="border:0">
                 </div>
-                <div>
-                    {% if method and method.code or method and method.description %}
-                        <h4><strong>Method:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if method.code  %}
+            {% endif %}
+
+            {% if method and method.code or method and method.description %}
+                <legend>Method</legend>
+                <div class="space-bottom">
+                    {% if method.code %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ method.code }}</div>
                         </div>
-                        {% endif %}
-                        {% if method.description  %}
+                    {% endif %}
+                    {% if method.description %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Description:</strong></div>
                             <div class="col-sm-8">{{ method.description }}</div>
                         </div>
-                        {% endif %}
-                    <hr style="border:0">
                     {% endif %}
                 </div>
-                <div>
-                    {% if quality_level and quality_level.code and quality_level and quality_level.definition %}
-                        <h4><strong>Quality Control Level:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if quality_level.code %}
+            {% endif %}
+
+            {% if quality_level and quality_level.code or quality_level and quality_level.definition %}
+                <legend>Quality Control Level</legend>
+                <div class="space-bottom">
+                    {% if quality_level.code %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ quality_level.code }}</div>
                         </div>
-                        {% endif %}
-                        {% if quality_level.definition %}
+                    {% endif %}
+                    {% if quality_level.definition %}
                         <div class="row">
                             <div class="col-sm-4"><strong>Definition:</strong></div>
                             <div class="col-sm-8">{{ quality_level.definition }}</div>
                         </div>
-                        {% endif %}
                     {% endif %}
                 </div>
-            </div>
+            {% endif %}
         </div>
     {%  endif %}
 {%  endblock %}
