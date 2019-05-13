@@ -468,10 +468,13 @@ function isSharePermissionPromptRequired(form_id) {
     }
     return NOT_REQUIRED;
 }
-function change_share_permission_ajax_submit(form_id, check_permission=true) {
+function change_share_permission_ajax_submit(form_id, check_permission) {
+    if (check_permission === undefined) {
+        check_permission = true;
+    }
     if (check_permission && isSharePermissionPromptRequired(form_id)) {
-	promptChangeSharePermission(form_id);
-	return;
+        promptChangeSharePermission(form_id);
+        return;
     }
 
     $form = $('#' + form_id);
@@ -1481,6 +1484,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
             folder_path: folder_path
         },
         success: function (result) {
+            $("#fb-alerts .upload-failed-alert").remove();
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
                 $('#create-folder-dialog').modal('hide');

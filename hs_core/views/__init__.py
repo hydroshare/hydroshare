@@ -1814,6 +1814,7 @@ class GroupView(TemplateView):
         g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
+        grantors = []
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
@@ -1822,6 +1823,8 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
+            grantors.append(res.grantor)
+        group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
         # TODO: need to sort this resource list using the date_granted field
 
@@ -1831,6 +1834,7 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
+            'grantors': set(grantors)
         }
 
 

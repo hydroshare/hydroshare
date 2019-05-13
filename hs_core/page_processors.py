@@ -2,6 +2,7 @@
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from mezzanine.pages.page_processors import processor_for
 
@@ -51,7 +52,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # whether the user has permission to view this resource
     can_view = content_model.can_view(request)
     if not can_view:
-        raise PermissionDenied()
+        if user.is_authenticated():
+            raise PermissionDenied()
+        return redirect_to_login(request.path)
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
@@ -123,10 +126,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if temporal_coverage:
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_data_dict['start_date'] = \
-                '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(start_date)
-            temporal_coverage_data_dict['end_date'] = \
-                '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(end_date)
+            temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
+            temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
 
         spatial_coverage = content_model.metadata.spatial_coverage
@@ -237,10 +238,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if temporal_coverage:
         start_date = parser.parse(temporal_coverage.value['start'])
         end_date = parser.parse(temporal_coverage.value['end'])
-        temporal_coverage_data_dict['start'] = \
-            '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(start_date)
-        temporal_coverage_data_dict['end'] = \
-            '{0.year:4d},{0.month:02d},{0.day:02d},{0.hour},{0.minute}'.format(end_date)
+        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
 

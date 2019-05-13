@@ -42,9 +42,9 @@ class TestFolders(HSRESTTestCase):
         response = self.client.put(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # should be able to create it again
+        # should not be able to create the same folder again
         response = self.client.put(url2, {})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # list that folder: should work, should be empty
         response = self.client.get(url2, {})

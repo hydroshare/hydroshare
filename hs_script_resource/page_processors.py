@@ -1,10 +1,10 @@
-from mezzanine.pages.page_processors import processor_for
 from crispy_forms.layout import Layout, HTML
-
-from hs_core import page_processors
-from hs_core.views import add_generic_context
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from forms import ScriptForm
+from hs_core import page_processors
+from hs_core.views import add_generic_context
 from models import ScriptResource
 
 
@@ -17,6 +17,10 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=None, request=request)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
+
         extended_metadata_exists = False
         if content_model.metadata.program:
             extended_metadata_exists = True

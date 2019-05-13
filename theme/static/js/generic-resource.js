@@ -178,34 +178,6 @@ function onRemoveKeywordFileType(event) {
     $("#id-keywords-filetype-msg").hide();
 }
 
-// Alert Types: "error", "success", "info"
-function customAlert(alertTitle, alertMessage, alertType, duration) {
-    alertType = alertType || "success";
-    var el = document.createElement("div");
-    var top = 200;
-    var style = "top:" + top + "px";
-    var alertTypes = {
-        success: {class: "alert alert-success", icon: "fa fa-check"},
-        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
-        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
-    };
-
-    el.setAttribute("style", style);
-    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
-    alertMessage =
-      '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
-      '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
-      + alertTitle + '</strong><br>' + alertMessage;
-    el.innerHTML = alertMessage;
-    setTimeout(function () {
-        $(el).fadeOut(300, function () {
-            $(this).remove();
-        });
-    }, duration);
-    $(el).appendTo("body > .main-container > .container");
-    $(el).hide().fadeIn(400);
-}
-
 function showAddEditExtraMetaPopup(edit, row_id_str) {
     $("#edit_extra_meta_row_id").val('');
     $("#old_extra_meta_name").val('');
@@ -231,6 +203,31 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
         $("#extra_meta_title").text("Add Extended Metadata");
     }
     $('#extraMetaDialog').modal('show');
+}
+
+
+
+function showRemoveExtraMetaPopup(row_id_str) {
+    // retrieving values from underlying data table
+    let t = $('#extraMetaTable').DataTable();
+
+    // get the row object via the row_id_str passed in
+    let row_to_delete = t.row("#" + row_id_str);
+
+    // get the row content - meta_name and meta_value
+    let meta_name = row_to_delete.data()[0];
+    let meta_value = row_to_delete.data()[1];
+
+    // this is a hidden HTML element to store the row_id_str
+    $("#delete_extra_meta_row_id").val(row_id_str);
+
+    $("#old_extra_meta_name").val(meta_name);
+
+    // set the meta_value.
+    $("#delete_extra_meta_name_input").val(meta_name);
+    $("#delete_extra_meta_value_input").val(meta_value);
+
+    $('#deleteExtraMetaDialog').modal('show');
 }
 
 function addEditExtraMeta2Table() {
@@ -286,6 +283,13 @@ function addEditExtraMeta2Table() {
 
     $("#extraMetaTable [data-toggle='tooltip']").tooltip();
     $("#extraMetaDialog").modal('hide');
+    saveExtraMetadata();
+}
+
+function removeExtraMetaTable(table) {
+    $("#deleteExtraMetaDialog").modal('hide');
+
+    removeExtraMetadataFromTable($("#delete_extra_meta_row_id").val().trim());
     saveExtraMetadata();
 }
 
@@ -568,8 +572,8 @@ $(document).ready(function () {
     });
 
     $("#list-roles a").click(onRoleSelect);
-    $("#add-access-form #id_user-autocomplete, #add-access-form #user-autocomplete").attr("placeholder", "Search by name or username").addClass("form-control");
-    $("#id_group-autocomplete").attr("placeholder", "Search by group name").addClass("form-control");
+    $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
+    $("input[name='group-autocomplete']").attr("placeholder", "Search by group name").addClass("form-control");
 
     var file_types = $("#supported-file-types").attr('value');
     if (file_types != ".*") {
@@ -743,8 +747,7 @@ $(document).ready(function () {
 
     $("#extraMetaTable").on("click", ".btn-remove-extra-metadata", function () {
         var loopCounter = $(this).attr("data-loop-counter");
-        removeExtraMetadataFromTable(loopCounter);
-        saveExtraMetadata();
+        showRemoveExtraMetaPopup(loopCounter);
     });
 
     $("#extraMetaTable").on("click", ".btn-edit-extra-metadata", function () {
