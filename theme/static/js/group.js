@@ -312,30 +312,30 @@ $(document).ready(function () {
     // Initialize filters counters
     updateMembersLabelCount();
 
-    // Initialize Shared By filter
-    var grantors = $("#grantors-list span");
-    if (grantors.length)
-        $("#filter-shared-by .no-items-found").remove();
-    for (var i = 0; i < grantors.length; i++) {
-        var id = $(grantors[i]).attr("data-grantor-id");
-        if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
-            var count = $("#grantors-list span[data-grantor-id='" + id + "']").length;
-            var name = $(grantors[i]).attr("data-grantor-name").trim();
-
-            $("#filter-shared-by .inputs-group").append('<li class="list-group-item">' +
-                                                            '<span data-facet="owned" class="badge">' + count + '</span>' +
-                                                            '<label class="checkbox noselect">' +
-                                                            '<input type="checkbox" class="grantor" data-grantor-id="' + id + '">' + name + '</label>' +
-                                                        '</li>')
-        }
-    }
-
-    $("#grantors-list").remove();   // Remove temporary list
-
     // File name preview for picture field, file select method
     $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
         var input = $(this).parents('.input-group').find(':text');
         input.val(label);
     });
 
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            contribs: []
+        },
+        methods: {
+            showFrom(contributorId) {
+                return this.$data.contribs.indexOf(contributorId) < 0;
+            },
+            updateContribs(contribId) {  // if not in the display list remove it otherwise add it effectively toggle
+                let loc = this.$data.contribs.indexOf(contribId);
+                if (loc < 0) {
+                    this.$data.contribs.push(contribId)
+                }
+                else {
+                   this.$data.contribs.splice(loc, 1);
+                }
+            }
+        }
+    });
 });
