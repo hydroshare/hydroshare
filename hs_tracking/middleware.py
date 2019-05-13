@@ -1,5 +1,18 @@
 from .models import Session
 import utils
+import re
+
+RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')
+
+
+def get_resource_id_from_url(request):
+
+    m = RESOURCE_RE.search(request)
+    if (m and m.group(1)):
+        resource_id = m.group(1)
+        return resource_id
+    else:
+        return None
 
 
 class Tracking(object):
@@ -12,9 +25,8 @@ class Tracking(object):
         if request.path.startswith('/heartbeat/'):
             return response
 
-        is_human = getattr(request, 'is_human', False)
-
         # filter out web crawlers
+        is_human = getattr(request, 'is_human', False)
         if not is_human:
             return response
 
@@ -37,7 +49,9 @@ class Tracking(object):
                          'user_email_domain=%s' % emaildomain,
                          'request_url=%s' % request.path]])
 
+        resource_id = get_resource_id_from_url(request.path)
+
         # save the activity in the database
-        session.record('visit', msg)
+        session.record('visit', value=msg, resource_id=resource_id)
 
         return response

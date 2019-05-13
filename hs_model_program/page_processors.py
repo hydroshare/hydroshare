@@ -1,9 +1,10 @@
-
-from models import *
 from crispy_forms.layout import Layout, HTML
+from django.http import HttpResponseRedirect
+
 from forms import *
 from hs_core import page_processors
 from hs_core.views import *
+from models import *
 
 
 @processor_for(ModelProgramResource)
@@ -17,6 +18,10 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, request=request, resource_edit=edit_resource,
                                                    extended_metadata_layout=None)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
+
         extended_metadata_exists = False
         if content_model.metadata.program:
             extended_metadata_exists = True

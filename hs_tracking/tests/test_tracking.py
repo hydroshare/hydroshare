@@ -8,10 +8,11 @@ from django.test import Client
 from django.http import HttpRequest, QueryDict, response
 from mock import patch, Mock
 
-from .models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
-from .views import AppLaunch
-import utils
+from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
+from hs_tracking.views import AppLaunch
+import hs_tracking.utils as utils
 import urllib
+from pprint import pprint
 
 
 class ViewTests(TestCase):
@@ -131,28 +132,32 @@ class TrackingTests(TestCase):
         return request
 
     def test_record_variable(self):
-        self.session.record('int', 42)
+        self.session.record('integer', 42)
         self.session.record('float', 3.14)
         self.session.record('true', True)
         self.session.record('false', False)
         self.session.record('text', "Hello, World")
 
-        self.assertEqual("42", self.session.variable_set.get(name='int').value)
-        self.assertEqual("3.14", self.session.variable_set.get(name='float').value)
-        self.assertEqual("true", self.session.variable_set.get(name='true').value)
-        self.assertEqual("false", self.session.variable_set.get(name='false').value)
-        self.assertEqual('Hello, World', self.session.variable_set.get(name='text').value)
+        pprint(self.session.get(name='false'))
+        self.assertEqual(42, self.session.get(name='integer'))
+        self.assertEqual(3.14, self.session.get(name='float'))
+        self.assertEqual(True, self.session.get(name='true'))
+        self.assertEqual(False, self.session.get(name='false'))
+        self.assertEqual('Hello, World', self.session.get(name='text'))
 
     def test_record_bad_value(self):
         self.assertRaises(TypeError, self.session.record, 'bad', ['oh no i cannot handle arrays'])
 
     def test_get(self):
+        v = Variable(name='foo', value='0', type=3)
+        pprint(v)
+        print("value={}, type={}".format(v.value, v.type))
         self.assertEqual(42, Variable(name='var', value='42', type=0).get_value())
         self.assertEqual(3.14, Variable(name='var', value='3.14', type=1).get_value())
-        self.assertEqual(True, Variable(name='var', value='true', type=3).get_value())
-        self.assertEqual(False, Variable(name='var', value='false', type=3).get_value())
         self.assertEqual("X", Variable(name='var', value='X', type=2).get_value())
-        self.assertEqual(None, Variable(name='var', value='', type=4).get_value())
+        self.assertEqual(None, Variable(name='var', value='false', type=4).get_value())
+        self.assertEqual(True, Variable(name='var', value='true', type=3).get_value())
+        self.assertEqual(False, Variable(name='var', value='0', type=3).get_value())
 
     def test_for_request_new(self):
         request = self.createRequest(user=self.user)
