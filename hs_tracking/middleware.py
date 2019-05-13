@@ -21,11 +21,12 @@ def get_resource_id_from_url(path):
 
 
 def get_rest_from_url(path):
-    """ determine whether a URL is a REST call or not """
-    m = REST_RE.search(path)
-    if m:
-        n = INTERNAL_RE.search(path)
-        if n:
+    """ determine whether a URL is a REST call or not
+
+        This should always return boolean, not search result.
+    """
+    if REST_RE.search(path):
+        if INTERNAL_RE.search(path):
             return False
         else:
             return True
@@ -34,8 +35,11 @@ def get_rest_from_url(path):
 
 
 def get_landing_from_url(path):
-    m = LANDING_RE.search(path)
-    if m:
+    """ determine whether a URL is a landing page.
+
+        This should always return boolean, not search result.
+    """
+    if LANDING_RE.search(path):
         return True
     else:
         return False
