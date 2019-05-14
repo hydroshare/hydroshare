@@ -19,7 +19,7 @@
     <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
     <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
     <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
-    <input type="hidden" id="keywords-string" value="{{ keywords_string }}">
+{#    <input type="hidden" id="keywords-string" value="{{ keywords_string }}">#}
     <input type="hidden" id="short-id" value="{{ cm.short_id }}">
     <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
     {% if page.perms.change and resource_edit_mode %}
@@ -832,6 +832,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
