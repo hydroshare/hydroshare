@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
-from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes, GroupResourcePrivilege
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -83,3 +83,22 @@ class T09GroupPublic(MockIRODSTestCaseMixin, TestCase):
             self.assertEqual(r.published, r.raccess.published)
             self.assertEqual(r.group_name, self.canines.name)
             self.assertEqual(r.group_id, self.canines.id)
+
+        # default for exhibit flag is correct
+        hperm = GroupResourcePrivilege.objects.get(group=self.canines, resource=self.holes)
+        self.assertEqual(hperm.exhibit, True)
+
+        # hide holes
+        hperm.exhibit = False
+        hperm.save()
+
+        res = self.canines.gaccess.public_resources
+        self.assertTrue(is_equal_to_as_set(res, [self.squirrels]))
+
+        # hide squirrels too
+        hperm = GroupResourcePrivilege.objects.get(group=self.canines, resource=self.squirrels)
+        hperm.exhibit = False
+        hperm.save()
+
+        res = self.canines.gaccess.public_resources
+        self.assertTrue(is_equal_to_as_set(res, []))

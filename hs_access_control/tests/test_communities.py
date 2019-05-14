@@ -637,6 +637,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         """ public resources contain those resources that are public and discoverable """
         self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
+
         res = self.pets.public_resources
         self.assertTrue(is_equal_to_as_set(res, []))
         self.holes.raccess.public = True
@@ -664,3 +665,20 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
             else:
                 self.assertEqual(r.group_name, self.dogs.name)
                 self.assertEqual(r.group_id, self.dogs.id)
+
+        # default for exhibit flag is correct
+        hperm = GroupResourcePrivilege.objects.get(group=self.dogs, resource=self.holes)
+        self.assertEqual(hperm.exhibit, True)
+
+        # hide holes
+        hperm.exhibit = False
+        hperm.save()
+        res = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set(res, [self.posts]))
+
+        # hide posts too
+        hperm = GroupResourcePrivilege.objects.get(group=self.cats, resource=self.posts)
+        hperm.exhibit = False
+        hperm.save()
+        res = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set(res, []))
