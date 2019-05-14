@@ -565,7 +565,7 @@ $(document).ready(function () {
                 // TODO handle if whitespace or empty when add clicked
                 console.log(keywords);
                 let newVal = keywords + "," + this.$data.newKeyword;
-                // TODO newval split "," has length (do not post nothing)
+                // TODO newval split "," has length (do not post nothing) and no trailing commas or whitespace
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                     if (resp.logical_file_type === "NetCDFLogicalFile") {
                         $("#div-netcdf-file-update").show();
@@ -581,12 +581,19 @@ $(document).ready(function () {
                 //     alert(event.target.tagName)
                 // }
             },
-            removeKeyword: function (keywordName) {
-                  // TODO make selector more specific?
+            removeKeyword: function (resIdShort, keywordName) {
+                // TODO make selector more specific?
+                console.log(event)
+                $(event.target).closest(".tag").remove();
                 let keywords = $("#lst-tags").find(".tag").map(function () {
                     return $(this).text().trim()
-                     }).get().join(",");
-                console.log(keywords.indexOf(keywordName))
+                }).get();
+                keywords.splice(keywords.indexOf(keywordName));
+                newVal = keywords.join(",");
+                //TODO make sure what posting is clean and no trailing commas
+                $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
+                    console.log(resp);
+                }, "json");
 
             }
         }

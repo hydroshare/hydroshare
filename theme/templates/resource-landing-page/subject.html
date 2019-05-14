@@ -21,18 +21,20 @@
 
 
                 <ul id="lst-tags" class="custom-well tag-list">
-
                     {% for keyword in keywords %}
                         {% if keyword %}
-<li>
+                            <li>
                                 {% if resource_edit_mode %}
-                                    <span class='tag'>{{ keyword }} &nbsp;<span v-on:click="removeKeyword('{{ keyword }}')" class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
+                                    <span class='tag'>{{ keyword }} &nbsp;<span
+                                            v-on:click="removeKeyword('{{ cm.short_id }}', '{{ keyword }}')"
+                                            class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
                                 {% else %}
 
-                                    <a class='tag' target="_blank" href="/search/?q=&selected_facets=subject_exact:{{ keyword }}">{{ keyword }}</a>
+                                    <a class='tag' target="_blank"
+                                       href="/search/?q=&selected_facets=subject_exact:{{ keyword }}">{{ keyword }}</a>
 
                                 {% endif %}
-</li>
+                            </li>
                         {% endif %}
                     {% endfor %}
                 </ul>
