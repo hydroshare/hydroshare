@@ -48,9 +48,3 @@ class ShareResourceGroup(APIView):
             user.uaccess.share_resource_with_group(res, to_group, privilege_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class DiscoveryJsonViewHsapi(APIView):
-
-    def get(self, request):
-        return self.super.get(request)

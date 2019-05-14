@@ -14,7 +14,6 @@ from rest_framework import permissions
 
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .views.discovery import DiscoverSearchView
-from rest_framework import routers
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
@@ -28,9 +27,6 @@ schema_view_yasg = get_schema_view(
    public=True,
    permission_classes=(permissions.AllowAny,),
 )
-
-router = routers.DefaultRouter()
-router.register("search", DiscoverSearchView, base_name="resource-search")
 
 urlpatterns = [
     # Swagger Docs View
@@ -178,5 +174,5 @@ urlpatterns = [
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
-    url(r'^resource/$', include(router.urls)),
+    url(r'^resource/search$', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
 ]
