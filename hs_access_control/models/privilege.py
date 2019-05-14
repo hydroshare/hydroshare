@@ -105,6 +105,8 @@ class PrivilegeBase(models.Model):
             * UserCommunityPrivilege.update(user={X}, community={Y}, privilege={Z}, grantor={W})
             * GroupCommunityPrivilege.update(group={X}, community={Y}, privilege={Z}, grantor={W})
 
+        This returns True if a record exists and was updated, and False if not.
+
         **This is a system routine** and not recommended for use in application code.
         There are no access control rules applied; this routine is unconditional.
         Only use this routine if you wish to completely bypass access control.
@@ -124,12 +126,16 @@ class PrivilegeBase(models.Model):
                     record.privilege = privilege
                     record.grantor = grantor
                     record.save()
+                    return True
+                else:
+                    return False
         else:
             if 'privilege' in kwargs:
                 del kwargs['privilege']
             del kwargs['grantor']
             cls.objects.filter(**kwargs) \
                .delete()
+            return False
 
     @classmethod
     def share(cls, **kwargs):
@@ -558,6 +564,11 @@ class GroupResourcePrivilege(PrivilegeBase):
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
 
+    # whether this resource -- if made public -- should be exhibited in public displays
+    # This field is not stored in provenance, nor restored upon undo.
+    exhibit = models.BooleanField(null=False, default=True, editable=False,
+                                  help_text="whether to exhibit this resource as a public product")
+
     class Meta:
         unique_together = ('group', 'resource')
 
@@ -592,7 +603,21 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
-        cls.update(**kwargs)
+        exists = cls.update(**kwargs)
+
+        # for a new record; default 'exhibit' flag.
+        if not exists:
+            # if resource is owned by a member of the group,
+            # then exhibit=True, else exhibit=False
+            owned = User.objects.filter(u2urp__resource=kwargs['resource'],
+                                        u2urp__privilege=PrivilegeCodes.OWNER,
+                                        u2ugp__group=kwargs['group']).exists()
+            if not owned:  # default is to exhibit; no action required if so.
+                priv = GroupResourcePrivilege.objects.get(resource=kwargs['resource'],
+                                                          group=kwargs['group'])
+                priv.exhibit = owned
+                priv.save()
+
         GroupResourceProvenance.update(**kwargs)
 
     @classmethod

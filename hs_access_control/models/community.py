@@ -42,16 +42,14 @@ class Community(models.Model):
         # TODO: This would enable fast querying of first author.
         # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
         # import here to avoid import loops
-        from hs_access_control.models.privilege import PrivilegeCodes
         res = BaseResource\
             .objects\
             .filter(r2grp__group__g2gcp__community=self,
-                    r2grp__group__gaccess__active=True)\
+                    r2grp__group__gaccess__active=True,
+                    r2grp__exhibit=True)\
             .filter(Q(raccess__public=True) |
                     Q(raccess__published=True) |
                     Q(raccess__discoverable=True))\
-            .filter(Q(r2urp__privilege=PrivilegeCodes.OWNER,
-                      r2urp__user__u2ugp__group__g2gcp__community=self))\
             .annotate(group_name=F("r2grp__group__name"),
                       group_id=F("r2grp__group__id"),
                       public=F("raccess__public"),

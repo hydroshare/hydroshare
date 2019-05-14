@@ -368,18 +368,18 @@ class GroupAccess(models.Model):
 
         Based upon hs_access_control/models/community.py:Community:public_resources
         """
-        res = BaseResource.objects.filter(r2grp__group__gaccess=self,
-                                          r2grp__group__gaccess__active=True)\
-                                  .filter(Q(raccess__public=True) |
-                                          Q(raccess__published=True) |
-                                          Q(raccess__discoverable=True))\
-                                  .filter(r2urp__privilege=PrivilegeCodes.OWNER,
-                                          r2urp__user__u2ugp__group=self.group)\
-                                  .annotate(group_name=F("r2grp__group__name"),
-                                            group_id=F("r2grp__group__id"),
-                                            public=F("raccess__public"),
-                                            published=F("raccess__published"),
-                                            discoverable=F("raccess__discoverable"))
+        res = BaseResource.objects\
+            .filter(r2grp__group__gaccess=self,
+                    r2grp__group__gaccess__active=True,
+                    r2grp__exhibit=True)\
+            .filter(Q(raccess__public=True) |
+                    Q(raccess__published=True) |
+                    Q(raccess__discoverable=True))\
+            .annotate(group_name=F("r2grp__group__name"),
+                      group_id=F("r2grp__group__id"),
+                      public=F("raccess__public"),
+                      published=F("raccess__published"),
+                      discoverable=F("raccess__discoverable"))
 
         res = res.only('title', 'resource_type', 'created', 'updated')
 
