@@ -9,6 +9,7 @@ from rest_framework.exceptions import ParseError
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils as hs_core_utils
 from hs_access_control.models import PrivilegeCodes
+from hs_core.views.discovery_json_view import DiscoveryJsonView
 
 logger = logging.getLogger(__name__)
 
@@ -47,3 +48,9 @@ class ShareResourceGroup(APIView):
             user.uaccess.share_resource_with_group(res, to_group, privilege_code)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DiscoveryJsonViewHsapi(APIView):
+
+    def get(self, request):
+        return self.super.get(request)
