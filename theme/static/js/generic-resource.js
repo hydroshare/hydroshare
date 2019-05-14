@@ -558,10 +558,12 @@ $(document).ready(function () {
             addButton: function (resIdShort) {
                 // comma separated trimmed, nospaces list of existing keywords constructed from <li>
                 // not sure where it's getting populated, possibly outside of subject.html which is bad
-                let keywords = $("#lst-tags").find(".tag > span").map(function () {
-                    return $(this).text()
+                // TODO make selector more specific?
+                let keywords = $("#lst-tags").find(".tag").map(function () {
+                    return $(this).text().trim()
                 }).get().join(",");
-                console.log(keywords)
+                // TODO handle if whitespace or empty when add clicked
+                console.log(keywords);
                 let newVal = keywords + "," + this.$data.newKeyword;
                 // TODO newval split "," has length (do not post nothing)
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
@@ -580,9 +582,11 @@ $(document).ready(function () {
                 // }
             },
             removeKeyword: function (keywordName) {
-                let keywords = $("#lst-tags").find(".tag > span").map(function () {
-                    return $(this).text()
-                }).get().join(",");
+                  // TODO make selector more specific?
+                let keywords = $("#lst-tags").find(".tag").map(function () {
+                    return $(this).text().trim()
+                     }).get().join(",");
+                console.log(keywords.indexOf(keywordName))
 
             }
         }
