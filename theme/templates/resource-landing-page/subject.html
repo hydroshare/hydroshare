@@ -13,9 +13,10 @@
                 {% if resource_edit_mode %}
                     <div id="add-keyword-wrapper" class="input-group">
                         <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
+                               @keyup.enter="addButton('{{ cm.short_id }}')"
                                placeholder="Examples: Hydrologic_modeling, USU, land use">
                         <span class="input-group-btn">
-                            <button v-on:click="addButton('{{ cm.short_id }}')" id="btn-add-keyword"
+                            <button @click="addButton('{{ cm.short_id }}')" id="btn-add-keyword"
                                     class="btn btn-success" type="button">Add</button>
                         </span>
                     </div>
@@ -26,11 +27,11 @@
                         {% if resource_edit_mode %}
                           {# TODO: prevent raw delimeters from being rendered before Vue.js is executed              #}
                             <span class='tag'>${ k }<span
-                                    v-on:click="removeKeyword('{{ cm.short_id }}', k )"
+                                    @click="removeKeyword('{{ cm.short_id }}', k )"
                                     class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
                         {% else %}
                             <a class='tag' target="_blank"
-                               v-bind:href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>
+                               :href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>
                         {% endif %}
                     </li>
                 </ul>
