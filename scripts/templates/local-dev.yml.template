@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.4
     container_name: data.local.org
     hostname: data.local.org
     links:
@@ -46,7 +46,7 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.4
     container_name: users.local.org
     hostname: users.local.org
     volumes:
@@ -122,7 +122,7 @@ services:
     depends_on:
       - hydroshare
     ports:
-      - "80:80"
+      - "NGINX_PORT:80"
     volumes:
       - "./log/nginx:/var/log/nginx"
       - ".:/hydroshare"
@@ -161,6 +161,8 @@ services:
       - "temp_vol:/hs_tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
+      # temp dir for whole container
+      - "hs_tmp_vol:/tmp"
     ports:
       - "1338:2022"
       - "8000:8000"
@@ -201,6 +203,8 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       - ".:/hydroshare"
+      # temp dir for whole container
+      - "dw_tmp_vol:/tmp"
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
@@ -227,4 +231,6 @@ volumes:
   solr_data_vol:
   temp_vol:
   share_vol:
+  hs_tmp_vol:
+  dw_tmp_vol:
   rabbitmq_data_vol:
