@@ -548,6 +548,8 @@ $(document).ready(function () {
     //     }
     // });
 
+    console.log(resKeywords);
+
     let subjKeywordsApp = new Vue({
         el: '#app-keyword',
         delimiters: ['${', '}'],
@@ -577,7 +579,6 @@ $(document).ready(function () {
                             else {
                                 subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i].trim());
                             }
-
                         }
 
                         // Reset input

@@ -1,5 +1,5 @@
 <script>
-  resKeywords = [{% for k in keywords %}{% if k %}"{{ k }}"{% if not forloop.last %}, {% endif %}{% endif %}{% endfor %}];
+  resKeywords = {{ keywords|safe }};
 </script>
 
 <div class="col-xs-12 content-block" id="app-keyword">
@@ -35,7 +35,6 @@
                         {% endif %}
                     </li>
                 </ul>
-
             </div>
             <div>
                 <p class="text-danger small" id="id-keywords-msg" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>

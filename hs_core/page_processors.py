@@ -14,6 +14,7 @@ from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+import json
 
 
 @processor_for(GenericResource)
@@ -118,7 +119,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
-    keywords = [sub.value for sub in content_model.metadata.subjects.all()]
+    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
 
     # user requested the resource in READONLY mode
     if not resource_edit:
