@@ -25,12 +25,12 @@
                     <li v-for="k in resKeywords">
                         {% if resource_edit_mode %}
                           {# TODO: prevent raw delimeters from being rendered before Vue.js is executed              #}
-                            <span class='tag'>${k}<span
-                                    v-on:click="removeKeyword('{{ cm.short_id }}', '${ k }')"
+                            <span class='tag'>${ k }<span
+                                    v-on:click="removeKeyword('{{ cm.short_id }}', k )"
                                     class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
                         {% else %}
                             <a class='tag' target="_blank"
-                               href="/search/?q=&selected_facets=subject_exact:${ k }">${ k }</a>
+                               v-bind:href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>
                         {% endif %}
                     </li>
                 </ul>

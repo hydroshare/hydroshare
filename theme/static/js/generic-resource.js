@@ -568,7 +568,7 @@ $(document).ready(function () {
                         // Append new keywords to our data array
                         let newKeywordsArray = subjKeywordsApp.$data.newKeyword.trim().split(",");
                         for (var i = 0; i < newKeywordsArray.length; i++) {
-                            subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i]);
+                            subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i].trim());
                         }
 
                         // Reset input
@@ -577,19 +577,14 @@ $(document).ready(function () {
                 }, "json");
             },
             removeKeyword: function (resIdShort, keywordName) {
-                // TODO make selector more specific?
-                console.log(event)
-                $(event.target).closest(".tag").remove();
-                let keywords = $("#lst-tags").find(".tag").map(function () {
-                    return $(this).text().trim()
-                }).get();
-                keywords.splice(keywords.indexOf(keywordName));
-                newVal = keywords.join(",");
-                //TODO make sure what posting is clean and no trailing commas
-                $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
-                    console.log(resp);
-                }, "json");
+                let newVal = subjKeywordsApp.$data.resKeywords.slice(); // Get a copy
+                newVal.splice($.inArray(keywordName, subjKeywordsApp.$data.resKeywords), 1);   // Remove the keyword
 
+                $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal.join(",")}, function (resp) {
+                    if (resp.status === "success") {
+                        subjKeywordsApp.$data.resKeywords = newVal;
+                    }
+                }, "json");
             }
         }
     });
