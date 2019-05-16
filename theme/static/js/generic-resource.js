@@ -2,6 +2,8 @@
 * Created by Mauriel on 3/9/2017.
 */
 
+let subjKeywordsApp;
+
 function onRoleSelect(event) {
     var el = $(event.target);
     $("#selected_role").text(el.text());
@@ -84,162 +86,6 @@ function updateActionsState(privilege){
     }
 }
 
-// function onRemoveKeyword(event) {
-//     $(event.target).closest(".tag").remove();
-//     // updateKeywords();
-//     // metadata_update_ajax_submit('id-subject');
-//     // $("#id-keywords-msg").hide();
-// }
-
-function filetype_keywords_update_ajax_submit() {
-    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
-    $form = $('#id-keywords-filetype');
-    // Data pre processing: trim keywords
-    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
-        return d.trim()
-    }).join(",");
-    $("#txt-keyword-filetype").val(subjects);
-    // var datastring = $form.serialize();
-
-    var keywords = json_response.added_keywords;
-    // add each of the newly added keywords as new li element for display
-    for (var i = 0; i < keywords.length; i++) {
-        var li = $("<li class='tag'><span></span></li>");
-        li.find('span').text(keywords[i]);
-        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-        $("#lst-tags-filetype").append(li);
-        $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-    }
-    // Refresh keywords field for the resource
-    var resKeywords = json_response.resource_keywords;
-    $("#lst-tags").empty();
-    console.log('POPULATING KEYWORDS AT LOAD');
-    for (var i = 0; i < resKeywords.length; i++) {
-        if (resKeywords[i] != "") {
-            var li = $("<li class='tag'><span></span></li>");
-            li.find('span').text(resKeywords[i]);
-            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-            $("#lst-tags").append(li);
-            $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-        }
-    }
-}
-
-function filetype_keywords_update_ajax_submit() {
-    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
-    $form = $('#id-keywords-filetype');
-    // Data pre processing: trim keywords
-    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
-        return d.trim()
-    }).join(",");
-    $("#txt-keyword-filetype").val(subjects);
-    var datastring = $form.serialize();
-    $.ajax({
-        type: "POST",
-        url: $form.attr('action'),
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                var keywords = json_response.added_keywords;
-                // add each of the newly added keywords as new li element for display
-                for (var i = 0; i < keywords.length; i++) {
-                    var li = $("<li class='tag'><span></span></li>");
-                    li.find('span').text(keywords[i]);
-                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-                    $("#lst-tags-filetype").append(li);
-                    $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-                }
-                // Refresh keywords field for the resource
-                var resKeywords = json_response.resource_keywords;
-                $("#lst-tags").empty();
-                for (var i = 0; i < resKeywords.length; i++) {
-                    if (resKeywords[i] != "") {
-                        var li = $("<li class='tag'><span></span></li>");
-                        li.find('span').text(resKeywords[i]);
-                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-                        $("#lst-tags").append(li);
-                    }
-                }
-                // show update netcdf file update option for NetCDFLogicalFile
-                if (json_response.logical_file_type === "NetCDFLogicalFile"){
-                    $("#div-netcdf-file-update").show();
-                }
-            }
-            $("#btn-add-keyword-filetype").toggleClass("disabled", false);
-        }
-    });
-}
-
-function filetype_keyword_delete_ajax_submit(keyword, tag) {
-    var datastring = 'keyword=' + keyword;
-    var url = $('#id-delete-keyword-filetype-action').val();
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                // remove the li element containing the deleted keyword
-                tag.remove();
-                // show update netcdf file update option for NetCDFLogicalFile
-                if (json_response.logical_file_type === "NetCDFLogicalFile"){
-                    $("#div-netcdf-file-update").show();
-                }
-            }
-        }
-    });
-}
-
-//
-// function onAddKeyword(event) {
-//     var keyword = $("#txt-keyword").val();
-//     keyword = keyword.split(",");
-//     var existsNewKeywords = false;
-//     for (var i = 0; i < keyword.length; i++) {
-//         keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
-//         var exists = false;
-//         // Check if the keyword already exists
-//         for (var x = 0; x < $("#lst-tags").find(".tag > span").length; x++) {
-//             if ($($("#lst-tags").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
-//                 exists = true;
-//             }
-//         }
-//         // if (exists){
-//         //     $("#id-keywords-msg").show();
-//         // }
-//         // else {
-//         //     $("#id-keywords-msg").hide();
-//         // }
-//         // If does not exist, add it
-//         if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
-//             var li = $("<li class='tag'><span></span></li>");
-//             li.find('span').text(keyword[i]);
-//             li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-//             $("#lst-tags").append(li);
-//             $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-//             // updateKeywords();
-//             existsNewKeywords = true;
-//         }
-//     }
-//
-//     $("#txt-keyword").val("");  // Clear text input
-//     if(existsNewKeywords){
-//         metadata_update_ajax_submit('id-subject');
-//     }
-// }
-
-// function updateKeywords() {
-//     // Get the list of keywords and store them as a comma separated string
-//     var keywords = $("#lst-tags").find(".tag > span").map(function () {
-//         return $(this).text()
-//     }).get().join(",");
-//     $("#id-subject").find("#id_subject_keyword_control_input").val(keywords);
-// }
-
 // function for adding keywords associated with file type
 function onAddKeywordFileType(event) {
     var keyword = $("#txt-keyword-filetype").val();
@@ -255,13 +101,7 @@ function onAddKeywordFileType(event) {
                 break;
             }
         }
-        // if (exists) {
-        //     $("#id-keywords-filetype-msg").show();
-        // }
-        // else {
-        //     $("#id-keywords-filetype-msg").hide();
-        // }
-        // If does not exist, add it
+
         if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
             existsNewKeywords = true;
         }
@@ -307,8 +147,6 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     }
     $('#extraMetaDialog').modal('show');
 }
-
-
 
 function showRemoveExtraMetaPopup(row_id_str) {
     // retrieving values from underlying data table
@@ -519,7 +357,7 @@ $(document).ready(function () {
         update_download_status(task_id, download_path);
     }
 
-    let subjKeywordsApp = new Vue({
+    subjKeywordsApp = new Vue({
         el: '#app-keyword',
         delimiters: ['${', '}'],
         data: {

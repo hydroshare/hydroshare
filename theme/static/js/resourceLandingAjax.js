@@ -1099,7 +1099,72 @@ function get_file_type_metadata_ajax_submit(url) {
     });
 }
 
+function filetype_keywords_update_ajax_submit() {
+    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
+    $form = $('#id-keywords-filetype');
+    // Data pre processing: trim keywords
+    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
+        return d.trim()
+    }).join(",");
+    $("#txt-keyword-filetype").val(subjects);
+    var datastring = $form.serialize();
+    $.ajax({
+        type: "POST",
+        url: $form.attr('action'),
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                var keywords = json_response.added_keywords;
+                // add each of the newly added keywords as new li element for display
+                for (var i = 0; i < keywords.length; i++) {
+                    var li = $("<li class='tag'><span></span></li>");
+                    li.find('span').text(keywords[i]);
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+                    $("#lst-tags-filetype").append(li);
+                    $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+                }
+                // Refresh keywords field for the resource
+                var resKeywords = json_response.resource_keywords;
+                for (var i = 0; i < resKeywords.length; i++) {
+                    if (resKeywords[i] != "") {
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsApp.$data.resKeywords) === -1) {
+                            subjKeywordsApp.$data.resKeywords.push(resKeywords[i].trim());
+                        }
+                    }
+                }
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+            $("#btn-add-keyword-filetype").toggleClass("disabled", false);
+        }
+    });
+}
 
+function filetype_keyword_delete_ajax_submit(keyword, tag) {
+    var datastring = 'keyword=' + keyword;
+    var url = $('#id-delete-keyword-filetype-action').val();
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                // remove the li element containing the deleted keyword
+                tag.remove();
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+        }
+    });
+}
 
 function update_netcdf_file_ajax_submit() {
     var $alert_success = '<div class="alert alert-success" id="success-alert"> \
