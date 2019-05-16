@@ -561,6 +561,19 @@ $(document).ready(function () {
         //
         methods: {
             addButton: function (resIdShort) {
+                // Remove any empty keywords from the list
+                let newKeywords = subjKeywordsApp.$data.newKeyword = subjKeywordsApp.$data.newKeyword.split(",");
+                newKeywords = newKeywords.filter(function(a) {
+                   return a.trim() != "";
+                });
+
+                // Update to cleaned up string
+                subjKeywordsApp.$data.newKeyword = newKeywords.join(",");
+
+                if (subjKeywordsApp.$data.newKeyword.trim() === "") {
+                    return; // Empty string detected
+                }
+
                 let newVal = subjKeywordsApp.$data.resKeywords.join(",") + "," + subjKeywordsApp.$data.newKeyword.trim();
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                     if (resp.status === "success") {
