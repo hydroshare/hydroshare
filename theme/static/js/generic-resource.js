@@ -91,113 +91,108 @@ function updateActionsState(privilege){
 //     // $("#id-keywords-msg").hide();
 // }
 
+function filetype_keywords_update_ajax_submit() {
+    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
+    $form = $('#id-keywords-filetype');
+    // Data pre processing: trim keywords
+    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
+        return d.trim()
+    }).join(",");
+    $("#txt-keyword-filetype").val(subjects);
+    // var datastring = $form.serialize();
 
+    var keywords = json_response.added_keywords;
+    // add each of the newly added keywords as new li element for display
+    for (var i = 0; i < keywords.length; i++) {
+        var li = $("<li class='tag'><span></span></li>");
+        li.find('span').text(keywords[i]);
+        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+        $("#lst-tags-filetype").append(li);
+        $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+    }
+    // Refresh keywords field for the resource
+    var resKeywords = json_response.resource_keywords;
+    $("#lst-tags").empty();
+    console.log('POPULATING KEYWORDS AT LOAD');
+    for (var i = 0; i < resKeywords.length; i++) {
+        if (resKeywords[i] != "") {
+            var li = $("<li class='tag'><span></span></li>");
+            li.find('span').text(resKeywords[i]);
+            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+            $("#lst-tags").append(li);
+            $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
+        }
+    }
+}
 
+function filetype_keywords_update_ajax_submit() {
+    $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
+    $form = $('#id-keywords-filetype');
+    // Data pre processing: trim keywords
+    let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
+        return d.trim()
+    }).join(",");
+    $("#txt-keyword-filetype").val(subjects);
+    var datastring = $form.serialize();
+    $.ajax({
+        type: "POST",
+        url: $form.attr('action'),
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                var keywords = json_response.added_keywords;
+                // add each of the newly added keywords as new li element for display
+                for (var i = 0; i < keywords.length; i++) {
+                    var li = $("<li class='tag'><span></span></li>");
+                    li.find('span').text(keywords[i]);
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+                    $("#lst-tags-filetype").append(li);
+                    $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+                }
+                // Refresh keywords field for the resource
+                var resKeywords = json_response.resource_keywords;
+                $("#lst-tags").empty();
+                for (var i = 0; i < resKeywords.length; i++) {
+                    if (resKeywords[i] != "") {
+                        var li = $("<li class='tag'><span></span></li>");
+                        li.find('span').text(resKeywords[i]);
+                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+                        $("#lst-tags").append(li);
+                    }
+                }
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+            $("#btn-add-keyword-filetype").toggleClass("disabled", false);
+        }
+    });
+}
 
-// function filetype_keywords_update_ajax_submit() {
-//     console.log("test")
-//     $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
-//     $form = $('#id-keywords-filetype');
-//     // Data pre processing: trim keywords
-//     let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
-//         return d.trim()
-//     }).join(",");
-//     $("#txt-keyword-filetype").val(subjects);
-//     // var datastring = $form.serialize();
-//
-//     var keywords = json_response.added_keywords;
-//     // add each of the newly added keywords as new li element for display
-//     for (var i = 0; i < keywords.length; i++) {
-//         var li = $("<li class='tag'><span></span></li>");
-//         li.find('span').text(keywords[i]);
-//         li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-//         $("#lst-tags-filetype").append(li);
-//         $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-//     }
-//     // Refresh keywords field for the resource
-//     var resKeywords = json_response.resource_keywords;
-//     $("#lst-tags").empty();
-//     console.log('POPULATING KEYWORDS AT LOAD')
-//     for (var i = 0; i < resKeywords.length; i++) {
-//         if (resKeywords[i] != "") {
-//             var li = $("<li class='tag'><span></span></li>");
-//             li.find('span').text(resKeywords[i]);
-//             li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-//             $("#lst-tags").append(li);
-//             $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-//         }
-//     }
-// }
-//
-// function filetype_keywords_update_ajax_submit() {
-//     $("#btn-add-keyword-filetype").toggleClass("disabled", true);    // Disable button during ajax
-//     $form = $('#id-keywords-filetype');
-//     // Data pre processing: trim keywords
-//     let subjects = $("#txt-keyword-filetype").val().split(",").map(function (d) {
-//         return d.trim()
-//     }).join(",");
-//     $("#txt-keyword-filetype").val(subjects);
-//     var datastring = $form.serialize();
-//     $.ajax({
-//         type: "POST",
-//         url: $form.attr('action'),
-//         dataType: 'html',
-//         data: datastring,
-//         success: function (result) {
-//             json_response = JSON.parse(result);
-//             if (json_response.status === 'success') {
-//                 var keywords = json_response.added_keywords;
-//                 // add each of the newly added keywords as new li element for display
-//                 for (var i = 0; i < keywords.length; i++) {
-//                     var li = $("<li class='tag'><span></span></li>");
-//                     li.find('span').text(keywords[i]);
-//                     li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-//                     $("#lst-tags-filetype").append(li);
-//                     $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-//                 }
-//                 // Refresh keywords field for the resource
-//                 var resKeywords = json_response.resource_keywords;
-//                 $("#lst-tags").empty();
-//                 for (var i = 0; i < resKeywords.length; i++) {
-//                     if (resKeywords[i] != "") {
-//                         var li = $("<li class='tag'><span></span></li>");
-//                         li.find('span').text(resKeywords[i]);
-//                         li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-//                         $("#lst-tags").append(li);
-//                         $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-//                     }
-//                 }
-//                 // show update netcdf file update option for NetCDFLogicalFile
-//                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
-//                     $("#div-netcdf-file-update").show();
-//                 }
-//             }
-//             $("#btn-add-keyword-filetype").toggleClass("disabled", false);
-//         }
-//     });
-// }
-
-// function filetype_keyword_delete_ajax_submit(keyword, tag) {
-//     var datastring = 'keyword=' + keyword;
-//     var url = $('#id-delete-keyword-filetype-action').val();
-//     $.ajax({
-//         type: "POST",
-//         url: url,
-//         dataType: 'html',
-//         data: datastring,
-//         success: function (result) {
-//             json_response = JSON.parse(result);
-//             if (json_response.status === 'success') {
-//                 // remove the li element containing the deleted keyword
-//                 tag.remove();
-//                 // show update netcdf file update option for NetCDFLogicalFile
-//                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
-//                     $("#div-netcdf-file-update").show();
-//                 }
-//             }
-//         }
-//     });
-// }
+function filetype_keyword_delete_ajax_submit(keyword, tag) {
+    var datastring = 'keyword=' + keyword;
+    var url = $('#id-delete-keyword-filetype-action').val();
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                // remove the li element containing the deleted keyword
+                tag.remove();
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+        }
+    });
+}
 
 //
 // function onAddKeyword(event) {
@@ -246,46 +241,45 @@ function updateActionsState(privilege){
 // }
 
 // function for adding keywords associated with file type
-// function onAddKeywordFileType(event) {
-//     var keyword = $("#txt-keyword-filetype").val();
-//     keyword = keyword.split(",");
-//     var existsNewKeywords = false;
-//     for (var i = 0; i < keyword.length; i++) {
-//         keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
-//         var exists = false;
-//         // Check if the keyword already exists
-//         for (var x = 0; x < $("#lst-tags-filetype").find(".tag > span").length; x++) {
-//             if ($($("#lst-tags-filetype").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
-//                 exists = true;
-//                 break;
-//             }
-//         }
-//         // if (exists) {
-//         //     $("#id-keywords-filetype-msg").show();
-//         // }
-//         // else {
-//         //     $("#id-keywords-filetype-msg").hide();
-//         // }
-//         // If does not exist, add it
-//         if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
-//             existsNewKeywords = true;
-//         }
-//     }
-//
-//     if(existsNewKeywords) {
-//         filetype_keywords_update_ajax_submit();
-//         $("#txt-keyword-filetype").val("");  // Clear text input
-//         $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-//     }
-// }
+function onAddKeywordFileType(event) {
+    var keyword = $("#txt-keyword-filetype").val();
+    keyword = keyword.split(",");
+    var existsNewKeywords = false;
+    for (var i = 0; i < keyword.length; i++) {
+        keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
+        var exists = false;
+        // Check if the keyword already exists
+        for (var x = 0; x < $("#lst-tags-filetype").find(".tag > span").length; x++) {
+            if ($($("#lst-tags-filetype").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
+                exists = true;
+                break;
+            }
+        }
+        // if (exists) {
+        //     $("#id-keywords-filetype-msg").show();
+        // }
+        // else {
+        //     $("#id-keywords-filetype-msg").hide();
+        // }
+        // If does not exist, add it
+        if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
+            existsNewKeywords = true;
+        }
+    }
+
+    if(existsNewKeywords) {
+        filetype_keywords_update_ajax_submit();
+        $("#txt-keyword-filetype").val("");  // Clear text input
+    }
+}
 
 // function for deleteing keywords associated with file type
-// function onRemoveKeywordFileType(event) {
-//     var tag = $(event.target).closest(".tag");
-//     var keyword = tag.find('span').text();
-//     filetype_keyword_delete_ajax_submit(keyword, tag);
-//     $("#id-keywords-filetype-msg").hide();
-// }
+function onRemoveKeywordFileType(event) {
+    var tag = $(event.target).closest(".tag");
+    var keyword = tag.find('span').text();
+    filetype_keyword_delete_ajax_submit(keyword, tag);
+    $("#id-keywords-filetype-msg").hide();
+}
 
 function showAddEditExtraMetaPopup(edit, row_id_str) {
     $("#edit_extra_meta_row_id").val('');
@@ -525,37 +519,12 @@ $(document).ready(function () {
         update_download_status(task_id, download_path);
     }
 
-        // console.log("asf")
-        // this.$data.keywords = abcd
-
-        // var vm = new Vue({
-        //     el: '#testvue',
-        //     template:  `<div>{{ item.count }}<input type="button" value="Click" @click="updateCount"/></div>`,
-    //     data: {
-    //         item: {}
-    //     },
-    //     beforeMount() {
-    //         this.$data.item = {
-    //             count: 0
-    //         };
-    //     },
-    //     methods: {
-    //         updateCount() {
-    //             // JavaScript object is updated but
-    //             // the component template is not rendered again
-    //             this.$data.item.count++;
-    //         }
-    //     }
-    // });
-
-    console.log(resKeywords);
-
     let subjKeywordsApp = new Vue({
         el: '#app-keyword',
         delimiters: ['${', '}'],
         data: {
             newKeyword: '',
-            resKeywords: resKeywords,
+            resKeywords: RES_KEYWORDS,   // global constant defined in template
             showIsDuplicate: false,
         },
         //

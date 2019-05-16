@@ -233,8 +233,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if not can_change:
         raise PermissionDenied()
 
-    # keywords_string = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-
     temporal_coverage = content_model.metadata.temporal_coverage
     temporal_coverage_data_dict = {}
     if temporal_coverage:
@@ -294,7 +292,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
                'keywords': keywords,
-               # 'keywords_string': keywords_string,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
