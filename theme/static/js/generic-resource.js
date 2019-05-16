@@ -554,6 +554,7 @@ $(document).ready(function () {
         data: {
             newKeyword: '',
             resKeywords: resKeywords,
+            showIsDuplicate: false,
         },
         //
         methods: {
@@ -567,8 +568,16 @@ $(document).ready(function () {
 
                         // Append new keywords to our data array
                         let newKeywordsArray = subjKeywordsApp.$data.newKeyword.trim().split(",");
+
+                        subjKeywordsApp.$data.showIsDuplicate = false;  // Reset
                         for (var i = 0; i < newKeywordsArray.length; i++) {
-                            subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i].trim());
+                            if ($.inArray(newKeywordsArray[i].trim(), subjKeywordsApp.$data.resKeywords) >= 0) {
+                                subjKeywordsApp.$data.showIsDuplicate = true;
+                            }
+                            else {
+                                subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i].trim());
+                            }
+
                         }
 
                         // Reset input
