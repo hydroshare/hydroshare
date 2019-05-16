@@ -589,6 +589,7 @@ $(document).ready(function () {
         }
     });
 
+    $("#lst-tags").removeClass("hidden");   // Tags are hidden until the vue above is initialized
 
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
