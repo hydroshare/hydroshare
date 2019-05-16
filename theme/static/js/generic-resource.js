@@ -550,36 +550,31 @@ $(document).ready(function () {
 
     let subjKeywordsApp = new Vue({
         el: '#app-keyword',
+        delimiters: ['${', '}'],
         data: {
             newKeyword: '',
+            resKeywords: resKeywords,
         },
         //
         methods: {
             addButton: function (resIdShort) {
-                // comma separated trimmed, nospaces list of existing keywords constructed from <li>
-                // not sure where it's getting populated, possibly outside of subject.html which is bad
-                // TODO make selector more specific?
-                let keywords = $("#lst-tags").find(".tag").map(function () {
-                    return $(this).text().trim()
-                }).get().join(",");
-                // TODO handle if whitespace or empty when add clicked
-                console.log(keywords);
-                let newVal = keywords + "," + this.$data.newKeyword;
-                // TODO newval split "," has length (do not post nothing) and no trailing commas or whitespace
+                let newVal = subjKeywordsApp.$data.resKeywords.join(",") + "," + subjKeywordsApp.$data.newKeyword.trim();
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
-                    if (resp.logical_file_type === "NetCDFLogicalFile") {
-                        $("#div-netcdf-file-update").show();
-                    }
-                    // subjKeywordsApp.$data.keywords = newVal;
-                    subjKeywordsApp.$data.newKeyword = '';
-                    console.log(resp);
+                    if (resp.status === "success") {
+                        if (resp.logical_file_type === "NetCDFLogicalFile") {
+                            $("#div-netcdf-file-update").show();
+                        }
 
+                        // Append new keywords to our data array
+                        let newKeywordsArray = subjKeywordsApp.$data.newKeyword.trim().split(",");
+                        for (var i = 0; i < newKeywordsArray.length; i++) {
+                            subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i]);
+                        }
+
+                        // Reset input
+                        subjKeywordsApp.$data.newKeyword = '';
+                    }
                 }, "json");
-                // alert(content)
-                // `event` is the native DOM event
-                // if (event) {
-                //     alert(event.target.tagName)
-                // }
             },
             removeKeyword: function (resIdShort, keywordName) {
                 // TODO make selector more specific?

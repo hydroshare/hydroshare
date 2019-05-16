@@ -1,4 +1,6 @@
-
+<script>
+  resKeywords = [{% for k in keywords %}{% if k %}"{{ k }}"{% if not forloop.last %}, {% endif %}{% endif %}{% endfor %}];
+</script>
 
 <div class="col-xs-12 content-block" id="app-keyword">
     <h3>Subject Keywords</h3>
@@ -19,25 +21,20 @@
                     </div>
                 {% endif %}
 
-
                 <ul id="lst-tags" class="custom-well tag-list">
-                    {% for keyword in keywords %}
-                        {% if keyword %}
-                            <li>
-                                {% if resource_edit_mode %}
-                                    <span class='tag'>{{ keyword }} &nbsp;<span
-                                            v-on:click="removeKeyword('{{ cm.short_id }}', '{{ keyword }}')"
-                                            class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
-                                {% else %}
-
-                                    <a class='tag' target="_blank"
-                                       href="/search/?q=&selected_facets=subject_exact:{{ keyword }}">{{ keyword }}</a>
-
-                                {% endif %}
-                            </li>
+                    <li v-for="k in resKeywords">
+                        {% if resource_edit_mode %}
+                          {# TODO: prevent raw delimeters from being rendered before Vue.js is executed              #}
+                            <span class='tag'>${k}<span
+                                    v-on:click="removeKeyword('{{ cm.short_id }}', '${ k }')"
+                                    class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
+                        {% else %}
+                            <a class='tag' target="_blank"
+                               href="/search/?q=&selected_facets=subject_exact:${ k }">${ k }</a>
                         {% endif %}
-                    {% endfor %}
+                    </li>
                 </ul>
+
             </div>
             <div>
                 <p class="text-danger small" id="id-keywords-msg"> Duplicate. Keyword not added.</p>
