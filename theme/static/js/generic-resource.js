@@ -400,6 +400,7 @@ $(document).ready(function () {
                         // Reset input
                         vue.newKeyword = '';
                     }
+                    showCompletedMessage(resp);
                 }, "json");
             },
             removeKeyword: function (resIdShort, keywordName) {
@@ -421,8 +422,6 @@ $(document).ready(function () {
             $("#lst-tags").removeClass("hidden");
         }
     });
-
-
 
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
