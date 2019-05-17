@@ -381,44 +381,48 @@ $(document).ready(function () {
                 }
 
                 let newVal = this.resKeywords.join(",") + "," + this.newKeyword.trim();
+                let vue = this;
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                     if (resp.status === "success") {
-                        if (resp.logical_file_type === "NetCDFLogicalFile") {
-                            $("#div-netcdf-file-update").show();
-                        }
-
                         // Append new keywords to our data array
-                        let newKeywordsArray = subjKeywordsApp.$data.newKeyword.trim().split(",");
+                        let newKeywordsArray = vue.newKeyword.trim().split(",");
 
                         subjKeywordsApp.$data.showIsDuplicate = false;  // Reset
                         for (var i = 0; i < newKeywordsArray.length; i++) {
-                            if ($.inArray(newKeywordsArray[i].trim(), subjKeywordsApp.$data.resKeywords) >= 0) {
-                                subjKeywordsApp.$data.showIsDuplicate = true;
+                            if ($.inArray(newKeywordsArray[i].trim(), vue.resKeywords) >= 0) {
+                                vue.showIsDuplicate = true;
                             }
                             else {
-                                subjKeywordsApp.$data.resKeywords.push(newKeywordsArray[i].trim());
+                                vue.resKeywords.push(newKeywordsArray[i].trim());
                             }
                         }
 
                         // Reset input
-                        subjKeywordsApp.$data.newKeyword = '';
+                        vue.newKeyword = '';
                     }
                 }, "json");
             },
             removeKeyword: function (resIdShort, keywordName) {
-                let newVal = subjKeywordsApp.$data.resKeywords.slice(); // Get a copy
-                newVal.splice($.inArray(keywordName, subjKeywordsApp.$data.resKeywords), 1);   // Remove the keyword
+                let newVal = this.resKeywords.slice(); // Get a copy
+                newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
-                $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal.join(",")}, function (resp) {
-                    if (resp.status === "success") {
-                        subjKeywordsApp.$data.resKeywords = newVal;
-                    }
-                }, "json");
+                let vue = this;
+
+                $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
+                  {value: newVal.join(",")}, function (resp) {
+                      if (resp.status === "success") {
+                          vue.resKeywords = newVal;
+                      }
+                  }, "json");
             }
+        },
+        mounted: function () {
+            // Tags are hidden until the Vue instance is initialized
+            $("#lst-tags").removeClass("hidden");
         }
     });
 
-    $("#lst-tags").removeClass("hidden");   // Tags are hidden until the vue above is initialized
+
 
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",

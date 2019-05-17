@@ -570,7 +570,6 @@ function promptUserInShareList() {
     let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
     $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
     $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
-
 }
 
 function share_resource_ajax_submit(form_id) {
@@ -757,7 +756,7 @@ function metadata_update_ajax_submit(form_id){
     if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
         metadata_update_ajax_submit.resourceSatusDisplayed = false;
     }
-    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
+
     var resourceType = RES_TYPE;
     let $form = $('#' + form_id);
     var datastring = $form.serialize();
@@ -772,11 +771,9 @@ function metadata_update_ajax_submit(form_id){
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
-        async: flagAsync,
         success: function(result) {
             /* The div contains now the updated form */
-            //$('#' + form_id).html(result);
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
@@ -804,7 +801,7 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                        json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
@@ -850,10 +847,12 @@ function metadata_update_ajax_submit(form_id){
 
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
+
                 if (json_response.hasOwnProperty('element_id')){
-                    form_update_action = $form.attr('action');
+                    let form_update_action = $form.attr('action');
+                    let update_url;
                     if (!json_response.hasOwnProperty('form_action')){
-                        res_short_id = form_update_action.split('/')[3];
+                        let res_short_id = form_update_action.split('/')[3];
                         update_url = "/hsapi/_internal/" + res_short_id + "/"
                             + json_response.element_name + "/"
                             + json_response.element_id + "/update-metadata/";
@@ -875,22 +874,20 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 if (json_response.element_exists == false){
-                    form_update_action = $form.attr('action');
-                    res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
+                    let form_update_action = $form.attr('action');
+                    let res_short_id = form_update_action.split('/')[3];
+                    let update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
                     if(json_response.element_name === 'title'){
-                        $res_title = $(".section-header").find("span").first();
-                        field_name_value = $res_title.text();
-                        updated_title = $form.find("#id_value").val();
+                        let $res_title = $(".section-header").find("span").first();
+                        let updated_title = $form.find("#id_value").val();
                         $res_title.text(updated_title);
                     }
                 }
 
                 showCompletedMessage(json_response);
-
 
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
