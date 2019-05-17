@@ -372,7 +372,7 @@ function promptSelfRemovingAccess(form_id){
     }
     var formIDParts = form_id.split('-');
     var userID = parseInt(formIDParts[formIDParts.length -1]);
-    var currentUserID = parseInt($("#current-user-id").val());
+    var currentUserID = CURRENT_USER_ID;
     if (currentUserID != userID){
         // no need to prompt for confirmation since self is not unsharing
         return true;
@@ -455,7 +455,7 @@ function isSharePermissionPromptRequired(form_id) {
 
     let formIDParts = form_id.split('-');
     let userID = parseInt(formIDParts[formIDParts.length -1]);
-    let currentUserID = parseInt($("#current-user-id").val());
+    let currentUserID = CURRENT_USER_ID;
 
     let $form = $('#' + form_id);
     let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
@@ -566,11 +566,6 @@ function getUserIDIntendToInvite() {
     return share_with;
 }
 
-/*return the current login user. */
-function getCurrentUser() {
-    return parseInt($("#current-user-id").val());
-}
-
 function promptUserInShareList() {
     let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
     $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
@@ -580,7 +575,7 @@ function promptUserInShareList() {
 
 function share_resource_ajax_submit(form_id) {
     if(isUserInvited(getUserIDIntendToInvite())) {
-	promptUserInShareList();
+	      promptUserInShareList();
         return;
     }
 
@@ -763,7 +758,7 @@ function metadata_update_ajax_submit(form_id){
         metadata_update_ajax_submit.resourceSatusDisplayed = false;
     }
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-    var resourceType = $("#resource-type").val();
+    var resourceType = RES_TYPE;
     let $form = $('#' + form_id);
     var datastring = $form.serialize();
 
@@ -938,7 +933,7 @@ function showCompletedMessage(json_response) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
             if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                let resourceType = $("#resource-type").val();
+                let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
                     promptMessage = "All required fields are completed. The resource can now be made discoverable " +
@@ -2024,7 +2019,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 // updates the UI spatial coverage elements for resource
 function updateResourceSpatialCoverage(spatialCoverage) {
     if ($("#id-coverage-spatial").length) {
-        $("#spatial-coverage-type").val(spatialCoverage.type);
+        spatial_coverage_type = spatialCoverage.type;
         var $form = $("#id-coverage-spatial");
         var form_update_action = $form.attr('action');
         var res_short_id = form_update_action.split('/')[3];
@@ -2039,7 +2034,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("input[value='point']");
         var $box_radio = $id_type_div.find("input[value='box']");
-        var resourceType = $("#resource-type").val();
+        var resourceType = RES_TYPE;
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
