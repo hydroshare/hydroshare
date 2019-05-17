@@ -23,17 +23,16 @@
 </ul>
 
 {% if not user.is_anonymous %}
-<ul class="nav navbar-nav navbar-right btn-primary" style="margin-right: 15px">
-    <li class="dropdown res-dropdown">
-        <a id="select-resource-type"
-           href="#" data-toggle="dropdown"
-           class="dropdown-toggle"
+<ul class="nav navbar-nav navbar-right">
+    <li class="res-dropdown">
+        <button id="select-resource-type" data-toggle="dropdown"
+           class="dropdown-toggle btn btn-primary"
            role="button" aria-haspopup="true" aria-expanded="false">Create
-        </a>
+        </button>
         {% if not user.is_anonymous %}
         <ul class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="A resource which can include multiple files without file format limitations."
                    data-value="CompositeResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
@@ -42,7 +41,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="A resource that holds a list of other resources in HydroShare."
                    data-value="CollectionResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
@@ -51,7 +50,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
                    data-value="ToolResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
@@ -60,7 +59,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="Describes the software component of a generic model within the water domain."
                    data-value="ModelProgramResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
@@ -69,7 +68,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="Defines the input and output data for a generic hydrological model, for a specific time and place."
                    data-value="ModelInstanceResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
@@ -78,7 +77,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
                    data-value="SWATModelInstanceResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
@@ -87,7 +86,7 @@
                 </a>
             </li>
             <li>
-                <a data-toggle="tooltip" data-placement="right"
+                <a data-toggle="tooltip" data-placement="left"
                    title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
                    data-value="MODFLOWModelInstanceResource">
                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"

@@ -83,11 +83,6 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    // Prevent hover event from triggering the dropdown
-    $("#select-resource-type").on('mouseenter', function (event) {
-        event.stopPropagation();
-    });
-
     // 404 error page
     // ====================
     $('#search-404').on('click', function () {
