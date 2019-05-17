@@ -159,6 +159,12 @@ $(document).ready(function () {
 
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
         $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+
         $('#submit-title-dialog').modal('show');
     });
 
