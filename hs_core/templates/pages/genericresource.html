@@ -820,7 +820,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script>
-      {# GLOBAL DECLARATIONS FOR RESOURCE LANING PAGE SCRIPTS #}
+      {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
