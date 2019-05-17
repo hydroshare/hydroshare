@@ -25,7 +25,6 @@
                 <ul id="lst-tags" class="custom-well tag-list hidden">
                     <li v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                          {# TODO: prevent raw delimeters from being rendered before Vue.js is executed              #}
                             <span class="tag">${ k }<span
                                     @click="removeKeyword('{{ cm.short_id }}', k )"
                                     class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
@@ -34,6 +33,7 @@
                                :href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>
                         {% endif %}
                     </li>
+                    <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                 </ul>
             </div>
             <div>

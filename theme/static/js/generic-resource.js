@@ -374,13 +374,13 @@ $(document).ready(function () {
                 });
 
                 // Update to cleaned up string
-                this.newKeyword = newKeywords.join(",");
+                this.newKeyword = newKeywords.join(",").trim();
 
                 if (this.newKeyword.trim() === "") {
                     return; // Empty string detected
                 }
 
-                let newVal = this.resKeywords.join(",") + "," + this.newKeyword.trim();
+                let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(","): "") + this.newKeyword;
                 let vue = this;
                 $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                     if (resp.status === "success") {
