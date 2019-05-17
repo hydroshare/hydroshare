@@ -22,8 +22,8 @@
     </li>
 </ul>
 
-{% if not user.is_anonymous %}
 <ul class="nav navbar-nav navbar-right">
+    {% if not user.is_anonymous %}
     <li class="res-dropdown">
         <button id="select-resource-type" data-toggle="dropdown"
            class="dropdown-toggle btn btn-primary"
@@ -97,7 +97,8 @@
         </ul>
         {% endif %}
     </li>
-{% endif %}
+    {% endif %}
+
     {% if not user.is_anonymous %}
         <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
     {% endif %}
