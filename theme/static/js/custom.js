@@ -169,17 +169,20 @@ $(document).ready(function () {
     });
 
     $("#btn-resource-create").on("click", function () {
-        createResource($(this).attr("data-value"));
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
     });
 
-    function createResource(type) {
+    function createResource(type, title="Untitled Resource") {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
 
         formData.append("csrfmiddlewaretoken", csrf_token);
-        formData.append("title", "Untitled Resource");
+        formData.append("title", title);
         formData.append("resource-type", type);
         formData.append("irods-username", "");
         formData.append("irods-password", "");
