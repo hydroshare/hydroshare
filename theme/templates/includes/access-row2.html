@@ -1,0 +1,94 @@
+{% load hydroshare_tags %}
+
+<tr v-for="(user, index) in this.users"
+    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (hasOnlyOneOwner || user.id === quotaHolder)}">
+    <td>
+        <table class="user-scope">
+            <tr v-if="user.user_type === 'user'">
+                <td>
+                    <div v-if="user.pictureUrl"
+                         :style="{backgroundImage: 'url(' + user.pictureUrl + ')'}"
+                         class="profile-pic-thumbnail round-image">
+                    </div>
+
+                    <div v-else class="profile-pic-thumbnail round-image user-icon"></div>
+                </td>
+                <td>
+                    <div data-col="name" class="user-name">
+                        <a :href="'/user/' + user.id">${user.best_name}</a>
+                    </div>
+                    <div data-col="user-name"
+                         class="user-username-content">${user.user_name}
+                    </div>
+                    <div>
+                        <span v-if="user.id === currentUser" class="badge you-flag">You</span>
+                        <span v-if="user.id === quotaHolder" quota-holder class="badge you-flag">
+                            <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr v-else>
+                <td>
+                    <div class="group-image-wrapper extra-small">
+                        <div class="group-image-extra-small group-preview-image-default"
+                             :style="{backgroundImage: 'url(' + (user.pictureUrl || groupImageDefaultUrl) + ')'}">
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div :value="user.id" class="user-name">
+                        <a :href="'/group/' + user.id">${user.best_name}</a>
+                    </div>
+                    <div class="user-username-content">(Group)</div>
+                </td>
+            </tr>
+        </table>
+    </td>
+
+    <td class="user-roles">
+        <span class="dropdown role-dropdown">
+            <span class="dropdown-toggle" data-col="current-access"
+                  id="roles-menu"
+                  data-toggle="dropdown"
+                  aria-haspopup="true" aria-expanded="true">
+                    ${user.access}
+                <span class="caret"></span>
+            </span>
+
+            <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                <li :class="{ active : user.access === 'Can view' }" data-access-type="Can view">
+                    <a @click="changeAccess(user, index, 'view')">Can view</a>
+                </li>
+                <li :class="{ active : user.access === 'Can edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }"
+                    data-access-type="Can edit">
+                    <a @click="changeAccess(user, index, 'edit')">Can edit</a>
+                </li>
+                <li v-if="user.user_type === 'user'"
+                    :class="{ active: user.access === 'Is owner', disabled: !canChangeResourceFlags}"
+                    data-access-type="Is owner">
+                    <a @click="changeAccess(user, index, 'owner')">Is owner</a>
+                </li>
+            </ul>
+        </span>
+    </td>
+
+    <td class="user-actions">
+        <i @click="undoAccess(user, index)"
+           class="fa fa-undo" aria-hidden="true" data-toggle="tooltip"
+           title="Undo Share"></i>
+    </td>
+
+    <td class="user-actions">
+        <form v-if="selfAccessLevel === 'owner' || user.id === currentUser"
+              :id="'form-remove-' + user.user_type + '-' + user.id"
+              class="remove-user-form"
+              :action="'/hsapi/_internal/' + resShortId + '/unshare-resource-with-' + user.user_type + '/' + user.id + '/'"
+              method="POST">
+            {% csrf_token %}
+            <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
+                  data-toggle="tooltip" title="Remove">
+            </span>
+        </form>
+    </td>
+</tr>
