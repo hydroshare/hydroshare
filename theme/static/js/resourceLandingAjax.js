@@ -372,7 +372,7 @@ function promptSelfRemovingAccess(form_id){
     }
     var formIDParts = form_id.split('-');
     var userID = parseInt(formIDParts[formIDParts.length -1]);
-    var currentUserID = parseInt($("#current-user-id").val());
+    var currentUserID = CURRENT_USER_ID;
     if (currentUserID != userID){
         // no need to prompt for confirmation since self is not unsharing
         return true;
@@ -455,7 +455,7 @@ function isSharePermissionPromptRequired(form_id) {
 
     let formIDParts = form_id.split('-');
     let userID = parseInt(formIDParts[formIDParts.length -1]);
-    let currentUserID = parseInt($("#current-user-id").val());
+    let currentUserID = CURRENT_USER_ID;
 
     let $form = $('#' + form_id);
     let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
@@ -566,21 +566,15 @@ function getUserIDIntendToInvite() {
     return share_with;
 }
 
-/*return the current login user. */
-function getCurrentUser() {
-    return parseInt($("#current-user-id").val());
-}
-
 function promptUserInShareList() {
     let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
     $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
     $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
-
 }
 
 function share_resource_ajax_submit(form_id) {
     if(isUserInvited(getUserIDIntendToInvite())) {
-	promptUserInShareList();
+	      promptUserInShareList();
         return;
     }
 
@@ -762,8 +756,8 @@ function metadata_update_ajax_submit(form_id){
     if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
         metadata_update_ajax_submit.resourceSatusDisplayed = false;
     }
-    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-    var resourceType = $("#resource-type").val();
+
+    var resourceType = RES_TYPE;
     let $form = $('#' + form_id);
     var datastring = $form.serialize();
 
@@ -777,11 +771,9 @@ function metadata_update_ajax_submit(form_id){
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
-        async: flagAsync,
         success: function(result) {
             /* The div contains now the updated form */
-            //$('#' + form_id).html(result);
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
@@ -809,7 +801,7 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                        json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
@@ -855,10 +847,12 @@ function metadata_update_ajax_submit(form_id){
 
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
+
                 if (json_response.hasOwnProperty('element_id')){
-                    form_update_action = $form.attr('action');
+                    let form_update_action = $form.attr('action');
+                    let update_url;
                     if (!json_response.hasOwnProperty('form_action')){
-                        res_short_id = form_update_action.split('/')[3];
+                        let res_short_id = form_update_action.split('/')[3];
                         update_url = "/hsapi/_internal/" + res_short_id + "/"
                             + json_response.element_name + "/"
                             + json_response.element_id + "/update-metadata/";
@@ -880,22 +874,20 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 if (json_response.element_exists == false){
-                    form_update_action = $form.attr('action');
-                    res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
+                    let form_update_action = $form.attr('action');
+                    let res_short_id = form_update_action.split('/')[3];
+                    let update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
                     if(json_response.element_name === 'title'){
-                        $res_title = $(".section-header").find("span").first();
-                        field_name_value = $res_title.text();
-                        updated_title = $form.find("#id_value").val();
+                        let $res_title = $(".section-header").find("span").first();
+                        let updated_title = $form.find("#id_value").val();
                         $res_title.text(updated_title);
                     }
                 }
 
                 showCompletedMessage(json_response);
-
 
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
@@ -938,7 +930,7 @@ function showCompletedMessage(json_response) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
             if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                let resourceType = $("#resource-type").val();
+                let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
                     promptMessage = "All required fields are completed. The resource can now be made discoverable " +
@@ -1127,14 +1119,11 @@ function filetype_keywords_update_ajax_submit() {
                 }
                 // Refresh keywords field for the resource
                 var resKeywords = json_response.resource_keywords;
-                $("#lst-tags").empty();
                 for (var i = 0; i < resKeywords.length; i++) {
                     if (resKeywords[i] != "") {
-                        var li = $("<li class='tag'><span></span></li>");
-                        li.find('span').text(resKeywords[i]);
-                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-                        $("#lst-tags").append(li);
-                        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsCmp.resKeywords) === -1) {
+                            subjKeywordsCmp.resKeywords.push(resKeywords[i].trim());
+                        }
                     }
                 }
                 // show update netcdf file update option for NetCDFLogicalFile
@@ -2027,7 +2016,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 // updates the UI spatial coverage elements for resource
 function updateResourceSpatialCoverage(spatialCoverage) {
     if ($("#id-coverage-spatial").length) {
-        $("#spatial-coverage-type").val(spatialCoverage.type);
+        spatial_coverage_type = spatialCoverage.type;
         var $form = $("#id-coverage-spatial");
         var form_update_action = $form.attr('action');
         var res_short_id = form_update_action.split('/')[3];
@@ -2042,7 +2031,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("input[value='point']");
         var $box_radio = $id_type_div.find("input[value='box']");
-        var resourceType = $("#resource-type").val();
+        var resourceType = RES_TYPE;
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');

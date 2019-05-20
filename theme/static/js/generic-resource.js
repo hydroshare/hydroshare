@@ -84,58 +84,6 @@ function updateActionsState(privilege){
     }
 }
 
-function onRemoveKeyword(event) {
-    $(event.target).closest(".tag").remove();
-    updateKeywords();
-    metadata_update_ajax_submit('id-subject');
-    $("#id-keywords-msg").hide();
-}
-
-function onAddKeyword(event) {
-    var keyword = $("#txt-keyword").val();
-    keyword = keyword.split(",");
-    var existsNewKeywords = false;
-    for (var i = 0; i < keyword.length; i++) {
-        keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
-        var exists = false;
-        // Check if the keyword already exists
-        for (var x = 0; x < $("#lst-tags").find(".tag > span").length; x++) {
-            if ($($("#lst-tags").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
-                exists = true;
-            }
-        }
-        if (exists){
-            $("#id-keywords-msg").show();
-        }
-        else {
-            $("#id-keywords-msg").hide();
-        }
-        // If does not exist, add it
-        if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
-            var li = $("<li class='tag'><span></span></li>");
-            li.find('span').text(keyword[i]);
-            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-            $("#lst-tags").append(li);
-            $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
-            updateKeywords();
-            existsNewKeywords = true;
-        }
-    }
-
-    $("#txt-keyword").val("");  // Clear text input
-    if(existsNewKeywords){
-        metadata_update_ajax_submit('id-subject');
-    }
-}
-
-function updateKeywords() {
-    // Get the list of keywords and store them as a comma separated string
-    var keywords = $("#lst-tags").find(".tag > span").map(function () {
-        return $(this).text()
-    }).get().join(",");
-    $("#id-subject").find("#id_subject_keyword_control_input").val(keywords);
-}
-
 // function for adding keywords associated with file type
 function onAddKeywordFileType(event) {
     var keyword = $("#txt-keyword-filetype").val();
@@ -151,13 +99,7 @@ function onAddKeywordFileType(event) {
                 break;
             }
         }
-        if (exists) {
-            $("#id-keywords-filetype-msg").show();
-        }
-        else {
-            $("#id-keywords-filetype-msg").hide();
-        }
-        // If does not exist, add it
+
         if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
             existsNewKeywords = true;
         }
@@ -166,7 +108,6 @@ function onAddKeywordFileType(event) {
     if(existsNewKeywords) {
         filetype_keywords_update_ajax_submit();
         $("#txt-keyword-filetype").val("");  // Clear text input
-        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
     }
 }
 
@@ -204,8 +145,6 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
     }
     $('#extraMetaDialog').modal('show');
 }
-
-
 
 function showRemoveExtraMetaPopup(row_id_str) {
     // retrieving values from underlying data table
@@ -334,8 +273,7 @@ function saveExtraMetadata() {
 
     var json_str = JSON.stringify(json_obj);
     json_obj = JSON.parse(json_str);
-    var shortID = $("#short-id").val();
-    var update_key_value_metadata_url = "/hsapi/_internal/" + shortID + "/update-key-value-metadata/";
+    var update_key_value_metadata_url = "/hsapi/_internal/" + SHORT_ID + "/update-key-value-metadata/";
 
     $.ajax({
         type: "POST",
@@ -418,7 +356,7 @@ $(document).ready(function () {
 
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
-        stop: function( event, ui ) {
+        stop: function (event, ui) {
             var forms = $(".authors-wrapper.sortable form");
 
             // Set the new order value in the form items
@@ -479,9 +417,8 @@ $(document).ready(function () {
             $('#download-file-btn').attr('disabled', 'disabled');
     });
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
-    var resourceMode = $("#resource-mode").val().toLowerCase();
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
-    inputElementToAdd = inputElementToAdd.replace('mode_to_replace', resourceMode);
+    inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());
 
     $("[id^=comment-]").find('form').each(function () {
         $(this).append(inputElementToAdd);
@@ -558,26 +495,12 @@ $(document).ready(function () {
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    // Populate keywords field
-    const keywordString = $("#keywords-string").val();
-    updateResourceKeywords(keywordString);
-    $("#lst-tags").on("click", ".icon-remove", onRemoveKeyword);
-
-    $("#btn-add-keyword").click(onAddKeyword);
-    $("#txt-keyword").keyup(function (e) {
-        e.which = e.which || e.keyCode;
-        if (e.which == 13) {
-            onAddKeyword();
-        }
-    });
-
     $("#list-roles a").click(onRoleSelect);
     $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
     $("input[name='group-autocomplete']").attr("placeholder", "Search by group name").addClass("form-control");
 
-    var file_types = $("#supported-file-types").attr('value');
-    if (file_types != ".*") {
-        var display_file_types = file_types.substring(0, file_types.length - 1) + ').';
+    if (SUPPORTE_FILE_TYPES != ".*") {
+        var display_file_types = SUPPORTE_FILE_TYPES.substring(0, SUPPORTE_FILE_TYPES.length - 1) + ').';
         display_file_types = display_file_types.replace(/'/g, '');
         $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
         $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
@@ -585,11 +508,9 @@ $(document).ready(function () {
     else {
         $("#file-types").text("Any file type can be uploaded.");
     }
-    var file_count = $("#file-count").attr('value');
 
     // set if multiple files can be uploaded
-    var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
-    if (allow_multiple_file_upload === "True") {
+    if (ALLLOW_MULTIPLE_FILE_UPLOAD === "True") {
         $("#file-multiple").text("Multiple file upload is allowed.");
         $("#file-multiple-irods").text("Multiple file upload is allowed.");
     }
@@ -597,7 +518,7 @@ $(document).ready(function () {
         $("#file-multiple").text("Only one file can be uploaded.");
         $("#file-multiple-irods").text("Only one file can be uploaded.");
 
-        if (file_count > 0) {
+        if (FILE_COUNT > 0) {
             $("#log-into-irods").hide();
             $("#sign-in-info").hide();
             $("#btn-select-irods-file").hide();
@@ -632,21 +553,20 @@ $(document).ready(function () {
             $(this).closest("form").find("#id_statement").first().attr('readonly', true);
             $(this).closest("form").find("#id_url").first().attr('readonly', true);
             $("#img-badge").first().show();
-            var staticURL = $("#static-url").val();
             if (text == "This resource is shared under the Creative Commons Attribution CC BY.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-SA.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-SA.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-SA");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-ND.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-ND.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-ND");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-NC-SA.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-NC-SA.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC-SA");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.") {
@@ -654,7 +574,7 @@ $(document).ready(function () {
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-NC-ND.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-NC-ND.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC-ND");
             }
         }
