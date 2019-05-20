@@ -994,7 +994,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
         if undo_user_privilege == PrivilegeCodes.VIEW:
             undo_user_privilege = "view"
         elif undo_user_privilege == PrivilegeCodes.CHANGE:
-            undo_user_privilege = "change"
+            undo_user_privilege = "edit"
         elif undo_user_privilege == PrivilegeCodes.OWNER:
             undo_user_privilege = "owner"
         else:

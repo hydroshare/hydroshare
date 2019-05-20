@@ -822,6 +822,7 @@
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
       const RES_KEYWORDS = {{ keywords|safe }};
+      const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
@@ -830,8 +831,28 @@
       const CURRENT_USER_ID = {{ request.user.id }};
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
-      let spatial_coverage_type = "{{ spatial_coverage.type }}";
+      {% if show_manage_access %}
+{#        const users = [#}
+{#          {#}
+{#            user_type: "",  // "User" or "Group"#}
+{#            access: "",     // "Owner", "Edit" or "View"#}
+{#            id:"",          // The user's Id#}
+{#            pictureUrl: "",#}
+{#            best_name: "",  // The name as computed in "best_name" filter#}
+{#            user_name: "",#}
+{#            can_undo: ""#}
+{#          },#}
+          {# ... #}
+{#        ];#}
+          const USERS_JSON = {{ users_json|safe }};
+          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
+          const CURRENT_USER_PK = {{ current_user.pk }};
+          const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
+          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
+      {% endif %}
+      var spatial_coverage_type = "{{ spatial_coverage.type }}";
     </script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>

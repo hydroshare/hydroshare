@@ -61,9 +61,5 @@ let subjKeywordsCmp = new Vue({
                   }
               }, "json");
         }
-    },
-    mounted: function () {
-        // Tags are hidden until the Vue instance is initialized
-        $("#lst-tags").removeClass("hidden");
     }
 });

@@ -301,7 +301,7 @@ function undo_share_ajax_submit(form_id) {
                     userRoles.find("li[data-access-type='" + "Can view"
                         + "']").addClass("active");
                 }
-                else if (json_response.undo_user_privilege === "change" || json_response.undo_group_privilege === "change") {
+                else if (json_response.undo_user_privilege === "edit" || json_response.undo_group_privilege === "edit") {
                     userRoles.find(".dropdown-toggle").text("Can edit");
                     userRoles.find("li[data-access-type='" + "Can edit"
                         + "']").addClass("active");
@@ -469,13 +469,14 @@ function isSharePermissionPromptRequired(form_id) {
     return NOT_REQUIRED;
 }
 function change_share_permission_ajax_submit(form_id, check_permission) {
-    if (check_permission === undefined) {
-        check_permission = true;
-    }
-    if (check_permission && isSharePermissionPromptRequired(form_id)) {
-        promptChangeSharePermission(form_id);
-        return;
-    }
+    // TODO: translate this logic
+    // if (check_permission === undefined) {
+    //     check_permission = true;
+    // }
+    // if (check_permission && isSharePermissionPromptRequired(form_id)) {
+    //     promptChangeSharePermission(form_id);
+    //     return;
+    // }
 
     $form = $('#' + form_id);
     var datastring = $form.serialize();
@@ -573,8 +574,8 @@ function promptUserInShareList() {
 }
 
 function share_resource_ajax_submit(form_id) {
-    if(isUserInvited(getUserIDIntendToInvite())) {
-	      promptUserInShareList();
+    if (isUserInvited(getUserIDIntendToInvite())) {
+        promptUserInShareList();
         return;
     }
 

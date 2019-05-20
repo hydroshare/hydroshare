@@ -191,6 +191,7 @@ def page_permissions_page_processor(request, page):
     is_owner_user = False
     is_edit_user = False
     is_view_user = False
+    self_access_level = None
     if request.user.is_authenticated():
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
@@ -200,6 +201,13 @@ def page_permissions_page_processor(request, page):
             is_edit_user = cm.raccess.edit_users.filter(pk=request.user.pk).exists()
             if not is_edit_user:
                 is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
+
+        if cm.raccess.owners.filter(pk=request.user.pk).exists():
+            self_access_level = 'owner'
+        elif cm.raccess.edit_users.filter(pk=request.user.pk).exists():
+            self_access_level = 'edit'
+        elif cm.raccess.view_users.filter(pk=request.user.pk).exists():
+            self_access_level = 'view'
 
     owners = cm.raccess.owners.all()
     editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
@@ -238,6 +246,65 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = False
 
+    users_json = []
+
+    for usr in owners:
+        users_json.append({
+            "user_type": "user",
+            "access": "Is owner",
+            "id": usr.id,
+            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
+            "best_name": best_name(usr),
+            "user_name": usr.username,
+            "can_undo": usr.can_undo
+        })
+
+    for usr in editors:
+        users_json.append({
+            "user_type": "user",
+            "access": "Can edit",
+            "id": usr.id,
+            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
+            "best_name": best_name(usr),
+            "user_name": usr.username,
+            "can_undo": usr.can_undo
+        })
+
+    for usr in viewers:
+        users_json.append({
+            "user_type": "user",
+            "access": "Can view",
+            "id": usr.id,
+            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
+            "best_name": best_name(usr),
+            "user_name": usr.username,
+            "can_undo": usr.can_undo
+        })
+
+    for usr in edit_groups:
+        users_json.append({
+            "user_type": "group",
+            "access": "Can edit",
+            "id": usr.id,
+            "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
+            "best_name": usr.name,
+            "user_name": None,
+            "can_undo": usr.can_undo
+        })
+
+    for usr in view_groups:
+        users_json.append({
+            "user_type": "group",
+            "access": "Can view",
+            "id": usr.id,
+            "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
+            "best_name": usr.name,
+            "user_name": None,
+            "can_undo": usr.can_undo
+        })
+
+    users_json = json.dumps(users_json)
+
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
     else:
@@ -250,25 +317,52 @@ def page_permissions_page_processor(request, page):
 
     show_manage_access = False
     if not cm.raccess.published and \
-            (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
+            (self_access_level == 'owner' or (
+                cm.raccess.shareable and (self_access_level == 'view' or self_access_level == 'edit'))):
         show_manage_access = True
 
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
+        # TODO: change these to JSON serialized objects
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
         "edit_groups": edit_groups,
         "view_groups": view_groups,
+        # TODOEND --------------------------------------
+        "users_json": users_json,
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
+        "self_access_level": self_access_level,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access
     }
+
+
+# TODO: import this from hydroshare_tags
+def best_name(content):
+    """
+    Takes a value edited via the WYSIWYG editor, and passes it through
+    each of the functions specified by the RICHTEXT_FILTERS setting.
+    """
+
+    if not content.is_authenticated():
+        content = "Anonymous"
+    elif content.first_name:
+        if content.userprofile.middle_name:
+            content = "{fn} {mn} {ln}".format(fn=content.first_name,
+                                              mn=content.userprofile.middle_name,
+                                              ln=content.last_name)
+        else:
+            content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
+    else:
+        content = content.username
+
+    return content
 
 
 class AbstractMetaDataElement(models.Model):

@@ -3,7 +3,7 @@
 {% for u in entries %}
 <tr id="row-id-{{ u.pk }}"
     {% if access != "Is owner" %}
-    {% elif entries|length == 1 or not is_owner_user or u.pk == quota_holder.pk %}
+    {% elif entries|length == 1 or not self_access_level == 'owner' or u.pk == quota_holder.pk %}
     class="hide-actions"
     {% endif %}>
     <td>
@@ -80,7 +80,7 @@
                         <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
                     </form>
                 </li>
-                <li class="{% if access == 'Can edit' %}active {% endif %}{% if not is_owner_user and not is_edit_user %}disabled{% endif %}" data-access-type="Can edit">
+                <li class="{% if access == 'Can edit' %}active {% endif %}{% if not self_access_level == 'owner' and not is_edit_user %}disabled{% endif %}" data-access-type="Can edit">
                     <form id="share-edit-{{ u.pk }}"
                           class="share-form-edit"
                           data-access-type="Can edit"

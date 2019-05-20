@@ -1,5 +1,5 @@
 {% load hydroshare_tags %}
-{% if is_owner_user %}
+{% if self_access_level == 'owner' %}
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Storage</h3>
