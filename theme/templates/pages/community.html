@@ -1,5 +1,6 @@
 {% extends "pages/page.html" %}
 {% load comment_tags %}
+{% load hydroshare_tags %}
 {#TODO when there is no community don't crash#}
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
@@ -14,6 +15,7 @@
                         <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
                         <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
                         <a href="{% url "community" %}" class="collaborate-nav-item active">Community</a>
+                        <h1>{{ groups}} </h1>
                     </div>
                 </div>
             </div>
@@ -52,12 +54,43 @@
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                            href="#filter">&nbsp;CZO Groups</a></h4>
                                 </div>
+
                                 <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                     <div class="panel-body">
                                         <div class="list-group">
-                                            <ul class="list-group inputs-group">
-                                                <i class="list-group-item no-items-found">TBD</i>
+                                            {% for u in owners %}
+                                            <input type="checkbox" id="u" class="list-group inputs-group">{{ u }}
+{#                                                <i class="list-group-item no-items-found">TBD</i>#}
+{% endfor %}
                                             </ul>
+                                        </div>
+
+                                        <div >
+
+
+
+
+
+                                            <div style="display: none;">
+
+    </div>
+
+                                            <input type="checkbox" name="group" id="group2" value="2" title="Secondary List" />
+                                            <label for="group2">CZO National</label><br>
+
+                                                                        <div>
+{% if groups %}
+                <h1>{{ groups }}</h1>
+                <h1>{{ group.gaccess.members}}</h1>
+
+            {% for group in groups %}
+                <h1>{{ group.gaccess.public }}</h1>
+{% endfor %}
+                                            {% endif %}
+                                            </div>
+
+
+
                                         </div>
                                         <div id="grantors-list">
 {#                                            GRANTOR.ID#}

@@ -1504,6 +1504,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
     View for the link in the verification email that was sent to a user
@@ -1824,6 +1825,10 @@ class GroupView(TemplateView):
             res.date_granted = grp.start
             group_resources.append(res)
             grantors.append(res.grantor)
+            print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print "total grantor are ", grp.grantor
+            print "total values are ", res.creator
+            print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
         # TODO: need to sort this resource list using the date_granted field
@@ -1891,16 +1896,69 @@ class CollaborateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
+        print "u is ",u
         groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+
+
+
+        print "----------------------------------------------------------------------"
+        print "fields are", Group.objects.all()
+        print "another fields are ", Group.objects.values()
+        # list_val= Group.objects.values()
+
+        # for x in list_val:
+        #     print "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        #     print "values of each group in a list is ", x
+        #     print "ccccccccccccccccccccccccccccccccccccccccccccc"
+
+        print "objects of group ", dir(groups)
+        print "type of group", type(groups)
+        print "group is ", groups
+        print "-----------------------------------------------------------------------"
+
+        def get_context_data(self, **kwargs):
+            group_id = kwargs['group_id']
+            g = Group.objects.get(pk=group_id)
+            u = User.objects.get(pk=self.request.user.id)
+            u.is_group_owner = u.uaccess.owns_group(g)
+            u.is_group_editor = g in u.uaccess.edit_groups
+            u.is_group_viewer = g in u.uaccess.view_groups
+
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+
+            grantors = []
+            group_resources = []
+            # for each of the resources this group has access to, set resource dynamic
+            # attributes (grantor - group member who granted access to the resource) and (date_granted)
+            for res in g.gaccess.view_resources:
+                grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
+                res.grantor = grp.grantor
+                res.date_granted = grp.start
+                group_resources.append(res)
+                grantors.append(res.grantor)
+                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                print "total grantor are ", grp.grantor
+                print "total values are ", res.creator
+                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=False)
+
+
+
+
+        # # for each group set group dynamic attributes
+        # for g in groups:
+        #     g.is_user_member = u in g.gaccess.members
+        #     g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+        #     g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+        #
+        #
+        #     g.join_request = None
+        #     if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+        #         g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+        #                          g.gaccess.group_membership_requests.filter(invitation_to=u).first()
         return {
             'profile_user': u,
             'groups': groups,

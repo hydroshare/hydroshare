@@ -34,7 +34,12 @@
 
         <div class="row group-thumbnails">
             {% if groups %}
+                <h1>{{ groups }}</h1>
+                <h1>{{ groups.gaccess.members}}</h1>
+
             {% for group in groups %}
+
+
                 {% if group.gaccess.public or group.gaccess.discoverable %}
                     <div class="col-sm-6 col-md-4 group-container">
                         <div class="group-thumbnail contribution">
@@ -63,6 +68,9 @@
                                                 {% else %}
                                                     <div class="profile-pic-thumbnail-small round-image"
                                                          title="{{ member|best_name }}"></div>
+                                                    <div class="profile-pic-thumbnail-small round-image"                                                     <div class="profile-pic-thumbnail-small round-image"
+                                                         title="{{ member|best_name }}"></div>
+
                                                 {% endif %}
                                             {% endfor %}
                                         </div>
