@@ -93,7 +93,7 @@ services:
     volumes:
       - "postgis_data_vol:/var/lib/postgresql/data"
     ports:
-      - "54322:5432"
+      - "5432:5432"
     stdin_open: true
     tty: true
   rabbitmq:
