@@ -832,18 +832,6 @@
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       {% if show_manage_access %}
-{#        const users = [#}
-{#          {#}
-{#            user_type: "",  // "User" or "Group"#}
-{#            access: "",     // "Owner", "Edit" or "View"#}
-{#            id:"",          // The user's Id#}
-{#            pictureUrl: "",#}
-{#            best_name: "",  // The name as computed in "best_name" filter#}
-{#            user_name: "",#}
-{#            can_undo: ""#}
-{#          },#}
-          {# ... #}
-{#        ];#}
           const USERS_JSON = {{ users_json|safe }};
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
           const CURRENT_USER_PK = {{ current_user.pk }};
