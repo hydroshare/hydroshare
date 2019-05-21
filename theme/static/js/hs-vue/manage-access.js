@@ -158,7 +158,7 @@ let manageAccessCmp = new Vue({
             let vue = this;
 
             let index = -1;
-            let user = this.users.filter(function(u, i) {
+            let user = this.users.filter(function (u, i) {
                 const answer = u.id == targetUserId;
                 if (answer) {
                     index = i;
@@ -207,13 +207,32 @@ let manageAccessCmp = new Vue({
                         user_type: vue.isInviteUsers ? 'user' : 'group',
                         access: resp.privilege_granted,
                         id: targetUserId,
-                        pictureUrl: resp.profile_pic === "No picture provided" ? null : resp.profile_pic,
+                        pictureUrl: resp.profile_pic === "None" ? null : resp.profile_pic,
                         best_name: resp.name,
                         user_name: resp.username,
+                        loading: false,
                         can_undo: true,
                     };
 
                     vue.users.push(newUserAccess);
+                }
+            });
+        },
+        removeAccess: function (user, index) {
+            user.loading = true;
+            this.users.splice(index, 1, user);
+            let vue = this;
+            vue.error = "";
+            $.post('/hsapi/_internal/' + this.resShortId + '/unshare-resource-with-' +
+                user.user_type + '/' + user.id + '/', function (resp) {
+                if (resp.status === "success") {
+                    vue.users.splice(index, 1);
+                }
+                else {
+                    user.loading = false;
+                    vue.users.splice(index, 1, user);
+                    vue.error = resp.message;
+                    console.log(resp);
                 }
             });
         }

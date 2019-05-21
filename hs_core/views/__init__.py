@@ -922,7 +922,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
         if user == user_to_share_with:
             is_current_user = True
 
-        picture_url = 'No picture provided'
+        picture_url = None
         if user_to_share_with.userprofile.picture:
             picture_url = user_to_share_with.userprofile.picture.url
 
@@ -933,7 +933,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                               'error_msg': err_message}
 
     else:
-        group_pic_url = 'No picture provided'
+        group_pic_url = None
         if group_to_share_with.gaccess.picture:
             group_pic_url = group_to_share_with.gaccess.picture.url
 

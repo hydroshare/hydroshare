@@ -75,20 +75,17 @@
 
     <td class="user-actions">
         <i @click="undoAccess(user, index)"
+           v-if="user.can_undo"
            class="fa fa-undo" aria-hidden="true" data-toggle="tooltip"
            title="Undo Share"></i>
     </td>
 
     <td class="user-actions">
-        <form v-if="!(user.access === 'owner' && hasOnlyOneOwner) && (selfAccessLevel === 'owner' || user.id === currentUser)"
+        <span @click="removeAccess(user, index)"
+              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && (selfAccessLevel === 'owner' || user.id === currentUser)"
               :id="'form-remove-' + user.user_type + '-' + user.id"
-              class="remove-user-form"
-              :action="'/hsapi/_internal/' + resShortId + '/unshare-resource-with-' + user.user_type + '/' + user.id + '/'"
-              method="POST">
-            {% csrf_token %}
-            <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
-                  data-toggle="tooltip" title="Remove">
-            </span>
-        </form>
+              class="glyphicon glyphicon-remove btn-remove-row"
+              data-toggle="tooltip" title="Remove">
+        </span>
     </td>
 </tr>
