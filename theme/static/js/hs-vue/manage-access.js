@@ -115,6 +115,41 @@ let manageAccessCmp = new Vue({
                 }
             });
         },
+        showDeleteSelfDialog: function (user, index) {
+            // close the manage access panel (modal)
+            $("#manage-access ").modal("hide");
+            let vue = this;
+
+            // display remove access confirmation dialog
+            $("#dialog-confirm-delete-self-access").dialog({
+                resizable: false,
+                draggable: false,
+                height: "auto",
+                width: 500,
+                modal: true,
+                dialogClass: 'noclose',
+                buttons: {
+                    Cancel: function () {
+                        $(this).dialog("close");
+                        // show manage access control panel again
+                        $("#manage-access").modal('show');
+                    },
+                    "Remove": function () {
+                        $(this).dialog("close");
+                        vue.removeAccess(user, index);
+                    }
+                },
+                open: function () {
+                    $(this).closest(".ui-dialog")
+                        .find(".ui-dialog-buttonset button:first") // the first button
+                        .addClass("btn btn-default");
+
+                    $(this).closest(".ui-dialog")
+                        .find(".ui-dialog-buttonset button:nth-child(2)") // the second button
+                        .addClass("btn btn-danger");
+                }
+            });
+        },
         undoAccess: function (user, index) {
             let vue = this;
             vue.error = "";
@@ -243,6 +278,9 @@ let manageAccessCmp = new Vue({
                 user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
                     vue.users.splice(index, 1);
+                    if (resp.hasOwnProperty('redirect_to')) {
+                        window.location.href = resp.redirect_to;
+                    }
                 }
                 else {
                     user.loading = false;

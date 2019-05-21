@@ -81,7 +81,7 @@
     </td>
 
     <td class="user-actions">
-        <span @click="removeAccess(user, index)"
+        <span @click="user.id === currentUser ? showDeleteSelfDialog(user, index) : removeAccess(user, index)"
               v-if="!(user.access === 'owner' && hasOnlyOneOwner) && (selfAccessLevel === 'owner' || user.id === currentUser)"
               :id="'form-remove-' + user.user_type + '-' + user.id"
               class="glyphicon glyphicon-remove btn-remove-row"
