@@ -150,6 +150,7 @@ let manageAccessCmp = new Vue({
             vue.error = "";
             user.loading = true;
             this.users.splice(index, 1, user);
+
             $.post('/hsapi/_internal/' + this.resShortId + '/undo-share-resource-with-'
                 + user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
@@ -170,7 +171,7 @@ let manageAccessCmp = new Vue({
 
                 user.loading = false;
                 vue.users.splice(index, 1, user);
-                this.isProcessing = false;
+                vue.isProcessing = false;
             });
         },
         grantAccess: function () {
@@ -222,7 +223,7 @@ let manageAccessCmp = new Vue({
                 catch (error) {
                     console.log(error);
                     vue.error = "Failed to change permission";
-                    this.isProcessing = false;
+                    vue.isProcessing = false;
                     return;
                 }
 
@@ -280,6 +281,7 @@ let manageAccessCmp = new Vue({
             let vue = this;
             vue.error = "";
             this.isProcessing = true;
+
             $.post('/hsapi/_internal/' + this.resShortId + '/unshare-resource-with-' +
                 user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
