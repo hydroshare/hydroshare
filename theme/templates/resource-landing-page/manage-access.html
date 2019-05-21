@@ -144,19 +144,18 @@
                             <h3 class="panel-title">Sharing status</h3>
                         </div>
                         <div class="panel-body">
-                            {% if self_access_level == 'owner' %}
-                                <div class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i>
-                                    You are the owner of this resource.
-                                </div>
-                            {% elif self_access_level == 'edit' %}
-                                <div class="alert alert-info" role="alert">You have been given specific permission to
-                                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
-                                </div>
-                            {% elif self_access_level == 'view' %}
-                                <div class="alert alert-info" role="alert">You have been given specific permission to
-                                    view this resource.
-                                </div>
-                            {% endif %}
+                            <div v-if="selfAccessLevel === 'owner'"
+                                 class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i>
+                                You are the owner of this resource.
+                            </div>
+                            <div v-if="selfAccessLevel === 'edit'"
+                                 class="alert alert-info" role="alert">You have been given specific permission to
+                                {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
+                            </div>
+                            <div v-if="selfAccessLevel === 'view'"
+                                 class="alert alert-info" role="alert">You have been given specific permission to
+                                view this resource.
+                            </div>
 
                             {% if can_change_resource_flags %}
                                 {# -------- PUBLIC -------- #}

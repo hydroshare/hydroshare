@@ -317,6 +317,7 @@ def page_permissions_page_processor(request, page):
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
         "users_json": users_json,
+        "owners": owners,
         "self_access_level": self_access_level,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
