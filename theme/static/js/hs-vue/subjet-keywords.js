@@ -60,13 +60,7 @@ let subjKeywordsCmp = new Vue({
                       vue.resKeywords = newVal;
                       if (!newVal.length) {
                           // If no keywords, the metadata is no longer sufficient to make the resource public
-                          manageAccessCmp.$data.resAccess = {
-                              isPublic: false,
-                              isDiscoverable: false,
-                              isShareable: manageAccessCmp.$data.resAccess.isShareable,
-                          };
-
-                          manageAccessCmp.$data.canBePublicDiscoverable = false;
+                          manageAccessCmp.onMetadataInsufficient();
                       }
                   }
               }, "json");

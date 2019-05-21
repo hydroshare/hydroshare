@@ -204,14 +204,15 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                 if (json_response.hasOwnProperty('metadata_status')) {
                     if (json_response.metadata_status !== $('#metadata-status').text()) {
                         $('#metadata-status').text(json_response.metadata_status);
-                        let areFieldsCompleted = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
-                        manageAccessCmp.$data.canBePublicDiscoverable = areFieldsCompleted;
-                        if (areFieldsCompleted) {
+                        if (son_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
                                 customAlert("Collection Status:", "Sufficient to publish or make public", "success", 3000);
                             }
+                        }
+                        else {
+                            manageAccessCmp.onMetadataInsufficient();
                         }
                     }
                 }

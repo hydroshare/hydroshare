@@ -36,6 +36,24 @@ let manageAccessCmp = new Vue({
         isProcessingAccess: false,
         isProcessingShareable: false,
     },
+    watch: {
+        resAccess: function (newAccess, oldAccess) {
+            // TODO: move to Highlight's component once it's ready
+            $("#publish").toggleClass("disabled", !newAccess.isPublic);
+            $("#publish > span").attr("data-original-title", !newAccess.isPublic ?
+                "Publish this resource<small class='space-top'>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
+            $("#publish").attr("data-toggle", !newAccess.isPublic ? "" : "modal");   // Disable the agreement modal
+
+            let accessStr = "Private";
+            if (newAccess.isPublic && newAccess.isDiscoverable) {
+                accessStr = "Public"
+            }
+            else if (!newAccess.isPublic && newAccess.isDiscoverable) {
+                accessStr = "Discoverable"
+            }
+            $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
+        }
+    },
     computed: {
         hasOnlyOneOwner: function() {
             return this.users.filter(function(user) {
@@ -342,13 +360,6 @@ let manageAccessCmp = new Vue({
                                 isShareable: vue.resAccess.isShareable,
                             }
                         }
-
-                        // TODO: move to Highlight's component once it's ready
-                        $("#publish").toggleClass("disabled", !vue.resAccess.isPublic);
-                        $("#publish > span").attr("data-original-title", !vue.resAccess.isPublic ?
-                            "Publish this resource<small class='space-top'>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
-                        $("#publish").attr("data-toggle", !vue.resAccess.isPublic ? "" : "modal");   // Disable the agreement modal
-                        $("#hl-sharing-status").text(resAccessStr[action]);    // Update highlight sharing status
                     }
 
                     vue.isProcessingAccess = false;
@@ -388,5 +399,13 @@ let manageAccessCmp = new Vue({
                 }
             );
         },
+        onMetadataInsufficient: function () {
+            this.resAccess = {
+                isPublic: false,
+                isDiscoverable: false,
+                isShareable: this.resAccess.isShareable,
+            };
+            this.canBePublicDiscoverable = false;
+        }
     },
 });

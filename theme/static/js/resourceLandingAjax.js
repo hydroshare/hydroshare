@@ -313,9 +313,8 @@ function showCompletedMessage(json_response) {
     if (json_response.hasOwnProperty('metadata_status')) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
-            let areFieldsCompleted = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
-                manageAccessCmp.$data.canBePublicDiscoverable = areFieldsCompleted;
-            if (areFieldsCompleted) {
+            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                manageAccessCmp.$data.canBePublicDiscoverable = true;
                 let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
@@ -340,6 +339,9 @@ function showCompletedMessage(json_response) {
                 }
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                 $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+            }
+            else {
+                manageAccessCmp.onMetadataInsufficient();
             }
         }
     }
