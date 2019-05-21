@@ -188,19 +188,10 @@ def page_permissions_page_processor(request, page):
 
     cm = page.get_content_model()
     can_change_resource_flags = False
-    is_owner_user = False
-    is_edit_user = False
-    is_view_user = False
     self_access_level = None
     if request.user.is_authenticated():
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
-
-        is_owner_user = cm.raccess.owners.filter(pk=request.user.pk).exists()
-        if not is_owner_user:
-            is_edit_user = cm.raccess.edit_users.filter(pk=request.user.pk).exists()
-            if not is_edit_user:
-                is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
         if cm.raccess.owners.filter(pk=request.user.pk).exists():
             self_access_level = 'owner'
@@ -248,6 +239,7 @@ def page_permissions_page_processor(request, page):
 
     users_json = []
 
+    # TODO: simplify these iterations
     for usr in owners:
         users_json.append({
             "user_type": "user",
@@ -324,17 +316,7 @@ def page_permissions_page_processor(request, page):
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
-        # TODO: change these to JSON serialized objects
-        "edit_users": editors,
-        "view_users": viewers,
-        "owners": owners,
-        "edit_groups": edit_groups,
-        "view_groups": view_groups,
-        # TODOEND --------------------------------------
         "users_json": users_json,
-        "is_owner_user": is_owner_user,
-        "is_edit_user": is_edit_user,
-        "is_view_user": is_view_user,
         "self_access_level": self_access_level,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
