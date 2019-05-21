@@ -413,7 +413,6 @@ $(document).ready(function () {
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    // $("#list-roles a").click(onRoleSelect);
     $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
     $("input[name='group-autocomplete']").attr("placeholder", "Search by group name").addClass("form-control");
 
