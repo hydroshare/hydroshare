@@ -210,11 +210,20 @@ let manageAccessCmp = new Vue({
                 }
                 else {
                     // No entry found. Push new data
+
+                    let pictureUrl;
+                    if (vue.isInviteUsers) {
+                        pictureUrl = resp.profile_pic === "None" ? null : resp.profile_pic;
+                    }
+                    else {
+                        pictureUrl = resp.group_pic === "None" ? null : resp.group_pic;
+                    }
+
                     const newUserAccess = {
                         user_type: vue.isInviteUsers ? 'user' : 'group',
                         access: resp.privilege_granted,
                         id: targetUserId,
-                        pictureUrl: resp.profile_pic === "None" ? null : resp.profile_pic,
+                        pictureUrl: pictureUrl,
                         best_name: resp.name,
                         user_name: resp.username,
                         loading: false,
