@@ -151,6 +151,7 @@ let manageAccessCmp = new Vue({
                 + user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
                     user.access = resp['undo_' + user.user_type + '_privilege'];
+                    user.can_undo = false;
                     if (user.access === "none") {
                         vue.users.splice(index, 1); // The entry was removed
                         return;
@@ -161,6 +162,7 @@ let manageAccessCmp = new Vue({
                 }
                 else {
                     vue.error = resp.error_msg;
+                    console.log(resp);
                 }
 
                 user.loading = false;

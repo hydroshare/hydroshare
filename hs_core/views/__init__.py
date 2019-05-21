@@ -1021,7 +1021,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
         if group_to_unshare_with in res.raccess.edit_groups:
-            undo_group_privilege = 'change'
+            undo_group_privilege = 'edit'
         elif group_to_unshare_with in res.raccess.view_groups:
             undo_group_privilege = 'view'
         else:
