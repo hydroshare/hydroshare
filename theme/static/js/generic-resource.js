@@ -407,7 +407,8 @@ $(document).ready(function () {
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
     $("#btnOpenWithApp").click(label_ajax_submit);
-    $("#form-change-access button").on("click", change_access_ajax_submit);
+
+    // $("#form-change-access button").on("click", change_access_ajax_submit);
 
     // Apply theme to comment's submit button
     $("#comment input[type='submit']").removeClass();

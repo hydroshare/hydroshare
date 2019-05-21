@@ -451,6 +451,7 @@ function showCompletedMessage(json_response) {
             $("#btn-discoverable").prop("disabled", true);
         }
 
+        // TODO: update this logic to reference Vue instance
         if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
             $("#btn-private").addClass('active');
             $("#btn-private").prop("disabled", true);

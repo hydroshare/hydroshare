@@ -16,6 +16,9 @@ let manageAccessCmp = new Vue({
         resShortId: SHORT_ID,
         canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
         groupImageDefaultUrl: GROUP_IMAGE_DEFAULT_URL,
+        resourceMode: RESOURCE_MODE,
+        resAccess: RESOURCE_ACCESS,
+        canBePublicDiscoverable: CAN_BE_PUBLIC_OR_DISCOVERABLE,
         isInviteUsers: true,
         selectedAccess: 'view',
         accessStr: {
@@ -25,6 +28,7 @@ let manageAccessCmp = new Vue({
         },
         error: "",
         isProcessing: false,
+        isProcessingAccess: false,
     },
     computed: {
         hasOnlyOneOwner: function() {
@@ -298,6 +302,37 @@ let manageAccessCmp = new Vue({
                     console.log(resp);
                 }
             });
+        },
+        setResourceAccess: function (action) {
+            let vue = this;
+            vue.isProcessingAccess = true;
+            $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
+                {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
+                    console.log(resp);
+                    if (resp.status === 'success') {
+                        if (action === 'make_public') {
+                            vue.resAccess = {
+                                isPublic: true,
+                                isDiscoverable: true,
+                            }
+                        }
+                        else if (action === 'make_discoverable') {
+                            vue.resAccess = {
+                                isPublic: false,
+                                isDiscoverable: true,
+                            }
+                        }
+                        else if (action === 'make_private') {
+                            vue.resAccess = {
+                                isPublic: false,
+                                isDiscoverable: false,
+                            }
+                        }
+                    }
+
+                    vue.isProcessingAccess = false;
+                }
+            );
         }
     },
 });
