@@ -314,6 +314,7 @@ let manageAccessCmp = new Vue({
                 user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
                     vue.users.splice(index, 1);
+                    vue.isProcessing = false;
                     if (resp.hasOwnProperty('redirect_to')) {
                         window.location.href = resp.redirect_to;
                     }
