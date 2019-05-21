@@ -2225,7 +2225,7 @@ table.user-scope tr {
 
 .user-roles li a {
 	color: #333;
-	padding: 10px 20px;
+	padding: 10px 20px !important;
 	font-size: 14px;
 	display: block;
 	clear: both;

@@ -28,6 +28,7 @@
                     </div>
                 </td>
             </tr>
+
             <tr v-else>
                 <td>
                     <div class="group-image-wrapper extra-small">
@@ -37,7 +38,7 @@
                     </div>
                 </td>
                 <td>
-                    <div :value="user.id" class="user-name">
+                    <div>
                         <a :href="'/group/' + user.id">${user.best_name}</a>
                     </div>
                     <div class="user-username-content">(Group)</div>
@@ -48,7 +49,7 @@
 
     <td class="user-roles">
         <span class="dropdown role-dropdown">
-            <span class="dropdown-toggle" data-col="current-access"
+            <span class="dropdown-toggle"
                   id="roles-menu"
                   data-toggle="dropdown"
                   aria-haspopup="true" aria-expanded="true">
