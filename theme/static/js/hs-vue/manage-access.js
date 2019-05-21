@@ -6,7 +6,10 @@ let manageAccessCmp = new Vue({
     el: '#manage-access',
     delimiters: ['${', '}'],
     data: {
-        users: USERS_JSON,
+        users: USERS_JSON.map(function(user) {
+            user.loading = false;
+            return user;
+        }),
         currentUser: CURRENT_USER_PK,
         selfAccessLevel: SELF_ACCESS_LEVEL,
         quotaHolder: QUOTA_HOLDER_PK,
@@ -48,6 +51,8 @@ let manageAccessCmp = new Vue({
             }
 
             this.error = "";    // Clear errors
+            user.loading = true;
+            this.users.splice(index, 1, user);
 
             $.post('/hsapi/_internal/' + this.resShortId + '/share-resource-with-' + user.user_type + '/'
                 + accessToGrant + '/' + user.id + '/', function (result) {
@@ -68,6 +73,9 @@ let manageAccessCmp = new Vue({
                     console.log(resp);
                     vue.error = resp.error_msg;
                 }
+
+                user.loading = false;
+                vue.users.splice(index, 1, user);
             });
         },
         showPermissionDialog: function (user, index, accessToGrant){
@@ -109,6 +117,8 @@ let manageAccessCmp = new Vue({
         undoAccess: function (user, index) {
             let vue = this;
             vue.error = "";
+            user.loading = true;
+            this.users.splice(index, 1, user);
             $.post('/hsapi/_internal/' + this.resShortId + '/undo-share-resource-with-'
                 + user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
@@ -118,6 +128,9 @@ let manageAccessCmp = new Vue({
                 else {
                     vue.error = resp.error_msg;
                 }
+
+                user.loading = false;
+                vue.users.splice(index, 1, user);
             });
         },
         grantAccess: function () {
@@ -125,7 +138,7 @@ let manageAccessCmp = new Vue({
 
             if (this.isInviteUsers) {
                 if ($("#user-deck > .hilight").length > 0) {
-                    targetUserId = $("#user-deck > .hilight")[0].getAttribute("data-value");
+                    targetUserId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
                 }
                 else {
                     return false;   // No user selected
@@ -133,7 +146,7 @@ let manageAccessCmp = new Vue({
             }
             else {
                 if ($("#id_group-deck > .hilight").length > 0) {
-                    targetUserId = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
+                    targetUserId = parseInt($("#id_group-deck > .hilight")[0].getAttribute("data-value"));
                 }
                 else {
                     return false;   // No group selected
@@ -143,6 +156,20 @@ let manageAccessCmp = new Vue({
             $(".hilight > span").click(); // Clears the search field
             this.error = "";
             let vue = this;
+
+            let index = -1;
+            let user = this.users.filter(function(u, i) {
+                const answer = u.id == targetUserId;
+                if (answer) {
+                    index = i;
+                }
+                return u.id == targetUserId;
+            })[0];
+
+            if (index >= 0) {
+                user.loading = true;
+                this.users.splice(index, 1, user);
+            }
 
             $.post('/hsapi/_internal/' + this.resShortId + '/share-resource-with-' +
                 (this.isInviteUsers ? 'user' : 'group') + '/' + this.selectedAccess + "/" +
@@ -171,6 +198,7 @@ let manageAccessCmp = new Vue({
                     // An entry was found, update the data
                     let user = vue.users[index];
                     user.access = resp.privilege_granted;
+                    user.loading = false;
                     vue.users.splice(index, 1, user);
                 }
                 else {
