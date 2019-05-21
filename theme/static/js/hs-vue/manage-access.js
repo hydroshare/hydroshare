@@ -400,11 +400,13 @@ let manageAccessCmp = new Vue({
             );
         },
         onMetadataInsufficient: function () {
+            // Set the resource access to private
             this.resAccess = {
                 isPublic: false,
                 isDiscoverable: false,
                 isShareable: this.resAccess.isShareable,
             };
+            // The metadata is insufficient
             this.canBePublicDiscoverable = false;
         }
     },
