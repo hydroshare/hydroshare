@@ -3,7 +3,6 @@
 */
 
 function rep_res_to_irods_user_zone_ajax_submit(res_id) {
-    setPointerEvents(false);
     $.ajax({
         url: "/hsapi/_internal/" + res_id + "/rep-res-bag-to-irods-user-zone/",
         type: "POST",
@@ -38,11 +37,6 @@ $(document).on('click', '.btn-undo-share', function () {
     var formID = $(this).closest("form").attr("id");
     undo_share_ajax_submit(formID);
 });
-
-// $(document).on("click", ".btn-change-share-permission", function () {
-//     var arg = $(this).attr("data-arg");
-//     change_share_permission_ajax_submit(arg);
-// });
 
 $(document).ready(function() {
     var resID = $("#resID").val();
@@ -91,11 +85,6 @@ $(document).ready(function() {
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
     $("#btn-confirm-delete-extended-metadata").click(removeExtraMetaTable);
-
-    // $("#btn-confirm-add-access").click(function () {
-    //     var formID = $(this).closest("form").attr("id");
-    //     share_resource_ajax_submit(formID);
-    // });
 
     $("input#user-autocomplete").addClass("form-control");
 
