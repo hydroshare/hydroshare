@@ -192,7 +192,6 @@
                                     </button>
                                 </div>
 
-
                                 {# TODO: test this with a Multidimensional resource #}
                                 <div
                                     v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
@@ -221,6 +220,10 @@
                                     </p>
                                 </div>
                             </template>
+
+                            <div v-if="sharingError" class='alert alert-danger space-top small'>
+                                <strong>Error: </strong>${ sharingError }
+                            </div>
                          </div>
                     </div>
 

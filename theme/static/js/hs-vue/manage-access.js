@@ -31,6 +31,7 @@ let manageAccessCmp = new Vue({
         },
         error: "",
         quotaError: "",
+        sharingError: "",
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
@@ -359,8 +360,12 @@ let manageAccessCmp = new Vue({
         setShareable: function (action) {
             let vue = this;
             vue.isProcessingShareable = true;
+            vue.sharingError = "";
             $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
-                {flag: action, 'resource-mode': this.resourceMode}, function () {
+                {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
+                    if (resp.status === "error") {
+                        vue.sharingError = resp.message;
+                    }
                     vue.isProcessingShareable = false;
                 }
             );

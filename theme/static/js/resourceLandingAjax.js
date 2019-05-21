@@ -65,49 +65,7 @@ function label_ajax_submit() {
     return false;
 }
 
-function change_access_ajax_submit() {
-    let form = $(this).closest("form");
-    let element = $(this);  // The access button that was pressed
-    form.find("input[name='flag']").val(element.attr("data-flag").trim());
 
-    // Disable buttons while request is being made
-    form.find("button").toggleClass("disabled", true);
-    form.css("cursor", "progress");
-
-    let datastring = form.serialize();
-    let url = form.attr('action');
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                form.find("button").removeAttr("disabled");
-                form.find("button").removeClass("active");
-                element.toggleClass("active", true);
-                element.attr("disabled", true);
-            }
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-
-            // Enable Publish Resource button if the resource was made public
-            const isPublic = element.attr("id") === "btn-public";
-            $("#publish").toggleClass("disabled", !isPublic);
-            $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
-            $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
-            $("#hl-sharing-status").text(element.text().trim());    // Update highlight sharing status
-        },
-        error: function () {
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-        }
-    });
-
-    return false;   //don't submit the form
-}
 
 function shareable_ajax_submit(event) {
     var form = $(this).closest("form");
