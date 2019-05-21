@@ -313,7 +313,9 @@ function showCompletedMessage(json_response) {
     if (json_response.hasOwnProperty('metadata_status')) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
-            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+            let areFieldsCompleted = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                manageAccessCmp.$data.canBePublicDiscoverable = areFieldsCompleted;
+            if (areFieldsCompleted) {
                 let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
@@ -323,6 +325,7 @@ function showCompletedMessage(json_response) {
                 else
                     promptMessage = "All required fields are completed. The resource can now be made discoverable " +
                       "or public.";
+
                 if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
                     metadata_update_ajax_submit.resourceSatusDisplayed = true;
                     if (json_response.hasOwnProperty('res_public_status')) {
@@ -341,42 +344,42 @@ function showCompletedMessage(json_response) {
         }
     }
 
-    if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-        if (json_response.res_public_status == "public") {
-            if (!$("#btn-public").hasClass('active')) {
-                $("#btn-public").prop("disabled", false);
-            }
-        }
-        else {
-            $("#btn-public").removeClass('active');
-            $("#btn-public").prop("disabled", true);
-        }
-
-        if (json_response.res_discoverable_status == "discoverable") {
-            if (!$("#btn-discoverable").hasClass('active')) {
-                $("#btn-discoverable").prop("disabled", false);
-            }
-        }
-        else {
-            $("#btn-discoverable").removeClass('active');
-            $("#btn-discoverable").prop("disabled", true);
-        }
-
-        // TODO: update this logic to reference Vue instance
-        if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
-            $("#btn-private").addClass('active');
-            $("#btn-private").prop("disabled", true);
-        }
-
-        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-            if (!$("#btn-public").hasClass('active')) {
-                $("#btn-public").prop("disabled", false);
-            }
-            if (!$("#btn-discoverable").hasClass('active')) {
-                $("#btn-discoverable").prop("disabled", false);
-            }
-        }
-    }
+    // if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
+    //     if (json_response.res_public_status == "public") {
+    //         if (!$("#btn-public").hasClass('active')) {
+    //             $("#btn-public").prop("disabled", false);
+    //         }
+    //     }
+    //     else {
+    //         $("#btn-public").removeClass('active');
+    //         $("#btn-public").prop("disabled", true);
+    //     }
+    //
+    //     if (json_response.res_discoverable_status == "discoverable") {
+    //         if (!$("#btn-discoverable").hasClass('active')) {
+    //             $("#btn-discoverable").prop("disabled", false);
+    //         }
+    //     }
+    //     else {
+    //         $("#btn-discoverable").removeClass('active');
+    //         $("#btn-discoverable").prop("disabled", true);
+    //     }
+    //
+    //     // TODO: update this logic to reference Vue instance
+    //     if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
+    //         $("#btn-private").addClass('active');
+    //         $("#btn-private").prop("disabled", true);
+    //     }
+    //
+    //     if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+    //         if (!$("#btn-public").hasClass('active')) {
+    //             $("#btn-public").prop("disabled", false);
+    //         }
+    //         if (!$("#btn-discoverable").hasClass('active')) {
+    //             $("#btn-discoverable").prop("disabled", false);
+    //         }
+    //     }
+    // }
 }
 
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
