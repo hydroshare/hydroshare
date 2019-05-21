@@ -11,7 +11,7 @@ let subjKeywordsCmp = new Vue({
         showIsDuplicate: false,
     },
     methods: {
-        addButton: function (resIdShort) {
+        addKeyword: function (resIdShort) {
             // Remove any empty keywords from the list
             let newKeywords = this.newKeyword.split(",");
             newKeywords = newKeywords.filter(function(a) {
@@ -58,6 +58,16 @@ let subjKeywordsCmp = new Vue({
               {value: newVal.join(",")}, function (resp) {
                   if (resp.status === "success") {
                       vue.resKeywords = newVal;
+                      if (!newVal.length) {
+                          // If no keywords, the metadata is no longer sufficient to make the resource public
+                          manageAccessCmp.$data.resAccess = {
+                              isPublic: false,
+                              isDiscoverable: false,
+                              isShareable: manageAccessCmp.$data.resAccess.isShareable,
+                          };
+
+                          manageAccessCmp.$data.canBePublicDiscoverable = false;
+                      }
                   }
               }, "json");
         }

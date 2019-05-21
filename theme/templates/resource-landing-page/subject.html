@@ -9,10 +9,10 @@
                 {% if resource_edit_mode %}
                     <div id="add-keyword-wrapper" class="input-group">
                         <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
-                               @keyup.enter="addButton('{{ cm.short_id }}')"
+                               @keyup.enter="addKeyword('{{ cm.short_id }}')"
                                placeholder="Examples: Hydrologic_modeling, USU, land use">
                         <span class="input-group-btn">
-                            <button @click="addButton('{{ cm.short_id }}')" id="btn-add-keyword"
+                            <button @click="addKeyword('{{ cm.short_id }}')"
                                     class="btn btn-success" type="button">Add</button>
                         </span>
                     </div>

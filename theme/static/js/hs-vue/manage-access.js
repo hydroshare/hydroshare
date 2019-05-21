@@ -314,8 +314,6 @@ let manageAccessCmp = new Vue({
             vue.isProcessingAccess = true;
             $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
                 {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
-                    console.log(resp);
-
                     const resAccessStr = {
                         make_public: "Public",
                         make_discoverable: "Discoverable",
