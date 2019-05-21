@@ -62,6 +62,14 @@ let manageAccessCmp = new Vue({
         },
     },
     methods: {
+        onChangeAccess: function (user, index, accessToGrant) {
+            if (this.currentUser === user.id && user.access === 'owner') {
+                this.showPermissionDialog(user, index, accessToGrant)
+            }
+            else {
+                this.changeAccess(user, index, accessToGrant)
+            }
+        },
         changeAccess: function (user, index, accessToGrant) {
             let vue = this;
 
@@ -101,6 +109,36 @@ let manageAccessCmp = new Vue({
                 vue.users.splice(index, 1, user);
                 vue.isProcessing = false;
             });
+        },
+        getUserDropdownItemClass: function (user, accessToGrant) {
+            let ddClass = {
+                active: false,
+                disabled: true,
+            };
+
+            if (accessToGrant == 'view') {
+                ddClass = {
+                    active: user.access === 'view',
+                    disabled: user.access === 'none'
+                }
+            }
+            else if (accessToGrant == 'edit') {
+                ddClass = {
+                    active: user.access === 'edit',
+                    disabled: this.selfAccessLevel !== 'owner' && this.selfAccessLevel !== 'edit'
+                }
+            }
+            else if (accessToGrant == 'owner') {
+                ddClass = {
+                    active: user.access === 'owner',
+                    disabled: !this.canChangeResourceFlags || this.selfAccessLevel !== 'owner'
+                }
+            }
+
+            ddClass.disabled = !ddClass.active && (ddClass.disabled || user.access === 'owner' &&
+                this.hasOnlyOneOwner || user.id === this.quotaHolder.id);
+
+            return ddClass;
         },
         showPermissionDialog: function (user, index, accessToGrant){
             // close the manage access panel (modal)
@@ -236,6 +274,10 @@ let manageAccessCmp = new Vue({
             })[0];
 
             if (index >= 0) {
+                if (user.access === this.selectedAccess) {
+                    return; // The user already has this access
+                }
+
                 user.loading = true;
                 this.users.splice(index, 1, user);
             }
