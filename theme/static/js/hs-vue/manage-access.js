@@ -34,22 +34,8 @@ let manageAccessCmp = new Vue({
         },
     },
     methods: {
-        changeAccess: function (user, index, accessToGrant, needsConfirmation) {
+        changeAccess: function (user, index, accessToGrant) {
             let vue = this;
-
-            if (needsConfirmation === undefined) {
-                needsConfirmation = true;
-            }
-
-            // Check if confirmation is needed
-            if (this.currentUser === user.id && needsConfirmation) {
-                let previousAccess = this.users[index].access;
-
-                if (previousAccess == "owner" && previousAccess !== accessToGrant) {
-                    this.showPermissionDialog(user, index, accessToGrant);
-                    return;
-                }
-            }
 
             this.error = "";    // Clear errors
             user.loading = true;
@@ -69,8 +55,10 @@ let manageAccessCmp = new Vue({
                 }
 
                 if (resp.status == "success") {
+                    // Access changes to self can't be undone
+                    user.can_undo = !(vue.currentUser === user.id);
+
                     user.access = resp.privilege_granted;
-                    user.can_undo = needsConfirmation;  // If the action had to be confirmed, it can't be undone
                     vue.users.splice(index, 1, user);
                 }
                 else {
@@ -105,7 +93,7 @@ let manageAccessCmp = new Vue({
                     "Confirm": function () {
                         $(this).dialog("close");
                         $("#manage-access").modal('show');
-                        vue.changeAccess(user, index, accessToGrant, false);
+                        vue.changeAccess(user, index, accessToGrant);
                     }
                 },
                 open: function () {
