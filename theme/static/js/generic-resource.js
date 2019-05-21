@@ -540,45 +540,6 @@ $(document).ready(function () {
         "language": {"emptyTable": "No Extended Metadata"}
     });
 
-    // Toggle visibility for invite users or groups
-    $(".add-view-group-form").hide();
-
-    // Toggle invite user or group form
-    // $("#invite-flag button").click(function () {
-    //     var form = $("#add-access-form");
-    //     var action = form.attr("action");
-    //     if ($(this).attr("data-value") == "users") {
-    //         $(".add-view-user-form").show();
-    //         $(".add-view-group-form").hide();
-    //         action = action.replace("share-resource-with-group", "share-resource-with-user");
-    //         form.attr("action", action);
-    //         $("#list-roles li:nth-child(3)").show();
-    //
-    //         $("#invite-flag button[data-value='groups']").removeClass("btn-primary");
-    //         $("#invite-flag button[data-value='groups']").addClass("btn-default");
-    //         $("#invite-flag button[data-value='users']").removeClass("btn-default");
-    //         $("#invite-flag button[data-value='users']").addClass("btn-primary");
-    //     }
-    //     else {
-    //         $(".add-view-group-form").show();
-    //         $(".add-view-user-form").hide();
-    //         action = action.replace("share-resource-with-user", "share-resource-with-group");
-    //         form.attr("action", action);
-    //         if ($("#selected_role").attr("data-role") == "owner") {
-    //             $("#selected_role").attr("data-role", "view");
-    //             $("#selected_role").text("Can view");
-    //         }
-    //         $("#list-roles li:nth-child(3)").hide();
-    //         $("#invite-flag button[data-value='users']").disabled = true;
-    //         $("#invite-flag button[data-value='groups']").disabled = false;
-    //
-    //         $("#invite-flag button[data-value='users']").removeClass("btn-primary");
-    //         $("#invite-flag button[data-value='users']").addClass("btn-default");
-    //         $("#invite-flag button[data-value='groups']").removeClass("btn-default");
-    //         $("#invite-flag button[data-value='groups']").addClass("btn-primary");
-    //     }
-    // });
-
     $("#btn-add-new-entry").click(function() {
         showAddEditExtraMetaPopup(false, '');
     });
