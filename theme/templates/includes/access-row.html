@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 <tr v-for="(user, index) in this.users"
-    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access == 'owner' && hasOnlyOneOwner || user.id === quotaHolder), loading: user.loading}">
+    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access == 'owner' && hasOnlyOneOwner || user.id === quotaHolder.id), loading: user.loading}">
     <td>
         <table class="user-scope">
             <tr v-if="user.user_type === 'user'">
@@ -20,7 +20,7 @@
                     <div class="user-username-content">${user.user_name}</div>
                     <div>
                         <span v-if="user.id === currentUser" class="badge you-flag">You</span>
-                        <span v-if="user.id === quotaHolder" quota-holder class="badge you-flag">
+                        <span v-if="user.id === quotaHolder.id" class="badge you-flag">
                             <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
                         </span>
                     </div>

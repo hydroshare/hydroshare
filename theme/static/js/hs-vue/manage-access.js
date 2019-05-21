@@ -12,7 +12,9 @@ let manageAccessCmp = new Vue({
         }),
         currentUser: CURRENT_USER_PK,
         selfAccessLevel: SELF_ACCESS_LEVEL,
-        quotaHolder: QUOTA_HOLDER_PK,
+        quotaHolder: USERS_JSON.find(function(user) {
+            return user.id === QUOTA_HOLDER_PK;
+        }),
         resType: RES_TYPE,
         resShortId: SHORT_ID,
         canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
@@ -28,6 +30,7 @@ let manageAccessCmp = new Vue({
             owner: 'Is owner'
         },
         error: "",
+        quotaError: "",
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
@@ -361,6 +364,26 @@ let manageAccessCmp = new Vue({
                     vue.isProcessingShareable = false;
                 }
             );
-        }
+        },
+        setQuotaHolder: function (username) {
+            let vue = this;
+            vue.quotaError = "";
+
+            $.post('/hsapi/_internal/' + this.resShortId + '/change-quota-holder/',
+                {new_holder_username: username}, function (resp) {
+                    console.log(resp);
+                    if (resp.status === "success") {
+                        var newHolder = vue.users.find(function(user) {
+                            return user.user_name === username;
+                        });
+
+                        vue.quotaHolder = newHolder; // TODO: also bind to Highlight's
+                    }
+                    else {
+                        vue.quotaError = resp.message;
+                    }
+                }
+            );
+        },
     },
 });

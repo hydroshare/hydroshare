@@ -131,10 +131,9 @@
                                 </div>
                             </div>
                         </form>
-                        <br>
-                        <span v-if="error" class='label label-danger space-top'>
+                        <div v-if="error" class='alert alert-danger space-top small'>
                             <strong>Error: </strong>${ error }
-                        </span>
+                        </div>
                     </div>
                 </div>
 
@@ -224,9 +223,7 @@
                             </template>
                          </div>
                     </div>
-                </div>
 
-                <div>
                     {# ======= Change quota holder ======= #}
                     {% include "resource-landing-page/quota.html" %}
                 </div>
