@@ -385,7 +385,6 @@ let manageAccessCmp = new Vue({
 
             $.post('/hsapi/_internal/' + this.resShortId + '/change-quota-holder/',
                 {new_holder_username: username}, function (resp) {
-                    console.log(resp);
                     if (resp.status === "success") {
                         var newHolder = vue.users.find(function(user) {
                             return user.user_name === username;
