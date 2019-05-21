@@ -255,51 +255,46 @@ let manageAccessCmp = new Vue({
                     return;
                 }
 
-                let index = -1;
-
-                // Check if this user already has any access and get its index in the array
-                for (let i = 0; i < vue.users.length; i++) {
-                    if (vue.users[i].id === targetUserId) {
-                        index = i;
-                        break;
+                if (resp.status === "success") {
+                    if (index >= 0) {
+                        // An entry was found, update the data
+                        user.access = resp.privilege_granted;
+                        user.loading = false;
+                        vue.users.splice(index, 1, user);
+                        if (vue.currentUser === user.id) {
+                            vue.selfAccessLevel = user.access;
+                        }
                     }
-                }
+                    else {
+                        // No entry found. Push new data
 
-                if (index >= 0) {
-                    // An entry was found, update the data
-                    let user = vue.users[index];
-                    user.access = resp.privilege_granted;
-                    user.loading = false;
-                    vue.users.splice(index, 1, user);
-                    if (vue.currentUser === user.id) {
-                        vue.selfAccessLevel = user.access;
+                        let pictureUrl;
+                        if (vue.isInviteUsers) {
+                            pictureUrl = resp.profile_pic === "None" ? null : resp.profile_pic;
+                        }
+                        else {
+                            pictureUrl = resp.group_pic === "None" ? null : resp.group_pic;
+                        }
+
+                        const newUserAccess = {
+                            user_type: vue.isInviteUsers ? 'user' : 'group',
+                            access: resp.privilege_granted,
+                            id: targetUserId,
+                            pictureUrl: pictureUrl,
+                            best_name: resp.name,
+                            user_name: resp.username,
+                            loading: false,
+                            can_undo: true,
+                        };
+
+                        vue.users.push(newUserAccess);
                     }
                 }
                 else {
-                    // No entry found. Push new data
-
-                    let pictureUrl;
-                    if (vue.isInviteUsers) {
-                        pictureUrl = resp.profile_pic === "None" ? null : resp.profile_pic;
-                    }
-                    else {
-                        pictureUrl = resp.group_pic === "None" ? null : resp.group_pic;
-                    }
-
-                    const newUserAccess = {
-                        user_type: vue.isInviteUsers ? 'user' : 'group',
-                        access: resp.privilege_granted,
-                        id: targetUserId,
-                        pictureUrl: pictureUrl,
-                        best_name: resp.name,
-                        user_name: resp.username,
-                        loading: false,
-                        can_undo: true,
-                    };
-
-                    vue.users.push(newUserAccess);
+                    vue.error = resp.error_msg;
+                    user.loading = false;
+                    vue.users.splice(index, 1, user);
                 }
-
                 vue.isProcessing = false;
             });
         },
