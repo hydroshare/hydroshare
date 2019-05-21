@@ -424,10 +424,21 @@ let manageAccessCmp = new Vue({
             $.post('/hsapi/_internal/' + this.resShortId + '/change-quota-holder/',
                 {new_holder_username: username}, function (resp) {
                     if (resp.status === "success") {
-                        var newHolder = vue.users.find(function(user) {
-                            return user.user_name === username;
-                        });
+                        let newHolder;
+                        let index;
 
+                        for (var i = 0; i < vue.users.length; i++) {
+                            if (vue.users[i].user_name === username) {
+                                newHolder = vue.users[i];
+                                index = i;
+                                break;
+                            }
+                        }
+
+                        newHolder.can_undo = false;
+                        vue.users.splice(index, 1, newHolder);
+
+                        // Changing quota holder can't be undone
                         vue.quotaHolder = newHolder;
                     }
                     else {
