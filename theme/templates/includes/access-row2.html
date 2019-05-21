@@ -52,20 +52,20 @@
                   id="roles-menu"
                   data-toggle="dropdown"
                   aria-haspopup="true" aria-expanded="true">
-                    ${user.access}
+                    ${accessStr[user.access]}
                 <span class="caret"></span>
             </span>
 
             <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                <li :class="{ active : user.access === 'Can view' }" data-access-type="Can view">
+                <li :class="{ active : user.access === 'view' }" data-access-type="Can view">
                     <a @click="changeAccess(user, index, 'view')">Can view</a>
                 </li>
-                <li :class="{ active : user.access === 'Can edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }"
-                    data-access-type="Can edit">
+                <li :class="{ active : user.access === 'edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }"
+                    data-access-type="edit">
                     <a @click="changeAccess(user, index, 'edit')">Can edit</a>
                 </li>
                 <li v-if="user.user_type === 'user'"
-                    :class="{ active: user.access === 'Is owner', disabled: !canChangeResourceFlags}"
+                    :class="{ active: user.access === 'owner', disabled: !canChangeResourceFlags}"
                     data-access-type="Is owner">
                     <a @click="changeAccess(user, index, 'owner')">Is owner</a>
                 </li>
@@ -80,7 +80,7 @@
     </td>
 
     <td class="user-actions">
-        <form v-if="selfAccessLevel === 'owner' || user.id === currentUser"
+        <form v-if="!(user.access === 'owner' && hasOnlyOneOwner) && (selfAccessLevel === 'owner' || user.id === currentUser)"
               :id="'form-remove-' + user.user_type + '-' + user.id"
               class="remove-user-form"
               :action="'/hsapi/_internal/' + resShortId + '/unshare-resource-with-' + user.user_type + '/' + user.id + '/'"

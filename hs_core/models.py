@@ -251,7 +251,7 @@ def page_permissions_page_processor(request, page):
     for usr in owners:
         users_json.append({
             "user_type": "user",
-            "access": "Is owner",
+            "access": "owner",
             "id": usr.id,
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
@@ -262,7 +262,7 @@ def page_permissions_page_processor(request, page):
     for usr in editors:
         users_json.append({
             "user_type": "user",
-            "access": "Can edit",
+            "access": "edit",
             "id": usr.id,
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
@@ -273,7 +273,7 @@ def page_permissions_page_processor(request, page):
     for usr in viewers:
         users_json.append({
             "user_type": "user",
-            "access": "Can view",
+            "access": "view",
             "id": usr.id,
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
@@ -284,7 +284,7 @@ def page_permissions_page_processor(request, page):
     for usr in edit_groups:
         users_json.append({
             "user_type": "group",
-            "access": "Can edit",
+            "access": "edit",
             "id": usr.id,
             "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
             "best_name": usr.name,
@@ -295,7 +295,7 @@ def page_permissions_page_processor(request, page):
     for usr in view_groups:
         users_json.append({
             "user_type": "group",
-            "access": "Can view",
+            "access": "view",
             "id": usr.id,
             "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
             "best_name": usr.name,

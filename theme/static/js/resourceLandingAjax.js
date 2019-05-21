@@ -428,16 +428,16 @@ function promptChangeSharePermission(form_id){
         buttons: {
             Cancel: function () {
                 $(this).dialog("close");
-		// show manage access control panel again
-		$("#manage-access").modal('show');
+                // show manage access control panel again
+                $("#manage-access").modal('show');
             },
             "Confirm": function () {
                 $(this).dialog("close");
                 change_share_permission_ajax_submit(form_id, false);
-		$("#manage-access").modal('show');
+                $("#manage-access").modal('show');
             }
         },
-	open: function () {
+        open: function () {
             $(this).closest(".ui-dialog")
                 .find(".ui-dialog-buttonset button:first") // the first button
                 .addClass("btn btn-default");
@@ -454,29 +454,27 @@ function isSharePermissionPromptRequired(form_id) {
     const NOT_REQUIRED = false;
 
     let formIDParts = form_id.split('-');
-    let userID = parseInt(formIDParts[formIDParts.length -1]);
+    let userID = parseInt(formIDParts[formIDParts.length - 1]);
     let currentUserID = CURRENT_USER_ID;
 
     let $form = $('#' + form_id);
     let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
     let clickedAccess = $form.closest("form").attr("data-access-type");
 
-    if (currentUserID == userID 
-        && previousAccess == "Is owner" 
-	&& previousAccess != clickedAccess){
-         return REQUIRED;
+    if (currentUserID == userID && previousAccess == "Is owner" && previousAccess != clickedAccess) {
+        return REQUIRED;
     }
     return NOT_REQUIRED;
 }
+
 function change_share_permission_ajax_submit(form_id, check_permission) {
-    // TODO: translate this logic
-    // if (check_permission === undefined) {
-    //     check_permission = true;
-    // }
-    // if (check_permission && isSharePermissionPromptRequired(form_id)) {
-    //     promptChangeSharePermission(form_id);
-    //     return;
-    // }
+    if (check_permission === undefined) {
+        check_permission = true;
+    }
+    if (check_permission && isSharePermissionPromptRequired(form_id)) {
+        promptChangeSharePermission(form_id);
+        return;
+    }
 
     $form = $('#' + form_id);
     var datastring = $form.serialize();

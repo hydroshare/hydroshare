@@ -132,6 +132,9 @@
                             </div>
                         </form>
                         <br>
+                        <span v-if="error" class='label label-danger space-top'>
+                            <strong>Error: </strong>${ error }
+                        </span>
                     </div>
                 </div>
 
