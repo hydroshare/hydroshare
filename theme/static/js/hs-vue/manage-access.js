@@ -60,6 +60,9 @@ let manageAccessCmp = new Vue({
 
                     user.access = resp.privilege_granted;
                     vue.users.splice(index, 1, user);
+                    if (vue.currentUser === user.id) {
+                        vue.selfAccessLevel = user.access;
+                    }
                 }
                 else {
                     console.log(resp);
@@ -239,6 +242,9 @@ let manageAccessCmp = new Vue({
                     user.access = resp.privilege_granted;
                     user.loading = false;
                     vue.users.splice(index, 1, user);
+                    if (vue.currentUser === user.id) {
+                        vue.selfAccessLevel = user.access;
+                    }
                 }
                 else {
                     // No entry found. Push new data

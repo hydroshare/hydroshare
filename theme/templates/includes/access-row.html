@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 <tr v-for="(user, index) in this.users"
-    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (hasOnlyOneOwner || user.id === quotaHolder), loading: user.loading}">
+    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access == 'owner' && hasOnlyOneOwner || user.id === quotaHolder), loading: user.loading}">
     <td>
         <table class="user-scope">
             <tr v-if="user.user_type === 'user'">
@@ -58,7 +58,7 @@
             </span>
 
             <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                <li :class="{ active : user.access === 'view' }" data-access-type="Can view">
+                <li :class="{ active : user.access === 'view', disabled: user.access === 'none'}">
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'view'): changeAccess(user, index, 'view')">Can view</a>
                 </li>
                 <li :class="{ active : user.access === 'edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }"
