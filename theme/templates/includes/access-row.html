@@ -66,7 +66,7 @@
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'edit'): changeAccess(user, index, 'edit')">Can edit</a>
                 </li>
                 <li v-if="user.user_type === 'user'"
-                    :class="{ active: user.access === 'owner', disabled: !canChangeResourceFlags}"
+                    :class="{ active: user.access === 'owner', disabled: !canChangeResourceFlags || selfAccessLevel !== 'owner'}"
                     data-access-type="Is owner">
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'owner'): changeAccess(user, index, 'owner')">Is owner</a>
                 </li>
