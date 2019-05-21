@@ -23,7 +23,8 @@ let manageAccessCmp = new Vue({
             edit: 'Can edit',
             owner: 'Is owner'
         },
-        error: ""
+        error: "",
+        isProcessing: false,
     },
     computed: {
         hasOnlyOneOwner: function() {
@@ -52,6 +53,7 @@ let manageAccessCmp = new Vue({
 
             this.error = "";    // Clear errors
             user.loading = true;
+            this.isProcessing = true;
             this.users.splice(index, 1, user);
 
             $.post('/hsapi/_internal/' + this.resShortId + '/share-resource-with-' + user.user_type + '/'
@@ -62,6 +64,7 @@ let manageAccessCmp = new Vue({
                 }
                 catch (error) {
                     console.log(error);
+                    vue.isProcessing = false;
                     return;
                 }
 
@@ -77,6 +80,7 @@ let manageAccessCmp = new Vue({
 
                 user.loading = false;
                 vue.users.splice(index, 1, user);
+                vue.isProcessing = false;
             });
         },
         showPermissionDialog: function (user, index, accessToGrant){
@@ -173,6 +177,7 @@ let manageAccessCmp = new Vue({
 
                 user.loading = false;
                 vue.users.splice(index, 1, user);
+                this.isProcessing = false;
             });
         },
         grantAccess: function () {
@@ -212,6 +217,7 @@ let manageAccessCmp = new Vue({
                 user.loading = true;
                 this.users.splice(index, 1, user);
             }
+            this.isProcessing = true;
 
             $.post('/hsapi/_internal/' + this.resShortId + '/share-resource-with-' +
                 (this.isInviteUsers ? 'user' : 'group') + '/' + this.selectedAccess + "/" +
@@ -223,6 +229,7 @@ let manageAccessCmp = new Vue({
                 catch (error) {
                     console.log(error);
                     vue.error = "Failed to change permission";
+                    this.isProcessing = false;
                     return;
                 }
 
@@ -267,6 +274,8 @@ let manageAccessCmp = new Vue({
 
                     vue.users.push(newUserAccess);
                 }
+
+                vue.isProcessing = false;
             });
         },
         removeAccess: function (user, index) {
@@ -274,6 +283,7 @@ let manageAccessCmp = new Vue({
             this.users.splice(index, 1, user);
             let vue = this;
             vue.error = "";
+            this.isProcessing = true;
             $.post('/hsapi/_internal/' + this.resShortId + '/unshare-resource-with-' +
                 user.user_type + '/' + user.id + '/', function (resp) {
                 if (resp.status === "success") {
@@ -286,6 +296,7 @@ let manageAccessCmp = new Vue({
                     user.loading = false;
                     vue.users.splice(index, 1, user);
                     vue.error = resp.message;
+                    vue.isProcessing = false;
                     console.log(resp);
                 }
             });
