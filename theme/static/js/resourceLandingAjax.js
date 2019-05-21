@@ -65,53 +65,6 @@ function label_ajax_submit() {
     return false;
 }
 
-
-
-function shareable_ajax_submit(event) {
-    var form = $(this).closest("form");
-    var datastring = form.serialize();
-    var url = form.attr('action');
-    var element = $(this);
-    var action = $(this).closest("form").find("input[name='t']").val();
-
-    element.attr("disabled", true);
-
-    if (element.prop("checked")) {
-        $("#shareable-description").text("Uncheck the box to prevent others from sharing the resource without the owner's permission.");
-    }
-    else {
-        $("#shareable-description").text("Check this box to allow others to share the resource without the owner's permission.");
-    }
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                element.attr("disabled", false);
-                if (action === "make_not_shareable") {
-                    element.closest("form").find("input[name='t']").val("make_shareable");
-                }
-                else {
-                    element.closest("form").find("input[name='t']").val("make_not_shareable");
-                }
-            }
-            else {
-                element.attr("disabled", false);
-                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
-            }
-        },
-        error: function () {
-            element.attr("disabled", false);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function license_agreement_ajax_submit(event) {
     // this sets if user will be required to agree to resource rights statement prior
     // to any resource file or bag download
