@@ -852,7 +852,8 @@
           const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
           const RESOURCE_ACCESS = {
               isPublic: "{{ cm.raccess.public }}" === "True",
-              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True"
+              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+              isShareable: "{{ cm.raccess.shareable }}" === "True"
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";

@@ -166,7 +166,6 @@
                                         :class="{active: resAccess.isPublic}"
                                         class="btn btn-default"
                                         id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        data-flag="make_public"
                                         title='Can be viewed and downloaded by anyone.' type="button">
                                         Public
                                     </button>
@@ -177,7 +176,6 @@
                                             :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
                                             class="btn btn-default"
                                             id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                            data-flag="make_discoverable"
                                             type="button" title='Metadata is public but data are protected.'>
                                         Discoverable
                                     </button>
@@ -189,51 +187,40 @@
                                         :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
                                         class="btn btn-default"
                                         id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        data-flag="make_private"
                                         title='Can be viewed and downloaded only by designated users or research groups.'
                                         type="button">
                                         Private
                                     </button>
                                 </div>
 
-                                {% if self_access_level == 'owner' and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
-                                    <div class="label-public">Note that making the resource public may take a little extra time
-                                        to update
-                                        Hyrax server in order to provide OPeNDAP service for this resource.
+
+                                {# TODO: test this with a Multidimensional resource #}
+                                <div
+                                    v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
+                                    class="alert alert-warning small space-top">
+                                    Note that making the resource public may take a little extra time to update
+                                    Hyrax server in order to provide OPeNDAP service for this resource.
+                                </div>
+
+                                <div v-if="selfAccessLevel === 'owner'">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" v-model="resAccess.isShareable" :disabled="isProcessingShareable"
+                                                   @change="setShareable(resAccess.isShareable ? 'make_not_shareable' : 'make_shareable')">
+                                            Shareable
+                                        </label>
                                     </div>
-                                {% endif %}
 
-                                {% if self_access_level == 'owner' %}
-                                    <div id="shareable-container">
-                                        {#   Shareable flag    #}
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                                              method="POST">
-                                            {% csrf_token %}
+                                    <p v-if="resAccess.isShareable" class="text-muted small">
+                                        Uncheck the box to prevent others from sharing the resource
+                                        without the owner's permission.
+                                    </p>
 
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="btn-shareable" type="checkbox"
-                                                           {% if cm.raccess.shareable %}checked{% endif %}>
-                                                    Shareable
-                                                </label>
-                                            </div>
-                                            <p id="shareable-description" class="text-muted small">
-                                                {% if cm.raccess.shareable %}
-                                                    Uncheck the box to prevent others from sharing the resource
-                                                    without the owner's permission.
-                                                {% else %}
-                                                    Check this box to allow others to share the resource without the
-                                                    owner's permission.
-                                                {% endif %}
-                                            </p>
-
-                                            <input name="flag" type="hidden"
-                                                   {% if cm.raccess.shareable %}value="make_not_shareable"
-                                                   {% else %}value="make_shareable"{% endif %}/>
-                                        </form>
-                                    </div>
-                                    <br>
-                                {% endif %}
+                                    <p v-else class="text-muted small">
+                                        Check this box to allow others to share the resource without the
+                                        owner's permission.
+                                    </p>
+                                </div>
                             </template>
                          </div>
                     </div>

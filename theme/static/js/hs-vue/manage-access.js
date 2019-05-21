@@ -13,6 +13,7 @@ let manageAccessCmp = new Vue({
         currentUser: CURRENT_USER_PK,
         selfAccessLevel: SELF_ACCESS_LEVEL,
         quotaHolder: QUOTA_HOLDER_PK,
+        resType: RES_TYPE,
         resShortId: SHORT_ID,
         canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
         groupImageDefaultUrl: GROUP_IMAGE_DEFAULT_URL,
@@ -29,6 +30,7 @@ let manageAccessCmp = new Vue({
         error: "",
         isProcessing: false,
         isProcessingAccess: false,
+        isProcessingShareable: false,
     },
     computed: {
         hasOnlyOneOwner: function() {
@@ -309,28 +311,54 @@ let manageAccessCmp = new Vue({
             $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
                 {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
                     console.log(resp);
+
+                    const resAccessStr = {
+                        make_public: "Public",
+                        make_discoverable: "Discoverable",
+                        make_private: "Private"
+                    };
+
                     if (resp.status === 'success') {
                         if (action === 'make_public') {
                             vue.resAccess = {
                                 isPublic: true,
                                 isDiscoverable: true,
-                            }
+                                isShareable: vue.resAccess.isShareable,
+                            };
                         }
                         else if (action === 'make_discoverable') {
                             vue.resAccess = {
                                 isPublic: false,
                                 isDiscoverable: true,
+                                isShareable: vue.resAccess.isShareable,
                             }
                         }
                         else if (action === 'make_private') {
                             vue.resAccess = {
                                 isPublic: false,
                                 isDiscoverable: false,
+                                isShareable: vue.resAccess.isShareable,
                             }
                         }
+
+                        // TODO: move to Highlight's component once it's ready
+                        $("#publish").toggleClass("disabled", !vue.resAccess.isPublic);
+                        $("#publish > span").attr("data-original-title", !vue.resAccess.isPublic ?
+                            "Publish this resource<small class='space-top'>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
+                        $("#publish").attr("data-toggle", !vue.resAccess.isPublic ? "" : "modal");   // Disable the agreement modal
+                        $("#hl-sharing-status").text(resAccessStr[action]);    // Update highlight sharing status
                     }
 
                     vue.isProcessingAccess = false;
+                }
+            );
+        },
+        setShareable: function (action) {
+            let vue = this;
+            vue.isProcessingShareable = true;
+            $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
+                {flag: action, 'resource-mode': this.resourceMode}, function () {
+                    vue.isProcessingShareable = false;
                 }
             );
         }
