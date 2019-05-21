@@ -17,8 +17,7 @@
                     <div class="user-name">
                         <a :href="'/user/' + user.id">${user.best_name}</a>
                     </div>
-                    <div class="user-username-content">${user.user_name}
-                    </div>
+                    <div class="user-username-content">${user.user_name}</div>
                     <div>
                         <span v-if="user.id === currentUser" class="badge you-flag">You</span>
                         <span v-if="user.id === quotaHolder" quota-holder class="badge you-flag">
@@ -74,6 +73,7 @@
     <td class="user-actions">
         <i @click="undoAccess(user, index)"
            v-if="user.can_undo"
+            {# TODO: manually initialize tooltips of dynamically created items #}
            class="fa fa-undo" aria-hidden="true" data-toggle="tooltip"
            title="Undo Share"></i>
     </td>
