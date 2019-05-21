@@ -67,6 +67,7 @@ let manageAccessCmp = new Vue({
 
                 if (resp.status == "success") {
                     user.access = resp.privilege_granted;
+                    user.can_undo = needsConfirmation;  // If the action had to be confirmed, it can't be undone
                     vue.users.splice(index, 1, user);
                 }
                 else {
@@ -153,7 +154,7 @@ let manageAccessCmp = new Vue({
                 }
             }
 
-            $(".hilight > span").click(); // Clears the search field
+            $(".hilight > span").click(); // Clear the autocomplete
             this.error = "";
             let vue = this;
 
