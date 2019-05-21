@@ -14,11 +14,10 @@
                     <div v-else class="profile-pic-thumbnail round-image user-icon"></div>
                 </td>
                 <td>
-                    <div data-col="name" class="user-name">
+                    <div class="user-name">
                         <a :href="'/user/' + user.id">${user.best_name}</a>
                     </div>
-                    <div data-col="user-name"
-                         class="user-username-content">${user.user_name}
+                    <div class="user-username-content">${user.user_name}
                     </div>
                     <div>
                         <span v-if="user.id === currentUser" class="badge you-flag">You</span>
@@ -61,13 +60,11 @@
                 <li :class="{ active : user.access === 'view', disabled: user.access === 'none'}">
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'view'): changeAccess(user, index, 'view')">Can view</a>
                 </li>
-                <li :class="{ active : user.access === 'edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }"
-                    data-access-type="edit">
+                <li :class="{ active : user.access === 'edit', disabled: selfAccessLevel != 'owner' && selfAccessLevel != 'edit' }">
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'edit'): changeAccess(user, index, 'edit')">Can edit</a>
                 </li>
                 <li v-if="user.user_type === 'user'"
-                    :class="{ active: user.access === 'owner', disabled: !canChangeResourceFlags || selfAccessLevel !== 'owner'}"
-                    data-access-type="Is owner">
+                    :class="{ active: user.access === 'owner', disabled: !canChangeResourceFlags || selfAccessLevel !== 'owner'}">
                     <a @click="currentUser === user.id && user.access === 'owner' ? showPermissionDialog(user, index, 'owner'): changeAccess(user, index, 'owner')">Is owner</a>
                 </li>
             </ul>
