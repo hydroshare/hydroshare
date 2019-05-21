@@ -391,7 +391,7 @@ let manageAccessCmp = new Vue({
                             return user.user_name === username;
                         });
 
-                        vue.quotaHolder = newHolder; // TODO: also bind to Highlight's
+                        vue.quotaHolder = newHolder;
                     }
                     else {
                         vue.quotaError = resp.message;
