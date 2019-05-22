@@ -68,6 +68,29 @@ from hs_access_control.models.privilege import PrivilegeCodes
 logger = logging.getLogger(__name__)
 
 
+def group(request):
+    if request.method == 'POST' and request.is_ajax():
+        owners = request.POST.getlist('temp[]')
+        for owner in owners:
+            print (owner)
+        print("selected owner is from view ", owner)
+        try:
+            community_resources = community_from_name_or_id(
+                "CZO National Community").public_resources  # fail gracefully
+            # group is the object
+            # __name=
+            # __id=
+            community_resources_luquillo = community_resources.filter(r2grp__group__name="CZO Luquillo")
+        
+
+        except Exception as e:
+            print e
+        return render(request, 'pages/community.html', {"group": group})
+
+
+
+
+
 def short_url(request, *args, **kwargs):
     try:
         shortkey = kwargs['shortkey']
@@ -1862,6 +1885,7 @@ class CommunityView(TemplateView):
         #__name=
         #__id=
         community_resources_luquillo = community_resources.filter(r2grp__group__name="CZO Luquillo")
+        print "------------------------------------------------",community_resources_luquillo
         groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
         communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
         groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
@@ -1872,7 +1896,8 @@ class CommunityView(TemplateView):
         except:
             pass
 
-        # g = Group.objects.get(pk=groups_view.id)
+        g = Group.objects.get(pk=groups_owner)
+        print "owner is ",g
         # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
         pause = 1
 
