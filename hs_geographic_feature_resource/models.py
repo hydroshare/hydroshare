@@ -219,7 +219,6 @@ class GeometryInformation(AbstractMetaDataElement):
 
 # TODO Deprecated
 class GeographicFeatureResource(BaseResource):
-    archived_model = True
     objects = ResourceManager("GeographicFeatureResource")
 
     @classmethod

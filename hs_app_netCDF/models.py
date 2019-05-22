@@ -306,7 +306,6 @@ class Variable(AbstractMetaDataElement):
 
 # TODO Deprecated
 class NetcdfResource(BaseResource):
-    archived_model = True
     objects = ResourceManager("NetcdfResource")
 
     @classmethod

@@ -191,15 +191,13 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         resource_create_request_validator = serializers.ResourceCreateRequestValidator(
             data=request.data)
         if not resource_create_request_validator.is_valid():
-            logger.exception("failed to create resoruce")
-            # raise ValidationError(detail=resource_create_request_validator.errors)
-            resource_create_request_validator.validated_data['resource_type'] = "CompositeResource"
+            raise ValidationError(detail=resource_create_request_validator.errors)
 
         validated_request_data = resource_create_request_validator.validated_data
         resource_type = validated_request_data['resource_type']
 
         res_title = validated_request_data.get('title', 'Untitled resource')
-        keywords = validated_request_data.get('keywords', [])
+        keywords = validated_request_data.get('keywords', None)
         abstract = validated_request_data.get('abstract', None)
         metadata = validated_request_data.get('metadata', None)
         extra_metadata = validated_request_data.get('extra_metadata', None)
@@ -233,7 +231,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                 page_redirect_url_key=None, files=files, metadata=metadata,
                 **kwargs)
         except Exception as ex:
-            logger.exception("failed to create resoruce")
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
 
@@ -254,7 +251,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             if abstract:
                 resource.metadata.create_element('description', abstract=abstract)
         except Exception as ex:
-            logger.exception("failed to create resoruce")
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
 
