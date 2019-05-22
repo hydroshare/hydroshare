@@ -34,6 +34,9 @@
             </div>
             <div>
                 <p class="text-danger small" id="id-keywords-msg" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                <div v-if="error" class='alert alert-danger space-top small'>
+                    <strong>Error: </strong>${ error }
+                </div>
             </div>
         </div>
         <div class="col-xs-12 col-sm-6">
