@@ -32,6 +32,7 @@ urlpatterns = i18n_patterns(
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    url(r'group/', hs_core_views.group, name='group'),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),

@@ -53,6 +53,13 @@
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                            href="#filter">&nbsp;CZO Groups</a></h4>
+                                     <div id  = "checkbox_one">
+        <h3>Select your Groups:</h3>
+        <label><input type="checkbox" value="GroupA" id ="chk" name="group"> CZO National</label><br>
+        <label><input type="checkbox" value="GroupB" id ="chk" name="group"> CZO Inter</label><br>
+
+        <br>
+                                        </div>
                                 </div>
 
                                 <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
@@ -75,9 +82,38 @@
 
     </div>
 
-                                            <input type="checkbox" name="group" id="group2" value="2" title="Secondary List" />
-                                            <label for="group2">CZO National</label><br>
 
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        $("#checkbox_one").change(function(){
+        	temp = []
+        	console.log("detected")
+            var filtered = [];
+            $.each($("input[name='group']:checked"), function(){
+                temp.push($(this).val());
+            });
+
+            console.log("Selected group is :"+ temp);
+
+        $.ajax({
+        url:"group/",
+        type:"POST",
+        data: {"temp[]":temp},
+        success:function(response) {
+         console.log("ajax success")
+
+       },
+       error:function(){
+        alert("error");
+       }
+
+      });
+        });
+    });
+</script>
                                                                         <div>
 {% if groups %}
                 <h1>{{ groups }}</h1>
@@ -145,6 +181,7 @@
                                 </thead>
                                 <tbody>
                                 {% for res in community_resources %}
+
                                     <tr class="data-row">
                                         {# Selection controls #}
                                         <td>
