@@ -13,7 +13,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
-from .views.discovery import DiscoverSearchView
+from .discovery import DiscoverSearchView
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
