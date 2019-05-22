@@ -195,9 +195,13 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
         validated_request_data = resource_create_request_validator.validated_data
         resource_type = validated_request_data['resource_type']
+        if resource_type in ["RasterResource", "GeographicFeatureResource", "RefTimeSeriesResource",
+                             "NetcdfResource", "TimeSeriesResource", "GenericResource"]:
+            # force deprecated resource types to composite
+            resource_type = "CompositeResource"
 
         res_title = validated_request_data.get('title', 'Untitled resource')
-        keywords = validated_request_data.get('keywords', None)
+        keywords = validated_request_data.get('keywords', [])
         abstract = validated_request_data.get('abstract', None)
         metadata = validated_request_data.get('metadata', None)
         extra_metadata = validated_request_data.get('extra_metadata', None)

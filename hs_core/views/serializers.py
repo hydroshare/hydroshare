@@ -60,7 +60,7 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
             choices=zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
                 [x.__name__ for x in hydroshare.get_resource_types()]
-            ), default='GenericResource')
+            ), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
