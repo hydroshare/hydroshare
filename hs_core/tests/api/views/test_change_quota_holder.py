@@ -49,7 +49,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
         response = change_quota_holder(request, shortkey=self.res.short_id)
         self.assertTrue(self.res.get_quota_holder() == self.user2)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['status'], 'success')
 
         # clean up
         hydroshare.delete_resource(self.res.short_id)
