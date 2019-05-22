@@ -204,7 +204,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                 if (json_response.hasOwnProperty('metadata_status')) {
                     if (json_response.metadata_status !== $('#metadata-status').text()) {
                         $('#metadata-status').text(json_response.metadata_status);
-                        if (son_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
@@ -212,7 +212,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                             }
                         }
                         else {
-                            manageAccessCmp.onMetadataInsufficient();
+                            manageAccessApp.onMetadataInsufficient();
                         }
                     }
                 }

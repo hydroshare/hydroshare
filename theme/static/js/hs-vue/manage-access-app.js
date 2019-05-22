@@ -2,7 +2,7 @@
  * Created by Mauriel on 5/19/2019.
  */
 
-let manageAccessCmp = new Vue({
+let manageAccessApp = new Vue({
     el: '#manage-access',
     delimiters: ['${', '}'],
     data: {

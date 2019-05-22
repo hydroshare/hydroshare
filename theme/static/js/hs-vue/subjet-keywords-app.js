@@ -2,7 +2,7 @@
 * Created by Mauriel on 5/19/2019.
 */
 
-let subjKeywordsCmp = new Vue({
+let subjKeywordsApp = new Vue({
     el: '#app-keyword',
     delimiters: ['${', '}'],
     data: {
@@ -60,7 +60,7 @@ let subjKeywordsCmp = new Vue({
                       vue.resKeywords = newVal;
                       if (!newVal.length) {
                           // If no keywords, the metadata is no longer sufficient to make the resource public
-                          manageAccessCmp.onMetadataInsufficient();
+                          manageAccessApp.onMetadataInsufficient();
                       }
                   }
               }, "json");

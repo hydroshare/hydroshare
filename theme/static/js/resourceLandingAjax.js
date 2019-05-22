@@ -314,7 +314,7 @@ function showCompletedMessage(json_response) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
             if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                manageAccessCmp.$data.canBePublicDiscoverable = true;
+                manageAccessApp.$data.canBePublicDiscoverable = true;
                 let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
@@ -341,7 +341,7 @@ function showCompletedMessage(json_response) {
                 $("#missing-metadata-file-type:not(.persistent)").fadeOut();
             }
             else {
-                manageAccessCmp.onMetadataInsufficient();
+                manageAccessApp.onMetadataInsufficient();
             }
         }
     }
