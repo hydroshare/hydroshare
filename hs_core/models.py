@@ -310,7 +310,8 @@ def page_permissions_page_processor(request, page):
     show_manage_access = False
     if not cm.raccess.published and \
             (self_access_level == 'owner' or (
-                cm.raccess.shareable and (self_access_level == 'view' or self_access_level == 'edit'))):
+                cm.raccess.shareable and (self_access_level == 'view'
+                                          or self_access_level == 'edit'))):
         show_manage_access = True
 
     return {
