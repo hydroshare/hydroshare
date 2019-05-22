@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -48,8 +50,9 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
 
         self.add_session_to_request(request)
         response = change_quota_holder(request, shortkey=self.res.short_id)
+        response_data = json.loads(response.content)
         self.assertTrue(self.res.get_quota_holder() == self.user2)
-        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response_data['status'], 'success')
 
         # clean up
         hydroshare.delete_resource(self.res.short_id)
