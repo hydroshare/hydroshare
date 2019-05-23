@@ -32,6 +32,7 @@ from hs_core.serialization import GenericResourceMeta, HsDeserializationDependen
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.parsers import MultiPartParser
 
 
 logger = logging.getLogger(__name__)
@@ -559,6 +560,7 @@ class ResourceFileCRUD(APIView):
     'parameter-2': ['error message-2'], .. }
     """
     allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+    parser_classes = (MultiPartParser,)
 
     def initialize_request(self, request, *args, **kwargs):
         """
@@ -611,6 +613,7 @@ class ResourceFileCRUD(APIView):
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
+    @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
     def post(self, request, pk, pathname):
         """
         Add a file to a resource.
@@ -641,6 +644,7 @@ class ResourceFileCRUD(APIView):
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],
+                                                           folder=pathname,
                                                            user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException,
@@ -688,6 +692,7 @@ class ResourceFileCRUD(APIView):
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(auto_schema=None)
     def put(self, request, pk, pathname):
         # TODO: (Brian) Currently we do not have this action for the front end. Will implement
         # in the next iteration. Implement only after we have a decision on when to validate a file

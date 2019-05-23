@@ -241,3 +241,11 @@ class UserAuthenticateRequestValidator(serializers.Serializer):
 
 class AccessRulesRequestValidator(serializers.Serializer):
     public = serializers.BooleanField(default=False)
+
+from drf_yasg.utils import swagger_serializer_method
+class ResourceFileValidator(serializers.Serializer):
+    file = serializers.FileField()
+
+    @swagger_serializer_method(serializer_or_field=file)
+    def get_file(self, obj):
+        return ResourceFileValidator().data
