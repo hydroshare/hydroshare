@@ -225,7 +225,8 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'coverages',
                                'science_metadata_url',
                                'resource_map_url',
-                               'resource_url'])
+                               'resource_url',
+                               'content_types'])
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
