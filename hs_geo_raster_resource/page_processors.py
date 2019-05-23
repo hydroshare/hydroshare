@@ -1,12 +1,15 @@
-from mezzanine.pages.page_processors import processor_for
-from models import RasterResource
+from functools import partial, wraps
+
 from crispy_forms.layout import Layout, HTML
+from django.forms.models import formset_factory
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
+
 from forms import CellInfoForm, BandInfoForm, BaseBandInfoFormSet, OriginalCoverageSpatialForm, \
     BandInfoLayoutEdit
 from hs_core import page_processors
-from django.forms.models import formset_factory
 from hs_core.views import add_generic_context
-from functools import partial, wraps
+from models import RasterResource
 
 
 # page processor to populate raster resource specific metadata into my-resources template page
@@ -18,6 +21,10 @@ def landing_page(request, page):
 
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)
+    if not edit_resource and isinstance(context, HttpResponseRedirect):
+        # sending user to login page
+        return context
+
     extended_metadata_exists = False
     if content_model.metadata.cellInformation or content_model.metadata.bandInformations:
         extended_metadata_exists = True

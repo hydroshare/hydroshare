@@ -47,4 +47,7 @@ class Command(BaseCommand):
 
         print("querying for records in last {} days".format(days))
         for v in Variable.objects.filter(query):
-            print("name={} resource_id={} value={}".format(v.name, v.last_resource_id, v.value))
+            time = v.timestamp.strftime('%Y-%m-%dT%H:%M:%S')
+            print("{} name={} resource_id={} landing={} rest={} internal={} value={}"
+                  .format(time, v.name, v.last_resource_id,
+                          v.landing, v.rest, v.internal, v.value))

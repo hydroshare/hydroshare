@@ -47,22 +47,22 @@ $(document).ready(function () {
 
     if (localStorage.openStatus === "closed") {
         $("#getStarted").addClass("collapse");
-        $("#change_me").html("Show get started");
+        $("#id-getting-started-toggle").html("Show Getting Started");
     } else if (localStorage.openStatus === "opened") {
         $("#getStarted").addClass("in");
-        $("#change_me").html("Hide get started");
+        $("#id-getting-started-toggle").html("Hide Getting Started");
     } else {
         $("#getStarted").addClass("in");
-        $("#change_me").html("Hide get started");
+        $("#id-getting-started-toggle").html("Hide Getting Started");
     }
     // add action handler
-    $("#change_me").click(function () {
-        $("#change_me").text(function (i, old) {
-            var statusChangedTo = old === 'Show get started' ? 'Hide get started' : 'Show get started';
+    $("#id-getting-started-toggle").click(function () {
+        $("#id-getting-started-toggle").text(function (i, old) {
+            var statusChangedTo = old === 'Show Getting Started' ? 'Hide Getting Started' : 'Show Getting Started';
 
-            if (statusChangedTo === "Hide get started") {
+            if (statusChangedTo === "Hide Getting Started") {
                 localStorage.openStatus = "opened";
-            } else if (statusChangedTo === "Show get started") {
+            } else if (statusChangedTo === "Show Getting Started") {
                 localStorage.openStatus = "closed";
             } else {
                 localStorage.openStatus = "opened";

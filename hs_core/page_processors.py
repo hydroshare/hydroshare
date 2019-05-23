@@ -2,6 +2,7 @@
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from mezzanine.pages.page_processors import processor_for
 
@@ -13,6 +14,7 @@ from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+import json
 
 
 @processor_for(GenericResource)
@@ -51,7 +53,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # whether the user has permission to view this resource
     can_view = content_model.can_view(request)
     if not can_view:
-        raise PermissionDenied()
+        if user.is_authenticated():
+            raise PermissionDenied()
+        return redirect_to_login(request.path)
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
@@ -115,6 +119,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
+    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         content_model.update_view_count(request)
@@ -155,7 +161,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
                 spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit',
                                                                                      None)
-        keywords = [sub.value for sub in content_model.metadata.subjects.all()]
         languages_dict = dict(languages_iso.languages)
         language = languages_dict[content_model.metadata.language.code] if \
             content_model.metadata.language else None
@@ -178,8 +183,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
-                   'language': language,
                    'keywords': keywords,
+                   'language': language,
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
@@ -227,8 +232,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     can_change = content_model.can_change(request)
     if not can_change:
         raise PermissionDenied()
-
-    keywords_string = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
 
     temporal_coverage = content_model.metadata.temporal_coverage
     temporal_coverage_data_dict = {}
@@ -288,7 +291,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
-               'keywords_string': keywords_string,
+               'keywords': keywords,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),

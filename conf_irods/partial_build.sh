@@ -51,18 +51,18 @@ echo "iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE
 echo " - iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" 
 
 # Tips for piping strings to docker exec container terminal https://gist.github.com/ElijahLynn/72cb111c7caf32a73d6f#file-pipe_to_docker_examples
-echo "iadmin mkzone ${HS_USER_IRODS_ZONE} remote users.local.org:1247" | $RUN_ON_DATA
-echo " - iadmin mkzone ${HS_USER_IRODS_ZONE} remote users.local.org:1247" 
+echo "iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${HS_USER_ZONE_HOST}:1247" | $RUN_ON_DATA
+echo " - iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${HS_USER_ZONE_HOST}:1247"
 sleep 1s
-echo "iadmin mkzone ${IRODS_ZONE} remote data.local.org:1247" | $RUN_ON_USER
-echo " - iadmin mkzone ${IRODS_ZONE} remote data.local.org:1247" 
+echo "iadmin mkzone ${IRODS_ZONE} remote ${IRODS_HOST}:1247" | $RUN_ON_USER
+echo " - iadmin mkzone ${IRODS_ZONE} remote ${IRODS_HOST}:1247"
 sleep 1s
 
 echo "------------------------------------------------------------"
 echo "INFO: init the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
 #TODO this throws error but succeeds research as low priority work
-echo "echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit" | docker exec -u hsuserproxy users.local.org bash
-echo " - echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit | docker exec -u hsuserproxy users.local.org bash"
+echo "echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit" | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash
+echo " - echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash"
 
 echo "------------------------------------------------------------"
 echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
