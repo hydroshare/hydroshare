@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views

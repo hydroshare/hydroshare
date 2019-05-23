@@ -2,7 +2,8 @@ from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
 from hs_core.search_indexes import BaseResourceIndex
 from hs_core.models import BaseResource
-from drf_haystack.fields import HaystackCharField, HaystackDateField, HaystackMultiValueField, HaystackFloatField
+from drf_haystack.fields import HaystackCharField, HaystackDateField, HaystackMultiValueField, \
+    HaystackFloatField
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from rest_framework import serializers
@@ -82,9 +83,9 @@ class DiscoverSearchView(HaystackViewSet):
     @swagger_auto_schema(operation_description="Search HydroShare Resources using solr conventions."
                                                "We use haystack for queries so you can use all of "
                                                "the parameters described here in combination with "
-                                               "field looksups "
+                                               "field lookups "
                                                "https://django-haystack.readthedocs.io/en/latest/"
-                                               "searchqueryset_api.html?highlight=lookups#id1)",
+                                               "searchqueryset_api.html?highlight=lookups#id1",
                          query_serializer=DiscoverResourceValidator)
     def list(self, request):
         return super(DiscoverSearchView, self).list(request)
