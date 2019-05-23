@@ -1,17 +1,12 @@
 Vue.component('profile-link', {
     delimiters: ['${', '}'],
     template: '#profile-link-template',
-    props: {user: Object},
-    methods: {
-        onClick: function () {
-            this.$emit('load-card', this.user);
-        }
-    }
+    props: {user: Object}
 });
 
 Vue.component('profile-card', {
     delimiters: ['${', '}'],
-    props: {user: Object},
+    props: {user: Object, position: Object},
     computed: {
         hasIdentifiers: function () {
             return !$.isEmptyObject(this.user.identifiers);
