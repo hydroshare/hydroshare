@@ -248,7 +248,16 @@ def page_permissions_page_processor(request, page):
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
             "user_name": usr.username,
-            "can_undo": usr.can_undo
+            "can_undo": usr.can_undo,
+            "email": usr.email,
+            "organization": usr.userprofile.organization,
+            "title": usr.userprofile.title,
+            "contributions": len(usr.uaccess.owned_resources),
+            "subject_areas": usr.userprofile.subject_areas,
+            "identifiers": usr.userprofile.identifiers,
+            "state": usr.userprofile.state,
+            "country": usr.userprofile.country,
+            "joined": usr.date_joined.strftime("%d %b, %Y")
         })
 
     for usr in editors:
@@ -259,7 +268,16 @@ def page_permissions_page_processor(request, page):
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
             "user_name": usr.username,
-            "can_undo": usr.can_undo
+            "can_undo": usr.can_undo,
+            "email": usr.email,
+            "organization": usr.userprofile.organization,
+            "title": usr.userprofile.title,
+            "contributions": len(usr.uaccess.owned_resources),
+            "subject_areas": usr.userprofile.subject_areas,
+            "identifiers": [],
+            "state": usr.userprofile.state,
+            "country": usr.userprofile.country,
+            "joined": usr.date_joined.strftime("%d %b, %Y")
         })
 
     for usr in viewers:
@@ -270,7 +288,16 @@ def page_permissions_page_processor(request, page):
             "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
             "best_name": best_name(usr),
             "user_name": usr.username,
-            "can_undo": usr.can_undo
+            "can_undo": usr.can_undo,
+            "email": usr.email,
+            "organization": usr.userprofile.organization,
+            "title": usr.userprofile.title,
+            "contributions": len(usr.uaccess.owned_resources),
+            "subject_areas": usr.userprofile.subject_areas,
+            "identifiers": [],
+            "state": usr.userprofile.state,
+            "country": usr.userprofile.country,
+            "joined": usr.date_joined.strftime("%d %b, %Y")
         })
 
     for usr in edit_groups:

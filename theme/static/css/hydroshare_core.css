@@ -123,31 +123,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	margin-right: 4px;
 }
 
-.profile-card .location-wrapper span:not(:first-child)::before {
-	content: ", ";
-}
-
-.profile-card [data-name] {
-	line-height: 1.5em;
-}
-
-.org-wrapper, .subjectareas-wrapper, .externalprofiles-wrapper {
-	margin-top: 10px;
-}
-
-.contributions-wrapper, .joined-wrapper {
-	margin-top: 10px;
-}
-
-.authors-wrapper .ui-state-highlight {
-    width: 150px;
-    display: inline-block;
-    height: 1.5em;
-    top: 0.25em;
-    position: relative;
-    border: 1px dashed #fcefa1;
-}
-
 .navbar-inverse .navbar-nav > .open > a:hover,
 .navbar-inverse .navbar-nav > li > a:hover,
 .navbar-inverse .navbar-nav > li > a:focus {
