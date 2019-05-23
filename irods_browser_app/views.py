@@ -116,37 +116,6 @@ def store(request):
         content_type = "application/json"
     )
 
-def upload(request):
-    if request.method == 'POST':
-        file_names = str(request.POST['upload'])
-        fnames_list = string.split(file_names, ',')
-
-        resource_cls = hydroshare.check_resource_type(request.POST['res_type'])
-        valid, ext = check_upload_files(resource_cls, fnames_list)
-
-        response_data = {}
-        if valid:
-            response_data['file_type_error'] = ''
-            response_data['irods_file_names'] = file_names
-            # get selected file names without path for informational display on the page
-            response_data['irods_sel_file'] = ', '.join(os.path.basename(f.rstrip(os.sep)) for f in fnames_list)
-            homepath = fnames_list[0]
-            response_data['irods_federated'] = utils.is_federated(homepath)
-        else:
-            response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
-            response_data['irods_file_names'] = ''
-            response_data['irods_sel_file'] = 'No file selected.'
-
-        return HttpResponse(
-            json.dumps(response_data),
-            content_type = "application/json"
-        )
-    else:
-        return HttpResponse(
-            json.dumps({"error": "Not POST request"}),
-            content_type="application/json"
-        )
-
 def upload_add(request):
     # add irods file into an existing resource
     res_id = request.POST['res_id']

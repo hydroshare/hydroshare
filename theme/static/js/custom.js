@@ -175,15 +175,6 @@ $(document).ready(function () {
         formData.append("csrfmiddlewaretoken", csrf_token);
         formData.append("title", "Untitled Resource");
         formData.append("resource-type", type);
-        formData.append("irods-username", "");
-        formData.append("irods-password", "");
-        formData.append("irods-host", "");
-        formData.append("irods-port", "");
-        formData.append("irods-zone", "");
-        formData.append("irods_file_names", "");
-        formData.append("irods_federated", "");
-        formData.append("copy-or-move", "copy");
-        formData.append("copy-move", "copy");
 
         customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
