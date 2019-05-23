@@ -52,6 +52,11 @@ let manageAccessApp = new Vue({
                 accessStr = "Discoverable"
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
+        },
+        users: function () {
+            leftHeaderApp.$data.owners = this.users.filter(function (user) {
+                return user.access === 'owner';
+            });
         }
     },
     computed: {
