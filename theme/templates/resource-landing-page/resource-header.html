@@ -89,10 +89,7 @@
 {#                        {% include "includes/profile-card.html" %}#}
 {#                    </td>#}
                     <td>
-                        <profile-link
-                            v-for="owner in owners">
-                        </profile-link>
-
+                        <profile-link v-for="owner in owners" v-bind:key="owner.id"></profile-link>
                         <profile-card></profile-card>
                     </td>
                 </tr>
