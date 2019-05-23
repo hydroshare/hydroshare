@@ -9,9 +9,9 @@
                     <th>Authors:</th>
                     {% if not resource_edit_mode %}
                         <td class="authors-wrapper">
-{#                            {% for author in creators %}#}
-{#                                {% include "includes/author-link.html" with author=author %}#}
-{#                            {% endfor %}#}
+                            {% for author in creators %}
+                                {% include "includes/author-link.html" with author=author %}
+                            {% endfor %}
                         </td>
                     {% else %}
                     <td>
@@ -83,24 +83,16 @@
                 </tr>
                 <tr>
                     <th>Owners:</th>
-{#                    <td class="owners-wrapper">#}
-{#                        {% for u in owners %}#}
-{#                            {% include "includes/profile-link.html" with user=u %}#}
-{#                        {% endfor %}#}
-{#                        {% include "includes/profile-card.html" %}#}
-{#                    </td>#}
                     <td class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
                                 :user="owner"
                                 v-bind:key="owner.id"
-                                v-on:load-card="onLoadCard($event)">
+                                v-on:load-card="onLoadOwnerCard($event)">
                             </profile-link>
                         </template>
 
-                        <profile-card :user="userCardSelected"
-                                      :position="cardPosition">
-                        </profile-card>
+                        <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 <tr>
@@ -122,6 +114,9 @@
 {#                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}#}
 {#                        {% endif %}#}
 {#                        {% include "includes/profile-card.html" %}#}
+
+                        <profile-link v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-card :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 {% if cm.raccess.published %}

@@ -10,7 +10,7 @@ let manageAccessApp = new Vue({
             user.loading = false;
             return user;
         }),
-        currentUser: CURRENT_USER_PK,
+        currentUser: CURRENT_USER_ID,
         selfAccessLevel: SELF_ACCESS_LEVEL,
         quotaHolder: USERS_JSON.find(function(user) {
             return user.id === QUOTA_HOLDER_PK;

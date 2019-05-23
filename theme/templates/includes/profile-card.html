@@ -1,5 +1,5 @@
 <script id="profile-card-template" type="text/x-template">
-    <ul class="dropdown-menu arrow_box profile-card"
+    <ul class="dropdown-menu arrow_box profile-card" @click.stop=""
         :style="{top: position.top + 'px', left: position.left + 'px'}">
         <li>
             <div class="flex">
@@ -21,7 +21,7 @@
                 </div>
                 <div style="flex-grow: 1;">
                     <h4 style="margin-top: 0;">
-                        <a href="#" title="View Profile">${user.best_name}</a>
+                        <a :href="/user/ + user.id" title="View Profile">${user.best_name}</a>
                     </h4>
 
                     <table>
@@ -87,6 +87,6 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
 
 <script id="profile-link-template" type="text/x-template">
-    <a v-on:click="$emit('load-card', {user: user, event: $event})" data-toggle="dropdown" href="#">${user.best_name}</a>
+    <a v-on:click="$emit('load-card', {user: user, event: $event})" data-toggle="dropdown" style="cursor: pointer;">${user.best_name}</a>
 </script>
 

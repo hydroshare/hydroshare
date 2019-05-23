@@ -26,17 +26,18 @@ let leftHeaderApp = new Vue({
             country: null,
             joined: null,
         },
+        lastChanagedBy: LAST_CHANGED_BY,
         cardPosition: {
             top: 0,
             left: 0,
         }
     },
     methods: {
-        onLoadCard: function(data) {
+        onLoadOwnerCard: function(data) {
             let el = $(data.event.target);
             this.userCardSelected = data.user;
             this.cardPosition.left = el.position().left - 175 + el.width() / 2;
-            this.cardPosition.top = el.position().top + 30
+            this.cardPosition.top = el.position().top + 30;
         }
     }
 });
