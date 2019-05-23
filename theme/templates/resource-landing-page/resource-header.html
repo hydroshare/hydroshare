@@ -3,7 +3,8 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12 col-md-6 res-header">
-            <table id="left-header-table" class="info-table">
+            <table id="left-header-table"
+                   class="info-table">
                 <tr>
                     <th>Authors:</th>
                     {% if not resource_edit_mode %}
@@ -89,8 +90,11 @@
 {#                        {% include "includes/profile-card.html" %}#}
 {#                    </td>#}
                     <td>
-                        <profile-link v-for="owner in owners" v-bind:key="owner.id"></profile-link>
-                        <profile-card></profile-card>
+                        <template v-for="owner in owners" >
+                            <profile-link :user="owner" v-bind:key="owner.id" v-on:load-card="onLoadCard($event)"></profile-link>
+                        </template>
+
+                        <profile-card :user="userCardSelected"></profile-card>
                     </td>
                 </tr>
                 <tr>
