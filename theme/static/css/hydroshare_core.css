@@ -102,6 +102,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     width: 350px;
     height: auto;
     margin: unset;
+	margin-bottom: 40px;
 }
 
 .profile-card .flex > div {

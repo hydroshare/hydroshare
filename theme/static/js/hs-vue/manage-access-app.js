@@ -35,6 +35,10 @@ let manageAccessApp = new Vue({
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
+        cardPosition: {
+            top: 0,
+            left: 0,
+        },
     },
     watch: {
         resAccess: function (newAccess, oldAccess) {
@@ -461,6 +465,11 @@ let manageAccessApp = new Vue({
             };
             // The metadata is insufficient
             this.canBePublicDiscoverable = false;
+        },
+        onLoadQuotaHolderCard: function (data) {
+            let el = $(data.event.target);
+            this.cardPosition.left = el.position().left - 175 + el.width() / 2;
+            this.cardPosition.top = el.position().top + 30;
         }
     },
 });
