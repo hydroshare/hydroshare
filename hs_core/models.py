@@ -28,7 +28,6 @@ from django.conf import settings
 from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
-from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
 from django.forms.models import model_to_dict
@@ -291,7 +290,7 @@ class AbstractMetaDataElement(models.Model):
 
     @property
     def dict(self):
-        return {self.__class__.__name__ : model_to_dict(self)}
+        return {self.__class__.__name__: model_to_dict(self)}
 
     @classmethod
     def create(cls, **kwargs):

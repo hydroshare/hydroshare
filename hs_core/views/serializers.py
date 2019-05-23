@@ -8,6 +8,7 @@ from hs_core.hydroshare import utils
 from hs_core import hydroshare
 from .utils import validate_json, validate_user, validate_group
 from hs_access_control.models import PrivilegeCodes
+from drf_yasg.utils import swagger_serializer_method
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 CONTENT_TYPES = [ctype.__name__ for ctype in utils.get_content_types()]
@@ -242,7 +243,7 @@ class UserAuthenticateRequestValidator(serializers.Serializer):
 class AccessRulesRequestValidator(serializers.Serializer):
     public = serializers.BooleanField(default=False)
 
-from drf_yasg.utils import swagger_serializer_method
+
 class ResourceFileValidator(serializers.Serializer):
     file = serializers.FileField()
 
