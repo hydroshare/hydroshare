@@ -8,9 +8,9 @@
                     <th>Authors:</th>
                     {% if not resource_edit_mode %}
                         <td class="authors-wrapper">
-                            {% for author in creators %}
-                                {% include "includes/author-link.html" with author=author %}
-                            {% endfor %}
+{#                            {% for author in creators %}#}
+{#                                {% include "includes/author-link.html" with author=author %}#}
+{#                            {% endfor %}#}
                         </td>
                     {% else %}
                     <td>
@@ -77,17 +77,23 @@
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
                               class="glyphicon glyphicon-info-sign text-muted"></span>
-
                     </td>
                     {% endif %}
                 </tr>
                 <tr>
                     <th>Owners:</th>
-                    <td class="owners-wrapper">
-                        {% for u in owners %}
-                            {% include "includes/profile-link.html" with user=u %}
-                        {% endfor %}
-                        {% include "includes/profile-card.html" %}
+{#                    <td class="owners-wrapper">#}
+{#                        {% for u in owners %}#}
+{#                            {% include "includes/profile-link.html" with user=u %}#}
+{#                        {% endfor %}#}
+{#                        {% include "includes/profile-card.html" %}#}
+{#                    </td>#}
+                    <td>
+                        <profile-link
+                            v-for="owner in owners">
+                        </profile-link>
+
+                        <profile-card></profile-card>
                     </td>
                 </tr>
                 <tr>
@@ -105,10 +111,10 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        {% if cm.last_changed_by %} by
-                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}
-                        {% endif %}
-                        {% include "includes/profile-card.html" %}
+{#                        {% if cm.last_changed_by %} by#}
+{#                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}#}
+{#                        {% endif %}#}
+{#                        {% include "includes/profile-card.html" %}#}
                     </td>
                 </tr>
                 {% if cm.raccess.published %}
@@ -138,3 +144,5 @@
         </div>
     </div>
 </div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/left-header-app.js"></script>
