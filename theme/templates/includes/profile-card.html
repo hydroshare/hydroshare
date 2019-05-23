@@ -42,8 +42,8 @@
                     </table>
 
                     <div v-if="user.organization || user.title" class="space-top separate">
-                        <span>${user.organization}</span>
-                        <span>${user.title}</span>
+                        <span v-if="user.organization">${user.organization}</span>
+                        <span v-if="user.title">${user.title}</span>
                     </div>
 
                     <div v-if="user.subject_areas" class="space-top">
@@ -51,7 +51,7 @@
                         <div>${user.subject_areas}</div>
                     </div>
 
-                    <div v-if="user.identifiers" class="space-top">
+                    <div v-if="hasIdentifiers" class="space-top">
                         <small class="text-muted">External Profiles:</small>
                         <div class="external-profiles">
                             <template v-for="(identifier, key) of user.identifiers">
@@ -86,6 +86,6 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
 
 <script id="profile-link-template" type="text/x-template">
-    <a v-on:click="onClick" data-toggle="dropdown" href="#">${user.best_name}</a>
+    <a v-on:click="$emit('load-card', user)" data-toggle="dropdown" href="#">${user.best_name}</a>
 </script>
 

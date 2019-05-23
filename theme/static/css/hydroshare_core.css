@@ -990,6 +990,18 @@ li.account p{
     top: 2px;
 }
 
+.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+    content: "";
+    width: 1px;
+    display: inline-block;
+    background-color: #999;
+    height: 1em;
+    margin: 0 4px;
+    position: relative;
+    top: 2px;
+}
+
 .authors-wrapper.sortable span:last-child a {
     margin-right: 10px;
 }

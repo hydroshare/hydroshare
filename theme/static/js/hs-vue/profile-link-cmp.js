@@ -12,6 +12,11 @@ Vue.component('profile-link', {
 Vue.component('profile-card', {
     delimiters: ['${', '}'],
     props: {user: Object},
+    computed: {
+        hasIdentifiers: function () {
+            return !$.isEmptyObject(this.user.identifiers);
+        }
+    },
     data: function () {
         return {
             identifierAttributes: {
