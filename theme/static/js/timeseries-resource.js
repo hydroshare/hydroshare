@@ -11,7 +11,7 @@ $(document).ready(function(){
         }
     }
 
-    if ($("#resource-mode").val() === 'Edit'){
+    if (RESOURCE_MODE === 'Edit'){
         $("#readonly-coverage-notice").show();
     }
 
