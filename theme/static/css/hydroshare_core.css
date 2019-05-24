@@ -979,7 +979,7 @@ li.account p{
 }
 
 .authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+.owners-wrapper a:not(:first-child)::before, .separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
