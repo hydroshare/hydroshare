@@ -83,11 +83,6 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    // Prevent hover event from triggering the dropdown
-    $("#select-resource-type").on('mouseenter', function (event) {
-        event.stopPropagation();
-    });
-
     // 404 error page
     // ====================
     $('#search-404').on('click', function () {
@@ -163,17 +158,31 @@ $(document).ready(function () {
     });
 
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
-        createResource($(this).attr("data-value"));
+        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+
+        $('#submit-title-dialog').modal('show');
     });
 
-    function createResource(type) {
+    $("#btn-resource-create").on("click", function () {
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
+    });
+
+    function createResource(type, title="Untitled Resource") {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
 
         formData.append("csrfmiddlewaretoken", csrf_token);
-        formData.append("title", "Untitled Resource");
+        formData.append("title", title);
         formData.append("resource-type", type);
         formData.append("irods-username", "");
         formData.append("irods-password", "");
