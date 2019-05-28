@@ -922,6 +922,8 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
         if user_to_share_with.userprofile.picture:
             picture_url = user_to_share_with.userprofile.picture.url
 
+        user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
+
         from hs_core.templatetags.hydroshare_tags import best_name
 
         ajax_response_data = {'status': status,
@@ -932,7 +934,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                                        "pictureUrl": picture_url,
                                        "best_name": best_name(user_to_share_with),
                                        "user_name": user_to_share_with.username,
-                                       "can_undo": True,
+                                       "can_undo": user_can_undo,
                                        "email": user_to_share_with.email,
                                        "organization": user_to_share_with.userprofile.organization,
                                        "title": user_to_share_with.userprofile.title,
@@ -948,6 +950,8 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
         if group_to_share_with.gaccess.picture:
             group_pic_url = group_to_share_with.gaccess.picture.url
 
+        group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+
         ajax_response_data = {'status': status,
                               'error_msg': err_message,
                               'user': {"user_type": "group",
@@ -955,7 +959,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                                        "id": group_to_share_with.id,
                                        "pictureUrl": group_pic_url,
                                        "best_name": group_to_share_with.name,
-                                       "can_undo": True,
+                                       "can_undo": group_can_undo,
                                        "user_name": None}
                               }
 
