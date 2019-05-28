@@ -239,7 +239,8 @@ def page_permissions_page_processor(request, page):
 
     users_json = []
 
-    # TODO: simplify these iterations
+    from hs_core.templatetags.hydroshare_tags import best_name
+
     for usr in owners:
         users_json.append({
             "user_type": "user",
@@ -353,28 +354,6 @@ def page_permissions_page_processor(request, page):
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access
     }
-
-
-# TODO: import this from hydroshare_tags
-def best_name(content):
-    """
-    Takes a value edited via the WYSIWYG editor, and passes it through
-    each of the functions specified by the RICHTEXT_FILTERS setting.
-    """
-
-    if not content.is_authenticated():
-        content = "Anonymous"
-    elif content.first_name:
-        if content.userprofile.middle_name:
-            content = "{fn} {mn} {ln}".format(fn=content.first_name,
-                                              mn=content.userprofile.middle_name,
-                                              ln=content.last_name)
-        else:
-            content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
-    else:
-        content = content.username
-
-    return content
 
 
 class AbstractMetaDataElement(models.Model):
