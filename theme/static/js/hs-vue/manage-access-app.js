@@ -309,7 +309,7 @@ let manageAccessApp = new Vue({
                 if (resp.status === "success") {
                     if (index >= 0) {
                         // An entry was found, update the data
-                        user.access = resp.privilege_granted;
+                        user.access = resp.user.access;
                         user.loading = false;
                         vue.users.splice(index, 1, user);
                         if (vue.currentUser === user.id) {
@@ -318,26 +318,8 @@ let manageAccessApp = new Vue({
                     }
                     else {
                         // No entry found. Push new data
-
-                        let pictureUrl;
-                        if (vue.isInviteUsers) {
-                            pictureUrl = resp.profile_pic === "None" ? null : resp.profile_pic;
-                        }
-                        else {
-                            pictureUrl = resp.group_pic === "None" ? null : resp.group_pic;
-                        }
-
-                        const newUserAccess = {
-                            user_type: vue.isInviteUsers ? 'user' : 'group',
-                            access: resp.privilege_granted,
-                            id: targetUserId,
-                            pictureUrl: pictureUrl,
-                            best_name: resp.name,
-                            user_name: resp.username,
-                            loading: false,
-                            can_undo: true,
-                        };
-
+                        let newUserAccess = resp.user;
+                        newUserAccess.loading = false;
                         vue.users.push(newUserAccess);
                     }
                 }

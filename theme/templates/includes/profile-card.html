@@ -87,5 +87,6 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
 
 <script id="profile-link-template" type="text/x-template">
-    <a v-on:click="$emit('load-card', {user: user, event: $event})" data-toggle="dropdown" style="cursor: pointer;">${user.best_name}</a>
+    <a v-on:click="$emit('load-card', {user: user, event: $event})"
+       data-toggle="dropdown" style="cursor: pointer;">${user.best_name}</a>
 </script>
