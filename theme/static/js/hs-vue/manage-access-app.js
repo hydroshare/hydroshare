@@ -73,10 +73,10 @@ let manageAccessApp = new Vue({
         changeAccess: function (user, index, accessToGrant) {
             let vue = this;
 
-            this.error = "";    // Clear errors
+            vue.error = "";    // Clear errors
             user.loading = true;
-            this.isProcessing = true;
-            this.users.splice(index, 1, user);
+            vue.isProcessing = true;
+            vue.users.splice(index, 1, user);
 
             $.post('/hsapi/_internal/' + this.resShortId + '/share-resource-with-' + user.user_type + '/'
                 + accessToGrant + '/' + user.id + '/', function (result) {
@@ -215,7 +215,7 @@ let manageAccessApp = new Vue({
             let vue = this;
             vue.error = "";
             user.loading = true;
-            this.users.splice(index, 1, user);
+            vue.users.splice(index, 1, user);
 
             $.post('/hsapi/_internal/' + this.resShortId + '/undo-share-resource-with-'
                 + user.user_type + '/' + user.id + '/', function (resp) {
