@@ -761,7 +761,7 @@ function showFileTypeMetadata(file_type_time_series, url){
             return;
         }
     }
-    var resource_mode = $("#resource-mode").val();
+    var resource_mode = RESOURCE_MODE;
     if (!resource_mode) {
         return;
     }

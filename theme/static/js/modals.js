@@ -109,7 +109,6 @@ $(document).ready(function() {
         $("#edit-creator-dialog").modal('show');
         let data = $.extend(true, {}, $(this).data());    // Shallow copy
         let dialog = $("#edit-creator-dialog");
-        let shortID = $("#short-id").val();
         let form = dialog.find("form");
 
         // The resource must have at least one author.
@@ -120,10 +119,10 @@ $(document).ready(function() {
         }
         else {
             dialog.find("modal-body--delete").show();
-            $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/delete-metadata/");
+            $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + SHORT_ID + "/creator/" + data.id + "/delete-metadata/");
         }
 
-        form.attr("action", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/update-metadata/");
+        form.attr("action", "/hsapi/_internal/" + SHORT_ID + "/creator/" + data.id + "/update-metadata/");
 
         data.order -= 1;    // The value we use in the back end is 0 based and in the UI it is not
 

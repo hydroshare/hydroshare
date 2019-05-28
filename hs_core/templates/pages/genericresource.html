@@ -12,16 +12,6 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
-    <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
-    <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-    <input type="hidden" id="resource-mode" value="{% if resource_edit_mode %}Edit{% else %}View{% endif %}" >
-    <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
-    <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
-    <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
-    <input type="hidden" id="keywords-string" value="{{ keywords_string }}">
-    <input type="hidden" id="short-id" value="{{ cm.short_id }}">
-    <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
     {% if page.perms.change and resource_edit_mode %}
     {% csrf_token %}
     {% endif %}
@@ -829,9 +819,23 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+      {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const RES_KEYWORDS = {{ keywords|safe }};
+      const RES_TYPE = "{{ cm|resource_type }}";
+      const FILE_COUNT = {{ cm.files.all.count }};
+      const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
+      const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
+      const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      const CURRENT_USER_ID = {{ request.user.id }};
+      const SHORT_ID = "{{ cm.short_id }}";
+      const STATIC_URL = "{{ STATIC_URL }}";
+      let spatial_coverage_type = "{{ spatial_coverage.type }}";
+    </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
