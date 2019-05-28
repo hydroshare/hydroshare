@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 try:
                     src_files = os.path.join(resource.root_path, 'data')
                     storage.copyFiles(src_files, resource.short_id)
-                    # copy iRODS AVU over for the resource collection from iRODS user zone to data zone
+                    # copy AVU over for the resource collection from iRODS user zone to data zone
                     src_coll = resource.root_path
                     tgt_coll = resource.short_id
                     for avu_name in avu_list:
@@ -40,8 +40,8 @@ class Command(BaseCommand):
                     # update resource federation path to point resource to data zone
                     resource.resource_federation_path = ''
                     resource.save()
-                    print("Resource {} has been moved from user zone to data zone successfully".format(
-                        resource.short_id))
+                    print("Resource {} has been moved from user zone to data zone "
+                          "successfully".format(resource.short_id))
                     resource_counter += 1
                 except SessionException as ex:
                     print("Resource {} failed to move: {}".format(resource.short_id, ex.stderr))
