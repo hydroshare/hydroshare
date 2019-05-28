@@ -370,12 +370,6 @@ let manageAccessApp = new Vue({
             vue.isProcessingAccess = true;
             $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
                 {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
-                    const resAccessStr = {
-                        make_public: "Public",
-                        make_discoverable: "Discoverable",
-                        make_private: "Private"
-                    };
-
                     if (resp.status === 'success') {
                         if (action === 'make_public') {
                             vue.resAccess = {
