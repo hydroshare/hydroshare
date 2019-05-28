@@ -100,11 +100,6 @@ let manageAccessApp = new Vue({
                 }
 
                 if (resp.status == "success") {
-                    // Access changes to self can't be undone
-                    user.can_undo = !(vue.currentUser === user.id);
-
-                    user.access = resp.privilege_granted;
-                    vue.users.splice(index, 1, user);
                     if (vue.currentUser === user.id) {
                         vue.selfAccessLevel = user.access;
                     }
@@ -114,8 +109,8 @@ let manageAccessApp = new Vue({
                     vue.error = resp.error_msg;
                 }
 
-                user.loading = false;
-                vue.users.splice(index, 1, user);
+                resp.user.loading = false;
+                vue.users.splice(index, 1, resp.user);
                 vue.isProcessing = false;
             });
         },
