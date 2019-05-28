@@ -1074,6 +1074,9 @@ def create_folder(res_id, folder_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
+    # check for duplicate folder path
+    if istorage.exists(coll_path):
+        raise ValidationError("Folder already exists")
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -1290,6 +1293,7 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['name'] = spatial_coverage.value.get('name', "")
             spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']

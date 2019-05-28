@@ -345,7 +345,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
           $("html").css("cursor", "initial"); // Restore default cursor
       })
       .fail(function () {
-          showUniversalMessage("error", 'Failed to delete resource(s).', 10000)();
+          customAlert("Error", 'Failed to delete resource(s).', "error", 10000);
           $("html").css("cursor", "initial"); // Restore default cursor
       });
 }

@@ -1,18 +1,18 @@
-from django.forms.models import formset_factory
-from django.forms import BaseFormSet
-from django.contrib import messages
-from mezzanine.pages.page_processors import processor_for
-
-from crispy_forms.layout import Layout, HTML
 from functools import partial, wraps
 
-from hs_core import page_processors
-from hs_core.forms import MetaDataElementDeleteForm
-from hs_core.views import add_generic_context
+from crispy_forms.layout import Layout, HTML
+from django.contrib import messages
+from django.forms import BaseFormSet
+from django.forms.models import formset_factory
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from hs_app_netCDF.forms import ModalDialogLayoutAddVariable, OriginalCoverageForm, \
     OriginalCoverageMetaDelete, VariableForm, VariableLayoutEdit
 from hs_app_netCDF.models import NetcdfResource
+from hs_core import page_processors
+from hs_core.forms import MetaDataElementDeleteForm
+from hs_core.views import add_generic_context
 
 
 @processor_for(NetcdfResource)
@@ -27,6 +27,10 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=None, request=request)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
+
         extended_metadata_exists = False
 
         if content_model.metadata.variables.all() or content_model.metadata.ori_coverage.all():

@@ -27,6 +27,7 @@
                     <span class="glyphicon glyphicon-search search-icon"></span>
                     <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
                 </div>
+                <p id="id-Group-Search-Result-Msg"></p>
             </div>
         </div>
 
@@ -172,7 +173,8 @@
                 {% endif %}
             {% endfor %}
                 {% else %}
-               <div class="col-sm-12"><i>No groups have been created yet.</i></div>
+               <div class="col-sm-12"><i>No groups have been created yet.</i>
+               </div>
             {% endif %}
         </div>
     </div>

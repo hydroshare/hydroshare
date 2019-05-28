@@ -1,9 +1,10 @@
+from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
+from hs_core.models import BaseResource
 from hs_core.views import add_generic_context
 from hs_core.views.utils import get_my_resources_list
-from hs_core.models import BaseResource
 from .models import CollectionResource
 
 
@@ -46,6 +47,10 @@ def landing_page(request, page):
 
         context['collection_candidate'] = candidate_resources_list
         context['collection_res_id'] = content_model.short_id
+    elif isinstance(context, HttpResponseRedirect):
+        # resource view mode
+        # sending user to login page
+        return context
 
     context['deleted_resources'] = content_model.deleted_resources.all()
     context['collection'] = collection_items_list

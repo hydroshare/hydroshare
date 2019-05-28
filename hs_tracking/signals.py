@@ -15,7 +15,7 @@ def capture_login(sender, **kwargs):
     # get standard fields
     fields = get_std_log_fields(kwargs['request'], session)
 
-    # format the 'download' kwargs
+    # format the 'login' kwargs
     msg = Variable.format_kwargs(**fields)
 
     session.record('login', value=msg)
@@ -28,7 +28,7 @@ def capture_logout(sender, **kwargs):
     # get standard fields
     fields = get_std_log_fields(kwargs['request'], session)
 
-    # format the 'download' kwargs
+    # format the 'logout' kwargs
     msg = Variable.format_kwargs(**fields)
 
     session.record('logout', value=msg)
@@ -63,7 +63,9 @@ def capture_download(**kwargs):
     msg = Variable.format_kwargs(**fields)
 
     # record the download action
-    session.record('download', value=msg)
+    session.record('download', value=msg,
+                   resource=kwargs['resource'],
+                   resource_id=kwargs['resource'].short_id)
 
 
 @receiver(post_create_resource)
@@ -82,11 +84,12 @@ def capture_resource_create(**kwargs):
     fields['resource_type'] = kwargs['resource'].resource_type
     fields['resource_guid'] = kwargs['resource'].short_id
 
-    # format the 'download' kwargs
+    # format the 'create' kwargs
     msg = Variable.format_kwargs(**fields)
 
     # record the create action
-    session.record('create', value=msg)
+    session.record('create', value=msg, resource=kwargs['resource'],
+                   resource_id=kwargs['resource'].short_id)
 
 
 @receiver(post_delete_resource)
@@ -106,6 +109,7 @@ def capture_resource_delete(**kwargs):
 
     # format the delete message
     msg = Variable.format_kwargs(**fields)
+    resource_id = kwargs['resource_shortkey']
 
     # record the delete action
-    session.record('delete', value=msg)
+    session.record('delete', value=msg, resource_id=resource_id)

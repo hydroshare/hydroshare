@@ -572,6 +572,46 @@
         </div>
     </div>
 
+    <div class="modal fade in" id="deleteExtraMetaDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form enctype="multipart/form-data">
+                    <input name="resource-mode" type="hidden" value="edit">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="extra_meta_title"> Delete Extended Metadata </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input id="delete_extra_meta_row_id" type="hidden" />
+                            <input id="old_extra_meta_name" type="hidden" />
+                            <div id="div_extra_meta_name" class="control-group">
+                                <label for="delete_extra_meta_name" class="control-label requiredField">Name</label>
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput" readonly required
+                                           id="delete_extra_meta_name_input" maxlength="100" name="name" type="text">
+                                </div>
+                            </div>
+                            <div id="div_extra_meta_value" class="control-group">
+                                <label for="delete_extra_meta_value" class="control-label">Value</label>
+                                <div class="controls">
+                                    <textarea readonly required class="form-control input-sm textarea" cols="40"
+                                                        id="delete_extra_meta_value_input" name="value"
+                                                        rows="10"></textarea>
+                                </div>
+                            </div>
+                            <div id="extra_meta_msg" style="display: None"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button id="btn-confirm-delete-extended-metadata" type="button" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade in" id="create-folder-dialog" tabindex="-1" role="dialog"
      aria-labelledby="create-folder" aria-hidden="false">
     <div class="modal-dialog">
@@ -823,7 +863,7 @@
     </div>
 
     <!-- Edit credit source Modal -->
-    {% for agency in fundingagnency_formset.initial %}
+    {% for agency in fundingagencies %}
         <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
              aria-labelledby="add-funding-label" aria-hidden="true">
             <div class="modal-dialog">
@@ -915,7 +955,7 @@
         </div>
     {% endfor %}
 
-    {% for source in source_formset.initial %}
+    {% for source in sources %}
     <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-source" aria-hidden="false">
         <div class="modal-dialog">
@@ -975,7 +1015,7 @@
     </div>
     {% endfor %}
 
-    {% for relation in relation_formset.initial %}
+    {% for relation in relations %}
     <div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
          aria-labelledby="delete-relation" aria-hidden="false">
         <div class="modal-dialog">
@@ -1049,7 +1089,7 @@
     </div>
     {% endfor %}
 
-    {% for contributor in contributor_formset.initial %}
+    {% for contributor in contributors %}
     <div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
          aria-labelledby="edit-contributor" aria-hidden="true">
         <div class="modal-dialog">
@@ -2024,24 +2064,24 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a type="button" data-dismiss="modal" class="btn btn-default">Close</a>
+                    <a type="button" data-dismiss="modal" class="btn btn-default" onClick="window.location.reload();">Close</a>
                 </div>
             </div>
         </div>
     </div>
     {#======= Manage access modal  window ends =======#}
 
-    <div id="dialog-confirm-delete-self-access" class="access-dialog-title" title="Warning! Loss of access"> 
+    <div id="dialog-confirm-delete-self-access" class="access-dialog-title" title="Warning! Loss of access">
         <p><span class="ui-icon ui-icon-alert access-warning"></span>
             This action will remove your access to this resource and you will no longer be able to
             access it without someone else sharing it with you again. This is not reversible,
             so <strong>Remove</strong> with caution.
         </p>
     </div>
-    
+
     <div id="dialog-confirm-change-share-permission" class="access-dialog-title" title="Warning! Loss of owner access">
         <p><span class="ui-icon ui-icon-alert access-warning"></span>
-        This action will remove your owner access to this resource. This removal is not reversible. Owner 
+        This action will remove your owner access to this resource. This removal is not reversible. Owner
         access can only be retrieved by another owner later granting you owner access. <strong>Remove</strong> with caution.
         </p>
     </div>

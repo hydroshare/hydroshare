@@ -48,9 +48,9 @@
                         aria-hidden="true">&times;</span></button>
                 {% if missing_metadata_elements %}
                     {% if just_created %}
-                        <strong>Congratulations! </strong>
-                        <span>Now that your resource has been created the following metadata are still required to
-                            {% if cm.resource_type != 'ToolResource' %}publish it or {% endif %}make it public or discoverable:</span>
+                        This is the landing page for the resource you just created. Add files in the content area below
+                        and enter metadata where needed. The following metadata is required for your resource to be
+                        {% if cm.resource_type != 'ToolResource' %} published or{% endif %} made public:
                     {% else %}
                         <span>The following metadata are still required to
                             {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
@@ -74,7 +74,7 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
-                {% if not metadata_form %}
+                {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
                     <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
@@ -106,7 +106,7 @@
                     </ul>
                 {% endfor %}
 
-                {% if not metadata_form %}
+                {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
                     <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
@@ -146,7 +146,7 @@
 
 {# ======= Title ======= #}
 <div class="col-xs-12">
-    {% if not metadata_form %}
+    {% if not resource_edit_mode %}
         <h2 id="resource-title">{{ title }}</h2>
         <hr>
         {% if tool_homepage_url %}

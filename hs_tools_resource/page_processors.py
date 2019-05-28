@@ -1,17 +1,17 @@
-from mezzanine.pages.page_processors import processor_for
 from crispy_forms.layout import Layout, HTML
-
-from hs_core import page_processors
-from hs_core.views import add_generic_context
+from django.http import HttpResponseRedirect
+from mezzanine.pages.page_processors import processor_for
 
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
     VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm, \
     UrlBaseAggregationForm, UrlBaseFileForm
+from hs_core import page_processors
+from hs_core.views import add_generic_context
+from hs_file_types.utils import get_SupportedAggTypes_choices
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
-from hs_file_types.utils import get_SupportedAggTypes_choices
 
 
 @processor_for(ToolResource)
@@ -25,6 +25,9 @@ def landing_page(request, page):
                                                    resource_edit=edit_resource,
                                                    extended_metadata_layout=None,
                                                    request=request)
+        if isinstance(context, HttpResponseRedirect):
+            # sending user to login page
+            return context
         extended_metadata_exists = False
         if content_model.metadata.url_base or content_model.metadata.version:
             extended_metadata_exists = True

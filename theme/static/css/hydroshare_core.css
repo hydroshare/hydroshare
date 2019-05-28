@@ -74,12 +74,16 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	color: #EEEEEE;
 }
 
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .resource-type-name,
+.navbar-inverse .navbar-nav > li > a,
+.navbar-inverse .navbar-nav > .open > a,
+.navbar-inverse .navbar-nav > .open > a:hover,
+.navbar-inverse .navbar-nav > .open > a:focus {
 	color: #777;
-    font: 13px/18px 'Open Sans',arial,sans-serif;
+	font: 13px/18px 'Open Sans', arial, sans-serif;
 }
 
-.navbar-nav > li > .dropdown-menu, .dropdown-menu.profile-card {
+.navbar-nav > li > .dropdown-menu.arrow_box, .dropdown-menu.profile-card {
     margin-top: 18px;
     margin-right: -12px;
     width: 300px;
@@ -94,11 +98,15 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     -moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2)
 }
 
+.res-dropdown {
+	padding: 7px;
+	padding-right: 40px;
+}
+
 .dropdown-menu.profile-card {
     width: 350px;
     height: auto;
     margin: unset;
-
 }
 
 .profile-card .flex > div {
@@ -144,7 +152,9 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     border: 1px dashed #fcefa1;
 }
 
-.navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
+.navbar-inverse .navbar-nav > .open > a:hover,
+.navbar-inverse .navbar-nav > li > a:hover,
+.navbar-inverse .navbar-nav > li > a:focus {
 	color: #333;
 	-webkit-transition: color 100ms linear;
 	-moz-transition: color 100ms linear;
@@ -160,23 +170,14 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
-.navbar-inverse .navbar-nav > .dropdown > a .caret {
-	border-top-color: #EEEEEE;
-	border-bottom-color: #EEEEEE;
-}
-
-.navbar-inverse .navbar-nav > .open > a .caret,
-.navbar-inverse .navbar-nav > .open > a:hover .caret,
-.navbar-inverse .navbar-nav > .open > a:focus .caret {
-	border-top-color: #eaeaea;
-	border-bottom-color: #eaeaea;
+.navbar-inverse .tooltip {
+	text-transform: none;
 }
 
 .navbar-inverse .navbar-nav > .open > a,
 .navbar-inverse .navbar-nav > .open > a:hover,
 .navbar-inverse .navbar-nav > .open > a:focus {
-	color: #FFF;
-	background-color: #63AC3C;
+	background-color: unset;
 }
 
 .dropdown-menu {
@@ -2174,7 +2175,9 @@ table.user-scope tr {
     border-bottom: 1px solid #ddd;
 }
 
-.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .undo-share-form, .access-table tr.hide-actions .caret {
+.access-table tr.hide-actions .remove-user-form,
+.access-table tr.hide-actions .undo-share-form,
+.access-table tr.hide-actions .caret {
 	display: none;
 }
 
@@ -3574,7 +3577,6 @@ div.description.active {
 
 #user-type-other {
     display: none;
-    padding-left: 30%;
 }
 
 div.btn-update-picture {
@@ -4877,8 +4879,10 @@ div#resource-content {
 	box-shadow: 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12), 0 2px 4px -1px rgba(0,0,0,.2);
 }
 
-#resource-content .resource-type-name {
-    display: inline-block;
+.dropdown-menu .resource-type-name,
+#select-resource-type .resource-type-name {
+	display: inline-block;
+	vertical-align: middle;
 }
 
 #btn-next-step, #btn-previous-step {
@@ -4929,13 +4933,28 @@ div#resource-content {
 	margin-left: 20px;
 }
 
+.navbar-inverse .res-dropdown .dropdown-menu > li > a {
+    padding: 4px 16px;
+    cursor: pointer;
+}
+
+.navbar-inverse .res-dropdown .dropdown-menu.disabled li {
+	pointer-events: none;
+}
+
 #dropdown-resource-type .dropdown-menu > li > a {
 	padding: 2px 16px;
 	cursor: default;
 }
 
-#dropdown-resource-type .dropdown-menu .resource-type-icon, #right-click-menu .resource-type-icon {
+#dropdown-resource-type .dropdown-menu .resource-type-icon,
+#right-click-menu .resource-type-icon {
 	height: 26px;
+}
+
+.navbar-inverse .res-dropdown .resource-type-icon {
+	height: 38px;
+	margin-right: 10px;
 }
 
 /* Tooltip */
@@ -4975,7 +4994,7 @@ div#resource-content {
 	width: 220px;
 }
 
-#dropdown-resource-type div.tooltip-inner {
+#dropdown-resource-type div.tooltip-inner, .res-dropdown div.tooltip-inner {
     width: 350px;
 }
 

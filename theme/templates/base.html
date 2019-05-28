@@ -88,12 +88,11 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/">
+                <a class="navbar-brand" href="/landingPage">
                     <img id="img-brand-logo" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
                 </a>
             </div>
             <div class="collapse navbar-collapse">
-                {% include "pages/menus/dropdown.html" %}
                 {% comment %}
                 <!-- Search form for extra small screens -->
                 <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
@@ -169,6 +168,7 @@
                     </li>
                     {% endcomment %}
                 </ul>
+                {% include "pages/menus/dropdown.html" %}
             </div>
         </div>
     </div>
@@ -222,7 +222,8 @@
         <div class="main-container">
             {% block main %}{% endblock %}
             {% block after_main %}{% endblock %}
-                </div>
+            {% include "pages/site-wide-modals.html" %}
+        </div>
     {% endblock %}
 
     <!-- Foooter
