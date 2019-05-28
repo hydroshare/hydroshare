@@ -1657,16 +1657,6 @@ body > .main-container {
 	outline: none;
 }
 
-.btn-create-resource .btn-cancel-create-resource {
-    height: 40px;
-    line-height: 26px;
-    width: 180px;
-}
-
-.btn-cancel-create-resource {
-	margin-right: 10px;
-}
-
 .access-panel-title{
     color: #FFF;
     background-color: #337ab7;

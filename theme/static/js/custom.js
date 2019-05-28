@@ -437,11 +437,3 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
 }
-
-// Displays error message if resource creation fails and restores UI state
-function showCreateError() {
-    customAlert("Error", 'Failed to create resource.', "error", 10000);
-    $(".btn-create-resource").removeClass("disabled");
-    $(".btn-create-resource").text("Create Resource");
-    $(".btn-cancel-create-resource").removeClass("disabled");
-}
