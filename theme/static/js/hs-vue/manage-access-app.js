@@ -100,6 +100,7 @@ let manageAccessApp = new Vue({
                 }
 
                 if (resp.status == "success") {
+                    user = resp.user;
                     if (vue.currentUser === user.id) {
                         vue.selfAccessLevel = user.access;
                     }
@@ -109,8 +110,8 @@ let manageAccessApp = new Vue({
                     vue.error = resp.error_msg;
                 }
 
-                resp.user.loading = false;
-                vue.users.splice(index, 1, resp.user);
+                user.loading = false;
+                vue.users.splice(index, 1, user);
                 vue.isProcessing = false;
             });
         },
@@ -320,8 +321,10 @@ let manageAccessApp = new Vue({
                 }
                 else {
                     vue.error = resp.error_msg;
-                    user.loading = false;
-                    vue.users.splice(index, 1, user);
+                    if (index >= 0) {
+                        user.loading = false;
+                        vue.users.splice(index, 1, user);
+                    }
                 }
                 vue.isProcessing = false;
             });
