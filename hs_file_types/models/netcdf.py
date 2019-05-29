@@ -1,33 +1,29 @@
-import os
-import shutil
 import logging
+import os
 import re
-
+import shutil
 from functools import partial, wraps
+
 import netCDF4
 import numpy as np
-from lxml import etree
-
-from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.template import Template, Context
+from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
-
+from django.template import Template, Context
 from dominate.tags import div, legend, form, button, p, textarea, input
+from lxml import etree
 
-from hs_core.hydroshare import utils
-from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import Creator, Contributor, CoreMetaData
-from hs_core.signals import post_add_netcdf_aggregation
-
-from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
-from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
-
-from base import AbstractFileMetaData, AbstractLogicalFile
-import hs_file_types.nc_functions.nc_utils as nc_utils
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
+import hs_file_types.nc_functions.nc_utils as nc_utils
+from base import AbstractFileMetaData, AbstractLogicalFile
+from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
+from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
+from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
+from hs_core.hydroshare import utils
+from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.signals import post_add_netcdf_aggregation
 
 
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
@@ -343,6 +339,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """does not allow the original folder to be deleted upon zipping of that folder"""
         return False
 
+    @property
+    def aggregation_name(self):
+        nc_file = self.get_primary_resouce_file(self.files.all())
+        return nc_file.short_path
+
     def update_netcdf_file(self, user):
         """
         writes metadata to the netcdf file associated with this instance of the logical file
@@ -422,53 +423,24 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             dump_file = create_header_info_txt_file(temp_file, nc_file_name)
             file_folder = res_file.file_folder
             aggregation_folder_created = False
-            create_new_folder = cls._check_create_aggregation_folder(
-                selected_res_file=res_file, selected_folder=folder_path,
-                aggregation_file_count=1)
 
             with transaction.atomic():
                 # create a netcdf logical file object to be associated with
                 # resource files
                 dataset_title = res_dublin_core_meta.get('title', nc_file_name)
                 logical_file = cls.initialize(dataset_title, resource)
-
+                # create logical file record in DB
+                logical_file.save()
                 try:
                     if folder_path is None:
                         # we are here means aggregation is being created by selecting a file
-
-                        # create a folder for the netcdf file type using the base file
-                        # name as the name for the new folder if the file is not already in a folder
-                        if create_new_folder:
-                            upload_folder = cls._create_aggregation_folder(resource, file_folder,
-                                                                           nc_file_name)
-                            aggregation_folder_created = True
-                            log.info("NetCDF Aggregation creation - folder created:{}".format(
-                                upload_folder))
-                        else:
-                            # selected nc file is already in a folder
-                            upload_folder = file_folder
-
-                        # create logical file record in DB
-                        logical_file.save()
-                        if aggregation_folder_created:
-                            # copy the nc file to the new aggregation folder and make it part
-                            # of the logical file
-                            tgt_folder = upload_folder
-                            files_to_copy = [res_file]
-                            logical_file.copy_resource_files(resource, files_to_copy,
-                                                             tgt_folder)
-                            res_files_to_delete.append(res_file)
-                        else:
-                            # make the selected nc file as part of the aggregation/file type
-                            logical_file.add_resource_file(res_file)
-
+                        upload_folder = file_folder
                     else:
-                        # logical file record gets created in DB
-                        logical_file.save()
                         # folder has been selected to create aggregation
                         upload_folder = folder_path
-                        # make the .nc file part of the aggregation
-                        logical_file.add_resource_file(res_file)
+
+                    # make the .nc file part of the aggregation
+                    logical_file.add_resource_file(res_file)
 
                     # add the new dump txt file to the resource
                     uploaded_file = UploadedFile(file=open(dump_file, 'rb'),
@@ -531,9 +503,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         shutil.rmtree(temp_dir)
 
             if not file_type_success:
-                aggregation_from_folder = folder_path is not None
-                cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                           file_folder, aggregation_from_folder)
                 raise ValidationError(msg)
 
         else:
