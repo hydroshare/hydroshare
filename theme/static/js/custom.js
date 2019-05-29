@@ -174,7 +174,7 @@ $(document).ready(function () {
 
         createResource(resourceType, title);
     });
-
+    
     function createResource(type, title="Untitled Resource") {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
