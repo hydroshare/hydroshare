@@ -20,11 +20,14 @@ class Command(BaseCommand):
                 # resource is in user zone, so migrate it to data zone
                 # copy files from iRODS user zone to data zone
                 try:
-                    src_files = os.path.join(resource.root_path, 'data')
-                    storage.copyFiles(src_files, resource.short_id)
-                    # copy AVU over for the resource collection from iRODS user zone to data zone
                     src_coll = resource.root_path
                     tgt_coll = resource.short_id
+
+                    if storage.exists(tgt_coll):
+                        storage.delete(tgt_coll)
+                    storage.copyFiles(src_coll, tgt_coll)
+                    # copy AVU over for the resource collection from iRODS user zone to data zone
+
                     for avu_name in avu_list:
                         value = storage.getAVU(src_coll, avu_name)
                         # bag_modified AVU needs to be set to true for the new resource so the bag
