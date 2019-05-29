@@ -752,9 +752,9 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     if (selectedItem.hasClass("fb-file")) {
-        // only in the case Ref TimeSeries file type or generic file type we need to show
-        // file type metadata when a file is selected
-        if (logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile") {
+        // we need to show file type metadata when a file is selected if that file is not part
+        // of a FileSet aggregation
+        if (logical_type === "FileSetLogicalFile") {
             $("#fileTypeMetaData").html(no_metadata_alert);
             $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
             updateSelectionMenuContext();
