@@ -16,7 +16,7 @@ class Command(BaseCommand):
         storage = IrodsStorage()
         avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
         for resource in BaseResource.objects.all():
-            if resource.resource_type == 'user':
+            if resource.storage_type == 'user':
                 # resource is in user zone, so migrate it to data zone
                 # copy files from iRODS user zone to data zone
                 try:
