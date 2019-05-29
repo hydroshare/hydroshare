@@ -98,11 +98,15 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     -moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2)
 }
 
+.res-dropdown {
+	padding: 7px;
+	padding-right: 40px;
+}
+
 .dropdown-menu.profile-card {
     width: 350px;
     height: auto;
     margin: unset;
-
 }
 
 .profile-card .flex > div {
