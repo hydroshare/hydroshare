@@ -292,15 +292,19 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_remove_aggregation(self):
         # here we are testing the remove_aggregation view function
 
-        self.create_composite_resource(file_to_upload=self.netcdf_file)
-
+        self.create_composite_resource()
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-
+        expected_file_folder = res_file.file_folder
+        
         # set the nc file to NetCDFLogicalFile (aggregation)
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        expected_file_folder, _ = os.path.splitext(res_file.file_name)
+
         # test that we have one logical file of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
