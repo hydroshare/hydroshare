@@ -334,8 +334,10 @@ let manageAccessApp = new Vue({
                 }
                 else {
                     vue.error = resp.error_msg;
-                    user.loading = false;
-                    vue.users.splice(index, 1, user);
+                    if (index >= 0) {
+                        user.loading = false;
+                        vue.users.splice(index, 1, user);
+                    }
                 }
                 vue.isProcessing = false;
             });
