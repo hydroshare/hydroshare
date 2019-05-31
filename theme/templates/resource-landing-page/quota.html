@@ -6,7 +6,6 @@
     <div class="panel-body">
         <span>The quota holder of this resource is: </span>
         <span>
-{#            <a :href="'/user/' + quotaHolder.id">${quotaHolder.best_name}</a>#}
             <profile-link v-on:load-card="onLoadQuotaHolderCard($event)" :user="quotaHolder"></profile-link>
             <profile-card :user="quotaHolder" :position="cardPosition"></profile-card>
         </span>
