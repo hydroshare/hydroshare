@@ -44,12 +44,17 @@
                 </fieldset>
             </div>
 
-            <button type="button" class="btn btn-default space-right" data-toggle="collapse"
-                    data-target="#form-quota-holder">Cancel
+            <button
+                :class="{disabled: isChangingQuotaHolder}"
+                class="btn btn-default space-right" data-toggle="collapse"
+                type="button"
+                data-target="#form-quota-holder">Cancel
             </button>
 
-            <button type="button" class="btn btn-primary"
-                    @click="setQuotaHolder($refs.newHolder.value)">Save Changes
+            <button @click="setQuotaHolder($refs.newHolder.value)"
+                    :class="{disabled: isChangingQuotaHolder}"
+                    class="btn btn-primary"
+                    type="button">${isChangingQuotaHolder ? "Saving Changes..." : "Save Changes"}
             </button>
         </div>
         <hr>

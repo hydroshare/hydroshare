@@ -35,6 +35,7 @@ let manageAccessApp = new Vue({
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
+        isChangingQuotaHolder: false,
         cardPosition: {
             top: 0,
             left: 0,
@@ -403,6 +404,7 @@ let manageAccessApp = new Vue({
         setQuotaHolder: function (username) {
             let vue = this;
             vue.quotaError = "";
+            vue.isChangingQuotaHolder = true;
 
             $.post('/hsapi/_internal/' + this.resShortId + '/change-quota-holder/',
                 {new_holder_username: username}, function (resp) {
@@ -427,6 +429,7 @@ let manageAccessApp = new Vue({
                     else {
                         vue.quotaError = resp.message;
                     }
+                    vue.isChangingQuotaHolder = false;
                 }
             );
         },
