@@ -839,7 +839,7 @@
       {% with cm.last_changed_by as usr %}
           const LAST_CHANGED_BY = {
           "id": {{ usr.id }},
-          "pictureUrl": "{{ usr.userprofile.picture.url }}",
+          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
           "best_name": "{{ usr|best_name }}",
           "email": "{{ usr.email|safe }}",
           "organization": "{{ usr.userprofile.organization }}",
