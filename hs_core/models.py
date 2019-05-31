@@ -183,43 +183,48 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
+# Build a JSON serializable object with user data
 def get_user_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
+    user_object = None
     picture = None
-    name = None
-    username = None
 
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
-        name = best_name(user)
-        username = user.username
+
+        user_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": best_name(user),
+            "user_name": user.username,
+            "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources),
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y")
+        }
     elif user_type == "group":
         if user.gaccess.picture:
             picture = user.gaccess.picture.url
-        name = user.name
 
-    user_object = {
-        "user_type": user_type,
-        "access": user_access,
-        "id": user.id,
-        "pictureUrl": picture,
-        "best_name": name,
-        "user_name": username,
-        "can_undo": user.can_undo
-    }
-
-    # Data used to populate profile badge
-    if user_type == user:
-        user_object["email"] = user.email,
-        user_object["organization"] = user.userprofile.organization,
-        user_object["title"] = user.userprofile.title,
-        user_object["contributions"] = len(user.uaccess.owned_resources),
-        user_object["subject_areas"] = user.userprofile.subject_areas,
-        user_object["identifiers"] = user.userprofile.identifiers,
-        user_object["state"] = user.userprofile.state,
-        user_object["country"] = user.userprofile.country,
-        user_object["joined"] = user.date_joined.strftime("%d %b, %Y")
+        user_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": user.name,
+            "user_name": None,
+            "can_undo": user.can_undo
+        }
 
     return user_object
 
