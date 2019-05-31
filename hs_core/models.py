@@ -199,7 +199,7 @@ def get_user_object(user, user_type, user_access):
             picture = user.gaccess.picture.url
         name = user.name
 
-    return {
+    user_object = {
         "user_type": user_type,
         "access": user_access,
         "id": user.id,
@@ -208,6 +208,20 @@ def get_user_object(user, user_type, user_access):
         "user_name": username,
         "can_undo": user.can_undo
     }
+
+    # Data used to populate profile badge
+    if user_type == user:
+        user_object["email"] = user.email,
+        user_object["organization"] = user.userprofile.organization,
+        user_object["title"] = user.userprofile.title,
+        user_object["contributions"] = len(user.uaccess.owned_resources),
+        user_object["subject_areas"] = user.userprofile.subject_areas,
+        user_object["identifiers"] = user.userprofile.identifiers,
+        user_object["state"] = user.userprofile.state,
+        user_object["country"] = user.userprofile.country,
+        user_object["joined"] = user.date_joined.strftime("%d %b, %Y")
+
+    return user_object
 
 
 def page_permissions_page_processor(request, page):
