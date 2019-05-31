@@ -96,11 +96,16 @@ def verify(request, *args, **kwargs):
 
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
+    ajax_response_data = {'status': 'error', 'message': ''}
+
     if not new_holder_uname:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Please select a user."
+        return JsonResponse(ajax_response_data)
     new_holder_u = User.objects.filter(username=new_holder_uname).first()
     if not new_holder_u:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Unable to change quota holder. " \
+                                     "Please verify that the selected user still has access to this resource."
+        return JsonResponse(ajax_response_data)
 
     res = utils.get_resource_by_shortkey(shortkey)
     try:
@@ -119,14 +124,17 @@ def change_quota_holder(request, shortkey):
                            settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
                            context=context)
     except PermissionDenied:
-        return HttpResponseForbidden()
+        ajax_response_data['message'] = "You do not have permission to change the quota holder for this resource."
+        return JsonResponse(ajax_response_data)
     except utils.QuotaException as ex:
         msg = 'Failed to change quota holder to {0} since {0} does not have ' \
               'enough quota to hold this new resource. The exception quota message ' \
               'reported for {0} is: '.format(new_holder_u.username) + ex.message
-        request.session['validation_error'] = msg
+        ajax_response_data['message'] = msg
+        return JsonResponse(ajax_response_data)
 
-    return HttpResponseRedirect(res.get_absolute_url())
+    ajax_response_data['status'] = 'success'
+    return JsonResponse(ajax_response_data)
 
 
 @api_view(['POST'])
@@ -922,7 +930,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
         if user == user_to_share_with:
             is_current_user = True
 
-        picture_url = 'No picture provided'
+        picture_url = None
         if user_to_share_with.userprofile.picture:
             picture_url = user_to_share_with.userprofile.picture.url
 
@@ -933,7 +941,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                               'error_msg': err_message}
 
     else:
-        group_pic_url = 'No picture provided'
+        group_pic_url = None
         if group_to_share_with.gaccess.picture:
             group_pic_url = group_to_share_with.gaccess.picture.url
 
@@ -994,7 +1002,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
         if undo_user_privilege == PrivilegeCodes.VIEW:
             undo_user_privilege = "view"
         elif undo_user_privilege == PrivilegeCodes.CHANGE:
-            undo_user_privilege = "change"
+            undo_user_privilege = "edit"
         elif undo_user_privilege == PrivilegeCodes.OWNER:
             undo_user_privilege = "owner"
         else:
@@ -1021,7 +1029,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
         if group_to_unshare_with in res.raccess.edit_groups:
-            undo_group_privilege = 'change'
+            undo_group_privilege = 'edit'
         elif group_to_unshare_with in res.raccess.view_groups:
             undo_group_privilege = 'view'
         else:

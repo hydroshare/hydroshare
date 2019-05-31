@@ -2,88 +2,6 @@
 * Created by Mauriel on 3/9/2017.
 */
 
-function onRoleSelect(event) {
-    var el = $(event.target);
-    $("#selected_role").text(el.text());
-    $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
-}
-
-// Toggles pointer events on and off for the access control interface
-function setPointerEvents(flag) {
-    if (!flag) {
-        // Disable pointer events
-        $(".access-table").css("pointer-events", "none");
-        $("#manage-access .modal-content").css("pointer-events", "none");
-    }
-    else {
-        // Enable pointer events
-        $(".access-table").css("pointer-events", "auto");
-        $("#manage-access .modal-content").css("pointer-events", "auto");
-    }
-}
-
-function ownersConstrain() {
-    // Constrains: 1 - At least one owner. 2 - Quota holders cannot be removed
-    if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {
-        var owners = $(".access-table li.active[data-access-type='Is owner']").closest("tr");
-        owners.each(function () {
-            var owner = $(this);
-            if (!owner.find("[quota-holder]").length && owners.length > 1) {
-                owner.toggleClass("hide-actions", false);
-            }
-            else {
-                owner.toggleClass("hide-actions", true);
-            }
-        });
-    }
-}
-
-// Enables and disables granting access buttons accordingly to the current access level
-function updateActionsState(privilege){
-    // Set the state of dropdown menu items and remove buttons to false by default
-    $("form[data-access-type]").parent().addClass("disabled");
-    $("#list-roles a[data-role]").parent().addClass("disabled");
-    $(".access-table li.active[data-access-type]").closest("tr").addClass("hide-actions");
-
-    if (privilege == "view") {
-        // Dropdown menu items
-        $("form[data-access-type='Can view']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='view']").parent().removeClass("disabled");
-
-        // Remove buttons
-        $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
-    }
-    else if(privilege == "change") {
-        // Dropdown menu items
-        $("form[data-access-type='Can view']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='view']").parent().removeClass("disabled");
-
-        $("form[data-access-type='Can edit']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
-
-        // Remove buttons
-        $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
-        $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
-    }
-    else if(privilege == "owner") {
-        // Dropdown menu items
-        $("form[data-access-type='Can view']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='view']").parent().removeClass("disabled");
-
-        $("form[data-access-type='Can edit']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
-
-        $("form[data-access-type='Is owner']").parent().removeClass("disabled");
-        $("#list-roles a[data-role='owner']").parent().removeClass("disabled");
-
-        // Remove buttons
-        $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
-        $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
-
-        ownersConstrain();
-    }
-}
-
 // function for adding keywords associated with file type
 function onAddKeywordFileType(event) {
     var keyword = $("#txt-keyword-filetype").val();
@@ -485,17 +403,14 @@ $(document).ready(function () {
         }
     });
 
-    $("#btn-shareable").on("change", shareable_ajax_submit);
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
     $("#btnOpenWithApp").click(label_ajax_submit);
-    $("#form-change-access button").on("click", change_access_ajax_submit);
 
     // Apply theme to comment's submit button
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");
 
-    $("#list-roles a").click(onRoleSelect);
     $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
     $("input[name='group-autocomplete']").attr("placeholder", "Search by group name").addClass("form-control");
 
@@ -620,45 +535,6 @@ $(document).ready(function () {
         "bFilter": false,
         "bInfo": false,
         "language": {"emptyTable": "No Extended Metadata"}
-    });
-
-    // Toggle visibility for invite users or groups
-    $(".add-view-group-form").hide();
-
-    // Toggle invite user or group form
-    $("#invite-flag button").click(function () {
-        var form = $("#add-access-form");
-        var action = form.attr("action");
-        if ($(this).attr("data-value") == "users") {
-            $(".add-view-user-form").show();
-            $(".add-view-group-form").hide();
-            action = action.replace("share-resource-with-group", "share-resource-with-user");
-            form.attr("action", action);
-            $("#list-roles li:nth-child(3)").show();
-
-            $("#invite-flag button[data-value='groups']").removeClass("btn-primary");
-            $("#invite-flag button[data-value='groups']").addClass("btn-default");
-            $("#invite-flag button[data-value='users']").removeClass("btn-default");
-            $("#invite-flag button[data-value='users']").addClass("btn-primary");
-        }
-        else {
-            $(".add-view-group-form").show();
-            $(".add-view-user-form").hide();
-            action = action.replace("share-resource-with-user", "share-resource-with-group");
-            form.attr("action", action);
-            if ($("#selected_role").attr("data-role") == "owner") {
-                $("#selected_role").attr("data-role", "view");
-                $("#selected_role").text("Can view");
-            }
-            $("#list-roles li:nth-child(3)").hide();
-            $("#invite-flag button[data-value='users']").disabled = true;
-            $("#invite-flag button[data-value='groups']").disabled = false;
-
-            $("#invite-flag button[data-value='users']").removeClass("btn-primary");
-            $("#invite-flag button[data-value='users']").addClass("btn-default");
-            $("#invite-flag button[data-value='groups']").removeClass("btn-default");
-            $("#invite-flag button[data-value='groups']").addClass("btn-primary");
-        }
     });
 
     $("#btn-add-new-entry").click(function() {
