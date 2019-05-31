@@ -42,6 +42,7 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+
 import unicodedata
 
 
@@ -182,9 +183,36 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
+def get_user_object(user, user_type, user_access):
+    from hs_core.templatetags.hydroshare_tags import best_name
+    picture = None
+    name = None
+    username = None
+
+    if user_type == "user":
+        if user.userprofile.picture:
+            picture = user.userprofile.picture.url
+        name = best_name(user)
+        username = user.username
+    elif user_type == "group":
+        if user.gaccess.picture:
+            picture = user.gaccess.picture.url
+        name = user.name
+
+    return {
+        "user_type": user_type,
+        "access": user_access,
+        "id": user.id,
+        "pictureUrl": picture,
+        "best_name": name,
+        "user_name": username,
+        "can_undo": user.can_undo
+    }
+
+
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
-    from hs_access_control.models import PrivilegeCodes
+    from hs_access_control.models.privilege import PrivilegeCodes
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -239,89 +267,20 @@ def page_permissions_page_processor(request, page):
 
     users_json = []
 
-    from hs_core.templatetags.hydroshare_tags import best_name
-
     for usr in owners:
-        users_json.append({
-            "user_type": "user",
-            "access": "owner",
-            "id": usr.id,
-            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
-            "best_name": best_name(usr),
-            "user_name": usr.username,
-            "can_undo": usr.can_undo,
-            "email": usr.email,
-            "organization": usr.userprofile.organization,
-            "title": usr.userprofile.title,
-            "contributions": len(usr.uaccess.owned_resources),
-            "subject_areas": usr.userprofile.subject_areas,
-            "identifiers": usr.userprofile.identifiers,
-            "state": usr.userprofile.state,
-            "country": usr.userprofile.country,
-            "joined": usr.date_joined.strftime("%d %b, %Y")
-        })
+        users_json.append(get_user_object(usr, "user", "owner"))
 
     for usr in editors:
-        users_json.append({
-            "user_type": "user",
-            "access": "edit",
-            "id": usr.id,
-            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
-            "best_name": best_name(usr),
-            "user_name": usr.username,
-            "can_undo": usr.can_undo,
-            "email": usr.email,
-            "organization": usr.userprofile.organization,
-            "title": usr.userprofile.title,
-            "contributions": len(usr.uaccess.owned_resources),
-            "subject_areas": usr.userprofile.subject_areas,
-            "identifiers": [],
-            "state": usr.userprofile.state,
-            "country": usr.userprofile.country,
-            "joined": usr.date_joined.strftime("%d %b, %Y")
-        })
+        users_json.append(get_user_object(usr, "user", "edit"))
 
     for usr in viewers:
-        users_json.append({
-            "user_type": "user",
-            "access": "view",
-            "id": usr.id,
-            "pictureUrl": usr.userprofile.picture.url if usr.userprofile.picture else None,
-            "best_name": best_name(usr),
-            "user_name": usr.username,
-            "can_undo": usr.can_undo,
-            "email": usr.email,
-            "organization": usr.userprofile.organization,
-            "title": usr.userprofile.title,
-            "contributions": len(usr.uaccess.owned_resources),
-            "subject_areas": usr.userprofile.subject_areas,
-            "identifiers": [],
-            "state": usr.userprofile.state,
-            "country": usr.userprofile.country,
-            "joined": usr.date_joined.strftime("%d %b, %Y")
-        })
+        users_json.append(get_user_object(usr, "user", "view"))
 
     for usr in edit_groups:
-        users_json.append({
-            "user_type": "group",
-            "access": "edit",
-            "id": usr.id,
-            "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
-            "best_name": usr.name,
-            "user_name": None,
-            "can_undo": usr.can_undo
-        })
+        users_json.append(get_user_object(usr, "group", "edit"))
 
     for usr in view_groups:
-        users_json.append({
-            "user_type": "group",
-            "access": "view",
-            "id": usr.id,
-            "pictureUrl": usr.gaccess.picture.url if usr.gaccess.picture else None,
-            "best_name": usr.name,
-            "user_name": None,
-            "can_undo": usr.can_undo
-        })
+        users_json.append(get_user_object(usr, "group", "view"))
 
     users_json = json.dumps(users_json)
 
