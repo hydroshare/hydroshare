@@ -15,7 +15,6 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
@@ -310,6 +309,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
