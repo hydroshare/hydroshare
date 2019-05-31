@@ -917,51 +917,22 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     else:
         status = 'error'
 
+    from hs_core.models import get_user_object
+
     if user_or_group == 'user':
-        picture_url = None
-        if user_to_share_with.userprofile.picture:
-            picture_url = user_to_share_with.userprofile.picture.url
-
         user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
-
-        from hs_core.templatetags.hydroshare_tags import best_name
+        user_to_share_with.can_undo = user_can_undo
 
         ajax_response_data = {'status': status,
                               'error_msg': err_message,
-                              'user': {"user_type": "user",
-                                       "access": privilege,
-                                       "id": user_to_share_with.id,
-                                       "pictureUrl": picture_url,
-                                       "best_name": best_name(user_to_share_with),
-                                       "user_name": user_to_share_with.username,
-                                       "can_undo": user_can_undo,
-                                       "email": user_to_share_with.email,
-                                       "organization": user_to_share_with.userprofile.organization,
-                                       "title": user_to_share_with.userprofile.title,
-                                       "contributions": len(user_to_share_with.uaccess.owned_resources),
-                                       "subject_areas": user_to_share_with.userprofile.subject_areas,
-                                       "identifiers": user_to_share_with.userprofile.identifiers,
-                                       "state": user_to_share_with.userprofile.state,
-                                       "country": user_to_share_with.userprofile.country,
-                                       "joined": user_to_share_with.date_joined.strftime("%d %b, %Y")}
-                              }
+                              'user': get_user_object(user_to_share_with, "user", privilege)}
     else:
-        group_pic_url = None
-        if group_to_share_with.gaccess.picture:
-            group_pic_url = group_to_share_with.gaccess.picture.url
-
         group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+        group_to_share_with.can_undo = group_can_undo
 
         ajax_response_data = {'status': status,
                               'error_msg': err_message,
-                              'user': {"user_type": "group",
-                                       "access": privilege,
-                                       "id": group_to_share_with.id,
-                                       "pictureUrl": group_pic_url,
-                                       "best_name": group_to_share_with.name,
-                                       "can_undo": group_can_undo,
-                                       "user_name": None}
-                              }
+                              'user': get_user_object(group_to_share_with, "group", privilege)}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
