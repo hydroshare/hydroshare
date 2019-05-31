@@ -75,62 +75,57 @@
                                     data-value="groups">Groups</button>
                         </div>
 
-                        <form id="add-access-form"
-                              :action="'/hsapi/_internal/' + resShortId + '/share-resource-with-' + (isInviteUsers ? 'user' : 'group') + '/'"
-                              method="POST">
-                            {% csrf_token %}
 
-                            <div class="row">
-                                <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">
-                                    {{ add_view_invite_user_form.user }}
-                                </div>
+                        <div class="row">
+                            <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">
+                                {{ add_view_invite_user_form.user }}
+                            </div>
 
-                                <div v-show="!isInviteUsers" class="add-view-group-form col-xs-12">
-                                    {{ add_view_group_form.group }}
-                                </div>
+                            <div v-show="!isInviteUsers" class="add-view-group-form col-xs-12">
+                                {{ add_view_group_form.group }}
+                            </div>
 
-                                <div class="col-xs-12">
-                                    <div class="row">
-                                        <div class="col-xs-6">
-                                            <div class="dropdown custom-dropdown">
-                                                <button class="btn btn-default dropdown-toggle" type="button"
-                                                        id="roles_list" data-toggle="dropdown"
-                                                        aria-haspopup="true">
-                                                    <span id="selected_role" data-role="view">${accessStr[selectedAccess]}</span>
-                                                    <span class="caret"></span>
-                                                </button>
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <div class="dropdown custom-dropdown">
+                                            <button class="btn btn-default dropdown-toggle" type="button"
+                                                    id="roles_list" data-toggle="dropdown"
+                                                    aria-haspopup="true">
+                                                <span id="selected_role" data-role="view">${accessStr[selectedAccess]}</span>
+                                                <span class="caret"></span>
+                                            </button>
 
-                                                <ul id="list-roles" class="dropdown-menu" aria-labelledby="roles_list">
-                                                    <li :class="{ disabled: selfAccessLevel === 'None' }"
-                                                        @click="selectedAccess = 'view'">
-                                                        <a data-role="view">Can view</a>
-                                                    </li>
+                                            <ul id="list-roles" class="dropdown-menu" aria-labelledby="roles_list">
+                                                <li :class="{ disabled: selfAccessLevel === 'None' }"
+                                                    @click="selectedAccess = 'view'">
+                                                    <a data-role="view">Can view</a>
+                                                </li>
 
-                                                    <li :class="{ disabled: selfAccessLevel !== 'owner' && selfAccessLevel !== 'edit' }"
-                                                        @click="selectedAccess = 'edit'">
-                                                        <a data-role="edit">Can edit</a>
-                                                    </li>
+                                                <li :class="{ disabled: selfAccessLevel !== 'owner' && selfAccessLevel !== 'edit' }"
+                                                    @click="selectedAccess = 'edit'">
+                                                    <a data-role="edit">Can edit</a>
+                                                </li>
 
-                                                    <li v-if="isInviteUsers"
-                                                        :class="{ disabled: selfAccessLevel !== 'owner' }"
-                                                        @click="selectedAccess = 'owner'">
-                                                        <a data-role="owner">Is owner</a>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                                <li v-if="isInviteUsers"
+                                                    :class="{ disabled: selfAccessLevel !== 'owner' }"
+                                                    @click="selectedAccess = 'owner'">
+                                                    <a data-role="owner">Is owner</a>
+                                                </li>
+                                            </ul>
                                         </div>
+                                    </div>
 
-                                        <div class="col-xs-6">
-                                            <a id="btn-confirm-add-access"
-                                               @click="grantAccess"
-                                               class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbsp;Add</span>
-                                            </a>
-                                        </div>
+                                    <div class="col-xs-6">
+                                        <a id="btn-confirm-add-access"
+                                           @click="grantAccess"
+                                           class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbsp;Add</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                         <div v-if="error" class='alert alert-danger space-top small'>
                             <strong>Error: </strong>${ error }
                         </div>
