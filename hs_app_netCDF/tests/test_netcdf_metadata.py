@@ -409,7 +409,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
     def test_metadata_extraction_of_wkt_crs_on_resource_creation(self):
         files = [UploadedFile(file=self.netcdf_file_obj_crs, name=self.netcdf_file_name_crs)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(
+        _, _, metadata = utils.resource_pre_create_actions(
             resource_type='NetcdfResource',
             resource_title='Snow water equivalent estimation at TWDEF site '
                            'from Oct 2009 to June 2010',
@@ -597,7 +597,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
     def _create_netcdf_resource(self):
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(
+        _, _, metadata = utils.resource_pre_create_actions(
             resource_type='NetcdfResource',
             resource_title='Snow water equivalent estimation at TWDEF site '
                            'from Oct 2009 to June 2010',
