@@ -177,28 +177,54 @@
             </ul>
         {% endif %}
     {% else %}
-        <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
-              id="id-title"
-              method="post">
-            {% csrf_token %}
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+        <!-------------------------- Vue form start --------------------------->
+        <div id="app">
+        <form id="id-title" >
             <fieldset>
                 <div id="div_id_value" class="control-group">
-                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                 id="txt-title"
-                                                 maxlength="300" name="value" type="text"
-                                                 value="{{ cm.metadata.title }}"></div>
+                    <div class="controls">
+                        <input class="form-control input-sm textinput textInput"
+                               id="txt-title"
+                               maxlength="300" name="value" type="text"
+                               v-model="{{ title }}">
+                    </div>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-primary pull-right btn-form-submit"
+                    <button type="button" class="btn btn-primary pull-right btn-form-submit" v-on:click="naming" value="Save Changes"
                             style="display: none;">
-                        Save changes
+                        Save Changes
                     </button>
                 </div>
             </fieldset>
         </form>
+        </div>
+        <!-------------------------- Vue form end --------------------------->
+
     {% endif %}
 </div>
 
+
+<script>
+
+    var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el:'#app',
+        data: {
+            short_id: {{ cm.short_id }},
+            title:{{ cm.metadata.title }},
+            id:{{ cm.metadata.title.id }},
+            token: {{ csrf_token }}
+
+        },
+        methods:{
+            naming:function (e) {
+                console.log('##################', this.title);
+        }}
+    });
+
+</script>
 
 {% if is_replaced_by %}
     <div class="col-xs-12">

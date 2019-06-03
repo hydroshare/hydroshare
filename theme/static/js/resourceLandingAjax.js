@@ -772,8 +772,11 @@ function metadata_update_ajax_submit(form_id){
         dataType: 'html',
         data: datastring,
         success: function(result) {
+            print("result data is ", result)
             /* The div contains now the updated form */
-            let json_response = JSON.parse(result);
+            // let json_response = JSON.toString(result);
+            let json_response = JSON.stringify(results);
+            // let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
