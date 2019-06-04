@@ -3,7 +3,6 @@
 */
 
 function rep_res_to_irods_user_zone_ajax_submit(res_id) {
-    setPointerEvents(false);
     $.ajax({
         url: "/hsapi/_internal/" + res_id + "/rep-res-bag-to-irods-user-zone/",
         type: "POST",
@@ -37,11 +36,6 @@ $(document).on('click', '.btn-unshare-resource', function () {
 $(document).on('click', '.btn-undo-share', function () {
     var formID = $(this).closest("form").attr("id");
     undo_share_ajax_submit(formID);
-});
-
-$(document).on("click", ".btn-change-share-permission", function () {
-    var arg = $(this).attr("data-arg");
-    change_share_permission_ajax_submit(arg);
 });
 
 $(document).ready(function() {
@@ -90,13 +84,9 @@ $(document).ready(function() {
     });
 
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
+    $("#btn-confirm-delete-extended-metadata").click(removeExtraMetaTable);
 
-    $("#btn-confirm-add-access").click(function () {
-        var formID = $(this).closest("form").attr("id");
-        share_resource_ajax_submit(formID);
-    });
-
-    $("input#id_user-autocomplete").addClass("form-control");
+    $("input#user-autocomplete").addClass("form-control");
 
     $('#usage-info').on('hidden.bs.collapse', function () {
         $("a[data-target='#usage-info']").text("Show More");
@@ -108,7 +98,6 @@ $(document).ready(function() {
         $("#edit-creator-dialog").modal('show');
         let data = $.extend(true, {}, $(this).data());    // Shallow copy
         let dialog = $("#edit-creator-dialog");
-        let shortID = $("#short-id").val();
         let form = dialog.find("form");
 
         // The resource must have at least one author.
@@ -119,10 +108,10 @@ $(document).ready(function() {
         }
         else {
             dialog.find("modal-body--delete").show();
-            $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/delete-metadata/");
+            $("#confirm-delete-author").find(".btn-danger").attr("href", "/hsapi/_internal/" + SHORT_ID + "/creator/" + data.id + "/delete-metadata/");
         }
 
-        form.attr("action", "/hsapi/_internal/" + shortID + "/creator/" + data.id + "/update-metadata/");
+        form.attr("action", "/hsapi/_internal/" + SHORT_ID + "/creator/" + data.id + "/update-metadata/");
 
         data.order -= 1;    // The value we use in the back end is 0 based and in the UI it is not
 

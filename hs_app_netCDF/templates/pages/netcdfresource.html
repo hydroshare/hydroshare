@@ -4,110 +4,102 @@
 {% load pages_tags mezzanine_tags crispy_forms_tags %}
 
 {% block extended_metadata %}
-        <div class="row">
-            <div class="col-md-12">
-                <div>
-                {# Add the view mode html code below for resource extended meta tab #}
+    <div class="col-md-12">
+        {# Add the view mode html code below for resource extended meta tab #}
 
-                {% if extended_metadata_exists %}
-                    {# Add the original coverage meta #}
-                    <legend>Spatial Reference</legend>
-                    {% if original_coverage %}
-                        {% if original_coverage.projection or original_coverage.projection_string_type or original_coverage.projection_string_text %}
-                        <table class="custom-table">
-                            <tbody>
-                                {% if original_coverage.projection %}
-                                    <tr><th class="text-muted">Coordinate Reference System </th><td>{{ original_coverage.projection}}</td></tr>
-                                {% endif %}
-
-                                {% if original_coverage.datum %}
-                                    <tr><th class="text-muted">Datum </th><td>{{ original_coverage.datum}}</td></tr>
-                                {% endif %}
-
-                                {% if original_coverage.projection_string_type %}
-                                    <tr><th class="text-muted">Coordinate String Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
-                                {% endif %}
-
-                                {% if original_coverage.projection_string_text %}
-                                    <tr><th class="text-muted">Coordinate String </th><td style="word-break:break-all" >{{ original_coverage.projection_string_text}}</td></tr>
-                                {% endif %}
-
-
-                            </tbody>
-                        </table>
+        {% if extended_metadata_exists %}
+            {# Add the original coverage meta #}
+            <legend>Spatial Reference</legend>
+            {% if original_coverage %}
+                {% if original_coverage.projection or original_coverage.projection_string_type or original_coverage.projection_string_text %}
+                <table class="custom-table">
+                    <tbody>
+                        {% if original_coverage.projection %}
+                            <tr><th class="text-muted">Coordinate Reference System </th><td>{{ original_coverage.projection}}</td></tr>
                         {% endif %}
 
-                        <h4>Extent</h4>
+                        {% if original_coverage.datum %}
+                            <tr><th class="text-muted">Datum </th><td>{{ original_coverage.datum}}</td></tr>
+                        {% endif %}
 
-                        <table class="custom-table">
+                        {% if original_coverage.projection_string_type %}
+                            <tr><th class="text-muted">Coordinate String Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
+                        {% endif %}
 
-                            {% if original_coverage.northlimit %}
-                                <tr><th class="text-muted">North </th><td>{{ original_coverage.northlimit }}</td></tr>
-                            {% endif %}
+                        {% if original_coverage.projection_string_text %}
+                            <tr><th class="text-muted">Coordinate String </th><td style="word-break:break-all" >{{ original_coverage.projection_string_text}}</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                {% endif %}
 
-                            {% if original_coverage.eastlimit %}
-                                <tr><th class="text-muted">East </th><td>{{ original_coverage.eastlimit }}</td></tr>
-                            {% endif %}
+                <h4>Extent</h4>
 
-                            {% if original_coverage.southlimit %}
-                                <tr><th class="text-muted">South </th><td>{{ original_coverage.southlimit }}</td></tr>
-                            {% endif %}
-
-                            {% if original_coverage.westlimit %}
-                                <tr><th class="text-muted">West </th><td>{{ original_coverage.westlimit }}</td></tr>
-                            {% endif %}
-
-                            {% if original_coverage.units %}
-                                <tr><th class="text-muted">Extent Unit</th><td>{{ original_coverage.units }}</td></tr>
-                            {% endif %}
-
-                        </table>
-                    {% else %}
-                        <p>Metadata information is not provided. </p>
+                <table class="custom-table">
+                    {% if original_coverage.northlimit %}
+                        <tr><th class="text-muted">North </th><td>{{ original_coverage.northlimit }}</td></tr>
                     {% endif %}
 
-                    {# Add the Variable meta #}
-                    <legend style="margin-top:20px;">Variables</legend>
-                    {% if variables %}
-                        <div id="variables" class="well clearfix">
-                            <div class="row">
-                            {% for variable in variables %}
-                                <div class="col-xs-12 col-sm-3">
-                                    <div class="custom-well">
-                                        <strong>{{ variable.name }}</strong>
-                                        <table class="custom-table">
-                                            <tbody>
-                                                <tr><th class="text-muted">Unit </th><td>{{ variable.unit }}</td></tr>
-                                                <tr><th class="text-muted">Type </th><td>{{ variable.type }}</td></tr>
-                                                <tr><th class="text-muted">Shape </th><td>{{ variable.shape }}</td></tr>
-                                                {# Optional extended meta subelement for Variable #}
-                                                {% if variable.descriptive_name %}
-                                                    <tr><th class="text-muted">Long Name </th><td>{{ variable.descriptive_name }}</td></tr>
-                                                {% endif %}
-                                                {% if variable.missing_value %}
-                                                    <tr><th class="text-muted">Missing Value </th><td>{{ variable.missing_value }}</td></tr>
-                                                {% endif %}
-                                                {% if variable.method %}
-                                                    <tr><th class="text-muted">Comment </th><td>{{ variable.method }}</td></tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                         </div>
+                    {% if original_coverage.eastlimit %}
+                        <tr><th class="text-muted">East </th><td>{{ original_coverage.eastlimit }}</td></tr>
+                    {% endif %}
+
+                    {% if original_coverage.southlimit %}
+                        <tr><th class="text-muted">South </th><td>{{ original_coverage.southlimit }}</td></tr>
+                    {% endif %}
+
+                    {% if original_coverage.westlimit %}
+                        <tr><th class="text-muted">West </th><td>{{ original_coverage.westlimit }}</td></tr>
+                    {% endif %}
+
+                    {% if original_coverage.units %}
+                        <tr><th class="text-muted">Extent Unit</th><td>{{ original_coverage.units }}</td></tr>
+                    {% endif %}
+
+                </table>
+            {% else %}
+                <p>Metadata information is not provided. </p>
+            {% endif %}
+
+            {# Add the Variable meta #}
+            <legend style="margin-top:20px;">Variables</legend>
+            {% if variables %}
+                <div id="variables" class="well clearfix">
+                    <div class="row">
+                    {% for variable in variables %}
+                        <div class="col-xs-12 col-sm-3">
+                            <div class="custom-well">
+                                <strong>{{ variable.name }}</strong>
+                                <table class="custom-table">
+                                    <tbody>
+                                        <tr><th class="text-muted">Unit </th><td>{{ variable.unit }}</td></tr>
+                                        <tr><th class="text-muted">Type </th><td>{{ variable.type }}</td></tr>
+                                        <tr><th class="text-muted">Shape </th><td>{{ variable.shape }}</td></tr>
+                                        {# Optional extended meta subelement for Variable #}
+                                        {% if variable.descriptive_name %}
+                                            <tr><th class="text-muted">Long Name </th><td>{{ variable.descriptive_name }}</td></tr>
+                                        {% endif %}
+                                        {% if variable.missing_value %}
+                                            <tr><th class="text-muted">Missing Value </th><td>{{ variable.missing_value }}</td></tr>
+                                        {% endif %}
+                                        {% if variable.method %}
+                                            <tr><th class="text-muted">Comment </th><td>{{ variable.method }}</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    {% else %}
-                        <p> Metadata information is not provided. </p>
-                    {% endif %} {# variable section end #}
-
-                {%  endif %}{# extended meta section end #}
-                {# Add the view mode html code for resource extended meta tababove #}
+                    {% endfor %}
+                 </div>
                 </div>
-            </div>
-        </div>
-{%  endblock %}
+            {% else %}
+                <p> Metadata information is not provided. </p>
+            {% endif %} {# variable section end #}
 
+        {%  endif %}{# extended meta section end #}
+        {# Add the view mode html code for resource extended meta tababove #}
+    </div>
+{%  endblock %}
 
 {#  Add the code of extended section on the landing page below #}
 {% block extra_section %}
@@ -121,14 +113,12 @@
 {#            {% endif %}#}
 {#        {% endfor %}#}
 
-
     {# Add ncdump section #}
     {% if cm.files.all %}
         {# tab body for ncdump #}
             {% for f in cm.files.all %}
                 {% if f.short_path|slice:"-3:" == 'txt'%}
-                    <div style="clear: both">
-                        <br>
+                    <div class="col-xs-12 space-top">
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.short_path }}</p>
                         <div class="hs-doc-preview">
@@ -152,19 +142,7 @@
                 {% endif %}
             {% endfor %}
     {% endif %}
-
-
-    {# Add THREDDS service #}
-    {% if nc_file_name %}
-        <div id="#thredds">
-            <h3>THREDDS Data Service</h3>
-            <h4>OPeNDAP: <a href="{{ opendap }}" target="_blank"> {{ nc_file_name }} </a></h4>
-            <h4>Visualize using IDV:Requires IDV <a href="https://www.unidata.ucar.edu/software/idv/" target="_blank">installation</a>, then use OPeNDAP service link as "URL" for IDV "Data Choosers"</h4>
-        </div>
-    {% endif %}
-
 {% endblock %} {# extra block ends here #}
-
 
 {% block extra_js %}
 
@@ -172,6 +150,5 @@
 
 {# put resource specific js below #}
 <script type="text/javascript" src="{{ STATIC_URL }}js/netcdf-resource.js"></script>
-
 
 {% endblock %}

@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:release-1.9.3
+FROM hydroshare/hs_docker_base:release-1.9.8
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 ### Begin - HydroShare Development Image Additions ###

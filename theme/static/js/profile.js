@@ -2,12 +2,50 @@
 * Created by Mauriel on 3/9/2017.
 */
 
+var CHECK_PROFILE_IMAGE_SIZE = true;
+const KILO_BYTE = 1024;
+const MEGA_BYTE = KILO_BYTE * KILO_BYTE;
+const PROFILE_IMAGE_SIZE_BYTE_LIMIT = KILO_BYTE * KILO_BYTE * 2;
+const MEGA_BYTE_STR="MB";
+var PROFILE_IMAGE_SIZE_MB_LIMIT_MSG = PROFILE_IMAGE_SIZE_BYTE_LIMIT/MEGA_BYTE
+                + " " + MEGA_BYTE_STR;
+
+// avoid tying error, define it as variable
+var errorElementID = "errorSizeLoadFile";
+
+function clearSizeErrorMsg() {
+    $("#" + errorElementID).remove();
+}
+
+function displaySizeErrorMsg() {
+     let errorMsg = "Error: Photo size can not exceed " + PROFILE_IMAGE_SIZE_MB_LIMIT_MSG;
+     let elementOpen = '<div style="display: block;" id="' + errorElementID + '"> <p ' +
+                       'class="label label-danger profile-photo-error">';
+     let elementClose = '</p></div>';
+     $(elementOpen + errorMsg + elementClose).insertAfter($("#photo-control"));;
+
+}
+
 // Preview profile picture
 function readURL(input) {
     if (input.files && input.files[0]) {
-        var reader = new FileReader();
+        let reader = new FileReader();
+        let file = input.files[0];
+
+        clearSizeErrorMsg();
+
+        if (
+            file.size > PROFILE_IMAGE_SIZE_BYTE_LIMIT &&
+            CHECK_PROFILE_IMAGE_SIZE === true
+        ) {
+            displaySizeErrorMsg();
+            // clear the file
+            input.value = "";
+            return;
+        }
+
         reader.onload = function (e) {
-            var profilePicContainer = $("#profile-pic-container");
+            let profilePicContainer = $("#profile-pic-container");
             profilePicContainer.empty();
             profilePicContainer.append(
                 '<div style="background-image: url(\'' + e.target.result +  '\')"' +
@@ -263,7 +301,7 @@ $(document).ready(function () {
     });
 
     $(".btn-cancel-profile-edit").click(function () {
-        location.reload();
+        location.reload(true);
     });
 
     // Filter list listener
@@ -341,4 +379,3 @@ $(document).ready(function () {
         history.pushState('', document.title, window.location.pathname);
     }
 });
-

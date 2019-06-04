@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
-        password=None, active=True, organization=None):
+        password=None, active=True, organization=None, middle_name=None):
     """
     Create a new user within the HydroShare system.
 
@@ -96,6 +96,10 @@ def create_account(
             except ObjectDoesNotExist:
                 new_term = UncategorizedTerm(name=dict_item)
                 new_term.save()
+
+    if middle_name:
+        user_profile.middle_name = middle_name
+        user_profile.save()
 
     # create default UserQuota object for the new user
     uq = UserQuota.objects.create(user=u)
@@ -304,6 +308,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     because it gets too expensive quickly.
 
     parameters:
+        author = a list of User names or emails
+        creator = a User or name
         group = Group or name
         user = User or name
         from_date = datetime object
@@ -319,7 +325,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         east = east coordinate
     """
 
-    if not any((creator, group, user, owner, from_date, to_date, start,
+    if not any((author, creator, group, user, owner, from_date, to_date, start,
                 count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
@@ -335,8 +341,9 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(doi__isnull=False))
 
     if author:
+        authors = author.split(',')
         author_parties = (
-            (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+            (Creator.objects.filter(email__in=authors) | Creator.objects.filter(name__in=authors))
         )
 
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
@@ -434,6 +441,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 # No matches on title or abstract, so treat as no results of search
                 flt = flt.none()
 
+    # TODO The below is legacy pagination... need to find out if anything is using it and delete
     qcnt = 0
     if flt:
         qcnt = len(flt)

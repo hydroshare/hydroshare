@@ -26,11 +26,11 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_type
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
-from hs_core.views import pagination
 from hs_core.hydroshare.utils import get_file_storage, resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
+from drf_yasg.utils import swagger_auto_schema
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,9 @@ class ResourceToListItemMixin(object):
         resource_url = site_url + r.get_absolute_url()
         coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
                      for v in r.metadata.coverages.values()]
+        authors = []
+        for c in r.metadata.creators.all():
+            authors.append(c.name)
         doi = None
         if r.raccess.published:
             doi = "10.4211/hs.{}".format(r.short_id)
@@ -55,6 +58,7 @@ class ResourceToListItemMixin(object):
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
                                                           abstract=r.metadata.description,
+                                                          authors=authors,
                                                           creator=r.first_creator.name,
                                                           doi=doi,
                                                           public=r.raccess.public,
@@ -63,7 +67,7 @@ class ResourceToListItemMixin(object):
                                                           immutable=r.raccess.immutable,
                                                           published=r.raccess.published,
                                                           date_created=r.created,
-                                                          date_last_updated=r.updated,
+                                                          date_last_updated=r.last_updated,
                                                           bag_url=bag_url,
                                                           coverages=coverages,
                                                           science_metadata_url=science_metadata_url,
@@ -79,7 +83,8 @@ class ResourceFileToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         url = site_url + f.url
         fsize = f.size
-        id = f.id
+        logical_file_type = f.logical_file_type_name
+        file_name = os.path.basename(f.resource_file.name)
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -87,54 +92,19 @@ class ResourceFileToListItemMixin(object):
         else:
             ftype = repr(None)
         resource_file_info_item = serializers.ResourceFileItem(url=url,
-                                                               id=id,
+                                                               file_name=file_name,
                                                                size=fsize,
-                                                               content_type=ftype)
+                                                               content_type=ftype,
+                                                               logical_file_type=logical_file_type)
         return resource_file_info_item
 
 
 class ResourceTypes(generics.ListAPIView):
-    """
-    Get a list of resource types
+    # We don't need pagination for a list of resource types
+    pagination_class = None
 
-    REST URL: hsapi/resourceTypes
-    HTTP method: GET
-
-    example return JSON format for GET /hsapi/resourceTypes (note response will consist of only
-    one page):
-
-    [
-        {
-            "resource_type": "GenericResource"
-        },
-        {
-            "resource_type": "RasterResource"
-        },
-        {
-            "resource_type": "RefTimeSeries"
-        },
-        {
-            "resource_type": "TimeSeriesResource"
-        },
-        {
-            "resource_type": "NetcdfResource"
-        },
-        {
-            "resource_type": "ModelProgramResource"
-        },
-        {
-            "resource_type": "ModelInstanceResource"
-        },
-        {
-            "resource_type": "ToolResource"
-        },
-        {
-            "resource_type": "SWATModelInstanceResource"
-        }
-    ]
-    """
-    pagination_class = pagination.SmallDatumPagination
-
+    @swagger_auto_schema(operation_description="List Resource Types",
+                         responses={200: serializers.ResourceTypesSerializer})
     def get(self, request):
         return self.list(request)
 
@@ -146,141 +116,23 @@ class ResourceTypes(generics.ListAPIView):
         return serializers.ResourceTypesSerializer
 
 
-class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
-    """
-    Get a list of resources based on the following filter query parameters
-    DEPRECATED: See GET /resource/ in CreateResource
-
-    For an anonymous user, all public resources will be listed.
-    For any authenticated user with no other query parameters provided in the request, all
-    resources that are viewable by the user will be listed.
-
-    REST URL: hsapi/resourceList/{query parameters}
-    HTTP method: GET
-
-    Supported query parameters (all are optional):
-
-    :type   owner: str
-    :type   types: list of resource type class names
-    :type   from_date:  str (e.g., 2015-04-01)
-    :type   to_date:    str (e.g., 2015-05-01)
-    :type   edit_permission: bool
-    :param  owner: (optional) - to get a list of resources owned by a specified username
-    :param  types: (optional) - to get a list of resources of the specified resource types
-    :param  from_date: (optional) - to get a list of resources created on or after this date
-    :param  to_date: (optional) - to get a list of resources created on or before this date
-    :param  edit_permission: (optional) - to get a list of resources for which the authorised user
-    has edit permission
-    :rtype:  json string
-    :return:  a paginated list of resources with data for resource id, title, resource type,
-    creator, public, date created, date last updated, resource bag url path, and science
-    metadata url path
-
-    example return JSON format for GET /hsapi/resourceList:
-
-        {   "count":n
-            "next": link to next page
-            "previous": link to previous page
-            "results":[
-                    {"resource_type": resource type, "resource_title": resource title,
-                    "resource_id": resource id,
-                    "creator": creator name, "date_created": date resource created,
-                    "date_last_updated": date resource last updated, "public": true or false,
-                    "discoverable": true or false, "shareable": true or false,
-                    "immutable": true or false,
-                    "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata,
-                    "resource_url": link to resource landing HTML page},
-                    {"resource_type": resource type, "resource_title": resource title,
-                    "resource_id": resource id,
-                    "creator": creator name, "date_created": date resource created,
-                    "date_last_updated": date resource last updated, "public": true or false,
-                    "discoverable": true or false, "shareable": true or false,
-                    "immutable": true or false,
-                    "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata,
-                    "resource_url": link to resource landing HTML page},
-            ]
-        }
-
-    """
-    pagination_class = PageNumberPagination
-
-    def get(self, request):
-        return self.list(request)
-
-    # needed for list of resources
-    def get_queryset(self):
-        resource_list_request_validator = serializers.ResourceListRequestValidator(
-            data=self.request.query_params)
-        if not resource_list_request_validator.is_valid():
-            raise ValidationError(detail=resource_list_request_validator.errors)
-
-        filter_parms = resource_list_request_validator.validated_data
-        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
-        if len(filter_parms['type']) == 0:
-            filter_parms['type'] = None
-        else:
-            filter_parms['type'] = list(filter_parms['type'])
-
-        filter_parms['public'] = not self.request.user.is_authenticated()
-
-        filtered_res_list = []
-
-        for r in hydroshare.get_resource_list(**filter_parms):
-            resource_list_item = self.resourceToResourceListItem(r)
-            filtered_res_list.append(resource_list_item)
-
-        return filtered_res_list
-
-    def get_serializer_class(self):
-        return serializers.ResourceListItemSerializer
-
-
 class CheckTaskStatus(generics.RetrieveAPIView):
+
+    # TODO, setup a serializer for in/out, figure out if redirect is needed...
     def get(self, request, task_id):
         url = reverse('rest_check_task_status', kwargs={'task_id': task_id})
         return HttpResponseRedirect(url)
 
 
 class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
-    """
-    Read, update, or delete a resource
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: GET
-    :return: (on success): The resource in zipped BagIt format.
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: DELETE
-    :return: (on success): JSON string of the format: {'resource_id':pk}
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: PUT
-    :return: (on success): JSON string of the format: {'resource_id':pk}
-
-    :type   str
-    :param  pk: resource id
-    :rtype:  JSON string for http methods DELETE and PUT, and resource file data bytes for GET
-
-    :raises:
-    NotFound: return JSON format: {'detail': 'No resource was found for resource id':pk}
-    PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform
-    this action.'}
-    ValidationError: return JSON format: {parameter-1': ['error message-1'], 'parameter-2':
-    ['error message-2'], .. }
-
-    :raises:
-    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2':
-    ['error message-2'], .. }
-    """
-    pagination_class = PageNumberPagination
+    # pagination doesn't make sense as there is only one resource
+    pagination_class = None
 
     allowed_methods = ('GET', 'PUT', 'DELETE')
 
+    @swagger_auto_schema(operation_description="Get a resource in zipped BagIt format",
+                         responses={200: serializers.TaskStatusSerializer})
     def get(self, request, pk):
-        """ Get resource in zipped BagIt format
-        """
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         if res.resource_type.lower() == "reftimeseriesresource":
@@ -293,6 +145,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
                               kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
 
+    @swagger_auto_schema(operation_description="Not Implemented")
     def put(self, request, pk):
         # TODO: update resource - involves overwriting a resource from the provided bag file
         raise NotImplementedError()
@@ -301,150 +154,14 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         # only resource owners are allowed to delete
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
         hydroshare.delete_resource(pk)
-        # spec says we need return the id of the resource that got deleted - otherwise would
-        # have used status code 204 and not 200
-        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
-
-    def get_serializer_class(self):
-        return serializers.ResourceListItemSerializer
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
-    """
-    Create a new resource or list existing resources
 
-    REST URL: hsapi/resource/
-    HTTP method: POST
-
-    Request data payload parameters:
-    :type   resource_type: str
-    :type   title: str
-    :type   subject: str
-    :type   edit_users: str
-    :type   edit_groups: str
-    :type   view_users: str
-    :type   view_groups: str
-    :param  resource_type: resource type name
-    :param  title: (optional) title of the resource (default value: 'Untitled resource')
-    :param  edit_users: (optional) list of comma separated usernames that should have edit
-    permission for the resource
-    :param  edit_groups: (optional) list of comma separated group names that should have edit
-    permission for the resource
-    :param  view_users: (optional) list of comma separated usernames that should have view
-    permission for the resource
-    :param  view_groups: (optional) list of comma separated group names that should have view
-    permission for the resource
-    :param  metadata: (optional) data for any valid metadata element including resource specific
-    metadata elements can be passed as json string:
-    example (passing data for the 'Coverage' element):
-    [{'coverage':{'type': 'period', 'start': '01/01/2000', 'end': '12/12/2010'}}, ...]
-    Note: the parameter 'metadata' can't be used for passing data for the following core metadata
-    elements:
-    Title, Description (abstract), Subject (keyword), Date, Publisher, Type, Format
-    :param  extra_metadata: (optional) data for any user-defined key/value pair metadata elements
-    of the resource can be passed as json string
-    example :
-    {'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}
-    :return: id and type of the resource created
-    :rtype: json string of the format: {'resource-id':id, 'resource_type': resource type}
-    :raises:
-    NotAuthenticated: return json format: {'detail': 'Authentication credentials were not
-    provided.'}
-    ValidationError: return json format: {parameter-1':['error message-1'], 'parameter-2':
-    ['error message-2'], .. }
-
-    REST URL: hsapi/resource/
-    HTTP method: GET
-
-    Supported query parameters (all are optional):
-
-    :type   owner: str
-    :type   types: list of resource type class names
-    :type   from_date:  str (e.g., 2015-04-01)
-    :type   to_date:    str (e.g., 2015-05-01)
-    :type   edit_permission: bool
-    :param  owner: (optional) - to get a list of resources owned by a specified username
-    :param  types: (optional) - to get a list of resources of the specified resource types
-    :param  from_date: (optional) - to get a list of resources created on or after this date
-    :param  to_date: (optional) - to get a list of resources created on or before this date
-    :param  include_obsolete: (optional) - default is False which means the returned resource list
-    does not include obsoleted resource; if set to True, obsoleted resource will be included
-    :param  edit_permission: (optional) - to get a list of resources for which the authorised user
-    has edit permission
-    :param  coverage_type: (optional) - to get a list of resources that fall within the specified
-    spatial coverage boundary (must be either 'box' or 'point')
-    :param  north:  (optional) - north coordinate of spatial coverage. This parameter is required
-    if *coverage_type* has been specified
-    :param  south:  (optional) - north coordinate of spatial coverage. This parameter is required
-    if *coverage_type* has been specified with a value of 'box'
-    :param  east:  (optional) - east coordinate of spatial coverage. This parameter is required
-    if *coverage_type* has been specified
-    :param  west:  (optional) - west coordinate of spatial coverage. This parameter is required
-    if *coverage_type* has been specified with a value of 'box'
-    :rtype:  json string
-    :return:  a paginated list of resources with data for resource id, title, resource type,
-    creator, public, date created, date last updated, resource bag url path, and science
-    metadata url path
-
-    example return JSON format for GET /hsapi/resourceList:
-
-        {   "count":n
-            "next": link to next page
-            "previous": link to previous page
-            "results":[
-                    {"resource_type": resource type, "resource_title": resource title,
-                    "resource_id": resource id,
-                    "creator": creator name, "date_created": date resource created,
-                    "date_last_updated": date resource last updated, "public": true or false,
-                    "discoverable": true or false, "shareable": true or false,
-                    "immutable": true or false,
-                    "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata,
-                    "resource_url": link to resource landing HTML page},
-                    {"resource_type": resource type, "resource_title": resource title,
-                    "resource_id": resource id,
-                    "creator": creator name, "date_created": date resource created,
-                    "date_last_updated": date resource last updated, "public": true or false,
-                    "discoverable": true or false, "shareable": true or false,
-                    "immutable": true or false,
-                    "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata,
-                    "resource_url": link to resource landing HTML page},
-            ]
-        }
-    """
-    def initialize_request(self, request, *args, **kwargs):
-        """
-        Hack to work around the following issue in django-rest-framework:
-
-        https://github.com/tomchristie/django-rest-framework/issues/3951
-
-        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
-        and is slated to be incorporated in the Django REST API 3.5.0 release.
-        At that time, we should remove this hack.
-
-        :param request:
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if not isinstance(request, Request):
-            # Don't deep copy the file data as it may contain an open file handle
-            old_file_data = copy.copy(request.FILES)
-            old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
-            request.POST._mutable = True
-            request.POST.update(old_post_data)
-            request.FILES.update(old_file_data)
-        return request
-
-    # Couch: This is called explicitly in the overrided create() method and thus this
-    # declaration does nothing. Thus, it can be changed to whatever is convenient.
-    # Currently, it is convenient to use the listing serializer instead, so that
-    # it will be the default output serializer.
-    # def get_serializer_class(self):
-    #     return serializers.ResourceCreateRequestValidator
-
+    @swagger_auto_schema(request_body=serializers.ResourceCreateRequestValidator,
+                         operation_description="Create a resource",
+                         responses={201: serializers.ResourceCreatedSerializer})
     def post(self, request):
         return self.create(request)
 
@@ -526,14 +243,16 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                                                           metadata=metadata, **kwargs)
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             post_creation_error_msg = ex.message
-
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
                          'message': post_creation_error_msg}
 
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
+    pagination_class.page_size_query_param = 'count'
 
+    @swagger_auto_schema(query_serializer=serializers.ResourceListRequestValidator,
+                         operation_description="List resources")
     def get(self, request):
         return self.list(request)
 
@@ -565,46 +284,19 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
 
+    # covers serialization of output from POST request
+    def post_serializer_class(self):
+        return serializers.ResourceCreatedSerializer
+
 
 class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
-    """
-    Retrieve resource system metadata
 
-    REST URL: hsapi/sysmeta/{pk}
-    HTTP method: GET
-
-    :type pk: str
-    :param pk: id of the resource
-    :return: system metadata as JSON string
-    :rtype: str
-    :raises:
-    NotFound: return JSON format: {'detail': 'No resource was found for resource id:pk'}
-    PermissionDenied: return JSON format: {'detail': 'You do not have permission to
-    perform this action.'}
-
-    example return JSON format for GET hsapi/sysmeta/<RESOURCE_ID>:
-
-    {
-        "resource_type": resource type,
-        "resource_title": resource title,
-        "resource_id": resource id,
-        "creator": creator user name,
-        "date_created": date resource created,
-        "date_last_updated": date resource last updated,
-        "public": true or false,
-        "discoverable": true or false,
-        "shareable": true or false,
-        "immutable": true or false,
-        "published": true or false,
-        "bag_url": link to bag file,
-        "science_metadata_url": link to science metadata
-    }
-    """
     allowed_methods = ('GET',)
 
+    @swagger_auto_schema(operation_description="Get resource system metadata, as well as URLs to "
+                                               "the bag and science metadata",
+                         responses={200: serializers.ResourceListItemSerializer})
     def get(self, request, pk):
-        """ Get resource system metadata, as well as URLs to the bag and science metadata
-        """
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
@@ -885,7 +577,7 @@ class ResourceFileCRUD(APIView):
             return Response(ex.message, status_code=status.HTTP_400_BAD_REQUEST)
 
         try:
-            f = hydroshare.get_resource_file(pk, pathname)
+            f = hydroshare.get_resource_file(pk, pathname).resource_file
         except ObjectDoesNotExist:
             err_msg = 'File with file name {file_name} does not exist for resource with ' \
                       'resource id {res_id}'.format(file_name=pathname, res_id=pk)
@@ -947,7 +639,8 @@ class ResourceFileCRUD(APIView):
 
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        response_data = {'resource_id': pk, 'file_name': file_name}
+        file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
+        response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
@@ -1125,7 +818,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        response_data = {'resource_id': pk, 'file_name': file_name}
+        file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
+        response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 

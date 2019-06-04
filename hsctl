@@ -4,15 +4,20 @@
 # HydroShare Control Script
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
+machine="`uname -s`"
+case "$machine" in
+  Linux*)  export SED_EXT=''   ;;
+  Darwin*) export SED_EXT='""' ;;
+  *)       export SED_EXT=''   ;;
+esac
+
 ### Local Config ###
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 HOME_DIR=${PWD}
 
 # Read hydroshare-config.yaml into environment
-sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} > $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/#.*$//' ${CONFIG_DIRECTORY}/hydroshare-config.sh
-sed -i '/^\s*$/d' ${CONFIG_DIRECTORY}/hydroshare-config.sh
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE}  | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Docker Variables ###
@@ -69,7 +74,7 @@ restart_hs() {
     delete_celerybeat_scheduler
     preflight_hs
     docker-compose start hydroshare defaultworker
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         start_nginx;
     fi
     get_nginx_ip
@@ -77,7 +82,7 @@ restart_hs() {
 
 maint_on_hs() {
     echo "MAINTENANCE ON:"
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         cd ${NGINX_DIR}
         ./run-nginx maint_on
         cd -;
@@ -88,7 +93,7 @@ maint_on_hs() {
 
 maint_off_hs() {
     echo "MAINTENANCE OFF:"
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         cd ${NGINX_DIR}
         ./run-nginx maint_off
         cd -;
@@ -131,7 +136,7 @@ start_hs() {
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker-compose start ${f};
     done
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         start_nginx;
     fi
     get_nginx_ip
@@ -139,7 +144,7 @@ start_hs() {
 
 stop_hs() {
     echo "STOP HYDROSHARE:"
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         stop_nginx;
     fi
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
@@ -170,8 +175,8 @@ preflight_hs() {
     else
         cp -rf ${HS_PATH}/scripts/templates/docker-compose.template ${HS_PATH}/docker-compose.yml
     fi
-    sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
-    sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i $SED_EXT 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i $SED_EXT 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
     # Create static directory if it does not exist
     if [[ ! -d ${HS_PATH}/hydroshare/static ]]; then
         mkdir -p ${HS_PATH}/hydroshare/static;
@@ -195,10 +200,10 @@ preflight_hs() {
     fi
     # Generate init-hydroshare
     cp -rf ${HS_PATH}/scripts/templates/init-hydroshare.template ${HS_PATH}/init-hydroshare
-    sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-hydroshare
-    sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-hydroshare
-    if [ "${USE_SSL,,}" = true ]; then
-        if [ "${USE_NGINX,,}" = false ]; then
+    sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-hydroshare
+    sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-hydroshare
+    if [ "${USE_SSL}" = true ]; then
+        if [ "${USE_NGINX}" = false ]; then
             echo "ERROR: Invalid USE_NGINX setting for USE_SSL = true in hydroshare-config.yaml"
             exit 1;
         fi
@@ -208,32 +213,32 @@ preflight_hs() {
         cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
         cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
         cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
-        sed -i 's!HS_SSH_SERVER!'"${PROD_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
-        sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${PROD_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
         # disable /tests/ URL
-        sed -i 's!.*tests.html.*!    # QUNIT_TESTS_OFF!' ${HS_PATH}/hydroshare/urls.py
-    elif [ "${USE_NGINX,,}" = true ]; then
+        sed -i $SED_EXT 's!.*tests.html.*!    # QUNIT_TESTS_OFF!' ${HS_PATH}/hydroshare/urls.py
+    elif [ "${USE_NGINX}" = true ]; then
         cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
-        sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
-        sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
         # enable /tests/ URL
-        sed -i 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
+        sed -i $SED_EXT 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
     else
         cp -rf ${HS_PATH}/scripts/run-dev-server ${HS_PATH}/run-server
-        sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
-        sed -i 's!HS_DJANGO_SERVER!'"${DEV_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${DEV_SERVER}"'!g' ${HS_PATH}/init-hydroshare
         # enable /tests/ URL
-        sed -i 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
+        sed -i $SED_EXT 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
     fi
     # Generate init-defaultworker
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
-    sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
-    sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
+    sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
+    sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
     # Check security settings
-    if [ "${USE_SECURITY,,}" = true ]; then
-        sed -i 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
+    if [ "${USE_SECURITY}" = true ]; then
+        sed -i $SED_EXT 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
     else
-        sed -i 's/\<USE_SECURITY = True\>/USE_SECURITY = False/g' ${HS_PATH}/hydroshare/settings.py
+        sed -i $SED_EXT 's/\<USE_SECURITY = True\>/USE_SECURITY = False/g' ${HS_PATH}/hydroshare/settings.py
     fi
 }
 
@@ -346,7 +351,7 @@ rebuild_hs() {
     fi
     echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
     docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
-    if [ "${USE_NGINX,,}" = true ]; then
+    if [ "${USE_NGINX}" = true ]; then
         start_nginx;
     fi
     echo "  - docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"

@@ -23,3 +23,12 @@ post_delete_resource = django.dispatch.Signal(providing_args=['request', 'user',
 pre_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource',
                                                                            'src_full_path',
                                                                            'tgt_full_path'])
+
+post_remove_file_aggregation = django.dispatch.Signal(providing_args=['resource', 'files'])
+post_add_generic_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_add_geofeature_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_add_netcdf_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_add_raster_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_add_reftimeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_add_timeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
+post_raccess_change = django.dispatch.Signal(providing_args=['resource'])

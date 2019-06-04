@@ -96,11 +96,16 @@ def verify(request, *args, **kwargs):
 
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
+    ajax_response_data = {'status': 'error', 'message': ''}
+
     if not new_holder_uname:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Please select a user."
+        return JsonResponse(ajax_response_data)
     new_holder_u = User.objects.filter(username=new_holder_uname).first()
     if not new_holder_u:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Unable to change quota holder. " \
+                                     "Please verify that the selected user still has access to this resource."
+        return JsonResponse(ajax_response_data)
 
     res = utils.get_resource_by_shortkey(shortkey)
     try:
@@ -119,14 +124,17 @@ def change_quota_holder(request, shortkey):
                            settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
                            context=context)
     except PermissionDenied:
-        return HttpResponseForbidden()
+        ajax_response_data['message'] = "You do not have permission to change the quota holder for this resource."
+        return JsonResponse(ajax_response_data)
     except utils.QuotaException as ex:
         msg = 'Failed to change quota holder to {0} since {0} does not have ' \
               'enough quota to hold this new resource. The exception quota message ' \
               'reported for {0} is: '.format(new_holder_u.username) + ex.message
-        request.session['validation_error'] = msg
+        ajax_response_data['message'] = msg
+        return JsonResponse(ajax_response_data)
 
-    return HttpResponseRedirect(res.get_absolute_url())
+    ajax_response_data['status'] = 'success'
+    return JsonResponse(ajax_response_data)
 
 
 @api_view(['POST'])
@@ -207,7 +215,22 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {'validation_error': ex.message}
         return JsonResponse(msg, status=500)
 
-    return JsonResponse(data={}, status=200)
+    res_public_status = 'public' if resource.raccess.public else 'not public'
+    res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
+        else 'not discoverable'
+
+    if resource.can_be_public_or_discoverable:
+        metadata_status = METADATA_STATUS_SUFFICIENT
+    else:
+        metadata_status = METADATA_STATUS_INSUFFICIENT
+
+    response_data = {
+        'res_public_status': res_public_status,
+        'res_discoverable_status': res_discoverable_status,
+        'metadata_status': metadata_status,
+    }
+
+    return JsonResponse(data=response_data, status=200)
     
 
 def _get_resource_sender(element_name, resource):
@@ -288,9 +311,12 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    if request.method == 'GET':
+        return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -585,6 +611,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -605,6 +632,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             logger.warn(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -902,7 +930,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
         if user == user_to_share_with:
             is_current_user = True
 
-        picture_url = 'No picture provided'
+        picture_url = None
         if user_to_share_with.userprofile.picture:
             picture_url = user_to_share_with.userprofile.picture.url
 
@@ -913,7 +941,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                               'error_msg': err_message}
 
     else:
-        group_pic_url = 'No picture provided'
+        group_pic_url = None
         if group_to_share_with.gaccess.picture:
             group_pic_url = group_to_share_with.gaccess.picture.url
 
@@ -974,7 +1002,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
         if undo_user_privilege == PrivilegeCodes.VIEW:
             undo_user_privilege = "view"
         elif undo_user_privilege == PrivilegeCodes.CHANGE:
-            undo_user_privilege = "change"
+            undo_user_privilege = "edit"
         elif undo_user_privilege == PrivilegeCodes.OWNER:
             undo_user_privilege = "owner"
         else:
@@ -1001,7 +1029,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
         if group_to_unshare_with in res.raccess.edit_groups:
-            undo_group_privilege = 'change'
+            undo_group_privilege = 'edit'
         elif group_to_unshare_with in res.raccess.view_groups:
             undo_group_privilege = 'view'
         else:
@@ -1152,14 +1180,14 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-@processor_for('my-resources')
-@login_required
-def my_resources(request, page):
-
-    resource_collection = get_my_resources_list(request)
-    context = {'collection': resource_collection}
-
-    return context
+# @processor_for('my-resources')
+# @login_required
+# def my_resources(request, page):
+#
+#     resource_collection = get_my_resources_list(request)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 
 @processor_for(GenericResource)
@@ -1171,14 +1199,28 @@ def add_generic_context(request, page):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
+    class AddUserContriForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'contri'}))
+
+    class AddUserInviteForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'invite'}))
+
+    class AddUserHSForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'hs-user'}))
+
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
-        'add_owner_user_form': AddUserForm(),
+        'add_view_contrib_user_form': AddUserContriForm(),
+        'add_view_invite_user_form': AddUserInviteForm(),
+        'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        'add_edit_user_form': AddUserForm(),
+        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1777,6 +1819,7 @@ class GroupView(TemplateView):
         g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
+        grantors = []
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
@@ -1785,6 +1828,8 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
+            grantors.append(res.grantor)
+        group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
         # TODO: need to sort this resource list using the date_granted field
 
@@ -1794,6 +1839,7 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
+            'grantors': set(grantors)
         }
 
 
@@ -1819,4 +1865,21 @@ class CollaborateView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
+        }
+
+
+class MyResourcesView(TemplateView):
+    template_name = 'pages/my-resources.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        resource_collection = get_my_resources_list(u)
+
+        return {
+            'collection': resource_collection
         }

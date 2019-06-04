@@ -1,25 +1,20 @@
 """Page processors for hs_core app."""
 
 from dateutil import parser
-from functools import partial, wraps
-
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
-from django.forms.models import formset_factory
-
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, Relation
+from forms import ExtendedMetadataForm
 from hs_core import languages_iso
-
-from django.conf import settings
-from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
-    SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
-    MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
-from hs_core.views.utils import show_relations_section, \
-    can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
+from hs_core.models import GenericResource, Relation
+from hs_core.views.utils import show_relations_section, \
+    can_user_copy_resource
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+import json
 
 
 @processor_for(GenericResource)
@@ -58,7 +53,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # whether the user has permission to view this resource
     can_view = content_model.can_view(request)
     if not can_view:
-        raise PermissionDenied()
+        if user.is_authenticated():
+            raise PermissionDenied()
+        return redirect_to_login(request.path)
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
@@ -122,26 +119,29 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
+    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         content_model.update_view_count(request)
-        temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
-        if len(temporal_coverages) > 0:
-            temporal_coverage_data_dict = {}
-            temporal_coverage = temporal_coverages[0]
+        temporal_coverage = content_model.metadata.temporal_coverage
+        temporal_coverage_data_dict = {}
+        if temporal_coverage:
             start_date = parser.parse(temporal_coverage.value['start'])
             end_date = parser.parse(temporal_coverage.value['end'])
             temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
             temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
-        else:
-            temporal_coverage_data_dict = None
 
-        spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
-
-        if len(spatial_coverages) > 0:
-            spatial_coverage_data_dict = {}
-            spatial_coverage = spatial_coverages[0]
+        spatial_coverage = content_model.metadata.spatial_coverage
+        spatial_coverage_data_dict = {}
+        spatial_coverage_data_dict['default_units'] = \
+            content_model.metadata.spatial_coverage_default_units
+        spatial_coverage_data_dict['default_projection'] = \
+            content_model.metadata.spatial_coverage_default_projection
+        spatial_coverage_data_dict['exists'] = False
+        if spatial_coverage:
+            spatial_coverage_data_dict['exists'] = True
             spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
             spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
             spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
@@ -161,10 +161,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
                 spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit',
                                                                                      None)
-        else:
-            spatial_coverage_data_dict = None
-
-        keywords = [sub.value for sub in content_model.metadata.subjects.all()]
         languages_dict = dict(languages_iso.languages)
         language = languages_dict[content_model.metadata.language.code] if \
             content_model.metadata.language else None
@@ -176,6 +172,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
+                   'cm': content_model,
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
@@ -186,8 +183,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
-                   'language': language,
                    'keywords': keywords,
+                   'language': language,
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
@@ -208,7 +205,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
-                   'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
                    'show_web_reference_note': has_web_ref,
@@ -237,113 +233,25 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if not can_change:
         raise PermissionDenied()
 
-    add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_contributor_modal_form = ContributorForm(allow_edit=can_change,
-                                                 res_short_id=content_model.short_id)
-    add_relation_modal_form = RelationForm(allow_edit=can_change,
-                                           res_short_id=content_model.short_id)
-    add_source_modal_form = SourceForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_fundingagency_modal_form = FundingAgencyForm(allow_edit=can_change,
-                                                     res_short_id=content_model.short_id)
-
-    keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change,
-                                 res_short_id=content_model.short_id, element_id=None)
-
-    abstract_form = AbstractForm(instance=content_model.metadata.description,
-                                 allow_edit=can_change, res_short_id=content_model.short_id,
-                                 element_id=content_model.metadata.description.id if
-                                 content_model.metadata.description else None)
-
-    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm,
-                                                                    allow_edit=can_change)),
-                                         formset=BaseCreatorFormSet, extra=0)
-
-    creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(),
-                                         prefix='creator')
-    index = 0
-
-    # TODO: dont track index manually. use enumerate, or zip
-
-    for creator_form in creator_formset.forms:
-        creator_form.action = "/hsapi/_internal/%s/creator/%s/update-metadata/" % \
-                              (content_model.short_id, creator_form.initial['id'])
-        creator_form.number = creator_form.initial['id']
-        index += 1
-
-    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm,
-                                                                            allow_edit=can_change)),
-                                             formset=BaseContributorFormSet, extra=0)
-    contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().
-                                                 values(), prefix='contributor')
-
-    index = 0
-    # TODO: dont track index manually. use enumerate, or zip
-    for contributor_form in contributor_formset.forms:
-        contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % \
-                                  (content_model.short_id, contributor_form.initial['id'])
-        contributor_form.number = contributor_form.initial['id']
-        index += 1
-
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm,
-                                                                      allow_edit=can_change)),
-                                          formset=BaseFormSet, extra=0)
-    relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(),
-                                           prefix='relation')
-
-    for relation_form in relation_formset.forms:
-        relation_form.action = "/hsapi/_internal/%s/relation/%s/update-metadata/" % \
-                               (content_model.short_id, relation_form.initial['id'])
-        relation_form.number = relation_form.initial['id']
-
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm,
-                                                                  allow_edit=can_change)),
-                                        formset=BaseFormSet, extra=0)
-    source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(),
-                                       prefix='source')
-
-    for source_form in source_formset.forms:
-        source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % \
-                             (content_model.short_id, source_form.initial['id'])
-        source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id,
-                                                                  'source',
-                                                                  source_form.initial['id'])
-        source_form.number = source_form.initial['id']
-
-    FundingAgencyFormSetEdit = formset_factory(wraps(FundingAgencyForm)(partial(
-        FundingAgencyForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
-    fundingagency_formset = FundingAgencyFormSetEdit(
-        initial=content_model.metadata.funding_agencies.all().values(), prefix='fundingagency')
-
-    for fundingagency_form in fundingagency_formset.forms:
-        action = "/hsapi/_internal/{}/fundingagnecy/{}/update-metadata/"
-        action = action.format(content_model.short_id, fundingagency_form.initial['id'])
-        fundingagency_form.action = action
-        fundingagency_form.number = fundingagency_form.initial['id']
-
-    temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
+    temporal_coverage = content_model.metadata.temporal_coverage
     temporal_coverage_data_dict = {}
-    if len(temporal_coverages) > 0:
-        temporal_coverage = temporal_coverages[0]
+    if temporal_coverage:
         start_date = parser.parse(temporal_coverage.value['start'])
         end_date = parser.parse(temporal_coverage.value['end'])
         temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
-    else:
-        temporal_coverage = None
 
-    coverage_temporal_form = CoverageTemporalForm(initial=temporal_coverage_data_dict,
-                                                  allow_edit=can_change,
-                                                  res_short_id=content_model.short_id,
-                                                  element_id=temporal_coverage.id if
-                                                  temporal_coverage else None)
-
-    spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
+    spatial_coverage = content_model.metadata.spatial_coverage
     spatial_coverage_data_dict = {'type': 'point'}
-    if len(spatial_coverages) > 0:
-        spatial_coverage = spatial_coverages[0]
+    spatial_coverage_data_dict['default_units'] = \
+        content_model.metadata.spatial_coverage_default_units
+    spatial_coverage_data_dict['default_projection'] = \
+        content_model.metadata.spatial_coverage_default_projection
+    spatial_coverage_data_dict['exists'] = False
+    if spatial_coverage:
+        spatial_coverage_data_dict['exists'] = True
         spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
         spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
         spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
@@ -361,46 +269,33 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
             spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
             spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
+
+    if extended_metadata_layout:
+        metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
+                                             extended_metadata_layout=extended_metadata_layout)
     else:
-        spatial_coverage = None
-
-    coverage_spatial_form = CoverageSpatialForm(initial=spatial_coverage_data_dict,
-                                                allow_edit=can_change,
-                                                res_short_id=content_model.short_id,
-                                                element_id=spatial_coverage.id if
-                                                spatial_coverage else None)
-
-    metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
-                                         extended_metadata_layout=extended_metadata_layout)
+        metadata_form = None
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
     context = {
+               'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creator_formset': creator_formset,
-               'add_creator_modal_form': add_creator_modal_form,
-               'creator_profilelink_formset': None,
+               'creators': content_model.metadata.creators.all(),
                'title': content_model.metadata.title,
                'readme': readme,
-               'abstract_form': abstract_form,
-               'contributor_formset': contributor_formset,
-               'add_contributor_modal_form': add_contributor_modal_form,
-               'relation_formset': relation_formset,
-               'add_relation_modal_form': add_relation_modal_form,
-               'source_formset': source_formset,
-               'add_source_modal_form': add_source_modal_form,
-               'fundingagnency_formset': fundingagency_formset,
-               'add_fundinagency_modal_form': add_fundingagency_modal_form,
-               'coverage_temporal_form': coverage_temporal_form,
-               'coverage_spatial_form': coverage_spatial_form,
+               'contributors': content_model.metadata.contributors.all(),
+               'relations': content_model.metadata.relations.all(),
+               'sources': content_model.metadata.sources.all(),
+               'fundingagencies': content_model.metadata.funding_agencies.all(),
+               'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
-               'subjects_form': subjects_form,
+               'keywords': keywords,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
                'rights': content_model.metadata.rights,
-               'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'current_user': user,
                'show_content_files': show_content_files,
@@ -414,7 +309,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               if type_value != 'isReplacedBy' and
                                               type_value != 'isVersionOf' and
                                               type_value != 'hasPart'),
-               'is_resource_specific_tab_active': False,
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key

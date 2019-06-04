@@ -72,16 +72,16 @@ $(document).ready(function () {
         $("#search-box").toggleClass('display-block animated fadeInUp');
     });
 
-	// Smooth scrolling for UI elements page
-	// =====================================
+    // Smooth scrolling for UI elements page
+    // =====================================
 
-	$('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
-		var anchor = $(this);
-		$('html, body').stop().animate({
-			scrollTop: $(anchor.attr('href')).offset().top
-		}, 1000);
-		e.preventDefault();
-	});
+    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+        var anchor = $(this);
+        $('html, body').stop().animate({
+            scrollTop: $(anchor.attr('href')).offset().top
+        }, 1000);
+        e.preventDefault();
+    });
 
     // 404 error page
     // ====================
@@ -157,6 +157,74 @@ $(document).ready(function () {
         return false
     });
 
+    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+
+        $('#submit-title-dialog').modal('show');
+    });
+
+    $("#btn-resource-create").on("click", function () {
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
+    });
+
+    function createResource(type, title="Untitled Resource") {
+        // Disable dropdown items while we process the request
+        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
+
+        var formData = new FormData();
+
+        formData.append("csrfmiddlewaretoken", csrf_token);
+        formData.append("title", title);
+        formData.append("resource-type", type);
+        formData.append("irods-username", "");
+        formData.append("irods-password", "");
+        formData.append("irods-host", "");
+        formData.append("irods-port", "");
+        formData.append("irods-zone", "");
+        formData.append("irods_file_names", "");
+        formData.append("irods_federated", "");
+        formData.append("copy-or-move", "copy");
+        formData.append("copy-move", "copy");
+
+        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
+        $("html").css("cursor", "progress");
+
+        $.ajax({
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            url: "/hsapi/_internal/create-resource/do/",
+            success: function (response) {
+                if (response.status == "success") {
+                    window.location = response['resource_url'];
+                }
+                else {
+                    console.log(response);
+                    $(".custom-alert").alert('close');  // Dismiss previous alert
+                    customAlert("Error", 'Failed to create resource.', "error", 6000);
+                    $("html").css("cursor", "initial");
+                    $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+                }
+            },
+            error: function (response) {
+                console.log(response);
+                $(".custom-alert").alert('close');  // Dismiss previous alert
+                customAlert("Error", 'Failed to create resource.', "error", 6000);
+                $("html").css("cursor", "initial");
+                $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+            }
+        });
+    }
+
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
@@ -172,10 +240,13 @@ $(document).ready(function () {
                 var message = 'Your profile is nearly complete. Please fill in the '
                     + '<strong>Organization</strong> field'
                     + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
-                showUniversalMessage("warn", message, 10000)();
+
+                customAlert("Profile", message, "info", 10000);
             }
         },
-        error: showUniversalMessage()
+        error: function(response) {
+            console.log(response);
+        }
     });
 
     // Event trigger for profile preview
@@ -357,19 +428,38 @@ $(document).ready(function () {
     };
 });
 
-function showUniversalMessage(type, message, timeout) {
-    return function(response,returnType,content) {
-        if(!message) message = content;
-        if(!type) type = returnType;
-        if(!timeout) timeout = 5000;
-
-        $("#universalMessage span").html(message);
-        $("#universalMessage").attr('class','');
-        $("#universalMessage").addClass(type);
-        $("#universalMessage").slideDown();
-
-        setTimeout(function() {
-            $("#universalMessage a.um_close").click()
-        }, timeout)
+// Alert Types: "error", "success", "info"
+// pass a duration value of -1 for persistent alerts
+function customAlert(alertTitle, alertMessage, alertType, duration) {
+    alertType = alertType || "success";
+    var el = document.createElement("div");
+    var top = 200;
+    var style = "top:" + top + "px";
+    var alertTypes = {
+        success: {class: "alert alert-success", icon: "fa fa-check"},
+        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
+        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
+    };
+    el.setAttribute("style", style);
+    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
+    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + alertMessage;
+    el.innerHTML = alertMessage;
+    if (duration !== -1) {
+        setTimeout(function () {
+            $(el).fadeOut(300, function () {
+                $(this).remove();
+            });
+        }, duration);
     }
+    $(el).appendTo("body > .main-container > .container");
+    $(el).hide().fadeIn(400);
+}
+
+// Displays error message if resource creation fails and restores UI state
+function showCreateError() {
+    customAlert("Error", 'Failed to create resource.', "error", 10000);
+    $(".btn-create-resource").removeClass("disabled");
+    $(".btn-create-resource").text("Create Resource");
+    $(".btn-cancel-create-resource").removeClass("disabled");
 }

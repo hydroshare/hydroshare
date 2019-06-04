@@ -308,10 +308,9 @@ class Variable(AbstractMetaDataElement):
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
-    @property
-    def metadata(self):
-        md = NetcdfMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return NetcdfMetaData
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -342,6 +341,7 @@ class NetcdfResource(BaseResource):
         return hs_term_dict
 
     def update_netcdf_file(self, user):
+        self.metadata.refresh_from_db()
         if not self.metadata.is_dirty:
             return
 
@@ -571,9 +571,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         form_action = "/hsapi/_internal/netcdf_update/{}/".\
             format(self.resource.short_id)
         style = "display:none;"
-        if self.is_dirty:
-            style = "margin-bottom:10px"
-        root_div = div(id="netcdf-file-update", cls="row", style=style)
+        root_div = div(id="netcdf-file-update", cls="space-bottom", style=style)
 
         with root_div:
             with div(cls="col-sm-12"):

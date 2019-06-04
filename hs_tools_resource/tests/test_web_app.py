@@ -14,6 +14,7 @@ from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTy
     SupportedAggTypes, RequestUrlBaseFile
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
     metadata_element_pre_update_handler
+from hs_core.hydroshare import create_empty_resource, copy_resource
 from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_core.testing import TestCaseCommonUtilities
@@ -572,3 +573,31 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(tl['openwithlist'])
         self.assertEqual('', tl['agg_types'])
         self.assertEqual('.tif', tl['file_extensions'])
+
+    def test_copy(self):
+
+        # create 1 SupportedResTypes obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                         supported_res_types=['NetcdfResource'])
+        self.assertEqual(SupportedResTypes.objects.all().count(), 1)
+
+        # set url launching pattern for aggregations
+        metadata = [{'requesturlbaseaggregation': {
+            'value': 'https://www.google.com?agg_path=${HS_AGG_PATH}'}}]
+        self.resWebApp.metadata.update(metadata, self.user)
+        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedAggTypes',
+                                         supported_agg_types=['GeoRasterLogicalFile'])
+
+        self.assertEqual(1, SupportedAggTypes.objects.all().count())
+
+        # make a new copy of web app
+        new_web_app = create_empty_resource(self.resWebApp.short_id, self.user,
+                                               action='copy')
+
+        new_web_app = copy_resource(self.resWebApp, new_web_app)
+
+        # test the new copy is a web app
+        self.assertTrue(isinstance(new_web_app, ToolResource))
+        # test that added types are copied
+        self.assertEqual(2, SupportedResTypes.objects.all().count())
+        self.assertEqual(2, SupportedAggTypes.objects.all().count())

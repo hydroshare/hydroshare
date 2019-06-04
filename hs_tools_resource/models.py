@@ -50,10 +50,9 @@ class ToolResource(BaseResource):
         # resource can't have any files
         return False
 
-    @property
-    def metadata(self):
-        md = ToolMetaData()
-        return self._get_metadata(md)
+    @classmethod
+    def get_metadata_class(cls):
+        return ToolMetaData
 
     @property
     def can_be_published(self):
@@ -212,12 +211,15 @@ class SupportedResTypes(AbstractMetaDataElement):
 
     @classmethod
     def _add_supported_res_type(cls, meta_instance, supported_res_types):
-
         for res_type in supported_res_types:
-            # there are two possibilities for res_type_str values:
+            # there are three possibilities for supported_res_types values:
+            # list of SupportedResTypeChoices objects or
             # list of string (during normal create or update) or
-            # integer (during creating new version of the resource)
-            if isinstance(res_type, int):
+            # list of integer (during creating new version of the resource)
+            if isinstance(res_type, SupportedResTypeChoices):
+                meta_instance.supported_res_types.add(res_type)
+
+            elif isinstance(res_type, int):
                 # "copy res" or "create a new version"
                 qs = SupportedResTypeChoices.objects.filter(id=res_type)
                 if not qs.exists():
@@ -299,11 +301,15 @@ class SupportedAggTypes(AbstractMetaDataElement):
     def _add_supported_agg_type(cls, meta_instance, supported_agg_types):
 
         for agg_type in supported_agg_types:
-            # there are two possibilities for agg_type_str values:
+            # there are three possibilities for agg_type_str values:
+            # list of SupportedAggTypeChoices object or
             # list of string (during normal create or update) or
-            # integer (during creating new version of the aggregation)
+            # list of integer (during creating new version of the aggregation)
             # TODO come back to this, probably only need one
-            if isinstance(agg_type, int):
+            if isinstance(agg_type, SupportedAggTypeChoices):
+                meta_instance.supported_agg_types.add(agg_type)
+
+            elif isinstance(agg_type, int):
                 # "copy agg" or "create a new version"
                 qs = SupportedAggTypeChoices.objects.filter(id=agg_type)
                 if not qs.exists():
@@ -384,10 +390,14 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     @classmethod
     def _add_sharing_status(cls, meta_instance, sharing_status_list):
         for sharing_status in sharing_status_list:
-            # there are two possibilities for res_type_str values:
+            # there are three possibilities for res_type_str values:
+            # list of SupportedSharingStatusChoices object or
             # list of string (during normal create or update) or
             # integer (during creating new version of the resource)
-            if isinstance(sharing_status, int):
+            if isinstance(sharing_status, SupportedSharingStatusChoices):
+                meta_instance.sharing_status.add(sharing_status)
+
+            elif isinstance(sharing_status, int):
                 # "copy res" or "create a new version"
                 qs = SupportedSharingStatusChoices.objects.filter(id=sharing_status)
                 if not qs.exists():

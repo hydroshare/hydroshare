@@ -14,6 +14,5 @@ RUN rm -f /opt/solr/server/solr/configsets/basic_configs/conf/managed-schema
 ADD ./conf_solr/core.properties /opt/solr/server/solr/collection1/core.properties
 ADD ./conf_solr/schema.xml.nogitignore /opt/solr/server/solr/configsets/basic_configs/conf/schema.xml
 ADD ./conf_solr/solrconfig.xml /opt/solr/server/solr/collection1/conf/solrconfig.xml
-
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["solr-foreground"]

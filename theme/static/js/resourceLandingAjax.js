@@ -65,95 +65,6 @@ function label_ajax_submit() {
     return false;
 }
 
-function change_access_ajax_submit() {
-    let form = $(this).closest("form");
-    let element = $(this);  // The access button that was pressed
-    form.find("input[name='flag']").val(element.attr("data-flag").trim());
-
-    // Disable buttons while request is being made
-    form.find("button").toggleClass("disabled", true);
-    form.css("cursor", "progress");
-
-    let datastring = form.serialize();
-    let url = form.attr('action');
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                form.find("button").removeAttr("disabled");
-                form.find("button").removeClass("active");
-                element.toggleClass("active", true);
-                element.attr("disabled", true);
-            }
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-
-            // Enable Publish Resource button if the resource was made public
-            const isPublic = element.attr("id") === "btn-public";
-            $("#publish").toggleClass("disabled", !isPublic);
-            $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
-            $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
-            $("#hl-sharing-status").text(element.text().trim());    // Update highlight sharing status
-        },
-        error: function () {
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-        }
-    });
-
-    return false;   //don't submit the form
-}
-
-function shareable_ajax_submit(event) {
-    var form = $(this).closest("form");
-    var datastring = form.serialize();
-    var url = form.attr('action');
-    var element = $(this);
-    var action = $(this).closest("form").find("input[name='t']").val();
-
-    element.attr("disabled", true);
-
-    if (element.prop("checked")) {
-        $("#shareable-description").text("Uncheck the box to prevent others from sharing the resource without the owner's permission.");
-    }
-    else {
-        $("#shareable-description").text("Check this box to allow others to share the resource without the owner's permission.");
-    }
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                element.attr("disabled", false);
-                if (action === "make_not_shareable") {
-                    element.closest("form").find("input[name='t']").val("make_shareable");
-                }
-                else {
-                    element.closest("form").find("input[name='t']").val("make_not_shareable");
-                }
-            }
-            else {
-                element.attr("disabled", false);
-                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
-            }
-        },
-        error: function () {
-            element.attr("disabled", false);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function license_agreement_ajax_submit(event) {
     // this sets if user will be required to agree to resource rights statement prior
     // to any resource file or bag download
@@ -202,151 +113,6 @@ function license_agreement_ajax_submit(event) {
     return false;
 }
 
-function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
-    if (typeof check_for_prompt === 'undefined'){
-        check_for_prompt = true;
-    }
-    if (typeof  remove_permission === 'undefined'){
-        remove_permission = true;
-    }
-    if (check_for_prompt){
-        if (!promptSelfRemovingAccess(form_id)){
-            return;
-        }
-    }
-    if (!remove_permission){
-        return;
-    }
-
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    setPointerEvents(false);
-    $form.parent().closest("tr").addClass("loading");
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-                if (json_response.hasOwnProperty('redirect_to')){
-                    window.location.href = json_response.redirect_to;
-                }
-                $form.parent().closest("tr").remove();
-                if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
-                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                }
-                setPointerEvents(true);
-            }
-            else {
-                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-            }
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
-function undo_share_ajax_submit(form_id) {
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    setPointerEvents(false);
-    $form.parent().closest("tr").addClass("loading");
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response;
-            var divInvite = $("#div-invite-people");
-
-            try {
-                json_response = JSON.parse(result);
-            }
-            catch (err) {
-                console.log(err.message);
-                // Remove previous alerts
-                divInvite.find(".label-danger").remove();
-
-                // Append new error message
-                divInvite.append("<span class='label label-danger'>" +
-                    "<strong>Error: </strong>Failed to undo action.</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-                return;
-            }
-
-            if (json_response.status === "success") {
-                // Set the new permission level in the interface
-                var userRoles = $form.closest("tr").find(".user-roles");
-
-                userRoles.find("li").removeClass("active");
-
-                if (json_response.undo_user_privilege === "view" || json_response.undo_group_privilege === "view") {
-                    userRoles.find(".dropdown-toggle").text("Can view");
-                    userRoles.find("li[data-access-type='" + "Can view"
-                        + "']").addClass("active");
-                }
-                else if (json_response.undo_user_privilege === "change" || json_response.undo_group_privilege === "change") {
-                    userRoles.find(".dropdown-toggle").text("Can edit");
-                    userRoles.find("li[data-access-type='" + "Can edit"
-                        + "']").addClass("active");
-                }
-                else if (json_response.undo_user_privilege === "owner" || json_response.undo_group_privilege === "owner") {
-                    userRoles.find(".dropdown-toggle").text("Is owner");
-                    userRoles.find("li[data-access-type='" + "Is owner"
-                        + "']").addClass("active");
-                }
-                else {
-                    // The item has no other permission. Remove it.
-                    $form.parent().closest("tr").remove();
-                    setPointerEvents(true);
-                    return;
-                }
-
-                ownersConstrain();
-
-                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
-                $(".role-dropdown").removeClass("open");
-                $form.toggleClass("hidden", true);
-            }
-            else {
-                // An error occurred
-                divInvite.find(".label-danger").remove(); // Remove previous alerts
-
-                divInvite.append("<span class='label label-danger'><strong>Error: </strong>"
-                    + json_response.message + "</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-            }
-
-            $form.parent().closest("tr").removeClass("loading");
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function showWaitDialog(){
     // display wait for the process to complete dialog
     return $("#wait-to-complete").dialog({
@@ -359,292 +125,13 @@ function showWaitDialog(){
     });
 }
 
-function promptSelfRemovingAccess(form_id){
-    $form = $('#' + form_id);
-    var url = $form.attr('action');
-    // check if we are unsharing a user or a group
-    var isUserUnsharing = false;
-    if(url.indexOf("unshare-resource-with-user") > 0){
-        isUserUnsharing = true;
-    }
-    if(!isUserUnsharing){
-        return true;
-    }
-    var formIDParts = form_id.split('-');
-    var userID = parseInt(formIDParts[formIDParts.length -1]);
-    var currentUserID = parseInt($("#current-user-id").val());
-    if (currentUserID != userID){
-        // no need to prompt for confirmation since self is not unsharing
-        return true;
-    }
-
-    // close the manage access panel (modal)
-    $("#manage-access .btn-primary").click();
-
-    // display remove access confirmation dialog
-    $("#dialog-confirm-delete-self-access").dialog({
-        resizable: false,
-        draggable: false,
-        height: "auto",
-        width: 500,
-        modal: true,
-        dialogClass: 'noclose',
-        buttons: {
-            Cancel: function () {
-                $(this).dialog("close");
-                // show manage access control panel again
-                $("#manage-access").modal('show');
-                unshare_resource_ajax_submit(form_id, false, false);
-            },
-            "Remove": function () {
-                $(this).dialog("close");
-                unshare_resource_ajax_submit(form_id, false, true);
-            }
-        },
-        open: function () {
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:first") // the first button
-                .addClass("btn btn-default");
-
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
-                .addClass("btn btn-danger");
-        }
-    });
-}
-
-function change_share_permission_ajax_submit(form_id) {
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("loading");
-    setPointerEvents(false);
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            json_response = JSON.parse(result);
-
-            try {
-                json_response = JSON.parse(result);
-            }
-            catch (err) {
-                console.log(err.message);
-                // Remove previous alerts
-                $("#div-invite-people").find(".label-danger").remove();
-
-                // Append new error message
-                $("#div-invite-people").append("<span class='label label-danger'>" +
-                    "<strong>Error: </strong>Failed to change permission.</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-                return;
-            }
-
-            var userRoles = $form.parent().closest(".user-roles");
-
-            if (json_response.status == "success") {
-                userRoles.find(".dropdown-toggle").text($form.attr("data-access-type"));
-                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
-                userRoles.find("li").removeClass("active");
-
-                userRoles.find("li[data-access-type='" + $form.attr("data-access-type")
-                    + "']").addClass("active");
-                $(".role-dropdown").removeClass("open");
-
-                $form.closest("tr").find(".undo-share-form").toggleClass("hidden", false);
-
-                updateActionsState(json_response.current_user_privilege);
-            }
-            else if (json_response.status == "error") {
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-            }
-            userRoles.find("li").removeClass("loading");
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-}
-
-function share_resource_ajax_submit(form_id) {
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var share_with;
-    var shareType;
-
-    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
-        if ($("#id_user-deck > .hilight").length > 0) {
-            share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
-            shareType = "user";
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        if ($("#id_group-deck > .hilight").length > 0) {
-            share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
-            shareType = "group";
-        }
-        else {
-            return false;
-        }
-    }
-
-    var access_type = $("#selected_role")[0].getAttribute("data-role");
-    var url = $form.attr('action') + access_type + "/" + share_with + "/";
-    setPointerEvents(false);
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-                $(".access-table #row-id-" + share_with).remove(); // Remove previous entry if it exists
-                $(".hilight > span").click(); // Clears the search field
-
-                // Get a copy of the user row template
-                var rowTemplate = $("#templateRow").clone();
-
-                // Form actions
-                var unshareUrl;
-                var undoUrl;
-                if (shareType == "user") {
-                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
-                        + share_with + "/";
-                    undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
-                }
-                else {
-                    unshareUrl =
-                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
-                        + share_with + "/";
-
-                    undoUrl = rowTemplate.find(".undo-share-form").attr("action")
-                            .replace("undo-share-resource-with-user", "undo-share-resource-with-group")
-                        + share_with + "/";
-                }
-
-                var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
-                var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
-                var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
-
-                rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
-                rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-
-                rowTemplate.find(".undo-share-form").attr('action', undoUrl);
-                rowTemplate.find(".undo-share-form").attr('id', 'form-undo-share-' + share_with);
-
-                // Set form urls, ids
-                rowTemplate.find(".share-form-view").attr('action', viewUrl);
-                rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
-                rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
-                rowTemplate.find(".share-form-view a").attr("data-arg", "share-view-" + share_with);
-                rowTemplate.find(".share-form-edit").attr('action', changeUrl);
-                rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
-                rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
-                rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
-
-                if (shareType == "user") {
-                    rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
-                    rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
-                    rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                    rowTemplate.find(".share-form-owner a").attr("data-arg", "share-owner-" + share_with);
-                }
-                else {
-                    rowTemplate.find(".share-form-owner").parent().remove();
-                }
-
-                if (json_response.name) {
-                    rowTemplate.find("div[data-col='name'] a").text(json_response.name);
-                }
-                else {
-                    rowTemplate.find("div[data-col='name'] a").text(json_response.username);
-                }
-
-                rowTemplate.find("div[data-col='name'] a").attr("href", "/" + shareType + "/" + share_with);
-
-                if (!json_response.is_current_user) {
-                    rowTemplate.find(".you-flag").hide();
-                }
-
-                if (shareType == "user") {
-                    rowTemplate.find("div[data-col='user-name']").text(json_response.username);
-                }
-                else {
-                    rowTemplate.find("div[data-col='user-name']").text("(Group)");
-                }
-
-                if (shareType == "user") {
-                    rowTemplate.find(".group-image-wrapper").remove();
-                    if (json_response.profile_pic != "No picture provided") {
-                        rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
-                        rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
-                    }
-                }
-                else {
-                    rowTemplate.find(".profile-pic-thumbnail").remove();
-                    if (json_response.group_pic != "No picture provided") {
-                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
-                    }
-                    else {
-                        // Set default group picture
-                        var defaultImgURL = $("#templateRow .group-preview-image-default")[0].style.backgroundImage;
-                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: " + defaultImgURL);
-                    }
-                }
-
-                if (access_type == "view") {
-                    rowTemplate.find("span[data-col='current-access']").text("Can view");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-view").parent().addClass("active");
-                }
-                else if (access_type == "edit") {
-                    rowTemplate.find("span[data-col='current-access']").text("Can edit");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-edit").parent().addClass("active");
-                }
-                else if (access_type == "owner") {
-                    rowTemplate.find("span[data-col='current-access']").text("Is owner");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-owner").parent().addClass("active");
-                }
-                $(".access-table > tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
-
-                updateActionsState(json_response.current_user_privilege);
-            }
-            else if (json_response.status == "error") {
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-            }
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function metadata_update_ajax_submit(form_id){
-    $alert_success = '<div class="alert alert-success" id="success-alert"> \
+    let $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata updated.\
     </div>';
-    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+    let $alert_error = '<div class="alert alert-danger" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Error! </strong> \
         Metadata failed to update.\
@@ -653,9 +140,9 @@ function metadata_update_ajax_submit(form_id){
     if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
         metadata_update_ajax_submit.resourceSatusDisplayed = false;
     }
-    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-    var resourceType = $("#resource-type").val();
-    $form = $('#' + form_id);
+
+    var resourceType = RES_TYPE;
+    let $form = $('#' + form_id);
     var datastring = $form.serialize();
 
     // Disable button while request is being made
@@ -668,11 +155,9 @@ function metadata_update_ajax_submit(form_id){
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
-        async: flagAsync,
         success: function(result) {
             /* The div contains now the updated form */
-            //$('#' + form_id).html(result);
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
@@ -700,7 +185,7 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                        json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
@@ -746,10 +231,12 @@ function metadata_update_ajax_submit(form_id){
 
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
+
                 if (json_response.hasOwnProperty('element_id')){
-                    form_update_action = $form.attr('action');
+                    let form_update_action = $form.attr('action');
+                    let update_url;
                     if (!json_response.hasOwnProperty('form_action')){
-                        res_short_id = form_update_action.split('/')[3];
+                        let res_short_id = form_update_action.split('/')[3];
                         update_url = "/hsapi/_internal/" + res_short_id + "/"
                             + json_response.element_name + "/"
                             + json_response.element_id + "/update-metadata/";
@@ -771,83 +258,28 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 if (json_response.element_exists == false){
-                    form_update_action = $form.attr('action');
-                    res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
+                    let form_update_action = $form.attr('action');
+                    let res_short_id = form_update_action.split('/')[3];
+                    let update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
                     if(json_response.element_name === 'title'){
-                        $res_title = $(".section-header").find("span").first();
-                        field_name_value = $res_title.text();
-                        updated_title = $form.find("#id_value").val();
+                        let $res_title = $(".section-header").find("span").first();
+                        let updated_title = $form.find("#id_value").val();
                         $res_title.text(updated_title);
                     }
                 }
-                if (json_response.hasOwnProperty('metadata_status')) {
-                    if (json_response.metadata_status !== $('#metadata-status').text()) {
-                        $('#metadata-status').text(json_response.metadata_status);
-                        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                            if(resourceType != 'Web App Resource')
-                                promptMessage = "This resource can be published or made public.";
-                            else
-                                promptMessage = "This resource can be made public.";
-                            if (!metadata_update_ajax_submit.resourceSatusDisplayed){
-                                metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                                if (json_response.hasOwnProperty('res_public_status')) {
-                                    if (json_response.res_public_status.toLowerCase() === "not public") {
-                                        // if the resource is already public no need to show the following alert message
-                                        customAlert("Resource Status:", promptMessage, "success", 3000);
-                                    }
-                                }
-                                else {
-                                    customAlert("Resource Status:", promptMessage, "success", 3000);
-                                }
-                            }
-                            $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                            $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-                        }
-                    }
-                }
-                if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-                    if (json_response.res_public_status == "public"){
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-public").removeClass('active');
-                        $("#btn-public").prop("disabled", true);
-                    }
-                    if (json_response.res_discoverable_status == "discoverable"){
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                    else {
-                        $("#btn-discoverable").removeClass('active');
-                        $("#btn-discoverable").prop("disabled", true);
-                    }
-                    if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable"){
-                        $("#btn-private").addClass('active');
-                        $("#btn-private").prop("disabled", true);
-                    }
-                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                        if (!$("#btn-public").hasClass('active')){
-                            $("#btn-public").prop("disabled", false);
-                        }
-                        if (!$("#btn-discoverable").hasClass('active')){
-                            $("#btn-discoverable").prop("disabled", false);
-                        }
-                    }
-                }
-                $('body > .container').append($alert_success);
+
+                showCompletedMessage(json_response);
+
+                $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
                     this.remove();
                 });
-                $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                $("#success-alert").fadeTo(2000, 500).fadeOut(1000, function(){
                     $(document).trigger("submit-success");
-                    $(".alert-success").alert('close');
+                    $("#success-alert").alert('close');
                 });
             }
             else{
@@ -877,6 +309,44 @@ function metadata_update_ajax_submit(form_id){
     return false;
 }
 
+function showCompletedMessage(json_response) {
+    if (json_response.hasOwnProperty('metadata_status')) {
+        if (json_response.metadata_status !== $('#metadata-status').text()) {
+            $('#metadata-status').text(json_response.metadata_status);
+            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                manageAccessApp.$data.canBePublicDiscoverable = true;
+                let resourceType = RES_TYPE;
+                let promptMessage = "";
+                if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                      "must first be made public.";
+                else
+                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                      "or public.";
+
+                if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
+                    metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                    if (json_response.hasOwnProperty('res_public_status')) {
+                        if (json_response.res_public_status.toLowerCase() === "not public") {
+                            // if the resource is already public no need to show the following alert message
+                            customAlert("Resource Status:", promptMessage, "success", 8000);
+                        }
+                    }
+                    else {
+                        customAlert("Resource Status:", promptMessage, "success", 8000);
+                    }
+                }
+                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+            }
+            else {
+                manageAccessApp.onMetadataInsufficient();
+            }
+        }
+    }
+}
+
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
     var $element_selection_dropdown = $('#' + element_id + '_code_choices');
     if ($element_selection_dropdown.length && $element_selection_dropdown.attr('type') !== "hidden"){
@@ -885,7 +355,7 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
 }
 
 function set_file_type_ajax_submit(url, folder_path) {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Selected content type creation was successful.\
@@ -903,8 +373,8 @@ function set_file_type_ajax_submit(url, folder_path) {
         success: function (result) {
             waitDialog.dialog("close");
             $("#fb-inner-controls").before($alert_success);
-            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                $(".alert-success").alert('close');
+            $("#success-alert").fadeTo(2000, 500).slideUp(1000, function(){
+                $("#success-alert").alert('close');
             });
         },
         error: function (xhr, textStatus, errorThrown) {
@@ -917,7 +387,7 @@ function set_file_type_ajax_submit(url, folder_path) {
 }
 
 function remove_aggregation_ajax_submit(url) {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Content type was removed successfully.\
@@ -933,8 +403,8 @@ function remove_aggregation_ajax_submit(url) {
         success: function (result) {
             waitDialog.dialog("close");
             $("#fb-inner-controls").before($alert_success);
-            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                $(".alert-success").alert('close');
+            $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                $("#success-alert").alert('close');
             });
         },
         error: function (xhr, textStatus, errorThrown) {
@@ -1002,14 +472,11 @@ function filetype_keywords_update_ajax_submit() {
                 }
                 // Refresh keywords field for the resource
                 var resKeywords = json_response.resource_keywords;
-                $("#lst-tags").empty();
                 for (var i = 0; i < resKeywords.length; i++) {
                     if (resKeywords[i] != "") {
-                        var li = $("<li class='tag'><span></span></li>");
-                        li.find('span').text(resKeywords[i]);
-                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-                        $("#lst-tags").append(li);
-                        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsCmp.resKeywords) === -1) {
+                            subjKeywordsCmp.resKeywords.push(resKeywords[i].trim());
+                        }
                     }
                 }
                 // show update netcdf file update option for NetCDFLogicalFile
@@ -1045,7 +512,7 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
 }
 
 function update_netcdf_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File update was successful.\
@@ -1062,8 +529,8 @@ function update_netcdf_file_ajax_submit() {
                 $("#div-netcdf-file-update").hide();
                 $alert_success = $alert_success.replace("File update was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
                  showFileTypeMetadata(false, "");
@@ -1076,7 +543,7 @@ function update_netcdf_file_ajax_submit() {
 }
 
 function update_sqlite_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File update was successful.\
@@ -1093,8 +560,8 @@ function update_sqlite_file_ajax_submit() {
                 $("#div-sqlite-file-update").hide();
                 $alert_success = $alert_success.replace("File update was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
                 showFileTypeMetadata(false, "");
@@ -1108,7 +575,7 @@ function update_sqlite_file_ajax_submit() {
 
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
-    var entry = $(obj).closest("div[data-hs-user-type]").find("#id_user-deck > .hilight");
+    var entry = $(obj).closest("div[data-hs-user-type]").find("#user-deck > .hilight");
     if (entry.length < 1) {
         entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
         is_group = true;
@@ -1234,21 +701,20 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
-                    $('#fb-files-container').append(`
-                        <div>
-                            <span class="text-muted fb-empty-dir">This directory is empty</span>
-                            <br><br>
-                            <div class="hs-upload-indicator text-center">
-                                <i class="fa fa-file" aria-hidden="true"></i>
-                                <h4>Drop files here or click "Add files" to upload</h4>
-                            </div>
-                        </div>
-                    `);
+                    $('#fb-files-container').append(
+                        '<div>' +
+                            '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
+                            '<div class="hs-upload-indicator text-center">' +
+                                '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                '<h4>Drop files here or click "Add files" to upload</h4>' +
+                            '</div>' +
+                        '</div>'
+                    );
                 }
                 else {
-                    $('#fb-files-container').append(`
-                        <span class="text-muted fb-empty-dir">This directory is empty</span>
-                    `);
+                    $('#fb-files-container').append(
+                        '<span class="text-muted fb-empty-dir">This directory is empty</span>'
+                    );
                 }
             }
             if (can_be_public) {
@@ -1360,6 +826,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
             folder_path: folder_path
         },
         success: function (result) {
+            $("#fb-alerts .upload-failed-alert").remove();
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
                 $('#create-folder-dialog').modal('hide');
@@ -1373,7 +840,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
+function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, validate_url_flag) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1383,23 +850,36 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url) {
             res_id: res_id,
             curr_path: curr_path,
             ref_name: ref_name,
-            ref_url: ref_url
+            ref_url: ref_url,
+            validate_url_flag: validate_url_flag
         },
         success: function (result) {
             $('#add-reference-url-dialog').modal('hide');
+            $('#validate-reference-url-dialog').modal('hide');
             $("#txtRefName").val("");
             $("#txtRefURL").val("");
             $("#ref_file_note").show();
         },
-        error: function(xhr, errmsg, err){
-            // Response text is not yet user friendly enough to display in UI
-            display_error_message('Error', "Failed to add reference content.");
-            $('#add-reference-url-dialog').modal('hide');
+        error: function(xhr, errmsg, err) {
+            if(validate_url_flag) {
+                $('#add-reference-url-dialog').modal('hide');
+                // display warning modal dialog
+                $("#ref_name_passover").val(ref_name);
+                $("#ref_url_passover").val(ref_url);
+                $("#new_ref_url_passover").val('');
+                $('#validate-reference-url-dialog').modal('show');
+            }
+            else {
+                // Response text is not yet user friendly enough to display in UI
+                display_error_message('Error', "Failed to add reference content.");
+                $('#add-reference-url-dialog').modal('hide');
+                $('#validate-reference-url-dialog').modal('hide');
+            }
         }
     });
 }
 
-function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url) {
+function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url, validate_url_flag) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1409,13 +889,25 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
             res_id: res_id,
             curr_path: curr_path,
             url_filename: url_filename,
-            new_ref_url: new_ref_url
+            new_ref_url: new_ref_url,
+            validate_url_flag: validate_url_flag
         },
         success: function (result) {
+            $('#validate-reference-url-dialog').modal('hide');
         },
         error: function (xhr, errmsg, err) {
-            // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
-            display_error_message('Error: failed to edit reference URL.');
+            if (validate_url_flag) {
+                // display warning modal dialog
+                $("#ref_name_passover").val(url_filename);
+                $("#ref_url_passover").val('');
+                $("#new_ref_url_passover").val(new_ref_url);
+                $('#validate-reference-url-dialog').modal('show');
+            }
+            else {
+                // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
+                display_error_message('Error: failed to edit referenced URL.');
+                $('#validate-reference-url-dialog').modal('hide');
+            }
         }
     });
 }
@@ -1604,6 +1096,7 @@ function deleteFileTypeExtraMetadata(form_id){
         }
     });
 }
+
 function deleteFileTypeSpatialCoverage(url, deleteButton) {
     $.ajax({
         type: "POST",
@@ -1696,6 +1189,7 @@ function BindKeyValueFileTypeClickHandlers(){
         })
     });
 }
+
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
@@ -1771,22 +1265,35 @@ function updateEditCoverageStateFileType() {
     }
 }
 
-// act on spatial coverage type change
+// set form fields for spatial coverage for aggregation/file type
 function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker){
-    // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
 
     if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
-        // don't allow changing coverage type
+        // don't allow changing coverage type if aggregation type is not GenericLogicalFile or FileSetLogicalFile
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find(radioBoxSelector).attr('onclick', 'return false');
         $id_type_filetype_div.find(radioPointSelector).attr('onclick', 'return false');
-        if (logical_type !== "RefTimeseriesLogicalFile"){
-            $id_type_filetype_div.find(radioBoxSelector).attr('checked', 'checked');
+
+        var selectBoxTypeCoverage = false;
+        if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
+            logical_type === "NetCDFLogicalFile" || logical_type === "GeoRasterLogicalFile"){
+            selectBoxTypeCoverage = true;
         }
-        $id_type_filetype_div.find(radioPointSelector).attr('disabled', true);
-        $id_type_filetype_div.find(radioPointSelector).parent().closest("label").addClass("text-muted");
+        if (selectBoxTypeCoverage){
+            $id_type_filetype_div.find(radioPointSelector).attr('disabled', true);
+            $id_type_filetype_div.find(radioPointSelector).parent().closest("label").addClass("text-muted");
+        }
+        else {
+            $id_type_filetype_div.find(radioBoxSelector).attr('disabled', true);
+            $id_type_filetype_div.find(radioBoxSelector).parent().closest("label").addClass("text-muted");
+        }
+
         if (logical_type === "NetCDFLogicalFile" || logical_type === "GeoRasterLogicalFile"){
+            // set box type coverage checked
+            $id_type_filetype_div.find(radioBoxSelector).attr('checked', 'checked');
+
+            // enable spatial coordinate picker (google map interface)
             $("#id-spatial-coverage-file-type").attr('data-coordinates-type', 'rectangle');
             $("#id-spatial-coverage-file-type").coordinatesPicker();
             $("#id-origcoverage-file-type").attr('data-coordinates-type', 'rectangle');
@@ -1794,7 +1301,9 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         }
     }
     else {
-        // file type is "GenericLogicalFile" or "FileSetLogicalFile" - allow changing coverage type
+        // file type is "GenericLogicalFile" or "FileSetLogicalFile"
+        // allow changing coverage type
+        // provide option to delete spatial coverage at the aggregation level
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageStateFileType);
         var onSpatialCoverageDelete = function () {
             var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
@@ -1819,35 +1328,23 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         // set spatial form attribute 'data-coordinates-type' to point or rectangle
         if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked"){
             $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'rectangle');
-            // check if spatial coverage exists
-            var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
-            if(!$btnDeleteSpatialCoverage.length) {
-                // delete option doesn't exist
-                $btnDeleteSpatialCoverage = addSpatialCoverageLink();
-            }
-            var formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
-            var url = formSpatialCoverage.attr('action');
-            if(url.indexOf('update-file-metadata') !== -1) {
-                onSpatialCoverageDelete();
-            }
-            else {
-                $btnDeleteSpatialCoverage.hide()
-            }
         }
         else {
             $("#id-coverage-spatial-filetype").attr('data-coordinates-type', 'point');
-            $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
-            if(!$btnDeleteSpatialCoverage.length) {
-                $btnDeleteSpatialCoverage = addSpatialCoverageLink();
-            }
-            formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
-            url = formSpatialCoverage.attr('action');
-            if(url.indexOf('update-file-metadata') !== -1) {
-                onSpatialCoverageDelete();
-            }
-            else {
-                $btnDeleteSpatialCoverage.hide()
-            }
+        }
+        // check if spatial coverage exists
+        var $btnDeleteSpatialCoverage = $("#id-btn-delete-spatial-filetype");
+        if(!$btnDeleteSpatialCoverage.length) {
+            // delete option doesn't exist
+            $btnDeleteSpatialCoverage = addSpatialCoverageLink();
+        }
+        var formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
+        var url = formSpatialCoverage.attr('action');
+        if(url.indexOf('update-file-metadata') !== -1) {
+            onSpatialCoverageDelete();
+        }
+        else {
+            $btnDeleteSpatialCoverage.hide()
         }
         if(bindCoordinatesPicker){
             $("#id-coverage-spatial-filetype").coordinatesPicker();
@@ -1874,7 +1371,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 // updates the UI spatial coverage elements for resource
 function updateResourceSpatialCoverage(spatialCoverage) {
     if ($("#id-coverage-spatial").length) {
-        $("#spatial-coverage-type").val(spatialCoverage.type);
+        spatial_coverage_type = spatialCoverage.type;
         var $form = $("#id-coverage-spatial");
         var form_update_action = $form.attr('action');
         var res_short_id = form_update_action.split('/')[3];
@@ -1889,7 +1386,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("input[value='point']");
         var $box_radio = $id_type_div.find("input[value='box']");
-        var resourceType = $("#resource-type").val();
+        var resourceType = RES_TYPE;
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
@@ -2077,7 +1574,7 @@ function setFileTypeMetadataFormsClickHandlers(){
 
 function updateResourceKeywords(keywordString) {
     // Update the value of the input used in form submission
-    $("#id-subject").find("#id_value").val(keywordString);
+    $("#id-subject").find("#id_subject_keyword_control_input").val(keywordString);
 
     // Populate keywords field in the UI
     var keywords = keywordString.split(",");
