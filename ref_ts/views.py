@@ -175,41 +175,6 @@ def verify_rest_url(request):
     except:
         return json_or_jsonp(request, {"status": "error"})
 
-@login_required
-def create_ref_time_series(request, *args, **kwargs):
-    try:
-        ts_dict = request.session.get('ts', False)
-        if not ts_dict:
-            raise Exception("No ts in session")
-
-        url = ts_dict['url']
-        reference_type = ts_dict['ref_type']
-        frm = CreateRefTimeSeriesForm(request.POST)
-        if frm.is_valid():
-            metadata = []
-            ts_utils.prepare_metadata_list(metadata=metadata,
-                                           ts_dict=ts_dict,
-                                           url=url,
-                                           reference_type=reference_type)
-
-            res = hydroshare.create_resource(
-                resource_type='RefTimeSeriesResource',
-                owner=request.user,
-                title=frm.cleaned_data.get('title'),
-                metadata=metadata)
-
-            if ts_dict:
-                del request.session['ts']
-
-            request.session['just_created'] = True
-            return HttpResponseRedirect(res.get_absolute_url())
-        else:
-            raise Exception("Parameters validation error")
-    except Exception as ex:
-        logger.exception("create_ref_time_series: %s" % (ex.message))
-        context = {'resource_creation_error': "Error: failed to create resource." }
-        return render(request, 'pages/create-ref-time-series.html', context)
-
 
 def download_refts_resource_bag(request, shortkey, *args, **kwargs):
     tempdir = None
