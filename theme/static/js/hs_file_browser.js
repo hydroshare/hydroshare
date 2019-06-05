@@ -1325,7 +1325,7 @@ $(document).ready(function () {
                 });
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
-                this.on("error", function (error, errorMessage, xhr) {
+                this.on("error", function (error, errorMessage) {
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
 
@@ -1337,7 +1337,7 @@ $(document).ready(function () {
                                     '<strong>File Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + errorMessage + '</span>' +
+                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });
