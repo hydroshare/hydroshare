@@ -9,10 +9,10 @@
                 {% if resource_edit_mode %}
                     <div id="add-keyword-wrapper" class="input-group">
                         <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
-                               @keyup.enter="addButton('{{ cm.short_id }}')"
+                               @keyup.enter="addKeyword('{{ cm.short_id }}')"
                                placeholder="Examples: Hydrologic_modeling, USU, land use">
                         <span class="input-group-btn">
-                            <button @click="addButton('{{ cm.short_id }}')" id="btn-add-keyword"
+                            <button @click="addKeyword('{{ cm.short_id }}')"
                                     class="btn btn-success" type="button">Add</button>
                         </span>
                     </div>
@@ -33,7 +33,10 @@
                 </ul>
             </div>
             <div>
-                <p class="text-danger small" id="id-keywords-msg" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                <div v-if="error" class='alert alert-danger space-top small'>
+                    <strong>Error: </strong>${ error }
+                </div>
             </div>
         </div>
         <div class="col-xs-12 col-sm-6">
@@ -49,4 +52,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subjet-keywords.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>

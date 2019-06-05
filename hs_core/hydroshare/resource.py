@@ -407,8 +407,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names=[], fed_res_path='', move=False,
-        create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
+        files=(), create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
         auto_aggregate=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
@@ -451,13 +450,6 @@ def create_resource(
     :param extra_metadata: one dict containing keys and corresponding values
          { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
-    :param source_names: a list of file names from a federated zone to be
-         used to create the resource in the federated zone, default is empty list
-    :param fed_res_path: the federated zone path in the format of
-         /federation_zone/home/localHydroProxy that indicate where the resource
-         is stored, default is empty string
-    :param move: a value of False or True indicating whether the content files
-         should be erased from the source directory. default is False.
     :param create_bag: whether to create a bag for the newly created resource or not.
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
@@ -470,9 +462,6 @@ def create_resource(
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
     """
-    if __debug__:
-        assert(isinstance(source_names, list))
-
     with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
@@ -506,15 +495,6 @@ def create_resource(
 
         if extra_metadata is not None:
             resource.extra_metadata = extra_metadata
-            resource.save()
-
-        if fed_res_path:
-            resource.resource_federation_path = fed_res_path
-            resource.save()
-
-        # TODO: It would be safer to require an explicit zone path rather than harvesting file path
-        elif len(source_names) > 0:
-            resource.resource_federation_path = utils.get_federated_zone_home_path(source_names[0])
             resource.save()
 
         # by default resource is private
@@ -580,8 +560,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, source_names=source_names, move=move,
-                               full_paths=full_paths, auto_aggregate=auto_aggregate)
+            add_resource_files(resource.short_id, *files, full_paths=full_paths,
+                               auto_aggregate=auto_aggregate)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -595,7 +575,6 @@ def create_resource(
     return resource
 
 
-# TODO: this is incredibly misnamed. It should not be used to create empty resources!
 def create_empty_resource(pk, user, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
@@ -631,7 +610,6 @@ def create_empty_resource(pk, user, action='version'):
         owner=user,
         title=res.metadata.title.value,
         create_metadata=False,
-        fed_res_path=res.resource_federation_path,
         create_bag=False
     )
     return new_resource
@@ -760,7 +738,6 @@ def add_resource_files(pk, *files, **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
 
-    move = kwargs.pop('move', False)
     folder = kwargs.pop('folder', None)
 
     if __debug__:  # assure that there are no spurious kwargs left.
@@ -794,8 +771,7 @@ def add_resource_files(pk, *files, **kwargs):
         for ifname in source_names:
             ret.append(utils.add_file_to_resource(resource, None,
                                                   folder=folder,
-                                                  source_name=ifname,
-                                                  move=move))
+                                                  source_name=ifname))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)

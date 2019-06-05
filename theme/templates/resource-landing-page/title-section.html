@@ -117,7 +117,7 @@
 {% endif %}
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-	 {% if is_owner_user or is_edit_user%}
+	 {% if self_access_level == 'owner' or self_access_level == 'edit'%}
 		{% if cm.check_content_files %}
 		<div class="col-sm-12">
 		    <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">

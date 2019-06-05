@@ -208,7 +208,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             # TODO: validate extra metadata here
 
         try:
-            _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
+            _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(
                 resource_type=resource_type, resource_title=res_title,
                 page_redirect_url_key=None, files=files, metadata=metadata,
                 **kwargs)
