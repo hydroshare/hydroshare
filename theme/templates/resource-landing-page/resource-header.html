@@ -14,71 +14,72 @@
                             {% endfor %}
                         </td>
                     {% else %}
-                    <td>
-                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
-                           data-target="#add-creator-dialog" title="Add Author">
-                            <span class="glyphicon glyphicon-plus"></span>
-                        </a>
-                        <span class="authors-wrapper sortable">
-                            {% for author in creators %}
-                                <span>
-                                    <a title="Edit {{ author.name }}"
-                                       class="author-modal-trigger" data-id="{{ author.id }}"
-                                       data-name="{{ author.name }}" data-order="{{ author.order }}"
-                                       data-description="{{ author.description|default:"" }}"
-                                       data-organization="{{ author.organization|default:"" }}"
-                                       data-email="{{ author.email|default:"" }}"
-                                       data-address="{{ author.address|default:"" }}"
-                                       data-phone="{{ author.phone|default:"" }}"
-                                       data-homepage="{{ author.homepage|default:"" }}"
-                                            {% for name, link in author.identifiers.items %}
-                                       data-{{ name }}="{{ link }}"
-                                            {% endfor %}>
-                                        {% if author.name %}
-                                            {{ author.name }}
-                                        {% else %}
-                                            {{ author.organization }}
-                                        {% endif %}
-                                    </a>
+                        <td>
+                            <a type="button" id="btn-add-new-author"
+                               class="btn btn-success btn-xs" data-toggle="modal"
+                               data-target="#add-creator-dialog" title="Add Author">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </a>
+                            <span class="authors-wrapper sortable">
+                                {% for author in creators %}
+                                    <span>
+                                        <a title="Edit {{ author.name }}"
+                                           class="author-modal-trigger" data-id="{{ author.id }}"
+                                           data-name="{{ author.name }}" data-order="{{ author.order }}"
+                                           data-description="{{ author.description|default:"" }}"
+                                           data-organization="{{ author.organization|default:"" }}"
+                                           data-email="{{ author.email|default:"" }}"
+                                           data-address="{{ author.address|default:"" }}"
+                                           data-phone="{{ author.phone|default:"" }}"
+                                           data-homepage="{{ author.homepage|default:"" }}"
+                                                {% for name, link in author.identifiers.items %}
+                                           data-{{ name }}="{{ link }}"
+                                                {% endfor %}>
+                                            {% if author.name %}
+                                                {{ author.name }}
+                                            {% else %}
+                                                {{ author.organization }}
+                                            {% endif %}
+                                        </a>
 
-                                    <form class="hidden-form"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                                          enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <input name="resource-mode" type="hidden" value="edit">
+                                        <form class="hidden-form"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                              enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <input name="resource-mode" type="hidden" value="edit">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                               value="{{ author.name|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                                   value="{{ author.name|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                               value="{{ author.description|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                                   value="{{ author.description|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                               value="{{ author.organization|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-organization"
+                                                   type="text" value="{{ author.organization|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                               value="{{ author.email|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                                   value="{{ author.email|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                               value="{{ author.address|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                                   value="{{ author.address|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                               type="text" value="{{ author.phone|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                                   type="text" value="{{ author.phone|default:"" }}">
 
-                                        <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                               value="{{ author.homepage|default:"" }}">
+                                            <input name="creator-{{ author.order|add:"- 1" }}-homepage"
+                                                   type="url" value="{{ author.homepage|default:"" }}">
 
-                                        <input class="input-order"
-                                               name="creator-{{ author.order|add:"- 1" }}-order"
-                                               type="number" value="{{ author.order|default:"" }}">
-                                    </form>
-                                 </span>
-                            {% endfor %}
-                        </span>
-                        <span data-toggle="tooltip" data-placement="auto"
-                              title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted"></span>
-                    </td>
+                                            <input class="input-order"
+                                                   name="creator-{{ author.order|add:"- 1" }}-order"
+                                                   type="number" value="{{ author.order|default:"" }}">
+                                        </form>
+                                     </span>
+                                {% endfor %}
+                            </span>
+                            <span data-toggle="tooltip" data-placement="auto"
+                                  title='Drag and drop Authors to rearrange.'
+                                  class="glyphicon glyphicon-info-sign text-muted"></span>
+                        </td>
                     {% endif %}
                 </tr>
                 <tr>
