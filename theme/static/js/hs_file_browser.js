@@ -435,6 +435,7 @@ function updateSelectionMenuContext() {
                     logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
+                        uiActionStates.paste.disabled = true;
                     }
                 }
             })
