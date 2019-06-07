@@ -1286,6 +1286,7 @@ $(document).ready(function () {
                 this.on("drop", function (event) {
                     var myDropzone = this;
                     myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.
+
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
@@ -1305,6 +1306,26 @@ $(document).ready(function () {
 
                 // When a file is added to the list
                 this.on("addedfile", function (file) {
+                    var myDropzone = this;
+                    if (currentPath.hasOwnProperty("aggregation")) {
+                        myDropzone.removeFile(file);
+                        // Display an error here
+                        $("#fb-alerts .upload-failed-alert").remove();
+                        $("#hsDropzone").toggleClass("glow-blue", false);
+
+                        $("#fb-alerts").append(
+                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                    '<span aria-hidden="true">&times;</span></button>' +
+                                '<div>' +
+                                    '<strong>File Upload Failed</strong>'+
+                                '</div>'+
+                                '<div>'+
+                                    '<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>' +
+                                '</div>'+
+                            '</div>').fadeIn(200);
+                        }
+
                     $(".fb-drag-flag").hide();
                 });
 
