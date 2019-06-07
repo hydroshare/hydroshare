@@ -15,7 +15,7 @@
                 </button>
             </div>
 
-            {% if is_owner_user and not cm.raccess.published and cm.can_be_published %}
+            {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
             <br />
 
             <div class="citation-description">
@@ -129,7 +129,7 @@
         {% if resource_edit_mode %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
-            {% if is_owner_user %}
+            {% if self_access_level == 'owner' %}
                 <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                       method="POST">
                     {% csrf_token %}

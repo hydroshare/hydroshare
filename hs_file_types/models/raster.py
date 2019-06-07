@@ -319,10 +319,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
         aggregation_folder_created = False
-        # determine if we need to create a new folder for the aggregation
-        create_new_folder = cls._check_create_aggregation_folder(
-            selected_res_file=res_file, selected_folder=folder_path,
-            aggregation_file_count=1)
 
         upload_folder = ''
         # get the file from irods to temp dir
@@ -347,49 +343,16 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             with transaction.atomic():
                 # create a geo raster logical file object to be associated with resource files
                 logical_file = cls.initialize(base_file_name, resource)
-
+                logical_file.save()
                 try:
                     if not folder_path:
-                        # we are here means aggregation is being created by selecting a file
-                        if create_new_folder:
-                            # create a folder for the raster file type using the base file name
-                            # as the name for the new folder
-                            upload_folder = cls._create_aggregation_folder(resource, file_folder,
-                                                                           base_file_name)
-                            log.info("Folder created:{}".format(upload_folder))
-                            aggregation_folder_created = True
-                        else:
-                            upload_folder = file_folder
-
-                        # create logical file record in DB
-                        logical_file.save()
-                        if res_file.extension.lower() in [".tiff", ".tif"]:
-                            if aggregation_folder_created:
-                                tgt_folder = upload_folder
-
-                                # copy any existing raster specific files to the new aggregation
-                                # folder and make them part of the logical file
-                                files_to_copy = validation_results['raster_resource_files']
-                                logical_file.copy_resource_files(resource, files_to_copy,
-                                                                 tgt_folder)
-                                res_files_to_delete.extend(files_to_copy)
-                            else:
-                                # make the existing raster specific files part of the
-                                # aggregation/file type
-                                for raster_res_file in validation_results['raster_resource_files']:
-                                    logical_file.add_resource_file(raster_res_file)
-
-                        else:
-                            # selected file must be a zip file
-                            res_files_to_delete.append(res_file)
+                        upload_folder = file_folder
                     else:
-                        # create logical file record in DB
-                        logical_file.save()
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
 
-                        # make all the files in the selected folder as part of the aggregation
-                        logical_file.add_resource_files_in_folder(resource, folder_path)
+                    # make all the files in the selected folder as part of the aggregation
+                    logical_file.add_resource_files_in_folder(resource, folder_path)
 
                     # add all new files to resource and make those part of the logical file
                     if validation_results['new_resource_files_to_add']:
@@ -427,9 +390,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         shutil.rmtree(temp_dir)
 
             if not file_type_success:
-                aggregation_from_folder = folder_path is not None
-                cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                           file_folder, aggregation_from_folder)
                 raise ValidationError(msg)
         else:
             # remove temp dir

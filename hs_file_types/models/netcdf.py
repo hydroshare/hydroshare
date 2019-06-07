@@ -339,11 +339,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """does not allow the original folder to be deleted upon zipping of that folder"""
         return False
 
-    @property
-    def aggregation_name(self):
-        nc_file = self.get_primary_resouce_file(self.files.all())
-        return nc_file.short_path
-
     def update_netcdf_file(self, user):
         """
         writes metadata to the netcdf file associated with this instance of the logical file

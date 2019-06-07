@@ -11,7 +11,7 @@
             </a>
         {% endif %}
         {% if not resource_edit_mode %}
-            {% if not is_owner_user and not is_edit_user and not is_view_user and cm.raccess.public %}
+            {% if not self_access_level == 'None' and cm.raccess.public %}
                 {% if resource_is_mine %}
                     <form data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
@@ -70,7 +70,7 @@
 
             {% if not is_replaced_by %}
                 {% if user.is_authenticated and rights.statement %}
-                    {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
+                    {% if cm.raccess.public or not self_access_level == 'None' %}
                         {% if not allow_resource_copy %}
                             <a disabled>
                                 <span data-toggle="tooltip" data-placement="bottom"
@@ -87,7 +87,7 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
-                {% if page.perms.change or is_owner_user and cm.raccess.published %}
+                {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
                     <form action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
 

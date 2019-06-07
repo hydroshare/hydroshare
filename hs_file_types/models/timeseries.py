@@ -560,10 +560,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         file_folder = res_file.file_folder
         aggregation_folder_created = False
         res_files_to_delete = []
-        # determine if we need to create a new folder for the aggregation
-        create_new_folder = cls._check_create_aggregation_folder(
-            selected_res_file=res_file, selected_folder=folder_path,
-            aggregation_file_count=1)
         file_type_success = False
         upload_folder = ''
         msg = "TimeSeries aggregation type. Error when creating. Error:{}"
@@ -571,40 +567,13 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             # create a TimeSerisLogicalFile object to be associated with resource file
             logical_file = cls.initialize(base_file_name, resource)
 
+            logical_file.save()
             try:
                 if folder_path is None:
-                    # we are here means aggregation is being created by selecting a file
-                    # create a folder for the timeseries file type using the base file
-                    # name as the name for the new folder if the file is not in a folder already
-                    if create_new_folder:
-                        # create a folder for the raster file type using the base file name
-                        # as the name for the new folder
-                        upload_folder = cls._create_aggregation_folder(resource, file_folder,
-                                                                       base_file_name)
-
-                        log.info("Folder created:{}".format(upload_folder))
-                        aggregation_folder_created = True
-                        tgt_folder = upload_folder
-                        files_to_copy = [res_file]
-                        # create logical file record in DB
-                        logical_file.save()
-                        logical_file.copy_resource_files(resource, files_to_copy,
-                                                         tgt_folder)
-                        res_files_to_delete.append(res_file)
-                    else:
-                        # selected file is already in a folder
-                        upload_folder = file_folder
-                        # create logical file record in DB
-                        logical_file.save()
-                        # make the selected file part of the aggregation
-                        logical_file.add_resource_file(res_file)
+                    upload_folder = file_folder
                 else:
-                    # folder has been selected for creating the aggregation
                     upload_folder = folder_path
-                    # create logical file record in DB
-                    logical_file.save()
-                    # make the selected file part of the aggregation
-                    logical_file.add_resource_file(res_file)
+                logical_file.add_resource_file(res_file)
 
                 # add a blank ODM2 sqlite file to the resource and make it part of the aggregation
                 # if we creating aggregation from a csv file
@@ -645,9 +614,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     shutil.rmtree(temp_dir)
 
         if not file_type_success:
-            aggregation_from_folder = folder_path is not None
-            cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                       file_folder, aggregation_from_folder)
             raise ValidationError(msg)
 
     def get_copy(self, copied_resource):

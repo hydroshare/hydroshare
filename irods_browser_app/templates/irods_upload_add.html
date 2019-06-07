@@ -8,17 +8,17 @@
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                     <h4 class="modal-title" id="myModalLabel">iRODS user: <span id="irods_content_label"></span> </h4>
                 </div>
-                <form class="form-signin" role="form" action="/irods/upload_add/" method="post">
+                <form class="form-signin" role="form" action="" method="post" id="irodsUpload">
                     <div class="modal-body">
                         {% csrf_token %}
                         <input type="hidden" name="store" id="root_store" value=""/>
                         <input type="hidden" name="res_id" id="res_id" value="{{ cm.short_id }}"/>
-                        <input type="hidden" id="irods-username" name="irods-username" value="">
-                        <input type="hidden" id="irods-password" name="irods-password" value="">
-                        <input type="hidden" id="irods-host" name="irods-host" value="">
-                        <input type="hidden" id="irods-port" name="irods-port" value="">
-                        <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                        <input type="hidden" name="irods_file_names" id="upload_store" value=""/>
+                        <input type="hidden" id="irods_username" name="irods_username" value="">
+                        <input type="hidden" id="irods_password" name="irods_password" value="">
+                        <input type="hidden" id="irods_host" name="irods_host" value="">
+                        <input type="hidden" id="irods_port" name="irods_port" value="">
+                        <input type="hidden" id="irods_zone" name="irods_zone" value="">
+                        <input type="hidden" id="upload_store" value=""/>
                         <div>
                             <div>Viewing : <input type="text" class="form-control" id="irods_view_store" ></div>
                             <div id = "file_struct"></div>

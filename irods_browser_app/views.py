@@ -1,7 +1,8 @@
 import json
 import os
 import string
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse
+from rest_framework import status
 
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
@@ -10,6 +11,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils
+
 
 def search_ds(coll):
     store = {}
@@ -25,6 +27,7 @@ def search_ds(coll):
     store['files'] = file
     store['folder'] = folder
     return store
+
 
 def check_upload_files(resource_cls, fnames_list):
     file_types = resource_cls.get_supported_upload_file_types()
@@ -46,6 +49,7 @@ def check_upload_files(resource_cls, fnames_list):
 
     return (valid, ext)
 
+
 # Create your views here.
 def login(request):
     if request.method == 'POST':
@@ -65,13 +69,9 @@ def login(request):
         except CollectionDoesNotExist:
             response_data['irods_loggedin'] = False
             response_data['login_message'] = 'iRODS login failed'
-            response_data['irods_file_names'] = ''
             response_data['error'] = "iRODS collection does not exist"
             irods_sess.cleanup()
-            return HttpResponse(
-                json.dumps(response_data),
-                content_type="application/json"
-            )
+            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
         else:
             response_data['user'] = user
             response_data['password'] = password
@@ -80,17 +80,11 @@ def login(request):
             response_data['zone'] = zone
             response_data['datastore'] = datastore
             response_data['irods_loggedin'] = True
-            response_data['irods_file_names'] = ''
             irods_sess.cleanup()
-            return HttpResponse(
-                json.dumps(response_data),
-                content_type = "application/json"
-            )
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
     else:
-        return HttpResponse(
-            json.dumps({"error": "Not POST request"}),
-            content_type="application/json"
-        )
+        return JsonResponse({"error": "Not POST request"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def store(request):
     """
@@ -109,62 +103,27 @@ def store(request):
 
     return_object['files'] = store['files']
     return_object['folder'] = store['folder']
-    jsondump = json.dumps(return_object)
     irods_sess.cleanup()
-    return HttpResponse(
-        jsondump,
-        content_type = "application/json"
-    )
+    return JsonResponse(return_object, status=status.HTTP_200_OK)
 
-def upload(request):
-    if request.method == 'POST':
-        file_names = str(request.POST['upload'])
-        fnames_list = string.split(file_names, ',')
-
-        resource_cls = hydroshare.check_resource_type(request.POST['res_type'])
-        valid, ext = check_upload_files(resource_cls, fnames_list)
-
-        response_data = {}
-        if valid:
-            response_data['file_type_error'] = ''
-            response_data['irods_file_names'] = file_names
-            # get selected file names without path for informational display on the page
-            response_data['irods_sel_file'] = ', '.join(os.path.basename(f.rstrip(os.sep)) for f in fnames_list)
-            homepath = fnames_list[0]
-            response_data['irods_federated'] = utils.is_federated(homepath)
-        else:
-            response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
-            response_data['irods_file_names'] = ''
-            response_data['irods_sel_file'] = 'No file selected.'
-
-        return HttpResponse(
-            json.dumps(response_data),
-            content_type = "application/json"
-        )
-    else:
-        return HttpResponse(
-            json.dumps({"error": "Not POST request"}),
-            content_type="application/json"
-        )
 
 def upload_add(request):
     # add irods file into an existing resource
-    res_id = request.POST['res_id']
+    res_id = request.POST.get('res_id', '')
     resource, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.POST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
-    irods_fnames = request.POST.get('irods_file_names', '')
+    irods_fnames = request.POST.get('upload', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
 
     # TODO: read resource type from resource, not from input file 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
     source_names = []
-    irods_federated = False
     if not valid:
-        request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return JsonResponse({'error': "Invalid file type: {ext}".format(ext=ext)},
+                            status=status.HTTP_400_BAD_REQUEST)
     else:
         homepath = irods_fnames_list[0]
         # TODO: this should happen whether resource is federated or not
@@ -172,29 +131,28 @@ def upload_add(request):
         if irods_federated:
             source_names = irods_fnames.split(',')
         else:
-            user = request.POST.get('irods-username')
-            password = request.POST.get("irods-password")
-            port = request.POST.get("irods-port")
-            host = request.POST.get("irods-host")
-            zone = request.POST.get("irods-zone")
+            user = request.POST.get('irods_username')
+            password = request.POST.get("irods_password")
+            port = request.POST.get("irods_port")
+            host = request.POST.get("irods_host")
+            zone = request.POST.get("irods_zone")
             try:
                 upload_from_irods(username=user, password=password, host=host, port=port,
                                   zone=zone, irods_fnames=irods_fnames, res_files=res_files)
             except SessionException as ex:
-                request.session['validation_error'] = ex.stderr
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+                return JsonResponse(
+                    {"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, 
                                             source_names=source_names, folder=None)
     except hydroshare.utils.ResourceFileSizeException as ex:
-        request.session['file_size_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return JsonResponse({'error': ex.message}, status=status.HTTP_400_BAD_REQUEST)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return JsonResponse({'error': ex.message}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, 
@@ -202,14 +160,12 @@ def upload_add(request):
                                                    extract_metadata=extract_metadata,
                                                    source_names=source_names, folder=None)
 
-    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+    except (hydroshare.utils.ResourceFileValidationException, SessionException) as ex:
         if ex.message:
-            request.session['validation_error'] = ex.message
+            return JsonResponse({'error': ex.message},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         elif ex.stderr:
-            request.session['validation_error'] = ex.stderr
-    except SessionException as ex:
-        request.session['validation_error'] = ex.stderr
+            return JsonResponse({'error': ex.stderr},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    request.session['resource-mode'] = 'edit'
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
+    return JsonResponse({}, status=status.HTTP_200_OK)
