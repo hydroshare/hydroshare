@@ -893,14 +893,14 @@ function InitializeTimeSeriesFileTypeForms() {
 
     tsSelect.change(function(e){
         if (e.target.value === "Other") {
-            var name = e.target.name;
+            let name = e.target.name;
             $(e.target).parent().parent().find(".other-field").show();
             $(e.target).parent().parent().find(".other-field input").attr("name", name);
             $(e.target).removeAttr("name");
         }
         else {
             if (!e.target.name.length) {
-                var name = $(e.target).parent().parent().find(".other-field input").attr("name");
+                let name = $(e.target).parent().parent().find(".other-field input").attr("name");
                 $(e.target).attr("name", name);
                 $(e.target).parent().parent().find(".other-field input").removeAttr("name");
                 $(e.target).parent().parent().find(".other-field").hide();
@@ -918,32 +918,16 @@ function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if (path) {
-        $("#fb-move-up").toggleClass("disabled", !path.length);
-
+    if (path.length) {
         for (let i = 0; i < path.length; i++) {
-            let isActive = i == 0;
+            let isActive = i === path.length - 1;
             if (isActive) {
-                crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
+                crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
             }
             else {
-                crumbs.prepend('<li data-path="' + currentPath.join('/') + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
+                crumbs.append('<li data-path="' + currentPath.slice(0, i + 1).join('/') + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
             }
         }
-
-        // var setFirstActive = false;
-        // while (path) {
-        //     var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
-        //     var currentPath = path;
-        //     path = path.substr(0, path.lastIndexOf("/"));
-        //     if (setFirstActive) {
-        //         crumbs.prepend('<li data-path="' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
-        //     }
-        //     else {
-        //         crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
-        //         setFirstActive = true;
-        //     }
-        // }
 
         // Prepend root folder
         crumbs.prepend('<li data-path="">' +
@@ -951,6 +935,7 @@ function setBreadCrumbs(path) {
             '<span> contents</span></li>');
     }
     else {
+        $("#fb-move-up").toggleClass("disabled", true);
         crumbs.prepend('<li class="active">' +
             '<i class="fa fa-folder-open-o" aria-hidden="true"></i><span> contents</span>' +
             '</li>');
@@ -1084,11 +1069,11 @@ function onOpenFolder() {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var folderName = selectedFolder.children(".fb-file-name").text();
 
-    // var targetPath = currentPath.length > 0 ? currentPath + "/" + folderName : folderName;
+
     var targetPath = currentPath.slice();
     targetPath.push(folderName);
 
-    sessionStorage.currentBrowsepath = targetPath;
+    sessionStorage.currentBrowsepath = JSON.stringify(targetPath);
     var allowCreateFolder = true;
 
     // remove any aggregation metadata display
@@ -1140,7 +1125,7 @@ function refreshFileBrowser(name) {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var calls = [];
     currentAggregations = {};
-    let path = sessionStorage.currentBrowsepath.length ? sessionStorage.currentBrowsepath.split('/') : [];
+    let path = JSON.parse(sessionStorage.currentBrowsepath);
     calls.push(get_irods_folder_struct_ajax_submit(resID, path));
 
     $.when.apply($, calls).done(function () {
@@ -1172,7 +1157,7 @@ function refreshFileBrowser(name) {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
-        sessionStorage.currentBrowsepath = currentPath.join('/');
+        sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
         updateSelectionMenuContext();
     });
 }
@@ -1206,25 +1191,15 @@ $(document).ready(function () {
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
         if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
-            sessionStorage.currentBrowsepath = "";
+            sessionStorage.currentBrowsepath = JSON.stringify([]);
         }
         if(sessionStorage.resID !== resID) {
             sessionStorage.resID = resID;
         }
 
-        let path = sessionStorage.currentBrowsepath.length ? sessionStorage.currentBrowsepath.split('/') : [];
+        let path = JSON.parse(sessionStorage.currentBrowsepath);
 
         get_irods_folder_struct_ajax_submit(resID, path);
-        // var currentPaths = sessionStorage.currentBrowsepath.split("/");
-        // var path = currentPaths[0];
-        // pathLog.push(path);
-        // for(var i=1; i < currentPaths.length; i++) {
-        //     path += "/" + currentPaths[i];
-        //     pathLog.push(path);
-        // }
-
-        // pathLog.push(currentPath);
-
         pathLogIndex = pathLog.length - 1;
         updateNavigationState();
     }
@@ -1326,11 +1301,11 @@ $(document).ready(function () {
                     // Remove further paths from the log
                     let range = pathLog.length - pathLogIndex;
                     pathLog.splice(pathLogIndex + 1, range);
-                    pathLog.push(sessionStorage.currentBrowsepath);
+                    pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
                     pathLogIndex = pathLog.length - 1;
 
                     if (resourceType === 'Composite Resource') {
-                        sessionStorage.currentBrowsepath = currentPath.join('/');
+                        sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
                         refreshFileBrowser();
                     }
                     else {
@@ -1398,8 +1373,8 @@ $(document).ready(function () {
     // Bind click events
     $("#fb-bread-crumbs").on("click", "li:not(.active)", function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
-        sessionStorage.currentBrowsepath = $(this).attr("data-path");
-        let path = sessionStorage.currentBrowsepath.length ? sessionStorage.currentBrowsepath.split('/') : [];
+        let path = $(this).attr("data-path").length ? $(this).attr("data-path").split('/') : [];
+        sessionStorage.currentBrowsepath = JSON.stringify(path);
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, path);
@@ -1697,7 +1672,7 @@ $(document).ready(function () {
         pathLog.push(upPath);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, upPath);
-        sessionStorage.currentBrowsepath = upPath.join('/');
+        sessionStorage.currentBrowsepath = JSON.stringify(upPath);
     });
 
     // Move back
@@ -1709,7 +1684,7 @@ $(document).ready(function () {
                 $("#fb-move-back").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
-            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
+            sessionStorage.currentBrowsepath = JSON.stringify(pathLog[pathLogIndex]);
         }
     });
 
@@ -1721,7 +1696,7 @@ $(document).ready(function () {
                 $("#fb-move-forward").addClass("disabled");
             }
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
-            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
+            sessionStorage.currentBrowsepath = JSON.stringify(pathLog[pathLogIndex]);
         }
     });
 
@@ -1863,7 +1838,7 @@ $(document).ready(function () {
         });
 
         $.when.apply($, calls).fail(function () {
-            sessionStorage.currentBrowsepath = currentPath.join('/');
+            sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
             refreshFileBrowser();
         });
     });
