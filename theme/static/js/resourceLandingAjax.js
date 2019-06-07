@@ -667,8 +667,8 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-function get_aggregation_folder_struct(id) {
-    let files = currentAggregations[id];
+function get_aggregation_folder_struct(aggregation) {
+    let files = aggregation.files;
     $('#fb-files-container').empty();
 
     $.each(files, function (i, v) {
@@ -680,7 +680,7 @@ function get_aggregation_folder_struct(id) {
     onSort();
     bindFileBrowserItemEvents();
     updateSelectionMenuContext();
-    setBreadCrumbs(currentPath);
+    setBreadCrumbs(jQuery.extend(true, {}, currentPath));   // Use a deep copy.
     updateNavigationState();
 }
 
@@ -703,17 +703,29 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             const mode = $("#hs-file-browser").attr("data-mode");
             $('#fb-files-container').empty();
             if (files.length > 0) {
+                currentAggregations = [];   // These will be updated
                 $.each(files, function (i, v) {
                     if (v['logical_file_id']) {
                         // The file is part of an aggregation
                         if ($('#fb-files-container li.fb-folder[data-logical-file-id="' + v['logical_file_id'] + '"]').length === 0) {
-                            // The file hasn't been added
+                            // The aggregation hasn't been rendered
                             $('#fb-files-container').append(getFileAggregationTemplateInstance(v['name'], v['logical_type'],
                               v['aggregation_name'], v['logical_file_id']));
-                            currentAggregations[v['logical_file_id']] = [];
+
+                            // Initialize the aggregation object
+                            currentAggregations.push({
+                                id: v['logical_file_id'],
+                                type: v['logical_type'],
+                                name: v['name'],
+                                files: []
+                            });
                         }
 
-                        currentAggregations[v['logical_file_id']].push(v);
+                        // Push the aggregation files to the collection
+                        let selectedAgg = currentAggregations.filter(function (agg) {
+                            return agg.id === v['logical_file_id']
+                        })[0];
+                        selectedAgg.files.push(v);
                     }
                     else {
                         $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
@@ -760,7 +772,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#hs-file-browser").attr("data-res-id", res_id);
 
             // strip the 'data' folder from the path
-            setBreadCrumbs(store_path);
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
 
             if ($("#hsDropzone").hasClass("dropzone")) {
                 // If no multiple files allowed and a file already exists, disable upload
@@ -801,8 +813,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
-            setBreadCrumbs(store_path);
-            $("#fb-files-container").prepend("<span>No files to display.</span>")
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
+            $("#fb-files-container").prepend("<span>No files to display.</span>");
             updateSelectionMenuContext();
         }
     });

@@ -7,7 +7,7 @@ var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
-var currentAggregations = {};
+var currentAggregations = [];
 var currentPath = {path: []};
 
 var file_metadata_alert =
@@ -918,8 +918,8 @@ function setBreadCrumbs(bcPath) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if (bcPath.hasOwnProperty("aggregationId")) {
-        bcPath.path.push(bcPath.aggregationName);
+    if (bcPath.hasOwnProperty("aggregation")) {
+        bcPath.path.push(bcPath.aggregation.name);
         // TODO: display aggregation icon in breadcrumbs
     }
 
@@ -1071,7 +1071,7 @@ function startDownload(zipped) {
 
 function onOpenFolder() {
     let selectedFolder = $("#fb-files-container li.ui-selected");
-    let aggregationId = selectedFolder.attr("data-logical-file-id");
+    let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
 
     if (aggregationId) {
         // Remove further paths from the log
@@ -1079,18 +1079,18 @@ function onOpenFolder() {
         pathLog.splice(pathLogIndex + 1, range);
 
         // Aggregations can be loaded from memory
+        let selectedAgg = currentAggregations.filter(function(agg){return agg.id === aggregationId })[0];
         let path = {
             path: currentPath.path.slice(),
-            aggregationId: aggregationId,
-            aggregationName: currentAggregations[aggregationId][0].name // #TODO: pass actual aggregation name
+            aggregation: selectedAgg,
         };
 
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         currentPath = path;
-        sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
+        sessionStorage.currentBrowsepath = JSON.stringify(path);
 
-        get_aggregation_folder_struct(aggregationId);
+        get_aggregation_folder_struct(selectedAgg);
 
         return;
     }
@@ -1125,7 +1125,7 @@ function onOpenFolder() {
 function updateNavigationState() {
     $("#fb-move-back").toggleClass("disabled", pathLogIndex === 0); // we are at the root folder
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
-    $("#fb-move-up").toggleClass("disabled", !currentPath.path.length);    // The root path is an empty string
+    $("#fb-move-up").toggleClass("disabled", !(currentPath.path.length || currentPath.hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
 // Reload the current folder structure
@@ -1133,9 +1133,15 @@ function updateNavigationState() {
 function refreshFileBrowser(name) {
     var resID = $("#hs-file-browser").attr("data-res-id");
     var calls = [];
-    currentAggregations = {};
-    let path = JSON.parse(sessionStorage.currentBrowsepath);
-    calls.push(get_irods_folder_struct_ajax_submit(resID, path));
+    currentAggregations = [];   // These will be updated
+    currentPath = JSON.parse(sessionStorage.currentBrowsepath);
+
+    if (currentPath.hasOwnProperty("aggregation")) {
+        calls.push(get_aggregation_folder_struct(currentPath.aggregation));
+    }
+    else {
+        calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
+    }
 
     $.when.apply($, calls).done(function () {
         $("#fb-files-container li").removeClass("fb-cutting");
@@ -1206,10 +1212,16 @@ $(document).ready(function () {
             sessionStorage.resID = resID;
         }
 
-        let path = JSON.parse(sessionStorage.currentBrowsepath);
+        currentPath = JSON.parse(sessionStorage.currentBrowsepath);
 
-        get_irods_folder_struct_ajax_submit(resID, path);
-        pathLog.push(path);
+        if (currentPath.hasOwnProperty("aggregation")) {
+            get_aggregation_folder_struct(currentPath.aggregation);
+        }
+        else {
+            get_irods_folder_struct_ajax_submit(resID, currentPath);
+        }
+
+        pathLog.push(currentPath);
         pathLogIndex = pathLog.length - 1;
         updateNavigationState();
     }
@@ -1686,8 +1698,8 @@ $(document).ready(function () {
         pathLog.push(upPath);
         pathLogIndex = pathLog.length - 1;
 
-        if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
-            get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+        if (pathLog[pathLogIndex].hasOwnProperty("aggregation")) {
+            get_aggregation_folder_struct(pathLog[pathLogIndex].aggregation);
         }
         else {
             get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
@@ -1703,8 +1715,8 @@ $(document).ready(function () {
                 // we are at the root folder
                 $("#fb-move-back").addClass("disabled");
             }
-            if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
-                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+            if (pathLog[pathLogIndex].hasOwnProperty("aggregation")) {
+                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregation);
             }
             else {
                 get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
@@ -1721,8 +1733,9 @@ $(document).ready(function () {
             if (pathLogIndex == pathLog.length - 1) {
                 $("#fb-move-forward").addClass("disabled");
             }
-            if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
-                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+            currentPath = pathLog[pathLogIndex];
+            if (pathLog[pathLogIndex].hasOwnProperty("aggregation")) {
+                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregation);
             }
             else {
                 get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
