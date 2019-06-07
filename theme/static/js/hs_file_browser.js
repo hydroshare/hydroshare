@@ -141,7 +141,7 @@ var initActionState = {
 */
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
-    var resourceType = $("#resource-type").val();
+    var resourceType = RES_TYPE;
     var mode = $("#hs-file-browser").attr("data-mode");
     var selectedFileName = selected.children(".fb-file-name").text().toUpperCase();
 
@@ -1098,7 +1098,6 @@ function onOpenFolder() {
     let folderName = selectedFolder.children(".fb-file-name").text();
     var resID = $("#hs-file-browser").attr("data-res-id");
     var targetPath = {path: currentPath.path.concat(folderName)};
-    var allowCreateFolder = true;
 
     sessionStorage.currentBrowsepath = JSON.stringify(targetPath);
 
@@ -1113,8 +1112,6 @@ function onOpenFolder() {
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
-        let logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        allowCreateFolder = !logicalFileType || logicalFileType.length === 0;
     });
 
     $.when.apply($, calls).fail(function () {
