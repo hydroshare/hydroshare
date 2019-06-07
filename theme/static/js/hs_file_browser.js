@@ -285,6 +285,7 @@ function updateSelectionMenuContext() {
             else {
                 // Folder is a logical file type
                 uiActionStates.zip.disabled = true;
+                uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
@@ -501,6 +502,9 @@ function bindFileBrowserItemEvents() {
             drop: function (event, ui) {
                 var resID = $("#hs-file-browser").attr("data-res-id");
                 var destination = $(event.target);
+                if (destination.attr("data-logical-file-id")) {
+                    return; // Moving files into aggregations is not allowed
+                }
                 var sources = $("#fb-files-container li.ui-selected").children(".fb-file-name");
                 var destName = destination.children(".fb-file-name").text();
                 var destFileType = destination.children(".fb-file-type").text();
@@ -539,7 +543,10 @@ function bindFileBrowserItemEvents() {
             over: function (event, ui) {
                 if (!$(event.target).hasClass("ui-selected")) {
                     $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
-                    $(event.target).addClass("fb-drag-cutting");
+                    let target = $(event.target);
+                    if (!target.attr("data-logical-file-id")) {
+                        target.addClass("fb-drag-cutting");
+                    }
                 }
             },
             out: function (event, ui) {
