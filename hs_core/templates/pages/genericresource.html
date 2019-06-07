@@ -274,13 +274,6 @@
                     <span class="fa fa-th-large icon-blue"></span>
                     <span>Select all</span>
                 </li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                    <li role="separator" class="divider"></li>
-                    <li data-menu-name="paste">
-                        <span class="fa fa-clipboard icon-blue"></span>
-                        <span>Paste</span>
-                    </li>
-                {% endif %}
             </ul>
 
             <div class="col-xs-12 content-block">
