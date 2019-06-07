@@ -474,8 +474,8 @@ function filetype_keywords_update_ajax_submit() {
                 var resKeywords = json_response.resource_keywords;
                 for (var i = 0; i < resKeywords.length; i++) {
                     if (resKeywords[i] != "") {
-                        if ($.inArray(resKeywords[i].trim(), subjKeywordsCmp.resKeywords) === -1) {
-                            subjKeywordsCmp.resKeywords.push(resKeywords[i].trim());
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsApp.resKeywords) === -1) {
+                            subjKeywordsApp.resKeywords.push(resKeywords[i].trim());
                         }
                     }
                 }
