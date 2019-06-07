@@ -4858,7 +4858,7 @@ span.caption-file-type {
 	width: 220px;
 }
 
-div.tooltip-inner, .res-dropdown div.tooltip-inner {
+.res-dropdown div.tooltip-inner {
     width: 350px;
 }
 
