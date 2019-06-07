@@ -1314,6 +1314,21 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+function get_aggregation_folder_struct(id, targetPath) {
+    let files = currentAggregations[id];
+    $('#fb-files-container').empty();
+
+    $.each(files, function (i, v) {
+        $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
+          v['aggregation_name'], v['logical_type'], v['logical_file_id'],
+          v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
+    });
+
+    onSort();
+    bindFileBrowserItemEvents();
+    setBreadCrumbs(targetPath);
+}
+
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
@@ -1324,7 +1339,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         async: true,
         data: {
             res_id: res_id,
-            store_path: store_path
+            store_path: store_path.join('/')
         },
         success: function (result) {
             var files = result.files;
@@ -1333,10 +1348,23 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             const mode = $("#hs-file-browser").attr("data-mode");
             $('#fb-files-container').empty();
             if (files.length > 0) {
-                $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
-                        v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-                        v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
+                $.each(files, function (i, v) {
+                    if (v['logical_file_id']) {
+                        // The file is part of an aggregation
+                        if ($('#fb-files-container li.fb-folder[data-logical-file-id="' + v['logical_file_id'] + '"]').length === 0) {
+                            // The file hasn't been added
+                            $('#fb-files-container').append(getFileAggregationTemplateInstance(v['name'], v['logical_type'],
+                              v['aggregation_name'], v['logical_file_id']));
+                            currentAggregations[v['logical_file_id']] = [];
+                        }
+
+                        currentAggregations[v['logical_file_id']].push(v);
+                    }
+                    else {
+                        $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
+                          v['aggregation_name'], v['logical_type'], v['logical_file_id'],
+                          v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
+                    }
                 });
             }
             if (folders.length > 0) {
@@ -1364,6 +1392,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     );
                 }
             }
+
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
@@ -1371,8 +1400,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 
             bindFileBrowserItemEvents();
 
-            $("#hs-file-browser").attr("data-current-path", store_path);
-            $("#upload-folder-path").text(store_path); // We don't show the data folder in the UI path
+            currentPath = store_path;
+
             $("#hs-file-browser").attr("data-res-id", res_id);
 
             // strip the 'data' folder from the path
@@ -1401,10 +1430,12 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
+
             if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
+
             if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
                 var temporalCoverage = result.temporal_coverage;
                 updateResourceTemporalCoverage(temporalCoverage);
