@@ -481,6 +481,17 @@ function updateSelectionMenuContext() {
         uiActionStates.paste.disabled = true;
     }
 
+    if (currentPath.hasOwnProperty("aggregation")) {
+        // The current path points to an aggregation
+        uiActionStates.setGenericFileType.disabled = true;
+        uiActionStates.setGenericFileType.fileMenu.hidden = true;
+
+        uiActionStates.setFileSetFileType.disabled = true;
+        uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+        uiActionStates.uploadFiles.disabled = true;
+    }
+
     // Toggle properties based on states
     $.each(uiActionStates, function (uiAction, element) {
         $("[data-fb-action='" + uiAction + "']").toggleClass("disabled", element.disabled);
@@ -750,7 +761,8 @@ function showFileTypeMetadata(file_type_time_series, url){
 
     var selectedItem = $("#fb-files-container li.ui-selected");
     var logical_file_id = selectedItem.attr("data-logical-file-id");
-    if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
+    if (currentPath.hasOwnProperty("aggregation") ||
+      !logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
         $("#fileTypeMetaData").html(no_metadata_alert);
         // Set corresponding action for "Add metadata" button in side bar
         if (selectedItem.hasClass("fb-file")) {
@@ -758,6 +770,11 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
         else {
             $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+        }
+
+        if (currentPath.hasOwnProperty("aggregation")) {
+            // Metadata can't be added to aggregation files
+            $("#btnSideAddMetadata").addClass("disabled");
         }
         return;
     }

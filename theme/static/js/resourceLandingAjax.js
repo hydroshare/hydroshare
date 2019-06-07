@@ -697,7 +697,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             store_path: store_path.path.join('/')
         },
         success: function (result) {
-            var files = result.files;
+            var files = result.files;   // TODO: Add aggregation virtual folder metadata
             var folders = result.folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
