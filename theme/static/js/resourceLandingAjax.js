@@ -709,8 +709,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                         // The file is part of an aggregation
                         if ($('#fb-files-container li.fb-folder[data-logical-file-id="' + v['logical_file_id'] + '"]').length === 0) {
                             // The aggregation hasn't been rendered
-                            $('#fb-files-container').append(getFileAggregationTemplateInstance(v['name'], v['logical_type'],
-                              v['aggregation_name'], v['logical_file_id']));
+                            $('#fb-files-container').append(getFileAggregationTemplateInstance(v));
 
                             // Initialize the aggregation object
                             currentAggregations.push({

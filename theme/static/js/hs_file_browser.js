@@ -62,18 +62,22 @@ function getFolderTemplateInstance(folderName, url, folderAgrregationType, folde
     }
 }
 
-function getFileAggregationTemplateInstance(folderName, folderAgrregationType, folderAggregationName, folderAggregationID) {
+function getFileAggregationTemplateInstance(agg) {
     var folderIcons = getFolderIcons();
     let iconTemplate = folderIcons.DEFAULT;
 
-    if (folderIcons[folderAgrregationType]) {
-        iconTemplate = folderIcons[folderAgrregationType];
+    if (folderIcons[agg.logical_type]) {
+      iconTemplate = folderIcons[agg.logical_type];
     }
-    return "<li class='fb-folder droppable draggable' data-logical-file-id='" + folderAggregationID + "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
+    // TODO: get correct virtual folder URL
+    return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
+      "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
+      agg.name + "&#13;" + agg.aggregation_name + "' >" +
       iconTemplate +
-      "<span class='fb-file-name'>" + folderName + "</span>" +
+      "<span class='fb-file-name'>" + agg.name + "</span>" +
       "<span class='fb-file-type'>File Folder</span>" +
-      "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID + "'>" + folderAggregationName + "</span>" +
+      "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
+      "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
       "<span class='fb-file-size'></span>" +
       "</li>";
 }
