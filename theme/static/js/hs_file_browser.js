@@ -168,6 +168,7 @@ function updateSelectionMenuContext() {
         "subMenuSetContentType",
         "unzip",
         "updateRefUrl",
+        "uploadFiles",
         "zip",
     ];
     var uiActionStates = {};
@@ -436,6 +437,7 @@ function updateSelectionMenuContext() {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
                         uiActionStates.paste.disabled = true;
+                        uiActionStates.uploadFiles.disabled = true;
                     }
                 }
             })

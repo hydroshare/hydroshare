@@ -471,7 +471,7 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button"
+                                                <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
                                                 </a>
@@ -495,6 +495,7 @@
                                                         </li>
 
                                                         <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                            data-fb-action="uploadFiles"
                                                             data-toggle="modal" data-target="#irodsContent">
                                                             <a>
                                                                 <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
