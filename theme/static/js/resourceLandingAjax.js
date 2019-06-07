@@ -1314,7 +1314,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-function get_aggregation_folder_struct(id, targetPath) {
+function get_aggregation_folder_struct(id) {
     let files = currentAggregations[id];
     $('#fb-files-container').empty();
 
@@ -1326,7 +1326,9 @@ function get_aggregation_folder_struct(id, targetPath) {
 
     onSort();
     bindFileBrowserItemEvents();
-    setBreadCrumbs(targetPath);
+    updateSelectionMenuContext();
+    setBreadCrumbs(currentPath);
+    updateNavigationState();
 }
 
 // This method is called to refresh the loader with the most recent structure after every other call
@@ -1339,7 +1341,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         async: true,
         data: {
             res_id: res_id,
-            store_path: store_path.join('/')
+            store_path: store_path.path.join('/')
         },
         success: function (result) {
             var files = result.files;

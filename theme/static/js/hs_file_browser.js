@@ -8,7 +8,7 @@ var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
 var currentAggregations = {};
-var currentPath = [];
+var currentPath = {path: []};
 
 var file_metadata_alert =
     '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
@@ -506,12 +506,12 @@ function bindFileBrowserItemEvents() {
                     return;
                 }
 
-                var destFolderPath = currentPath.concat(destName);
+                var destFolderPath = currentPath.path.concat(destName);
 
                 var calls = [];
                 var callSources = [];
                 for (var i = 0; i < sources.length; i++) {
-                    var sourcePath = currentPath.concat($(sources[i]).text());
+                    var sourcePath = currentPath.path.concat($(sources[i]).text());
                     var destPath = destFolderPath.concat($(sources[i]).text());
 
                     if (sourcePath !== destPath) {
@@ -914,18 +914,23 @@ function InitializeTimeSeriesFileTypeForms() {
     processProcessingLevelMetadataElement();
 }
 
-function setBreadCrumbs(path) {
+function setBreadCrumbs(bcPath) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if (path.length) {
-        for (let i = 0; i < path.length; i++) {
-            let isActive = i === path.length - 1;
+    if (bcPath.hasOwnProperty("aggregationId")) {
+        bcPath.path.push(bcPath.aggregationName);
+        // TODO: display aggregation icon in breadcrumbs
+    }
+
+    if (bcPath.path.length) {
+        for (let i = 0; i < bcPath.path.length; i++) {
+            let isActive = i === bcPath.path.length - 1;
             if (isActive) {
-                crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
+                crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
             }
             else {
-                crumbs.append('<li data-path="' + currentPath.slice(0, i + 1).join('/') + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + path[i] + '</span></li>');
+                crumbs.append('<li data-path="' + currentPath.path.slice(0, i + 1).join('/') + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
             }
         }
 
@@ -1066,32 +1071,36 @@ function startDownload(zipped) {
 
 function onOpenFolder() {
     let selectedFolder = $("#fb-files-container li.ui-selected");
-    var resID = $("#hs-file-browser").attr("data-res-id");
-    var folderName = selectedFolder.children(".fb-file-name").text();
-
-
-    var targetPath = currentPath.slice();
-    targetPath.push(folderName);
-
-    sessionStorage.currentBrowsepath = JSON.stringify(targetPath);
-    var allowCreateFolder = true;
-
-    // remove any aggregation metadata display
-    $("#fileTypeMetaData").html(file_metadata_alert);
-
     let aggregationId = selectedFolder.attr("data-logical-file-id");
-    if (aggregationId) {
-        get_aggregation_folder_struct(aggregationId, targetPath);
-        updateSelectionMenuContext();
 
+    if (aggregationId) {
         // Remove further paths from the log
-        // var range = pathLog.length - pathLogIndex;
-        // pathLog.splice(pathLogIndex + 1, range);
-        pathLog.push(targetPath);
+        let range = pathLog.length - pathLogIndex;
+        pathLog.splice(pathLogIndex + 1, range);
+
+        // Aggregations can be loaded from memory
+        let path = {
+            path: currentPath.path.slice(),
+            aggregationId: aggregationId,
+            aggregationName: currentAggregations[aggregationId][0].name // #TODO: pass actual aggregation name
+        };
+
+        pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
+        currentPath = path;
+        sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
+
+        get_aggregation_folder_struct(aggregationId);
 
         return;
     }
+
+    let folderName = selectedFolder.children(".fb-file-name").text();
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var targetPath = {path: currentPath.path.concat(folderName)};
+    var allowCreateFolder = true;
+
+    sessionStorage.currentBrowsepath = JSON.stringify(targetPath);
 
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
@@ -1114,9 +1123,9 @@ function onOpenFolder() {
 }
 
 function updateNavigationState() {
-    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 0); // we are at the root folder
+    $("#fb-move-back").toggleClass("disabled", pathLogIndex === 0); // we are at the root folder
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
-    $("#fb-move-up").toggleClass("disabled", currentPath === "");    // The root path is an empty string
+    $("#fb-move-up").toggleClass("disabled", !currentPath.path.length);    // The root path is an empty string
 }
 
 // Reload the current folder structure
@@ -1191,7 +1200,7 @@ $(document).ready(function () {
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
         if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
-            sessionStorage.currentBrowsepath = JSON.stringify([]);
+            sessionStorage.currentBrowsepath = JSON.stringify({path: []});
         }
         if(sessionStorage.resID !== resID) {
             sessionStorage.resID = resID;
@@ -1200,6 +1209,7 @@ $(document).ready(function () {
         let path = JSON.parse(sessionStorage.currentBrowsepath);
 
         get_irods_folder_struct_ajax_submit(resID, path);
+        pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         updateNavigationState();
     }
@@ -1289,7 +1299,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#root-path").text(currentPath.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(currentPath.path.length > 0 ? "contents/" : "contents");
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1338,7 +1348,7 @@ $(document).ready(function () {
                 });
 
                 this.on('sending', function (file, xhr, formData) {
-                    formData.append('file_folder', currentPath.join('/'));
+                    formData.append('file_folder', currentPath.path.join('/'));
                 });
 
                 // Applies allowing upload of multiple files to OS upload dialog
@@ -1373,7 +1383,10 @@ $(document).ready(function () {
     // Bind click events
     $("#fb-bread-crumbs").on("click", "li:not(.active)", function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
+
         let path = $(this).attr("data-path").length ? $(this).attr("data-path").split('/') : [];
+        path = {path: path};
+
         sessionStorage.currentBrowsepath = JSON.stringify(path);
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
@@ -1568,8 +1581,8 @@ $(document).ready(function () {
         var newFolderPath;
         if (folderName) {
             var calls = [];
-            newFolderPath = currentPath.concat(folderName);
-            calls.push(create_irods_folder_ajax_submit(resID, newFolderPath.join('/')));
+            newFolderPath = {path: currentPath.path.concat(folderName)};
+            calls.push(create_irods_folder_ajax_submit(resID, newFolderPath.path.join('/')));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1589,7 +1602,7 @@ $(document).ready(function () {
         var refURL = $("#txtRefURL").val();
         if (refName && refURL) {
             var calls = [];
-            calls.push(add_ref_content_ajax_submit(resID, currentPath.join('/'), refName, refURL, true));
+            calls.push(add_ref_content_ajax_submit(resID, currentPath.path.join('/'), refName, refURL, true));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1614,7 +1627,7 @@ $(document).ready(function () {
         var newRefURL = $("#new_ref_url_passover").val();
         var calls = [];
         if (refName && refURL) {
-            calls.push(add_ref_content_ajax_submit(resID, currentPath.join('/'), refName, refURL, false));
+            calls.push(add_ref_content_ajax_submit(resID, currentPath.path.join('/'), refName, refURL, false));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1631,7 +1644,7 @@ $(document).ready(function () {
             var file = $("#fb-files-container li.ui-selected");
             var oldurl = file.attr("data-ref-url");
             if (oldurl != newRefURL) {
-                calls.push(update_ref_url_ajax_submit(resID, currentPath.join('/'), refName, newRefURL, false));
+                calls.push(update_ref_url_ajax_submit(resID, currentPath.path.join('/'), refName, newRefURL, false));
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
                 });
@@ -1653,7 +1666,7 @@ $(document).ready(function () {
         var newurl = $("#txtNewRefURL").val().trim();
         if (oldurl != newurl) {
             var calls = [];
-            calls.push(update_ref_url_ajax_submit(resID, currentPath.join('/'), oldName, newurl, true));
+            calls.push(update_ref_url_ajax_submit(resID, currentPath.path.join('/'), oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1667,12 +1680,19 @@ $(document).ready(function () {
 
     // Move up one directory
     $("#fb-move-up").click(function () {
-        var upPath = currentPath.splice(currentPath.length - 1, 1); // Remove last item
+        var upPath = {path: currentPath.path.slice()};
+        upPath.path.pop();  // Remove last item
 
         pathLog.push(upPath);
         pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(resID, upPath);
-        sessionStorage.currentBrowsepath = JSON.stringify(upPath);
+
+        if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
+            get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+        }
+        else {
+            get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+        }
+        sessionStorage.currentBrowsepath = JSON.stringify(pathLog[pathLogIndex]);
     });
 
     // Move back
@@ -1683,7 +1703,13 @@ $(document).ready(function () {
                 // we are at the root folder
                 $("#fb-move-back").addClass("disabled");
             }
-            get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
+                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+            }
+            else {
+                get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            }
+
             sessionStorage.currentBrowsepath = JSON.stringify(pathLog[pathLogIndex]);
         }
     });
@@ -1695,7 +1721,12 @@ $(document).ready(function () {
             if (pathLogIndex == pathLog.length - 1) {
                 $("#fb-move-forward").addClass("disabled");
             }
-            get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            if (pathLog[pathLogIndex].hasOwnProperty("aggregationId")) {
+                get_aggregation_folder_struct(pathLog[pathLogIndex].aggregationId);
+            }
+            else {
+                get_irods_folder_struct_ajax_submit(resID, pathLog[pathLogIndex]);
+            }
             sessionStorage.currentBrowsepath = JSON.stringify(pathLog[pathLogIndex]);
         }
     });
@@ -1712,7 +1743,7 @@ $(document).ready(function () {
 
         for (var i = 0; i < selection.length; i++) {
             var itemName = $(selection[i]).children(".fb-file-name").text();
-            sourcePaths.push(currentPath.concat(itemName).join('/'));
+            sourcePaths.push(currentPath.path.concat(itemName).join('/'));
             $(selection[i]).addClass("fb-cutting");
         }
 
@@ -1730,7 +1761,7 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var targetPath;
 
-        targetPath = currentPath.concat(folderName);
+        targetPath = currentPath.path.concat(folderName);
 
         var calls = [];
         var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
@@ -1770,7 +1801,7 @@ $(document).ready(function () {
                 else {
                     // item is a folder
                     var folderName = $(deleteList[i]).children(".fb-file-name").text();
-                    var folder_path = currentPath.concat(folderName);
+                    var folder_path = currentPath.path.concat(folderName);
                     calls.push(delete_folder_ajax_submit(resID, folder_path).join('/'));
                 }
             }
@@ -1827,8 +1858,8 @@ $(document).ready(function () {
         }
 
         var calls = [];
-        var oldNamePath = currentPath.concat(oldName);
-        var newNamePath = currentPath.concat(newName);
+        var oldNamePath = currentPath.path.concat(oldName);
+        var newNamePath = currentPath.path.concat(newName);
 
         calls.push(rename_file_or_folder_ajax_submit(resID, oldNamePath.join('/'), newNamePath.join('/')));
 
@@ -1947,7 +1978,7 @@ $(document).ready(function () {
             let fileName = $("#txtZipName").val() + ".zip";
 
             let calls = [];
-            let path = currentPath.concat(folderName);
+            let path = currentPath.path.concat(folderName);
 
             calls.push(zip_irods_folder_ajax_submit(resID, path.join('/'), fileName));
 
@@ -1969,7 +2000,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(resID, currentPath.concat(fileName).join('/')));
+            calls.push(unzip_irods_file_ajax_submit(resID, currentPath.path.concat(fileName).join('/')));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
