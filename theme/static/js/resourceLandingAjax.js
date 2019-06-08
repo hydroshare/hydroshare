@@ -705,8 +705,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             if (files.length > 0) {
                 currentAggregations = [];   // These will be updated
                 $.each(files, function (i, v) {
-                    if (v['logical_file_id']) {
-                        // The file is part of an aggregation
+                    if (v['logical_file_id'] && v['logical_type'] !== "GenericLogicalFile") {
+                        // The file is part of an aggregation virtual folder
                         if ($('#fb-files-container li.fb-folder[data-logical-file-id="' + v['logical_file_id'] + '"]').length === 0) {
                             // The aggregation hasn't been rendered
                             $('#fb-files-container').append(getFileAggregationTemplateInstance(v));

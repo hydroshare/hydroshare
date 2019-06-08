@@ -841,77 +841,80 @@ function showFileTypeMetadata(file_type_time_series, url){
                  return false;
              }
          });
-         $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-         $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
-         $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
-         showMetadataFormSaveChangesButton();
-         initializeDatePickers();
-         var bindCoordinatesPicker = true;
-         // show/hide spatial delete option for aggregation in addition to other settings for
-         // aggregation spatial coverage form
-         setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
-         // show/hide temporal data delete option for the aggregation
-         setFileTypeTemporalCoverageDeleteOption(logical_type);
-         // Bind event handler for submit button
-         setFileTypeMetadataFormsClickHandlers();
 
-         var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
-         var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
-         if (logical_type === "NetCDFLogicalFile") {
-             // don't let the user open the Projection String Type dropdown list
-             // when editing Original Coverage element
-             $("#id_projection_string_type_filetype").css('pointer-events', 'none');
-             // don't let the user open the Variable type dropdown list when editing
-             // Variable elements
-             $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
-         }
-         if (logical_type === "RefTimeseriesLogicalFile"){
-             var $startDateElement = $("#id_start_filetype");
-             var $endDateElement = $("#id_end_filetype");
-             $startDateElement.css('pointer-events', 'none');
-             $endDateElement.css('pointer-events', 'none');
-         }
-         if (logical_type === 'TimeSeriesLogicalFile') {
-             $("#series_id_file_type").change(function () {
-                 var $url = $(this.form).attr('action');
-                 $url = $url.replace('series_id', $(this).val());
-                 $url = $url.replace('resource_mode', resource_mode);
-                 // make a recursive call to this function
-                 showFileTypeMetadata(true, $url);
-             });
-             if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
-                 $("#div-sqlite-file-update").hide();
+        if (RESOURCE_MODE === "edit") {
+             $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+             $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
+             $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
+             showMetadataFormSaveChangesButton();
+             initializeDatePickers();
+             var bindCoordinatesPicker = true;
+             // show/hide spatial delete option for aggregation in addition to other settings for
+             // aggregation spatial coverage form
+             setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
+             // show/hide temporal data delete option for the aggregation
+             setFileTypeTemporalCoverageDeleteOption(logical_type);
+             // Bind event handler for submit button
+             setFileTypeMetadataFormsClickHandlers();
+
+             var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
+             var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
+             if (logical_type === "NetCDFLogicalFile") {
+                 // don't let the user open the Projection String Type dropdown list
+                 // when editing Original Coverage element
+                 $("#id_projection_string_type_filetype").css('pointer-events', 'none');
+                 // don't let the user open the Variable type dropdown list when editing
+                 // Variable elements
+                 $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
              }
-             $(".hs-coordinates-picker").each(function() {
-                    const instance = $(this);
-                    instance.coordinatesPicker();
-             });
-             InitializeTimeSeriesFileTypeForms();
-         }
-         if (logical_type === "GeoRasterLogicalFile"){
-             $spatialRadioBox.prop("checked", true);
-             $("#id_type_filetype input:radio").trigger("change");
-             $spatialRadioBox.attr('onclick', 'return false');
-             $spatialRadioPoint.attr('onclick', 'return false');
-         }
-         else {
-             if ($spatialRadioBox.attr('checked') === 'checked'){
+             if (logical_type === "RefTimeseriesLogicalFile"){
+                 var $startDateElement = $("#id_start_filetype");
+                 var $endDateElement = $("#id_end_filetype");
+                 $startDateElement.css('pointer-events', 'none');
+                 $endDateElement.css('pointer-events', 'none');
+             }
+             if (logical_type === 'TimeSeriesLogicalFile') {
+                 $("#series_id_file_type").change(function () {
+                     var $url = $(this.form).attr('action');
+                     $url = $url.replace('series_id', $(this).val());
+                     $url = $url.replace('resource_mode', resource_mode);
+                     // make a recursive call to this function
+                     showFileTypeMetadata(true, $url);
+                 });
+                 if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
+                     $("#div-sqlite-file-update").hide();
+                 }
+                 $(".hs-coordinates-picker").each(function() {
+                        const instance = $(this);
+                        instance.coordinatesPicker();
+                 });
+                 InitializeTimeSeriesFileTypeForms();
+             }
+             if (logical_type === "GeoRasterLogicalFile"){
                  $spatialRadioBox.prop("checked", true);
+                 $("#id_type_filetype input:radio").trigger("change");
+                 $spatialRadioBox.attr('onclick', 'return false');
+                 $spatialRadioPoint.attr('onclick', 'return false');
              }
              else {
-                 $spatialRadioPoint.prop("checked", true);
+                 if ($spatialRadioBox.attr('checked') === 'checked'){
+                     $spatialRadioBox.prop("checked", true);
+                 }
+                 else {
+                     $spatialRadioPoint.prop("checked", true);
+                 }
              }
-         }
-         if (logical_type === "FileSetLogicalFile") {
-             // Submit for aggregation spatial coverage update
-             $("#btn-update-aggregation-spatial-coverage").click(function () {
-                fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
-             });
-             // Submit for aggregation temporal coverage update
-             $("#btn-update-aggregation-temporal-coverage").click(function () {
-                fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
-             });
-         }
+             if (logical_type === "FileSetLogicalFile") {
+                 // Submit for aggregation spatial coverage update
+                 $("#btn-update-aggregation-spatial-coverage").click(function () {
+                    fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
+                 });
+                 // Submit for aggregation temporal coverage update
+                 $("#btn-update-aggregation-temporal-coverage").click(function () {
+                    fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                 });
+             }
+        }
     });
 }
 
@@ -1864,7 +1867,7 @@ $(document).ready(function () {
                     // item is a folder
                     var folderName = $(deleteList[i]).children(".fb-file-name").text();
                     var folder_path = currentPath.path.concat(folderName);
-                    calls.push(delete_folder_ajax_submit(resID, folder_path).join('/'));
+                    calls.push(delete_folder_ajax_submit(resID, folder_path.join('/')));
                 }
             }
 
