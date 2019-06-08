@@ -351,8 +351,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         # user selected a folder to create aggregation
                         upload_folder = folder_path
 
-                    # make all the files in the selected folder as part of the aggregation
-                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    # make the existing raster specific files part of the
+                    # aggregation/file type (this covers both file and folder selection)
+                    for raster_res_file in validation_results['raster_resource_files']:
+                        logical_file.add_resource_file(raster_res_file)
 
                     # add all new files to resource and make those part of the logical file
                     if validation_results['new_resource_files_to_add']:
