@@ -320,7 +320,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         file_folder = res_file.file_folder
         aggregation_folder_created = False
 
-        upload_folder = ''
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         temp_dir = os.path.dirname(temp_file)
