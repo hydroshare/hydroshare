@@ -765,11 +765,6 @@ class AbstractLogicalFile(models.Model):
                         return f
         return None
 
-    @property
-    def aggregation_name(self):
-        primary_file = self.get_primary_resouce_file(self.files.all())
-        return primary_file.short_path
-
     @classmethod
     def get_allowed_storage_file_types(cls):
         # can store any file types in this logical file group - subclass needs to override this
@@ -997,7 +992,8 @@ class AbstractLogicalFile(models.Model):
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
         if not self.is_fileset:
-            return self.files.first().short_path
+            primary_file = self.get_primary_resouce_file(self.files.all())
+            return primary_file.short_path
 
         # self is a fileset aggregation
         return self.folder
