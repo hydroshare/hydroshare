@@ -404,10 +404,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
-        """Gets a resource file that has extension .tif from the list of files *resource_files* """
+        """Gets a resource file that has extension .vrt from the list of files *resource_files* """
 
-        res_files = [f for f in resource_files if f.extension.lower() == '.tif' or
-                     f.extension.lower() == '.tiff']
+        res_files = [f for f in resource_files if f.extension.lower() == '.vrt']
         return res_files[0] if res_files else None
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
