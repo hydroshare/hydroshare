@@ -72,7 +72,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
 
     res_file = self.composite_resource.files.first()
-    expected_dataset_name = os.path.basename(res_file.file_folder)
+    expected_dataset_name, _ = os.path.splitext(res_file.file_name)
     logical_file = res_file.logical_file
     self.assertEqual(logical_file.dataset_name, expected_dataset_name)
     self.assertEqual(logical_file.has_metadata, True)
