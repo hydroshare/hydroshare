@@ -374,7 +374,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     logical_file._finalize(user, resource,
                                            folder_created=aggregation_folder_created,
                                            res_files_to_delete=res_files_to_delete,
-                                           reset_title=True)
+                                           reset_title=False)
 
                     file_type_success = True
                     post_add_raster_aggregation.send(
@@ -403,9 +403,13 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
-        """Gets a resource file that has extension .vrt from the list of files *resource_files* """
+        """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
+        from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.vrt']
+        if not res_files:
+            res_files = [f for f in resource_files if f.extension.lower() in ('.tif', 'tiff')]
+
         return res_files[0] if res_files else None
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
