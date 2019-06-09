@@ -1,4 +1,3 @@
-import os
 import json
 
 from django.test import TestCase, RequestFactory
@@ -300,7 +299,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         expected_file_folder = res_file.file_folder
-        
+
         # set the nc file to NetCDFLogicalFile (aggregation)
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
