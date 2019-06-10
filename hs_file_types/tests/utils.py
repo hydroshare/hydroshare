@@ -318,14 +318,9 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
         self.assertEqual(res_file.logical_file_type_name, "GeoFeatureLogicalFile")
         self.assertEqual(res_file.has_logical_file, True)
         self.assertTrue(isinstance(res_file.logical_file, GeoFeatureLogicalFile))
-    # check that we put the 3 files in a new folder
+    # check that we put the 3 files in a new folder - expected_folder_name
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
-        expected_file_path = "{}/data/contents/{}/{}"
-        res_file.file_folder = expected_folder_name
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       expected_folder_name, base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, expected_folder_name)
     # test extracted raster file type metadata
     # there should not be any resource level coverage
     self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
@@ -660,3 +655,8 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     self.assertEqual(logical_file.metadata.cv_aggregation_statistics.all().count(), 17)
     # there should not be any UTCOffset element
     self.assertEqual(logical_file.metadata.utc_offset, None)
+
+
+def get_path_with_no_file_extension(path):
+    path_no_ext, _ = os.path.splitext(path)
+    return path_no_ext
