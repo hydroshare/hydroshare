@@ -447,7 +447,6 @@ class CompositeResource(BaseResource):
                     return aggregation.supports_resource_file_rename
                 except ObjectDoesNotExist:
                     # check if the source file represents an aggregation
-                    aggregation_path = os.path.join(aggregation_path, src_file_name)
                     # get source resource file object from source file path
                     src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
                     aggregation = src_res_file.logical_file
