@@ -12,7 +12,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
-from .views.hs_core import ShareResourceGroup, ShareResourceUser
+from .views.resource_share import ShareResourceGroup, ShareResourceUser
+from .discovery import DiscoverSearchView
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
@@ -173,5 +174,5 @@ urlpatterns = [
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
-
+    url(r'^resource/search$', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
 ]
