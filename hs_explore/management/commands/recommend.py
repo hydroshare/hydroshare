@@ -69,7 +69,7 @@ def recommended_groups(target_user, target_group_preferences_set):
         jaccard_groups_sim[gp.group.name] = js
 
     for key, value in sorted(jaccard_groups_sim.iteritems(),
-                                key=lambda (k, v): (v, k), reverse=True)[:5]:
+                                key=lambda (k, v): (v, k), reverse=True)[:10]:
         if value - 0 < 0.000001:
             break
         candidate_group = Group.objects.get(name=key)
@@ -129,7 +129,7 @@ def recommended_users(target_user, target_user_preferences_set):
         return
 
     for key, value in sorted(jaccard_users_sim.iteritems(),
-                                key=lambda (k, v): (v, k), reverse=True)[:5]:
+                                key=lambda (k, v): (v, k), reverse=True)[:10]:
         if value - 0 < 0.000001:
             break
         candidate_user = user_from_id(key)
@@ -250,7 +250,7 @@ class Command(BaseCommand):
             '''
             print("------------ Jaccard similarity for Propensity ---------------")
             for key, value in sorted(target_res_jaccard_sim.iteritems(),
-                                        key=lambda (k, v): (v, k), reverse=True)[:5]:
+                                        key=lambda (k, v): (v, k), reverse=True)[:10]:
                 candidate_resource = get_resource_by_shortkey(key)
                 r1 = RecommendedResource.recommend(target_user,
                                                    candidate_resource,

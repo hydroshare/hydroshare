@@ -5,11 +5,10 @@
             based on your interests in these keywords:
             <ul class="list-inline">
                 {% for z in r.keywords.all %}
-                    <li> {{ z.value }} 
-                        <button class="dismiss-button" style="background:none;border:none;padding:0;"  
+                    <li> {{ z.value }} </li> 
+                        <!-- <button class="dismiss-button" style="background:none;border:none;padding:0;"  
                                 onclick="update_resources('{{z.key}}', '{{z.value}}')">
-                        <span class="glyphicon glyphicon-remove-circle"></span></button> 
-                    </li>
+                        <span class="glyphicon glyphicon-remove-circle"></span></button>--> 
                 {% endfor %}
             </ul>
         {% endif %}

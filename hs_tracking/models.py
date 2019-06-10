@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
-
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Q, Count, Max, Subquery
 from django.core import signing
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -284,3 +283,28 @@ class Variable(models.Model):
             .annotate(last_accessed=models.Max('visitor__session__variable__timestamp'))\
             .filter(visitor__session__variable__timestamp=F('last_accessed'))\
             .order_by('-last_accessed')[:n_users]
+
+    @classmethod
+    def user_resource_matrix(cls, first, last):
+    
+        users = User.objects.filter(
+            visitor__session__variable__timestamp__gte=first,
+            visitor__session__variable__timestamp__lte=last)\
+                .distinct()
+        events = []
+        for u in users:
+            resources = BaseResource.objects.filter(
+                    variable__timestamp__gte=first,
+                    variable__timestamp__lte=last,
+                    variable__session__visitor__user=u)
+            for r in resources:
+                latest = Variable.objects.filter(
+                        resource=r,
+                        session__visitor__user=u,
+                        timestamp__gte=first,
+                        timestamp__lte=last)\
+                        .aggregate(latest=Max('timestamp'))
+
+                events.append((u.username, r.short_id, latest['latest']))
+
+        return events

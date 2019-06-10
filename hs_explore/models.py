@@ -17,7 +17,7 @@ class Status(object):
         (STATUS_APPROVED, 'Approved'),
         (STATUS_DISMISSED, 'Dismissed')
     )
-    RECOMMENDATION_LIMIT = 5
+    RECOMMENDATION_LIMIT = 10
 
 
 class KeyValuePair(models.Model):

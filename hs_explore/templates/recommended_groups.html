@@ -3,13 +3,12 @@
         <li><a href="/group/{{ r.candidate_group.id }}/">{{ r.candidate_group.name }}</a> (relevance {{ r.relevance }})</li>
         {% if r.keywords %} 
             based on your interests in these keywords:
-            <ul> 
+            <ul class="list-inline"> 
                 {% for z in r.keywords.all %} 
-                    <li> {{ z.value }}
-                        <button class="dismiss-button" style="background:none;border:none;padding:0;"  
+                    <li> {{ z.value }} </li>
+                        <!--<button class="dismiss-button" style="background:none;border:none;padding:0;"  
                                 onclick="update_groups('{{z.key}}', '{{z.value}}')">
-                        <span class="glyphicon glyphicon-remove-circle"></span></button>
-                    </li>
+                        <span class="glyphicon glyphicon-remove-circle"></span></button> -->
                 {% endfor %}
             </ul> 
         {% endif %}

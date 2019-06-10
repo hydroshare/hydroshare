@@ -14,6 +14,8 @@ from hs_explore.models import ResourcePreferences, UserPreferences, GroupPrefere
     PropensityPreferences, OwnershipPreferences, UserInteractedResources, UserNeighbors
 from sklearn.metrics.pairwise import pairwise_distances
 from haystack.query import SearchQuerySet
+from hs_tracking.models import Variable
+from pprint import pprint
 
 
 class Command(BaseCommand):
@@ -64,6 +66,24 @@ class Command(BaseCommand):
         print("ownership data access time cost: " + str(ownership_elapsed_time))
 
         propensity_start_time = time.time()
+        
+        triples = Variable.user_resource_matrix(beginning, today)
+        for v in triples:
+            user = v[0]
+            res = v[1]
+            if (user, res) not in propensity:
+                propensity[(user, res)] = 1
+            else:
+                propensity[(user, res)] += 1
+            if user not in users_interested_resources:
+                users_interested_resources[user] = set([res])
+            else:
+                users_interested_resources[user].add(res)
+
+        print("propensity : {}".format(len(propensity)))
+        # pprint(propensity)
+        # return
+        '''
         views = Features.visited_resources(beginning, today)
         for user, res_set in views.iteritems():
             for res in res_set:
@@ -99,7 +119,7 @@ class Command(BaseCommand):
                     users_interested_resources[user] = set([res])
                 else:
                     users_interested_resources[user].add(res)
-
+        '''
         propensity_elapsed_time = time.time() - propensity_start_time
         print("propensity data access time cost: " + str(propensity_elapsed_time))
 
@@ -192,6 +212,8 @@ class Command(BaseCommand):
         m_ug_values = np.matmul(m_ur_values, m_rg_values)
         nm_ug_values = np.matmul(nm_ur_values, m_rg_values)
 
+        print("m_ug : {}".format(m_ug_values.shape))
+        print("nm_ug : {}".format(nm_ug_values.shape))
         m_ug = pd.DataFrame(m_ug_values, index=list(user_usernames), columns=all_subjects_list)
         nm_ug = pd.DataFrame(nm_ug_values, index=list(user_usernames), columns=all_subjects_list)
         nm_ug_ones = nm_ug.copy()
