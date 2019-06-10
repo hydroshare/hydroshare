@@ -1002,18 +1002,7 @@ class AbstractLogicalFile(models.Model):
     def metadata_short_file_path(self):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
-
-        xml_file_name = self.aggregation_name
-        if "/" in xml_file_name:
-            xml_file_name = os.path.basename(xml_file_name)
-        xml_file_name += "_meta.xml"
-        if self.is_fileset:
-            file_folder = self.folder
-        else:
-            file_folder = self.files.first().file_folder
-        if file_folder is not None:
-            xml_file_name = os.path.join(file_folder, xml_file_name)
-        return xml_file_name
+        return self._xml_file_short_path(resmap=False)
 
     @property
     def metadata_file_path(self):
@@ -1025,17 +1014,7 @@ class AbstractLogicalFile(models.Model):
     def map_short_file_path(self):
         """File path of the aggregation map xml file relative to {resource_id}/data/contents/
         """
-        xml_file_name = self.aggregation_name
-        if "/" in xml_file_name:
-            xml_file_name = os.path.basename(xml_file_name)
-        xml_file_name += "_resmap.xml"
-        if self.is_fileset:
-            file_folder = self.folder
-        else:
-            file_folder = self.files.first().file_folder
-        if file_folder is not None:
-            xml_file_name = os.path.join(file_folder, xml_file_name)
-        return xml_file_name
+        return self._xml_file_short_path()
 
     @property
     def map_file_path(self):
@@ -1467,3 +1446,27 @@ class AbstractLogicalFile(models.Model):
         xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
+
+    def _xml_file_short_path(self, resmap=True):
+        """File path of the aggregation metadata or map xml file relative
+        to {resource_id}/data/contents/
+        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
+        aggregation metadata file is returned
+        """
+        xml_file_name = self.aggregation_name
+        if "/" in xml_file_name:
+            xml_file_name = os.path.basename(xml_file_name)
+        # remove file extension
+        xml_file_name, _ = os.path.splitext(xml_file_name)
+        if resmap:
+            xml_file_name += "_resmap.xml"
+        else:
+            xml_file_name += "_meta.xml"
+
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
+        if file_folder is not None:
+            xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
