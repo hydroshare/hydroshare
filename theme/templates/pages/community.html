@@ -50,21 +50,16 @@
                                     <h4 class="panel-title">
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                           href="#filter">&nbsp;CZO Groups</a></h4>
+                                           href="#filter">&nbsp;Groups</a></h4>
                                 </div>
                                 <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                     <div class="panel-body">
                                         <div class="list-group">
-                                            <ul class="list-group inputs-group">
-                                                <i class="list-group-item no-items-found">TBD</i>
-                                            </ul>
                                         </div>
-                                        <div id="grantors-list">
-{#                                            GRANTOR.ID#}
-                                            {#                                                {% for res in group_resources %}#}
-                                            {#                                                    <span data-grantor-id="{{ res.grantor.id }}"#}
-                                            {#                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>#}
-                                            {#                                                {% endfor %}#}
+                                        <div id="groups-list">
+                                            {% for g in groups %}
+                                                <span> {{ g }}</span>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
