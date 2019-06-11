@@ -1811,12 +1811,39 @@ class GroupView(TemplateView):
         }
 
 
-class CommunityView(TemplateView):
-    template_name = 'pages/community.html'
+class GroupsAuthenticatedView(TemplateView):
+    template_name = 'pages/groups-authenticated.html'
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(CommunityView, self).dispatch(*args, **kwargs)
+        return super(GroupsAuthenticatedView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        # for each group set group dynamic attributes
+        for g in groups:
+            g.is_user_member = u in g.gaccess.members
+            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+            g.join_request = None
+            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+        return {
+            'profile_user': u,
+            'groups': groups,
+        }
+
+class CollaborateView(TemplateView):
+    template_name = 'pages/collaborate.html'
+
+class CommunitiesView(TemplateView):
+    template_name = 'pages/communities.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommunitiesView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         user_id = User.objects.get(pk=self.request.user.id)
@@ -1852,31 +1879,6 @@ class CommunityView(TemplateView):
         return {
             'community_resources': community_resources,
             'groups': groups
-        }
-
-
-class CollaborateView(TemplateView):
-    template_name = 'pages/collaborate.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CollaborateView, self).dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
-            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-        return {
-            'profile_user': u,
-            'groups': groups,
         }
 
 
