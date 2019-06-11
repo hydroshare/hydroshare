@@ -1873,8 +1873,7 @@ class CommunitiesView(TemplateView):
         # 'groups_view': groups_view,
         # 'communities_view': communities_view,
         # 'communities_owner': communities_owner,
-
-        groups = {g.group_name for g in community_resources}
+        groups = {c.group_name for c in community_resources}
 
         return {
             'community_resources': community_resources,

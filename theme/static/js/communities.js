@@ -338,4 +338,24 @@ $(document).ready(function () {
         input.val(label);
     });
 
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            contribs: []
+        },
+        methods: {
+            showFrom(contributorId) {
+                return this.$data.contribs.indexOf(contributorId) < 0;
+            },
+            updateContribs(contribId) {  // if not in the display list remove it otherwise add it effectively toggle
+                let loc = this.$data.contribs.indexOf(contribId);
+                if (loc < 0) {
+                    this.$data.contribs.push(contribId)
+                } else {
+                    this.$data.contribs.splice(loc, 1);
+                }
+            }
+        }
+    });
+
 });
