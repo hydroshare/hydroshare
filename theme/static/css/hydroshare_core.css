@@ -1613,18 +1613,17 @@ body > .main-container {
     width: 100%;
 }
 
-.btn-add-access {
+.btn-add-access, #btn-confirm-add-access {
 	height: 34px;
-	border-radius: 0;
 	width: 100%;
 }
 
-#invite-to-group .btn-add-access {
-	height: 34px;
-	width: 160px;
-	top: 0;
+#btn-confirm-add-access {
 	border-radius: 0;
-	margin-top:15px;
+}
+
+#invite-to-group .btn-add-access {
+	width: 160px;
 }
 
 .btn-default {
