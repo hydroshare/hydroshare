@@ -90,7 +90,7 @@
                                                             <tbody>
                                                             {% for u in group.gaccess.members %}
                                                                 <tr id="row-id-{{ u.pk }}"
-                                                                    {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
+                                                                    {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
                                                                     <td>
                                                                         <div class="user-scope">
                                                                             {% if u.userprofile.picture %}
