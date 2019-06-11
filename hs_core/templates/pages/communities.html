@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block main %}
-    <div id="app">
+    <div id="communities-app">
         <div class="collaborate-header">
             <div class="container">
                 <div class="row">
@@ -61,9 +61,9 @@
                                                         shared with this community yet.</i>
                                                 {% else %}
                                                     {% for g in groups %}
-                                                        <label for="{{ g }}">{{ g }}</label>
-                                                        <input type="checkbox" id="{{ asdf }}" value="Click"
-                                                               @click="updateContribs({{ asdf}})" checked/><br/>
+                                                        <label for="{{ g.id }}">{{ g.name }}</label>
+                                                        <input type="checkbox" id="{{ g.id }}" value="Click"
+                                                               @click="updateContribs({{ g.id }})" checked/><br/>
                                                     {% endfor %}
                                                 {% endif %}
                                             </div>
@@ -113,7 +113,7 @@
                                     </thead>
                                     <tbody>
                                     {% for res in community_resources %}
-                                        <tr class="data-row">
+                                        <tr class="data-row" v-show="showFrom({{ res.group_id }})">
                                             {# Selection controls #}
                                             <td>
                                                 <input class="row-selector" type="checkbox">

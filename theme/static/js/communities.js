@@ -338,8 +338,8 @@ $(document).ready(function () {
         input.val(label);
     });
 
-    let vm = new Vue({
-        el: "#app",
+    let CommunitiesVm = new Vue({
+        el: "#communities-app",
         data: {
             contribs: []
         },

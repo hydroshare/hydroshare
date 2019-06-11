@@ -1846,34 +1846,14 @@ class CommunitiesView(TemplateView):
         return super(CommunitiesView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        user_id = User.objects.get(pk=self.request.user.id)
-        user = user_from_name(user_id)
-        # groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
-        # communities_owner = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
+        # user_id = User.objects.get(pk=self.request.user.id)
 
         # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community
         community_resources = community_from_name_or_id("CZO National Community").public_resources
-        #__name=
-        #__id=
-        # community_resources_luquillo = community_resources.filter(r2grp__group__name="CZO Luquillo")
-        # groups_owner = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)
-        # communities_view = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
-        # groups_view = user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
-
-        # try:
-        #     g = groups_view[0]
-        # except:
-        #     pass
-
-        # g = Group.objects.get(pk=groups_view.id)
-        # users_view = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
-
-        # 'user_id': user_id,
-        # 'groups_owner': groups_owner,
-        # 'groups_view': groups_view,
-        # 'communities_view': communities_view,
-        # 'communities_owner': communities_owner,
-        groups = {c.group_name for c in community_resources}
+        groups = []
+        for c in community_resources:
+            if not any(str(c.group_id) == g.get('id') for g in groups):  # if the group id is not already present in the list
+                groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
 
         return {
             'community_resources': community_resources,
