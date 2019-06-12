@@ -643,7 +643,7 @@
                                             <td>{{ res.last_updated|date:"U" }}</td>
                                             <td><!-- Needed for datatable to function properly --></td>
                                             <td>{{ res.created|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
