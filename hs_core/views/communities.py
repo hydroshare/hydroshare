@@ -28,6 +28,7 @@ class CommunitiesView(TemplateView):
                 if c.group_name != "CZO National":  # The National Group is used to establish the entire Community
                     groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
 
+        groups = sorted(groups, key=lambda key: key['name'])
         return {
             'community_resources': community_resources,
             'groups': groups
