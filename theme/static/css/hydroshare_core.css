@@ -1366,10 +1366,6 @@ a[data-toggle='tab']{
 	min-height: 34px;
 }
 
-#invite-to-group #id_user-wrapper {
-    width: calc(100% - 144px);
-}
-
 #permission-panel .panel-body{
     padding: 15px 0;
 }

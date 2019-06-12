@@ -673,12 +673,12 @@
                     </div>
                     <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                         <div class="modal-body">
-                            <div id="div-invite-people">
+                            <div id="div-invite-people" class="flex">
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
                                     <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
+                                       class="btn btn-add-access btn-success glyphicon glyphicon-send space-left"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>
