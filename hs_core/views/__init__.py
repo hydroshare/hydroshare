@@ -1853,7 +1853,8 @@ class CommunitiesView(TemplateView):
         groups = []
         for c in community_resources:
             if not any(str(c.group_id) == g.get('id') for g in groups):  # if the group id is not already present in the list
-                groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
+                if c.group_name != "CZO National":  # The National Group is used to establish the entire Community
+                    groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
 
         return {
             'community_resources': community_resources,

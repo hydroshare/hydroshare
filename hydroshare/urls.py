@@ -17,7 +17,6 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_app_netCDF import views as nc_views
 
 
 autocomplete_light.autodiscover()

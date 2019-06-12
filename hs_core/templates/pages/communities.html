@@ -35,7 +35,6 @@
                         <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
                     </li>
-
                 </ul>
 
                 <!-- Tab panes -->
@@ -61,9 +60,13 @@
                                                         shared with this community yet.</i>
                                                 {% else %}
                                                     {% for g in groups %}
-                                                        <label for="{{ g.id }}">{{ g.name }}</label>
-                                                        <input type="checkbox" id="{{ g.id }}" value="Click"
-                                                               @click="updateContribs({{ g.id }})" checked/><br/>
+                                                        <li class="list-group-item">
+                                                            <label class="checkbox noselect"
+                                                                   for="{{ g.id }}">{{ g.name }}
+                                                                <input type="checkbox" id="{{ g.id }}" value="Click"
+                                                                       @click="updateContribs({{ g.id }})" checked/>
+                                                            </label>
+                                                        </li>
                                                     {% endfor %}
                                                 {% endif %}
                                             </div>
