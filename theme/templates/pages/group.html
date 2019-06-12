@@ -6,7 +6,6 @@
 {% endblock %}
 
 {% block main %}
-    <div id="app">
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -110,7 +109,6 @@
                         {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                             <h4>Recent Activity</h4>
                             {% if group_resources %}
-                                <h2> {{ group_resources.date_granted | time }} </h2>
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
                                         {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
@@ -467,32 +465,34 @@
                         <div class="col-lg-2" id="facets">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-
-                                        <div id="shared-by">
                                     <h4 class="panel-title">
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
-                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                           href="#filter">&nbsp;Shared by</a></h4>
-                                            {% if not grantors %}
-                                                <i class="list-group-item no-items-found">No resources have been shared
-                                                    with this group yet.</i>
-                                            {% else %}
-                                                {% for grantor in grantors %}
-                                                    <label for="{{ grantor.id }}">{{ grantor|best_name }}</label>
-                                                    <input type="checkbox" id="{{ grantor.id }}" value="Click"
-                                                           @click="updateContribs({{ grantor.id }})" checked /><br/>
-                                                {% endfor %}
-                                            {% endif %}
+                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Shared by</a></h4>
+                                </div>
+                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
+                                    <div class="panel-body">
+                                        <div class="list-group">
+                                            <ul class="list-group inputs-group">
+                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>
+                                            </ul>
+                                        </div>
+
+                                        <div id="grantors-list">
+                                            {% for res in group_resources %}
+                                                <span data-grantor-id="{{ res.grantor.id }}"
+                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                         <div class="col-lg-10" id="items">
-                             <div class="row">
-                                 <div class="col-sm-12">
-                                     <div id="search-container" class="input-group">
-                                         <span class="glyphicon glyphicon-search search-icon"></span>
-                                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
+                        <div class="col-lg-10" id="items">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div id="search-container" class="input-group">
+                                        <span class="glyphicon glyphicon-search search-icon"></span>
+                                        <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
                                         <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
 
                                         <div class="input-group-btn">
@@ -572,7 +572,7 @@
                                 </thead>
                                 <tbody>
                                     {% for res in group_resources %}
-                                        <tr class="data-row" v-show="showFrom({{ res.grantor.id }})">
+                                        <tr class="data-row">
                                             {# Selection controls #}
                                             <td>
                                                 <input class="row-selector" type="checkbox">
@@ -673,12 +673,12 @@
                     </div>
                     <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                         <div class="modal-body">
-                            <div id="div-invite-people" class="flex">
+                            <div id="div-invite-people">
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
                                     <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success glyphicon glyphicon-send space-left"><span
+                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>
@@ -860,12 +860,11 @@
             </div>
         </div>
     {% endif %}
-    </div>
+
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
