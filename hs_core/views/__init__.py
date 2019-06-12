@@ -15,7 +15,7 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.template import RequestContext
+
 from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
@@ -62,7 +62,6 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 
 from hs_collection_resource.models import CollectionDeletedResource
 
-from hs_access_control.management.utilities import user_from_name, community_from_name_or_id
 from hs_access_control.models.privilege import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
@@ -1183,15 +1182,6 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-# @processor_for('my-resources')
-# @login_required
-# def my_resources(request, page):
-#
-#     resource_collection = get_my_resources_list(request)
-#     context = {'collection': resource_collection}
-#
-#     return context
-
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
@@ -1787,7 +1777,6 @@ class GroupView(TemplateView):
         g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        grantors = []
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
@@ -1796,7 +1785,6 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-            grantors.append(res.grantor)
         group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
         # TODO: need to sort this resource list using the date_granted field
@@ -1807,7 +1795,6 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
-            'grantors': set(grantors)
         }
 
 
@@ -1833,32 +1820,6 @@ class GroupsAuthenticatedView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
-        }
-
-class CollaborateView(TemplateView):
-    template_name = 'pages/collaborate.html'
-
-class CommunitiesView(TemplateView):
-    template_name = 'pages/communities.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CommunitiesView, self).dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        # user_id = User.objects.get(pk=self.request.user.id)
-
-        # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community
-        community_resources = community_from_name_or_id("CZO National Community").public_resources
-        groups = []
-        for c in community_resources:
-            if not any(str(c.group_id) == g.get('id') for g in groups):  # if the group id is not already present in the list
-                if c.group_name != "CZO National":  # The National Group is used to establish the entire Community
-                    groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
-
-        return {
-            'community_resources': community_resources,
-            'groups': groups
         }
 
 

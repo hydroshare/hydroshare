@@ -12,6 +12,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
+from hs_core.views.communities import CommunitiesView, CollaborateView
 from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
@@ -72,8 +73,8 @@ urlpatterns = i18n_patterns(
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.GroupsAuthenticatedView.as_view(), name='groups'),
-    url(r'^communities/', hs_core_views.CommunitiesView.as_view(), name='communities'),
-    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^communities/', hs_core_views.communities.CommunitiesView.as_view(), name='communities'),
+    url(r'^collaborate/$', hs_core_views.communities.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
