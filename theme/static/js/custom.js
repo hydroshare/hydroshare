@@ -423,8 +423,7 @@ $(document).ready(function () {
     };
 
     // Prevent clicking on list items dismissing the modal window
-    let autoCompletes = $(".autocomplete-light-widget > input.autocomplete");
-    autoCompletes.each(function (i, el) {
+    $(".autocomplete-light-widget > input.autocomplete").each(function (i, el) {
         $(el).yourlabsAutocomplete()
             .input.bind('selectChoice', function (e, choice, autocomplete) {
             e.stopPropagation();
