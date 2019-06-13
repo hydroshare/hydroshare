@@ -128,20 +128,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
-            # check for single file aggregations
-            if "data/contents/" in path and res.resource_type is "CompositeResource":  # not a metadata file
-                aggregation = res.get_aggregation_by_name(path)
-                if aggregation:
-                    is_agg = True
-                    if not is_zip_request:
-                        download_url = request.GET.get('url_download', 'false').lower()
-                        if download_url == 'false':
-                            # redirect to referenced url in the url file instead
-                            redirect_url = aggregation.redirect_url
-                            if redirect_url:
-                                return HttpResponseRedirect(redirect_url)
-
-
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
@@ -149,6 +135,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
+        # check for aggregations
+        elif res.resource_type is "CompositeResource":
+            aggregation = res.get_aggregation_by_name(path)
+            if aggregation:
+                is_agg = True
+                if not is_zip_request:
+                    download_url = request.GET.get('url_download', 'false').lower()
+                    if download_url == 'false':
+                        # redirect to referenced url in the url file instead
+                        redirect_url = aggregation.redirect_url
+                        if redirect_url:
+                            return HttpResponseRedirect(redirect_url)
+
+
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
