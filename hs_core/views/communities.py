@@ -13,7 +13,7 @@ class CollaborateView(TemplateView):
 class CommunitiesView(TemplateView):
     template_name = 'pages/communities.html'
 
-    @method_decorator(login_required)
+    # @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(CommunitiesView, self).dispatch(*args, **kwargs)
 
