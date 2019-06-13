@@ -424,14 +424,12 @@ $(document).ready(function () {
 
     // Prevent clicking on list items dismissing the modal window
     let autoCompletes = $(".autocomplete-light-widget > input.autocomplete");
-    if (autoCompletes.length) {
-        autoCompletes.each(function (i, el) {
-            $(el).yourlabsAutocomplete()
-                .input.bind('selectChoice', function (e, choice, autocomplete) {
-                e.stopPropagation();
-            });
+    autoCompletes.each(function (i, el) {
+        $(el).yourlabsAutocomplete()
+            .input.bind('selectChoice', function (e, choice, autocomplete) {
+            e.stopPropagation();
         });
-    }
+    });
 
     // Can be used to obtain an element's HTML including itself and not just its content
     jQuery.fn.outerHTML = function () {
