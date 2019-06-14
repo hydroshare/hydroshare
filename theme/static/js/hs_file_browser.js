@@ -35,15 +35,14 @@ var loading_metadata_alert =
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, url, folderAggregationTypeToSet, folderShortPath) {
-
-    return "<li class='fb-folder droppable draggable' data-url='" + url + "' title='" + folderName + "&#13;Type: File Folder'>" +
+function getFolderTemplateInstance(folder) {
+    return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" + folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
-        "<span class='fb-file-name'>" + folderName + "</span>" +
-        "<span class='fb-file-type' data-folder-short-path='" + folderShortPath + "'>File Folder</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folderAggregationTypeToSet + "'></span>" +
+        "<span class='fb-file-name'>" + folder.name + "</span>" +
+        "<span class='fb-file-type' data-folder-short-path='" + folder.folder_short_path + "'>File Folder</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folder.folder_aggregation_type_to_set + "'></span>" +
         "<span class='fb-file-size'></span>" +
-        "</li>"
+        "</li>";
 }
 
 function getFileAggregationTemplateInstance(agg) {
@@ -67,35 +66,40 @@ function getFileAggregationTemplateInstance(agg) {
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url, is_single_file_aggregation) {
-    var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-
+function getFileTemplateInstance(file) {
+    var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
     var iconTemplate;
-
     var fileIcons = getFileIcons();
 
     if (fileIcons[fileTypeExt.toUpperCase()]) {
         iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
     }
-    else if (fileName.toUpperCase().endsWith(".REFTS.JSON")){
+    else if (file.name.toUpperCase().endsWith(".REFTS.JSON")){
         iconTemplate = fileIcons["JSON"];
     }
     else {
         iconTemplate = fileIcons.DEFAULT;
     }
 
-    if (logical_type.length > 0){
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;" + aggregation_name;
+    if (file.logical_type.length > 0){
+        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+            formatBytes(parseInt(file.size)) + "&#13;" + file.aggregation_name;
     }
     else {
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
+        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+            formatBytes(parseInt(file.size));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" + is_single_file_aggregation + "'>" +
+    return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
+        file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
+        "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
+        file.is_single_file_aggregation + "'>" +
         iconTemplate +
-        "<span class='fb-file-name'>" + fileName + "</span>" +
-        "<span class='fb-file-type'>" + fileType + " File</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type='" + logical_type + "' data-logical-file-id='" + logical_file_id +  "'>" + aggregation_name + "</span>" +
-        "<span class='fb-file-size' data-file-size=" + fileSize + ">" + formatBytes(parseInt(fileSize)) + "</span></li>"
+        "<span class='fb-file-name'>" + file.name + "</span>" +
+        "<span class='fb-file-type'>" + file.type + " File</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
+        file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
+        "<span class='fb-file-size' data-file-size=" + file.size + ">" + formatBytes(parseInt(file.size)) +
+        "</span></li>"
 }
 
 function formatBytes(bytes) {
@@ -1097,7 +1101,7 @@ function onOpenFolder() {
         pathLog.splice(pathLogIndex + 1, range);
 
         // Aggregations can be loaded from memory
-        let selectedAgg = currentAggregations.filter(function(agg){return agg.id === aggregationId })[0];
+        let selectedAgg = currentAggregations.filter(function(agg){return agg.logical_file_id === aggregationId })[0];
         let path = {
             path: currentPath.path.slice(),
             aggregation: selectedAgg,
