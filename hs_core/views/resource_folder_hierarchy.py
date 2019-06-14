@@ -65,44 +65,15 @@ def data_store_structure(request):
 
     files = []
     dirs = []
+    aggregations = []
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
-        main_file = ''
-        folder_aggregation_type = ''
-        folder_aggregation_name = ''
-        folder_aggregation_id = ''
-        folder_aggregation_type_to_set = ''
-        if resource.resource_type == "CompositeResource":
-            dir_path = resource.get_public_path(d_store_path)
-            # find if this folder *dir_path* represents (contains) an aggregation object
-            aggregation_object = resource.get_folder_aggregation_object(dir_path)
-            # folder aggregation type is not relevant for single file aggregation types - which
-            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
-            if aggregation_object is not None and not \
-                    aggregation_object.is_single_file_aggregation:
-                folder_aggregation_type = aggregation_object.get_aggregation_class_name()
-                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
-                folder_aggregation_id = aggregation_object.id
-                main_file = ''
-                if not aggregation_object.is_fileset:
-                    main_file = aggregation_object.get_main_file.file_name
-            else:
-                # find if any aggregation type that can be created from this folder
-                folder_aggregation_type_to_set =  \
-                    resource.get_folder_aggregation_type_to_set(dir_path)
-                if folder_aggregation_type_to_set is None:
-                    folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
                      'url': d_url,
-                     'main_file': main_file,
-                     'folder_aggregation_type': folder_aggregation_type,
-                     'folder_aggregation_name': folder_aggregation_name,
-                     'folder_aggregation_id': folder_aggregation_id,
-                     'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
                      'folder_short_path': os.path.join(folder_path, d_pk)})
 
     is_federated = resource.is_federated
@@ -131,25 +102,27 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
-        is_single_file_aggregation = ''
-        if resource.resource_type == "CompositeResource":
-            if f.has_logical_file:
-                logical_file_type = f.logical_file_type_name
-                logical_file_id = f.logical_file.id
-                aggregation_name = f.aggregation_display_name
-                is_single_file_aggregation = f.logical_file.is_single_file_aggregation
-                if 'url' in f.logical_file.extra_data:
-                    f_ref_url = f.logical_file.extra_data['url']
+        if f.has_logical_file and (f.logical_file.is_single_file_aggregation or f.logical_file.get_main_file_type().endswith(f.extension)):
+            aggregations.append({'logical_file_id': f.logical_file.id,
+                              'name': f.logical_file.get_aggregation_display_name(),
+                              'logical_type': f.logical_file.get_aggregation_class_name(),
+                              'aggregation_name': f.logical_file.get_aggregation_display_name(),
+                              'url': f.url})
+            logical_file_type = f.logical_file_type_name
+            logical_file_id = f.logical_file.id
+            aggregation_name = f.aggregation_display_name
+            if 'url' in f.logical_file.extra_data:
+                f_ref_url = f.logical_file.extra_data['url']
 
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id,
-                      'is_single_file_aggregation': is_single_file_aggregation})
+                      'logical_file_id': logical_file_id})
 
     return_object = {'files': files,
                      'folders': dirs,
+                     'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":

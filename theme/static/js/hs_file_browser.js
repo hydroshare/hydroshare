@@ -35,31 +35,15 @@ var loading_metadata_alert =
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath, mainFile) {
-    if (folderAgrregationType.length > 0) {
-        var folderIcons = getFolderIcons();
-        let iconTemplate = folderIcons.DEFAULT;
+function getFolderTemplateInstance(folderName, url, folderAggregationTypeToSet, folderShortPath) {
 
-        if (folderIcons[folderAgrregationType]) {
-            iconTemplate = folderIcons[folderAgrregationType];
-        }
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' main-file='" + mainFile + "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
-                iconTemplate +
-                "<span class='fb-file-name'>" + folderName + "</span>" +
-                "<span class='fb-file-type'>File Folder</span>" +
-                "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID +  "'>" + folderAggregationName + "</span>" +
-                "<span class='fb-file-size'></span>" +
-            "</li>"
-    }
-    else {
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' title='" + folderName + "&#13;Type: File Folder'>" +
-            "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
-            "<span class='fb-file-name'>" + folderName + "</span>" +
-            "<span class='fb-file-type' data-folder-short-path='" + folderShortPath + "'>File Folder</span>" +
-            "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folderAggregationTypeToSet + "'></span>" +
-            "<span class='fb-file-size'></span>" +
-            "</li>"
-    }
+    return "<li class='fb-folder droppable draggable' data-url='" + url + "' title='" + folderName + "&#13;Type: File Folder'>" +
+        "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
+        "<span class='fb-file-name'>" + folderName + "</span>" +
+        "<span class='fb-file-type' data-folder-short-path='" + folderShortPath + "'>File Folder</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folderAggregationTypeToSet + "'></span>" +
+        "<span class='fb-file-size'></span>" +
+        "</li>"
 }
 
 function getFileAggregationTemplateInstance(agg) {

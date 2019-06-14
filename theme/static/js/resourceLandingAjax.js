@@ -699,6 +699,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         success: function (result) {
             var files = result.files;   // TODO: Add aggregation virtual folder metadata
             var folders = result.folders;
+            var aggregations = result.aggregations;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
             $('#fb-files-container').empty();
@@ -736,8 +737,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
                     $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
-                        v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
+                        v['folder_aggregation_type_to_set'], v['folder_short_path']));
                 });
             }
             if (!files.length && !folders.length) {
