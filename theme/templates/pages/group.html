@@ -197,15 +197,15 @@
                             {% endif %}
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
-                                    <tr class="active" data-filter-by="all">
+                                    <tr class="active c-pointer" data-filter-by="all">
                                         <td><span>All</span></td>
                                         <td><span class="badge" data-filter-by='All'>0</span></td>
                                     </tr>
-                                     <tr data-filter-by="edit-user">
+                                    <tr class="c-pointer" data-filter-by="edit-user">
                                         <td><span>Owners</span></td>
                                         <td><span class="badge" data-filter-by='Owners'>0</span></td>
                                     </tr>
-                                    <tr data-filter-by="pending">
+                                    <tr class="c-pointer" data-filter-by="pending">
                                         <td><span>Pending</span></td>
                                         <td><span class="badge" data-filter-by='Pending'>0</span></td>
                                     </tr>
@@ -467,7 +467,9 @@
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
-                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Shared by</a></h4>
+                                        <a data-toggle="collapse" class="accordion-toggle"
+                                           data-parent="#accordion" href="#filter-shared-by">&nbsp;Shared by</a>
+                                    </h4>
                                 </div>
                                 <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                     <div class="panel-body">
@@ -624,13 +626,7 @@
                                                 </strong>
                                             </td>
                                             {# First Author #}
-                                            {% if res.first_creator.description %}
-                                                <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                                </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
+                                            {{ res|resource_first_author }}
                                             {# Date Created #}
                                             <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
                                             {# Last Modified #}
