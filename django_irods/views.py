@@ -67,7 +67,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     is_bag_download = False
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
-    is_agg = False
+    aggregation = None
     is_sf_request = False
 
     if split_path_strs[0] == 'bags':
@@ -139,7 +139,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         elif res.resource_type is "CompositeResource":
             aggregation = res.get_aggregation_by_name(path)
             if aggregation:
-                is_agg = True
                 if not is_zip_request:
                     download_url = request.GET.get('url_download', 'false').lower()
                     if download_url == 'false':
@@ -152,7 +151,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
-    # * is_agg: path is an aggregation in Composite Resource
+    # * aggregation: aggregation object if path is to one in Composite Resource
     # * is_sf_request: path is a single-file
     # flags for download:
     # * is_bag_download: download a bag in format bags/{rid}.zip
@@ -193,7 +192,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                is_agg, is_sf_request))
+                                                aggregation, is_sf_request))
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
 
@@ -215,7 +214,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         is_agg, is_sf_request)
+                                         aggregation, is_sf_request)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
