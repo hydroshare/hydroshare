@@ -64,10 +64,6 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     istorage = resource.get_irods_storage()
     errors = []
     ecount = 0
-    defaultpath = '/' + os.path.join(
-        getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-        'home',
-        getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
 
     # skip federated resources if not configured to handle these
     if resource.is_federated and not settings.REMOTE_USE_IRODS:
