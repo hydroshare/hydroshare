@@ -671,10 +671,8 @@ function get_aggregation_folder_struct(aggregation) {
     let files = aggregation.files;
     $('#fb-files-container').empty();
 
-    $.each(files, function (i, v) {
-        $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
-          v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-          v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
+    $.each(files, function (i, file) {
+        $('#fb-files-container').append(getFileTemplateInstance(file));
     });
 
     onSort();
@@ -697,49 +695,38 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             store_path: store_path.path.join('/')
         },
         success: function (result) {
-            var files = result.files;   // TODO: Add aggregation virtual folder metadata
+            var files = result.files;
             var folders = result.folders;
-            var aggregations = result.aggregations;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
+
             $('#fb-files-container').empty();
-            if (files.length > 0) {
-                currentAggregations = [];   // These will be updated
-                $.each(files, function (i, v) {
-                    if (v['logical_file_id'] && v['logical_type'] !== "GenericLogicalFile") {
-                        // The file is part of an aggregation virtual folder
-                        if ($('#fb-files-container li.fb-folder[data-logical-file-id="' + v['logical_file_id'] + '"]').length === 0) {
-                            // The aggregation hasn't been rendered
-                            $('#fb-files-container').append(getFileAggregationTemplateInstance(v));
+            currentAggregations = result.aggregations;
 
-                            // Initialize the aggregation object
-                            currentAggregations.push({
-                                id: v['logical_file_id'],
-                                type: v['logical_type'],
-                                name: v['name'],
-                                files: []
-                            });
-                        }
+            $.each(files, function (i, file) {
+                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile") {
+                    let selectedAgg = currentAggregations.filter(function (agg) {
+                        return agg.logical_file_id === file['logical_file_id']
+                    })[0];
 
-                        // Push the aggregation files to the collection
-                        let selectedAgg = currentAggregations.filter(function (agg) {
-                            return agg.id === v['logical_file_id']
-                        })[0];
-                        selectedAgg.files.push(v);
+                    if (!selectedAgg.hasOwnProperty('files')) {
+                        selectedAgg.files = [];     // Initialize the array
                     }
-                    else {
-                        $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
-                          v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-                          v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
-                    }
-                });
-            }
-            if (folders.length > 0) {
-                $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path']));
-                });
-            }
+                    selectedAgg.files.push(file);   // Push the aggregation files to the collection
+                }
+                else {
+                    $('#fb-files-container').append(getFileTemplateInstance(file));
+                }
+            });
+
+            $.each(currentAggregations, function (i, agg) {
+                $('#fb-files-container').append(getFileAggregationTemplateInstance(agg));
+            });
+
+            $.each(folders, function (i, folder) {
+                $('#fb-files-container').append(getFolderTemplateInstance(folder));
+            });
+
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
                     $('#fb-files-container').append(
@@ -762,15 +749,11 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
+
             onSort();
-
             bindFileBrowserItemEvents();
-
             currentPath = store_path;
-
             $("#hs-file-browser").attr("data-res-id", res_id);
-
-            // strip the 'data' folder from the path
             setBreadCrumbs(jQuery.extend(true, {}, store_path));
 
             if ($("#hsDropzone").hasClass("dropzone")) {

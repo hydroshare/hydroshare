@@ -104,7 +104,7 @@ def data_store_structure(request):
         aggregation_name = ''
         if f.has_logical_file and (f.logical_file.is_single_file_aggregation or f.logical_file.get_main_file_type().endswith(f.extension)):
             aggregations.append({'logical_file_id': f.logical_file.id,
-                              'name': f.logical_file.get_aggregation_display_name(),
+                              'name': f.logical_file.dataset_name,
                               'logical_type': f.logical_file.get_aggregation_class_name(),
                               'aggregation_name': f.logical_file.get_aggregation_display_name(),
                               'url': f.url})
