@@ -19,8 +19,8 @@ class CommunitiesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         # user_id = User.objects.get(pk=self.request.user.id)
+        grpfilter = self.request.GET.get('grp')
 
-        # TODO instead of line below, will use design pattern from user.py eventually to get logged in user community
         community_resources = community_from_name_or_id("CZO National Community").public_resources
         groups = []
         for c in community_resources:
@@ -31,5 +31,6 @@ class CommunitiesView(TemplateView):
         groups = sorted(groups, key=lambda key: key['name'])
         return {
             'community_resources': community_resources,
-            'groups': groups
+            'groups': groups,
+            'grpfilter': grpfilter
         }
