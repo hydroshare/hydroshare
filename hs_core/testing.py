@@ -126,7 +126,7 @@ class TestCaseCommonUtilities(object):
 
     def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
         '''
-        Have to use LINUX_ADMIN_USER_FOR_HS_USER_ZONE with rodsadmin role to get user type AVU 
+        Have to use LINUX_ADMIN_USER_FOR_HS_USER_ZONE with rodsadmin role to get user type AVU
         in user zone and verify its quota usage is set correctly
         :param attname: quota usage attribute name set on iRODS proxy user in user zone
         :param qsize: quota size (type string) to be verified to equal to the value set for attname.

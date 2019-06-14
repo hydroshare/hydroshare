@@ -11,7 +11,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
-import os
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
