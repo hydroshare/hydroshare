@@ -949,10 +949,24 @@ function setBreadCrumbs(bcPath) {
         for (let i = 0; i < bcPath.path.length; i++) {
             let isActive = i === bcPath.path.length - 1;
             if (isActive) {
-                crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
+                if (bcPath.hasOwnProperty("aggregation")) {
+                    let logicalType = bcPath.aggregation.logical_type;
+                    let icon = getFolderIcons()[logicalType];
+
+                    // Crumb for active aggregaqtion (with its icon)
+                    crumbs.append('<li class="active crumb-aggregation">' + icon + '<span class="crumb-aggregation-name"> '
+                        + bcPath.path[i] + '</span></li>');
+                }
+                else {
+                    // Crumb for the active folder
+                    crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> '
+                        + bcPath.path[i] + '</span></li>');
+                }
             }
             else {
-                crumbs.append('<li data-path="' + currentPath.path.slice(0, i + 1).join('/') + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
+                // Crumb for inactive folder
+                crumbs.append('<li data-path="' + currentPath.path.slice(0, i + 1).join('/') +
+                    '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
             }
         }
 
