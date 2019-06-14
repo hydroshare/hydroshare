@@ -145,19 +145,6 @@ $(document).ready(function () {
 
     $("#item-selectors").show();
 
-    // Bind ajax submit events to favorite and label buttons
-
-    $("#filter input[type='checkbox']").on("change", function () {
-        resourceTable.draw();
-    });
-
-    $("#user-labels-left").on("change", "input[type='checkbox']", function () {
-        resourceTable.draw();
-    });
-
-    $("#filter-shared-by input[type='checkbox']").on("change", function () {
-        resourceTable.draw();
-    });
 
     $("#resource-search-input").keyup(function () {
         var searchString = removeQueryOccurrences($(this).val());
@@ -181,40 +168,6 @@ $(document).ready(function () {
         var searchInput = $("#resource-search-input");
         searchInput.val("");
         searchInput.keyup();
-    });
-
-    $('#input-author, #input-subject').keyup(function () {
-        typeQueryStrings();
-        resourceTable.draw();
-    });
-
-    $("#input-resource-type").change(function () {
-        typeQueryStrings();
-        resourceTable.draw();
-    });
-
-    $(".all-rows-selector").change(function () {
-        $(".row-selector").prop("checked", $(this).prop("checked"));
-
-        var toolbarLabels = $("#toolbar-labels-dropdown input[type='checkbox']");
-        if ($(this).prop("checked") == false) {
-            toolbarLabels.attr("disabled", true);
-        } else {
-            toolbarLabels.attr("disabled", false);
-        }
-
-    });
-
-
-    $("#item-selectors td").click(function (e) {
-        if (e.target.tagName != "TD") {
-            return;
-        }
-        if ($(this).parent().find("input[type='checkbox']:checked.row-selector").length > 0) {
-            $(this).parent().find("input[type='checkbox'].row-selector").prop("checked", false);
-        } else {
-            $(this).parent().find("input[type='checkbox'].row-selector").prop("checked", true);
-        }
     });
 
     // Prevents dropdown form getting dismissed when clicking on items
