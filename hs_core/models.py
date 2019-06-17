@@ -2441,7 +2441,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         userpath = '/' + os.path.join(
             getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
             'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
         if self.resource_federation_path == userpath:
             return 'user'
         else:

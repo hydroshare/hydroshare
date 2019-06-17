@@ -32,23 +32,23 @@ echo "iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" | $RUN_ON_DATA
 echo " - iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" 
 
 echo "------------------------------------------------------------"
-echo "INFO: make ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} and ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
-echo "iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser" | $RUN_ON_USER
-echo " - iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser" 
-echo "iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}" | $RUN_ON_USER
-echo " - iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}" 
+echo "INFO: make ${HS_IRODS_PROXY_USER_IN_USER_ZONE} and ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}"
+echo "iadmin mkuser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} rodsuser" | $RUN_ON_USER
+echo " - iadmin mkuser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} rodsuser"
+echo "iadmin moduser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} password ${HS_AUTH}" | $RUN_ON_USER
+echo " - iadmin moduser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} password ${HS_AUTH}"
 
 echo "------------------------------------------------------------"
 echo "INFO: create and configure rodsadmin"
-echo "iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin" | $RUN_ON_USER
-echo " - iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin" 
-echo "iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}" | $RUN_ON_USER
-echo " - iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}" 
+echo "iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin" | $RUN_ON_USER
+echo " - iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin"
+echo "iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}" | $RUN_ON_USER
+echo " - iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
 
 echo "------------------------------------------------------------"
-echo "INFO: make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} is able to access in ${HS_USER_ZONE_HOST}"
-echo "iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" | $RUN_ON_USER
-echo " - iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" 
+echo "INFO: make resource ${HS_IRODS_USER_ZONE_DEF_RES} is able to access in ${HS_USER_ZONE_HOST}"
+echo "iadmin mkresc ${HS_IRODS_USER_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault" | $RUN_ON_USER
+echo " - iadmin mkresc ${HS_IRODS_USER_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 
 # Tips for piping strings to docker exec container terminal https://gist.github.com/ElijahLynn/72cb111c7caf32a73d6f#file-pipe_to_docker_examples
 echo "iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${HS_USER_ZONE_HOST}:1247" | $RUN_ON_DATA
@@ -59,10 +59,10 @@ echo " - iadmin mkzone ${IRODS_ZONE} remote ${IRODS_HOST}:1247"
 sleep 1s
 
 echo "------------------------------------------------------------"
-echo "INFO: init the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}"
+echo "INFO: init the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}"
 #TODO this throws error but succeeds research as low priority work
-echo "echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit" | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash
-echo " - echo ${HS_USER_ZONE_PROXY_USER_PWD} | iinit | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash"
+echo "echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit" | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash
+echo " - echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash"
 
 echo "------------------------------------------------------------"
 echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
@@ -75,13 +75,13 @@ echo "------------------------------------------------------------"
 echo "INFO: update permissions"
 echo "ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home" | $RUN_ON_USER
 echo " - ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home" 
-echo "ichmod -r -M own rods#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home/${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" | $RUN_ON_USER
-echo " - ichmod -r -M own rods#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home/${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" 
+echo "ichmod -r -M own rods#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home/${HS_IRODS_PROXY_USER_IN_USER_ZONE}" | $RUN_ON_USER
+echo " - ichmod -r -M own rods#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home/${HS_IRODS_PROXY_USER_IN_USER_ZONE}"
 
 echo "------------------------------------------------------------"
 echo "INFO: edit permissions in /home"
-echo "ichmod -r -M own "${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" /${HS_USER_IRODS_ZONE}/home" | $RUN_ON_USER
-echo " - ichmod -r -M own "${HS_LOCAL_PROXY_USER_IN_FED_ZONE}" /${HS_USER_IRODS_ZONE}/home"
+echo "ichmod -r -M own "${HS_IRODS_PROXY_USER_IN_USER_ZONE}" /${HS_USER_IRODS_ZONE}/home" | $RUN_ON_USER
+echo " - ichmod -r -M own "${HS_IRODS_PROXY_USER_IN_USER_ZONE}" /${HS_USER_IRODS_ZONE}/home"
 
 echo "------------------------------------------------------------"
 echo "INFO: set ${HS_USER_IRODS_ZONE}/home to inherit"
