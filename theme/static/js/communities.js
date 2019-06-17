@@ -26,8 +26,9 @@ $(document).ready(function () {
             showFrom(contributorId) {
                 return this.$data.contribs.indexOf(contributorId) < 0;
             },
-            updateContribs(contribId) {  // if not in the display list remove it otherwise add it effectively toggle
+            updateContribs(contribId, chkState) {  // if not in the display list remove it otherwise add it effectively toggle
                 let loc = this.$data.contribs.indexOf(contribId);
+
                 if (loc < 0) {
                     this.$data.contribs.push(contribId)
                 } else {

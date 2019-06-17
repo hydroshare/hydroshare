@@ -193,39 +193,8 @@ function removeQueryOccurrences(inputString) {
     return inputString;
 }
 
-// Looks at the query strings in the searchbox and sets the values in the dropdown options
 function applyQueryStrings() {
-    var inputString = $("#resource-search-input").val().toLowerCase();
-    // Matches occurrences of query strings. i.e.: author:mauriel
-    var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
-    var occurrences = inputString.match(regExp);
-
-    var inputType = "";
-    var inputSubject = "";
-    var inputAuthor = "";
-
-    var collection = [];
-    if (occurrences) {
-        for (var item in occurrences) {
-            var content = occurrences[item].replace("[", "").replace("]", "").split(":");
-            collection.push(content);
-        }
-    }
-
-    for (var item in collection) {
-        if (collection[item][0].toUpperCase() == "TYPE") {
-            inputType = collection[item][1];
-        } else if (collection[item][0].toUpperCase() == "AUTHOR") {
-            inputAuthor = collection[item][1];
-        } else if (collection[item][0].toUpperCase() == "SUBJECT") {
-            inputSubject = collection[item][1];
-        }
-    }
-
-    $("#input-author").val(inputAuthor);
-    $("#input-subject").val(inputSubject);
-    $("#input-resource-type").val(inputType.toLowerCase());
-
+    return true
 }
 
 // Looks at the values in the dropdown options and appends the corresponding query string to the search box.
