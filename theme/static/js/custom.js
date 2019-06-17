@@ -174,7 +174,7 @@ $(document).ready(function () {
 
         createResource(resourceType, title);
     });
-
+    
     function createResource(type, title="Untitled Resource") {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
@@ -184,15 +184,6 @@ $(document).ready(function () {
         formData.append("csrfmiddlewaretoken", csrf_token);
         formData.append("title", title);
         formData.append("resource-type", type);
-        formData.append("irods-username", "");
-        formData.append("irods-password", "");
-        formData.append("irods-host", "");
-        formData.append("irods-port", "");
-        formData.append("irods-zone", "");
-        formData.append("irods_file_names", "");
-        formData.append("irods_federated", "");
-        formData.append("copy-or-move", "copy");
-        formData.append("copy-move", "copy");
 
         customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
@@ -337,6 +328,14 @@ $(document).ready(function () {
         this.box.insertAfter(this.input).css({top: 35, left: 0});
     };
 
+    // Prevent clicking on list items dismissing the modal window
+    $(".autocomplete-light-widget > input.autocomplete").each(function (i, el) {
+        $(el).yourlabsAutocomplete()
+            .input.bind('selectChoice', function (e, choice, autocomplete) {
+            e.stopPropagation();
+        });
+    });
+
     // Can be used to obtain an element's HTML including itself and not just its content
     jQuery.fn.outerHTML = function () {
         return jQuery('<div />').append(this.eq(0).clone()).html();
@@ -369,12 +368,4 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     }
     $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
-}
-
-// Displays error message if resource creation fails and restores UI state
-function showCreateError() {
-    customAlert("Error", 'Failed to create resource.', "error", 10000);
-    $(".btn-create-resource").removeClass("disabled");
-    $(".btn-create-resource").text("Create Resource");
-    $(".btn-cancel-create-resource").removeClass("disabled");
 }

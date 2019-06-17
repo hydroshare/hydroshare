@@ -1,44 +1,44 @@
 
-.fb-file .fb-file-icon.fa-file-zip-o, .dz-details .fb-file-icon.fa-file-zip-o {
+.fb-file .fb-file-icon.fa-file-zip-o, .fb-file-icon.fa-file-zip-o {
     color: rgb(140, 86, 75);
 }
 
-.fb-file .fb-file-icon.fa-file-excel-o, .dz-details .fb-file-icon.fa-file-excel-o {
+.fb-file .fb-file-icon.fa-file-excel-o, .fb-file-icon.fa-file-excel-o {
     color: rgb(44, 160, 44);
 }
 
-.fb-file .fb-file-icon.fa-file-o, .dz-details .fb-file-icon.fa-file-o {
+.fb-file .fb-file-icon.fa-file-o, .fb-file-icon.fa-file-o {
     color: rgb(127, 127, 127);
 }
 
-.fb-file .fb-file-icon.fa-file-pdf-o, .dz-details .fb-file-icon.fa-file-pdf-o {
+.fb-file .fb-file-icon.fa-file-pdf-o, .fb-file-icon.fa-file-pdf-o {
     color: rgb(214, 39, 40);
 }
 
-.fb-file .fb-file-icon.fa-file-word-o, .dz-details .fb-file-icon.fa-file-word-o {
+.fb-file .fb-file-icon.fa-file-word-o, .fb-file-icon.fa-file-word-o {
     color: rgb(31, 119, 180);
 }
 
-.fb-file .fb-file-icon.fa-file-audio-o, .dz-details .fb-file-icon.fa-file-audio-o {
+.fb-file .fb-file-icon.fa-file-audio-o, .fb-file-icon.fa-file-audio-o {
     color: rgb(148, 103, 189);
 }
 
-.fb-file .fb-file-icon.fa-file-movie-o, .dz-details .fb-file-icon.fa-file-movie-o {
+.fb-file .fb-file-icon.fa-file-movie-o, .fb-file-icon.fa-file-movie-o {
     color: rgb(227, 119, 194);
 }
-.fb-file .fb-file-icon.fa-file-image-o, .dz-details .fb-file-icon.fa-file-image-o {
+.fb-file .fb-file-icon.fa-file-image-o, .fb-file-icon.fa-file-image-o {
     color: rgb(255, 127, 14);
 }
 
-.fb-file .fb-file-icon.fa-file-text-o, .dz-details .fb-file-icon.fa-file-text-o {
+.fb-file .fb-file-icon.fa-file-text-o, .fb-file-icon.fa-file-text-o {
     color: rgb(127, 127, 127);
 }
 
-.fb-file .fb-file-icon.fa-file-powerpoint-o, .dz-details .fb-file-icon.fa-file-powerpoint-o {
+.fb-file .fb-file-icon.fa-file-powerpoint-o, .fb-file-icon.fa-file-powerpoint-o {
     color: rgb(255, 187, 120);
 }
 
-.fb-file .fb-file-icon.fa-file-code-o, .dz-details .fb-file-icon.fa-file-code-o {
+.fb-file .fb-file-icon.fa-file-code-o, .fb-file-icon.fa-file-code-o {
     color: rgb(102, 170, 0);
 }
 
@@ -103,7 +103,7 @@
     margin-left: 10px;
 }
 
-.fb-view-grid .fb-stack-netcdf .fa-th-large, .dz-details .fb-stack-netcdf .fa-th-large {
+.fb-view-grid .fb-stack-netcdf .fa-th-large, .fb-stack-netcdf .fa-th-large {
 	margin-top: 6px;
 	font-size: 14px;
 }
@@ -113,7 +113,7 @@
 	top: -4px;
 }
 
-.fb-view-grid .fb-stack-js [data-icon], .dz-details .fb-stack-js [data-icon] {
+.fb-view-grid .fb-stack-js [data-icon], .fb-stack-js [data-icon] {
     top: 4px;
     font-size: 23px;
     left: 2px;
@@ -125,7 +125,7 @@
 	left: 1px;
 }
 
-.fb-view-grid .fb-stack-cpp [data-icon], .dz-details .fb-stack-cpp [data-icon] {
+.fb-view-grid .fb-stack-cpp [data-icon], .fb-stack-cpp [data-icon] {
     top: 6px;
     font-size: 15px;
 }
@@ -135,7 +135,7 @@
     top: -3px;
 }
 
-.fb-view-grid .fb-stack-c [data-icon], .dz-details .fb-stack-c [data-icon] {
+.fb-view-grid .fb-stack-c [data-icon], .fb-stack-c [data-icon] {
     top: 6px;
     font-size: 15px;
 }
@@ -145,7 +145,7 @@
     top: -3px;
 }
 
-.fb-view-grid .fb-stack-database .fa-database, .dz-details .fb-stack-database .fa-database {
+.fb-view-grid .fb-stack-database .fa-database, .fb-stack-database .fa-database {
     top: 6px;
 }
 
@@ -155,7 +155,7 @@
     left: -2px;
 }
 
-.fb-view-grid .fb-stack-cs [data-icon], .dz-details .fb-stack-cs [data-icon] {
+.fb-view-grid .fb-stack-cs [data-icon], .fb-stack-cs [data-icon] {
     top: 6px;
     font-size: 15px;
 }
@@ -165,7 +165,7 @@
     top: -3px;
 }
 
-.fb-view-grid .fb-stack-py [data-icon], .dz-details .fb-stack-py [data-icon] {
+.fb-view-grid .fb-stack-py [data-icon], .fb-stack-py [data-icon] {
 	top: 6px;
 	font-size: 17px;
 	left: 1px;
@@ -176,7 +176,7 @@
 	top: -4px;
 }
 
-.fb-view-grid .fb-stack-url .fa-external-link, .dz-details .fb-stack-url .fa-external-link {
+.fb-view-grid .fb-stack-url .fa-external-link, .fb-stack-url .fa-external-link {
     top: 7px;
     font-size: 16px;
 }
@@ -187,7 +187,7 @@
     left: -2px;
 }
 
-.fb-view-grid .fb-stack-css [data-icon], .dz-details .fb-stack-css [data-icon] {
+.fb-view-grid .fb-stack-css [data-icon], .fb-stack-css [data-icon] {
     top: 6px;
     font-size: 21px;
     left: 2px;
@@ -199,7 +199,7 @@
     left: 1px;
 }
 
-.fb-view-grid .fb-stack-html [data-icon], .dz-details .fb-stack-html [data-icon] {
+.fb-view-grid .fb-stack-html [data-icon], .fb-stack-html [data-icon] {
     top: 6px;
     font-size: 21px;
     left: 2px;
@@ -211,7 +211,7 @@
     left: 1px;
 }
 
-.fb-view-grid .fb-stack-java [data-icon], .dz-details .fb-stack-java [data-icon] {
+.fb-view-grid .fb-stack-java [data-icon], .fb-stack-java [data-icon] {
     top: 6px;
     font-size: 21px;
     left: 2px;
@@ -223,7 +223,7 @@
     left: 1px;
 }
 
-.fb-view-grid .fb-stack-mysql [data-icon], .dz-details .fb-stack-mysql [data-icon] {
+.fb-view-grid .fb-stack-mysql [data-icon], .fb-stack-mysql [data-icon] {
     top: 3px;
     font-size: 18px;
     left: 1px;
@@ -234,7 +234,7 @@
     top: -4px;
 }
 
-.fb-view-grid .fb-stack-netcdf .fa-th-large, .dz-details .fb-stack-netcdf .fa-th-large {
+.fb-view-grid .fb-stack-netcdf .fa-th-large, .fb-stack-netcdf .fa-th-large {
 	margin-top: 6px;
 	font-size: 14px;
 }
@@ -244,7 +244,7 @@
 	top: -4px;
 }
 
-.fb-view-grid .fb-stack-refts .fa-line-chart, .dz-details .fb-stack-refts .fa-line-chart {
+.fb-view-grid .fb-stack-refts .fa-line-chart, .fb-stack-refts .fa-line-chart {
 	top: 7px;
 	font-size: 14px;
 }
@@ -254,7 +254,7 @@
     top: -3px;
 }
 
-.fb-view-grid .fb-stack-shape .fa-globe, .dz-details .fb-stack-shape .fa-globe {
+.fb-view-grid .fb-stack-shape .fa-globe, .fb-stack-shape .fa-globe {
 	top: 5px;
 	font-size: 14px;
 }

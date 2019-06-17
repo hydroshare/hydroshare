@@ -2619,7 +2619,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None, move=False):
+    def create(cls, resource, file, folder=None, source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2630,7 +2630,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
-        :param move: if True, move the file rather than copying.
 
         There are two main usages to this constructor:
 
@@ -2640,12 +2639,10 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         * copying a file internally from iRODS:
 
-                ResourceFile.create(r, file_name, folder=d, source=s, move=True)
-          or
-                ResourceFile.create(r, file_name, folder=d, source=s, move=False)
+                ResourceFile.create(r, file_name, folder=d, source=s)
 
-        In this case, source is a full iRODS pathname of the place from which to copy or move
-        the file. The default is to copy the file and leave a copy in place.
+        In this case, source is a full iRODS pathname of the place from which to copy
+        the file.
 
         A third form is less common and presumes that the file already exists in iRODS
         in the proper place:
@@ -2684,15 +2681,10 @@ class ResourceFile(ResourceFileIRODSMixin):
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
-                if not move:
-                    istorage.copyFiles(source, target)
-                else:
-                    istorage.moveFile(source, target)
+                istorage.copyFiles(source, target)
                 if not istorage.exists(target):
                     raise ValidationError("ResourceFile.create: copy to target {} failed"
                                           .format(target))
-                if move and istorage.exists(source):
-                    raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
                 # no need to verify whether the file exists in iRODS since the file
@@ -2963,17 +2955,6 @@ class ResourceFile(ResourceFileIRODSMixin):
                 raise ValidationError("Local path does not exist in irods")
 
         return folder, base
-
-    # def rename(self, new_name):
-    #     """ rename a file, setting all path variables appropriately """
-    #     pass
-
-    # def copy_irods(self, source_path, dest_path=None):
-    #     """ copy an irods file into this FileField, setting all paths appropriately """
-    #     pass
-
-    # def move_irods(self, source_path, dest_path=None):
-    #     """ move an irods file into this object, setting all paths appropriately """
 
     # classmethods do things that query or affect all files.
 

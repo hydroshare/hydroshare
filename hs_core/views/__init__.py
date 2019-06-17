@@ -1212,11 +1212,6 @@ def add_generic_context(request, page):
 
 
 @login_required
-def create_resource_select_resource_type(request, *args, **kwargs):
-    return render(request, 'pages/create-resource.html')
-
-
-@login_required
 def create_resource(request, *args, **kwargs):
     # Note: This view function must be called by ajax
 
@@ -1224,40 +1219,14 @@ def create_resource(request, *args, **kwargs):
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
     resource_files, full_paths = extract_files_with_paths(request)
-    source_names = []
-    irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower() == 'true'
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
-    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
-    fed_copy_or_move = request.POST.get("copy-or-move")
-
-    if irods_fnames:
-        if federated:
-            source_names = irods_fnames.split(',')
-        else:
-            user = request.POST.get('irods-username')
-            password = request.POST.get("irods-password")
-            port = request.POST.get("irods-port")
-            host = request.POST.get("irods-host")
-            zone = request.POST.get("irods-zone")
-            try:
-                upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
-            except utils.ResourceFileSizeException as ex:
-                ajax_response_data['message'] = ex.message
-                return JsonResponse(ajax_response_data)
-
-            except SessionException as ex:
-                ajax_response_data['message'] = ex.stderr
-                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
     try:
-        _, res_title, metadata, fed_res_path = \
+        _, res_title, metadata = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
                                                          resource_title=res_title,
-                                                         source_names=source_names,
                                                          page_redirect_url_key=url_key,
                                                          requesting_user=request.user,
                                                          **kwargs)
@@ -1280,10 +1249,6 @@ def create_resource(request, *args, **kwargs):
                 title=res_title,
                 metadata=metadata,
                 files=resource_files,
-                source_names=source_names,
-                # TODO: should probably be resource_federation_path like it is set to.
-                fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-                move=(fed_copy_or_move == 'move'),
                 content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
@@ -1803,7 +1768,6 @@ class GroupView(TemplateView):
         g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        grantors = []
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
@@ -1812,7 +1776,6 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-            grantors.append(res.grantor)
         group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
         # TODO: need to sort this resource list using the date_granted field
@@ -1823,7 +1786,6 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
-            'grantors': set(grantors)
         }
 
 
@@ -1861,7 +1823,7 @@ class MyResourcesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-
+        
         resource_collection = get_my_resources_list(u)
 
         return {
