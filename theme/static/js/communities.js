@@ -20,19 +20,34 @@ $(document).ready(function () {
     let CommunitiesVm = new Vue({
         el: "#communities-app",
         data: {
-            contribs: []
+            filterTo: [],
+        },
+        mounted: function () {
+            let groupIds = {};
+            let ids = [];
+
+            $('#groups-list li').each(function(){
+                let groupId = parseInt($(this).attr('id'));
+                groupIds[$(this).text()] = groupId;
+                ids.push(groupId)
+            });
+            this.$data.ids = ids
         },
         methods: {
-            showFrom(contributorId) {
-                return this.$data.contribs.indexOf(contributorId) < 0;
+            showFrom(groupId) {
+                if (this.$data.filterTo.length === 0) {  // If no selections show all
+                    return true;
+                } else {  // Display row if Group ID found in the filterTo Array
+                    return this.$data.filterTo.indexOf(groupId) > -1;
+                }
             },
-            updateContribs(contribId, chkState) {  // if not in the display list remove it otherwise add it effectively toggle
-                let loc = this.$data.contribs.indexOf(contribId);
+            updateContribs(groupId) {
+                let loc = this.$data.filterTo.indexOf(groupId);
 
                 if (loc < 0) {
-                    this.$data.contribs.push(contribId)
+                    this.$data.filterTo.push(groupId)
                 } else {
-                    this.$data.contribs.splice(loc, 1);
+                    this.$data.filterTo.splice(loc, 1);
                 }
             }
         }

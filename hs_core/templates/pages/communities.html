@@ -54,37 +54,20 @@
                                         <div class="panel-body">
                                             <div class="list-group">
                                             </div>
-                                            <div id="groups-list">
+                                            <div id="groups-list"><!-- this id=groups-list is used to construct the VueJS group name to id map -->
                                                 {% if not groups %}
                                                     <i class="list-group-item no-items-found">No resources have been
                                                         shared with this community yet.</i>
                                                 {% else %}
-                                                    {% if grpfilter %}
-                                                        {% for g in groups %}
-                                                            <li class="list-group-item">
-                                                                <label class="checkbox noselect"
-                                                                       for="{{ g.id }}">{{ g.name }}
-                                                                    <input type="checkbox" id="{{ g.id }}" value="Click"
-                                                                           @click="updateContribs({{ g.id }})"
-                                                                    {% if grpfilter == g.name %}
-                                                                            checked
-                                                                    {% endif %}
-                                                                    />
-                                                                </label>
-                                                            </li>
-                                                        {% endfor %}
-                                                    {% else %}
-                                                        {% for g in groups %}
-                                                            <li class="list-group-item">
-                                                                <label class="checkbox noselect"
-                                                                       for="{{ g.id }}">{{ g.name }}
-                                                                    <input type="checkbox" id="{{ g.id }}" value="Click"
-                                                                           @click="updateContribs({{ g.id }})" checked/>
-                                                                </label>
-                                                            </li>
-                                                        {% endfor %}
-                                                    {% endif %}
-
+                                                    {% for g in groups %}
+                                                        <li class="list-group-item" id="{{ g.id }}">
+                                                            <label class="checkbox noselect"
+                                                                 for="{{ g.id }}">{{ g.name }}<input type="checkbox" id="{{ g.id }}" value="Click"
+                                                                    @click="updateContribs({{ g.id }})"
+                                                                />
+                                                            </label>
+                                                        </li>
+                                                    {% endfor %}
                                                 {% endif %}
                                             </div>
                                         </div>
