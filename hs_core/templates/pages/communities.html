@@ -64,6 +64,9 @@
                                                             <label class="checkbox noselect"
                                                                  for="{{ g.id }}">{{ g.name }}<input type="checkbox" id="{{ g.id }}" value="Click"
                                                                     @click="updateContribs({{ g.id }})"
+                                                            {% if grpfilter == g.name %}
+                                                                 checked
+                                                            {% endif %}
                                                                 />
                                                             </label>
                                                         </li>
@@ -114,9 +117,10 @@
                                         {# Needed for datatable to function properly #}
                                     </tr>
                                     </thead>
+                                    <div id="filter-querystring" style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
                                     <tbody>
                                     {% for res in community_resources %}
-                                        <tr class="data-row" v-show="showFrom({{ res.group_id }})">
+                                        <tr class="data-row" v-show="isVisible({{ res.group_id }})">
                                             {# Selection controls #}
                                             <td>
                                                 <input class="row-selector" type="checkbox">
