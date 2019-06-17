@@ -1,6 +1,6 @@
 {% load hydroshare_tags %}
 
-<tr v-for="(user, index) in this.users"
+<tr v-for="(user, index) in this.users" v-bind:key="user.id"
     :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access === 'owner' && hasOnlyOneOwner || user.id === quotaHolder.id), loading: user.loading}">
     <td>
         <table class="user-scope">
