@@ -821,11 +821,13 @@
 {% endblock %}
 
 {% block extra_js %}
+    {% set_page_permissions page %}
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
@@ -835,6 +837,25 @@
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
+      const AUTHORS = [
+          {% for author in creators %}
+              {
+                  "id": "{{ author.id }}",
+                  "name": "{{ author.name|default:"" }}",
+                  "email": "{{ author.email|default:"" }}",
+                  "organization": "{{ author.organization|default:"" }}",
+                  "identifiers": {
+                      {% for name, link in author.userprofile.identifiers.items %}
+                          "{{ name }}": "{{ link }}",
+                      {% endfor %}
+                  },
+                  "address": "{{ author.address|default:"" }}",
+                  "phone": "{{ author.phone|default:"" }}",
+                  "homepage": "{{ author.homepage|default:"" }}",
+                  "profileUrl": "{{ author.description|default:"" }}"
+              },
+          {% endfor %}
+      ];
 
       {% with cm.last_changed_by as usr %}
           const LAST_CHANGED_BY = {

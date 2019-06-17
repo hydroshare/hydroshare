@@ -95,9 +95,9 @@ $(document).ready(function() {
     });
 
     $(".authors-wrapper").on("click", ".author-modal-trigger", function () {
-        $("#edit-creator-dialog").modal('show');
+        $("#edit-author-modal").modal('show');
         let data = $.extend(true, {}, $(this).data());    // Shallow copy
-        let dialog = $("#edit-creator-dialog");
+        let dialog = $("#edit-author-modal");
         let form = dialog.find("form");
 
         // The resource must have at least one author.

@@ -1591,7 +1591,7 @@ function updateResourceKeywords(keywordString) {
 }
 
 function updateResourceAuthors(authors) {
-    let container = $("#left-header-table .authors-wrapper");
+    let container = $("#left-header .authors-wrapper");
     container.empty();
     authors.forEach(function (author) {
         const shortID = $("#short-id").val();

@@ -1,5 +1,5 @@
 let leftHeaderApp = new Vue({
-    el: '#left-header-table',
+    el: '#left-header',
     delimiters: ['${', '}'],
     data: {
         owners: USERS_JSON.map(function(user) {
@@ -8,6 +8,21 @@ let leftHeaderApp = new Vue({
         }).filter(function(user){
             return user.access === 'owner';
         }),
+        res_mode: RESOURCE_MODE,
+        resShortId: SHORT_ID,
+        can_change: CAN_CHANGE,
+        authors: AUTHORS,
+        selectedAuthor: {
+            "id": null,
+            "name": null,
+            "email": null,
+            "organization": null,
+            "identifiers": {},
+            "address": null,
+            "phone": null,
+            "homepage": null,
+            "profileUrl": null
+        },
         userCardSelected: {
             user_type: null,
             access: null,
@@ -38,6 +53,19 @@ let leftHeaderApp = new Vue({
             this.userCardSelected = data.user;
             this.cardPosition.left = el.position().left - 175 + el.width() / 2;
             this.cardPosition.top = el.position().top + 30;
+        },
+        deleteAuthor: function (author) {
+            // TODO: change endpoint to return json data
+            $.post('/hsapi/_internal/' + this.resShortId + '/creator/' + author.id +
+                '/delete-metadata/', function (result) {
+                console.log(result);
+            });
+        },
+        updateAuthor: function(author) {
+
+        },
+        selectAuthor: function(author) {
+            this.selectedAuthor = $.extend(true, {}, author);  // Deep copy
         }
     }
 });

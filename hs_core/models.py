@@ -183,46 +183,6 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
-from rest_framework import serializers
-
-
-class UserAccessSerializer(serializers.Serializer):
-    owned_resources = serializers.ListField()
-
-
-class UserProfileSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    organization = serializers.CharField(required=False)
-    subject_areas = serializers.CharField(required=False)
-    picture = serializers.ImageField()
-
-
-class UserSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    id = serializers.CharField()
-    username = serializers.CharField()
-    date_joined = serializers.DateTimeField(format="%d %b, %Y")
-    userprofile = UserProfileSerializer()
-    # uaccess = UserAccessSerializer()
-    # "user_type": user_type,
-    # "access": user_access,
-    # "id": user.id,
-    # "pictureUrl": picture,
-    # "best_name": best_name(user),
-    # "user_name": user.username,
-    # "can_undo": user.can_undo,
-    # # Data used to populate profile badge:
-    # "email": user.email,
-    # "organization": user.userprofile.organization,
-    # "title": user.userprofile.title,
-    # "contributions": len(user.uaccess.owned_resources),
-    # "subject_areas": user.userprofile.subject_areas,
-    # "identifiers": user.userprofile.identifiers,
-    # "state": user.userprofile.state,
-    # "country": user.userprofile.country,
-    # "joined": user.date_joined.strftime("%d %b, %Y")
-
-
 # Build a JSON serializable object with user data
 def get_user_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
@@ -251,7 +211,6 @@ def get_user_object(user, user_type, user_access):
             "state": user.userprofile.state,
             "country": user.userprofile.country,
             "joined": user.date_joined.strftime("%d %b, %Y"),
-            "serializedData": UserSerializer(user).data
         }
     elif user_type == "group":
         if user.gaccess.picture:
