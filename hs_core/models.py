@@ -184,16 +184,16 @@ class ResourcePermissionsMixin(Ownable):
 
 
 # Build a JSON serializable object with user data
-def get_user_object(user, user_type, user_access):
+def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
-    user_object = None
+    access_object = None
     picture = None
 
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
 
-        user_object = {
+        access_object = {
             "user_type": user_type,
             "access": user_access,
             "id": user.id,
@@ -216,7 +216,7 @@ def get_user_object(user, user_type, user_access):
         if user.gaccess.picture:
             picture = user.gaccess.picture.url
 
-        user_object = {
+        access_object = {
             "user_type": user_type,
             "access": user_access,
             "id": user.id,
@@ -226,7 +226,7 @@ def get_user_object(user, user_type, user_access):
             "can_undo": user.can_undo
         }
 
-    return user_object
+    return access_object
 
 
 def page_permissions_page_processor(request, page):
@@ -287,19 +287,19 @@ def page_permissions_page_processor(request, page):
     users_json = []
 
     for usr in owners:
-        users_json.append(get_user_object(usr, "user", "owner"))
+        users_json.append(get_access_object(usr, "user", "owner"))
 
     for usr in editors:
-        users_json.append(get_user_object(usr, "user", "edit"))
+        users_json.append(get_access_object(usr, "user", "edit"))
 
     for usr in viewers:
-        users_json.append(get_user_object(usr, "user", "view"))
+        users_json.append(get_access_object(usr, "user", "view"))
 
     for usr in edit_groups:
-        users_json.append(get_user_object(usr, "group", "edit"))
+        users_json.append(get_access_object(usr, "group", "edit"))
 
     for usr in view_groups:
-        users_json.append(get_user_object(usr, "group", "view"))
+        users_json.append(get_access_object(usr, "group", "view"))
 
     users_json = json.dumps(users_json)
 

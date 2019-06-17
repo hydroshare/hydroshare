@@ -917,7 +917,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     else:
         status = 'error'
 
-    from hs_core.models import get_user_object
+    from hs_core.models import get_access_object
 
     if user_or_group == 'user':
         user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
@@ -925,14 +925,14 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
 
         ajax_response_data = {'status': status,
                               'error_msg': err_message,
-                              'user': get_user_object(user_to_share_with, "user", privilege)}
+                              'user': get_access_object(user_to_share_with, "user", privilege)}
     else:
         group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
         group_to_share_with.can_undo = group_can_undo
 
         ajax_response_data = {'status': status,
                               'error_msg': err_message,
-                              'user': get_user_object(group_to_share_with, "group", privilege)}
+                              'user': get_access_object(group_to_share_with, "group", privilege)}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
