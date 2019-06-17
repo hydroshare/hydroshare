@@ -445,7 +445,8 @@ let manageAccessApp = new Vue({
         },
         onLoadQuotaHolderCard: function (data) {
             let el = $(data.event.target);
-            this.cardPosition.left = el.position().left - 175 + el.width() / 2;
+            let cardWidth = 350;
+            this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
             this.cardPosition.top = el.position().top + 30;
         }
     },
