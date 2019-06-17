@@ -110,6 +110,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     output_path = path
 
     irods_output_path = irods_path
+
+    # check for aggregations
+    if res.resource_type is "CompositeResource":
+        aggregation = res.get_aggregation_by_name(path)
+        if aggregation:
+            if not is_zip_request:
+                download_url = request.GET.get('url_download', 'false').lower()
+                if download_url == 'false':
+                    # redirect to referenced url in the url file instead
+                    redirect_url = aggregation.redirect_url
+                    if redirect_url:
+                        return HttpResponseRedirect(redirect_url)
+            is_zip_download = True
+
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
@@ -135,17 +149,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
-        # check for aggregations
-        elif res.resource_type is "CompositeResource":
-            aggregation = res.get_aggregation_by_name(path)
-            if aggregation:
-                if not is_zip_request:
-                    download_url = request.GET.get('url_download', 'false').lower()
-                    if download_url == 'false':
-                        # redirect to referenced url in the url file instead
-                        redirect_url = aggregation.redirect_url
-                        if redirect_url:
-                            return HttpResponseRedirect(redirect_url)
 
 
 
