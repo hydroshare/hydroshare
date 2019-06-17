@@ -23,3 +23,7 @@
 .modelprogram tr:nth-child(odd){
     background-color: #f0f0f0;
 }
+
+.multiselect.dropdown-toggle.btn.btn-default {
+    padding:5px 36px
+}
