@@ -692,6 +692,8 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
 
+COMMUNITIES_ENABLED = False
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
