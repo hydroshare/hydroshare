@@ -1571,9 +1571,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
-            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
         else:
-            user_name = "{} {}".format(user.first_name, user.last_name)
+            user_name = "{}, {}".format(user.last_name, user.first_name)
 
         user_data['name'] = user_name
         user_data['email'] = user.email
