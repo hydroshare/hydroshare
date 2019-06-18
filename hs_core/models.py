@@ -4210,7 +4210,7 @@ class CoreMetaData(models.Model):
                     last_names = name_parts[0]
 
                 if first_names:
-                    hsterms_name.text = first_names + " " + last_names
+                    hsterms_name.text = "{fn} {ln}".format(fn=first_names, ln=last_names)
                 else:
                     hsterms_name.text = last_names
             else:
