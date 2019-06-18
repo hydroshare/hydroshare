@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from django.conf.urls import include, url
@@ -15,11 +16,11 @@ from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
-from hs_core import views as hs_core_views
+
 from hs_app_timeseries import views as hs_ts_views
 from hs_app_netCDF import views as nc_views
-
-
+import hs_core.views.group
+# import hs_core
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
@@ -33,7 +34,7 @@ urlpatterns = i18n_patterns(
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
-    url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
+    url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core.views.short_url),
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
         name='tracking-report-profiles'),
     url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
@@ -65,20 +66,20 @@ urlpatterns = i18n_patterns(
         theme.email_verify, name='email_verify'),
     url(r'^email_verify_password_reset/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
         theme.email_verify_password_reset, name='email_verify_password_reset'),
-    url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
+    url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core.views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
-    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
-    url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
-    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
-    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
+    url(r'^collaborate/$', hs_core.views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-resources/$', hs_core.views.MyResourcesView.as_view(), name='my_resources'),
+    url(r'^my-groups/$', hs_core.views.group.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core.views.group.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
-    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
+    url(r'^apps/$', hs_core.views.apps.AppsView.as_view(), name="apps")
 )
 
 # Filebrowser admin media library.
