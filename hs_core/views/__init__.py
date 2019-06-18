@@ -1795,6 +1795,7 @@ class GroupView(TemplateView):
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
+            'communities_enabled': settings.COMMUNITIES_ENABLED
         }
 
 
