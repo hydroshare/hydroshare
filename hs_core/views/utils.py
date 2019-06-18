@@ -57,6 +57,79 @@ ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
 logger = logging.getLogger(__name__)
 
 
+
+def share_resource(request, shortkey, privilege, user_or_group_id, user_or_group):
+    """
+    share resource with a user or group
+    :param request:
+    :param shortkey: id of the resource to share with
+    :param privilege: access privilege need for the resource
+    :param user_or_group_id: id of the user or group with whom the resource to be shared
+    :param user_or_group: indicates if the resource to be shared with a user or group. A value of 'user' will share
+                          the resource with a user whose id is provided with the parameter 'user_or_group_id'.
+                          Any other value for this parameter assumes resource to be shared with a group.
+    :return:
+    """
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    user_to_share_with = None
+    group_to_share_with = None
+    status_code = 200
+    if user_or_group == 'user':
+        user_to_share_with = utils.user_from_id(user_or_group_id)
+    else:
+        group_to_share_with = utils.group_from_id(user_or_group_id)
+
+    status = 'success'
+    err_message = ''
+    if privilege == 'view':
+        access_privilege = PrivilegeCodes.VIEW
+    elif privilege == 'edit':
+        access_privilege = PrivilegeCodes.CHANGE
+    elif privilege == 'owner':
+        if user_or_group != 'user':
+            status_code = 400
+            err_message = "Group can't have owner privilege over a resource"
+            access_privilege = PrivilegeCodes.NONE
+        else:
+            access_privilege = PrivilegeCodes.OWNER
+    else:
+        status_code = 400
+        err_message = "Not a valid privilege"
+        access_privilege = PrivilegeCodes.NONE
+
+    if access_privilege != PrivilegeCodes.NONE:
+        try:
+            if user_or_group == 'user':
+                user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
+            else:
+                user.uaccess.share_resource_with_group(res, group_to_share_with, access_privilege)
+        except PermissionDenied as exp:
+            status = 'error'
+            err_message = exp.message
+    else:
+        status = 'error'
+
+    from hs_core.models import get_access_object
+
+    if user_or_group == 'user':
+        user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
+        user_to_share_with.can_undo = user_can_undo
+
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(user_to_share_with, "user", privilege)}
+    else:
+        group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+        group_to_share_with.can_undo = group_can_undo
+
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(group_to_share_with, "group", privilege)}
+
+    return HttpResponse(json.dumps(ajax_response_data), status=status_code)
+
+
 def json_or_jsonp(r, i, code=200):
     if not isinstance(i, basestring):
         i = json.dumps(i)

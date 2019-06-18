@@ -9,7 +9,7 @@ from rest_framework import status
 
 from hs_core.testing import ViewTestCase
 from hs_core import hydroshare
-from hs_core.views import create_user_group, update_user_group, delete_user_group, \
+from hs_core.views.group import create_user_group, update_user_group, delete_user_group, \
     restore_user_group
 
 

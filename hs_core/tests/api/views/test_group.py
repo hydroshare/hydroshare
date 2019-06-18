@@ -14,7 +14,7 @@ from mezzanine.utils.email import default_token_generator
 from rest_framework import status
 
 from hs_core import hydroshare
-from hs_core.views import create_user_group, update_user_group, share_group_with_user, unshare_group_with_user, \
+from hs_core.views.group import create_user_group, update_user_group, share_group_with_user, unshare_group_with_user, \
     make_group_membership_request, act_on_group_membership_request, share_resource_with_group, \
     unshare_resource_with_group, delete_user_group, restore_user_group
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
