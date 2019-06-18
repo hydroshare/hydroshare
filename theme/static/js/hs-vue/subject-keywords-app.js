@@ -2,16 +2,17 @@
 * Created by Mauriel on 5/19/2019.
 */
 
-let subjKeywordsCmp = new Vue({
+let subjKeywordsApp = new Vue({
     el: '#app-keyword',
     delimiters: ['${', '}'],
     data: {
         newKeyword: '',
         resKeywords: RES_KEYWORDS,   // global constant defined in template
         showIsDuplicate: false,
+        error: ''
     },
     methods: {
-        addButton: function (resIdShort) {
+        addKeyword: function (resIdShort) {
             // Remove any empty keywords from the list
             let newKeywords = this.newKeyword.split(",");
             newKeywords = newKeywords.filter(function(a) {
@@ -27,6 +28,8 @@ let subjKeywordsCmp = new Vue({
 
             let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
             let vue = this;
+            vue.error = "";
+
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                 if (resp.status === "success") {
                     // Append new keywords to our data array
@@ -45,6 +48,10 @@ let subjKeywordsCmp = new Vue({
                     // Reset input
                     vue.newKeyword = '';
                 }
+                else {
+                    vue.error = resp.message;
+                    console.log(resp);
+                }
                 showCompletedMessage(resp);
             }, "json");
         },
@@ -53,17 +60,22 @@ let subjKeywordsCmp = new Vue({
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
             let vue = this;
+            vue.error = "";
 
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
-              {value: newVal.join(",")}, function (resp) {
-                  if (resp.status === "success") {
-                      vue.resKeywords = newVal;
-                  }
-              }, "json");
+                {value: newVal.join(",")}, function (resp) {
+                    if (resp.status === "success") {
+                        vue.resKeywords = newVal;
+                        if (!newVal.length) {
+                            // If no keywords, the metadata is no longer sufficient to make the resource public
+                            manageAccessApp.onMetadataInsufficient();
+                        }
+                    }
+                    else {
+                        vue.error = resp.message;
+                        console.log(resp);
+                    }
+                }, "json");
         }
-    },
-    mounted: function () {
-        // Tags are hidden until the Vue instance is initialized
-        $("#lst-tags").removeClass("hidden");
     }
 });

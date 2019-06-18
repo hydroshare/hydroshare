@@ -3,7 +3,6 @@ from ref_ts import views
 
 urlpatterns = [
     url(r'^_internal/get-his-urls/$', views.get_his_urls),
-    url(r'^_internal/create-ref-time-series/$', views.create_ref_time_series),
     url(r'^_internal/search-sites/$', views.search_sites),
     url(r'^_internal/search-variables/$', views.search_variables),
     url(r'^_internal/verify-rest-url/$', views.verify_rest_url),

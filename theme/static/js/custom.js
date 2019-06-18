@@ -83,11 +83,6 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    // Prevent hover event from triggering the dropdown
-    $("#select-resource-type").on('mouseenter', function (event) {
-        event.stopPropagation();
-    });
-
     // 404 error page
     // ====================
     $('#search-404').on('click', function () {
@@ -163,27 +158,32 @@ $(document).ready(function () {
     });
 
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
-        createResource($(this).attr("data-value"));
+        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+
+        $('#submit-title-dialog').modal('show');
     });
 
-    function createResource(type) {
+    $("#btn-resource-create").on("click", function () {
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
+    });
+    
+    function createResource(type, title="Untitled Resource") {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
 
         formData.append("csrfmiddlewaretoken", csrf_token);
-        formData.append("title", "Untitled Resource");
+        formData.append("title", title);
         formData.append("resource-type", type);
-        formData.append("irods-username", "");
-        formData.append("irods-password", "");
-        formData.append("irods-host", "");
-        formData.append("irods-port", "");
-        formData.append("irods-zone", "");
-        formData.append("irods_file_names", "");
-        formData.append("irods_federated", "");
-        formData.append("copy-or-move", "copy");
-        formData.append("copy-move", "copy");
 
         customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
@@ -240,87 +240,6 @@ $(document).ready(function () {
         }
     });
 
-    // Event trigger for profile preview
-    $(".profile-preview").click(function () {
-        // Move the profile card below the clicked item
-        var profileCard = $(this).parent().find(".profile-card");
-        profileCard.css("top", ($(this).position().top + 30) + "px");
-        profileCard.css("left", ($(this).position().left - 175 + $(this).width()/2) + "px");
-
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
-
-        resetProfilePreview(profileCard);
-        var data = jQuery.extend(true, {}, $(this).data());
-
-        // Populate subject areas
-        var areas = data.subjectareas.split(",");
-        for (var i = 0; i < areas.length; i++) {
-            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ");
-        }
-
-        // Populate profile button url
-        profileCard.find("[data-name]").attr("href", data.profileUrl);
-        profileCard.find("[data-url]").attr("href", data.profileUrl);
-
-        // Populate profile picture
-        var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
-        if (data.profilePicture) {
-            pic.toggleClass("dropdown-user-icon", false);
-            pic.css("background-image", "url('" + data.profilePicture + "')");
-        }
-        else {
-            pic.toggleClass("dropdown-user-icon", true);
-            pic.css("background-image", "none");
-        }
-
-        // Toggle wrappers visibility:
-
-        // State and Country
-        if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
-            $(".location-wrapper").show();
-        }
-
-        // Organization and Title
-        if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
-            $(".org-wrapper").show();
-        }
-
-        // Rest of the fields
-        for (var item in data) {
-            if ($.inArray(item, fields) != -1) {
-                var content = data[item];
-                var field = profileCard.find("[data-" + item + "]");
-                if (content && content != "Unspecified") {
-                    field.text(content);
-                    field.show();
-                }
-                else {
-                    profileCard.find("." + item + "-wrapper").hide();
-                    field.hide();
-                }
-            }
-            else if ($.inArray(item, identifiers) != -1) {
-                var ident = profileCard.find("[data-" + item + "]");
-                ident.show();
-                profileCard.find(".externalprofiles-wrapper").show();
-                ident.attr("href", data[item]);
-            }
-        }
-    });
-
-    function resetProfilePreview(profileCard) {
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        fields.forEach(function (f) {
-            profileCard.find("[data-" + f + "]").text("");
-            profileCard.find("." + f + "-wrapper").show();
-        });
-        profileCard.find(".identifier-icon").hide();
-        $(".profile-card .externalprofiles-wrapper").hide();
-        $(".profile-card .location-wrapper").hide();
-        $(".profile-card .org-wrapper").hide();
-    }
-
     $(".author-preview").click(function() {
         resetAuthorPreview();
         var preview = $("#view-author-modal");
@@ -375,10 +294,6 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    $(".profile-card").click(function (e) {
-        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
-    });
-
     // Abstract collapse toggle
     $(".toggle-abstract").click(function () {
         if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
@@ -413,6 +328,14 @@ $(document).ready(function () {
         this.box.insertAfter(this.input).css({top: 35, left: 0});
     };
 
+    // Prevent clicking on list items dismissing the modal window
+    $(".autocomplete-light-widget > input.autocomplete").each(function (i, el) {
+        $(el).yourlabsAutocomplete()
+            .input.bind('selectChoice', function (e, choice, autocomplete) {
+            e.stopPropagation();
+        });
+    });
+
     // Can be used to obtain an element's HTML including itself and not just its content
     jQuery.fn.outerHTML = function () {
         return jQuery('<div />').append(this.eq(0).clone()).html();
@@ -445,12 +368,4 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     }
     $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
-}
-
-// Displays error message if resource creation fails and restores UI state
-function showCreateError() {
-    customAlert("Error", 'Failed to create resource.', "error", 10000);
-    $(".btn-create-resource").removeClass("disabled");
-    $(".btn-create-resource").text("Create Resource");
-    $(".btn-cancel-create-resource").removeClass("disabled");
 }
