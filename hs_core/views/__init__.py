@@ -534,7 +534,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
             res_public_status = 'public' if res.raccess.public else 'not public'
             res_discoverable_status = 'discoverable' if res.raccess.discoverable \
                 else 'not discoverable'
-            if res.can_be_public_or_discoverable:
+            if res.CAN_BE_PUBLIC_OR_DISCOVERABLE:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT

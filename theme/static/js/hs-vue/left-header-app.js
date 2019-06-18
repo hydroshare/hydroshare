@@ -13,16 +13,21 @@ let leftHeaderApp = new Vue({
         can_change: CAN_CHANGE,
         authors: AUTHORS,
         selectedAuthor: {
-            "id": null,
-            "name": null,
-            "email": null,
-            "organization": null,
-            "identifiers": {},
-            "address": null,
-            "phone": null,
-            "homepage": null,
-            "profileUrl": null
+            author: {
+                "id": null,
+                "name": null,
+                "email": null,
+                "organization": null,
+                "identifiers": {},
+                "address": null,
+                "phone": null,
+                "homepage": null,
+                "profileUrl": null,
+                "order": null
+            },
+            index: null
         },
+        editAuthorError: null,
         userCardSelected: {
             user_type: null,
             access: null,
@@ -47,6 +52,21 @@ let leftHeaderApp = new Vue({
             left: 0,
         }
     },
+    computed: {
+         // Returns true if the Author object passed originally to selectedAuthor is a Person
+        isAuthorRequired: function () {
+            let vue = this;
+            let authorSearch = this.authors.filter(function(el) {
+                return el.id === vue.selectedAuthor.author.id;
+            });
+
+            if (authorSearch.length) {
+                return authorSearch[0].name.trim().length > 0;
+            }
+
+            return true;    // default
+        },
+    },
     methods: {
         onLoadOwnerCard: function(data) {
             let el = $(data.event.target);
@@ -56,18 +76,59 @@ let leftHeaderApp = new Vue({
             this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
             this.cardPosition.top = el.position().top + 30;
         },
-        deleteAuthor: function (author) {
+        deleteAuthor: function () {
             // TODO: change endpoint to return json data
-            $.post('/hsapi/_internal/' + this.resShortId + '/creator/' + author.id +
+            $.post('/hsapi/_internal/' + this.resShortId + '/creator/' + this.selectedAuthor.author.id +
                 '/delete-metadata/', function (result) {
                 console.log(result);
             });
         },
-        updateAuthor: function(author) {
+        updateAuthor: function() {
+            let formData = new FormData();
+            let vue = this;
 
+            vue.editAuthorError = null;
+            let author = vue.selectedAuthor.author;
+
+            formData.append("csrfmiddlewaretoken", csrf_token);
+            formData.append("resource-mode", this.res_mode.toLowerCase());
+            formData.append("creator-" + author.order + "-name", author.name);
+            formData.append("creator-" + author.order + "-order", author.order !== null ? author.order : "");
+            // TODO: figure out why sending HydroShare identifier in the request fails
+            formData.append("creator-" + author.order + "-description", author.profileUrl !== null ? author.profileUrl : "");
+            formData.append("creator-" + author.order + "-organization", author.organization !== null ? author.organization : "");
+            formData.append("creator-" + author.order + "-email", author.email !== null ? author.email : "");
+            formData.append("creator-" + author.order + "-address", author.address !== null ? author.address : "");
+            formData.append("creator-" + author.order + "-phone", author.phone !== null ? author.phone : "");
+            formData.append("creator-" + author.order + "-homepage", author.homepage !== null ? author.homepage : "");
+
+            $.ajax({
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                url: '/hsapi/_internal/' + this.resShortId + '/creator/' + author.id + '/update-metadata/',
+                success: function (response) {
+                    if (response.status === "success") {
+                        vue.authors.splice(vue.selectedAuthor.index, 1, author);
+                        showCompletedMessage(response);
+                        $("#edit-author-modal").modal('hide');
+                    }
+                    else {
+                        vue.editAuthorError = response.message;
+                    }
+                    console.log(response);
+                },
+                error: function (response) {
+                    vue.editAuthorError = response.message;
+                    console.log(response);
+                }
+            });
         },
-        selectAuthor: function(author) {
-            this.selectedAuthor = $.extend(true, {}, author);  // Deep copy
+        selectAuthor: function(author, index) {
+            this.selectedAuthor.author = $.extend(true, {}, author);  // Deep copy
+            this.selectedAuthor.index = index;
+            console.log(index);
         }
     }
 });

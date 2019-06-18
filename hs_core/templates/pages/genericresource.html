@@ -852,7 +852,8 @@
                   "address": "{{ author.address|default:"" }}",
                   "phone": "{{ author.phone|default:"" }}",
                   "homepage": "{{ author.homepage|default:"" }}",
-                  "profileUrl": "{{ author.description|default:"" }}"
+                  "profileUrl": "{{ author.description|default:"" }}",
+                  "order": "{{ author.order }}"
               },
           {% endfor %}
       ];
