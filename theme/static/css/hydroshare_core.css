@@ -4122,6 +4122,16 @@ form#covereage-search-fields {
 	text-decoration: underline;
 }
 
+#fb-bread-crumbs .fb-aggregation-icon img {
+	width: 24px;
+	position: absolute;
+	margin-top: -3px;
+}
+
+#fb-bread-crumbs .crumb-aggregation-name {
+	margin-left: 24px;
+}
+
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
 	width: 100px;
 	height: 100px;
