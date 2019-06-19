@@ -196,6 +196,7 @@ $(document).ready(function () {
 
         customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
+        $("html").css("left", ($(this).position().left - 175) + "px");
 
         $.ajax({
             type: "POST",
@@ -433,8 +434,10 @@ $(document).ready(function () {
 function customAlert(alertTitle, alertMessage, alertType, duration) {
     alertType = alertType || "success";
     var el = document.createElement("div");
-    var top = 200;
-    var style = "top:" + top + "px";
+    // var top = 200;
+    // var style = "top:" + top + "px";
+    var width = 200;
+    var style = "width:" + width + "px";
     var alertTypes = {
         success: {class: "alert alert-success", icon: "fa fa-check"},
         error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
