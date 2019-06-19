@@ -12,6 +12,7 @@ from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, 
     Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.templatetags.hydroshare_tags import name_without_commas
 
 
 class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
@@ -66,8 +67,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # number of creators at this point should be 1
         self.assertEqual(self.res.metadata.creators.all().count(), 1, msg='Number of creators not equal to 1')
 
-        self.assertEqual(self.res.metadata.creators.all().first().name, self.res.creator.get_full_name(),
-                         msg='resource creator did not match')
+        self.assertEqual(name_without_commas(self.res.metadata.creators.all().first().name),
+                         self.res.creator.get_full_name(), msg='resource creator did not match')
 
         self.assertIn('created', [dt.type for dt in self.res.metadata.dates.all()], msg="Date created not found")
         self.assertIn('modified', [dt.type for dt in self.res.metadata.dates.all()], msg="Date modified not found")

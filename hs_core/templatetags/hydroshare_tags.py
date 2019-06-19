@@ -145,8 +145,8 @@ def name_without_commas(name):
         if len(name_parts) == 1:
             return name_parts[0]
         elif len(name_parts) == 2:
-            first_names = name_parts[1]
-            last_names = name_parts[0]
+            first_names = name_parts[1].strip()
+            last_names = name_parts[0].strip()
             return "{fn} {ln}".format(fn=first_names, ln=last_names)
 
     return name  # default
