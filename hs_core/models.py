@@ -183,31 +183,50 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
-def get_user_object(user, user_type, user_access):
+# Build a JSON serializable object with user data
+def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
+    access_object = None
     picture = None
-    name = None
-    username = None
 
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
-        name = best_name(user)
-        username = user.username
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": best_name(user),
+            "user_name": user.username,
+            "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources),
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y")
+        }
     elif user_type == "group":
         if user.gaccess.picture:
             picture = user.gaccess.picture.url
-        name = user.name
 
-    return {
-        "user_type": user_type,
-        "access": user_access,
-        "id": user.id,
-        "pictureUrl": picture,
-        "best_name": name,
-        "user_name": username,
-        "can_undo": user.can_undo
-    }
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": user.name,
+            "user_name": None,
+            "can_undo": user.can_undo
+        }
+
+    return access_object
 
 
 def page_permissions_page_processor(request, page):
@@ -268,19 +287,19 @@ def page_permissions_page_processor(request, page):
     users_json = []
 
     for usr in owners:
-        users_json.append(get_user_object(usr, "user", "owner"))
+        users_json.append(get_access_object(usr, "user", "owner"))
 
     for usr in editors:
-        users_json.append(get_user_object(usr, "user", "edit"))
+        users_json.append(get_access_object(usr, "user", "edit"))
 
     for usr in viewers:
-        users_json.append(get_user_object(usr, "user", "view"))
+        users_json.append(get_access_object(usr, "user", "view"))
 
     for usr in edit_groups:
-        users_json.append(get_user_object(usr, "group", "edit"))
+        users_json.append(get_access_object(usr, "group", "edit"))
 
     for usr in view_groups:
-        users_json.append(get_user_object(usr, "group", "view"))
+        users_json.append(get_access_object(usr, "group", "view"))
 
     users_json = json.dumps(users_json)
 
@@ -2441,7 +2460,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         userpath = '/' + os.path.join(
             getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
             'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
         if self.resource_federation_path == userpath:
             return 'user'
         else:

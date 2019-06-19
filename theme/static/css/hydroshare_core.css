@@ -107,6 +107,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     width: 350px;
     height: auto;
     margin: unset;
+	margin-bottom: 40px;
 }
 
 .profile-card .flex > div {
@@ -125,31 +126,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .profile-card table .fa {
 	margin-right: 4px;
-}
-
-.profile-card .location-wrapper span:not(:first-child)::before {
-	content: ", ";
-}
-
-.profile-card [data-name] {
-	line-height: 1.5em;
-}
-
-.org-wrapper, .subjectareas-wrapper, .externalprofiles-wrapper {
-	margin-top: 10px;
-}
-
-.contributions-wrapper, .joined-wrapper {
-	margin-top: 10px;
-}
-
-.authors-wrapper .ui-state-highlight {
-    width: 150px;
-    display: inline-block;
-    height: 1.5em;
-    top: 0.25em;
-    position: relative;
-    border: 1px dashed #fcefa1;
 }
 
 .navbar-inverse .navbar-nav > .open > a:hover,
@@ -1005,6 +981,18 @@ li.account p{
 
 .contact-table {
 	table-layout: fixed;
+}
+
+.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.owners-wrapper a:not(:first-child)::before, .separate :not(:first-child)::before {
+    content: "";
+    width: 1px;
+    display: inline-block;
+    background-color: #999;
+    height: 1em;
+    margin: 0 4px;
+    position: relative;
+    top: 2px;
 }
 
 .authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,

@@ -171,7 +171,7 @@ def is_federated(homepath):
     # fed_proxy_path exists to hold hydroshare resources in a federated zone
     if homepath_list[1]:
         fed_proxy_path = os.path.join(homepath_list[1], 'home',
-                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
         fed_proxy_path = '/' + fed_proxy_path
     else:
         # the test path input is invalid, return False meaning it is not federated
@@ -200,7 +200,7 @@ def get_federated_zone_home_path(filepath):
         # the Zone name should follow the first slash
         zone = split_path_strs[1]
         return '/{zone}/home/{local_proxy_user}'.format(
-            zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            zone=zone, local_proxy_user=settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
     else:
         return ''
 
