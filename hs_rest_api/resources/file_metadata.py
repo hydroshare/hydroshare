@@ -1,3 +1,5 @@
+import os
+
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.response import Response
@@ -84,7 +86,7 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             except Exception:
                 # is it a folder?
                 resource = hydroshare.get_resource_by_shortkey(pk)
-                dir_path = pk + "/data/contents/"+pathname
+                dir_path = pk + os.path.join("/data/contents/", pathname)
                 logical_file = resource.get_folder_aggregation_object(dir_path)
                 metadata = None
 

@@ -59,8 +59,8 @@ def get_resource_types():
 
 def get_content_types():
     content_types = []
+    from hs_file_types.models.base import AbstractLogicalFile
     for model in apps.get_models():
-        from hs_file_types.models.base import AbstractLogicalFile
         if issubclass(model, AbstractLogicalFile):
             content_types.append(model)
     return content_types
