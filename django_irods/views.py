@@ -23,7 +23,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
+def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
@@ -112,8 +112,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     irods_output_path = irods_path
 
     # check for aggregations
-    if res.resource_type is "CompositeResource":
-        aggregation = res.get_aggregation_by_name(path)
+    if res.resource_type == "CompositeResource":
+        aggregation = res.get_aggregation_by_name(path.split("/")[-1])
         if aggregation:
             if not is_zip_request:
                 download_url = request.GET.get('url_download', 'false').lower()
