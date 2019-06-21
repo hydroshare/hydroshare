@@ -594,13 +594,15 @@ function get_user_info_ajax_submit(url, obj) {
         success: function (result) {
             var formContainer = $(obj).parent().parent();
             var json_response = JSON.parse(result);
+            // TODO is_group even used?
             if (is_group){
                 formContainer.find("input[name='description']").val(json_response.url);
                 formContainer.find("input[name='organization']").val(json_response.organization);
             }
             else{
+                var user_id = "/user/" + json_response.url.split("/")[4] + "/";
                 formContainer.find("input[name='name']").val(json_response.name);
-                formContainer.find("input[name='description']").val(json_response.url);
+                formContainer.find("input[name='description']").val(user_id);
                 formContainer.find("input[name='organization']").val(json_response.organization);
                 formContainer.find("input[name='email']").val(json_response.email);
                 formContainer.find("input[name='address']").val(json_response.address);

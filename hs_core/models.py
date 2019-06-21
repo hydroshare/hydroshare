@@ -121,13 +121,13 @@ def validate_user_url(value):
     err_message = '%s is not a valid url for hydroshare user' % value
     if value:
         url_parts = value.split('/')
-        if len(url_parts) != 6:
+        if len(url_parts) != 4:
             raise ValidationError(err_message)
-        if url_parts[3] != 'user':
+        if url_parts[1] != 'user':
             raise ValidationError(err_message)
 
         try:
-            user_id = int(url_parts[4])
+            user_id = int(url_parts[2])
         except ValueError:
             raise ValidationError(err_message)
 
@@ -401,7 +401,8 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
+    description = models.CharField(null=True, blank=True, max_length=50,
+                                   validators=[validate_user_url])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
