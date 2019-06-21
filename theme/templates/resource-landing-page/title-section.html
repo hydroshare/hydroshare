@@ -177,6 +177,57 @@
             </ul>
         {% endif %}
     {% else %}
+
+                    <!-- template for the modal component -->
+<script type="text/x-template" id="modal-template">
+  <transition name="modal">
+    <div class="modal-mask">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+
+{#          <div class="modal-header">#}
+{#            <slot name="header">#}
+{#              Title Builder#}
+{#                test#}
+{#            </slot>#}
+{#          </div>#}
+
+          <div class="modal-body">
+            <slot name="body">
+             Choose Critical Zone Region
+            </slot>
+          </div>
+
+          <div class="modal-footer">
+            <slot name="footer">
+              <br />
+              <button class="modal-default-button" @click="$emit('close')">
+                OK
+              </button>
+            </slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+</script>
+
+<!-- app -->
+<div id="modal-app">
+{#  <button id="show-modal" @click="showModal = true">Show Modal</button>#}
+  <!-- use the modal component, pass in the prop -->
+  <modal v-if="showModal" @close="showModal = false">
+    <!--
+      you can use custom content here to overwrite
+      default content
+    -->
+    <h3 slot="header">custom header</h3>
+  </modal>
+</div>
+<script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
+
+
+
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"
               method="post">
@@ -185,6 +236,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                  id="txt-title"
+                                                 onclick="titleClick()"
                                                  maxlength="300" name="value" type="text"
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>

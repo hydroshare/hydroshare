@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
@@ -816,6 +817,7 @@
             {% include "resource-landing-page/modals.html" %}
             {% include "includes/author-preview.html" %}
             {% include "resource-landing-page/coordinates_picker.html" %}
+
         {%  endblock %}
         </div>
 {% endblock %}
@@ -881,6 +883,7 @@
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
+
 
     {% if relevant_tools %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
