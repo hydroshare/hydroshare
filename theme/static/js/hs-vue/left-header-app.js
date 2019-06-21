@@ -2,10 +2,88 @@ Vue.component('edit-author-modal', {
     delimiters: ['${', '}'],
     template: '#edit-author-modal-template',
     props: {
-        author: {type: Object, required: true},
+        _author: {type: Object, required: true},
         is_person: {type: Boolean, required: true},
         can_remove: {type: Boolean, required: true},
     },
+    methods: {
+        onDeleteIdentifier: function (index) {
+            this.author.identifiers.splice(index, 1);
+        },
+        onAddIdentifier: function() {
+            this.author.identifiers.push({
+                identifierName: null,
+                identifierLink: null
+            });
+        },
+        onSaveAuthor: function() {
+            // Transform the indentifier field back into an object
+            let author = $.extend(true, {}, this.author);
+            let identifiers = {};
+
+            this.author.identifiers.map(function(el) {
+                if (el.identifierName && el.identifierLink) {
+                    identifiers[el.identifierName] = el.identifierLink;
+                }
+            });
+
+            author.identifiers = identifiers;
+            this.$emit('update-author', author);
+        },
+        hasIdentifier: function(identifier) {
+            let search = this.author.identifiers.filter(function (el) {
+                return el.identifierName === identifier;
+            });
+
+            return search.length > 0;
+        }
+    },
+    watch: {
+        _author: function() {
+            let identifiers = [];
+
+            $.each(this._author.identifiers, function (identifierName, identifierLink) {
+                identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+            });
+
+            let localAuthor = $.extend(true, {}, this._author);
+            localAuthor.identifiers = identifiers;
+
+            this.author = localAuthor;
+        }
+    },
+    data: function () {
+        let identifiers = [];
+
+        $.each(this._author.identifiers, function (identifierName, identifierLink) {
+            identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+        });
+
+        let localAuthor = $.extend(true, {}, this._author);
+        localAuthor.identifiers = identifiers;
+
+        return {
+            author: localAuthor,
+            identifierDict: {
+                ORCID: {
+                    title: "ORCID",
+                    value: "ORCID"
+                },
+                ResearchGateID: {
+                    title: "ResearchGate",
+                    value: "ResearchGateID"
+                },
+                ResearcherID: {
+                    title: "ResearcherID",
+                    value: "ResearcherID"
+                },
+                GoogleScholarID: {
+                    title: "Google Scholar",
+                    value: "GoogleScholarID"
+                }
+            },
+        }
+    }
 });
 
 Vue.component('author-preview-modal', {

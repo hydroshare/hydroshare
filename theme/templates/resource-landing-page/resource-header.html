@@ -153,7 +153,7 @@
 
             <edit-author-modal v-if="res_mode === 'Edit'"
                                @update-author="updateAuthor"
-                               :author="selectedAuthor.author"
+                               :_author="selectedAuthor.author"
                                :is_person="isPerson"
                                :can_remove="authors.length > 1">
             </edit-author-modal>
