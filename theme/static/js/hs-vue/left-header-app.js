@@ -8,6 +8,37 @@ Vue.component('edit-author-modal', {
     },
 });
 
+Vue.component('author-preview-modal', {
+    delimiters: ['${', '}'],
+    template: '#author-preview-modal-template',
+    props: {
+        author: {type: Object, required: true},
+        is_person: {type: Boolean, required: true},
+    },
+    data: function () {
+        return {
+            identifierAttributes: {
+                ORCID: {
+                    classes: "ai ai-orcid hover-shadow",
+                    title: "ORCID"
+                },
+                ResearchGateID: {
+                    classes: "ai ai-researchgate-square hover-shadow",
+                    title: "ResearchGate"
+                },
+                ResearcherID: {
+                    classes: "",
+                    title: "ResearcherID"
+                },
+                GoogleScholarID: {
+                    classes: "ai ai-google-scholar-square hover-shadow",
+                    title: "Google Scholar"
+                }
+            },
+        }
+    },
+});
+
 let leftHeaderApp = new Vue({
     el: '#left-header',
     delimiters: ['${', '}'],
@@ -65,7 +96,7 @@ let leftHeaderApp = new Vue({
     computed: {
          // Returns true if the Author object passed originally to selectedAuthor is a Person
         isPerson: function () {
-            if (this.selectedAuthor.author.name) {
+            if (this.selectedAuthor.author.name !== null) {
                 return this.selectedAuthor.author.name.trim().length > 0;
             }
             return true;    // default

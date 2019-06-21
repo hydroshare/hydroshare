@@ -845,7 +845,7 @@
                   "email": "{{ author.email|default:"" }}",
                   "organization": "{{ author.organization|default:"" }}",
                   "identifiers": {
-                      {% for name, link in author.userprofile.identifiers.items %}
+                      {% for name, link in author.identifiers.items %}
                           "{{ name }}": "{{ link }}",
                       {% endfor %}
                   },

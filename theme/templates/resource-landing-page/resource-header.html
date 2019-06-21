@@ -13,7 +13,7 @@
                         {#                            {% endfor %}#}
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
-                           class="author-preview"
+{#                           class="author-preview"#}
                            data-target="#view-author-modal" href="#">
                             <template v-if="author.name">
                                 ${ author.name }
@@ -152,11 +152,16 @@
             </table>
 
             <edit-author-modal v-if="res_mode === 'Edit'"
-                @update-author="updateAuthor"
-                :author="selectedAuthor.author"
-                :is_person="isPerson"
-                :can_remove="authors.length > 1">
+                               @update-author="updateAuthor"
+                               :author="selectedAuthor.author"
+                               :is_person="isPerson"
+                               :can_remove="authors.length > 1">
             </edit-author-modal>
+
+            <author-preview-modal v-if="res_mode === 'View'"
+                                           :author="selectedAuthor.author"
+                                           :is_person="isPerson">
+            </author-preview-modal>
         </div>
         <div class="col-sm-12 col-md-6 res-header">
             {% include "resource-landing-page/highlights.html" %}
