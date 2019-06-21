@@ -204,15 +204,22 @@ let leftHeaderApp = new Vue({
 
             formData.append("csrfmiddlewaretoken", csrf_token);
             formData.append("resource-mode", this.res_mode.toLowerCase());
-            formData.append("creator-" + author.order + "-name", author.name);
             formData.append("creator-" + author.order + "-order", author.order !== null ? author.order : "");
-            // TODO: figure out why sending HydroShare identifier in the request fails
-            formData.append("creator-" + author.order + "-description", author.profileUrl !== null ? author.profileUrl : "");
+
             formData.append("creator-" + author.order + "-organization", author.organization !== null ? author.organization : "");
             formData.append("creator-" + author.order + "-email", author.email !== null ? author.email : "");
             formData.append("creator-" + author.order + "-address", author.address !== null ? author.address : "");
             formData.append("creator-" + author.order + "-phone", author.phone !== null ? author.phone : "");
             formData.append("creator-" + author.order + "-homepage", author.homepage !== null ? author.homepage : "");
+
+            if (this.isPerson) {
+                formData.append("creator-" + author.order + "-name", author.name);
+
+                $.each(author.identifiers, function (identifierName, identifierLink) {
+                    formData.append("identifier_name", identifierName);
+                    formData.append("identifier_link", identifierLink);
+                });
+            }
 
             $.ajax({
                 type: "POST",
