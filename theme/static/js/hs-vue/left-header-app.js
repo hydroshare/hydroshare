@@ -1,3 +1,13 @@
+Vue.component('edit-author-modal', {
+    delimiters: ['${', '}'],
+    template: '#edit-author-modal-template',
+    props: {
+        author: {type: Object, required: true},
+        is_person: {type: Boolean, required: true},
+        can_remove: {type: Boolean, required: true},
+    },
+});
+
 let leftHeaderApp = new Vue({
     el: '#left-header',
     delimiters: ['${', '}'],
@@ -54,16 +64,10 @@ let leftHeaderApp = new Vue({
     },
     computed: {
          // Returns true if the Author object passed originally to selectedAuthor is a Person
-        isAuthorRequired: function () {
-            let vue = this;
-            let authorSearch = this.authors.filter(function(el) {
-                return el.id === vue.selectedAuthor.author.id;
-            });
-
-            if (authorSearch.length) {
-                return authorSearch[0].name.trim().length > 0;
+        isPerson: function () {
+            if (this.selectedAuthor.author.name) {
+                return this.selectedAuthor.author.name.trim().length > 0;
             }
-
             return true;    // default
         },
     },
@@ -83,12 +87,11 @@ let leftHeaderApp = new Vue({
                 console.log(result);
             });
         },
-        updateAuthor: function() {
+        updateAuthor: function(author) {
             let formData = new FormData();
             let vue = this;
 
             vue.editAuthorError = null;
-            let author = vue.selectedAuthor.author;
 
             formData.append("csrfmiddlewaretoken", csrf_token);
             formData.append("resource-mode", this.res_mode.toLowerCase());
@@ -110,7 +113,7 @@ let leftHeaderApp = new Vue({
                 url: '/hsapi/_internal/' + this.resShortId + '/creator/' + author.id + '/update-metadata/',
                 success: function (response) {
                     if (response.status === "success") {
-                        vue.authors.splice(vue.selectedAuthor.index, 1, author);
+                        vue.authors.splice(vue.selectedAuthor.index, 1, author);    // Save changes to the data
                         showCompletedMessage(response);
                         $("#edit-author-modal").modal('hide');
                     }
@@ -128,7 +131,6 @@ let leftHeaderApp = new Vue({
         selectAuthor: function(author, index) {
             this.selectedAuthor.author = $.extend(true, {}, author);  // Deep copy
             this.selectedAuthor.index = index;
-            console.log(index);
         }
     }
 });
