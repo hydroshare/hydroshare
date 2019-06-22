@@ -57,6 +57,15 @@ def get_resource_types():
     return resource_types
 
 
+def get_content_types():
+    content_types = []
+    from hs_file_types.models.base import AbstractLogicalFile
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            content_types.append(model)
+    return content_types
+
+
 def get_resource_instance(app, model_name, pk, or_404=True):
     model = apps.get_model(app, model_name)
     if or_404:
