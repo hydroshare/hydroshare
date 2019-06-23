@@ -1456,8 +1456,11 @@ class AbstractLogicalFile(models.Model):
         xml_file_name = self.aggregation_name
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
-        # remove file extension
-        xml_file_name, _ = os.path.splitext(xml_file_name)
+
+        if not self.is_single_file_aggregation:
+            # remove file extension
+            xml_file_name, _ = os.path.splitext(xml_file_name)
+
         if resmap:
             xml_file_name += "_resmap.xml"
         else:
