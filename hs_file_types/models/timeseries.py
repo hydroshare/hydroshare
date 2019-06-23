@@ -555,18 +555,17 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             raise ValidationError(validate_err_message)
 
         file_name = res_file.file_name
-        # file name without the extension - used for naming the new aggregation folder
+        # file name without the extension - used for new aggregation dataset_name attribute
         base_file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
         aggregation_folder_created = False
         res_files_to_delete = []
         file_type_success = False
-        upload_folder = ''
+
         msg = "TimeSeries aggregation type. Error when creating. Error:{}"
         with transaction.atomic():
             # create a TimeSerisLogicalFile object to be associated with resource file
             logical_file = cls.initialize(base_file_name, resource)
-
             logical_file.save()
             try:
                 if folder_path is None:
@@ -594,10 +593,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     # populate CV metadata django models from the blank sqlite file
                     extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
-                reset_title = logical_file.dataset_name == base_file_name
                 logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete,
-                                       reset_title=reset_title)
+                                       res_files_to_delete=res_files_to_delete)
 
                 file_type_success = True
                 post_add_timeseries_aggregation.send(
