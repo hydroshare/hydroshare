@@ -259,6 +259,12 @@ class GenericLogicalFile(AbstractLogicalFile):
             file=logical_file
         )
 
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets any resource file as the primary file  from the list of files *resource_files* """
+
+        return resource_files[0]
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
