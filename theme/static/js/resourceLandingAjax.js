@@ -574,18 +574,13 @@ function update_sqlite_file_ajax_submit() {
 }
 
 function get_user_info_ajax_submit(url, obj) {
-    var is_group = false;
     var entry = $(obj).closest("div[data-hs-user-type]").find("#user-deck > .hilight");
-    if (entry.length < 1) {
-        entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
-        is_group = true;
-    }
     if (entry.length < 1) {
         return false;
     }
 
     var userID = entry[0].getAttribute("data-value");
-    url = url + userID + "/" + is_group;
+    url = url + userID + "/false";
 
     $.ajax({
         type: "POST",
@@ -594,34 +589,26 @@ function get_user_info_ajax_submit(url, obj) {
         success: function (result) {
             var formContainer = $(obj).parent().parent();
             var json_response = JSON.parse(result);
-            // TODO is_group even used?
-            if (is_group){
-                formContainer.find("input[name='description']").val(json_response.url);
-                formContainer.find("input[name='organization']").val(json_response.organization);
-            }
-            else{
-                var user_id = "/user/" + json_response.url.split("/")[4] + "/";
-                formContainer.find("input[name='name']").val(json_response.name);
-                formContainer.find("input[name='description']").val(user_id);
-                formContainer.find("input[name='organization']").val(json_response.organization);
-                formContainer.find("input[name='email']").val(json_response.email);
-                formContainer.find("input[name='address']").val(json_response.address);
-                formContainer.find("input[name='phone']").val(json_response.phone);
-                formContainer.find("input[name='homepage']").val(json_response.website);
+            var user_id = "/user/" + json_response.url.split("/")[4] + "/";
+            formContainer.find("input[name='name']").val(json_response.name);
+            formContainer.find("input[name='description']").val(user_id);
+            formContainer.find("input[name='organization']").val(json_response.organization);
+            formContainer.find("input[name='email']").val(json_response.email);
+            formContainer.find("input[name='address']").val(json_response.address);
+            formContainer.find("input[name='phone']").val(json_response.phone);
+            formContainer.find("input[name='homepage']").val(json_response.website);
 
-                for (var identif in json_response.identifiers) {
-                    modalBody = formContainer.find(".modal-body");
-                    modalBody.append(
-                        $('<input />').attr('type', 'hidden')
-                            .attr('name', "identifier_name")
-                            .attr('value', identif));
+            for (var identifier in json_response.identifiers) {
+                let modalBody = formContainer.find(".modal-body");
+                modalBody.append(
+                    $('<input />').attr('type', 'hidden')
+                        .attr('name', "identifier_name")
+                        .attr('value', identifier));
 
-                    modalBody.append(
-                        $('<input />').attr('type', 'hidden')
-                            .attr('name', "identifier_link")
-                            .attr('value', json_response.identifiers[identif]));
-                }
-
+                modalBody.append(
+                    $('<input />').attr('type', 'hidden')
+                        .attr('name', "identifier_link")
+                        .attr('value', json_response.identifiers[identifier]));
             }
             formContainer.submit();
         },

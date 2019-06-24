@@ -180,10 +180,9 @@ $(document).ready(function() {
         // ORDER
         let order = dialog.find(".input-order");
         order.attr("name", "creator-" + data.order + "-order");
-        order.val(data.order != null ? data.order : "");
+        order.val(data.order != null ? (parseInt(data.order) + 1) : "");
 
         // IDENTIFIERS
-        // const identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
         const identifiersValueAttr = {
             googlescholarid: "GoogleScholarID",
             orcid: "ORCID",
