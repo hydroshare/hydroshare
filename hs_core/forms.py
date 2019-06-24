@@ -239,7 +239,7 @@ class CreatorForm(PartyForm):
 class PartyValidationForm(forms.Form):
     """Validate form for Party models."""
 
-    description = forms.URLField(required=False, validators=[validate_user_url])
+    description = forms.CharField(required=False, validators=[validate_user_url])
     name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
@@ -253,7 +253,8 @@ class PartyValidationForm(forms.Form):
         user_absolute_url = self.cleaned_data['description']
         if user_absolute_url:
             url_parts = user_absolute_url.split('/')
-            return '/user/{user_id}/'.format(user_id=url_parts[4])
+            if len(url_parts) > 4:
+                return '/user/{user_id}/'.format(user_id=url_parts[4])
         return user_absolute_url
 
     def clean_identifiers(self):
