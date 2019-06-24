@@ -688,7 +688,7 @@ class AbstractLogicalFile(models.Model):
         # at this point the logical file is not created in DB - caller needs to save it to DB
         return logical_file
 
-    def _finalize(self, user, resource, folder_created, res_files_to_delete, reset_title=False):
+    def _finalize(self, user, resource, folder_created, res_files_to_delete):
         """
         A helper for creating aggregation. As a final step in creation of aggregation/logical file,
         sets resource access control and generates aggregation xml files and if necessary delete
@@ -698,19 +698,9 @@ class AbstractLogicalFile(models.Model):
         :param  folder_created: True/False to indicate if a new folder has been created represent
         this aggregation
         :param  res_files_to_delete: a list of resource files to delete
-        :param  reset_title: True/False to indicate if aggregation dataset_name attribute needs
-        to be modified
+
         """
 
-        # for multi-file aggregation set the aggregation dataset_name field to the containing
-        # folder name
-        if not self.is_single_file_aggregation and reset_title:
-            if '/' in self.aggregation_name:
-                folder = os.path.basename(self.aggregation_name)
-            else:
-                folder = self.aggregation_name
-            self.dataset_name = folder
-            self.save()
         # set resource to private if logical file is missing required metadata
         resource.update_public_and_discoverable()
         self.create_aggregation_xml_documents()
