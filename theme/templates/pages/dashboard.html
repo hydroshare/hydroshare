@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block meta_title %}Home{% endblock %}
-{% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n %}
+{% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n hydroshare_tags %}
 
 {% comment %}
 
@@ -85,7 +85,7 @@ timestamp should go with a template tags to convert to a human readble day.
                                 {% resource_link_builder r.title r.short_id %}
                             {% endautoescape %}
                         </td>
-                        <td>{{ r.first_creator }}</td>
+                        <td>{{ r|resource_first_author }}</td>
                         <td>
                             {% autoescape off %}
                                 {% resource_verbose_name_builder r.resource_type %}
