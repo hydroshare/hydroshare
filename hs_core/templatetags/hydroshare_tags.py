@@ -142,12 +142,10 @@ def name_without_commas(name):
     if "," in name:
         name_parts = name.split(",")
 
-        if len(name_parts) == 1:
-            return name_parts[0]
-        elif len(name_parts) == 2:
+        if len(name_parts) == 2:
             first_names = name_parts[1].strip()
             last_names = name_parts[0].strip()
-            return "{fn} {ln}".format(fn=first_names, ln=last_names)
+            return first_names + " " + last_names
 
     return name  # default
 
