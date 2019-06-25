@@ -342,7 +342,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation=None, sf_z
             res.create_aggregation_xml_documents()
 
     try:
-        if sf_zip:
+        if aggregation or sf_zip:
             # input path points to single file aggregation
             # ensure that foo.zip contains aggregation metadata
             # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
@@ -352,17 +352,17 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation=None, sf_z
             istorage.copyFiles(input_path, out_with_folder)
             if aggregation:
                 try:
-                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                    logger.error("cannot copy {}".format(aggregation.map_file_path))
                 try:
-                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
+                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
                 for file in aggregation.files.all():
+                    logger.error(file)
                     try:
-                        istorage.copyFiles(file.storage_path,
-                                           os.path.join(temp_folder_name, file.file_name))
+                        istorage.copyFiles(file.storage_path, temp_folder_name)
                     except SessionException:
                         logger.error("cannot copy {}".format(file.storage_path))
             istorage.zipup(temp_folder_name, output_path)

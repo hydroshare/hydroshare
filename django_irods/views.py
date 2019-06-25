@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect
 from rest_framework.decorators import api_view
+from django.core.exceptions import ObjectDoesNotExist
 
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
@@ -113,16 +114,25 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
 
     # check for aggregations
     if res.resource_type == "CompositeResource":
-        aggregation = res.get_aggregation_by_name(path.split("/")[-1])
+        aggregation_name = path.split("/")[-1]
+        try:
+            aggregation = res.get_aggregation_by_name(aggregation_name)
+        except ObjectDoesNotExist:
+            pass
         if aggregation:
             if not is_zip_request:
                 download_url = request.GET.get('url_download', 'false').lower()
                 if download_url == 'false':
                     # redirect to referenced url in the url file instead
-                    redirect_url = aggregation.redirect_url
-                    if redirect_url:
-                        return HttpResponseRedirect(redirect_url)
-            is_zip_download = True
+                    if hasattr(aggregation, 'redirect_url'):
+                        return HttpResponseRedirect(aggregation.redirect_url)
+            is_zip_request = True
+            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+            output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+            if res.is_federated:
+                irods_output_path = os.path.join(res.resource_federation_path, output_path)
+            else:
+                irods_output_path = output_path
 
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
