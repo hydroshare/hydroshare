@@ -850,7 +850,7 @@
               {% for name, link in usr.userprofile.identifiers.items %}
                   "{{ name }}": "{{ link }}",
               {% endfor %}
-          },
+          },\
           "state": "{{ usr.userprofile.state }}",
           "country": "{{ usr.userprofile.country }}",
           "joined": "{{ usr.date_joined|date:"M d, Y" }}"
