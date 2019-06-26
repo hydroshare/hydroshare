@@ -237,16 +237,20 @@
                     <p slot="body">
                         <select id="czselect" v-model="selected" @change="updateInput()">
                             <option disabled value="">Critical Zone Region</option>
-                            <option>LCZO</option>
+                            <option>BCCZO</option>
                             <option>CCZO</option>
                             <option>CJCZO</option>
+                            <option>CRBCZO</option>
+                            <option>ERCZO</option>
+                            <option>LCZO</option>
                             <option>RCCZO</option>
+                            <option>SSCZO</option>
+                            <option>SSHCZO</option>
                         </select><br/>
 
                     </p>
                 </modal>
             </div>
-            Selected: {% templatetag openvariable %} selected {% templatetag closevariable %}
         </div>
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>

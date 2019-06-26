@@ -12,6 +12,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
+from hs_core.views.community import TopicsView
 from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
@@ -70,6 +71,7 @@ urlpatterns = i18n_patterns(
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
+    url(r'^topics/$', hs_core_views.community.TopicsView.as_view(), name='topics'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),

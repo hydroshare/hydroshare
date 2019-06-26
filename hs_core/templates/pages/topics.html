@@ -1,0 +1,27 @@
+
+{% block main %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Topics</title>
+    </head>
+    <body>
+    <div id="app">
+        <template>
+            <ul>
+                <li v-for="number in numbers">
+                    <span v-show="!number.edit" v-on:click="toggleEdit(this, number)">{% templatetag openvariable %} number.val {% templatetag closevariable %}</span>
+                    <input type="text" v-model="number.val" v-show="number.edit" v-on:blur="saveEdit(this, number)">
+                </li>
+            </ul>
+        </template>
+    </div>
+    </body>
+    </html>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
+{% endblock %}
