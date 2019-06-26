@@ -14,7 +14,7 @@
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
 {#                           class="author-preview"#}
-                           data-target="#view-author-modal" href="#">
+                           data-target="#view-author-modal">
                             <template v-if="author.name">
                                 ${ author.name }
                             </template>
@@ -35,7 +35,7 @@
                         <span class="authors-wrapper sortable">
                             <span v-for="(author, index) in authors">
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
-                                   @click="selectAuthor(author, index)" data-target="#edit-author-modal" href="#">
+                                   @click="selectAuthor(author, index)" data-target="#edit-author-modal">
                                     <template v-if="author.name">${ author.name }</template>
                                     <template v-else>${ author.organization }</template>
                                 </a>
@@ -89,7 +89,7 @@
 {#                                                   name="creator-{{ author.order|add:"- 1" }}-order"#}
 {#                                                   type="number" value="{{ author.order|default:"" }}">#}
 {#                                        </form>#}
-                                 </span>
+                            </span>
                         </span>
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
@@ -154,13 +154,14 @@
             <edit-author-modal v-if="res_mode === 'Edit'"
                                @update-author="updateAuthor"
                                :_author="selectedAuthor.author"
+                               :is_updating_author="isUpdatingAuthor"
                                :is_person="isPerson"
                                :can_remove="authors.length > 1">
             </edit-author-modal>
 
             <author-preview-modal v-if="res_mode === 'View'"
-                                           :author="selectedAuthor.author"
-                                           :is_person="isPerson">
+                                  :author="selectedAuthor.author"
+                                  :is_person="isPerson">
             </author-preview-modal>
         </div>
         <div class="col-sm-12 col-md-6 res-header">

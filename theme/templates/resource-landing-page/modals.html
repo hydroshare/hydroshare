@@ -469,10 +469,13 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button :disabled="is_updating_author"
+                                type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         <button @click="onSaveAuthor"
-                                type="button"
-                                class="btn btn-primary">Save changes
+                                :disabled="is_updating_author"
+                                type="button" class="btn btn-primary">
+                            <template v-if="is_updating_author">Saving changes...</template>
+                            <template v-else>Save changes</template>
                         </button>
                     </div>
                 </div>

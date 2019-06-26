@@ -5,6 +5,7 @@ Vue.component('edit-author-modal', {
         _author: {type: Object, required: true},
         is_person: {type: Boolean, required: true},
         can_remove: {type: Boolean, required: true},
+        is_updating_author: {type: Boolean, required: false},
     },
     methods: {
         onDeleteIdentifier: function (index) {
@@ -17,7 +18,7 @@ Vue.component('edit-author-modal', {
             });
         },
         onSaveAuthor: function() {
-            // Transform the indentifier field back into an object
+            // Transform the identifier field back into an object
             let author = $.extend(true, {}, this.author);
             let identifiers = {};
 
@@ -146,6 +147,7 @@ let leftHeaderApp = new Vue({
             },
             index: null
         },
+        isUpdatingAuthor: false,
         editAuthorError: null,
         userCardSelected: {
             user_type: null,
@@ -201,10 +203,10 @@ let leftHeaderApp = new Vue({
             let vue = this;
 
             vue.editAuthorError = null;
+            vue.isUpdatingAuthor = true;
 
-            formData.append("csrfmiddlewaretoken", csrf_token);
             formData.append("resource-mode", this.res_mode.toLowerCase());
-            formData.append("creator-" + author.order + "-order", author.order !== null ? author.order : "");
+            formData.append("creator-" + author.order + "-order", author.order !== null ? parseInt(author.order) + 1 : "");
 
             formData.append("creator-" + author.order + "-organization", author.organization !== null ? author.organization : "");
             formData.append("creator-" + author.order + "-email", author.email !== null ? author.email : "");
@@ -212,6 +214,7 @@ let leftHeaderApp = new Vue({
             formData.append("creator-" + author.order + "-phone", author.phone !== null ? author.phone : "");
             formData.append("creator-" + author.order + "-homepage", author.homepage !== null ? author.homepage : "");
 
+            // Person-exclusive fields
             if (this.isPerson) {
                 formData.append("creator-" + author.order + "-name", author.name);
 
@@ -236,10 +239,11 @@ let leftHeaderApp = new Vue({
                     else {
                         vue.editAuthorError = response.message;
                     }
-                    console.log(response);
+                    vue.isUpdatingAuthor = false;
                 },
                 error: function (response) {
                     vue.editAuthorError = response.message;
+                    vue.isUpdatingAuthor = false;
                     console.log(response);
                 }
             });
