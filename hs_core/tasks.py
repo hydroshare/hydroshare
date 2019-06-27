@@ -325,11 +325,11 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, aggregation=None, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
-    :param sf_aggregation: if True, include logical metadata files
+    :param agg_name: The name of the aggregation to zip
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
@@ -343,7 +343,7 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip
             res.create_aggregation_xml_documents()
 
     try:
-        if sf_zip:
+        if aggregation or sf_zip:
             # input path points to single file aggregation
             # ensure that foo.zip contains aggregation metadata
             # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
@@ -351,15 +351,21 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip
             head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
             out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
             istorage.copyFiles(input_path, out_with_folder)
-            if sf_aggregation:
+            if aggregation:
                 try:
-                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                    logger.error("cannot copy {}".format(aggregation.map_file_path))
                 try:
-                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
+                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+                for file in aggregation.files.all():
+                    logger.error(file)
+                    try:
+                        istorage.copyFiles(file.storage_path, temp_folder_name)
+                    except SessionException:
+                        logger.error("cannot copy {}".format(file.storage_path))
             istorage.zipup(temp_folder_name, output_path)
             istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
         else:  # regular folder to zip

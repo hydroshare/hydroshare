@@ -373,8 +373,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     log.info("Geographic raster aggregation type - metadata was saved to DB")
                     logical_file._finalize(user, resource,
                                            folder_created=aggregation_folder_created,
-                                           res_files_to_delete=res_files_to_delete,
-                                           reset_title=False)
+                                           res_files_to_delete=res_files_to_delete)
 
                     file_type_success = True
                     post_add_raster_aggregation.send(
