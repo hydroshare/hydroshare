@@ -139,7 +139,7 @@ def name_without_commas(name):
     If a name without commas is passed it is returned unchanged.
     """
 
-    if "," in name:
+    if name and "," in name:
         name_parts = name.split(",")
 
         if len(name_parts) == 2:
