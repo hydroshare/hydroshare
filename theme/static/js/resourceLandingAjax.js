@@ -125,6 +125,30 @@ function showWaitDialog(){
     });
 }
 
+function handleIsDirty(json_response) {
+    // show update netcdf file update option for NetCDFLogicalFile
+    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+        $("#div-netcdf-file-update").show();
+    }
+    // show update sqlite file update option for TimeSeriesLogicalFile
+    if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
+        json_response.is_dirty && json_response.can_update_sqlite) {
+        $("#div-sqlite-file-update").show();
+    }
+    // show update netcdf resource
+    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
+        json_response.is_dirty) {
+        $("#netcdf-file-update").show();
+    }
+
+    // start timeseries resource specific DOM manipulation
+    if (RES_TYPE === 'Time Series') {
+        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
+            $("#sql-file-update").show();
+        }
+    }
+}
+
 function metadata_update_ajax_submit(form_id){
     let $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -159,27 +183,7 @@ function metadata_update_ajax_submit(form_id){
             /* The div contains now the updated form */
             let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
-                // show update netcdf file update option for NetCDFLogicalFile
-                if (json_response.logical_file_type === "NetCDFLogicalFile"){
-                    $("#div-netcdf-file-update").show();
-                }
-                // show update sqlite file update option for TimeSeriesLogicalFile
-                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  &&
-                    json_response.is_dirty && json_response.can_update_sqlite) {
-                    $("#div-sqlite-file-update").show();
-                }
-                // show update netcdf resource
-                if (resourceType === 'Multidimensional (NetCDF)' &&
-                    json_response.is_dirty) {
-                    $("#netcdf-file-update").show();
-                }
-
-                // start timeseries resource specific DOM manipulation
-                if(resourceType === 'Time Series') {
-                    if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-                        $("#sql-file-update").show();
-                    }
-                }
+                handleIsDirty(json_response);
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
@@ -512,11 +516,8 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
 }
 
 function update_netcdf_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        File update was successful.\
-    </div>';
+    $("#id-update-netcdf-file").text("Updating...");
+    $("#id-update-netcdf-file").attr("disabled", true);
 
     var url = $('#update-netcdf-file').attr("action");
     $.ajax({
@@ -524,16 +525,11 @@ function update_netcdf_file_ajax_submit() {
         url: url,
         dataType: 'html',
         success: function (result) {
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 $("#div-netcdf-file-update").hide();
-                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
-                $("#fb-inner-controls").before($alert_success);
-                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
-                    $("#success-alert").alert('close');
-                });
-                // refetch file metadata to show the updated header file info
-                 showFileTypeMetadata(false, "");
+                customAlert("Success!", json_response.message, "success", 8000);
+                showFileTypeMetadata(false, "");    // refetch file metadata to show the updated header file info
             }
             else {
                 display_error_message("File update.", json_response.message);
@@ -983,6 +979,27 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Renaming Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path
+function rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName) {
+    let url = '/hsapi/_internal/' + fileType + '/' + fileTypeId + '/update-filetype-dataset-name/';
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        data: {
+            dataset_name: newName,
+        },
+        success: function (response) {
+            handleIsDirty(response);
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Failed to rename aggregation', xhr.responseText);
         }
     });
 }

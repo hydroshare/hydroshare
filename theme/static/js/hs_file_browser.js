@@ -830,7 +830,7 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
          });
 
-        if (RESOURCE_MODE === "edit") {
+        if (RESOURCE_MODE === "Edit") {
              $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
              $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
              $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
@@ -1912,11 +1912,13 @@ $(document).ready(function () {
 
     // Rename method
     $("#btn-rename").click(function () {
-        var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        let selected = $("#fb-files-container li.ui-selected");
+        var oldName = selected.children(".fb-file-name").text().trim();
         var newName = $("#txtName").val();
 
-        if ($("#file-type-addon").length) {
-            newName = newName + $("#file-type-addon").text();
+        let fileTypeAddon = $("#file-type-addon");
+        if (fileTypeAddon.length) {
+            newName = newName + fileTypeAddon.text();
         }
 
         // make sure .url file has .url extension after renaming
@@ -1928,15 +1930,27 @@ $(document).ready(function () {
         var oldNamePath = currentPath.path.concat(oldName);
         var newNamePath = currentPath.path.concat(newName);
 
-        calls.push(rename_file_or_folder_ajax_submit(resID, oldNamePath.join('/'), newNamePath.join('/')));
+        let isVirtualFolder = selected.attr("data-logical-file-id") && selected.attr("data-logical-file-id").trim().length;
+        if (isVirtualFolder){
+            let fileType = selected.children(".fb-logical-file-type").text().trim();
+            let fileTypeId = selected.attr("data-logical-file-id");
+            calls.push(rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName));
+        }
+        else {
+            calls.push(rename_file_or_folder_ajax_submit(resID, oldNamePath.join('/'), newNamePath.join('/')));
+        }
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
+            $("#btn-rename").text("Save Changes");
+            $("#rename-dialog").modal('hide');
             refreshFileBrowser();
         });
 
         $.when.apply($, calls).fail(function () {
             sessionStorage.currentBrowsepath = JSON.stringify(currentPath);
+            $("#btn-rename").text("Save Changes");
+            $("#rename-dialog").modal('hide');
             refreshFileBrowser();
         });
     });
