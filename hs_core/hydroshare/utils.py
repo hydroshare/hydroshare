@@ -57,6 +57,15 @@ def get_resource_types():
     return resource_types
 
 
+def get_content_types():
+    content_types = []
+    from hs_file_types.models.base import AbstractLogicalFile
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            content_types.append(model)
+    return content_types
+
+
 def get_resource_instance(app, model_name, pk, or_404=True):
     model = apps.get_model(app, model_name)
     if or_404:
@@ -171,7 +180,7 @@ def is_federated(homepath):
     # fed_proxy_path exists to hold hydroshare resources in a federated zone
     if homepath_list[1]:
         fed_proxy_path = os.path.join(homepath_list[1], 'home',
-                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
         fed_proxy_path = '/' + fed_proxy_path
     else:
         # the test path input is invalid, return False meaning it is not federated
@@ -200,7 +209,7 @@ def get_federated_zone_home_path(filepath):
         # the Zone name should follow the first slash
         zone = split_path_strs[1]
         return '/{zone}/home/{local_proxy_user}'.format(
-            zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            zone=zone, local_proxy_user=settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
     else:
         return ''
 
@@ -786,10 +795,10 @@ def get_party_data_from_user(user):
     user_profile = get_profile(user)
 
     if user_profile.middle_name:
-        user_full_name = '%s %s %s' % (user.first_name, user_profile.middle_name,
-                                       user.last_name)
+        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                        user_profile.middle_name)
     else:
-        user_full_name = user.get_full_name()
+        user_full_name = '%s, %s' % (user.last_name, user.first_name)
 
     if user_full_name:
         party_name = user_full_name

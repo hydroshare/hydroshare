@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
@@ -41,6 +42,9 @@
                 </div>
             </div>
         {% endif %}
+
+        {# Needs to be included first so it's available before other instances initialize #}
+        {% include "includes/profile-card.html" %}
 
         {# ======= Title ======= #}
         {% include "resource-landing-page/title-section.html" %}
@@ -813,6 +817,7 @@
             {% include "resource-landing-page/modals.html" %}
             {% include "includes/author-preview.html" %}
             {% include "resource-landing-page/coordinates_picker.html" %}
+
         {%  endblock %}
         </div>
 {% endblock %}
@@ -828,13 +833,34 @@
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
-      const CURRENT_USER_ID = {{ request.user.id }};
+      const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
+      const USERS_JSON = {{ users_json|safe }};
+
+      {% with cm.last_changed_by as usr %}
+          const LAST_CHANGED_BY = {
+          "id": {{ usr.id }},
+          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
+          "best_name": "{{ usr|best_name }}",
+          "email": "{{ usr.email|safe }}",
+          "organization": "{{ usr.userprofile.organization }}",
+          "title": "{{ usr.userprofile.title }}",
+          "contributions": "{{ usr.uaccess.owned_resources|length  }}",
+          "subject_areas": "{{ usr.userprofile.subject_areas }}",
+          "identifiers": {
+              {% for name, link in usr.userprofile.identifiers.items %}
+                  "{{ name }}": "{{ link }}",
+              {% endfor %}
+          },
+          "state": "{{ usr.userprofile.state }}",
+          "country": "{{ usr.userprofile.country }}",
+          "joined": "{{ usr.date_joined|date:"M d, Y" }}"
+      };
+      {% endwith %}
+
       {% if show_manage_access %}
-          const USERS_JSON = {{ users_json|safe }};
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const CURRENT_USER_PK = {{ current_user.pk }};
           const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
           const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
           const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
@@ -857,6 +883,7 @@
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
+
 
     {% if relevant_tools %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>

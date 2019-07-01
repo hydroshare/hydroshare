@@ -28,9 +28,9 @@ from django.conf import settings
 from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
-from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page
 from mezzanine.core.managers import PublishedManager
@@ -121,13 +121,13 @@ def validate_user_url(value):
     err_message = '%s is not a valid url for hydroshare user' % value
     if value:
         url_parts = value.split('/')
-        if len(url_parts) != 6:
+        if len(url_parts) != 4:
             raise ValidationError(err_message)
-        if url_parts[3] != 'user':
+        if url_parts[1] != 'user':
             raise ValidationError(err_message)
 
         try:
-            user_id = int(url_parts[4])
+            user_id = int(url_parts[2])
         except ValueError:
             raise ValidationError(err_message)
 
@@ -183,31 +183,50 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
-def get_user_object(user, user_type, user_access):
+# Build a JSON serializable object with user data
+def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
+    access_object = None
     picture = None
-    name = None
-    username = None
 
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
-        name = best_name(user)
-        username = user.username
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": best_name(user),
+            "user_name": user.username,
+            "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources),
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y")
+        }
     elif user_type == "group":
         if user.gaccess.picture:
             picture = user.gaccess.picture.url
-        name = user.name
 
-    return {
-        "user_type": user_type,
-        "access": user_access,
-        "id": user.id,
-        "pictureUrl": picture,
-        "best_name": name,
-        "user_name": username,
-        "can_undo": user.can_undo
-    }
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": user.name,
+            "user_name": None,
+            "can_undo": user.can_undo
+        }
+
+    return access_object
 
 
 def page_permissions_page_processor(request, page):
@@ -268,19 +287,19 @@ def page_permissions_page_processor(request, page):
     users_json = []
 
     for usr in owners:
-        users_json.append(get_user_object(usr, "user", "owner"))
+        users_json.append(get_access_object(usr, "user", "owner"))
 
     for usr in editors:
-        users_json.append(get_user_object(usr, "user", "edit"))
+        users_json.append(get_access_object(usr, "user", "edit"))
 
     for usr in viewers:
-        users_json.append(get_user_object(usr, "user", "view"))
+        users_json.append(get_access_object(usr, "user", "view"))
 
     for usr in edit_groups:
-        users_json.append(get_user_object(usr, "group", "edit"))
+        users_json.append(get_access_object(usr, "group", "edit"))
 
     for usr in view_groups:
-        users_json.append(get_user_object(usr, "group", "view"))
+        users_json.append(get_access_object(usr, "group", "view"))
 
     users_json = json.dumps(users_json)
 
@@ -332,6 +351,10 @@ class AbstractMetaDataElement(models.Model):
         """Return content object that describes metadata."""
         return self.content_object
 
+    @property
+    def dict(self):
+        return {self.__class__.__name__: model_to_dict(self)}
+
     @classmethod
     def create(cls, **kwargs):
         """Pass through kwargs to object.create method."""
@@ -378,7 +401,8 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
+    description = models.CharField(null=True, blank=True, max_length=50,
+                                   validators=[validate_user_url])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -2441,7 +2465,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         userpath = '/' + os.path.join(
             getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
             'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
         if self.resource_federation_path == userpath:
             return 'user'
         else:
@@ -4167,6 +4191,7 @@ class CoreMetaData(models.Model):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url
+        from hs_core.templatetags.hydroshare_tags import name_without_commas
 
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
@@ -4179,7 +4204,9 @@ class CoreMetaData(models.Model):
         if person.name:
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = person.name
+
+            hsterms_name.text = name_without_commas(person.name)
+
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)

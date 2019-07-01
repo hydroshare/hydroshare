@@ -56,6 +56,13 @@ class AbstractFileMetaData(models.Model):
         """
         return list(self.coverages.all())
 
+    def dict(self):
+        dict = {}
+        metadata = self.get_metadata_elements()
+        for element in metadata:
+            dict.update(element.dict)
+        return dict
+
     def delete_all_elements(self):
         self.coverages.all().delete()
         self.extra_metadata = {}

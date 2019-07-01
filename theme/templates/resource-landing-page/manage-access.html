@@ -71,7 +71,7 @@
                                     data-value="users">Users</button>
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': !isInviteUsers, 'btn-default': isInviteUsers}"
-                                    @click="isInviteUsers = false"
+                                    @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
                                     data-value="groups">Groups</button>
                         </div>
 
@@ -187,7 +187,6 @@
                                     </button>
                                 </div>
 
-                                {# TODO: test this with a Multidimensional resource #}
                                 <div
                                     v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
                                     class="alert alert-warning small space-top">

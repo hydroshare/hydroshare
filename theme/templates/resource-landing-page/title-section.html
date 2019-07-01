@@ -1,8 +1,10 @@
 {# ======= Resource Publication just published notification =======#}
 {% if cm.raccess.published and just_published %}
     <div class="col-xs-12">
-        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+             role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
             <span>Your resource has been published. You will see the DOI in the citation for your resource below,
                 but it may take approximately one day for your DOI to become active.</span>
@@ -13,8 +15,10 @@
 {# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
     <div class="col-xs-12">
-        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+             role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
             <span>Your new version has been created. A link to the older version has been added below the resource title. To modify this
                 new version or change the sharing status, click the Edit button. To share this new version with individual HydroShare users,
@@ -27,8 +31,10 @@
 {# ======= Resource copy just created notification =======#}
 {% if just_created and just_copied %}
     <div class="col-xs-12">
-        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+             role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
             <span>Your new copy of the resource has been created. A <i>Derived From</i> Source metadata element has been added to this resource in
                 the <i>Related Resources</i> tab below that links to the original resource. Please respect the terms of the license of the original resource
@@ -43,7 +49,9 @@
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-xs-12">
-            <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="missing-metadata-or-file"
+                 class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+                 role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
                 {% if missing_metadata_elements %}
@@ -60,16 +68,16 @@
                             <li>{{ element }}</li>
                         {% endfor %}
                         {% if title|stringformat:"s" == "Untitled resource" %}
-                           <li>Title: needs to be changed</li>
+                            <li>Title: needs to be changed</li>
                         {% endif %}
                     </ul>
-                {%  endif %}
-                {%  if not cm.has_required_content_files %}
-                         <br>
-                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
                 {% endif %}
-                {%  if cm.resource_type|lower == "collectionresource" %}
-                    {% if not cm.has_resources%}
+                {% if not cm.has_required_content_files %}
+                    <br>
+                    <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                {% endif %}
+                {% if cm.resource_type|lower == "collectionresource" %}
+                    {% if not cm.has_resources %}
                         <br>
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
@@ -77,7 +85,9 @@
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
-                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit
+                        this resource.
+                    </small>
                 {% endif %}
             </div>
         </div>
@@ -88,7 +98,9 @@
 {% if cm.resource_type == "CompositeResource" %}
     {% if file_type_missing_metadata %}
         <div class="col-sm-12">
-            <div id="missing-metadata-file-type" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="missing-metadata-file-type"
+                 class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+                 role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
 
@@ -109,7 +121,9 @@
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
-                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit
+                        this resource.
+                    </small>
                 {% endif %}
             </div>
         </div>
@@ -117,31 +131,33 @@
 {% endif %}
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-	 {% if self_access_level == 'owner' or self_access_level == 'edit'%}
-		{% if cm.check_content_files %}
-		<div class="col-sm-12">
-		    <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-				aria-hidden="false">&times;</span></button>
+    {% if self_access_level == 'owner' or self_access_level == 'edit' %}
+        {% if cm.check_content_files %}
+            <div class="col-sm-12">
+                <div id="missing-metadata-or-file"
+                     class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible"
+                     role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                            aria-hidden="false">&times;</span></button>
 
-			<br>
-			{% if cm.check_content_files == 'multiple_nam' %}
-			    <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
+                    <br>
+                    {% if cm.check_content_files == 'multiple_nam' %}
+                        <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
 				<ul>
 				    <li>Only one .nam or .mfn is allowed</li>
 				</ul></span>
-			{% else %}
-			    <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
+                    {% else %}
+                        <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
 				<ul>
 				    {% for f in cm.check_content_files %}
-					<li>{{ f }} </li>
-				    {% endfor %}
+                        <li>{{ f }} </li>
+                    {% endfor %}
 				</ul></span>
-			{% endif %}
-		    </div>
-		</div>
-		{% endif %}
-	{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
 {% endif %}
 
 {# ======= Title ======= #}
@@ -162,7 +178,8 @@
                 {% for tool in relevant_tools.tool_list %}
                     {% if tool.openwithlist and tool.url %}
                         <li title="{{ tool.title }}">
-                                <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{ tool.title }};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}" target="_blank">
+                            <a href="{% url 'tracking-applaunch' %}?url={{ tool.url|urlencode }};name={{ tool.title }};tool_res_id={{ tool.res_id }};res_id={{ cm.short_id }}"
+                               target="_blank">
                                 <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
                                 {% if tool.title|length > 20 %}
                                     <span>{{ tool.title|slice:":21"|add:"..." }}</span>
@@ -177,6 +194,67 @@
             </ul>
         {% endif %}
     {% else %}
+        </div>
+        <div id="title-builder-app">
+            <!-- template for the modal component -->
+            <script type="text/x-template" id="modal-template">
+                <transition name="modal">
+                    <div class="modal-mask">
+                        <div class="modal-wrapper">
+                            <div class="modal-container">
+
+                                <div class="modal-header">
+                                    <slot name="header">
+                                        default header
+                                    </slot>
+                                </div>
+
+                                <div class="modal-body">
+                                    <slot name="body">
+                                        default body
+                                    </slot>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <slot name="footer">
+                                        <button class="modal-default-button" @click="$emit('close')">
+                                            OK
+                                        </button>
+                                    </slot>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+            </script>
+            <!-- app -->
+            <div id="modal-app">
+                {#  <button id="show-modal" @click="showModal = true">Show Modal</button>#}
+                <!-- use the modal component, pass in the prop -->
+                <modal v-if="showModal" @close="showModal = false">
+
+                    <div slot="header">Title Builder</div>
+                    <p slot="body">
+                        <select id="czselect" v-model="selected" @change="updateInput()">
+                            <option disabled value="">Critical Zone Region</option>
+                            <option>BCCZO</option>
+                            <option>CCZO</option>
+                            <option>CJCZO</option>
+                            <option>CRBCZO</option>
+                            <option>ERCZO</option>
+                            <option>LCZO</option>
+                            <option>RCCZO</option>
+                            <option>SSCZO</option>
+                            <option>SSHCZO</option>
+                        </select><br/>
+
+                    </p>
+                </modal>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
+
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"
               method="post">
@@ -185,6 +263,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                  id="txt-title"
+                                                 onclick="titleClick()"
                                                  maxlength="300" name="value" type="text"
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
@@ -196,6 +275,7 @@
                 </div>
             </fieldset>
         </form>
+
     {% endif %}
 </div>
 
@@ -215,7 +295,8 @@
 
 {% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
     <div class="col-xs-12">
-        <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp resource has been approved by HydroShare admin.</i></div>
+        <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp
+            resource has been approved by HydroShare admin.</i></div>
     </div>
 {% endif %}
 
@@ -278,7 +359,8 @@
             "longitude": {{ spatial_coverage.east|floatformat:"4" }}
             {% else %}
             "@type": "GeoShape",
-            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }}
+    {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
             {% endif %}
         }
     },
@@ -299,7 +381,7 @@
                 "url": "{{ cr.description }}/"
             }
         }
-        {%if not forloop.last%},{%endif%}
+        {% if not forloop.last %},{% endif %}
         {% endfor %}
     ],
     "provider": {

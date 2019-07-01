@@ -4,6 +4,8 @@ import datetime
 import pytz
 import logging
 
+from drf_yasg.utils import swagger_auto_schema
+
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -15,7 +17,6 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-
 from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
@@ -61,8 +62,6 @@ from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 from hs_collection_resource.models import CollectionDeletedResource
-
-from hs_access_control.models.privilege import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +138,7 @@ def change_quota_holder(request, shortkey):
     return JsonResponse(ajax_response_data)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def update_quota_usage(request, username):
     req_user = request.user
@@ -919,38 +919,22 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_effective_privilege(user)
-    if current_user_privilege == PrivilegeCodes.VIEW:
-        current_user_privilege = "view"
-    elif current_user_privilege == PrivilegeCodes.CHANGE:
-        current_user_privilege = "change"
-    elif current_user_privilege == PrivilegeCodes.OWNER:
-        current_user_privilege = "owner"
+    from hs_core.models import get_access_object
 
     if user_or_group == 'user':
-        is_current_user = False
-        if user == user_to_share_with:
-            is_current_user = True
+        user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
+        user_to_share_with.can_undo = user_can_undo
 
-        picture_url = None
-        if user_to_share_with.userprofile.picture:
-            picture_url = user_to_share_with.userprofile.picture.url
-
-        ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                              'username': user_to_share_with.username, 'privilege_granted': privilege,
-                              'current_user_privilege': current_user_privilege,
-                              'profile_pic': picture_url, 'is_current_user': is_current_user,
-                              'error_msg': err_message}
-
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(user_to_share_with, "user", privilege)}
     else:
-        group_pic_url = None
-        if group_to_share_with.gaccess.picture:
-            group_pic_url = group_to_share_with.gaccess.picture.url
+        group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+        group_to_share_with.can_undo = group_can_undo
 
-        ajax_response_data = {'status': status, 'name': group_to_share_with.name,
-                              'privilege_granted': privilege, 'group_pic': group_pic_url,
-                              'current_user_privilege': current_user_privilege,
-                              'error_msg': err_message}
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(group_to_share_with, "group", privilege)}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
@@ -1580,9 +1564,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
-            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
         else:
-            user_name = "{} {}".format(user.first_name, user.last_name)
+            user_name = "{}, {}".format(user.last_name, user.first_name)
 
         user_data['name'] = user_name
         user_data['email'] = user.email

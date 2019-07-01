@@ -22,6 +22,8 @@ from . import ts_utils
 from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, \
     VerifyRestUrlForm, CreateRefTimeSeriesForm
 
+from drf_yasg.utils import swagger_auto_schema
+
 
 PREVIEW_NAME = "preview.png"
 HIS_CENTRAL_URL = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
@@ -206,6 +208,7 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
            shutil.rmtree(tempdir)
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
     tempdir = None

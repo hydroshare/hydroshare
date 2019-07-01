@@ -203,8 +203,9 @@ def manage_task_nightly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1))
-def manage_task_weekly():
+@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1,
+                                                     day_of_month='1-7'))
+def send_over_quota_emails():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
@@ -406,7 +407,7 @@ def create_bag_by_irods(resource_id):
         is_bagit_readme_exist = istorage.exists(bagit_readme_file)
         bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
         bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
         bagit_files = [
             '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
@@ -512,7 +513,7 @@ def update_quota_usage_task(username):
     # get quota size for the user in iRODS user zone
     try:
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
                                      settings.IRODS_BAGIT_PATH)
         uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
         if uqUserZoneSize is None:

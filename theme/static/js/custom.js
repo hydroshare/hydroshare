@@ -240,87 +240,6 @@ $(document).ready(function () {
         }
     });
 
-    // Event trigger for profile preview
-    $(".profile-preview").click(function () {
-        // Move the profile card below the clicked item
-        var profileCard = $(this).parent().find(".profile-card");
-        profileCard.css("top", ($(this).position().top + 30) + "px");
-        profileCard.css("left", ($(this).position().left - 175 + $(this).width()/2) + "px");
-
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
-
-        resetProfilePreview(profileCard);
-        var data = jQuery.extend(true, {}, $(this).data());
-
-        // Populate subject areas
-        var areas = data.subjectareas.split(",");
-        for (var i = 0; i < areas.length; i++) {
-            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ");
-        }
-
-        // Populate profile button url
-        profileCard.find("[data-name]").attr("href", data.profileUrl);
-        profileCard.find("[data-url]").attr("href", data.profileUrl);
-
-        // Populate profile picture
-        var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
-        if (data.profilePicture) {
-            pic.toggleClass("dropdown-user-icon", false);
-            pic.css("background-image", "url('" + data.profilePicture + "')");
-        }
-        else {
-            pic.toggleClass("dropdown-user-icon", true);
-            pic.css("background-image", "none");
-        }
-
-        // Toggle wrappers visibility:
-
-        // State and Country
-        if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
-            $(".location-wrapper").show();
-        }
-
-        // Organization and Title
-        if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
-            $(".org-wrapper").show();
-        }
-
-        // Rest of the fields
-        for (var item in data) {
-            if ($.inArray(item, fields) != -1) {
-                var content = data[item];
-                var field = profileCard.find("[data-" + item + "]");
-                if (content && content != "Unspecified") {
-                    field.text(content);
-                    field.show();
-                }
-                else {
-                    profileCard.find("." + item + "-wrapper").hide();
-                    field.hide();
-                }
-            }
-            else if ($.inArray(item, identifiers) != -1) {
-                var ident = profileCard.find("[data-" + item + "]");
-                ident.show();
-                profileCard.find(".externalprofiles-wrapper").show();
-                ident.attr("href", data[item]);
-            }
-        }
-    });
-
-    function resetProfilePreview(profileCard) {
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        fields.forEach(function (f) {
-            profileCard.find("[data-" + f + "]").text("");
-            profileCard.find("." + f + "-wrapper").show();
-        });
-        profileCard.find(".identifier-icon").hide();
-        $(".profile-card .externalprofiles-wrapper").hide();
-        $(".profile-card .location-wrapper").hide();
-        $(".profile-card .org-wrapper").hide();
-    }
-
     $(".author-preview").click(function() {
         resetAuthorPreview();
         var preview = $("#view-author-modal");
@@ -373,10 +292,6 @@ $(document).ready(function () {
         $(this).next('ul').toggle();
         e.stopPropagation();
         e.preventDefault();
-    });
-
-    $(".profile-card").click(function (e) {
-        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
     });
 
     // Abstract collapse toggle

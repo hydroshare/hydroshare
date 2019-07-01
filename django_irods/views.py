@@ -18,6 +18,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from . import models as m
 from .icommands import Session, GLOBAL_SESSION
 from hs_core.models import ResourceFile
+from drf_yasg.utils import swagger_auto_schema
 
 import logging
 logger = logging.getLogger(__name__)
@@ -341,7 +342,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         userpath = '/' + os.path.join(
             getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
             'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
 
         # stop NGINX targets that are non-existent from hanging forever.
         if not istorage.exists(irods_output_path):
@@ -401,6 +402,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     return response
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_download(request, path, *args, **kwargs):
     # need to have a separate view function just for REST API call
@@ -427,6 +429,7 @@ def check_task_status(request, task_id=None, *args, **kwargs):
                             content_type="application/json")
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_check_task_status(request, task_id, *args, **kwargs):
     # need to have a separate view function just for REST API call

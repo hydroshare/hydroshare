@@ -67,7 +67,7 @@ class TestTickets(HSRESTTestCase):
         self.resources_to_delete.append(res_id)
 
         # should be able to get read ticket for file
-        url2 = str.format('/hsapi/resource/{}/ticket/read/data/contents/cea.tif/', res_id)
+        url2 = str.format('/hsapi/resource/{}/ticket/read/data/contents/cea/cea.tif/', res_id)
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
