@@ -56,6 +56,7 @@ class FindCommunitiesView(TemplateView):
 class MyCommunitiesView(TemplateView):
     template_name = 'pages/my-communities.html'
 
+    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(MyCommunitiesView, self).dispatch(*args, **kwargs)
 
