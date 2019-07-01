@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 
+import json
 import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.utils.decorators import method_decorator
+from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
 
 logger = logging.getLogger(__name__)
@@ -47,5 +49,5 @@ class TopicsView(TemplateView):
          "Tree Growth & Physiology", "Vegetation", "Water Potential", "Well Water Levels"]
 
         return {
-            'topics': topics
+            'topics_json': mark_safe(escapejs(json.dumps(topics)))
         }

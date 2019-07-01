@@ -1,4 +1,3 @@
-
 {% block main %}
     <!DOCTYPE html>
     <html lang="en">
@@ -23,5 +22,10 @@
 
 {% block extra_js %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
+    <script type="application/javascript">
+            // contents here are required by topics.js
+            let topics = JSON.parse("{{ topics_json }}");
+    </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
+
 {% endblock %}
