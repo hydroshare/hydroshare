@@ -131,6 +131,9 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "end": "2018-02-06"
         })
 
+        # check for logical_file in metadata
+        self.assertEqual(json_response.get("logical_file"), {})
+
     def test_metadata_spatial_create_update(self):
         # Create resource
         response = self.client.post(reverse('list_create_resource'), {

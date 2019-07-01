@@ -132,6 +132,25 @@ def best_name(content):
 
 
 @register.filter
+def name_without_commas(name):
+    """
+    Takes a name formatted as "[LastNames], [FirstNames]"
+    and returns it formatted as "[FirstNames] [LastNames]".
+    If a name without commas is passed it is returned unchanged.
+    """
+
+    if "," in name:
+        name_parts = name.split(",")
+
+        if len(name_parts) == 2:
+            first_names = name_parts[1].strip()
+            last_names = name_parts[0].strip()
+            return first_names + " " + last_names
+
+    return name  # default
+
+
+@register.filter
 def display_name(user):
     """
     take a User instance and return the full name of the user regardless of whether the user
