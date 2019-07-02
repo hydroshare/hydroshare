@@ -57,6 +57,15 @@ def get_resource_types():
     return resource_types
 
 
+def get_content_types():
+    content_types = []
+    from hs_file_types.models.base import AbstractLogicalFile
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            content_types.append(model)
+    return content_types
+
+
 def get_resource_instance(app, model_name, pk, or_404=True):
     model = apps.get_model(app, model_name)
     if or_404:
@@ -171,7 +180,7 @@ def is_federated(homepath):
     # fed_proxy_path exists to hold hydroshare resources in a federated zone
     if homepath_list[1]:
         fed_proxy_path = os.path.join(homepath_list[1], 'home',
-                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
         fed_proxy_path = '/' + fed_proxy_path
     else:
         # the test path input is invalid, return False meaning it is not federated
@@ -200,7 +209,7 @@ def get_federated_zone_home_path(filepath):
         # the Zone name should follow the first slash
         zone = split_path_strs[1]
         return '/{zone}/home/{local_proxy_user}'.format(
-            zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            zone=zone, local_proxy_user=settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
     else:
         return ''
 
@@ -653,13 +662,10 @@ def validate_user_quota(user, size):
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
-                                files=(), source_names=[], metadata=None,
+                                files=(), metadata=None,
                                 requesting_user=None, **kwargs):
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
-
-    if __debug__:
-        assert(isinstance(source_names, list))
 
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -682,12 +688,6 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
         validate_metadata(metadata, resource_type)
 
     page_url_dict = {}
-    # this is needed since raster and feature resource types allows to upload a zip file,
-    # then replace zip file with exploded files. If the zip file is loaded from hydroshare
-    # federation zone, the original zip file encoded in source_names gets deleted
-    # in this case and fed_res_path is used to keep the federation path, so that the resource
-    # will be stored in the federated zone rather than the hydroshare zone
-    fed_res_path = []
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
 
@@ -699,13 +699,12 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                              title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
                              validate_files=file_validation_dict,
-                             source_names=source_names,
-                             user=requesting_user, fed_res_path=fed_res_path, **kwargs)
+                             user=requesting_user, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata, fed_res_path
+    return page_url_dict, resource_title,  metadata
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):
@@ -796,10 +795,10 @@ def get_party_data_from_user(user):
     user_profile = get_profile(user)
 
     if user_profile.middle_name:
-        user_full_name = '%s %s %s' % (user.first_name, user_profile.middle_name,
-                                       user.last_name)
+        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                        user_profile.middle_name)
     else:
-        user_full_name = user.get_full_name()
+        user_full_name = '%s, %s' % (user.last_name, user.first_name)
 
     if user_full_name:
         party_name = user_full_name
@@ -875,7 +874,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         move=False, check_target_folder=False, add_to_aggregation=True):
+                         check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -889,12 +888,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                         disk, or from the federated zone directly where f is empty
                         but source_name has the whole data object
                         iRODS path in the federated zone
-    :param  move: indicate whether the file should be copied or moved from private user
-                 account to proxy user account in federated zone; A value of False
-                 indicates copy is needed, a value of True indicates no copy, but
-                 the file will be moved from private user account to proxy user account.
-                 The default value is False.
-
     :param  check_target_folder: if true and the resource is a composite resource then uploading
     a file to the specified folder will be validated before adding the file to the resource
     :param  add_to_aggregation: if true and the resource is a composite resource then the file
@@ -914,7 +907,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
                     err_msg = "File can't be added to this folder which represents an aggregation"
                     raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
-        ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
+        ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
             if folder is not None and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_fileset_aggregation_in_path(folder)
@@ -928,7 +921,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name)
         except SessionException as ex:
             try:
                 ret.delete()

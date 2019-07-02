@@ -1,133 +1,89 @@
 {% load hydroshare_tags %}
 
-{% for u in entries %}
-<tr id="row-id-{{ u.pk }}"
-    {% if access != "Is owner" %}
-    {% elif entries|length == 1 or not is_owner_user or u.pk == quota_holder.pk %}
-    class="hide-actions"
-    {% endif %}>
+<tr v-for="(user, index) in this.users" v-bind:key="user.id"
+    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access === 'owner' && hasOnlyOneOwner || user.id === quotaHolder.id), loading: user.loading}">
     <td>
         <table class="user-scope">
-            {% if access_type == "user" %}
-            <tr>
+            <tr v-if="user.user_type === 'user'">
                 <td>
-                    {% if u.userprofile.picture %}
-                    <div style="background-image: url('{{ u.userprofile.picture.url }}');"
-                         class="profile-pic-thumbnail round-image"></div>
-                    {% else %}
-                    <div class="profile-pic-thumbnail round-image user-icon"></div>
-                    {% endif %}
+                    <div v-if="user.pictureUrl"
+                         :style="{backgroundImage: 'url(' + user.pictureUrl + ')'}"
+                         class="profile-pic-thumbnail round-image">
+                    </div>
+
+                    <div v-else class="profile-pic-thumbnail round-image user-icon"></div>
                 </td>
                 <td>
-                    <div data-col="name" class="user-name">
-                        <a href="/user/{{ u.id }}">{{ u|best_name }}</a>
+                    <div class="user-name">
+                        <a :href="'/user/' + user.id">${user.best_name}</a>
                     </div>
-                    <div data-col="user-name"
-                          class="user-username-content">{{ u.username }}</div>
+                    <div class="user-username-content">${user.user_name}</div>
                     <div>
-                        {% if u.pk == current_user.pk %}
-                        <span class="badge you-flag">You</span>
-                        {% endif %}
-                        {% if u.pk == quota_holder.pk %}
-                        <span quota-holder class="badge you-flag">
+                        <span v-if="user.id === currentUser" class="badge you-flag">You</span>
+                        <span v-if="user.id === quotaHolder.id" class="badge you-flag">
                             <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
                         </span>
-                        {% endif %}
                     </div>
                 </td>
             </tr>
-            {% elif access_type == "group" %}
-            <tr>
+
+            <tr v-else>
                 <td>
                     <div class="group-image-wrapper extra-small">
-                        {% if u.gaccess.picture and u.gaccess.picture.url %}
                         <div class="group-image-extra-small group-preview-image-default"
-                             style="background-image: url({{ u.gaccess.picture.url }})"></div>
-                        {% else %}
-                        <div class="group-image-extra-small group-preview-image-default"
-                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                        {% endif %}
+                             :style="{backgroundImage: 'url(' + (user.pictureUrl || groupImageDefaultUrl) + ')'}">
+                        </div>
                     </div>
                 </td>
                 <td>
-                    <div value="{{ u.pk }}" class="user-name">
-                        <a href="/group/{{ u.pk }}">{{ u.name }}</a>
+                    <div>
+                        <a :href="'/group/' + user.id">${user.best_name}</a>
                     </div>
                     <div class="user-username-content">(Group)</div>
                 </td>
             </tr>
-            {% endif %}
         </table>
     </td>
 
     <td class="user-roles">
         <span class="dropdown role-dropdown">
-            <span class="dropdown-toggle" data-col="current-access"
+            <span class="dropdown-toggle"
                   id="roles-menu"
                   data-toggle="dropdown"
                   aria-haspopup="true" aria-expanded="true">
-                {{ access }}
+                    ${accessStr[user.access]}
                 <span class="caret"></span>
             </span>
+
             <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                <li class="{% if access == 'Can view' %}active {% endif %}" data-access-type="Can view">
-                    <form id="share-view-{{ u.pk }}"
-                          class="share-form-view"
-                          data-access-type="Can view"
-                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-{{ access_type }}/view/{{ u.pk }}/"
-                           method="POST">
-                        {% csrf_token %}
-                        <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
-                    </form>
+                <li :class="getUserDropdownItemClass(user, 'view')">
+                    <a @click="onChangeAccess(user, index, 'view')">Can view</a>
                 </li>
-                <li class="{% if access == 'Can edit' %}active {% endif %}{% if not is_owner_user and not is_edit_user %}disabled{% endif %}" data-access-type="Can edit">
-                    <form id="share-edit-{{ u.pk }}"
-                          class="share-form-edit"
-                          data-access-type="Can edit"
-                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-{{ access_type }}/edit/{{ u.pk }}/"
-                          method="POST">
-                        {% csrf_token %}
-                        <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
-                    </form>
+                <li :class="getUserDropdownItemClass(user, 'edit')">
+                    <a @click="onChangeAccess(user, index, 'edit')">Can edit</a>
                 </li>
-                {% if access_type == "user" %}
-                <li class="{% if access == 'Is owner' %}active{% endif %} {% if not can_change_resource_flags %}disabled{% endif %}" data-access-type="Is owner">
-                    <form id="share-owner-{{ u.pk }}"
-                          class="share-form-owner"
-                          data-access-type="Is owner"
-                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
-                          method="POST">
-                        {% csrf_token %}
-                        <a class="btn-change-share-permission" data-arg="share-owner-{{ u.pk }}">Is owner</a>
-                    </form>
+                <li v-if="user.user_type === 'user'"
+                    :class="getUserDropdownItemClass(user, 'owner')">
+                    <a @click="onChangeAccess(user, index, 'owner')">Is owner</a>
                 </li>
-                {% endif %}
             </ul>
         </span>
     </td>
 
     <td class="user-actions">
-        <form id="form-undo-share-{{ u.pk }}"
-              class="undo-share-form{% if not u.can_undo %} hidden{% endif %}"
-              action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-{{ access_type }}/{{ u.pk }}/"
-              method="POST">
-            {% csrf_token %}
-            <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
-               title="Undo Share"></i>
-        </form>
+        <i @click="undoAccess(user, index)"
+           v-if="user.can_undo && quotaHolder.id !== user.id"
+            {# TODO: manually initialize tooltips of dynamically created items #}
+           class="fa fa-undo" aria-hidden="true" data-toggle="tooltip"
+           title="Undo Share"></i>
     </td>
 
     <td class="user-actions">
-        {% if is_owner_user or u.pk == current_user.pk %}
-        <form id="form-remove-{{ access_type }}-{{ u.pk }}"
-              class="remove-user-form"
-              action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-{{ access_type }}/{{ u.pk }}/"
-              method="POST">
-            {% csrf_token %}
-            <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
-                  data-toggle="tooltip" title="Remove"></span>
-        </form>
-        {% endif %}
+        <span @click="user.id === currentUser ? showDeleteSelfDialog(user, index) : removeAccess(user, index)"
+              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && user.id !== quotaHolder.id && (selfAccessLevel === 'owner' || user.id === currentUser)"
+              :id="'form-remove-' + user.user_type + '-' + user.id"
+              class="glyphicon glyphicon-remove btn-remove-row"
+              data-toggle="tooltip" title="Remove">
+        </span>
     </td>
 </tr>
-{% endfor %}
