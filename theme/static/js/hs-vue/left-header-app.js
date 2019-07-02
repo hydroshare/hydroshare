@@ -199,30 +199,12 @@ let leftHeaderApp = new Vue({
             });
         },
         updateAuthor: function(author) {
-            let formData = new FormData();
             let vue = this;
 
             vue.editAuthorError = null;
             vue.isUpdatingAuthor = true;
 
-            formData.append("resource-mode", this.res_mode.toLowerCase());
-            formData.append("creator-" + author.order + "-order", author.order !== null ? parseInt(author.order) + 1 : "");
-
-            formData.append("creator-" + author.order + "-organization", author.organization !== null ? author.organization : "");
-            formData.append("creator-" + author.order + "-email", author.email !== null ? author.email : "");
-            formData.append("creator-" + author.order + "-address", author.address !== null ? author.address : "");
-            formData.append("creator-" + author.order + "-phone", author.phone !== null ? author.phone : "");
-            formData.append("creator-" + author.order + "-homepage", author.homepage !== null ? author.homepage : "");
-
-            // Person-exclusive fields
-            if (this.isPerson) {
-                formData.append("creator-" + author.order + "-name", author.name);
-
-                $.each(author.identifiers, function (identifierName, identifierLink) {
-                    formData.append("identifier_name", identifierName);
-                    formData.append("identifier_link", identifierLink);
-                });
-            }
+            let formData = getAuthorFormData(author, this.isPerson);
 
             $.ajax({
                 type: "POST",
@@ -248,9 +230,87 @@ let leftHeaderApp = new Vue({
                 }
             });
         },
+        updateAuthorOrder: function($author) {
+            let vue = this;
+
+            vue.editAuthorError = null;
+            vue.isUpdatingAuthor = true;
+
+            let authorId = $author.attr("data-id");
+
+            let oldIndex = vue.authors.findIndex(function (author) {
+                return author.id === authorId;
+            });
+
+            vue.selectAuthor(vue.authors[oldIndex], oldIndex);
+            let newIndex = getElementIndex($author[0]);
+            vue.selectedAuthor.author.order = newIndex + 1;
+
+            $author.closest(".sortable").sortable("cancel"); // Cancel the sort. Positioning is now handled by Vue.
+
+            if (newIndex === oldIndex) {
+                vue.isUpdatingAuthor = false;
+                return;
+            }
+
+            let formData = getAuthorFormData(vue.selectedAuthor.author, this.isPerson);
+
+            $.ajax({
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                url: '/hsapi/_internal/' + vue.resShortId + '/creator/' + vue.selectedAuthor.author.id + '/update-metadata/',
+                success: function (response) {
+                    if (response.status === "success") {
+                        // Update the author's positions in the array
+                        vue.authors.splice(newIndex, 0, vue.authors.splice(oldIndex, 1)[0]);
+
+                        // Update the Order values
+                        vue.authors = vue.authors.map(function (item, index) {
+                            item.order = index + 1;
+                            return item;
+                        });
+                    }
+                    else {
+                        vue.editAuthorError = response.message;
+                    }
+                    vue.isUpdatingAuthor = false;
+                },
+                error: function (response) {
+                    vue.editAuthorError = response.message;
+                    vue.isUpdatingAuthor = false;
+                    console.log(response);
+                }
+            });
+        },
         selectAuthor: function(author, index) {
             this.selectedAuthor.author = $.extend(true, {}, author);  // Deep copy
             this.selectedAuthor.index = index;
         }
     }
 });
+
+function getAuthorFormData(author, isPerson) {
+    let formData = new FormData();
+    formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
+    formData.append("creator-" + (author.order - 1) + "-order", author.order !== null ? parseInt(author.order): "");
+
+    formData.append("creator-" + (author.order - 1) + "-organization", author.organization !== null ? author.organization : "");
+    formData.append("creator-" + (author.order - 1) + "-email", author.email !== null ? author.email : "");
+    formData.append("creator-" + (author.order - 1) + "-address", author.address !== null ? author.address : "");
+    formData.append("creator-" + (author.order - 1) + "-phone", author.phone !== null ? author.phone : "");
+    formData.append("creator-" + (author.order - 1) + "-homepage", author.homepage !== null ? author.homepage : "");
+
+    // Person-exclusive fields
+    if (isPerson) {
+        formData.append("creator-" + (author.order - 1) + "-name", author.name);
+
+        $.each(author.identifiers, function (identifierName, identifierLink) {
+            formData.append("identifier_name", identifierName);
+            formData.append("identifier_link", identifierLink);
+        });
+    }
+
+    return formData;
+}

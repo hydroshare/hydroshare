@@ -265,6 +265,14 @@ function update_download_status(task_id, download_path) {
     });
 }
 
+function getElementIndex(node) {
+    var index = 0;
+    while ((node = node.previousElementSibling)) {
+        index++;
+    }
+    return index;
+}
+
 $(document).ready(function () {
     var task_id = $('#task_id').val();
     var download_path = $('#download_path').val();
@@ -275,31 +283,7 @@ $(document).ready(function () {
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
         stop: function (event, ui) {
-            var forms = $(".authors-wrapper.sortable form");
-
-            // Set the new order value in the form items
-            for (let i = 0; i < forms.length; i++) {
-                $(forms[i]).find("input.input-order").val(i + 1);
-                $(forms[i]).find("input.input-order").attr("value", i + 1);
-            }
-
-            let $form = $(ui.item.find("form"));
-            var url = $form.attr('action');
-            var datastring = $form.serialize();
-            $("html").css("cursor", "progress");
-
-            $.ajax({
-                type: "POST",
-                url: url,
-                data: datastring,
-                success: function () {
-                    $("html").css("cursor", "initial");
-                },
-                error: function (xhr, errmsg, err) {
-                    $("html").css("cursor", "initial");
-                    console.log(errmsg, err);
-                }
-            });
+            leftHeaderApp.updateAuthorOrder($(ui.item));
         }
     });
 

@@ -33,7 +33,7 @@
                         </a>
 
                         <span class="authors-wrapper sortable">
-                            <span v-for="(author, index) in authors">
+                            <span v-for="(author, index) in authors" :data-id="author.id">
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
                                    @click="selectAuthor(author, index)" data-target="#edit-author-modal">
                                     <template v-if="author.name">${ author.name }</template>

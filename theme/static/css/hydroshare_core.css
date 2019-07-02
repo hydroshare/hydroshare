@@ -983,19 +983,11 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before {
-    content: "";
-    width: 1px;
-    display: inline-block;
-    background-color: #999;
-	height: 22px;
-    margin: 0 4px;
-    position: relative;
-    top: 2px;
-}
-
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before,
+.owners-wrapper > a:not(:first-child)::before,
+.separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
@@ -1006,8 +998,21 @@ li.account p{
     top: 2px;
 }
 
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before {
+	margin: 0 -6px;
+}
+
 .authors-wrapper.sortable span:last-child a {
     margin-right: 10px;
+}
+
+.authors-wrapper .ui-state-highlight {
+	width: 100px;
+	height: 1em;
+	display: inline-block;
+	margin-left: 8px;
+	margin-right: 4px;
+	padding: 0;
 }
 
 .authors-wrapper a {
