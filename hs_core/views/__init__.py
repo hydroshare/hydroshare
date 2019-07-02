@@ -1741,6 +1741,7 @@ class MyGroupsView(TemplateView):
 class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
+# from hs_access_control.models import group
 
 class GroupView(TemplateView):
     template_name = 'pages/group.html'
@@ -1752,6 +1753,7 @@ class GroupView(TemplateView):
     def get_context_data(self, **kwargs):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
+
         u = User.objects.get(pk=self.request.user.id)
         u.is_group_owner = u.uaccess.owns_group(g)
         u.is_group_editor = g in u.uaccess.edit_groups
@@ -1783,29 +1785,37 @@ class GroupView(TemplateView):
         }
 
 
-class GroupsAuthenticatedView(TemplateView):
-    template_name = 'pages/groups-authenticated.html'
+class FindGroupsView(TemplateView):
+    template_name = 'pages/groups-unauthenticated.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(GroupsAuthenticatedView, self).dispatch(*args, **kwargs)
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/groups-authenticated.html'
+        return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
-            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-        return {
-            'profile_user': u,
-            'groups': groups,
-        }
+        if self.request.user.is_authenticated():
+            u = User.objects.get(pk=self.request.user.id)
+            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+
+            for g in groups:
+                g.is_user_member = u in g.gaccess.members
+                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                    request_from=u).exists()
+                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                    invitation_to=u).exists()
+                g.join_request = None
+                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            return {
+                'profile_user': u,
+                'groups': groups
+            }
+        else:
+            return {
+                'groups': Group.objects.filter(g2grp__resource__raccess__public=True)
+            }
 
 
 class MyResourcesView(TemplateView):
@@ -1817,7 +1827,7 @@ class MyResourcesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        
+
         resource_collection = get_my_resources_list(u)
 
         return {

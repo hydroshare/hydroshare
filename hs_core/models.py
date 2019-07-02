@@ -4369,6 +4369,12 @@ class CoreMetaData(models.Model):
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
 
+class Topics(models.Model):
+    """
+    Temporary class for demonstrating topics for Critical-Zone
+    """
+    name = models.CharField(max_length=200)
+
 
 def resource_processor(request, page):
     """Return mezzanine page processor for resource page."""

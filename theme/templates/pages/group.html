@@ -24,6 +24,7 @@
     </div>
 
     <div class="container">
+
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
@@ -40,6 +41,7 @@
                     </div>
                 {% endif %}
             {% endif %}
+
             <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}

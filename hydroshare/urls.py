@@ -73,7 +73,7 @@ if settings.COMMUNITIES_ENABLED:
         url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
         url(r'^sitemap/$', sitemap, name='sitemap'),
         url(r'^sitemap', include('hs_sitemap.urls')),
-        url(r'^groups', hs_core_views.GroupsAuthenticatedView.as_view(), name='groups'),
+        url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
         url(r'^communities/$', hs_core_views.communities.FindCommunitiesView.as_view(), name='communities'),
         url(r'^collaborate/$', hs_core_views.communities.CollaborateView.as_view(), name='collaborate'),
         url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),

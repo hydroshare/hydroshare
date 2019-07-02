@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
+from hs_core.models import Topics
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,9 @@ class TopicsView(TemplateView):
          "Stage", "Stream Ecology", "Stream Suspended Sediment", "Stream Water Chemistry", "Stream Water Temperatures",
          "Streamflow / Discharge", "Surface Water Chemistry", "Throughfall Chemistry", "Topographic Carbon Storage",
          "Tree Growth & Physiology", "Vegetation", "Water Potential", "Well Water Levels"]
+
+        topic1 = Topics(name="Air Temp")
+
 
         return {
             'topics_json': mark_safe(escapejs(json.dumps(topics)))

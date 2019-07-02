@@ -1,5 +1,5 @@
 let TopicsApp = new Vue({
-        el: '#app',
+        el: '#topics-app',
         data: {
             numbers: []
         },
