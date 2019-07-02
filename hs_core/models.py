@@ -28,9 +28,9 @@ from django.conf import settings
 from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
-from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page
 from mezzanine.core.managers import PublishedManager
@@ -42,6 +42,7 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+
 import unicodedata
 
 
@@ -120,13 +121,13 @@ def validate_user_url(value):
     err_message = '%s is not a valid url for hydroshare user' % value
     if value:
         url_parts = value.split('/')
-        if len(url_parts) != 6:
+        if len(url_parts) != 4:
             raise ValidationError(err_message)
-        if url_parts[3] != 'user':
+        if url_parts[1] != 'user':
             raise ValidationError(err_message)
 
         try:
-            user_id = int(url_parts[4])
+            user_id = int(url_parts[2])
         except ValueError:
             raise ValidationError(err_message)
 
@@ -182,24 +183,69 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
+# Build a JSON serializable object with user data
+def get_access_object(user, user_type, user_access):
+    from hs_core.templatetags.hydroshare_tags import best_name
+    access_object = None
+    picture = None
+
+    if user_type == "user":
+        if user.userprofile.picture:
+            picture = user.userprofile.picture.url
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": best_name(user),
+            "user_name": user.username,
+            "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources),
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y")
+        }
+    elif user_type == "group":
+        if user.gaccess.picture:
+            picture = user.gaccess.picture.url
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": user.name,
+            "user_name": None,
+            "can_undo": user.can_undo
+        }
+
+    return access_object
+
+
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
-    from hs_access_control.models import PrivilegeCodes
+    from hs_access_control.models.privilege import PrivilegeCodes
 
     cm = page.get_content_model()
     can_change_resource_flags = False
-    is_owner_user = False
-    is_edit_user = False
-    is_view_user = False
+    self_access_level = None
     if request.user.is_authenticated():
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
 
-        is_owner_user = cm.raccess.owners.filter(pk=request.user.pk).exists()
-        if not is_owner_user:
-            is_edit_user = cm.raccess.edit_users.filter(pk=request.user.pk).exists()
-            if not is_edit_user:
-                is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
+        if cm.raccess.owners.filter(pk=request.user.pk).exists():
+            self_access_level = 'owner'
+        elif cm.raccess.edit_users.filter(pk=request.user.pk).exists():
+            self_access_level = 'edit'
+        elif cm.raccess.view_users.filter(pk=request.user.pk).exists():
+            self_access_level = 'view'
 
     owners = cm.raccess.owners.all()
     editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
@@ -238,6 +284,25 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = False
 
+    users_json = []
+
+    for usr in owners:
+        users_json.append(get_access_object(usr, "user", "owner"))
+
+    for usr in editors:
+        users_json.append(get_access_object(usr, "user", "edit"))
+
+    for usr in viewers:
+        users_json.append(get_access_object(usr, "user", "view"))
+
+    for usr in edit_groups:
+        users_json.append(get_access_object(usr, "group", "edit"))
+
+    for usr in view_groups:
+        users_json.append(get_access_object(usr, "group", "view"))
+
+    users_json = json.dumps(users_json)
+
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
     else:
@@ -249,21 +314,19 @@ def page_permissions_page_processor(request, page):
         is_version_of = ''
 
     show_manage_access = False
+    is_owner = self_access_level == 'owner'
+    is_edit = self_access_level == 'edit'
+    is_view = self_access_level == 'view'
     if not cm.raccess.published and \
-            (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
+            (is_owner or (cm.raccess.shareable and (is_view or is_edit))):
         show_manage_access = True
 
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
-        "edit_users": editors,
-        "view_users": viewers,
+        "users_json": users_json,
         "owners": owners,
-        "edit_groups": edit_groups,
-        "view_groups": view_groups,
-        "is_owner_user": is_owner_user,
-        "is_edit_user": is_edit_user,
-        "is_view_user": is_view_user,
+        "self_access_level": self_access_level,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
@@ -287,6 +350,10 @@ class AbstractMetaDataElement(models.Model):
     def metadata(self):
         """Return content object that describes metadata."""
         return self.content_object
+
+    @property
+    def dict(self):
+        return {self.__class__.__name__: model_to_dict(self)}
 
     @classmethod
     def create(cls, **kwargs):
@@ -334,7 +401,8 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
+    description = models.CharField(null=True, blank=True, max_length=50,
+                                   validators=[validate_user_url])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -2397,7 +2465,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         userpath = '/' + os.path.join(
             getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
             'home',
-            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
         if self.resource_federation_path == userpath:
             return 'user'
         else:
@@ -2556,7 +2624,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None, move=False):
+    def create(cls, resource, file, folder=None, source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2567,7 +2635,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
-        :param move: if True, move the file rather than copying.
 
         There are two main usages to this constructor:
 
@@ -2577,12 +2644,10 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         * copying a file internally from iRODS:
 
-                ResourceFile.create(r, file_name, folder=d, source=s, move=True)
-          or
-                ResourceFile.create(r, file_name, folder=d, source=s, move=False)
+                ResourceFile.create(r, file_name, folder=d, source=s)
 
-        In this case, source is a full iRODS pathname of the place from which to copy or move
-        the file. The default is to copy the file and leave a copy in place.
+        In this case, source is a full iRODS pathname of the place from which to copy
+        the file.
 
         A third form is less common and presumes that the file already exists in iRODS
         in the proper place:
@@ -2621,15 +2686,10 @@ class ResourceFile(ResourceFileIRODSMixin):
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
-                if not move:
-                    istorage.copyFiles(source, target)
-                else:
-                    istorage.moveFile(source, target)
+                istorage.copyFiles(source, target)
                 if not istorage.exists(target):
                     raise ValidationError("ResourceFile.create: copy to target {} failed"
                                           .format(target))
-                if move and istorage.exists(source):
-                    raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
                 # no need to verify whether the file exists in iRODS since the file
@@ -2900,17 +2960,6 @@ class ResourceFile(ResourceFileIRODSMixin):
                 raise ValidationError("Local path does not exist in irods")
 
         return folder, base
-
-    # def rename(self, new_name):
-    #     """ rename a file, setting all path variables appropriately """
-    #     pass
-
-    # def copy_irods(self, source_path, dest_path=None):
-    #     """ copy an irods file into this FileField, setting all paths appropriately """
-    #     pass
-
-    # def move_irods(self, source_path, dest_path=None):
-    #     """ move an irods file into this object, setting all paths appropriately """
 
     # classmethods do things that query or affect all files.
 
@@ -3478,7 +3527,7 @@ class CoreMetaData(models.Model):
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
 
     NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                  'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
+                  'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
                   'dcterms': "http://purl.org/dc/terms/",
                   'hsterms': "http://hydroshare.org/terms/"}
@@ -4142,6 +4191,7 @@ class CoreMetaData(models.Model):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url
+        from hs_core.templatetags.hydroshare_tags import name_without_commas
 
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
@@ -4154,7 +4204,9 @@ class CoreMetaData(models.Model):
         if person.name:
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = person.name
+
+            hsterms_name.text = name_without_commas(person.name)
+
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)

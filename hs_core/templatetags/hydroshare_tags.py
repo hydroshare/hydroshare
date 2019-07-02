@@ -61,21 +61,21 @@ def resource_type(content):
 @register.filter
 def resource_first_author(content):
     if not content:
-        return format_html('<td></td>')
+        return ''
     if content.first_creator.name and content.first_creator.description:
-        return format_html('<td><a href="{desc}">{name}</a></td>',
+        return format_html('<a href="{desc}">{name}</a>',
                            desc=content.first_creator.description,
                            name=content.first_creator.name)
     elif content.first_creator.name:
-        return format_html('<td>{name}</td>', name=content.first_creator.name)
+        return format_html('<span>{name}</span>', name=content.first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
-            return format_html('<td>{name}</td>', name=first_creator.name)
+            return format_html('<span>{name}</span>', name=first_creator.name)
         if first_creator.organization:
-            return format_html('<td>{name}</td>', name=first_creator.organization)
+            return format_html('<span>{name}</span>', name=first_creator.organization)
 
-        return format_html('<td></td>')
+        return ''
 
 
 @register.filter
@@ -129,6 +129,25 @@ def best_name(content):
         content = content.username
 
     return content
+
+
+@register.filter
+def name_without_commas(name):
+    """
+    Takes a name formatted as "[LastNames], [FirstNames]"
+    and returns it formatted as "[FirstNames] [LastNames]".
+    If a name without commas is passed it is returned unchanged.
+    """
+
+    if name and "," in name:
+        name_parts = name.split(",")
+
+        if len(name_parts) == 2:
+            first_names = name_parts[1].strip()
+            last_names = name_parts[0].strip()
+            return first_names + " " + last_names
+
+    return name  # default
 
 
 @register.filter

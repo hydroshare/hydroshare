@@ -67,7 +67,6 @@ urlpatterns = [
     url(r'^_internal/get-user-or-group-data/(?P<user_or_group_id>[0-9]+)/(?P<is_group>[a-z]+)$',
         views.get_user_or_group_data, name='get_user_or_group_data'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/publish/$', views.publish),
-    url(r'^_internal/create-resource/$', views.create_resource_select_resource_type),
     url(r'^_internal/create-resource/do/$', views.create_resource, name='create_resource'),
     url(r'^_internal/verify-account/$', views.verify_account),
     url(r'^_internal/resend_verification_email/$', views.resend_verification_email),

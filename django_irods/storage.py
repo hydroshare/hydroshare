@@ -62,12 +62,12 @@ class IrodsStorage(Storage):
     # zone direct file operations
     def set_fed_zone_session(self):
         if settings.REMOTE_USE_IRODS:
-            self.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                  password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                  host=settings.HS_WWW_IRODS_HOST,
+            self.set_user_session(username=settings.IRODS_USERNAME,
+                                  password=settings.IRODS_AUTH,
+                                  host=settings.IRODS_HOST,
                                   port=settings.IRODS_PORT,
-                                  def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES,
-                                  zone=settings.HS_WWW_IRODS_ZONE,
+                                  def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
+                                  zone=settings.IRODS_ZONE,
                                   sess_id='federated_session')
 
     def delete_user_session(self):

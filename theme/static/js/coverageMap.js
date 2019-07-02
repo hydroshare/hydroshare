@@ -45,11 +45,10 @@ function drawInitialShape() {
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
     var resourceType = $("#resource-type").val();
-    var spatialCoverageType = $("#spatial-coverage-type").val();
     // Center the map
     if (shapeType || resourceType === "Time Series") {
         deleteAllShapes();
-        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+        if (shapeType == "point" || (resourceType === "Time Series" && spatial_coverage_type == "point")) {
             var myLatLng;
             if (shapeType == "point") {
                 // resource view mode
@@ -84,7 +83,7 @@ function drawInitialShape() {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
-        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+        else if (shapeType == "box" || (resourceType === "Time Series" && spatial_coverage_type == "box")) {
             var bounds;
             if (shapeType == "box") {
                 //resource view mode

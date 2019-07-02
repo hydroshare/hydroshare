@@ -1,78 +1,91 @@
-<ul class="dropdown-menu arrow_box profile-card">
-    <li>
-        <div class="flex">
-            <div>
-                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon"></div>
-{#                <a href="#" class="btn btn-info btn-block" title="View Profile" data-url>Profile</a>#}
+<script id="profile-card-template" type="text/x-template">
+    <ul class="dropdown-menu arrow_box profile-card" @click.stop=""
+        :style="{top: position.top + 'px', left: position.left + 'px'}">
+        <li>
+            <div class="flex">
+                <div>
+                    <div :class="{'dropdown-user-icon': !user.pictureUrl}"
+                         :style="{backgroundImage: user.pictureUrl ? 'url(' + user.pictureUrl + ')' : 'none'}"
+                        class="dropdown-profile-pic-thumbnail round-image">
+                    </div>
 
-                <div class="contributions-wrapper">
-                    <small>Contributions</small><br>
-                    <div class="label label-default" data-contributions></div>
+                    <div>
+                        <small>Contributions</small>
+                        <div class="label label-default space-top">${user.contributions}</div>
+                    </div>
+
+                    <div class="space-top">
+                        <small>Joined</small>
+                        <div class="label label-default">${user.joined}</div>
+                    </div>
                 </div>
+                <div style="flex-grow: 1;">
+                    <h4 style="margin-top: 0;">
+                        <a :href="/user/ + user.id" title="View Profile">${user.best_name}</a>
+                    </h4>
 
-                <div class="joined-wrapper">
-                    <small>Joined</small>
-                    <div data-joined class="label label-default"></div>
-                </div>
-            </div>
-            <div style="flex-grow: 1;">
-                <h4 style="margin-top: 0;"><a href="#" title="View Profile" data-name></a></h4>
+                    <table>
+                        <tr v-if="user.email">
+                            <td class="text-center"><i class="fa fa-envelope text-muted" aria-hidden="true"></i></td>
+                            <td><span>${user.email}</span></td>
+                        </tr>
+                        <tr v-if="(user.state && user.state !== 'Unspecified') || (user.country && user.country !== 'Unspecified')"
+                            >
+                            <td class="text-center">
+                                <i class="fa fa-map-marker text-muted" aria-hidden="true"></i>
+                            </td>
+                            <td>
+                                <span v-if="user.state && user.state !== 'Unspecified'">${user.state}</span>
+                                <span v-if="user.state && user.country">, </span>
+                                <span v-if="user.country && user.country !== 'Unspecified'">${user.country}</span>
+                            </td>
+                        </tr>
+                    </table>
 
-                <table>
-                    <tr class="email-wrapper">
-                        <td class="text-center"><i class="fa fa-envelope text-muted" aria-hidden="true"></i></td>
-                        <td><span data-email></span></td>
-                    </tr>
-                    <tr class="location-wrapper">
-                        <td class="text-center"><i class="fa fa-map-marker text-muted" aria-hidden="true"></i></td>
-                        <td><span data-state></span><span data-country></span></td>
-                    </tr>
-                </table>
+                    <div v-if="user.organization || user.title" class="space-top separate">
+                        <span v-if="user.organization">${user.organization}</span>
+                        <span v-if="user.title">${user.title}</span>
+                    </div>
 
-                <div class="org-wrapper separate">
-                    <span data-organization></span><span data-title></span>
-                </div>
+                    <div v-if="user.subject_areas" class="space-top">
+                        <small class="text-muted">Subject Areas:</small>
+                        <div>${user.subject_areas}</div>
+                    </div>
 
-                <div class="subjectareas-wrapper">
-                    <small class="text-muted">Subject Areas:</small>
-                    <div data-subjectareas></div>
-                </div>
+                    <div v-if="hasIdentifiers" class="space-top">
+                        <small class="text-muted">External Profiles:</small>
+                        <div class="external-profiles">
+                            <template v-for="(identifier, key) of user.identifiers">
+                                <a v-if="identifierAttributes.hasOwnProperty(key)"
+                                   :href="identifier"
+                                   class="identifier-icon" target="_blank"
+                                   data-toggle="tooltip" data-placement="top"
+                                   :title="identifierAttributes[key].title">
 
-                <div class="externalprofiles-wrapper">
-                    <small class="text-muted">External Profiles:</small>
-                    <div class="external-profiles">
-                        <a href="" data-googlescholarid class="identifier-icon" target="_blank"
-                           data-toggle="tooltip"
-                           data-placement="top"
-                           title="Google Scholar">
-                            <i class="ai ai-google-scholar-square hover-shadow"></i>
-                        </a>
-                        <a href="" data-orcid class="identifier-icon" target="_blank" data-toggle="tooltip"
-                           data-placement="top"
-                           title="ORCID">
-                            <i class="ai ai-orcid hover-shadow"></i>
-                        </a>
-                        <a href="" data-researchgateid class="identifier-icon" target="_blank" data-toggle="tooltip"
-                           data-placement="top"
-                           title="ResearchGate">
-                            <i class="ai ai-researchgate-square hover-shadow"></i>
-                        </a>
-                        <a href="" data-researcerid class="identifier-icon" target="_blank" data-toggle="tooltip"
-                           data-placement="top"
-                           title="ResearcherID">
-                            <img class="hover-shadow"
-                                 src="{{ STATIC_URL }}img/researcherID.png"
-                                 alt="ResearcherID icon"/>
-                        </a>
-                        <a href="" data-identifier-other class="identifier-icon" target="_blank"
-                           data-toggle="tooltip"
-                           data-placement="top"
-                           title="">
-                            <i class="fa fa-address-card hover-shadow"></i>
-                        </a>
+                                    <img v-if="key === 'ResearcherID'" class="hover-shadow"
+                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                         alt="ResearcherID icon"/>
+
+                                    <i v-else :class="identifierAttributes[key].classes"></i>
+                                </a>
+
+                                <a v-else :href="identifier" class="identifier-icon" target="_blank"
+                                   data-toggle="tooltip" data-placement="top"
+                                   :title="key">
+                                    <i class="fa fa-address-card hover-shadow"></i>
+                                </a>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </li>
-</ul>
+        </li>
+    </ul>
+</script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
+
+<script id="profile-link-template" type="text/x-template">
+    <a v-on:click="$emit('load-card', {user: user, event: $event})"
+       data-toggle="dropdown" style="cursor: pointer;">${user.best_name}</a>
+</script>

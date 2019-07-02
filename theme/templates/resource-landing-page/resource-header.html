@@ -3,7 +3,8 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12 col-md-6 res-header">
-            <table id="left-header-table" class="info-table">
+            <table id="left-header-table"
+                   class="info-table">
                 <tr>
                     <th>Authors:</th>
                     {% if not resource_edit_mode %}
@@ -34,7 +35,7 @@
                                        data-{{ name }}="{{ link }}"
                                             {% endfor %}>
                                         {% if author.name %}
-                                            {{ author.name }}
+                                            {{ author.name|name_without_commas }}
                                         {% else %}
                                             {{ author.organization }}
                                         {% endif %}
@@ -77,17 +78,21 @@
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
                               class="glyphicon glyphicon-info-sign text-muted"></span>
-
                     </td>
                     {% endif %}
                 </tr>
                 <tr>
                     <th>Owners:</th>
                     <td class="owners-wrapper">
-                        {% for u in owners %}
-                            {% include "includes/profile-link.html" with user=u %}
-                        {% endfor %}
-                        {% include "includes/profile-card.html" %}
+                        <template v-for="owner in owners">
+                            <profile-link
+                                :user="owner"
+                                v-bind:key="owner.id"
+                                v-on:load-card="onLoadOwnerCard($event)">
+                            </profile-link>
+                        </template>
+
+                        <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 <tr>
@@ -105,10 +110,8 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        {% if cm.last_changed_by %} by
-                            {% include "includes/profile-link.html" with user=cm.last_changed_by %}
-                        {% endif %}
-                        {% include "includes/profile-card.html" %}
+                        <profile-link v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-card :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 {% if cm.raccess.published %}
@@ -138,3 +141,5 @@
         </div>
     </div>
 </div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/left-header-app.js"></script>

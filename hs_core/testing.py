@@ -60,11 +60,11 @@ class TestCaseCommonUtilities(object):
     def create_irods_user_in_user_zone(self):
         """Create corresponding irods account in user zone."""
         try:
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+            exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
                                             self.user.username, self.user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper():
@@ -80,11 +80,11 @@ class TestCaseCommonUtilities(object):
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
         try:
-            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD,
+            exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD,
                                         self.user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper():
@@ -126,21 +126,21 @@ class TestCaseCommonUtilities(object):
 
     def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
         '''
-        Have to use HS_USER_ZONE_PROXY_USER with rodsadmin role to get user type AVU in user zone
-        and verify its quota usage is set correctly
+        Have to use LINUX_ADMIN_USER_FOR_HS_USER_ZONE with rodsadmin role to get user type AVU
+        in user zone and verify its quota usage is set correctly
         :param attname: quota usage attribute name set on iRODS proxy user in user zone
         :param qsize: quota size (type string) to be verified to equal to the value set for attname.
         '''
         istorage = IrodsStorage()
-        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
-                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
+        istorage.set_user_session(username=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+                                  password=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                   host=settings.HS_USER_ZONE_HOST,
                                   port=settings.IRODS_PORT,
                                   zone=settings.HS_USER_IRODS_ZONE,
                                   sess_id='user_proxy_session')
 
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
                                      settings.IRODS_BAGIT_PATH)
         get_qsize = istorage.getAVU(uz_bagit_path, attname)
         self.assertEqual(qsize, get_qsize)
