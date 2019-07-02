@@ -1,7 +1,3 @@
-RUN userdel hydro-service \
- && groupdel storage-hydro \
- && echo "storage-hydro:x:HS_SERVICE_GID:" >> /etc/group \
- && echo "hydro-service:x:HS_SERVICE_UID:HS_SERVICE_GID::/hydroshare:/bin/bash" >> /etc/passwd
 
 RUN celery beat -A hydroshare -s /log/celerybeat-schedule &
 CMD celery worker -A hydroshare -E -Q default
