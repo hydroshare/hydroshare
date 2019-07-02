@@ -983,13 +983,12 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper a:not(:first-child)::before, .separate :not(:first-child)::before {
+.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before {
     content: "";
     width: 1px;
     display: inline-block;
     background-color: #999;
-    height: 1em;
+	height: 22px;
     margin: 0 4px;
     position: relative;
     top: 2px;
@@ -4841,7 +4840,7 @@ span.caption-file-type {
 	width: 220px;
 }
 
-div.tooltip-inner, .res-dropdown div.tooltip-inner {
+.res-dropdown div.tooltip-inner {
     width: 350px;
 }
 
@@ -4898,33 +4897,20 @@ a[data-toggle="modal"] {
 }
 
 .external-profiles .identifier-icon i, .external-profiles .identifier-icon img {
-    background: #FFF;
     border-radius: 4px;
     font-size: 24px;
     padding: 4px 6px;
     cursor: pointer;
-    margin: 0;
-    text-align: center;
+}
+
+.external-profiles .identifier-icon img {
+	height: 32px;
+	margin-top: -8px;
 }
 
 .identifier-icon img {
     height: 100%;
 }
-
-/*.page-stamp {*/
-    /*position: absolute;*/
-    /*box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);*/
-/*}*/
-
-/*.page-stamp:after {*/
-    /*content: "";*/
-    /*position: absolute;*/
-    /*bottom: -6px;*/
-    /*left: 0;*/
-    /*border: 3px solid transparent;*/
-    /*border-top-color: #acacac;*/
-    /*border-right-color: #acacac;*/
-/*}*/
 
 #stamp-contributions {
     left: -12px;
@@ -4952,11 +4938,7 @@ a[data-toggle="modal"] {
 }
 
 .external-profiles > a {
-    height: 28px;
-    width: 28px;
     display: inline-block;
-    margin: 0 8px 0 0;
-    vertical-align: middle;
 }
 
 .external-profiles .fa-address-card {
