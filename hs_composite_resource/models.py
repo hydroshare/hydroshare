@@ -254,6 +254,19 @@ class CompositeResource(BaseResource):
             for aggregation in aggregations:
                 aggregation.create_aggregation_xml_documents()
 
+    def get_aggregation_by_dataset_name(self, dataset_name):
+        """Get an aggregation that matches the aggregation dataset_name specified by *dataset_name*
+        :param  name: name (aggregation path) of the aggregation to find
+        :return an aggregation object if found
+        :raises ObjectDoesNotExist if no matching aggregation is found
+        """
+        for aggregation in self.logical_files:
+            # remove the last slash in aggregation_name if any
+            if aggregation.dataset_name.rstrip('/') == dataset_name:
+                return aggregation
+
+        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(dataset_name))
+
     def get_aggregation_by_name(self, name):
         """Get an aggregation that matches the aggregation name specified by *name*
         :param  name: name (aggregation path) of the aggregation to find

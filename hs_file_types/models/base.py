@@ -755,6 +755,10 @@ class AbstractLogicalFile(models.Model):
                         return f
         return None
 
+    @property
+    def url(self):
+        return "/" + os.path.join("resource", self.resource.short_id, "data", "contents", self.dataset_name)
+
     @classmethod
     def get_allowed_storage_file_types(cls):
         # can store any file types in this logical file group - subclass needs to override this
@@ -988,7 +992,7 @@ class AbstractLogicalFile(models.Model):
             return primary_file.short_path
 
         # self is a fileset aggregation - aggregation folder path is the aggregation name
-        return self.folder
+        return self.dataset_name
 
     @property
     def metadata_short_file_path(self):

@@ -116,7 +116,7 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
     if res.resource_type == "CompositeResource":
         aggregation_name = path.split("/")[-1]
         try:
-            aggregation = res.get_aggregation_by_name(aggregation_name)
+            aggregation = res.get_aggregation_by_dataset_name(aggregation_name)
         except ObjectDoesNotExist:
             pass
         if aggregation:
@@ -126,12 +126,16 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
                     # redirect to referenced url in the url file instead
                     if hasattr(aggregation, 'redirect_url'):
                         return HttpResponseRedirect(aggregation.redirect_url)
+            # point to the main file path
+            path = aggregation.get_main_file.url[len("/resource/"):]
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             if res.is_federated:
+                irods_path = os.path.join(res.resource_federation_path, path)
                 irods_output_path = os.path.join(res.resource_federation_path, output_path)
             else:
+                irods_path = path
                 irods_output_path = output_path
 
     # folder requests are automatically zipped
