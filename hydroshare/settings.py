@@ -305,7 +305,8 @@ INSTALLED_APPS = (
     "hs_rest_api",
     "hs_dictionary",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'

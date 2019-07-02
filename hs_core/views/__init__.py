@@ -1708,6 +1708,39 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     return None
 
 
+class FindGroupsView(TemplateView):
+    template_name = 'pages/groups-unauthenticated.html'
+
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/groups-authenticated.html'
+        return super(FindGroupsView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.request.user.is_authenticated():
+            u = User.objects.get(pk=self.request.user.id)
+            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+
+            for g in groups:
+                g.is_user_member = u in g.gaccess.members
+                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                    request_from=u).exists()
+                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                    invitation_to=u).exists()
+                g.join_request = None
+                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            return {
+                'profile_user': u,
+                'groups': groups
+            }
+        else:
+            return {
+                'groups': Group.objects.filter(g2grp__resource__raccess__public=True)
+            }
+
+
 class MyGroupsView(TemplateView):
     template_name = 'pages/my-groups.html'
 
@@ -1783,39 +1816,6 @@ class GroupView(TemplateView):
             'add_view_user_form': AddUserForm(),
             'communities_enabled': settings.COMMUNITIES_ENABLED
         }
-
-
-class FindGroupsView(TemplateView):
-    template_name = 'pages/groups-unauthenticated.html'
-
-    def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated():
-            self.template_name = 'pages/groups-authenticated.html'
-        return super(FindGroupsView, self).dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        if self.request.user.is_authenticated():
-            u = User.objects.get(pk=self.request.user.id)
-            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-
-            for g in groups:
-                g.is_user_member = u in g.gaccess.members
-                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
-                    request_from=u).exists()
-                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
-                    invitation_to=u).exists()
-                g.join_request = None
-                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-            return {
-                'profile_user': u,
-                'groups': groups
-            }
-        else:
-            return {
-                'groups': Group.objects.filter(g2grp__resource__raccess__public=True)
-            }
 
 
 class MyResourcesView(TemplateView):

@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
-from hs_core.models import Topics
+from hs_communities.models import Topics
 
 logger = logging.getLogger(__name__)
 
