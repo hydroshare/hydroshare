@@ -31,6 +31,8 @@ def debug_resource(short_id):
         storage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
+        '''
+        single_file_aggregation has been removed
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
                 print("  {} is single file aggregation {} "
@@ -42,6 +44,8 @@ def debug_resource(short_id):
                     print("    {} does not exist".format(f.storage_path + "_resmap.xml"))
                 if not storage.exists(f.storage_path + "_meta.xml"):
                     print("    {} does not exist".format(f.storage_path + "_meta.xml"))
+         '''
+
 
 
 class Command(BaseCommand):

@@ -103,8 +103,7 @@ def data_store_structure(request):
         logical_file_id = ''
         aggregation_name = ''
         if f.has_logical_file:
-            if f.logical_file.is_single_file_aggregation or \
-                    f.logical_file.get_main_file_type().endswith(f.extension):
+            if f.logical_file.get_main_file_type().endswith(f.extension):
                 aggregations.append({'logical_file_id': f.logical_file.id,
                                   'name': f.logical_file.dataset_name,
                                   'logical_type': f.logical_file.get_aggregation_class_name(),
@@ -446,6 +445,47 @@ def data_store_remove_folder(request):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
+
+    try:
+        folder_path = _validate_path(folder_path, 'folder_path')
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        remove_folder(user, res_id, folder_path)
+    except SessionException as ex:
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as ex:
+        return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return_object = {'status': 'success'}
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
+def data_store_remove_aggregation(request):
+    """
+    remove an aggregation. It is invoked by an AJAX call and returns json object that include a
+    status of 'success' if succeeds, and HttpResponse of status code of 403, 400, or 500 if fails.
+    The AJAX request must be a POST request with input data passed in for res_id and aggregation
+    dataset_name with relative path.
+    """
+    res_id = request.POST.get('res_id', None)
+    if res_id is None:
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, user = authorize(request, res_id,
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    aggregation_path = request.POST.get('aggregation_path', None)
 
     try:
         folder_path = _validate_path(folder_path, 'folder_path')

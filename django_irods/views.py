@@ -58,7 +58,6 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
     """
     if __debug__:
         logger.debug("request path is {}".format(path))
-
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
         split_path_strs.pop()
@@ -114,9 +113,9 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
 
     # check for aggregations
     if res.resource_type == "CompositeResource":
-        aggregation_name = path.split("/")[-1]
         try:
-            aggregation = res.get_aggregation_by_dataset_name(aggregation_name)
+            dataset_pathname = path[len(res.short_id + "/data/contents/"):]
+            aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
         except ObjectDoesNotExist:
             pass
         if aggregation:

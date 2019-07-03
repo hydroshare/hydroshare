@@ -980,13 +980,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                         aggregation_object = resource.get_file_aggregation_object(
                             destination_file)
                         if aggregation_object:
-                            if aggregation_object.is_single_file_aggregation:
-                                aggregation_object.logical_delete(user)
-                            else:
-                                directory = os.path.dirname(destination_file)
-                                # remove_folder expects path to start with 'data/contents'
-                                directory = directory.replace(res_id + "/", "")
-                                remove_folder(user, res_id, directory)
+                            aggregation_object.logical_delete(user)
                         else:
                             logger.error("No aggregation object found for " + destination_file)
                             istorage.delete(destination_file)
