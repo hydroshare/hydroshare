@@ -28,9 +28,9 @@ from django.conf import settings
 from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
-from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page
 from mezzanine.core.managers import PublishedManager
@@ -121,13 +121,13 @@ def validate_user_url(value):
     err_message = '%s is not a valid url for hydroshare user' % value
     if value:
         url_parts = value.split('/')
-        if len(url_parts) != 6:
+        if len(url_parts) != 4:
             raise ValidationError(err_message)
-        if url_parts[3] != 'user':
+        if url_parts[1] != 'user':
             raise ValidationError(err_message)
 
         try:
-            user_id = int(url_parts[4])
+            user_id = int(url_parts[2])
         except ValueError:
             raise ValidationError(err_message)
 
@@ -351,6 +351,10 @@ class AbstractMetaDataElement(models.Model):
         """Return content object that describes metadata."""
         return self.content_object
 
+    @property
+    def dict(self):
+        return {self.__class__.__name__: model_to_dict(self)}
+
     @classmethod
     def create(cls, **kwargs):
         """Pass through kwargs to object.create method."""
@@ -397,7 +401,8 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
+    description = models.CharField(null=True, blank=True, max_length=50,
+                                   validators=[validate_user_url])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -4186,6 +4191,7 @@ class CoreMetaData(models.Model):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url
+        from hs_core.templatetags.hydroshare_tags import name_without_commas
 
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
@@ -4198,7 +4204,9 @@ class CoreMetaData(models.Model):
         if person.name:
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = person.name
+
+            hsterms_name.text = name_without_commas(person.name)
+
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)

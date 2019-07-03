@@ -18,6 +18,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
+from drf_yasg.utils import swagger_auto_schema
 
 
 logger = logging.getLogger(__name__)
@@ -292,6 +293,12 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 
 @api_view(['POST'])
+def data_store_add_reference_public(request):
+    return data_store_add_reference(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
+@api_view(['POST'])
 def data_store_add_reference(request):
     """
     create the reference url file, add the url file to resource, and add the url to
@@ -336,6 +343,12 @@ def data_store_add_reference(request):
         return JsonResponse({'message': msg}, status=ret_status)
 
 
+@api_view(['POST'])
+def data_store_edit_reference_url_public(request):
+    return data_store_edit_reference_url(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_edit_reference_url(request):
     """
@@ -518,6 +531,7 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_move_to_folder(request, pk=None):
     """
@@ -636,6 +650,7 @@ def data_store_move_to_folder(request, pk=None):
     )
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_rename_file_or_folder(request, pk=None):
     """
