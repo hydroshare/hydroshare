@@ -6,7 +6,19 @@
         <title>Topics</title>
     </head>
     <body>
-    <div id="topics-app">
+        <div id="topics-app">
+
+    <h2>View/Select Topics</h2>
+        <div class="container">
+            <div class="row-fluid">
+                <select class="selectpicker" data-show-subtext="true" data-live-search="true">
+                    <option v-for="number in numbers" v-bind:value="number.val"
+                            data-subtext={{ number.val }}>{% templatetag openvariable %} number.val {% templatetag closevariable %}</option>
+                </select>
+                {#            <span>Selected: {{ selected }}</span>#}
+            </div>
+        </div>
+    <h2>Edit Topics</h2>
         <template>
             <ul>
                 <li v-for="number in numbers">
@@ -16,16 +28,57 @@
             </ul>
         </template>
     </div>
+    <hr/>
+    <div id="Body" style="padding: 10px;">
+        <div class="container" style="margin-top: 80px">
+
+            <mover :left-items="unselectedItems" :right-items="selectedItems"
+                   title-left="Available Items" title-right="Selected Items"
+                   moved-item-location="bottom"
+                   v-on:item-moved="itemMoved"
+                   v-cloak>
+            </mover>
+            <hr/>
+            <button class="btn btn-primary" @click="saveItems()">Show Selected Items</button>
+
+            <h3>Bound and updated model values</h3>
+            {% templatetag openvariable %} unselectedItems {% templatetag closevariable %}
+            {% templatetag openvariable %} selectedItems {% templatetag closevariable %}
+        </div>
+    </div>
     </body>
     </html>
 {% endblock %}
 
 {% block extra_js %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
+    <style>
+    [v-cloak] {display: none}
+    </style>
+    <style>
+        /* override panel height for second panel */
+        #Mover2 .mover-panel {
+            height: 600px !important;
+        }
+        #Mover2 {
+            margin-top: 20px;
+        }
+    </style>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="application/javascript">
-            // contents here are required by topics.js
-            let topics = JSON.parse("{{ topics_json }}");
+        // contents here are required by topics.js
+        let topics = JSON.parse("{{ topics_json }}");
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
+    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>
+    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+    <script src="{{ STATIC_URL }}js/moverComponentSample.js"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
 
 {% endblock %}
