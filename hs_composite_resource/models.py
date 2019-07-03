@@ -265,7 +265,8 @@ class CompositeResource(BaseResource):
             if aggregation.aggregation_name == dataset_pathname:
                 return aggregation
 
-        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(dataset_pathname))
+        raise ObjectDoesNotExist("No matching aggregation was found for "
+                                 "name:{}".format(dataset_pathname))
 
     def get_aggregation_by_name(self, name):
         """Get an aggregation that matches the aggregation name specified by *name*

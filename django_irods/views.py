@@ -18,7 +18,6 @@ from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from . import models as m
 from .icommands import Session, GLOBAL_SESSION
-from hs_core.models import ResourceFile
 
 import logging
 logger = logging.getLogger(__name__)
@@ -162,8 +161,6 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
-
-
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped

@@ -5,7 +5,7 @@
 """
 
 from django.core.management.base import BaseCommand
-from hs_core.models import BaseResource, ResourceFile
+from hs_core.models import BaseResource
 from pprint import pprint
 
 
@@ -28,10 +28,10 @@ def debug_resource(short_id):
                 print("metadata for {} is".format(resource.short_id))
                 pprint(metadata)
 
-        storage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
-        '''
+        '''        
+        storage = resource.get_irods_storage()
         single_file_aggregation has been removed
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
@@ -45,7 +45,6 @@ def debug_resource(short_id):
                 if not storage.exists(f.storage_path + "_meta.xml"):
                     print("    {} does not exist".format(f.storage_path + "_meta.xml"))
          '''
-
 
 
 class Command(BaseCommand):

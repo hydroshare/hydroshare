@@ -4,7 +4,7 @@ from dateutil import parser
 
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
+from hs_core.hydroshare.utils import add_file_to_resource
 from hs_core.hydroshare import create_resource, add_resource_files
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
     NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \

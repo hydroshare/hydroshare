@@ -106,10 +106,11 @@ def data_store_structure(request):
         if f.has_logical_file:
             if f.logical_file.get_main_file_type().endswith(f.extension):
                 aggregations.append({'logical_file_id': f.logical_file.id,
-                                  'name': f.logical_file.dataset_name,
-                                  'logical_type': f.logical_file.get_aggregation_class_name(),
-                                  'aggregation_name': f.logical_file.get_aggregation_display_name(),
-                                  'url': f.logical_file.url})
+                                     'name': f.logical_file.dataset_name,
+                                     'logical_type': f.logical_file.get_aggregation_class_name(),
+                                     'aggregation_name':
+                                         f.logical_file.get_aggregation_display_name(),
+                                     'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
             logical_file_id = f.logical_file.id
             aggregation_name = f.aggregation_display_name
