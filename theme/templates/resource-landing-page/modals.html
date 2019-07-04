@@ -111,29 +111,30 @@
                                 {{ add_view_hs_user_form.user }}
                             </div>
 
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                                  enctype="multipart/form-data">
-                                {% csrf_token %}
-                                <input name="resource-mode" type="hidden" value="edit">
+{#                            <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"#}
+{#                                  enctype="multipart/form-data">#}
+{#                                {% csrf_token %}#}
+{#                                <input name="resource-mode" type="hidden" value="edit">#}
 
-                                <div class="modal-body" style="display:none;">
-                                    <input maxlength="100" name="name" type="text">
-                                    <input name="description" type="text">
-                                    <input name="organization" type="text">
-                                    <input name="email" type="email">
-                                    <input maxlength="250" name="address" type="text">
-                                    <input maxlength="25" name="phone" type="text">
-                                    <input maxlength="200" name="homepage" type="url">
-                                    <div id="identifiers"></div>
-                                </div>
+{#                                <div class="modal-body" style="display:none;">#}
+{#                                    <input maxlength="100" name="name" type="text">#}
+{#                                    <input name="description" type="text">#}
+{#                                    <input name="organization" type="text">#}
+{#                                    <input name="email" type="email">#}
+{#                                    <input maxlength="250" name="address" type="text">#}
+{#                                    <input maxlength="25" name="phone" type="text">#}
+{#                                    <input maxlength="200" name="homepage" type="url">#}
+{#                                    <div id="identifiers"></div>#}
+{#                                </div>#}
 
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <button id="btn-add-author" type="button" class="btn btn-primary">
+                                    <button @click="addAuthorExistingUser"
+                                        type="button" class="btn btn-primary">
                                         Save Changes
                                     </button>
                                 </div>
-                            </form>
+{#                            </form>#}
                         </div>
 
                         {# Other Person #}
@@ -327,7 +328,7 @@
                     <div v-if="can_remove" class="modal-body modal-body--delete">
                         <div class="flex">
                             <span title="Remove author" data-toggle="collapse" data-target="#confirm-delete-author"
-                                  class="glyphicon glyphicon-trash icon-button table-icon btn-remove">
+                                  class="glyphicon glyphicon-trash icon-button table-icon btn-remove space-right">
                             </span>
 
                             <div id="confirm-delete-author" class="collapse">

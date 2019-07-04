@@ -98,7 +98,83 @@ Vue.component('add-author-modal', {
 
     },
     methods: {
+        addAuthorExistingUser: function () {
+            let vue = this;
+            let userId = $("#add-author-modal #user-autocomplete").yourlabsAutocomplete().data.exclude[0];
+            if (!userId) {
+                return;
+            }
 
+            let url = '/hsapi/_internal/get-user-or-group-data/' + userId + "/false";
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                success: function (result) {
+                    console.log(JSON.parse(result));
+
+                    let author = JSON.parse(result);
+
+                    let formData = new FormData();
+                    formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
+                    formData.append("organization", author.organization !== null ? author.organization : "");
+                    formData.append("email", author.email !== null ? author.email : "");
+                    formData.append("description", "/user/" + userId + "/");    // TODO: clean up url field to match this
+                    formData.append("address", author.address !== null ? author.address : "");
+                    formData.append("phone", author.phone !== null ? author.phone : "");
+                    formData.append("homepage", author.website !== null ? author.website : "");
+                    formData.append("name", author.name);
+
+                    $.each(author.identifiers, function (identifierName, identifierLink) {
+                        formData.append("identifier_name", identifierName);
+                        formData.append("identifier_link", identifierLink);
+                    });
+
+                    $.ajax({
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        url: '/hsapi/_internal/' + vue.resShortId + '/creator/add-metadata/',
+                        success: function (response) {
+                            console.log(response);
+                            if (response.status === "success") {
+                                let newAuthor = {
+                                    "id": response.element_id,
+                                    "name": author.name,
+                                    "email": author.email !== null ? author.email : "",
+                                    "organization": author.organization,
+                                    "identifiers": author.identifiers,
+                                    "address": author.address !== null ? author.address : "",
+                                    "phone": author.phone !== null ? author.phone : "",
+                                    "homepage": author.website !== null ? author.website : "",
+                                    "profileUrl": "/user/" + userId + "/",
+                                };
+
+                                leftHeaderApp.$data.authors.push(newAuthor);
+
+                                // Update the Order values
+                                leftHeaderApp.$data.authors = leftHeaderApp.$data.authors.map(function (item, index) {
+                                    item.order = index + 1;
+                                    return item;
+                                });
+
+                                $("#add-author-modal").modal("hide");
+                                showCompletedMessage(response);
+                            }
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                }
+            });
+            console.log("adding...");
+        },
     },
     watch: {
 
@@ -106,6 +182,7 @@ Vue.component('add-author-modal', {
     data: function () {
         return {
             userType: 0,
+            resShortId: SHORT_ID,
         }
     }
 });
@@ -223,15 +300,17 @@ let leftHeaderApp = new Vue({
             $.post('/hsapi/_internal/' + this.resShortId + '/delete-author/' + this.selectedAuthor.author.id +
                 '/', function (response) {
                 if (response.status === "success") {
-                    vue.authors.splice(vue.selectedAuthor.index, 1);    // Remove the author from the list
+                    // Remove the author from the list
+                    vue.authors.splice(vue.selectedAuthor.index, 1);
+
                     // Update the Order values
                     vue.authors = vue.authors.map(function (item, index) {
                         item.order = index + 1;
                         return item;
                     });
 
-                    // Dismiss the modal
-                    $("#edit-author-modal").modal('hide');
+                    $("#edit-author-modal").modal('hide');          // Dismiss the modal
+                    $("#confirm-delete-author").collapse("hide");   // Collapse delete warning
                 }
                 else {
                     vue.deleteAuthorError = response.message;
