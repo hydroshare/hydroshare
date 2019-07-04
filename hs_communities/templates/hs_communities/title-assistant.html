@@ -1,0 +1,92 @@
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>#}
+{#<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />#}
+{##}
+{##}
+{#<div id="ex1" class="modal">#}
+{#  <p>Thanks for clicking. That felt good.</p>#}
+{#  <a href="#" rel="modal:close">Close</a>#}
+{#</div>#}
+{##}
+{#<!-- Link to open the modal -->#}
+{#<p><a href="#ex1" rel="modal:open">Open Modal</a></p>#}
+
+<div id="title-builder-app">
+    <!-- template for the modal component -->
+    <script type="text/x-template" id="modal-template">
+        <transition name="modal">
+            <div class="modal-mask">
+                <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                        <div class="modal-header">
+                            <slot name="header">
+                                default header
+                            </slot>
+                        </div>
+
+                        <div class="modal-body">
+                            <slot name="body">
+                                default body
+                            </slot>
+                        </div>
+
+                        <div class="modal-footer">
+                            <slot name="footer">
+                                <button class="modal-default-button" @click="$emit('close')">
+                                    OK
+                                </button>
+                            </slot>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </script>
+
+    <!-- app -->asdf
+    https://stackoverflow.com/questions/32958219/getting-bootstraps-modal-content-from-another-page
+    <div id="modal-app">
+        {#  <button id="show-modal" @click="showModal = true">Show Modal</button>#}
+        <!-- use the modal component, pass in the prop -->
+        <modal v-if="showModal" @close="showModal = false">
+
+            <div slot="header">Title Builder</div>
+            <p slot="body">
+                <select id="czselect" v-model="selected" @change="updateInput()">
+                    <option disabled value="">Critical Zone Region</option>
+                    <option>BCCZO</option>
+                    <option>CCZO</option>
+                    <option>CJCZO</option>
+                    <option>CRBCZO</option>
+                    <option>ERCZO</option>
+                    <option>LCZO</option>
+                    <option>RCCZO</option>
+                    <option>SSCZO</option>
+                    <option>SSHCZO</option>
+                </select><br/>
+
+
+            <div id="dual-listbox" style="padding: 10px;">
+                <div class="container" style="margin-top: 80px">
+
+                    <mover :left-items="unselectedItems" :right-items="selectedItems"
+                           title-left="Available Items" title-right="Selected Items"
+                           moved-item-location="bottom"
+                           v-on:item-moved="itemMoved"
+                           v-cloak>
+                    </mover>
+                    <hr/>
+                    <button class="btn btn-primary" @click="saveItems()">Show Selected Items</button>
+
+                    <h3>Bound and updated model values</h3>
+                    {% templatetag openvariable %} unselectedItems {% templatetag closevariable %}
+                    {% templatetag openvariable %} selectedItems {% templatetag closevariable %}
+                </div>
+            </div>
+
+            </p>
+        </modal>
+    </div>
+</div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
