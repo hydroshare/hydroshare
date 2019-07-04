@@ -6,6 +6,7 @@ Vue.component('edit-author-modal', {
         is_person: {type: Boolean, required: true},
         can_remove: {type: Boolean, required: true},
         is_updating_author: {type: Boolean, required: false},
+        is_deleting_author: {type: Boolean, required: false},
     },
     methods: {
         onDeleteIdentifier: function (index) {
@@ -16,6 +17,9 @@ Vue.component('edit-author-modal', {
                 identifierName: null,
                 identifierLink: null
             });
+        },
+        onDeleteAuthor: function () {
+            this.$emit('delete-author');
         },
         onSaveAuthor: function() {
             // Transform the identifier field back into an object
@@ -87,6 +91,25 @@ Vue.component('edit-author-modal', {
     }
 });
 
+Vue.component('add-author-modal', {
+    delimiters: ['${', '}'],
+    template: '#add-author-modal-template',
+    props: {
+
+    },
+    methods: {
+
+    },
+    watch: {
+
+    },
+    data: function () {
+        return {
+            userType: 0,
+        }
+    }
+});
+
 Vue.component('author-preview-modal', {
     delimiters: ['${', '}'],
     template: '#author-preview-modal-template',
@@ -149,6 +172,8 @@ let leftHeaderApp = new Vue({
         },
         isUpdatingAuthor: false,
         editAuthorError: null,
+        isDeletingAuthor: false,
+        deleteAuthorError: null,
         userCardSelected: {
             user_type: null,
             access: null,
@@ -192,10 +217,26 @@ let leftHeaderApp = new Vue({
             this.cardPosition.top = el.position().top + 30;
         },
         deleteAuthor: function () {
-            // TODO: change endpoint to return json data
-            $.post('/hsapi/_internal/' + this.resShortId + '/creator/' + this.selectedAuthor.author.id +
-                '/delete-metadata/', function (result) {
-                console.log(result);
+            let vue = this;
+            vue.isDeletingAuthor = true;
+            vue.deleteAuthorError = null;
+            $.post('/hsapi/_internal/' + this.resShortId + '/delete-author/' + this.selectedAuthor.author.id +
+                '/', function (response) {
+                if (response.status === "success") {
+                    vue.authors.splice(vue.selectedAuthor.index, 1);    // Remove the author from the list
+                    // Update the Order values
+                    vue.authors = vue.authors.map(function (item, index) {
+                        item.order = index + 1;
+                        return item;
+                    });
+
+                    // Dismiss the modal
+                    $("#edit-author-modal").modal('hide');
+                }
+                else {
+                    vue.deleteAuthorError = response.message;
+                }
+                vue.isDeletingAuthor = false;
             });
         },
         updateAuthor: function(author) {

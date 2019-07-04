@@ -14,6 +14,8 @@ urlpatterns = [
         views.update_metadata_element, name='update_metadata_element'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$',
         views.delete_metadata_element, name='delete_metadata_element'),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-author/(?P<element_id>[A-z0-9]+)/$',
+        views.delete_author, name='delete_author'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/get-metadata/$',
         views.get_resource_metadata, name='get_metadata'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/update-key-value-metadata/$',

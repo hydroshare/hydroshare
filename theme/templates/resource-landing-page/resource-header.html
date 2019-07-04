@@ -153,8 +153,10 @@
 
             <edit-author-modal v-if="res_mode === 'Edit'"
                                @update-author="updateAuthor"
+                               @delete-author="deleteAuthor"
                                :_author="selectedAuthor.author"
                                :is_updating_author="isUpdatingAuthor"
+                               :is_deleting_author="isDeletingAuthor"
                                :is_person="isPerson"
                                :can_remove="authors.length > 1">
             </edit-author-modal>
@@ -163,6 +165,8 @@
                                   :author="selectedAuthor.author"
                                   :is_person="isPerson">
             </author-preview-modal>
+
+            <add-author-modal v-if="res_mode === 'Edit'"></add-author-modal>
         </div>
         <div class="col-sm-12 col-md-6 res-header">
             {% include "resource-landing-page/highlights.html" %}
