@@ -100,20 +100,24 @@ Vue.component('add-author-modal', {
     methods: {
         addAuthorExistingUser: function () {
             let vue = this;
-            let userId = $("#add-author-modal #user-autocomplete").yourlabsAutocomplete().data.exclude[0];
+            vue.addAuthorError = null;
+
+            let autoComplete = $("#add-author-modal #user-autocomplete").yourlabsAutocomplete().data;
+            let userId = autoComplete.exclude ? autoComplete.exclude[0] : null;
+
             if (!userId) {
+                vue.addAuthorError = "Select a user to add as an author";
                 return;
             }
 
             let url = '/hsapi/_internal/get-user-or-group-data/' + userId + "/false";
 
+            vue.isAddingAuthor = true;
             $.ajax({
                 type: "POST",
                 url: url,
                 dataType: 'html',
                 success: function (result) {
-                    console.log(JSON.parse(result));
-
                     let author = JSON.parse(result);
 
                     let formData = new FormData();
@@ -138,7 +142,6 @@ Vue.component('add-author-modal', {
                         contentType: false,
                         url: '/hsapi/_internal/' + vue.resShortId + '/creator/add-metadata/',
                         success: function (response) {
-                            console.log(response);
                             if (response.status === "success") {
                                 let newAuthor = {
                                     "id": response.element_id,
@@ -163,17 +166,22 @@ Vue.component('add-author-modal', {
                                 $("#add-author-modal").modal("hide");
                                 showCompletedMessage(response);
                             }
+                            else {
+                                vue.addAuthorError = response.message;
+                            }
+                            vue.isAddingAuthor = false;
                         },
                         error: function (response) {
+                            vue.isAddingAuthor = false;
                             console.log(response);
                         }
                     });
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+                    vue.isAddingAuthor = false;
+                    vue.addAuthorError = textStatus;
                 }
             });
-            console.log("adding...");
         },
     },
     watch: {
@@ -183,6 +191,8 @@ Vue.component('add-author-modal', {
         return {
             userType: 0,
             resShortId: SHORT_ID,
+            isAddingAuthor: false,
+            addAuthorError: null,
         }
     }
 });
