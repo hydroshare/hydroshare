@@ -104,7 +104,7 @@
                                         </div>
 
                                         {# ORGANIZATION #}
-                                        <div class="control-group control-group--organization">
+                                        <div class="control-group">
                                             <label for="creator-organization"
                                                    class="control-label">Organization
                                                 <span v-if="authorType === authorTypes.ORGANIZATION">*</span>
@@ -119,7 +119,7 @@
                                         </div>
 
                                         {# EMAIL #}
-                                        <div class="control-group control-group--email">
+                                        <div class="control-group">
                                             <label for="creator-email" class="control-label">Email</label>
 
                                             <div class="controls">
@@ -130,7 +130,7 @@
                                         </div>
 
                                         {# ADDRESS #}
-                                        <div class="control-group control-group--address">
+                                        <div class="control-group">
                                             <label for="creator-address" class="control-label">Address</label>
 
                                             <div class="controls">
@@ -141,7 +141,7 @@
                                         </div>
 
                                         {# PHONE #}
-                                        <div class="control-group control-group--phone">
+                                        <div class="control-group">
                                             <label for="creator-phone" class="control-label">Phone</label>
 
                                             <div class="controls">
@@ -152,7 +152,7 @@
                                         </div>
 
                                         {# HOMEPAGE #}
-                                        <div class="control-group control-group--homepage">
+                                        <div class="control-group">
                                             <label for="creator-homepage" class="control-label">Homepage</label>
 
                                             <div class="controls">
@@ -200,6 +200,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div class="modal-footer">
                                 <button :disabled="isAddingAuthor"
                                         type="button" class="btn btn-default" data-dismiss="modal">Cancel
@@ -227,7 +228,6 @@
                         <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
                     </div>
 
-
                     <div v-if="can_remove" class="modal-body">
                         <div class="flex">
                             <span @click="showConfirmDelete = !showConfirmDelete" title="Remove author"
@@ -251,18 +251,16 @@
                                             <template v-else>Delete</template>
                                         </a>
                                     </div>
-
                                 </div>
                             </transition>
                         </div>
                     </div>
 
-
                     <div class="modal-body">
                         <div class="form-group">
                             <fieldset>
                                 {# NAME #}
-                                <div v-if="is_person" class="control-group control-group--name">
+                                <div v-if="is_person" class="control-group">
                                     <label for="creator-name" class="control-label requiredField">Name<span
                                         class="asteriskField">*</span>
                                     </label>
@@ -277,13 +275,13 @@
                                 </div>
 
                                 {# PROFILE URL #}
-                                <div v-if="author.profileUrl" class="control-group control-group--description">
+                                <div v-if="author.profileUrl" class="control-group">
                                     <label class="control-label space-right">HydroShare Profile</label>
                                     <div class="space-bottom"><a :href="author.profileUrl">View Profile</a></div>
                                 </div>
 
                                 {# ORGANIZATION #}
-                                <div class="control-group control-group--organization">
+                                <div class="control-group">
                                     <label for="creator-organization" class="control-label">Organization
                                         <span v-if="!is_person" class="asteriskField">*</span></label>
 
@@ -297,7 +295,7 @@
                                 </div>
 
                                 {# EMAIL #}
-                                <div class="control-group control-group--email">
+                                <div class="control-group">
                                     <label for="creator-email" class="control-label">Email</label>
 
                                     <div class="controls">
@@ -308,7 +306,7 @@
                                 </div>
 
                                 {# ADDRESS #}
-                                <div class="control-group control-group--address">
+                                <div class="control-group">
                                     <label for="creator-address" class="control-label">Address</label>
 
                                     <div class="controls">
@@ -319,7 +317,7 @@
                                 </div>
 
                                 {# PHONE #}
-                                <div class="control-group control-group--phone">
+                                <div class="control-group">
                                     <label for="creator-phone" class="control-label">Phone</label>
 
                                     <div class="controls">
@@ -330,7 +328,7 @@
                                 </div>
 
                                 {# HOMEPAGE #}
-                                <div class="control-group control-group--homepage">
+                                <div class="control-group">
                                     <label for="creator-homepage" class="control-label">Homepage</label>
 
                                     <div class="controls">
