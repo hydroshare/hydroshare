@@ -222,7 +222,7 @@ Vue.component('add-author-modal', {
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     vue.isAddingAuthor = false;
-                    vue.addAuthorError = textStatus;
+                    vue.addAuthorError = errorThrown;
                 }
             });
         },
@@ -295,6 +295,17 @@ Vue.component('add-author-modal', {
                         });
 
                         $("#add-author-modal").modal("hide");
+
+                        // Reset form fields
+                        vue.author = {
+                            "name": null,
+                            "email": null,
+                            "organization": null,
+                            "identifiers": [],
+                            "address": null,
+                            "phone": null,
+                            "homepage": null,
+                        };
                         showCompletedMessage(response);
                     }
                     else {
@@ -456,7 +467,6 @@ let leftHeaderApp = new Vue({
                     });
 
                     $("#edit-author-modal").modal('hide');          // Dismiss the modal
-                    $("#confirm-delete-author").collapse("hide");   // Collapse delete warning
                 }
                 else {
                     vue.deleteAuthorError = response.message;
