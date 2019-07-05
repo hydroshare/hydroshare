@@ -9,7 +9,6 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
@@ -68,7 +67,6 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file type
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -151,7 +149,6 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file type
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -221,7 +218,6 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 

@@ -56,6 +56,13 @@ class AbstractFileMetaData(models.Model):
         """
         return list(self.coverages.all())
 
+    def dict(self):
+        dict = {}
+        metadata = self.get_metadata_elements()
+        for element in metadata:
+            dict.update(element.dict)
+        return dict
+
     def delete_all_elements(self):
         self.coverages.all().delete()
         self.extra_metadata = {}
@@ -755,6 +762,10 @@ class AbstractLogicalFile(models.Model):
                         return f
         return None
 
+    @property
+    def url(self):
+        return "/" + os.path.join("resource", self.resource.file_path, self.aggregation_name)
+
     @classmethod
     def get_allowed_storage_file_types(cls):
         # can store any file types in this logical file group - subclass needs to override this
@@ -981,14 +992,11 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
-        if not self.is_fileset:
-            # any aggregation that is not a fileset type, the path of the aggregation primary file
-            # is the aggregation name
-            primary_file = self.get_primary_resouce_file(self.files.all())
-            return primary_file.short_path
-
-        # self is a fileset aggregation - aggregation folder path is the aggregation name
-        return self.folder
+        short_path = self.files.first().short_path
+        if "/" in short_path:
+            short_path = short_path.rsplit("/")[0]
+            return os.path.join(short_path, self.dataset_name)
+        return self.dataset_name
 
     @property
     def metadata_short_file_path(self):
@@ -1013,16 +1021,6 @@ class AbstractLogicalFile(models.Model):
         """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.map_short_file_path)
-
-    @property
-    def is_single_file_aggregation(self):
-        """
-        Returns True if the aggregation consists of only one file, otherwise, False.
-        Subclasses that support only single file must override this property
-
-        :return: True or False
-        """
-        return False
 
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
@@ -1449,9 +1447,7 @@ class AbstractLogicalFile(models.Model):
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
 
-        if not self.is_single_file_aggregation:
-            # remove file extension
-            xml_file_name, _ = os.path.splitext(xml_file_name)
+        xml_file_name, _ = os.path.splitext(xml_file_name)
 
         if resmap:
             xml_file_name += "_resmap.xml"

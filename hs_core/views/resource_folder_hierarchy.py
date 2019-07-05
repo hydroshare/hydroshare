@@ -4,6 +4,7 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
@@ -17,6 +18,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
+from drf_yasg.utils import swagger_auto_schema
 
 
 logger = logging.getLogger(__name__)
@@ -103,13 +105,13 @@ def data_store_structure(request):
         logical_file_id = ''
         aggregation_name = ''
         if f.has_logical_file:
-            if f.logical_file.is_single_file_aggregation or \
-                    f.logical_file.get_main_file_type().endswith(f.extension):
+            if f.logical_file.get_main_file_type().endswith(f.extension):
                 aggregations.append({'logical_file_id': f.logical_file.id,
-                                  'name': f.logical_file.dataset_name,
-                                  'logical_type': f.logical_file.get_aggregation_class_name(),
-                                  'aggregation_name': f.logical_file.get_aggregation_display_name(),
-                                  'url': f.url})
+                                     'name': f.logical_file.dataset_name,
+                                     'logical_type': f.logical_file.get_aggregation_class_name(),
+                                     'aggregation_name':
+                                         f.logical_file.get_aggregation_display_name(),
+                                     'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
             logical_file_id = f.logical_file.id
             aggregation_name = f.aggregation_display_name
@@ -291,6 +293,12 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 
 @api_view(['POST'])
+def data_store_add_reference_public(request):
+    return data_store_add_reference(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
+@api_view(['POST'])
 def data_store_add_reference(request):
     """
     create the reference url file, add the url file to resource, and add the url to
@@ -335,6 +343,12 @@ def data_store_add_reference(request):
         return JsonResponse({'message': msg}, status=ret_status)
 
 
+@api_view(['POST'])
+def data_store_edit_reference_url_public(request):
+    return data_store_edit_reference_url(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_edit_reference_url(request):
     """
@@ -517,6 +531,7 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_move_to_folder(request, pk=None):
     """
@@ -635,6 +650,7 @@ def data_store_move_to_folder(request, pk=None):
     )
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_rename_file_or_folder(request, pk=None):
     """

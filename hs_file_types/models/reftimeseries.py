@@ -794,11 +794,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         """
         return "Reference to Time Series"
 
-    @property
-    def is_single_file_aggregation(self):
-        """This aggregation supports only one file"""
-        return True
-
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
@@ -814,7 +809,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == '.json']
         return res_files[0] if res_files else None
-    
+
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)

@@ -18,13 +18,13 @@ from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from . import models as m
 from .icommands import Session, GLOBAL_SESSION
-from hs_core.models import ResourceFile
+from drf_yasg.utils import swagger_auto_schema
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=True,
+def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
@@ -58,7 +58,6 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
     """
     if __debug__:
         logger.debug("request path is {}".format(path))
-
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
         split_path_strs.pop()
@@ -114,9 +113,9 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
 
     # check for aggregations
     if res.resource_type == "CompositeResource":
-        aggregation_name = path.split("/")[-1]
         try:
-            aggregation = res.get_aggregation_by_name(aggregation_name)
+            dataset_pathname = path[len(res.short_id + "/data/contents/"):]
+            aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
         except ObjectDoesNotExist:
             pass
         if aggregation:
@@ -126,12 +125,16 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
                     # redirect to referenced url in the url file instead
                     if hasattr(aggregation, 'redirect_url'):
                         return HttpResponseRedirect(aggregation.redirect_url)
+            # point to the main file path
+            path = aggregation.get_main_file.url[len("/resource/"):]
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             if res.is_federated:
+                irods_path = os.path.join(res.resource_federation_path, path)
                 irods_output_path = os.path.join(res.resource_federation_path, output_path)
             else:
+                irods_path = path
                 irods_output_path = output_path
 
     # folder requests are automatically zipped
@@ -159,8 +162,6 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
                     irods_output_path = os.path.join(res.resource_federation_path, output_path)
                 else:
                     irods_output_path = output_path
-
-
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
@@ -409,6 +410,7 @@ def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=
     return response
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_download(request, path, *args, **kwargs):
     # need to have a separate view function just for REST API call
@@ -435,6 +437,7 @@ def check_task_status(request, task_id=None, *args, **kwargs):
                             content_type="application/json")
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_check_task_status(request, task_id, *args, **kwargs):
     # need to have a separate view function just for REST API call

@@ -35,7 +35,7 @@
                                        data-{{ name }}="{{ link }}"
                                             {% endfor %}>
                                         {% if author.name %}
-                                            {{ author.name }}
+                                            {{ author.name|name_without_commas }}
                                         {% else %}
                                             {{ author.organization }}
                                         {% endif %}

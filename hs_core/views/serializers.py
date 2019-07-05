@@ -8,8 +8,10 @@ from hs_core.hydroshare import utils
 from hs_core import hydroshare
 from .utils import validate_json, validate_user, validate_group
 from hs_access_control.models import PrivilegeCodes
+from drf_yasg.utils import swagger_serializer_method
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
+CONTENT_TYPES = [ctype.__name__ for ctype in utils.get_content_types()]
 
 
 class StringListField(serializers.ListField):
@@ -59,13 +61,19 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
             choices=zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
                 [x.__name__ for x in hydroshare.get_resource_types()]
-            ), default='GenericResource')
+            ), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100, required=True,
                                           validators=[lambda x: x in RESOURCE_TYPES],
                                           help_text='list of resource types')
+
+
+class ContentTypesSerializer(serializers.Serializer):
+    content_type = serializers.CharField(max_length=100, required=True,
+                                          validators=[lambda x: x in CONTENT_TYPES],
+                                          help_text='list of content types')
 
 
 class TaskStatusSerializer(serializers.Serializer):
@@ -193,6 +201,11 @@ class ResourceType(object):
         self.resource_type = resource_type
 
 
+class ContentType(object):
+    def __init__(self, content_type):
+        self.content_type = content_type
+
+
 ResourceListItem = namedtuple('ResourceListItem',
                               ['resource_type',
                                'resource_id',
@@ -212,7 +225,8 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'coverages',
                                'science_metadata_url',
                                'resource_map_url',
-                               'resource_url'])
+                               'resource_url',
+                               'content_types'])
 
 ResourceFileItem = namedtuple('ResourceFileItem',
                               ['url',
@@ -229,3 +243,11 @@ class UserAuthenticateRequestValidator(serializers.Serializer):
 
 class AccessRulesRequestValidator(serializers.Serializer):
     public = serializers.BooleanField(default=False)
+
+
+class ResourceFileValidator(serializers.Serializer):
+    file = serializers.FileField()
+
+    @swagger_serializer_method(serializer_or_field=file)
+    def get_file(self, obj):
+        return ResourceFileValidator().data
