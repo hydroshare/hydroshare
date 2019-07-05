@@ -139,7 +139,6 @@
                      role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                             aria-hidden="false">&times;</span></button>
-
                     <br>
                     {% if cm.check_content_files == 'multiple_nam' %}
                         <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
@@ -233,7 +232,7 @@
                 <!-- use the modal component, pass in the prop -->
                 <modal v-if="showModal" @close="showModal = false">
 
-                    <div slot="header">Title Builder</div>
+                    <div slot="header">Title Assistant</div>
                     <p slot="body">
                         <select id="czselect" v-model="selected" @change="updateInput()">
                             <option disabled value="">Critical Zone Region</option>
@@ -268,8 +267,7 @@
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-primary pull-right btn-form-submit"
-                            style="display: none;">
+                    <button type="button" class="btn btn-primary pull-right btn-form-submit" style="display: none;">
                         Save changes
                     </button>
                 </div>

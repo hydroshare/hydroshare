@@ -31,7 +31,7 @@
     {#    <hr/>#}
     <div id="title-assistant" style="padding: 10px;">
         Region:
-        <select id="czselect" v-model="select" @change="updateInput()">
+        <select id="czselect" v-model="regionSelected" @change="updateRegion()">
             <option disabled value="">Critical Zone Region</option>
             <option>BCCZO</option>
             <option>CCZO</option>
@@ -90,7 +90,7 @@
         // contents here are required by topics.js
         let topics = JSON.parse("{{ topics_json }}");
     </script>
-{#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>#}
+{#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
     <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>
     <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
     <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
