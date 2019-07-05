@@ -246,14 +246,15 @@ Vue.component('add-author-modal', {
             formData.append("address", author.address !== null ? author.address : "");
             formData.append("phone", author.phone !== null ? author.phone : "");
             formData.append("homepage", author.homepage !== null ? author.homepage : "");
+            $.each(author.identifiers, function (identifierName, identifierLink) {
+                formData.append("identifier_name", identifierName);
+                formData.append("identifier_link", identifierLink);
+            });
 
             // Person specific fields
             if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                 formData.append("name", author.name);
-                $.each(author.identifiers, function (identifierName, identifierLink) {
-                    formData.append("identifier_name", identifierName);
-                    formData.append("identifier_link", identifierLink);
-                });
+
             }
 
             vue.isAddingAuthor = true;
