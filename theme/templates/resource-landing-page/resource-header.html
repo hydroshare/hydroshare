@@ -11,7 +11,7 @@
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
-                            <template v-if="author.name">${ author.name }</template>
+                            <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
                             <template v-else>${ author.organization }</template>
                         </a>
                     </td>

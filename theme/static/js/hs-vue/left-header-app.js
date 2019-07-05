@@ -1,3 +1,22 @@
+const IDENTIFIERS = {
+    ORCID: {
+        title: "ORCID",
+        value: "ORCID"
+    },
+    ResearchGateID: {
+        title: "ResearchGate",
+        value: "ResearchGateID"
+    },
+    ResearcherID: {
+        title: "ResearcherID",
+        value: "ResearcherID"
+    },
+    GoogleScholarID: {
+        title: "Google Scholar",
+        value: "GoogleScholarID"
+    }
+};
+
 Vue.component('edit-author-modal', {
     delimiters: ['${', '}'],
     template: '#edit-author-modal-template',
@@ -70,24 +89,7 @@ Vue.component('edit-author-modal', {
 
         return {
             author: localAuthor,
-            identifierDict: {
-                ORCID: {
-                    title: "ORCID",
-                    value: "ORCID"
-                },
-                ResearchGateID: {
-                    title: "ResearchGate",
-                    value: "ResearchGateID"
-                },
-                ResearcherID: {
-                    title: "ResearcherID",
-                    value: "ResearcherID"
-                },
-                GoogleScholarID: {
-                    title: "Google Scholar",
-                    value: "GoogleScholarID"
-                }
-            },
+            identifierDict: IDENTIFIERS,
             showConfirmDelete: false
         }
     }
@@ -108,24 +110,7 @@ Vue.component('add-author-modal', {
                 OTHER_PERSON: 1,
                 ORGANIZATION: 2,
             },
-            identifierDict: {
-                ORCID: {
-                    title: "ORCID",
-                    value: "ORCID"
-                },
-                ResearchGateID: {
-                    title: "ResearchGate",
-                    value: "ResearchGateID"
-                },
-                ResearcherID: {
-                    title: "ResearcherID",
-                    value: "ResearcherID"
-                },
-                GoogleScholarID: {
-                    title: "Google Scholar",
-                    value: "GoogleScholarID"
-                }
-            },
+            identifierDict: IDENTIFIERS,
             author: {
                 "name": null,
                 "email": null,
@@ -136,9 +121,6 @@ Vue.component('add-author-modal', {
                 "homepage": null,
             },
         }
-    },
-    props: {
-
     },
     methods: {
         addAuthorExistingUser: function () {
@@ -315,7 +297,7 @@ Vue.component('add-author-modal', {
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(response);
-                    vue.addAuthorError = textStatus;
+                    vue.addAuthorError = errorThrown;
                     vue.isAddingAuthor = false;
                 }
             });
@@ -338,10 +320,6 @@ Vue.component('add-author-modal', {
             return search.length > 0;
         }
     },
-    watch: {
-
-    },
-
 });
 
 Vue.component('author-preview-modal', {
