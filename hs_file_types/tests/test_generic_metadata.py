@@ -302,8 +302,10 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
         logical_file = res_file.logical_file
-        expected_meta_path = '{}_meta.xml'.format(res_file.file_name)
-        expected_map_path = '{}_resmap.xml'.format(res_file.file_name)
+        # file name without extension
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{}_meta.xml'.format(res_file_name)
+        expected_map_path = '{}_resmap.xml'.format(res_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -317,8 +319,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -329,8 +332,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -342,8 +346,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(folder_rename, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(folder_rename, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}_meta.xml'.format(folder_rename, res_file_name)
+        expected_map_path = '{0}/{1}_resmap.xml'.format(folder_rename, res_file_name)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.composite_resource.delete()
