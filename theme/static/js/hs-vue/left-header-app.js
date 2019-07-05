@@ -240,19 +240,23 @@ Vue.component('add-author-modal', {
 
             let formData = new FormData();
             formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
-            formData.append("name", author.name);
+
             formData.append("organization", author.organization !== null ? author.organization : "");
             formData.append("email", author.email !== null ? author.email : "");
             formData.append("address", author.address !== null ? author.address : "");
             formData.append("phone", author.phone !== null ? author.phone : "");
             formData.append("homepage", author.homepage !== null ? author.homepage : "");
 
-            vue.isAddingAuthor = true;
+            // Person specific fields
+            if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
+                formData.append("name", author.name);
+                $.each(author.identifiers, function (identifierName, identifierLink) {
+                    formData.append("identifier_name", identifierName);
+                    formData.append("identifier_link", identifierLink);
+                });
+            }
 
-            $.each(author.identifiers, function (identifierName, identifierLink) {
-                formData.append("identifier_name", identifierName);
-                formData.append("identifier_link", identifierLink);
-            });
+            vue.isAddingAuthor = true;
 
             $.ajax({
                 type: "POST",
@@ -264,15 +268,21 @@ Vue.component('add-author-modal', {
                     if (response.status === "success") {
                         let newAuthor = {
                             "id": response.element_id.toString(),
-                            "name": author.name,
                             "email": author.email !== null ? author.email : "",
                             "organization": author.organization,
-                            "identifiers": author.identifiers,
                             "address": author.address !== null ? author.address : "",
                             "phone": author.phone !== null ? author.phone : "",
                             "homepage": author.homepage !== null ? author.homepage : "",
-                            "profileUrl": null
+                            "identifiers": author.identifiers,
+                            "name": "",
+                            "profileUrl": "",
                         };
+
+                        // Person specific fields
+                        if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
+                            newAuthor.name = author.name;
+                            newAuthor.profileUrl = null;
+                        }
 
                         leftHeaderApp.$data.authors.push(newAuthor);
 
@@ -571,15 +581,20 @@ function getAuthorFormData(author, isPerson) {
     formData.append("creator-" + (author.order - 1) + "-address", author.address !== null ? author.address : "");
     formData.append("creator-" + (author.order - 1) + "-phone", author.phone !== null ? author.phone : "");
     formData.append("creator-" + (author.order - 1) + "-homepage", author.homepage !== null ? author.homepage : "");
+    $.each(author.identifiers, function (identifierName, identifierLink) {
+        formData.append("identifier_name", identifierName);
+        formData.append("identifier_link", identifierLink);
+    });
 
     // Person-exclusive fields
     if (isPerson) {
         formData.append("creator-" + (author.order - 1) + "-name", author.name);
         formData.append("creator-" + (author.order - 1) + "-description", author.profileUrl !== null ? author.profileUrl : "");
-        $.each(author.identifiers, function (identifierName, identifierLink) {
-            formData.append("identifier_name", identifierName);
-            formData.append("identifier_link", identifierLink);
-        });
+    }
+    else {
+        // Empty values still needed for valid request
+        formData.append("creator-" + (author.order - 1) + "-name", "");
+        formData.append("creator-" + (author.order - 1) + "-description", "");
     }
 
     return formData;
