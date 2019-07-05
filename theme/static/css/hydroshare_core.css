@@ -3450,6 +3450,15 @@ span.you-flag {
   animation-duration: 0.6s; /* So they look staggered */
 }
 
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .35s;
+	transition-timing-function: ease;
+}
+
+.fade-enter, .fade-leave-to {
+	opacity: 0;
+}
+
 @keyframes come-in {
   to { transform: translateY(0); }
 }

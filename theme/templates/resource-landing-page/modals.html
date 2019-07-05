@@ -227,30 +227,36 @@
                         <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
                     </div>
 
-                    <div v-if="can_remove" class="modal-body modal-body--delete">
+
+                    <div v-if="can_remove" class="modal-body">
                         <div class="flex">
-                            <span title="Remove author" data-toggle="collapse" data-target="#confirm-delete-author"
+                            <span @click="showConfirmDelete = !showConfirmDelete" title="Remove author"
                                   class="glyphicon glyphicon-trash icon-button table-icon btn-remove space-right">
                             </span>
 
-                            <div id="confirm-delete-author" class="collapse">
-                                <div>
-                                    <strong>Are you sure you want to delete this metadata element?</strong>
+                            <transition name="fade">
+                                <div v-if="showConfirmDelete">
+                                    <div>
+                                        <strong>Are you sure you want to delete this metadata element?</strong>
+                                    </div>
+
+                                    <div class="space-top">
+                                        <button :disabled="is_deleting_author"
+                                                @click="showConfirmDelete = false"
+                                                type="button" class="btn btn-default">Cancel
+                                        </button>
+                                        <a :disabled="is_deleting_author"
+                                           @click="onDeleteAuthor()" type="button" class="btn btn-danger">
+                                            <template v-if="is_deleting_author">Deleting...</template>
+                                            <template v-else>Delete</template>
+                                        </a>
+                                    </div>
+
                                 </div>
-                                <div class="space-top">
-                                    <button :disabled="is_deleting_author"
-                                            data-toggle="collapse" data-target="#confirm-delete-author"
-                                            type="button" class="btn btn-default">Cancel
-                                    </button>
-                                    <a :disabled="is_deleting_author"
-                                       @click="onDeleteAuthor()" type="button" class="btn btn-danger">
-                                        <template v-if="is_deleting_author">Deleting...</template>
-                                        <template v-else>Delete</template>
-                                    </a>
-                                </div>
-                            </div>
+                            </transition>
                         </div>
                     </div>
+
 
                     <div class="modal-body">
                         <div class="form-group">
@@ -273,7 +279,7 @@
                                 {# PROFILE URL #}
                                 <div v-if="author.profileUrl" class="control-group control-group--description">
                                     <label class="control-label space-right">HydroShare Profile</label>
-                                    <a :href="author.profileUrl">View Profile</a>
+                                    <div class="space-bottom"><a :href="author.profileUrl">View Profile</a></div>
                                 </div>
 
                                 {# ORGANIZATION #}

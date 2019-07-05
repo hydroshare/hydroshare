@@ -55,6 +55,7 @@ Vue.component('edit-author-modal', {
             localAuthor.identifiers = identifiers;
 
             this.author = localAuthor;
+            this.showConfirmDelete =  false;
         }
     },
     data: function () {
@@ -87,6 +88,7 @@ Vue.component('edit-author-modal', {
                     value: "GoogleScholarID"
                 }
             },
+            showConfirmDelete: false
         }
     }
 });
@@ -185,7 +187,7 @@ Vue.component('add-author-modal', {
                         success: function (response) {
                             if (response.status === "success") {
                                 let newAuthor = {
-                                    "id": response.element_id,
+                                    "id": response.element_id.toString(),
                                     "name": author.name,
                                     "email": author.email !== null ? author.email : "",
                                     "organization": author.organization,
@@ -254,7 +256,6 @@ Vue.component('add-author-modal', {
             // Person specific fields
             if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                 formData.append("name", author.name);
-
             }
 
             vue.isAddingAuthor = true;
