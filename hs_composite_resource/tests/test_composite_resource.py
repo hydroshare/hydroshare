@@ -248,7 +248,12 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # files for a logical file type, other files in the composite resource are still associated
         # with their respective logical file types
 
-        self.create_composite_resource(self.raster_file)
+
+        self.create_composite_resource()
+        new_folder = 'raster_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the raster file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
 
         tif_res_file = [f for f in self.composite_resource.files.all()
                         if f.extension == ".tif"][0]
@@ -274,8 +279,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                         if f.extension == ".txt"][0]
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
 
-        # now delete the folder small_logan that contains files associated with raster file type
-        folder_path = "data/contents/small_logan"
+        # now delete the folder new_folder that contains files associated with raster file type
+        folder_path = "data/contents/{}".format(new_folder)
         remove_folder(self.user, self.composite_resource.short_id, folder_path)
         txt_res_file.refresh_from_db()
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
@@ -1025,33 +1030,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_full_path = os.path.join(new_folder_full_path, "another-folder")
         self.assertTrue(self.composite_resource.supports_folder_creation(new_folder_full_path))
 
-    def test_supports_folder_creation_multi_file_aggregation_folder(self):
-        """Here we are testing the function supports_folder_creation()
-        Test that this function returns False when we check for creating a folder inside a folder
-        that represents a multi-file aggregation (e.g., raster aggregation)
-        """
-        self.create_composite_resource()
-
-        # add a raster tif file to the resource which will be part of
-        # a GoeRasterLogicalFile object
-        self.add_file_to_resource(file_to_add=self.raster_file)
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # make the tif as part of the GeoRasterLogicalFile
-        tif_res_file = self.composite_resource.files.first()
-        self.assertEqual(tif_res_file.file_folder, None)
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
-        tif_res_file = self.composite_resource.files.first()
-        base_file_name, _ = os.path.splitext(tif_res_file.file_name)
-        expected_folder = base_file_name
-        self.assertEqual(tif_res_file.file_folder, expected_folder)
-        self.assertEqual(tif_res_file.file_name, self.raster_file_name)
-
-        # test that creating a folder at aggregation folder is not supported
-        # as that folder represetns a multi-file aggregation (raster aggregation)
-        new_folder_path = os.path.join(self.composite_resource.file_path,
-                                       tif_res_file.file_folder, 'my-new-folder')
-        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
-
     def test_supports_rename_single_file_aggregation_file(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
         composite resource class
@@ -1096,12 +1074,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         tif_res_file = self.composite_resource.files.first()
         # test renaming of any files that are part of GeoRasterLogicalFile is not allowed
-        file_rename = 'small_logan_1.tif'
-        self.assertNotEqual(tif_res_file.file_name, file_rename)
-        src_full_path = os.path.join(self.composite_resource.file_path,
-                                     tif_res_file.file_folder, self.raster_file_name)
-        tgt_full_path = os.path.join(self.composite_resource.file_path,
-                                     tif_res_file.file_folder, file_rename)
+        new_file_rename = 'small_logan_1.tif'
+        self.assertNotEqual(tif_res_file.file_name, new_file_rename)
+        src_full_path = os.path.join(self.composite_resource.file_path, self.raster_file_name)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, new_file_rename)
 
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
@@ -1184,15 +1160,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """
 
         self.create_composite_resource()
+        raster_folder = 'raster-folder'
+        raster_folder_path = "data/contents/{}".format(raster_folder)
+        # create the folder
+        create_folder(self.composite_resource.short_id, raster_folder_path)
         # add a raster tif file to the resource which will be part of
         # a GoeRasterLogicalFile object
-        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=raster_folder)
         self.assertEqual(self.composite_resource.files.count(), 1)
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = self.composite_resource.files.first()
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, raster_folder)
 
         # test renaming a folder that contains resource files that are part of the
         # GeoRasterLogicalFile is allowed
@@ -1241,24 +1221,27 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """
 
         self.create_composite_resource()
-
+        raster_folder = 'raster-folder'
+        raster_folder_path = "data/contents/{}".format(raster_folder)
+        # create the folder
+        create_folder(self.composite_resource.short_id, raster_folder_path)
         # add a raster tif file to the resource which will be part of
         # a GoeRasterLogicalFile object
-        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=raster_folder)
         self.assertEqual(self.composite_resource.files.count(), 1)
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = self.composite_resource.files.first()
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, raster_folder)
 
         # create a new folder
-        new_folder = '{}_1'.format(res_file.file_folder)
+        new_folder = 'some-other-folder'
         new_folder_path = os.path.join("data", "contents", new_folder)
         create_folder(self.composite_resource.short_id, new_folder_path)
 
-        # test it should be possible to move the 'small_logan' folder that
-        # represents the raster aggregation to the 'my-new-folder' that we created above
+        # test it should be possible to move the 'raster-folder' folder that
+        # contains the raster aggregation to the 'some-other-folder' that we created above
         src_full_path = os.path.join(self.composite_resource.file_path, res_file.file_folder)
         tgt_full_path = os.path.join(self.composite_resource.file_path, new_folder)
         # this is the function we are testing
@@ -1369,18 +1352,21 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """
 
         self.create_composite_resource()
-
+        raster_folder = 'raster-folder'
+        raster_folder_path = "data/contents/{}".format(raster_folder)
+        # create the folder
+        create_folder(self.composite_resource.short_id, raster_folder_path)
         # add a tif file to the resource
-        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=raster_folder)
         self.assertEqual(self.composite_resource.files.count(), 1)
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = self.composite_resource.files.first()
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(self.raster_file_name)
-        expected_folder_name = base_file_name
-        # resource file exists in a new folder
-        self.assertEqual(res_file.file_folder, expected_folder_name)
+
+        # resource file exists in a folder
+        self.assertEqual(res_file.file_folder, raster_folder)
 
         # test that we can't zip the folder that represents the aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, res_file.file_folder)
@@ -1393,19 +1379,20 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         """
 
         self.create_composite_resource()
-
+        raster_folder = 'raster-folder'
+        raster_folder_path = "data/contents/{}".format(raster_folder)
+        # create the folder
+        create_folder(self.composite_resource.short_id, raster_folder_path)
         # add a file to the resource which will be part of  a raster aggregation later
-        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=raster_folder)
         self.assertEqual(self.composite_resource.files.count(), 1)
 
         tif_res_file = self.composite_resource.files.first()
-        self.assertEqual(tif_res_file.file_folder, None)
+        self.assertEqual(tif_res_file.file_folder, raster_folder)
         # create the raster aggregation
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
         res_file = self.composite_resource.files.first()
-        base_file_name, _ = os.path.splitext(self.raster_file_name)
-        expected_folder_name = base_file_name
-        self.assertEqual(res_file.file_folder, expected_folder_name)
+        self.assertEqual(res_file.file_folder, raster_folder)
 
         # create a folder
         parent_folder = 'parent-folder'
@@ -1456,8 +1443,12 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that a folder containing a resource file that's part of the GeoRasterLogicalFile
         # can't be deleted after that folder gets zipped
 
+        raster_folder = 'raster-folder'
+        raster_folder_path = "data/contents/{}".format(raster_folder)
+        # create the folder
+        create_folder(self.composite_resource.short_id, raster_folder_path)
         # add a file to the resource which will be part of  a GeoRasterLogicalFile object
-        self.add_file_to_resource(file_to_add=self.raster_file)
+        self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=raster_folder)
         self.assertEqual(self.composite_resource.files.count(), 2)
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
@@ -1467,10 +1458,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
 
-        # resource file exists in a new folder
-        base_file_name, _ = os.path.splitext(self.raster_file_name)
-        expected_folder_name = base_file_name
-        self.assertEqual(tif_res_file.file_folder, expected_folder_name)
+        # resource file exists in a folder
+        self.assertEqual(tif_res_file.file_folder, raster_folder)
         folder_to_zip = os.path.join(self.composite_resource.file_path, tif_res_file.file_folder)
         # test that we can't zip the folder my_new_folder
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
@@ -1486,13 +1475,15 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(CompositeResource.objects.count(), 1)
         # add a file to the resource
         self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
         # create a copy of the composite resource
         new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
                                                                   self.user,
                                                                   action='copy')
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        # copy resource files and metadata
         new_composite_resource = hydroshare.copy_resource(self.composite_resource,
                                                           new_composite_resource)
-        self.assertEqual(CompositeResource.objects.count(), 2)
         self.assertEqual(self.composite_resource.metadata.title.value,
                          new_composite_resource.metadata.title.value)
         self.assertEqual(self.composite_resource.files.count(),
@@ -1517,6 +1508,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                                   action='copy')
         new_composite_resource = hydroshare.copy_resource(self.composite_resource,
                                                           new_composite_resource)
+
         self.assertEqual(CompositeResource.objects.count(), 2)
         self.assertEqual(self.composite_resource.metadata.title.value,
                          new_composite_resource.metadata.title.value)
@@ -1743,7 +1735,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a dbf file to the resource
         self.add_file_to_resource(file_to_add=self.watershed_dbf_file)
 
-        # set the shp file to raster aggregation
+        # set the shp file to geofeature aggregation
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, shp_res_file.id)
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
         # create a copy of the composite resource
