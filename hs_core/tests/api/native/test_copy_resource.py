@@ -349,6 +349,7 @@ class TestCopyResource(TestCase):
         new_composite_resource = hydroshare.copy_resource(self.composite_resource,
                                                           new_composite_resource)
 
+        self.assertEqual(new_composite_resource.files.count(), 2)
         self.assertEqual(self.composite_resource.files.count(),
                          new_composite_resource.files.count())
         # check that there is 2 GeoRasterLogicalFile objects
