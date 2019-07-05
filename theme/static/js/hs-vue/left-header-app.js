@@ -94,6 +94,47 @@ Vue.component('edit-author-modal', {
 Vue.component('add-author-modal', {
     delimiters: ['${', '}'],
     template: '#add-author-modal-template',
+    data: function () {
+        return {
+            userType: 0,
+            resShortId: SHORT_ID,
+            isAddingAuthor: false,
+            addAuthorError: null,
+            authorType: 0,
+            authorTypes: {
+                EXISTING_HS_USER: 0,
+                OTHER_PERSON: 1,
+                ORGANIZATION: 2,
+            },
+            identifierDict: {
+                ORCID: {
+                    title: "ORCID",
+                    value: "ORCID"
+                },
+                ResearchGateID: {
+                    title: "ResearchGate",
+                    value: "ResearchGateID"
+                },
+                ResearcherID: {
+                    title: "ResearcherID",
+                    value: "ResearcherID"
+                },
+                GoogleScholarID: {
+                    title: "Google Scholar",
+                    value: "GoogleScholarID"
+                }
+            },
+            author: {
+                "name": null,
+                "email": null,
+                "organization": null,
+                "identifiers": [],
+                "address": null,
+                "phone": null,
+                "homepage": null,
+            },
+        }
+    },
     props: {
 
     },
@@ -183,18 +224,101 @@ Vue.component('add-author-modal', {
                 }
             });
         },
+        addAuthorOtherPerson: function () {
+            let vue = this;
+            // Transform the identifier field back into an object
+            let author = $.extend(true, {}, this.author);
+            let identifiers = {};
+
+            this.author.identifiers.map(function (el) {
+                if (el.identifierName && el.identifierLink) {
+                    identifiers[el.identifierName] = el.identifierLink;
+                }
+            });
+
+            author.identifiers = identifiers;
+
+            let formData = new FormData();
+            formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
+            formData.append("name", author.name);
+            formData.append("organization", author.organization !== null ? author.organization : "");
+            formData.append("email", author.email !== null ? author.email : "");
+            formData.append("address", author.address !== null ? author.address : "");
+            formData.append("phone", author.phone !== null ? author.phone : "");
+            formData.append("homepage", author.homepage !== null ? author.homepage : "");
+
+            vue.isAddingAuthor = true;
+
+            $.each(author.identifiers, function (identifierName, identifierLink) {
+                formData.append("identifier_name", identifierName);
+                formData.append("identifier_link", identifierLink);
+            });
+
+            $.ajax({
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                url: '/hsapi/_internal/' + vue.resShortId + '/creator/add-metadata/',
+                success: function (response) {
+                    if (response.status === "success") {
+                        let newAuthor = {
+                            "id": response.element_id.toString(),
+                            "name": author.name,
+                            "email": author.email !== null ? author.email : "",
+                            "organization": author.organization,
+                            "identifiers": author.identifiers,
+                            "address": author.address !== null ? author.address : "",
+                            "phone": author.phone !== null ? author.phone : "",
+                            "homepage": author.homepage !== null ? author.homepage : "",
+                            "profileUrl": null
+                        };
+
+                        leftHeaderApp.$data.authors.push(newAuthor);
+
+                        // Update the Order values
+                        leftHeaderApp.$data.authors = leftHeaderApp.$data.authors.map(function (item, index) {
+                            item.order = index + 1;
+                            return item;
+                        });
+
+                        $("#add-author-modal").modal("hide");
+                        showCompletedMessage(response);
+                    }
+                    else {
+                        vue.addAuthorError = response.message;
+                    }
+                    vue.isAddingAuthor = false;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(response);
+                    vue.addAuthorError = textStatus;
+                    vue.isAddingAuthor = false;
+                }
+            });
+        },
+        onDeleteIdentifier: function (index) {
+            this.author.identifiers.splice(index, 1);
+        },
+        // TODO: create a nested component with this identifier stuff
+        onAddIdentifier: function () {
+            this.author.identifiers.push({
+                identifierName: null,
+                identifierLink: null
+            });
+        },
+        hasIdentifier: function(identifier) {
+            let search = this.author.identifiers.filter(function (el) {
+                return el.identifierName === identifier;
+            });
+
+            return search.length > 0;
+        }
     },
     watch: {
 
     },
-    data: function () {
-        return {
-            userType: 0,
-            resShortId: SHORT_ID,
-            isAddingAuthor: false,
-            addAuthorError: null,
-        }
-    }
+
 });
 
 Vue.component('author-preview-modal', {
@@ -418,6 +542,22 @@ let leftHeaderApp = new Vue({
             this.selectedAuthor.author = $.extend(true, {}, author);  // Deep copy
             this.selectedAuthor.index = index;
         }
+    },
+    filters: {
+        nameWithoutCommas: function (name) {
+            if (!name) return '';
+            name = name.toString();
+
+            if (name.indexOf(',') >= 0) {
+                let  fullName = name.split(',');
+                if (fullName.length == 2) {
+                    let firstNames = fullName[1].trim();
+                    let lastNames = fullName[0].trim();
+                    return firstNames + " " + lastNames;
+                }
+            }
+            return name;    // default
+        }
     }
 });
 
@@ -435,7 +575,7 @@ function getAuthorFormData(author, isPerson) {
     // Person-exclusive fields
     if (isPerson) {
         formData.append("creator-" + (author.order - 1) + "-name", author.name);
-
+        formData.append("creator-" + (author.order - 1) + "-description", author.profileUrl !== null ? author.profileUrl : "");
         $.each(author.identifiers, function (identifierName, identifierLink) {
             formData.append("identifier_name", identifierName);
             formData.append("identifier_link", identifierLink);

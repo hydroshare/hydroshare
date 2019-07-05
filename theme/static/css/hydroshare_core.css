@@ -399,6 +399,13 @@ a.sign-out-inline:hover {
 	overflow: hidden;
 }
 
+#add-author-modal .author-types > button {
+	flex-grow: 1;
+	flex-basis: 0;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 /* warning access removal dialog title */
 .access-dialog-title {
 	display: none;
@@ -2269,7 +2276,7 @@ table.user-scope tr {
     background-color: #f5f5f5;
 }
 
-.user-roles li.loading, .access-table tr.loading {
+.user-roles li.loading, .access-table tr.loading, .authors-wrapper.loading {
 	animation: grayScaleChange 1s; /* animation-name followed by duration in seconds*/
 	/* you could also use milliseconds (ms) or something like 2.5s */
 	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
