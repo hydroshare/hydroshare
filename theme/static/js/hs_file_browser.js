@@ -2131,7 +2131,7 @@ function updateResourceUI() {
         $("#id_abstract").val(UIData.abstract);
         $("#txt-title").val(UIData.title);
         updateResourceAuthors(UIData.creators);
-        updateResourceKeywords(UIData.keywords.join(","));
+        updateResourceKeywords(UIData.keywords);
         updateResourceSpatialCoverage(UIData.spatial_coverage);
         updateResourceTemporalCoverage(UIData.temporal_coverage);
     });

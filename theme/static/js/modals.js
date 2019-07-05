@@ -61,15 +61,15 @@ $(document).ready(function() {
         $("#license-agree-dialog-bag").modal('hide');
     });
 
-    // $("#btn-add-author, #btn-add-hydroshare-user").click(function () {
-    //     $(this).text("Saving Changes...");
-    //     $(this).addClass("disabled");
-    //     var response = get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this);
-    //     if (!response) {
-    //         $(this).text("Save Changes");
-    //         $(this).removeClass("disabled");
-    //     }
-    // });
+    $("#btn-add-hydroshare-user").click(function () {
+        $(this).text("Saving Changes...");
+        $(this).addClass("disabled");
+        var response = get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this);
+        if (!response) {
+            $(this).text("Save Changes");
+            $(this).removeClass("disabled");
+        }
+    });
 
     // Disables the button after it has been clicked and its closest form was found to be valid
     $(".btn-disable-after-valid").click(function () {
