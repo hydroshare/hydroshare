@@ -248,7 +248,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # files for a logical file type, other files in the composite resource are still associated
         # with their respective logical file types
 
-
         self.create_composite_resource()
         new_folder = 'raster_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)

@@ -30,7 +30,7 @@ def debug_resource(short_id):
 
         resource.create_aggregation_xml_documents()
         print("resource {}".format(resource.short_id))
-        '''        
+        ''' 
         storage = resource.get_irods_storage()
         single_file_aggregation has been removed
         for f in ResourceFile.objects.filter(object_id=resource.id):
