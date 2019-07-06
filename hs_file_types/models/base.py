@@ -921,11 +921,6 @@ class AbstractLogicalFile(models.Model):
         return sum([f.size for f in self.files.all()])
 
     @property
-    def can_contain_folders(self):
-        """By default an aggregation can't have folders"""
-        return False
-
-    @property
     def supports_resource_file_move(self):
         """allows a resource file that is part of this logical file type to be moved"""
         return True
