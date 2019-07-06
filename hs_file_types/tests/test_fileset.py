@@ -575,6 +575,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         # delete the folder that represents the raster aggregation
+        raster_folder_path = "data/contents/{}".format(raster_folder_path)
         remove_folder(self.user, self.composite_resource.short_id, raster_folder_path)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # there should be 1 resource files
