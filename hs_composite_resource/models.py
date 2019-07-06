@@ -377,35 +377,6 @@ class CompositeResource(BaseResource):
                 return True
         return False
 
-    def supports_folder_creation(self, folder_full_path):
-        """this checks if it is allowed to create a folder at the specified path
-        :param  folder_full_path: the target path where the new folder needs to be created
-
-        :return True or False
-        """
-
-        if __debug__:
-            assert(folder_full_path.startswith(self.file_path))
-
-        # determine containing folder
-        if "/" in folder_full_path:
-            path_to_check, _ = os.path.split(folder_full_path)
-        else:
-            path_to_check = folder_full_path
-
-        # find if the path represents a multi-file aggregation
-        if path_to_check.startswith(self.file_path):
-            aggregation_path = path_to_check[len(self.file_path) + 1:]
-        else:
-            aggregation_path = path_to_check
-        try:
-            aggregation = self.get_aggregation_by_name(aggregation_path)
-            return aggregation.can_contain_folders
-        except ObjectDoesNotExist:
-            # target path doesn't represent an aggregation - so it is OK to create a folder
-            pass
-        return True
-
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed
         :param  src_full_path: name of the file/folder path to be renamed
@@ -498,29 +469,9 @@ class CompositeResource(BaseResource):
                 if not can_move:
                     return can_move
             except ObjectDoesNotExist:
-                pass
+                return True
 
-            # check target folder only if it is not the root
-            if tgt_file_dir != self.file_path:
-                aggregation_path = tgt_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.supports_resource_file_add
-                except ObjectDoesNotExist:
-                    # target folder is not an aggregation - no restriction
-                    return True
-            return True
         elif is_moving_folder:
-            # no check on source is needed in this case
-            # check target - only if it is not the root
-            if tgt_file_dir != self.file_path:
-                aggregation_path = tgt_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.can_contain_folders
-                except ObjectDoesNotExist:
-                    # target folder doesn't represent an aggregation - no restriction
-                    return True
             return True
 
     def can_add_files(self, target_full_path):
