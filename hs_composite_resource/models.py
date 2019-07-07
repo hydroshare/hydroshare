@@ -466,8 +466,7 @@ class CompositeResource(BaseResource):
             # check source - see if the folder containing the file represents an aggregation
             try:
                 can_move = check_file_rename_or_move()
-                if not can_move:
-                    return can_move
+                return can_move
             except ObjectDoesNotExist:
                 return True
 
