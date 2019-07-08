@@ -954,14 +954,11 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
-        if not self.is_fileset:
-            # any aggregation that is not a fileset type, the path of the aggregation primary file
-            # is the aggregation name
-            primary_file = self.get_primary_resouce_file(self.files.all())
-            return primary_file.short_path
-
-        # self is a fileset aggregation - aggregation folder path is the aggregation name
-        return self.folder
+        short_path = self.files.first().short_path
+        if "/" in short_path:
+            short_path = short_path.rsplit("/")[0]
+            return os.path.join(short_path, self.dataset_name)
+        return self.dataset_name
 
     @property
     def metadata_short_file_path(self):
