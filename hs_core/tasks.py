@@ -325,14 +325,17 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation=None, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, dataset_pathname=None, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
+    :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
-    :param agg_name: The name of the aggregation to zip
+    :param dataset_pathname: The name of the aggregation to zip
+    :param sf_zip: signals a single file to zip
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
+    aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
     istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
     if res.resource_type == "CompositeResource":
