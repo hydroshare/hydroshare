@@ -70,11 +70,16 @@
 /*
      Vue-Mover Component
      -------------------
-     by Rick Strahl, West Wind Technologies
+     Original by Rick Strahl, West Wind Technologies
 
      Version 0.3.2
      February 9th, 2018
-     
+
+     Extended/forked HydroShare Mark O'Brien
+     Summer 2019
+     - Reordering right listbox emits change event for updating content ordering hook
+     - Add search filter in left listbox
+
      depends on: 
      -----------
      CSS:     
@@ -88,8 +93,9 @@
      
      Usage:
      ------
-      <mover :left-items="selectedItems"
-             :right-items="unselectedItems"
+      <mover :all-items="itemsList"
+             :left-items="unselectedItems"
+             :right-items="selectedItems"
              title-left="Available Items"
              title-right="Selected Items"
              moved-item-location="top"
@@ -134,6 +140,7 @@ if (!Sortable) {
 var vue = Vue.component("mover", {
     vue: vue,
     props: {
+        // Note in the html how camelCase is converted to hypenated variables titleLeft title-left itemsList items-list
         // Left side title - defaults to Available
         titleLeft: {
             type: String,
@@ -149,6 +156,8 @@ var vue = Vue.component("mover", {
             type: String,
             default: "top"
         },
+        // Unchanging authoritative list of objects
+        allItems: Array,
         // Array of objects to bind to left list. { value: "xxx", displayValue: "show", isSelected: false}
         leftItems: Array,
         // Array of objects to bind right list. { value: "xxx", displayValue: "show", isSelected: false}
@@ -177,6 +186,7 @@ var vue = Vue.component("mover", {
     template: '<div :id="targetId" class="mover-container">' + '\n' +
     '    <div id="MoverLeft" class="mover-panel-box mover-left">' + '\n' +
     '        <div class="mover-header">{{titleLeft}}</div>' + '\n' +
+    '         <div><input id="leftinput" size=20 v-model="filterOn" v-on:keyup="updateFilter()"/></div>' + '\n' +
     '        <div :id="targetId + \'LeftItems\'" class="mover-panel ">\n' +
     '           <div class="mover-item"' + '\n' +
     '                v-for="item in unselectedItems"' + '\n' +
@@ -224,9 +234,11 @@ var vue = Vue.component("mover", {
             selectedSortable: null,
             selectedItem: {},
             selectedList: null,
+            itemsList: this.allItems,
             selectedItems: this.rightItems,
             unselectedItems: this.leftItems,  
-            lastMovedItem: null,                     
+            lastMovedItem: null,
+            filterOn: '',
 
             // hook up sortable - call from end of data retrieval
             initialize: function (vue) {
@@ -247,6 +259,11 @@ var vue = Vue.component("mover", {
 
                 if (vue.normalizeLists)
                     vm.normalizeListValues();
+            },
+            updateFilter: function () {
+                vm.unselectedItems = vm.itemsList.filter(function (item) {
+                    return item.value.toLocaleLowerCase().includes(vm.filterOn.toLocaleLowerCase());
+                });
             },
             selectItem: function (item, items) {
                 if (!item) {

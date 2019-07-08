@@ -31,7 +31,7 @@
     {#    <hr/>#}
     <div id="title-assistant" style="padding: 10px;">
         Title:<br/>
-        <input id="resource-title" v-model="title" size="400"/><br/>
+        <input id="resource-title" v-model="title" size="400" disabled /><br/>
 
         Region:
         <select id="czselect" v-model="regionSelected" @change="updateTitle()">
@@ -50,7 +50,7 @@
 
         <div class="container" style="margin-top: 80px">
             Topics:<br/>
-            <mover :left-items="topics.unselectedItems" :right-items="topics.selectedItems"
+            <mover :all-items="topics.itemsList" :left-items="topics.unselectedItems" :right-items="topics.selectedItems"
                    title-left="Available Items" title-right="Selected Items"
                    moved-item-location="bottom"
                    v-on:item-moved="itemMoved"

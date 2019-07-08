@@ -130,7 +130,7 @@ else:
         url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
         url(r'^sitemap/$', sitemap, name='sitemap'),
         url(r'^sitemap', include('hs_sitemap.urls')),
-        url(r'^collaborate/$', hs_core_views.GroupsAuthenticatedView.as_view(), name='groups'),
+        url(r'^collaborate/$', hs_core_views.FindGroupsView.as_view(), name='groups'),
         url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
         url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
         url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
