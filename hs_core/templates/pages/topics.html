@@ -4,6 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <title>Title Assistant</title>
+        <link rel="shortcut icon" href="/">
     </head>
     <body>
     {#        <div id="topics-app">#}
@@ -31,8 +32,7 @@
     {#    <hr/>#}
     <div id="title-assistant" style="padding: 10px;">
         Title:<br/>
-        <input id="resource-title" v-model="title" size="400" disabled /><br/>
-
+        <input id="resource-title" v-model="title" size="400" disabled /><br/><br/>
         Region:
         <select id="czselect" v-model="regionSelected" @change="updateTitle()">
             <option disabled value="">Critical Zone Region</option>
@@ -49,19 +49,11 @@
         </select><br/>
 
         <div class="container" style="margin-top: 80px">
-            Topics:<br/>
-            <mover :all-items="topics.itemsList" :left-items="topics.unselectedItems" :right-items="topics.selectedItems"
-                   title-left="Available Items" title-right="Selected Items"
+            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
+                   title-left="Available Topics" title-right="Selected Items"
                    moved-item-location="bottom"
-                   v-on:item-moved="itemMoved"
-                   v-cloak>
+                   v-on:item-moved="itemMoved" v-cloak>
             </mover>
-{#            <hr/>#}
-{#            <button class="btn btn-primary" @click="saveItems()">Show Selected Items</button>#}
-
-{#            <h3>Bound and updated model values</h3>#}
-{#            {% templatetag openvariable %} vm.unselectedItems {% templatetag closevariable %}#}
-{#            {% templatetag openvariable %} topics.selectedItems {% templatetag closevariable %}#}
         </div>
         Subtopic:<br/>
         <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()"/>
@@ -79,21 +71,11 @@
             display: none
         }
     </style>
-    <style>
-        /* override panel height for second panel */
-        #Mover2 .mover-panel {
-            height: 600px !important;
-        }
-
-        #Mover2 {
-            margin-top: 20px;
-        }
-    </style>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="application/javascript">
         // contents here are required by topics.js
-        let topics_from_page = JSON.parse("{{ topics_json }}");
+        const topics_from_page = JSON.parse("{{ topics_json }}");
     </script>
 {#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
 {#    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>#}

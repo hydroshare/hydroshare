@@ -1,6 +1,6 @@
 .mover-container {
     display: flex;
-    flex-flow:  row nowrap;  
+    flex-flow: row nowrap;
 }
 .mover-panel-box {
     flex: 1 1 auto;

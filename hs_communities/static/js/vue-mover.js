@@ -94,7 +94,6 @@
      Usage:
      ------
       <mover :all-items="itemsList"
-             :left-items="unselectedItems"
              :right-items="selectedItems"
              title-left="Available Items"
              title-right="Selected Items"
@@ -158,9 +157,7 @@ var vue = Vue.component("mover", {
         },
         // Unchanging authoritative list of objects
         allItems: Array,
-        // Array of objects to bind to left list. { value: "xxx", displayValue: "show", isSelected: false}
-        leftItems: Array,
-        // Array of objects to bind right list. { value: "xxx", displayValue: "show", isSelected: false}
+        // Array of objects to bind to pre-selected list. { value: "xxx", displayValue: "show", isSelected: false}
         rightItems: Array,
         // The ID assigned to the wrapping element of this component
         targetId: {
@@ -174,7 +171,7 @@ var vue = Vue.component("mover", {
         },
         fontAwesome: {
             type: Boolean,
-            default: true
+            default: false
         }
     },
     methods: {
@@ -187,7 +184,7 @@ var vue = Vue.component("mover", {
     '    <div id="MoverLeft" class="mover-panel-box mover-left">' + '\n' +
     '        <div class="mover-header">{{titleLeft}}</div>' + '\n' +
     '         <div><input id="leftinput" size=20 v-model="filterOn" v-on:keyup="updateFilter()"/></div>' + '\n' +
-    '        <div :id="targetId + \'LeftItems\'" class="mover-panel ">\n' +
+    '        <div :id="targetId + \'LeftItems\'" class="mover-panel">\n' +
     '           <div class="mover-item"' + '\n' +
     '                v-for="item in unselectedItems"' + '\n' +
     '                :class="{\'mover-selected\': item.isSelected }"' + '\n' +
@@ -236,7 +233,7 @@ var vue = Vue.component("mover", {
             selectedList: null,
             itemsList: this.allItems,
             selectedItems: this.rightItems,
-            unselectedItems: this.leftItems,  
+            unselectedItems: this.allItems,
             lastMovedItem: null,
             filterOn: '',
 
