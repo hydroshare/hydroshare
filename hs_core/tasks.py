@@ -335,7 +335,9 @@ def create_temp_zip(resource_id, input_path, output_path, dataset_pathname=None,
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
-    aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
+    aggregation = None
+    if dataset_pathname:
+        aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
     istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
     if res.resource_type == "CompositeResource":
