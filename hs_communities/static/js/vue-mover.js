@@ -346,6 +346,8 @@ var vue = Vue.component("mover", {
                     vm.unselectedItems.splice(i, 1);
                     vm.selectedItems.push(item);
                 }
+                vue.raiseItemMoved(item,vm.selectedItems, "right");
+
             },
             moveAllLeft: function () {
                 for (var i = vm.selectedItems.length - 1; i >= 0; i--) {
@@ -353,8 +355,11 @@ var vue = Vue.component("mover", {
                     vm.selectedItems.splice(i, 1);
                     vm.unselectedItems.push(item);
                 }
+                vue.raiseItemMoved(item,vm.selectedItems, "left");
+
             },
             refreshListDisplay: function () {
+                console.log("Refreshing list display")
                 setTimeout(function () {
                     var list = vm.selectedItems;
                     vm.selectedItems = [];
@@ -366,7 +371,6 @@ var vue = Vue.component("mover", {
                 }, 10);
             },
             onSorted: function (e) {
-
                 var key = e.item.dataset["id"];
                 var side = e.item.dataset["side"];
 
@@ -387,6 +391,7 @@ var vue = Vue.component("mover", {
                 if (!item)
                     return;
 
+
                 setTimeout(function () {
                     list.splice(e.oldIndex, 1);                    
                     list.splice(e.newIndex, 0, item);
@@ -399,8 +404,10 @@ var vue = Vue.component("mover", {
                         vm.selectedItems = list;
                         vm.selectItem(item, vm.selectedItems);
                     }
-                });
-            },
+                    this.$emit('item-moved', this.lastMovedItem);
+
+                }.bind(this));
+            }.bind(this),
             onListDrop: function (e) {                
                 var key = e.item.dataset["id"];
                 var side = e.item.dataset["side"];
@@ -437,7 +444,6 @@ var vue = Vue.component("mover", {
                         vm.selectedItems = list;
                     });
                 }
-
             },
             // removes dupes from unselected list that exist in selected items
             normalizeListValues: function () {
