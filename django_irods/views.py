@@ -68,6 +68,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
     aggregation = None
+    dataset_pathname = None
     is_sf_request = False
 
     if split_path_strs[0] == 'bags':
