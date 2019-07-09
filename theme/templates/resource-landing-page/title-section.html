@@ -227,22 +227,30 @@
                 </transition>
             </script>
             <!-- app -->
-            <div id="modal-app">
-                {#  <button id="show-modal" @click="showModal = true">Show Modal</button>#}
-                <!-- use the modal component, pass in the prop -->
-                <modal v-if="showModal" @close="showModal = false">
 
-                    <div slot="header">Title Assistant</div>
-                    <p slot="body">
-                        MODAL CONTENT<br/>
+            {% if communities_enabled %}
+                <div id="modal-app">
+                    {#  <button id="show-modal" @click="showModal = true">Show Modal</button>#}
+                    <!-- use the modal component, pass in the prop -->
+                    <modal v-if="showModal" @close="showModal = false">
 
-                    </p>
-                </modal>
-            </div>
-        </div>
+                        <div slot="header">Title Assistant</div>
+                        <p slot="body">
+                        <div id="title-assistant"></div>
 
-        <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
 
+                        </p>
+                    </modal>
+                </div>
+                </div>
+                <script type="application/javascript">
+                    // contents here are required by topics.js
+                    const topics_from_page = JSON.parse("{{ topics_json }}");
+                    {#console.log(topics_from_page)#}
+                </script>
+                <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
+            {% endif %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"
               method="post">
@@ -251,7 +259,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                  id="txt-title"
-                                                 onclick="titleClick()"
+                            {% if communities_enabled %} onclick="titleClick()" {% endif %}
                                                  maxlength="300" name="value" type="text"
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
@@ -290,25 +298,21 @@
 {% if communities_enabled %}
     {% block extra_js %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
-    {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.3.0.2.css">#}
-    {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>#}
+        {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.3.0.2.css">#}
+        {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>#}
         <style>
             [v-cloak] {
                 display: none
             }
         </style>
-    {##}
-    {#    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>#}
-        <script type="application/javascript">
-            // contents here are required by topics.js
-            const topics_from_page = JSON.parse("{{ topics_json }}");
-            {#console.log(topics_from_page)#}
-        </script>
-    {#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
-    {#    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>#}
+        {##}
+        {#    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>#}
+
+        {#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
+        {#    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>#}
         <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
         <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
-        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+
 
     {% endblock %}
 {% endif %}
