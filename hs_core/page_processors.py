@@ -209,7 +209,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'belongs_to_collections': belongs_to_collections,
                    'show_web_reference_note': has_web_ref,
                    'current_user': user,
-                   'maps_key': maps_key
+                   'maps_key': maps_key,
+                   'communities_enabled': settings.COMMUNITIES_ENABLED
+
         }
 
         if 'task_id' in request.session:
@@ -311,7 +313,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               type_value != 'hasPart'),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
-               'maps_key': maps_key
+               'maps_key': maps_key,
+               'communities_enabled': settings.COMMUNITIES_ENABLED
     }
 
     return context

@@ -18,7 +18,7 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_core.views.community import TopicsView
+from hs_core.views.communities import TopicsView
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -69,7 +69,7 @@ if settings.COMMUNITIES_ENABLED:
         url(r'^django_irods/', include('django_irods.urls')),
         url(r'^autocomplete/', include('autocomplete_light.urls')),
         url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
-        url(r'^topics/$', hs_core_views.community.TopicsView.as_view(), name='topics'),
+        url(r'^topics/$', hs_core_views.communities.TopicsView.as_view(), name='topics'),
         url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
         url(r'^sitemap/$', sitemap, name='sitemap'),
         url(r'^sitemap', include('hs_sitemap.urls')),
