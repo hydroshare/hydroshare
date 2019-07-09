@@ -1,9 +1,12 @@
 """Page processors for hs_core app."""
 
+import json
+
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
 from forms import ExtendedMetadataForm
@@ -14,7 +17,6 @@ from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-import json
 
 
 @processor_for(GenericResource)
@@ -121,6 +123,27 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
 
+    topics = ["Air Temperature", "Barometric Pressure", "Chlorophyll", "Climate", "Diatoms",
+              "Digital Elevation Model(DEM)",
+              "Dissolved Organic Matter(DOM)", "Ecosystem model", "Electrical Conductivity", "Flux Tower", "Geology",
+              "Geomorphology", "Geophysics", "GIS / Map Data", "Ground Penetrating Radar(GPR)", "Groundwater Chemistry",
+              "Groundwater Depth", "Groundwater Temperatures", "Hydropedologic Properties", "Land Cover",
+              "Land Use History",
+              "LiDAR", "Lysimeter Water Samples Chemistry", "Matric Potential", "Meteorology", "Nutrient Fluxes",
+              "Overland Water Chemistry", "Ozone", "Photographic Imagery", "Piezometer", "Precipitation",
+              "Precipitation Chemistry", "Rainfall Chemistry", "Regolith Survey", "Reservoir Height", "Rock Moisture",
+              "Sap Flow", "Sediment Transport", "Seismic Refraction", "Snow Depth", "Snow Pits", "Snow Survey",
+              "Soil Biogeochemistry", "Soil Electrical Resistivity", "Soil Evapotranspiration", "Soil Gas",
+              "Soil Geochemistry", "Soil Invertebrates", "Soil Microbes", "Soil Mineralogy", "Soil Moisture",
+              "Soil Porewater Chemistry", "Soil Porosity", "Soil Redox Potential", "Soil Respiration", "Soil Survey",
+              "Soil Temperature", "Soil Texture", "Soil Water", "Soil Water Chemistry", "Solar Radiation",
+              "Stable Isotopes",
+              "Stage", "Stream Ecology", "Stream Suspended Sediment", "Stream Water Chemistry",
+              "Stream Water Temperatures",
+              "Streamflow / Discharge", "Surface Water Chemistry", "Throughfall Chemistry",
+              "Topographic Carbon Storage",
+              "Tree Growth & Physiology", "Vegetation", "Water Potential", "Well Water Levels"]
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         content_model.update_view_count(request)
@@ -210,7 +233,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_web_reference_note': has_web_ref,
                    'current_user': user,
                    'maps_key': maps_key,
-                   'communities_enabled': settings.COMMUNITIES_ENABLED
+                   'communities_enabled': settings.COMMUNITIES_ENABLED,
+                   'topics_json': mark_safe(escapejs(json.dumps(topics)))
 
         }
 
@@ -314,7 +338,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,
-               'communities_enabled': settings.COMMUNITIES_ENABLED
+               'communities_enabled': settings.COMMUNITIES_ENABLED,
+               'topics_json': mark_safe(escapejs(json.dumps(topics)))
+
     }
 
     return context

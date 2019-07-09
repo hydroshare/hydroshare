@@ -292,22 +292,23 @@
         <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
     {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.3.0.2.css">#}
     {#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>#}
-    {#    <style>#}
-    {#        [v-cloak] {#}
-    {#            display: none#}
-    {#        }#}
-    {#    </style>#}
+        <style>
+            [v-cloak] {
+                display: none
+            }
+        </style>
     {##}
     {#    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>#}
         <script type="application/javascript">
             // contents here are required by topics.js
             const topics_from_page = JSON.parse("{{ topics_json }}");
+            {#console.log(topics_from_page)#}
         </script>
     {#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
     {#    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>#}
-    {#    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>#}
-    {#    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>#}
-    {#    <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>#}
+        <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
+        <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
 
     {% endblock %}
 {% endif %}
