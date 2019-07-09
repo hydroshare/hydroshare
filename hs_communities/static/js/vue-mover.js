@@ -183,7 +183,7 @@ var vue = Vue.component("mover", {
     template: '<div :id="targetId" class="mover-container">' + '\n' +
     '    <div id="MoverLeft" class="mover-panel-box mover-left">' + '\n' +
     '        <div class="mover-header">{{titleLeft}}</div>' + '\n' +
-    '         <div><input id="leftinput" size=20 v-model="filterOn" v-on:keyup="updateFilter()"/></div>' + '\n' +
+    '         <div><input id="leftinput" size=30 v-model="filterOn" v-on:keyup="updateFilter()"/></div>' + '\n' +
     '        <div :id="targetId + \'LeftItems\'" class="mover-panel">\n' +
     '           <div class="mover-item"' + '\n' +
     '                v-for="item in unselectedItems"' + '\n' +

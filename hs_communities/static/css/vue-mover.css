@@ -16,7 +16,9 @@
 .mover-panel {
     height: 280px;
     min-height: 240px;
-    overflow-y: auto !important;    
+    width: 222px;
+    min-width: 222px;
+    overflow-y: auto !important;
 }
 .mover-controls {
     flex: 0 0 auto;
@@ -24,14 +26,14 @@
     padding: 0 30px;
 }
 .mover-controls>button {
-    padding: 10px;
-    width: 50px; 
+    padding: 5px;
+    width: 30px;
     display: block; 
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .mover-item, .mover-ghost, .mover-selected, .mover-header {
-    padding: 8px 10px;    
+    padding: 6px 8px;
     border-bottom:1px solid #ccc; 
 }
 .mover-header{

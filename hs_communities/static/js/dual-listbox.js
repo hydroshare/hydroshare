@@ -11,12 +11,12 @@ var TitleAssistantApp = new Vue({
             selectedValues: ''
         },
 
-    },
-    mounted() {
-        topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data
-            this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
-            this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false})
-        }.bind(this));
+    // },
+    // mounted() {
+    //     topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data
+    //         this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
+    //         this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false})
+    //     }.bind(this));
     },
     methods: {
         itemMoved: function () {
@@ -33,3 +33,12 @@ var TitleAssistantApp = new Vue({
         }
     }
 });
+
+function titleClick() {
+    // ModalApp.$data.showModal = true
+    $("#title-modal").modal('show');
+    topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data
+            this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
+            this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false})
+        }.bind(TitleAssistantApp));
+}
