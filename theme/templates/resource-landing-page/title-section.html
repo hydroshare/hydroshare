@@ -196,13 +196,13 @@
         </div>
         {% if communities_enabled %}
 
-            <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                                     aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                            <h4 class="modal-title" id="myModalLabel">Title Assistant</h4>
                         </div>
                         <div class="modal-body">
                             <div id="title-assistant">
@@ -221,14 +221,14 @@
                                     <option>SSCZO</option>
                                     <option>SSHCZO</option>
                                     <option>X-CZO</option>
-                                </select><br/>
+                                </select><br/><br/>
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom"
                                        v-on:item-moved="itemMoved" v-cloak>
-                                </mover>
+                                </mover><br/>
                                 Subtopic:<br/>
-                                <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()"/>
+                                <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51" maxlength="50"/>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -237,10 +237,7 @@
                         </div>
                     </div>
                 </div>
-</div>
-
-
-
+            </div>
 
             <script type="application/javascript">
                 // contents here are required by topics.js
