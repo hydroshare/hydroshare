@@ -273,7 +273,7 @@
                     const topics_from_page = JSON.parse("{{ topics_json }}");
                     {#console.log(topics_from_page)#}
                 </script>
-                <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+{#                <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>#}
                 <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
             {% endif %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
