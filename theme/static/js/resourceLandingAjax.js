@@ -421,10 +421,9 @@ function remove_aggregation_ajax_submit(url) {
 }
 
 function getResourceMetadata() {
-    const res_id = $("#short-id").val();
     return $.ajax({
         type: "POST",
-        url: '/hsapi/_internal/' + res_id + '/get-metadata/',
+        url: '/hsapi/_internal/' + SHORT_ID + '/get-metadata/',
         dataType: 'html',
         async: false,
         success: function (result) {
