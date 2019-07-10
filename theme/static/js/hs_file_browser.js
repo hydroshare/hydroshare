@@ -56,7 +56,7 @@ function getVirtualFolderTemplateInstance(agg) {
       iconTemplate = folderIcons[agg.logical_type];
     }
 
-    return "<li class='fb-folder droppable draggable' data-url='" + agg.url + "?aggregation=true" +
+    return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
       agg.name + "&#13;" + agg.aggregation_name + "' >" +
       iconTemplate +
@@ -1082,6 +1082,10 @@ function onOpenFile() {
 }
 
 function startDownload(zipped) {
+    if (zipped === undefined) {
+        zipped = false;
+    }
+
     var downloadList = $("#fb-files-container li.ui-selected");
 
     // Remove previous temporary download frames
@@ -1090,18 +1094,31 @@ function startDownload(zipped) {
     if (downloadList.length) {
         // Workaround for Firefox and IE
         for (var i = 0; i < downloadList.length; i++) {
-            var url = $(downloadList[i]).attr("data-url");
-            var fileName = $(downloadList[i]).children(".fb-file-name").text();
+            let item = $(downloadList[i]);
+            let url = item.attr("data-url");
+            let fileName = item.children(".fb-file-name").text();
+            let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
+            let isVirtualFolder = item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+            let hasParameters = zipped || isVirtualFolder || fileName.toUpperCase().endsWith(".URL");
+            let parameters = [];
+
             if (fileName.toUpperCase().endsWith(".URL")) {
-                url += '?url_download=true';
-                if(zipped === true)
-                    url += "&zipped=true"
-            }
-            else if(zipped === true) {
-                url += "?zipped=True"
+                parameters.push('url_download=true');
             }
 
-            var frameID = "download-frame-" + i;
+            if (zipped === true) {
+                parameters.push("zipped=true");
+            }
+
+            if (isVirtualFolder) {
+                parameters.push("aggregation=true");
+            }
+
+            if (hasParameters) {
+                url += "?" + parameters.join("&");
+            }
+
+            let frameID = "download-frame-" + i;
             $("body").append("<iframe class='temp-download-frame' id='"
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");
         }
