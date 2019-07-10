@@ -1968,7 +1968,7 @@ $(document).ready(function () {
         var newNamePath = getCurrentPath().path.concat(newName);
 
         if (isVirtualFolder(selected.first())){
-            let fileType = selected.children(".fb-logical-file-type").text().trim();
+            let fileType = selected.children(".fb-logical-file-type").attr("data-logical-file-type");
             let fileTypeId = selected.attr("data-logical-file-id");
             calls.push(rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName));
         }
