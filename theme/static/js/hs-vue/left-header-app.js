@@ -490,14 +490,23 @@ let leftHeaderApp = new Vue({
             vue.editAuthorError = null;
             vue.isUpdatingAuthor = true;
 
-            let authorId = $author.attr("data-id");
+            let authorId = $author[0].getAttribute("data-id");
 
             let oldIndex = vue.authors.findIndex(function (author) {
                 return author.id === authorId;
             });
 
             vue.selectAuthor(vue.authors[oldIndex], oldIndex);
-            let newIndex = getElementIndex($author[0]);
+
+            let newIndex = 0;   // default
+
+            // Iterate through the authors and find the target position index
+            $author.first().parent().find("span[data-id]").filter(function (index, el) {
+               if (el.getAttribute("data-id") == authorId) {
+                   newIndex = index;
+               }
+            });
+
             vue.selectedAuthor.author.order = newIndex + 1;
 
             $author.closest(".sortable").sortable("cancel"); // Cancel the sort. Positioning is now handled by Vue.

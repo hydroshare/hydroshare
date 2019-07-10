@@ -265,16 +265,6 @@ function update_download_status(task_id, download_path) {
     });
 }
 
-// Returns the index position of an HTML element within its parent.
-// Useful when items can be identical and thus filtering is not possible
-function getElementIndex(node) {
-    let index = 0;
-    while ((node = node.previousElementSibling)) {
-        index++;
-    }
-    return index;
-}
-
 $(document).ready(function () {
     var task_id = $('#task_id').val();
     var download_path = $('#download_path').val();
