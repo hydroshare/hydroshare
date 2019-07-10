@@ -19,7 +19,7 @@ while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-co
 
 AUTODETECT=YES
 FQDN_OR_IP=`hostname`
-PORT=80
+PORT=8080
 
 function blue() {
     local TEXT="$1"
@@ -77,7 +77,7 @@ function get_host_port() {
     else
         AUTODETECT=YES
         FQDN_OR_IP=`hostname`
-        PORT="80"
+        PORT="8080"
     fi
 }
 
@@ -282,7 +282,8 @@ NGINX_IP=`docker network inspect hydroshare_default | grep nginx -A3 | grep IPv4
 mkdir -p tmp 2>/dev/null
 echo $NGINX_IP > tmp/nginx_ip
 
-export HYDROSHARE_IP=`docker network inspect hydroshare_default | grep '"Name": "hydroshare"' -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+#export HYDROSHARE_IP=`docker network inspect hydroshare_default | grep '"Name": "hydroshare"' -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+export HYDROSHARE_IP=hydroshare
 
 docker exec hydroshare bash scripts/chown-root-items
 

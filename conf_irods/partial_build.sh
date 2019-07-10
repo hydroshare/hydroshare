@@ -69,7 +69,6 @@ sleep 1s
 
 echo "------------------------------------------------------------"
 echo "INFO: init the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}"
-#TODO this throws error but succeeds research as low priority work
 echo "echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit" | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} sh -C
 echo " - echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} sh -C"
 
