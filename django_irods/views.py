@@ -24,7 +24,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
+def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
@@ -67,8 +67,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     is_bag_download = False
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
-    aggregation = None
-    dataset_pathname = None
+    is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
+    aggregation_name = None
     is_sf_request = False
 
     if split_path_strs[0] == 'bags':
@@ -113,13 +113,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     irods_output_path = irods_path
 
     # check for aggregations
-    if res.resource_type == "CompositeResource":
+    if is_aggregation_request and res.resource_type == "CompositeResource":
         try:
-            dataset_pathname = path[len(res.short_id + "/data/contents/"):]
-            aggregation = res.get_aggregation_by_dataset_pathname(dataset_pathname)
+            aggregation_name = path[len(res.short_id + "/data/contents/"):]
+            aggregation = res.get_aggregation_by_dataset_pathname(aggregation_name)
         except ObjectDoesNotExist:
-            dataset_pathname = None
-            pass
+            raise ObjectDoesNotExist("No aggregation found at {}".format(aggregation_name))
         if aggregation:
             if not is_zip_request:
                 download_url = request.GET.get('url_download', 'false').lower()
@@ -208,7 +207,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                dataset_pathname, is_sf_request))
+                                                aggregation_name, is_sf_request))
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
 
@@ -230,7 +229,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         dataset_pathname, is_sf_request)
+                                         aggregation_name, is_sf_request)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:

@@ -312,9 +312,9 @@ class IrodsStorage(Storage):
         stdout = self.session.run("ils", None, "-l", name)[0].split()
         return int(stdout[3])
 
-    def url(self, name, url_download=False, zipped=False):
+    def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
-        query_params = {'url_download': url_download, "zipped": zipped}
+        query_params = {'url_download': url_download, "zipped": zipped, 'aggregation': aggregation}
         return reverse_url + '?' + urlencode(query_params)
 
     def get_available_name(self, name, max_length=None):

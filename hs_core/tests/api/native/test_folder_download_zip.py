@@ -83,9 +83,11 @@ class TestFolderDownloadZip(TestCase):
         self.assertTrue(IrodsStorage().exists(output_path))
 
     def test_create_temp_zip_aggregation(self):
-        input_path = "{}/data/contents/multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
+        input_path = "{}/data/contents/" \
+                     "multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
         output_path = "zips/rand/aggregation.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                        output_path, "Sites, Variable", False))
+                                        output_path, "multi_sites_formatted_version1.0.refts.json",
+                                        False))
         self.assertTrue(IrodsStorage().exists(output_path))
