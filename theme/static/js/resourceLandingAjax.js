@@ -691,7 +691,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $.each(files, function (i, file) {
                 if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile") {
                     let selectedAgg = currentAggregations.filter(function (agg) {
-                        return agg.logical_file_id === file['logical_file_id']
+                        return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
                     })[0];
 
                     if (!selectedAgg.hasOwnProperty('files')) {

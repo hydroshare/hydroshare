@@ -1108,6 +1108,7 @@ function startDownload(zipped) {
 function onOpenFolder() {
     let selectedFolder = $("#fb-files-container li.ui-selected");
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
+    let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
 
     if (aggregationId) {
         // Remove further paths from the log
@@ -1115,7 +1116,10 @@ function onOpenFolder() {
         pathLog.splice(pathLogIndex + 1, range);
 
         // Aggregations can be loaded from memory
-        let selectedAgg = currentAggregations.filter(function(agg){return agg.logical_file_id === aggregationId })[0];
+        let selectedAgg = currentAggregations.filter(function(agg){
+            return agg.logical_file_id === aggregationId && agg.logical_type === logicalFileType;
+        })[0];
+
         let path = {
             path: currentPath.path.slice(),
             aggregation: selectedAgg,
