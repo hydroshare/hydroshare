@@ -2130,8 +2130,8 @@ function updateResourceUI() {
         let UIData = JSON.parse(result);
         $("#id_abstract").val(UIData.abstract);
         $("#txt-title").val(UIData.title);
+        subjKeywordsApp.$data.resKeywords = UIData.keywords;
         updateResourceAuthors(UIData.creators);
-        updateResourceKeywords(UIData.keywords);
         updateResourceSpatialCoverage(UIData.spatial_coverage);
         updateResourceTemporalCoverage(UIData.temporal_coverage);
     });

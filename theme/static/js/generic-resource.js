@@ -265,8 +265,10 @@ function update_download_status(task_id, download_path) {
     });
 }
 
+// Returns the index position of an HTML element within its parent.
+// Useful when items can be identical and thus filtering is not possible
 function getElementIndex(node) {
-    var index = 0;
+    let index = 0;
     while ((node = node.previousElementSibling)) {
         index++;
     }

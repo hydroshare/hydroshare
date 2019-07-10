@@ -1560,10 +1560,6 @@ function setFileTypeMetadataFormsClickHandlers(){
     BindKeyValueFileTypeClickHandlers();
 }
 
-function updateResourceKeywords(keywords) {
-    subjKeywordsApp.$data.resKeywords = keywords;
-}
-
 function updateResourceAuthors(authors) {
     leftHeaderApp.$data.authors = authors.map(function(author) {
         return {
