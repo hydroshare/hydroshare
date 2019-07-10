@@ -705,7 +705,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             });
 
             $.each(currentAggregations, function (i, agg) {
-                $('#fb-files-container').append(getFileAggregationTemplateInstance(agg));
+                $('#fb-files-container').append(getVirtualFolderTemplateInstance(agg));
             });
 
             $.each(folders, function (i, folder) {

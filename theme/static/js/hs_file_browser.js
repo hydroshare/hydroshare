@@ -48,14 +48,14 @@ function getFolderTemplateInstance(folder) {
         "</li>";
 }
 
-function getFileAggregationTemplateInstance(agg) {
+function getVirtualFolderTemplateInstance(agg) {
     var folderIcons = getFolderIcons();
     let iconTemplate = folderIcons.DEFAULT;
 
     if (folderIcons[agg.logical_type]) {
       iconTemplate = folderIcons[agg.logical_type];
     }
-    // TODO: get correct virtual folder URL
+
     return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
       agg.name + "&#13;" + agg.aggregation_name + "' >" +
