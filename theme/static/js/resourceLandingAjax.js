@@ -663,7 +663,7 @@ function get_aggregation_folder_struct(aggregation) {
     onSort();
     bindFileBrowserItemEvents();
     updateSelectionMenuContext();
-    setBreadCrumbs(jQuery.extend(true, {}, currentPath));   // Use a deep copy.
+    setBreadCrumbs(jQuery.extend(true, {}, getCurrentPath()));   // Use a deep copy.
     updateNavigationState();
 }
 
@@ -737,7 +737,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 
             onSort();
             bindFileBrowserItemEvents();
-            currentPath = store_path;
+            pathLog[pathLogIndex] = store_path;
             $("#hs-file-browser").attr("data-res-id", res_id);
             setBreadCrumbs(jQuery.extend(true, {}, store_path));
 
