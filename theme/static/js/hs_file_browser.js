@@ -56,7 +56,7 @@ function getVirtualFolderTemplateInstance(agg) {
       iconTemplate = folderIcons[agg.logical_type];
     }
 
-    return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
+    return "<li class='fb-folder droppable draggable' data-url='" + agg.url + "?aggregation=true" +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
       agg.name + "&#13;" + agg.aggregation_name + "' >" +
       iconTemplate +
