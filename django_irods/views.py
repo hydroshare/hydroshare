@@ -24,7 +24,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=False, use_reverse_proxy=True,
+def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
