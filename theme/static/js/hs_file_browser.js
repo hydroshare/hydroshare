@@ -1081,6 +1081,13 @@ function onOpenFile() {
     }
 }
 
+// Takes an element and returns true if the element is a virtual folder
+function isVirtualFolder(item) {
+    item = $(item);
+    let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
+    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+}
+
 function startDownload(zipped) {
     if (zipped === undefined) {
         zipped = false;
@@ -1097,9 +1104,7 @@ function startDownload(zipped) {
             let item = $(downloadList[i]);
             let url = item.attr("data-url");
             let fileName = item.children(".fb-file-name").text();
-            let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
-            let isVirtualFolder = item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
-            let hasParameters = zipped || isVirtualFolder || fileName.toUpperCase().endsWith(".URL");
+            let itemIsVirtualFolder = isVirtualFolder(item.first());
             let parameters = [];
 
             if (fileName.toUpperCase().endsWith(".URL")) {
@@ -1110,11 +1115,11 @@ function startDownload(zipped) {
                 parameters.push("zipped=true");
             }
 
-            if (isVirtualFolder) {
+            if (itemIsVirtualFolder) {
                 parameters.push("aggregation=true");
             }
 
-            if (hasParameters) {
+            if (parameters.length) {
                 url += "?" + parameters.join("&");
             }
 
@@ -1881,7 +1886,8 @@ $(document).ready(function () {
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
-                var pk = $(deleteList[i]).attr("data-pk");
+                let item = $(deleteList[i]);
+                var pk = item.attr("data-pk");
                 if (pk) {
                     if (filesToDelete !== "") {
                         filesToDelete += ",";
@@ -1889,10 +1895,18 @@ $(document).ready(function () {
                     filesToDelete += pk;
                 }
                 else {
-                    // item is a folder
-                    var folderName = $(deleteList[i]).children(".fb-file-name").text();
-                    var folder_path = getCurrentPath().path.concat(folderName);
-                    calls.push(delete_folder_ajax_submit(resID, folder_path.join('/')));
+                    if (isVirtualFolder(item.first())) {
+                        // Item is a virtual folder
+                        let hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+                        let file_type_id = item.attr("data-logical-file-id");
+                        calls.push(delete_virtual_folder_ajax_submit(hs_file_type, file_type_id));
+                    }
+                    else {
+                        // Item is a regular folder
+                        let folderName = item.children(".fb-file-name").text();
+                        let folder_path = getCurrentPath().path.concat(folderName);
+                        calls.push(delete_folder_ajax_submit(resID, folder_path.join('/')));
+                    }
                 }
             }
 
@@ -1953,8 +1967,7 @@ $(document).ready(function () {
         var oldNamePath = getCurrentPath().path.concat(oldName);
         var newNamePath = getCurrentPath().path.concat(newName);
 
-        let isVirtualFolder = selected.attr("data-logical-file-id") && selected.attr("data-logical-file-id").trim().length;
-        if (isVirtualFolder){
+        if (isVirtualFolder(selected.first())){
             let fileType = selected.children(".fb-logical-file-type").text().trim();
             let fileTypeId = selected.attr("data-logical-file-id");
             calls.push(rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName));

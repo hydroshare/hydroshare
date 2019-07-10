@@ -651,6 +651,22 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    let url = '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/delete-aggregation/';
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        success: function (result) {
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Folder Deletion Failed', xhr.responseText);
+        }
+    });
+}
+
 function get_aggregation_folder_struct(aggregation) {
     let files = aggregation.files;
     $('#fb-files-container').empty();
