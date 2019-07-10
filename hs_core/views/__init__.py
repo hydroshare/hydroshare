@@ -599,7 +599,8 @@ def file_download_url_mapper(request, shortkey):
     istorage = res.get_irods_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
-    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
+    aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped, aggregation))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
