@@ -203,6 +203,11 @@ class GenericLogicalFile(AbstractLogicalFile):
         """
         return "Generic Data"
 
+    @classmethod
+    def get_main_file_type(cls):
+        """Accepts any type"""
+        return ""
+
     @property
     def redirect_url(self):
         """
