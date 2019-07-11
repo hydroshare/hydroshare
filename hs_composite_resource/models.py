@@ -139,7 +139,7 @@ class CompositeResource(BaseResource):
             # there are folders under dir_path as well as files - only FileSet can bet set
             return FileSetLogicalFile.__name__
 
-        if len(files_in_folder) > 1:
+        if len(files_in_folder) > 0:
             return FileSetLogicalFile.__name__
         else:
             return None
