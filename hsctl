@@ -274,7 +274,7 @@ migrate_hs() {
 manage_py_hs() {
     echo "MANAGEPY:"
     echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
-    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
+    docker exec -u hydro-service hydroshare python manage.py ${@:2}
 }
 
 solr_reload_hs() {

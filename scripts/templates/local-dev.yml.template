@@ -117,7 +117,7 @@ services:
     depends_on:
       - hydroshare
     ports:
-      - "8080:80"
+      - "NGINX_PORT:80"
     volumes:
       - "./log/nginx:/var/log/nginx"
       - ".:/hydroshare"
