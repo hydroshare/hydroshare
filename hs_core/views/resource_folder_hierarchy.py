@@ -73,8 +73,33 @@ def data_store_structure(request):
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
+        main_file = ''
+        folder_aggregation_type = ''
+        folder_aggregation_name = ''
+        folder_aggregation_id = ''
+        folder_aggregation_type_to_set = ''
+        if resource.resource_type == "CompositeResource":
+            dir_path = resource.get_public_path(d_store_path)
+            # find if this folder *dir_path* represents (contains) an aggregation object
+            aggregation_object = resource.get_folder_aggregation_object(dir_path)
+            # folder aggregation type is not relevant for single file aggregation types - which
+            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            if aggregation_object is not None:
+                folder_aggregation_type = aggregation_object.get_aggregation_class_name()
+                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
+                folder_aggregation_id = aggregation_object.id
+            else:
+                # find if any aggregation type that can be created from this folder
+                folder_aggregation_type_to_set = \
+                    resource.get_folder_aggregation_type_to_set(dir_path)
+                if folder_aggregation_type_to_set is None:
+                    folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
                      'url': d_url,
+                     'folder_aggregation_type': folder_aggregation_type,
+                     'folder_aggregation_name': folder_aggregation_name,
+                     'folder_aggregation_id': folder_aggregation_id,
+                     'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
                      'folder_short_path': os.path.join(folder_path, d_pk)})
 
     is_federated = resource.is_federated
