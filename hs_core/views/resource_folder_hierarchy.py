@@ -73,7 +73,6 @@ def data_store_structure(request):
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
-        main_file = ''
         folder_aggregation_type = ''
         folder_aggregation_name = ''
         folder_aggregation_id = ''
@@ -129,7 +128,11 @@ def data_store_structure(request):
         logical_file_id = ''
         aggregation_name = ''
         if f.has_logical_file:
-            if f.logical_file.get_main_file_type().endswith(f.extension):
+            main_extension = f.logical_file.get_main_file_type()
+            if not main_extension:
+                # accept any extension
+                main_extension = ""
+            if main_extension.endswith(f.extension):
                 aggregations.append({'logical_file_id': f.logical_file.id,
                                      'name': f.logical_file.dataset_name,
                                      'logical_type': f.logical_file.get_aggregation_class_name(),
