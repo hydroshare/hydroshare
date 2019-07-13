@@ -701,7 +701,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             const mode = $("#hs-file-browser").attr("data-mode");
 
             $('#fb-files-container').empty();
-            currentAggregations = result.aggregations;
+            currentAggregations = result.aggregations.filter(function(agg) {
+                return agg['logical_type'] !== "FileSetLogicalFile"; // Exclude FileSet aggregations
+            });
 
             // Render each file. Aggregation files get loaded in memory instead.
             $.each(files, function (i, file) {
