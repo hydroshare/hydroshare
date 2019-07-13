@@ -685,7 +685,7 @@ function get_aggregation_folder_struct(aggregation) {
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
-    // TODO: 2105: doesn't return enough information for intelligent decision 
+
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
@@ -703,8 +703,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             currentAggregations = result.aggregations;
 
+            // Render each file. Aggregation files get loaded in memory instead.
             $.each(files, function (i, file) {
-                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile") {
+                // Check if the file belongs to an aggregation. Exclude FileSets and their files.
+                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile") {
                     let selectedAgg = currentAggregations.filter(function (agg) {
                         return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
                     })[0];
@@ -715,18 +717,22 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     selectedAgg.files.push(file);   // Push the aggregation files to the collection
                 }
                 else {
+                    // Regular files
                     $('#fb-files-container').append(getFileTemplateInstance(file));
                 }
             });
 
+            // Display virtual folders for each aggregation.
             $.each(currentAggregations, function (i, agg) {
                 $('#fb-files-container').append(getVirtualFolderTemplateInstance(agg));
             });
 
+            // Display regular folders
             $.each(folders, function (i, folder) {
                 $('#fb-files-container').append(getFolderTemplateInstance(folder));
             });
 
+            // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
                     $('#fb-files-container').append(

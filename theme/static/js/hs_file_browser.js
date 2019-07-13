@@ -39,11 +39,34 @@ function getCurrentPath() {
 }
 
 function getFolderTemplateInstance(folder) {
-    return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" + folder.name + "&#13;Type: File Folder'>" +
+    if (folder['folder_aggregation_type'] === "FileSetLogicalFile") {
+        var folderIcons = getFolderIcons();
+        let iconTemplate = folderIcons.DEFAULT;
+
+        if (folderIcons[folder['folder_aggregation_type']]) {
+            iconTemplate = folderIcons[folder['folder_aggregation_type']];
+        }
+        return "<li class='fb-folder droppable draggable' data-url='" +
+            folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
+            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] + "' >" +
+            iconTemplate +
+            "<span class='fb-file-name'>" + folder['name'] + "</span>" +
+            "<span class='fb-file-type'>File Folder</span>" +
+            "<span class='fb-logical-file-type' data-logical-file-type='" +
+            folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
+            folder['folder_aggregation_name'] + "</span>" +
+            "<span class='fb-file-size'></span>" +
+            "</li>"
+    }
+
+    // Default
+    return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
+        folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
         "<span class='fb-file-name'>" + folder.name + "</span>" +
-        "<span class='fb-file-type' data-folder-short-path='" + folder.folder_short_path + "'>File Folder</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folder.folder_aggregation_type_to_set + "'></span>" +
+        "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
+        folder['folder_aggregation_type_to_set'] + "'></span>" +
         "<span class='fb-file-size'></span>" +
         "</li>";
 }
@@ -1135,7 +1158,7 @@ function onOpenFolder() {
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
     let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
 
-    if (aggregationId) {
+    if (aggregationId && logicalFileType !== "FileSetLogicalFile") {
         // Remove further paths from the log
         let range = pathLog.length - pathLogIndex;
         pathLog.splice(pathLogIndex + 1, range);
