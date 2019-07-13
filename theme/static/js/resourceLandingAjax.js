@@ -940,7 +940,7 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
             }
             else {
                 // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
-                display_error_message('Error: failed to edit referenced URL.');
+                display_error_message('Error', 'Failed to edit referenced URL.');
                 $('#validate-reference-url-dialog').modal('hide');
             }
         }

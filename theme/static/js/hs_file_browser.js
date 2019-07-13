@@ -2053,7 +2053,7 @@ $(document).ready(function () {
             let parameters = ["zipped=true", "aggregation=true"];
             url += "?" + parameters.join("&");
         }
-        // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
+
         $("#txtFileURL").val(basePath + url);
     });
 
