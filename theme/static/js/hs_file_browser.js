@@ -2041,13 +2041,20 @@ $(document).ready(function () {
         startDownload(isDownloadZipped);
     });
 
-    // Get file URL method
+    // Get file or folder URL
     $("#btn-get-link, #fb-get-link").click(function () {
-        var file = $("#fb-files-container li.ui-selected");
-        var URL = file.attr("data-url");
+        var item = $("#fb-files-container li.ui-selected");
+        var url = item.attr("data-url");
         var basePath = window.location.protocol + "//" + window.location.host;
+
+        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id") &&
+            item.find(".fb-logical-file-type").attr("data-logical-file-type") !== "FileSetLogicalFile") {
+            // The selected item is a virtual folder
+            let parameters = ["zipped=true", "aggregation=true"];
+            url += "?" + parameters.join("&");
+        }
         // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
-        $("#txtFileURL").val(basePath + URL);
+        $("#txtFileURL").val(basePath + url);
     });
 
     // Open with method
