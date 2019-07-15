@@ -34,12 +34,7 @@
         <div class="row group-thumbnails">
             {% if not communities_list %}
                 <div class="col-sm-12"><i>No communities have been created yet.</i></div>
-            {% else %}
-                List of all Communities:<br />
             {% endif %}
-            {% for c in communities_list|default_if_none:'' %}
-                {{ c.name }} {{ c.id  }}
-            {% endfor %}
                 {% for c in communities_list %}
                         <div class="col-sm-6 col-md-4 group-container">
                             <div class="group-thumbnail contribution">
@@ -52,7 +47,7 @@
                                 {% endif %}
                                 <div class="group-caption">
                                     <h3 class="group-name"><a
-                                            href="/group/{{ c.id }}">{{ c.name }}</a></h3>
+                                            href="/community/{{ c.id }}">{{ c.name }}</a></h3>
                                     <div class="group-purpose" style="overflow-y: auto">
                                         <p>{{ group.gaccess.purpose|linebreaks }}</p>
                                     </div>
@@ -148,7 +143,7 @@
 
                                             <div class="text-center">
                                                 <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You
-                                                    have joined this community</h4>
+                                                    may have joined this community</h4>
                                             </div>
                                     </div>
                                 </div>

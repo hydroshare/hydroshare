@@ -22,11 +22,11 @@ class CollaborateView(TemplateView):
     template_name = 'pages/collaborate.html'
 
 
-class CommunitiesView(TemplateView):
-    template_name = 'pages/communities.html'
+class CommunityView(TemplateView):
+    template_name = 'hs_communities/communities.html'
 
     def dispatch(self, *args, **kwargs):
-        return super(CommunitiesView, self).dispatch(*args, **kwargs)
+        return super(CommunityView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         # user_id = User.objects.get(pk=self.request.user.id)
