@@ -27,6 +27,7 @@ var TitleAssistantApp = new Vue({
         saveTitle: function() {
             $("#txt-title").val(this.$data.title);
             $("#txt-title").trigger( "change" );
+            $("#title-save-button").trigger("click");
             $("#title-modal").modal('hide');
         }
     }
