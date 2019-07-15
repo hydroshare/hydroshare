@@ -17,6 +17,10 @@ echo "HS_SERVICE_UID=`id -u`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
 echo "HS_SERVICE_GID=`id -g`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
+AUTODETECT=YES
+FQDN_OR_IP=`hostname`
+PORT=8080
+
 function blue() {
     local TEXT="$1"
     echo -n "\x1B[1;34m${TEXT}\x1B[0m"
@@ -46,6 +50,36 @@ function getImageID() {
     docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
+function host_port() {
+    local FULL_FQDN=''
+    if [ $AUTODETECT == "YES" ]; then
+        FULL_FQDN="Auto detect => $FQDN_OR_IP"
+    else
+        FULL_FQDN="Manual setting => $FQDN_OR_IP"
+    fi
+    if [ "$PORT" != "80" ]; then
+        FULL_FQDN="${FULL_FQDN}:${PORT}"
+    fi
+    echo -n `green "${FULL_FQDN}"`
+}
+
+function get_host_port() {
+    if [ $AUTODETECT == "YES" ]; then
+        AUTODETECT=NO
+        echo -ne "   - Please input hostname or IP (Enter for `green $FQDN_OR_IP`): "; read T_FQDN_OR_IP
+        echo -ne "   - Please enter port (Enter for `green $PORT`): "; read T_PORT
+        if [ "$T_FQDN_OR_IP" != "" ]; then
+            FQDN_OR_IP="$T_FQDN_OR_IP"
+        fi
+        if [ "$T_PORT" != "" ]; then
+            PORT=$(($T_PORT + 0))
+        fi
+    else
+        AUTODETECT=YES
+        FQDN_OR_IP=`hostname`
+        PORT="8080"
+    fi
+}
 
 REMOVE_CONTAINER=YES
 REMOVE_VOLUME=YES
@@ -55,7 +89,6 @@ while [ 1 -eq 1 ]
 do
 
 clear
-
 echo
 echo '########################################################################################################################'
 echo -e " `red 'For fewer problems during setup all HydroShare containers, images and volumes should be deleted.\n Make sure you understand the impact of this is not reversible and could result in the loss of work.'`"
@@ -64,8 +97,10 @@ echo
 echo -e " (1) Remove all HydroShare container: `green $REMOVE_CONTAINER`"
 echo -e " (2) Remove all HydroShare volume:    `green $REMOVE_VOLUME`"
 echo -e " (3) Remove all HydroShare image:     `green $REMOVE_IMAGE`"
+echo    " ------------------------------------------------------------------------------"
+echo -e " (4) Hostname and Port: `host_port`"
 echo
-echo -ne " There are three options you can combine to make a configuratin. What you see here is the default.\n\n Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
+echo -ne " There are four options you can combine to make a configuration. What you see here is the default.\n\n Enter from `green 1` to `green 4` to toggle options. Type 'c' to continue or press Ctrl+C to exit: "; read A
 echo
 
 case "$A" in
@@ -87,6 +122,8 @@ case "$A" in
         REMOVE_IMAGE=YES
       fi
   ;;
+  4)  get_host_port
+  ;;
   c)  break
   ;;
   C)  break
@@ -103,7 +140,7 @@ fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
-HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
+HYDROSHARE_VOLUMES=(hydroshare_idata_root_vol hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_root_vol hydroshare_iuser_hspx_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_hs_tmp_vol hydroshare_dw_tmp_vol)
 HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
@@ -150,37 +187,36 @@ fi
 ### Preparing                                                                                            
 ###############################################################################################################
 
-#grep -v CMD Dockerfile > Dockerfile-defaultworker
-#grep -v CMD Dockerfile > Dockerfile-hydroshare
-
-#cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
-#cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
+rm -f init-defaultworker init-hydroshare local-dev.yml 2>/dev/null
 
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
+cp scripts/templates/local-dev.yml.template      local-dev.yml
+
+sed -i $SED_EXT s/NGINX_PORT/$PORT/g local-dev.yml
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
 sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
 
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
 cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-local-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 
-sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+if [ "$PORT" != "80" ]; then
+    F_FQDN_OR_IP="${FQDN_OR_IP}:${PORT}"
+else 
+    F_FQDN_OR_IP="${FQDN_OR_IP}"
+fi
+
+sed -i $SED_EXT 's!FQDN_OR_IP:8000!'${FQDN_OR_IP}:8000'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+sed -i $SED_EXT 's!FQDN_OR_IP!'${F_FQDN_OR_IP}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
@@ -241,6 +277,13 @@ echo '##########################################################################
 echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
+
+NGINX_IP=`docker network inspect hydroshare_default | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+mkdir -p tmp 2>/dev/null
+echo $NGINX_IP > tmp/nginx_ip
+
+#export HYDROSHARE_IP=`docker network inspect hydroshare_default | grep '"Name": "hydroshare"' -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+export HYDROSHARE_IP=hydroshare
 
 docker exec hydroshare bash scripts/chown-root-items
 
@@ -359,6 +402,17 @@ echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
+
+echo
+echo '########################################################################################################################'
+echo " Update quota data on Django"
+echo '########################################################################################################################'
+echo
+
+
+echo " - ./hsctl managepy update_used_storage"
+./hsctl managepy update_used_storage
+echo
 
 docker-compose -f local-dev.yml down
 

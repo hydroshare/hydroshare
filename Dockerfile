@@ -7,4 +7,6 @@ RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355
 USER root
 WORKDIR /hydroshare
 
+VOLUME /tmp /hs_tmp /shared_tmp
+
 CMD ["/bin/bash"]
