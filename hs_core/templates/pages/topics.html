@@ -7,80 +7,35 @@
         <link rel="shortcut icon" href="/">
     </head>
     <body>
-    {#        <div id="topics-app">#}
-    {##}
-    {#    <h2>View/Select Topics</h2>#}
-    {#        <div class="container">#}
-    {#            <div class="row-fluid">#}
-    {#                <select class="selectpicker" data-show-subtext="true" data-live-search="true">#}
-    {#                    <option v-for="number in numbers" v-bind:value="number.val"#}
-    {#                            data-subtext={{ number.val }}>{% templatetag openvariable %} number.val {% templatetag closevariable %}</option>#}
-    {#                </select>#}
-    {#            <span>Selected: {{ selected }}</span>#}
-    {#            </div>#}
-    {#        </div>#}
-    {#    <h2>Edit Topics</h2>#}
-    {#        <template>#}
-    {#            <ul>#}
-    {#                <li v-for="number in numbers">#}
-    {#                    <span v-show="!number.edit" v-on:click="toggleEdit(this, number)">{% templatetag openvariable %} number.val {% templatetag closevariable %}</span>#}
-    {#                    <input type="text" v-model="number.val" v-show="number.edit" v-on:blur="saveEdit(this, number)">#}
-    {#                </li>#}
-    {#            </ul>#}
-    {#        </template>#}
-    {#    </div>#}
-    {#    <hr/>#}
-    <div id="title-assistant" style="padding: 10px;">
-        Title:<br/>
-        <input id="resource-title" v-model="title" size="400" disabled /><br/><br/>
-        Region:
-        <select id="czselect" v-model="regionSelected" @change="updateTitle()">
-            <option disabled value="">Critical Zone Region</option>
-            <option>BCCZO</option>
-            <option>CCZO</option>
-            <option>CJCZO</option>
-            <option>CRBCZO</option>
-            <option>ERCZO</option>
-            <option>LCZO</option>
-            <option>RCCZO</option>
-            <option>SSCZO</option>
-            <option>SSHCZO</option>
-            <option>X-CZO</option>
-        </select><br/>
-
-        <div class="container" style="margin-top: 80px">
-            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
-                   title-left="Available Topics" title-right="Selected Items"
-                   moved-item-location="bottom"
-                   v-on:item-moved="itemMoved" v-cloak>
-            </mover>
-        </div>
-        Subtopic:<br/>
-        <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()"/>
+    <div id="topics-app">
+        <h2>Edit Topics</h2>
+        <template>
+            <ul>
+                <li v-for="number in numbers">
+                    <span v-show="!number.edit" v-on:click="toggleEdit(this, number)">{% templatetag openvariable %} number.val[1] {% templatetag closevariable %}</span>
+                    <input type="text" v-model="number.val[1]" v-show="number.edit"
+                           v-on:blur="saveEdit('{{ csrf_token }}', this, number)">
+                </li>
+            </ul>
+        </template>
     </div>
+    <button>add</button>
+
     </body>
     </html>
 {% endblock %}
 
 {% block extra_js %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.3.0.2.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>
-    <style>
-        [v-cloak] {
-            display: none
-        }
-    </style>
 
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
+
     <script type="application/javascript">
         // contents here are required by topics.js
         const topics_from_page = JSON.parse("{{ topics_json }}");
     </script>
-{#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}
-{#    <script src="{{ STATIC_URL }}js/jquery-1.11.2-min.js"></script>#}
-    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
-    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
-    <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
 
 {% endblock %}

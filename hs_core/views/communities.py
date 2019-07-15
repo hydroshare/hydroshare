@@ -5,15 +5,17 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
+from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
 
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
-from hs_communities.models import Topics
+from hs_communities.models import Topic
 
 logger = logging.getLogger(__name__)
+
 
 class CollaborateView(TemplateView):
     template_name = 'pages/collaborate.html'
@@ -76,7 +78,6 @@ class MyCommunitiesView(TemplateView):
             if grp.id in [g.id for g in community.member_groups]:
                 return (community.id, community.name)
 
-
     def get_context_data(self, **kwargs):
         all_communities = Community.objects.all()
 
@@ -103,16 +104,38 @@ class MyCommunitiesView(TemplateView):
         }
 
 
-        # all_communities[0].member_users[0].id
-        # all_communities[0].owners
-
-
 class TopicsView(TemplateView):
-    template_name = 'pages/topics.html'
+    """
+    TODO log failure and silently redirect to view if missing params
+
+    id:
+    name:
+    action: CREATE, READ, UPDATE, DELETE
+    """
 
     @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(TopicsView, self).dispatch(*args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        if request.POST.get('action') == 'CREATE':
+            try:
+                new_topic = Topic()
+                new_topic.name = request.POST.get('name')
+            except Exception as e:
+                logger.error("TopicsView error creating new topic {}".format(e))
+        elif request.POST.get('action') == 'UPDATE':
+            print("updating")
+            try:
+                update_topic = Topic.objects.get(id=request.POST.get('id'))
+                update_topic.name = request.POST.get('name')
+                update_topic.save()
+            except Exception as e:
+                logger.error("TopicsView error updating topic {}".format(e))
+        else:
+            logger.error("TopicsView POST action not recognized should be CREATE or UPDATE")
+        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
@@ -127,22 +150,6 @@ class TopicsView(TemplateView):
                 g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        topics = ["Air Temperature", "Barometric Pressure", "Chlorophyll", "Climate", "Diatoms", "Digital Elevation Model(DEM)",
-         "Dissolved Organic Matter(DOM)", "Ecosystem model", "Electrical Conductivity", "Flux Tower", "Geology",
-         "Geomorphology", "Geophysics", "GIS / Map Data", "Ground Penetrating Radar(GPR)", "Groundwater Chemistry",
-         "Groundwater Depth", "Groundwater Temperatures", "Hydropedologic Properties", "Land Cover", "Land Use History",
-         "LiDAR", "Lysimeter Water Samples Chemistry", "Matric Potential", "Meteorology", "Nutrient Fluxes",
-         "Overland Water Chemistry", "Ozone", "Photographic Imagery", "Piezometer", "Precipitation",
-         "Precipitation Chemistry", "Rainfall Chemistry", "Regolith Survey", "Reservoir Height", "Rock Moisture",
-         "Sap Flow", "Sediment Transport", "Seismic Refraction", "Snow Depth", "Snow Pits", "Snow Survey",
-         "Soil Biogeochemistry", "Soil Electrical Resistivity", "Soil Evapotranspiration", "Soil Gas",
-         "Soil Geochemistry", "Soil Invertebrates", "Soil Microbes", "Soil Mineralogy", "Soil Moisture",
-         "Soil Porewater Chemistry", "Soil Porosity", "Soil Redox Potential", "Soil Respiration", "Soil Survey",
-         "Soil Temperature", "Soil Texture", "Soil Water", "Soil Water Chemistry", "Solar Radiation", "Stable Isotopes",
-         "Stage", "Stream Ecology", "Stream Suspended Sediment", "Stream Water Chemistry", "Stream Water Temperatures",
-         "Streamflow / Discharge", "Surface Water Chemistry", "Throughfall Chemistry", "Topographic Carbon Storage",
-         "Tree Growth & Physiology", "Vegetation", "Water Potential", "Well Water Levels"]
+        topics = list(Topic.objects.all().values_list("id", "name", flat=False))
 
-        return {
-            'topics_json': mark_safe(escapejs(json.dumps(topics)))
-        }
+        return mark_safe(escapejs(json.dumps(topics)))
