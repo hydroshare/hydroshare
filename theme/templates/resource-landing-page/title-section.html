@@ -198,14 +198,14 @@
 
             <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
                 <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div id="title-assistant" class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                                     aria-hidden="true">&times;</span></button>
                             <h4 class="modal-title" id="myModalLabel">Title Assistant</h4>
                         </div>
                         <div class="modal-body">
-                            <div id="title-assistant">
+                            <div>
                                 <textarea id="resource-title" v-model="title" disabled rows="3"
                                           cols="75"></textarea><br/><br/>
                                 Region:
@@ -233,7 +233,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary">Save changes</button>
+                            <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
                         </div>
                     </div>
                 </div>
@@ -266,7 +266,6 @@
         </form>
 
     {% endif %}
-</div>
 
 
 {% if is_replaced_by %}
