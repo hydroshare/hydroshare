@@ -23,7 +23,7 @@ class CollaborateView(TemplateView):
 
 
 class CommunityView(TemplateView):
-    template_name = 'hs_communities/communities.html'
+    template_name = 'hs_communities/community.html'
 
     def dispatch(self, *args, **kwargs):
         return super(CommunityView, self).dispatch(*args, **kwargs)
