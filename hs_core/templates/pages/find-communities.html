@@ -40,9 +40,7 @@
             {% for c in communities_list|default_if_none:'' %}
                 {{ c.name }} {{ c.id  }}
             {% endfor %}
-            {% if groups %}
-                {% for group in groups %}
-                    {% if group.gaccess.public or group.gaccess.discoverable %}
+                {% for c in communities_list %}
                         <div class="col-sm-6 col-md-4 group-container">
                             <div class="group-thumbnail contribution">
                                 {% if group.gaccess.picture and group.gaccess.picture.url %}
@@ -54,7 +52,7 @@
                                 {% endif %}
                                 <div class="group-caption">
                                     <h3 class="group-name"><a
-                                            href="/group/{{ group.id }}">{{ group.name }}</a></h3>
+                                            href="/group/{{ c.id }}">{{ c.name }}</a></h3>
                                     <div class="group-purpose" style="overflow-y: auto">
                                         <p>{{ group.gaccess.purpose|linebreaks }}</p>
                                     </div>
@@ -148,55 +146,17 @@
 
                                         <br>
 
-                                        {% if group.is_user_member %}
                                             <div class="text-center">
                                                 <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You
-                                                    have joined this group</h4>
+                                                    have joined this community</h4>
                                             </div>
-                                        {% elif group.join_request_waiting_owner_action %}
-                                            <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span>
-                                                Request Sent</h4>
-
-                                        {% elif group.join_request_waiting_user_action %}
-                                            <div>
-                                                <span class="flag-joined">You have been invited to join this group!</span>
-                                                <br><br>
-                                                <div class="height-fix">
-                                                    <form class="act-on-request height-fix"
-                                                          action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                                          method="POST">
-                                                        {% csrf_token %}
-                                                        <a class="btn btn-success btn-act-on-request"
-                                                           data-user-action="Accept">Accept</a>
-                                                    </form>
-
-                                                    <form class="act-on-request height-fix"
-                                                          action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                                          method="POST">
-                                                        {% csrf_token %}
-                                                        <a class="btn btn-default btn-act-on-request">
-                                                            Decline
-                                                        </a>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <form id="join-{{ group.id }}" method="post"
-                                                  action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                                {% csrf_token %}
-                                                <a href="#"
-                                                   data-form-id="join-{{ group.id }}"
-                                                   class="btn btn-primary btn-ask-to-join"
-                                                   role="button">Ask to join</a>
-                                            </form>
-                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    {% endif %}
+
+
                 {% endfor %}
-            {% endif %}
         </div>
     </div>
 

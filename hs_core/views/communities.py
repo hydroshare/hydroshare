@@ -6,10 +6,11 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.shortcuts import render
+from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
-
+from django.views.decorators.cache import never_cache
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
 from hs_communities.models import Topic
@@ -24,7 +25,6 @@ class CollaborateView(TemplateView):
 class CommunitiesView(TemplateView):
     template_name = 'pages/communities.html'
 
-    # @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(CommunitiesView, self).dispatch(*args, **kwargs)
 
@@ -60,10 +60,10 @@ class FindCommunitiesView(TemplateView):
         }
 
 
+@method_decorator(login_required, name='dispatch')
 class MyCommunitiesView(TemplateView):
     template_name = 'pages/my-communities.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(MyCommunitiesView, self).dispatch(*args, **kwargs)
 
@@ -104,6 +104,7 @@ class MyCommunitiesView(TemplateView):
         }
 
 
+@method_decorator(login_required, name='dispatch')
 class TopicsView(TemplateView):
     """
     TODO log failure and silently redirect to view if missing params
@@ -113,29 +114,34 @@ class TopicsView(TemplateView):
     action: CREATE, READ, UPDATE, DELETE
     """
 
-    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+
     def post(self, request, *args, **kwargs):
         if request.POST.get('action') == 'CREATE':
             try:
                 new_topic = Topic()
                 new_topic.name = request.POST.get('name')
+                new_topic.save()
             except Exception as e:
                 logger.error("TopicsView error creating new topic {}".format(e))
         elif request.POST.get('action') == 'UPDATE':
-            print("updating")
             try:
                 update_topic = Topic.objects.get(id=request.POST.get('id'))
                 update_topic.name = request.POST.get('name')
                 update_topic.save()
             except Exception as e:
                 logger.error("TopicsView error updating topic {}".format(e))
+        elif request.POST.get('action') == 'DELETE':
+            try:
+                delete_topic = Topic.objects.get(id=request.POST.get('id'))
+                delete_topic.delete(keep_parents=False)
+            except:
+                logger.error("error")
         else:
-            logger.error("TopicsView POST action not recognized should be CREATE or UPDATE")
-        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+            logger.error("TopicsView POST action not recognized should be CREATE UPDATE or DELETE")
 
-    @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
-        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+        return HttpResponseRedirect('/topics/')
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
@@ -150,6 +156,33 @@ class TopicsView(TemplateView):
                 g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        topics = list(Topic.objects.all().values_list("id", "name", flat=False))
+        topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
+        topics = list(topics)  # force QuerySet evaluation
 
         return mark_safe(escapejs(json.dumps(topics)))
+
+
+# @api_view(['POST', 'GET'])
+# def update_key_value_metadata_public(request, pk):
+#     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+#
+#     if request.method == 'GET':
+#         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
+#
+#     post_data = request.data.copy()
+#     res.extra_metadata = post_data
+#
+#     is_update_success = True
+#
+#     try:
+#         res.save()
+#     except Error as ex:
+#         is_update_success = False
+#
+#     if is_update_success:
+#         resource_modified(res, request.user, overwrite_bag=False)
+#
+#     if is_update_success:
+#         return HttpResponse(status=200)
+#     else:
+#         return HttpResponse(status=400)
