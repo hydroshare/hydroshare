@@ -1737,7 +1737,7 @@ class FindGroupsView(TemplateView):
             }
         else:
             return {
-                'groups': Group.objects.filter(g2grp__resource__raccess__public=True)
+                'groups': Group.objects.filter(g2grp__resource__raccess__public=True).distinct()
             }
 
 
