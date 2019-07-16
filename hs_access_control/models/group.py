@@ -361,6 +361,19 @@ class GroupAccess(models.Model):
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
 
+    @classmethod
+    def public_groups(cls):
+        """ Return the list of groups that have discoverable or public resources
+            These must contain at least one resource that is discoverable and
+            is owned by a group member.
+        """
+        return Group.objects\
+            .filter(
+                g2grp__resource__raccess__discoverable=True,
+                g2grp__resource__r2urp__user__u2ugp__group__gaccess=F('gaccess'),
+                g2grp__resource__r2urp__privilege=PrivilegeCodes.OWNER)\
+            .distinct().order_by('name')
+
     @property
     def public_resources(self):
         """
