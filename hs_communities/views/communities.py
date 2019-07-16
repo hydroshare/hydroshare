@@ -37,18 +37,19 @@ class CommunityView(TemplateView):
         for c in community_resources:
             if not any(str(c.group_id) == g.get('id') for g in groups):  # if the group id is not already present in the list
                 if c.group_name != "CZO National":  # The National Group is used to establish the entire Community
-                    groups.append({'id': str(c.group_id), 'name': str(c.group_name)})
+                    res_count = len([r for r in community_resources if r.group_name == c.group_name])
+                    groups.append({'id': str(c.group_id), 'name': str(c.group_name), 'res_count': str(res_count)})
 
         groups = sorted(groups, key=lambda key: key['name'])
         return {
             'community_resources': community_resources,
             'groups': groups,
-            'grpfilter': grpfilter
+            'grpfilter': grpfilter,
         }
 
 
 class FindCommunitiesView(TemplateView):
-    template_name = 'pages/find-communities.html'
+    template_name = 'hs_communities/find-communities.html'
 
     def dispatch(self, *args, **kwargs):
         return super(FindCommunitiesView, self).dispatch(*args, **kwargs)
@@ -62,7 +63,7 @@ class FindCommunitiesView(TemplateView):
 
 @method_decorator(login_required, name='dispatch')
 class MyCommunitiesView(TemplateView):
-    template_name = 'pages/my-communities.html'
+    template_name = 'hs_communities/my-communities.html'
 
     def dispatch(self, *args, **kwargs):
         return super(MyCommunitiesView, self).dispatch(*args, **kwargs)

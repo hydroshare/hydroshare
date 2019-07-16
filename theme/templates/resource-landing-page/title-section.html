@@ -220,14 +220,14 @@
                                     <option>RCCZO</option>
                                     <option>SSCZO</option>
                                     <option>SSHCZO</option>
-                                    <option>X-CZO</option>
+                                    <option>Cross-CZO</option>
                                 </select><br/><br/>
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom"
                                        v-on:item-moved="itemMoved" v-cloak>
                                 </mover><br/>
-                                Subtopic:<br/>
+                                Optional Custom Text:<br/>
                                 <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51" maxlength="50"/>
                             </div>
                         </div>
