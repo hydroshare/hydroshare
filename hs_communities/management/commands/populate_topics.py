@@ -9,9 +9,9 @@ def populate_topics():
     :return:
     """
     topics = ["Air Temperature", "Barometric Pressure", "Chlorophyll", "Climate", "Diatoms",
-              "Digital Elevation Model(DEM)",
-              "Dissolved Organic Matter(DOM)", "Ecosystem model", "Electrical Conductivity", "Flux Tower", "Geology",
-              "Geomorphology", "Geophysics", "GIS / Map Data", "Ground Penetrating Radar(GPR)", "Groundwater Chemistry",
+              "Digital Elevation Model (DEM)",
+              "Dissolved Organic Matter (DOM)", "Ecosystem model", "Electrical Conductivity", "Flux Tower", "Geology",
+              "Geomorphology", "Geophysics", "GIS / Map Data", "Ground Penetrating Radar (GPR)", "Groundwater Chemistry",
               "Groundwater Depth", "Groundwater Temperatures", "Hydropedologic Properties", "Land Cover",
               "Land Use History",
               "LiDAR", "Lysimeter Water Samples Chemistry", "Matric Potential", "Meteorology", "Nutrient Fluxes",
