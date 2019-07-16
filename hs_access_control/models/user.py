@@ -1011,6 +1011,82 @@ class UserAccess(models.Model):
 
         return selected
 
+    def _limit_to_view_resources(self, rlist):
+        """
+        QuerySet of resources held by user.
+
+        :return: QuerySet of resource objects accessible (in any form) to user.
+
+        Held implies viewable. This includes group-community-group relationships,
+        unlike GroupAccess.view_groups and GroupAccess.edit_groups.
+
+        This can be subqueried in returns, because it is lazily evaluated.
+        e.g., resource in self.uaccess.view_resources runs efficiently, because it
+        is equivalent to self.uaccess.view_resources.filter(id=resource).exists()
+        """
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return rlist.filter(
+            # direct access
+            Q(r2urp__user=self.user) |
+            # access via a group
+            Q(r2grp__group__gaccess__active=True,
+              r2grp__group__g2ugp__user=self.user) |
+            # access via an unprivileged peer group in a community
+            Q(r2grp__group__gaccess__active=True,
+              r2grp__group__g2gcp__allow_view=True,
+              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
+            # access via a privileged peer group in a community
+            Q(r2grp__group__gaccess__active=True,
+              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
+              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
+            ).distinct()
+
+    def _limit_to_edit_resources(self, rlist):
+        """
+        Filter a QuerySet of resources to those that can be edited by user.
+
+        :return: QuerySet of resource objects that can be edited  by this user.
+
+        This utilizes effective privilege; immutable resources are not returned.
+
+        Note that this return includes all editable resources, whereas
+        get_resources_with_explicit_access only returns those resources that are editable
+        without being owned. Thus, this functions as an access list.
+        """
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        # This is a mouthful.
+        # a resource is editable if
+        # 1. it's shared with the user and editable.
+        # 2. it's shared with a group that has edit privilege and contains the user,
+        # 3. it's shared with a group that has edit privilege and a community that
+        #    contains the user, and the community share preserves edit
+
+        return rlist.filter(
+            # user has direct access
+            Q(raccess__immutable=False,
+              r2urp__user=self.user,
+              r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
+            # user has direct access through being a member of a group
+            Q(raccess__immutable=False,
+              r2grp__group__gaccess__active=True,
+              r2grp__group__g2ugp__user=self.user,
+              r2grp__privilege=PrivilegeCodes.CHANGE) |
+            # user has access by being a member of a privileged group in the same community
+            # Note: CHANGE privilege overrides allow_view flag.
+            Q(raccess__immutable=False,
+              r2grp__group__gaccess__active=True,
+              r2grp__privilege=PrivilegeCodes.CHANGE,
+              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user,
+              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE))\
+            .distinct()
+
     ##########################################
     # PUBLIC METHODS: resources
     ##########################################
@@ -1032,23 +1108,12 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return BaseResource.objects.filter(
-            # direct access
-            Q(r2urp__user=self.user) |
-            # access via a group
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user) |
-            # access via an unprivileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__allow_view=True,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
-            # access via a privileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-            ).distinct()
+        return self._limit_to_view_resources(BaseResource.objects.all())
+
+    def view_resource_check(self, resource):
+        return self._limit_to_view_resources(
+            BaseResource.objects.filter(short_id=resource.short_id)
+        ).exists()
 
     @property
     def owned_resources(self):
@@ -1107,6 +1172,11 @@ class UserAccess(models.Model):
               r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user,
               r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE))\
             .distinct()
+
+    def edit_resource_check(self, resource):
+        return self._limit_to_edit_resources(
+            BaseResource.objects.filter(short_id=resource.short_id)
+        ).exists()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
@@ -1370,7 +1440,7 @@ class UserAccess(models.Model):
         if access_resource.immutable:
             return False
 
-        if this_resource in self.edit_resources:
+        if self.edit_resource_check(this_resource):
             return True
 
         return False
@@ -1429,7 +1499,7 @@ class UserAccess(models.Model):
         if access_resource.public or self.user.is_superuser:
             return True
 
-        if this_resource in self.view_resources:
+        if self.view_resource_check(this_resource):
             return True
 
         return False
