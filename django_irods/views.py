@@ -112,34 +112,34 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     irods_output_path = irods_path
 
-    # check for aggregations
-    if is_aggregation_request and res.resource_type == "CompositeResource":
-        try:
-            aggregation_name = path[len(res.short_id + "/data/contents/"):]
-            aggregation = res.get_aggregation_by_dataset_pathname(aggregation_name)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No aggregation found at {}".format(aggregation_name))
-        if aggregation:
-            if not is_zip_request:
-                download_url = request.GET.get('url_download', 'false').lower()
-                if download_url == 'false':
-                    # redirect to referenced url in the url file instead
-                    if hasattr(aggregation, 'redirect_url'):
-                        return HttpResponseRedirect(aggregation.redirect_url)
-            # point to the main file path
-            path = aggregation.get_main_file.url[len("/resource/"):]
-            is_zip_request = True
-            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-            output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            if res.is_federated:
-                irods_path = os.path.join(res.resource_federation_path, path)
-                irods_output_path = os.path.join(res.resource_federation_path, output_path)
-            else:
-                irods_path = path
-                irods_output_path = output_path
-
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
+        # check for aggregations
+        if is_aggregation_request and res.resource_type == "CompositeResource":
+            try:
+                aggregation_name = path[len(res.short_id + "/data/contents/"):]
+                aggregation = res.get_aggregation_by_dataset_pathname(aggregation_name)
+            except ObjectDoesNotExist:
+                raise ObjectDoesNotExist("No aggregation found at {}".format(aggregation_name))
+            if aggregation:
+                if not is_zip_request:
+                    download_url = request.GET.get('url_download', 'false').lower()
+                    if download_url == 'false':
+                        # redirect to referenced url in the url file instead
+                        if hasattr(aggregation, 'redirect_url'):
+                            return HttpResponseRedirect(aggregation.redirect_url)
+                # point to the main file path
+                path = aggregation.get_main_file.url[len("/resource/"):]
+                is_zip_request = True
+                daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+                output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+                if res.is_federated:
+                    irods_path = os.path.join(res.resource_federation_path, path)
+                    irods_output_path = os.path.join(res.resource_federation_path, output_path)
+                else:
+                    irods_path = path
+                    irods_output_path = output_path
+
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
