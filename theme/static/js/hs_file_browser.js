@@ -560,13 +560,11 @@ function paste(destPath) {
     $.when.apply($, calls).done(function () {
         refreshFileBrowser();
         clearSourcePaths();
-        // updateSelectionMenuContext();
     });
 
     $.when.apply($, calls).fail(function () {
         refreshFileBrowser();
         clearSourcePaths();
-        // updateSelectionMenuContext();
     });
 }
 
