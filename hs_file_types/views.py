@@ -252,7 +252,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
 
 @login_required
-def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path, **kwargs):
+def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", **kwargs):
     """moves all files associated with an aggregation and all the associated metadata.
     """
     response_data = {'status': 'error'}
