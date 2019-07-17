@@ -958,6 +958,8 @@ class AbstractLogicalFile(models.Model):
             # any aggregation that is not a fileset type, the path of the aggregation primary file
             # is the aggregation name
             primary_file = self.get_primary_resouce_file(self.files.all())
+            if not primary_file:
+                return ""
             return primary_file.short_path
         # self is a fileset aggregation - aggregation folder path is the aggregation name
         return self.folder
