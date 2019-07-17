@@ -27,6 +27,22 @@ Vue.component('edit-author-modal', {
         is_updating_author: {type: Boolean, required: false},
         is_deleting_author: {type: Boolean, required: false},
     },
+    data: function () {
+        let identifiers = [];
+
+        $.each(this._author.identifiers, function (identifierName, identifierLink) {
+            identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+        });
+
+        let localAuthor = $.extend(true, {}, this._author);
+        localAuthor.identifiers = identifiers;
+
+        return {
+            author: localAuthor,
+            identifierDict: IDENTIFIERS,
+            showConfirmDelete: false
+        }
+    },
     methods: {
         onDeleteIdentifier: function (index) {
             this.author.identifiers.splice(index, 1);
@@ -63,36 +79,21 @@ Vue.component('edit-author-modal', {
         }
     },
     watch: {
-        _author: function() {
+        _author: function () {
             let identifiers = [];
-
-            $.each(this._author.identifiers, function (identifierName, identifierLink) {
-                identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
-            });
-
             let localAuthor = $.extend(true, {}, this._author);
-            localAuthor.identifiers = identifiers;
+
+            if (!this.is_person) {
+                $.each(this._author.identifiers, function (identifierName, identifierLink) {
+                    identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+                });
+                localAuthor.identifiers = identifiers;
+            }
 
             this.author = localAuthor;
-            this.showConfirmDelete =  false;
+            this.showConfirmDelete = false;
         }
     },
-    data: function () {
-        let identifiers = [];
-
-        $.each(this._author.identifiers, function (identifierName, identifierLink) {
-            identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
-        });
-
-        let localAuthor = $.extend(true, {}, this._author);
-        localAuthor.identifiers = identifiers;
-
-        return {
-            author: localAuthor,
-            identifierDict: IDENTIFIERS,
-            showConfirmDelete: false
-        }
-    }
 });
 
 Vue.component('add-author-modal', {
@@ -230,14 +231,15 @@ Vue.component('add-author-modal', {
             formData.append("address", author.address !== null ? author.address : "");
             formData.append("phone", author.phone !== null ? author.phone : "");
             formData.append("homepage", author.homepage !== null ? author.homepage : "");
-            $.each(author.identifiers, function (identifierName, identifierLink) {
-                formData.append("identifier_name", identifierName);
-                formData.append("identifier_link", identifierLink);
-            });
+
 
             // Person specific fields
             if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                 formData.append("name", author.name);
+                $.each(author.identifiers, function (identifierName, identifierLink) {
+                    formData.append("identifier_name", identifierName);
+                    formData.append("identifier_link", identifierLink);
+                });
             }
 
             vue.isAddingAuthor = true;
@@ -257,7 +259,6 @@ Vue.component('add-author-modal', {
                             "address": author.address !== null ? author.address : "",
                             "phone": author.phone !== null ? author.phone : "",
                             "homepage": author.homepage !== null ? author.homepage : "",
-                            "identifiers": author.identifiers,
                             "name": "",
                             "profileUrl": "",
                         };
@@ -265,6 +266,7 @@ Vue.component('add-author-modal', {
                         // Person specific fields
                         if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                             newAuthor.name = author.name;
+                            newAuthor.identifiers = author.identifiers,
                             newAuthor.profileUrl = null;
                         }
 

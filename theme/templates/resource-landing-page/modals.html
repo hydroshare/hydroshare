@@ -164,40 +164,42 @@
                                     </fieldset>
 
                                     {# AUTHOR IDENTIFIERS #}
-                                    <label class="control-label">Author Identifiers</label>
+                                    <template v-if="authorType !== authorTypes.ORGANIZATION">
+                                        <label class="control-label">Author Identifiers</label>
 
-                                    <div class="modal-identifiers-container height-fix">
-                                        <div class="edit-identifiers-container">
-                                            <div v-for="(identifier, index) in author.identifiers" class="well">
-                                                <div style="height:22px;">
-                                                    <button @click="onDeleteIdentifier(index)" type="button"
-                                                            class="close">&times;</button>
+                                        <div class="modal-identifiers-container height-fix">
+                                            <div class="edit-identifiers-container">
+                                                <div v-for="(identifier, index) in author.identifiers" class="well">
+                                                    <div style="height:22px;">
+                                                        <button @click="onDeleteIdentifier(index)" type="button"
+                                                                class="close">&times;</button>
+                                                    </div>
+                                                    <fieldset class="select-identifier-fieldset">
+                                                        <label>Identifier Name</label>
+                                                        <select v-model="identifier.identifierName"
+                                                                class="form-control select-identifier">
+                                                            <option v-for="ident in identifierDict"
+                                                                    :disabled="hasIdentifier(ident.value)"
+                                                                    :value="ident.value">
+                                                                ${ident.title}
+                                                            </option>
+                                                        </select>
+                                                    </fieldset>
+
+                                                    <fieldset>
+                                                        <label>Identifier Link</label>
+                                                        <input v-model="identifier.identifierLink"
+                                                               class="form-control identifier-link">
+                                                    </fieldset>
                                                 </div>
-                                                <fieldset class="select-identifier-fieldset">
-                                                    <label>Identifier Name</label>
-                                                    <select v-model="identifier.identifierName"
-                                                            class="form-control select-identifier">
-                                                        <option v-for="ident in identifierDict"
-                                                                :disabled="hasIdentifier(ident.value)"
-                                                                :value="ident.value">
-                                                            ${ident.title}
-                                                        </option>
-                                                    </select>
-                                                </fieldset>
-
-                                                <fieldset>
-                                                    <label>Identifier Link</label>
-                                                    <input v-model="identifier.identifierLink"
-                                                           class="form-control identifier-link">
-                                                </fieldset>
                                             </div>
-                                        </div>
 
-                                        <button @click="onAddIdentifier"
-                                                type="button" class="btn btn-success">
-                                            <i class="fa fa-plus" aria-hidden="true"></i> Add New
-                                        </button>
-                                    </div>
+                                            <button @click="onAddIdentifier"
+                                                    type="button" class="btn btn-success">
+                                                <i class="fa fa-plus" aria-hidden="true"></i> Add New
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
 
@@ -340,39 +342,41 @@
                             </fieldset>
 
                             {# AUTHOR IDENTIFIERS #}
-                            <label class="control-label">Author Identifiers</label>
-                            <div class="modal-identifiers-container height-fix">
-                                <div class="edit-identifiers-container">
-                                    <div v-for="(identifier, index) in author.identifiers" class="well">
-                                        <div style="height:22px;">
-                                            <button @click="onDeleteIdentifier(index)" type="button"
-                                                    class="close">&times;</button>
+                            <template v-if="is_person">
+                                <label class="control-label">Author Identifiers</label>
+                                <div class="modal-identifiers-container height-fix">
+                                    <div class="edit-identifiers-container">
+                                        <div v-for="(identifier, index) in author.identifiers" class="well">
+                                            <div style="height:22px;">
+                                                <button @click="onDeleteIdentifier(index)" type="button"
+                                                        class="close">&times;</button>
+                                            </div>
+                                            <fieldset class="select-identifier-fieldset">
+                                                <label>Identifier Name</label>
+                                                <select v-model="identifier.identifierName"
+                                                        class="form-control select-identifier">
+                                                    <option v-for="ident in identifierDict"
+                                                            :disabled="hasIdentifier(ident.value)"
+                                                            :value="ident.value">
+                                                        ${ident.title}
+                                                    </option>
+                                                </select>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <label>Identifier Link</label>
+                                                <input v-model="identifier.identifierLink"
+                                                       class="form-control identifier-link">
+                                            </fieldset>
                                         </div>
-                                        <fieldset class="select-identifier-fieldset">
-                                            <label>Identifier Name</label>
-                                            <select v-model="identifier.identifierName"
-                                                    class="form-control select-identifier">
-                                                <option v-for="ident in identifierDict"
-                                                        :disabled="hasIdentifier(ident.value)"
-                                                        :value="ident.value">
-                                                    ${ident.title}
-                                                </option>
-                                            </select>
-                                        </fieldset>
-
-                                        <fieldset>
-                                            <label>Identifier Link</label>
-                                            <input v-model="identifier.identifierLink"
-                                                   class="form-control identifier-link">
-                                        </fieldset>
                                     </div>
-                                </div>
 
-                                <button @click="onAddIdentifier"
-                                    type="button" class="btn btn-success">
-                                    <i class="fa fa-plus" aria-hidden="true"></i> Add New
-                                </button>
-                            </div>
+                                    <button @click="onAddIdentifier"
+                                            type="button" class="btn btn-success">
+                                        <i class="fa fa-plus" aria-hidden="true"></i> Add New
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
