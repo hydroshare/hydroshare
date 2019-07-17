@@ -547,11 +547,17 @@ function bindFileBrowserItemEvents() {
                 var calls = [];
                 var callSources = [];
                 for (var i = 0; i < sources.length; i++) {
-                    var sourcePath = getCurrentPath().path.concat($(sources[i]).text());
-                    var destPath = destFolderPath.concat($(sources[i]).text());
+                    // Moving virtual folders uses its own endpoint
+                    if (isVirtualFolder(sources[i].parentElement)) {
+                        // TODO: add call to move virtual folders here
+                    }
+                    else {
+                        var sourcePath = getCurrentPath().path.concat($(sources[i]).text());
+                        var destPath = destFolderPath.concat($(sources[i]).text());
 
-                    if (sourcePath !== destPath) {
-                        callSources.push(sourcePath.join('/'));
+                        if (sourcePath !== destPath) {
+                            callSources.push(sourcePath.join('/'));
+                        }
                     }
                 }
                 // use same entry point as cut/paste
