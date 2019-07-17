@@ -1665,7 +1665,7 @@ class UserAccess(models.Model):
                 privilege=PrivilegeCodes.CHANGE,
                 community__c2gcp__group=this_group,
                 group__g2ugp__user=self.user).exists() and\
-           not this_group.gaccess.members.filter(id=self.user).exists() and\
+           not this_group.gaccess.members.filter(id=self.user.id).exists() and\
            not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
