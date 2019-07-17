@@ -115,8 +115,9 @@
                     <tr data-index="{{ forloop.counter0 }}">
                         <td>
                             {% if agency.agency_url %}
-                                <strong><a href="{{ agency.agency_url }}"
-                                           target="_blank">{{ agency.agency_name }}</a></strong>
+                                <strong>
+                                    <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
+                                </strong>
                             {% else %}
                                 <strong><span>{{ agency.agency_name }}</span></strong>
                             {% endif %}
@@ -148,12 +149,10 @@
                 <span class="glyphicon glyphicon-plus"></span>
             </a>
         </h4>
-        <p><i>People or
-            organizations that contributed technically, materially,
-            financially, or provided general support for the
-            creation of the resource's content but are not
-            considered authors.
-        </i></p>
+        <p>
+            <i>People or organizations that contributed technically, materially, financially, or provided general
+                support for the creation of the resource's content but are not considered authors.</i>
+        </p>
 
         {% if contributors %}
             <table class="hs-table contact-table table d-block">
@@ -177,12 +176,9 @@
                                 {{ contributor.name|name_without_commas }}
                             {% endif %}
                         </td>
-                        <td>{% if  contributor.organization %}
-                            {{ contributor.organization }}{% endif %}</td>
-                        <td>{% if  contributor.address %}
-                            {{ contributor.address }}{% endif %}</td>
-                        <td>{% if  contributor.phone %}
-                            {{ contributor.phone }}{% endif %}</td>
+                        <td>{% if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
+                        <td>{% if  contributor.address %}{{ contributor.address }}{% endif %}</td>
+                        <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
                         <td>
                             {% for name, link in contributor.identifiers.items %}
                                 {{ identif.name }}

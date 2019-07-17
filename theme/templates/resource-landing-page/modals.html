@@ -533,6 +533,7 @@
 
                                         <div class="controls">
                                             <input class="form-control input-sm textinput textInput"
+                                                   placeholder="e.g. 'Smith, John Arnold'"
                                                    id="{{ div_id }}_input_name" maxlength="100" name="name"
                                                    required="required" type="text">
                                         </div>
@@ -1186,6 +1187,7 @@
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput"
                                                id="id_contributor-{{ contributor.order|add:"-1" }}-name"
+                                               placeholder="e.g. 'Smith, John Arnold'"
                                                maxlength="100" name="contributor-{{ contributor.order|add:"-1" }}-name"
                                                required="required" type="text"
                                                value="{% if contributor.name %}{{ contributor.name }}{% endif %}">
