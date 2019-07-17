@@ -948,14 +948,14 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
+function move_to_folder_ajax_submit(source_paths, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-to-folder/',
         async: true,
         data: {
-            res_id: res_id,
+            res_id: SHORT_ID,
             source_paths: JSON.stringify(source_paths),
             target_path: target_path
         },
@@ -964,6 +964,24 @@ function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
             if (target_rel_path.length > 0) {
                 $("#fb-files-container li").removeClass("fb-cutting");
             }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Moving Failed', xhr.responseText);
+        }
+    });
+}
+
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath + '/',
+        async: true,
+        success: function (result) {
+            if (result.status === "success") {
+
+            }
+            console.log(result);
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Moving Failed', xhr.responseText);

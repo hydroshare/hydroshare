@@ -2,7 +2,7 @@
  * Created by Mauriel on 8/16/2016.
  */
 
-var sourcePaths = [];
+var sourcePaths = {path: null, selected:[]};
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
@@ -36,6 +36,11 @@ const MAX_FILE_SIZE = 1024; // MB
 
 function getCurrentPath() {
     return pathLog[pathLogIndex];
+}
+
+function clearSourcePaths() {
+    sourcePaths = {path: null, selected: []};
+    $("#fb-files-container li").removeClass("fb-cutting");
 }
 
 function getFolderTemplateInstance(folder) {
@@ -199,7 +204,7 @@ function updateSelectionMenuContext() {
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
-        // Multiple files selected
+        //  ------------- Multiple files selected -------------
         uiActionStates.rename.disabled = true;
         uiActionStates.rename.fileMenu.hidden = true;
 
@@ -279,7 +284,7 @@ function updateSelectionMenuContext() {
 
         var fileName = $(selected).find(".fb-file-name").text();
 
-        // The item selected is a folder
+        //  ------------- The item selected is a folder -------------
         if (selected.hasClass("fb-folder")) {
             uiActionStates.unzip.disabled = true;
             uiActionStates.unzip.fileMenu.hidden = true;
@@ -301,7 +306,7 @@ function updateSelectionMenuContext() {
                 uiActionStates.removeAggregation.fileMenu.hidden = true;
             }
             else {
-                // Folder is a logical file type
+                //  ------------- Folder is a logical file type -------------
                 uiActionStates.zip.disabled = true;
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
@@ -342,7 +347,7 @@ function updateSelectionMenuContext() {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
-        // The item selected is a file
+        //  ------------- The item selected is a file -------------
         else {
             const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
 
@@ -391,8 +396,8 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                uiActionStates.cut.disabled = true;
-                uiActionStates.paste.disabled = true;
+                // uiActionStates.cut.disabled = true;
+                // uiActionStates.paste.disabled = true;
                 uiActionStates.createFolder.disabled = true;
             }
 
@@ -430,7 +435,7 @@ function updateSelectionMenuContext() {
         }
     }
     else {
-        // No files selected
+        // ------------- No files selected -------------
         uiActionStates.cut.disabled = true;
         uiActionStates.rename.disabled = true;
         uiActionStates.unzip.disabled = true;
@@ -466,20 +471,19 @@ function updateSelectionMenuContext() {
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
 
-    // Any number of items selected
+    // ------------- Any number of items selected ----------------------
 
-    const logicalFileType = $(selected).children('span.fb-logical-file-type').attr("data-logical-file-type");
+    // Check if any aggregation was included in the selection
+    selected.each(function () {
+        if (isVirtualFolder(selected[0])) {
+            uiActionStates.createFolder.disabled = true;
+            uiActionStates.delete.disabled = !selected.hasClass("fb-folder");
+            // uiActionStates.cut.disabled = true;
+            uiActionStates.setGenericFileType.disabled = true;
+        }
+    });
 
-    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-        logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-        uiActionStates.createFolder.disabled = true;
-        uiActionStates.rename.disabled = !selected.hasClass("fb-folder");
-        uiActionStates.delete.disabled = !selected.hasClass("fb-folder");
-        uiActionStates.cut.disabled = true;
-        uiActionStates.setGenericFileType.disabled = true;
-    }
-
-    // A file is included in the selection
+    //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
@@ -491,12 +495,12 @@ function updateSelectionMenuContext() {
         uiActionStates.zip.fileMenu.hidden = true;
     }
 
-    if (!sourcePaths.length) {
+    if (!sourcePaths.selected.length) {
         uiActionStates.paste.disabled = true;
     }
 
     if (getCurrentPath().hasOwnProperty("aggregation")) {
-        // The current path points to an aggregation
+        //  ------------- The current path points to an aggregation -------------
         uiActionStates.setGenericFileType.disabled = true;
         uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
@@ -522,6 +526,48 @@ function updateSelectionMenuContext() {
     $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
 }
 
+function onPaste() {
+    let folderName = $("#fb-files-container li.ui-selected").find(".fb-file-name").text();
+    paste(getCurrentPath().path.concat(folderName))
+}
+
+function paste(destPath) {
+    let calls = [];
+    let localSources = [];
+
+    // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
+    sourcePaths.selected.each(function () {
+        if (isVirtualFolder(this)) {
+            let item = $(this);
+            const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+            const file_type_id = item.attr("data-logical-file-id");
+            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+        }
+        else {
+            const itemName = $(this).find(".fb-file-name").text();
+            localSources.push(sourcePaths.path.concat(itemName).join('/'));
+            $(this).addClass("fb-cutting");
+        }
+    });
+
+    if (localSources.length) {
+        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
+    }
+
+    // Wait for the asynchronous call to finish to get new folder structure
+    $.when.apply($, calls).done(function () {
+        refreshFileBrowser();
+        clearSourcePaths();
+        // updateSelectionMenuContext();
+    });
+
+    $.when.apply($, calls).fail(function () {
+        refreshFileBrowser();
+        clearSourcePaths();
+        // updateSelectionMenuContext();
+    });
+}
+
 function bindFileBrowserItemEvents() {
     var mode = $("#hs-file-browser").attr("data-mode");
 
@@ -529,49 +575,59 @@ function bindFileBrowserItemEvents() {
     if (mode === "edit") {
         $(".droppable").droppable({
             drop: function (event, ui) {
-                var resID = $("#hs-file-browser").attr("data-res-id");
+                // var resID = $("#hs-file-browser").attr("data-res-id");
                 var destination = $(event.target);
-                if (destination.attr("data-logical-file-id")) {
+                if (isVirtualFolder(destination)) {
                     return; // Moving files into aggregations is not allowed
                 }
-                var sources = $("#fb-files-container li.ui-selected").children(".fb-file-name");
-                var destName = destination.children(".fb-file-name").text();
-                var destFileType = destination.children(".fb-file-type").text();
+                var selection = $("#fb-files-container li.ui-selected");
+                var destName = destination.find(".fb-file-name").text();
+                var destFileType = destination.find(".fb-file-type").text();
 
                 if (destFileType !== "File Folder") {
                     return;
                 }
 
-                var destFolderPath = getCurrentPath().path.concat(destName);
+                // var destFolderPath = getCurrentPath().path.concat(destName);
+                sourcePaths = {path: getCurrentPath().path, selected: selection};
 
-                var calls = [];
-                var callSources = [];
-                for (var i = 0; i < sources.length; i++) {
-                    // Moving virtual folders uses its own endpoint
-                    if (isVirtualFolder(sources[i].parentElement)) {
-                        // TODO: add call to move virtual folders here
-                    }
-                    else {
-                        var sourcePath = getCurrentPath().path.concat($(sources[i]).text());
-                        var destPath = destFolderPath.concat($(sources[i]).text());
+                paste(getCurrentPath().path.concat(destName));
 
-                        if (sourcePath !== destPath) {
-                            callSources.push(sourcePath.join('/'));
-                        }
-                    }
-                }
-                // use same entry point as cut/paste
-                calls.push(move_to_folder_ajax_submit(resID, callSources, destFolderPath.join('/')));
-
-                $.when.apply($, calls).done(function () {
-                    refreshFileBrowser();
-                    destination.removeClass("fb-drag-cutting");
-                });
-
-                $.when.apply($, calls).fail(function () {
-                    refreshFileBrowser();
-                    destination.removeClass("fb-drag-cutting");
-                });
+                // var calls = [];
+                // var callSources = [];
+                // for (var i = 0; i < sources.length; i++) {
+                //     const item = $(sources[i].parentElement);
+                //     // Moving virtual folders uses its own endpoint
+                //     if (isVirtualFolder(item)) {
+                //         const targetPath = destFolderPath.join('/');
+                //         const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+                //         const file_type_id = item.attr("data-logical-file-id");
+                //         calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath));
+                //     }
+                //     else {
+                //         const destPath = destFolderPath.concat($(sources[i]).text());
+                //         var sourcePath = getCurrentPath().path.concat($(sources[i]).text());
+                //
+                //         if (sourcePath !== destPath) {
+                //             callSources.push(sourcePath.join('/'));
+                //         }
+                //     }
+                // }
+                //
+                // // use same entry point as cut/paste
+                // if (callSources.length) {
+                //     calls.push(move_to_folder_ajax_submit(callSources, destFolderPath.join('/')));
+                // }
+                //
+                // $.when.apply($, calls).done(function () {
+                //     refreshFileBrowser();
+                //     clearSourcePaths();
+                // });
+                //
+                // $.when.apply($, calls).fail(function () {
+                //     refreshFileBrowser();
+                //     clearSourcePaths();
+                // });
 
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
@@ -1234,9 +1290,8 @@ function refreshFileBrowser(name) {
     }
 
     $.when.apply($, calls).done(function () {
-        $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
-        sourcePaths = [];
+        clearSourcePaths();
 
         $("#fileTypeMetaData").html(file_metadata_alert);
 
@@ -1259,9 +1314,8 @@ function refreshFileBrowser(name) {
     });
 
     $.when.apply($, calls).fail(function () {
-        $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
-        sourcePaths = [];
+        clearSourcePaths();
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         updateSelectionMenuContext();
     });
@@ -1856,55 +1910,22 @@ $(document).ready(function () {
     });
 
     $("#btn-open").click(onOpenFolder);
-
     $("#btn-cut, #fb-cut").click(onCut);
+    $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
 
     function onCut() {
-        $("#fb-files-container li").removeClass("fb-cutting");
-        sourcePaths = [];
+        let selection = $("#fb-files-container li.ui-selected:not(.hidden)");
+        clearSourcePaths();
 
-        var selection = $("#fb-files-container li.ui-selected:not(.hidden)");
+        selection.addClass("fb-cutting");
+        sourcePaths = {path: getCurrentPath().path, selected: selection};
 
-        for (var i = 0; i < selection.length; i++) {
-            var itemName = $(selection[i]).children(".fb-file-name").text();
-            sourcePaths.push(getCurrentPath().path.concat(itemName).join('/'));
-            $(selection[i]).addClass("fb-cutting");
-        }
-
-        if (sourcePaths.length) {
+        if (selection.length) {
             $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", false);
             $("#fb-paste").toggleClass("disabled", false);
         }
 
         $("#fb-cut").toggleClass("disabled", true);
-    }
-
-    $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
-
-    function onPaste() {
-        var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var targetPath;
-
-        targetPath = getCurrentPath().path.concat(folderName);
-
-        var calls = [];
-        var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
-        calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath.join('/')));
-
-        // Wait for the asynchronous call to finish to get new folder structure
-        $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-            sourcePaths = [];
-            $("#fb-files-container li").removeClass("fb-cutting");
-            updateSelectionMenuContext();
-        });
-
-        $.when.apply($, calls).fail(function () {
-            refreshFileBrowser();
-            sourcePaths = [];
-            $("#fb-files-container li").removeClass("fb-cutting");
-            updateSelectionMenuContext();
-        });
     }
 
     // File(s) delete method
