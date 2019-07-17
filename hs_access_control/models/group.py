@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q, F, Exists, OuterRef
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
@@ -362,17 +362,31 @@ class GroupAccess(models.Model):
             return PrivilegeCodes.NONE
 
     @classmethod
-    def public_groups(cls):
+    def groups_with_public_resources(cls):
         """ Return the list of groups that have discoverable or public resources
             These must contain at least one resource that is discoverable and
             is owned by a group member.
+
+            This query is subtle. See 
+                https://medium.com/@hansonkd/\
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16 
+            for details of how this improves performance. 
+
+           As a short summary, all we need to know is that one resource exists. 
+           This is not possible to notate in the main query except through an annotation. 
+           However, that annotation is really efficient, and is implemented as a postgres 
+           subquery. This is a Django 1.11 extension. 
         """
         return Group.objects\
-            .filter(
-                g2grp__resource__raccess__discoverable=True,
-                g2grp__resource__r2urp__user__u2ugp__group__gaccess=F('gaccess'),
-                g2grp__resource__r2urp__privilege=PrivilegeCodes.OWNER)\
-            .distinct().order_by('name')
+            .annotate(
+                has_public_resources=Exists(
+                    BaseResource.objects.filter(
+                        raccess__discoverable=True,
+                        r2grp__group__id=OuterRef('id'), 
+                        r2urp__user__u2ugp__group__id=OuterRef('id'),
+                        r2urp__privilege=PrivilegeCodes.OWNER)))\
+            .filter(has_public_resources=True)\
+            .order_by('name')
 
     @property
     def public_resources(self):

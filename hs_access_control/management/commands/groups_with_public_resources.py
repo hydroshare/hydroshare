@@ -8,8 +8,8 @@ from hs_access_control.models import GroupAccess
 
 
 def usage():
-    print("group_public usage:")
-    print("  group_public ")
+    print("groups_with_public_resources usage:")
+    print("  groups_with_public_resources ")
 
 
 def shorten(title, length):
@@ -35,6 +35,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        for g in GroupAccess.public_groups(): 
-            n = g.gaccess.public_resources.count()
-            print("group is {} (id={}, public_resources={})".format(g.name, g.id, n))
+        for g in GroupAccess.groups_with_public_resources(): 
+            # n = g.gaccess.public_resources.count()
+            print("group is {} (id={})".format(g.name, g.id))
