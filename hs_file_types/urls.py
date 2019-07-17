@@ -32,6 +32,11 @@ urlpatterns = [
         views.move_aggregation,
         name="move_aggregation"),
 
+    url(r'^_internal/(?P<resource_id>[0-9a-f]+)/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/move-aggregation/$',
+        views.move_aggregation,
+        name="move_aggregation"),
+
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<element_name>[A-z]+)/'
         r'(?P<element_id>[0-9]+)/update-file-metadata/$',
         views.update_metadata_element,
