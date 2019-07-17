@@ -58,7 +58,7 @@
                     </div>
 
                     {# Person #}
-                    <div data-hs-user-type="person">
+                    <div>
                         {#  Existing HydroShare User  #}
                         <div v-show="authorType === authorTypes.EXISTING_HS_USER">
                             <div class="modal-body">
@@ -407,40 +407,20 @@
                 </div>
 
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Existing HydroShare User</div>
-                                    <input type="radio" name="add_contributor_user_type" value="hs_user" checked>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-2 text-center or-separator">
-                            <span class="text-muted">- Or -</span>
-                        </div>
-
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Other</div>
-                                    <input type="radio" name="add_contributor_user_type" value="other">
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <hr>
-                        </div>
+                    <div class="btn-group flex author-types" role="group"
+                         aria-label="Author type">
+                        <button class="btn btn-primary" data-contributor-type="hs_user" type="button">
+                            Existing<br>HydroShare User
+                        </button>
+                        <button class="btn btn-default" data-contributor-type="other" type="button">
+                            Other Person
+                        </button>
                     </div>
                 </div>
 
                 {#  Existing HydroShare User  #}
                 {% with "user-type-hs-user" as div_id %}
-                <div data-hs-user-type="hs_user">
+                <div data-contributor-type="hs_user">
                     <div class="modal-body">
                         {{ add_view_contrib_user_form.user }}
                     </div>
@@ -535,7 +515,7 @@
 
                 {#  Other Person #}
                 {% with "user-type-other-user" as div_id %}
-                <div data-hs-user-type="other" style="display:none">
+                <div data-contributor-type="other" style="display:none">
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
                           enctype="multipart/form-data">
                         {% csrf_token %}
@@ -1210,15 +1190,20 @@
                                 </div>
                                 {% if contributor.description %}
                                     <div id="div_id_description" class="control-group">
-                                        <label class="control-label">HydroShare User Identifier (URL)</label>
+                                        <label class="control-label">HydroShare Profile</label>
+                                        <div class="space-bottom">
+                                            <a href="{{ contributor.description }}">View Profile</a>
+                                        </div>
 
-                                        <div class="controls"><input
-                                                class="form-control input-sm urlinput"
-                                                id="id_creator-{{ contributor.order|add:"-1" }}-description"
-                                                maxlength="200"
-                                                name="creator-{{ contributor.order|add:"-1" }}-description" type="url"
-                                                value="{{ contributor.description }}"
-                                                readonly></div>
+                                        <div class="controls hidden">
+                                            <input class="form-control input-sm urlinput"
+                                                   id="id_creator-{{ contributor.order|add:"-1" }}-description"
+                                                   maxlength="200"
+                                                   name="creator-{{ contributor.order|add:"-1" }}-description"
+                                                   type="url"
+                                                   value="{{ contributor.description }}"
+                                                   readonly>
+                                        </div>
                                     </div>
                                 {% endif %}
                                 <div id="div_id_organization" class="control-group">

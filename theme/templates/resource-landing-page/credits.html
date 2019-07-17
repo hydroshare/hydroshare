@@ -1,3 +1,5 @@
+{% load hydroshare_tags %}
+
 {% if not resource_edit_mode %}
     {% if fundingagencies or contributors %}
         <div class="col-xs-12 content-block">
@@ -61,9 +63,13 @@
                 <tbody>
                 {% for cont in contributors %}
                     <tr>
-                        <td>{% if cont.description %}
-                            <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
-                            {{ cont.name }}{% endif %}</td>
+                        <td>
+                            {% if cont.description %}
+                                <a href="{{ cont.description }}">{{ cont.name|name_without_commas }}</a>
+                            {% else %}
+                                {{ cont.name|name_without_commas }}
+                            {% endif %}
+                        </td>
                         <td>{% if cont.organization %}
                             {{ cont.organization }}{% endif %}</td>
                         <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
@@ -164,9 +170,13 @@
                 <tbody>
                 {% for contributor in contributors %}
                     <tr>
-                        <td>{% if contributor.description %}
-                            <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
-                            {{ contributor.name }}{% endif %}</td>
+                        <td>
+                            {% if contributor.description %}
+                                <a href="{{ contributor.description }}">{{ contributor.name|name_without_commas }}</a>
+                            {% else %}
+                                {{ contributor.name|name_without_commas }}
+                            {% endif %}
+                        </td>
                         <td>{% if  contributor.organization %}
                             {{ contributor.organization }}{% endif %}</td>
                         <td>{% if  contributor.address %}

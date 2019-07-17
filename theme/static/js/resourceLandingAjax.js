@@ -573,7 +573,7 @@ function update_sqlite_file_ajax_submit() {
 }
 
 function get_user_info_ajax_submit(url, obj) {
-    var entry = $(obj).closest("div[data-hs-user-type]").find("#user-deck > .hilight");
+    var entry = $(obj).closest("div[data-contributor-type]").find("#user-deck > .hilight");
     if (entry.length < 1) {
         return false;
     }

@@ -333,33 +333,24 @@ $(document).ready(function () {
         metadata_update_ajax_submit(formID);
     });
 
+    $("#add-contributor-dialog .author-types > .btn").click(onAddContributorTypeChange);
+
     // Display toggle for Add Author/Contributor radio buttons
     function onAddContributorTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-user-type]").hide();
-        $("div[data-hs-user-type='" + type + "']").show();
+        const type = $(this).attr("data-contributor-type");
+        const isHydroShareUser = type === "hs-user";
+
+        // Toggle form visibility
+        $("#add-contributor-dialog div[data-contributor-type]").hide();
+        $("#add-contributor-dialog div[data-contributor-type='" + type + "']").show();
+
+        let buttons = $("#add-contributor-dialog .author-types .btn");
+        buttons.each(function() {
+            const isActive = $(this).attr("data-contributor-type") === type;
+            $(this).toggleClass("btn-primary", isActive);
+            $(this).toggleClass("btn-default", !isActive);
+        });
     }
-
-    $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
-    $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onOrgTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-org-type]").hide();
-        $("div[data-hs-org-type='" + type + "']").show();
-    }
-
-    $("input[name='choose_org_type']").click(onOrgTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onPersonTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-person-type]").hide();
-        $("div[data-hs-person-type='" + type + "']").show();
-    }
-
-    $("input[name='add_author_person']").click(onPersonTypeChange);
 
     $("#citation-text").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower

@@ -399,7 +399,7 @@ a.sign-out-inline:hover {
 	overflow: hidden;
 }
 
-#add-author-modal .author-types > button {
+#add-author-modal .author-types > button, #add-contributor-dialog .author-types > button {
 	flex-grow: 1;
 	flex-basis: 0;
 	text-overflow: ellipsis;
@@ -4037,21 +4037,6 @@ div.group-add-photo {
 #edit-group-dialog div.toggle.btn {
 	width: 100px !important;
 	float: right;
-}
-
-.center-radio-inline {
-    padding: 8px;
-    border-radius: 4px;
-    width: 190px;
-}
-
-.center-radio-inline input[type='radio']{
-	float: none;
-	margin: 0;
-}
-
-.center-radio-inline label {
-	cursor: pointer;
 }
 
 .or-separator {
