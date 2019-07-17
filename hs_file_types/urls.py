@@ -28,7 +28,7 @@ urlpatterns = [
         name="delete_aggregation"),
 
     url(r'^_internal/(?P<resource_id>[0-9a-f]+)/'
-        r'(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/move-aggregation/(?P<tgt_path>.+)/$',
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/move-aggregation/(?P<tgt_path>.+)$',
         views.move_aggregation,
         name="move_aggregation"),
 
