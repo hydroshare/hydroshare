@@ -1228,10 +1228,10 @@ div.readme .readme-header h4 > span {
 	height: 155px;
 }
 
-span.remove {
-    position: absolute;
-    right: 1px;
-    top: 4px;
+.hilight > span.remove {
+	position: absolute;
+	right: 8px;
+	top: 10px;
 }
 
 .form-control, .controls .input-group .form-control {
