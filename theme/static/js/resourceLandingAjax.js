@@ -978,10 +978,7 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath + '/',
         async: true,
         success: function (result) {
-            if (result.status === "success") {
 
-            }
-            console.log(result);
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Moving Failed', xhr.responseText);

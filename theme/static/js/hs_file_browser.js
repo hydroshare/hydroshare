@@ -526,11 +526,13 @@ function updateSelectionMenuContext() {
     $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
 }
 
+// Proxy function when pasting in current directory triggering from menu item or button
 function onPaste() {
     let folderName = $("#fb-files-container li.ui-selected").find(".fb-file-name").text();
     paste(getCurrentPath().path.concat(folderName))
 }
 
+// Pastes the files currently in the global variable source Paths into a destination path
 function paste(destPath) {
     let calls = [];
     let localSources = [];
@@ -588,47 +590,9 @@ function bindFileBrowserItemEvents() {
                     return;
                 }
 
-                // var destFolderPath = getCurrentPath().path.concat(destName);
+                // Load the files to be moved
                 sourcePaths = {path: getCurrentPath().path, selected: selection};
-
                 paste(getCurrentPath().path.concat(destName));
-
-                // var calls = [];
-                // var callSources = [];
-                // for (var i = 0; i < sources.length; i++) {
-                //     const item = $(sources[i].parentElement);
-                //     // Moving virtual folders uses its own endpoint
-                //     if (isVirtualFolder(item)) {
-                //         const targetPath = destFolderPath.join('/');
-                //         const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
-                //         const file_type_id = item.attr("data-logical-file-id");
-                //         calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath));
-                //     }
-                //     else {
-                //         const destPath = destFolderPath.concat($(sources[i]).text());
-                //         var sourcePath = getCurrentPath().path.concat($(sources[i]).text());
-                //
-                //         if (sourcePath !== destPath) {
-                //             callSources.push(sourcePath.join('/'));
-                //         }
-                //     }
-                // }
-                //
-                // // use same entry point as cut/paste
-                // if (callSources.length) {
-                //     calls.push(move_to_folder_ajax_submit(callSources, destFolderPath.join('/')));
-                // }
-                //
-                // $.when.apply($, calls).done(function () {
-                //     refreshFileBrowser();
-                //     clearSourcePaths();
-                // });
-                //
-                // $.when.apply($, calls).fail(function () {
-                //     refreshFileBrowser();
-                //     clearSourcePaths();
-                // });
-
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
