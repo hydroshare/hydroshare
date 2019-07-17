@@ -992,7 +992,6 @@ function setBreadCrumbs(bcPath) {
 
     if (bcPath.hasOwnProperty("aggregation")) {
         bcPath.path.push(bcPath.aggregation.name);
-        // TODO: display aggregation icon in breadcrumbs
     }
 
     if (bcPath.path.length) {
