@@ -321,8 +321,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,
                'communities_enabled': settings.COMMUNITIES_ENABLED,
-               'topics_json': mark_safe(escapejs(json.dumps(topics)))
-
+               'topics_json': mark_safe(escapejs(json.dumps(topics))),
+               'admin_user': True
     }
 
     return context

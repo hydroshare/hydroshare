@@ -112,7 +112,7 @@ class TopicsView(TemplateView):
     """
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+        return render(request, 'pages/topics.html', {'topics_json': self.get_topics_data()})
 
     def post(self, request, *args, **kwargs):
         if request.POST.get('action') == 'CREATE':
@@ -140,18 +140,18 @@ class TopicsView(TemplateView):
 
         return render(request, 'pages/topics.html')
 
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
-            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+    def get_topics_data(self, **kwargs):
+        # u = User.objects.get(pk=self.request.user.id)
+        # groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        # # for each group set group dynamic attributes
+        # for g in groups:
+        #     g.is_user_member = u in g.gaccess.members
+        #     g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+        #     g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+        #     g.join_request = None
+        #     if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+        #         g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+        #                          g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
         topics = list(topics)  # force QuerySet evaluation

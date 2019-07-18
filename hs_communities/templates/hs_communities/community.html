@@ -61,7 +61,7 @@
                                                         shared with this community yet.</i>
                                                 {% else %}
                                                     {% for g in groups %}
-                                                        <li class="list-group-item" id="{{ g.id }}">
+                                                        <li class="list-group-item" id="{{ g.id }}"><div style="white-space:nowrap;">
                                                             <label class="checkbox noselect"
                                                                  for="{{ g.id }}">{{ g.name }}<input type="checkbox" id="{{ g.id }}" value="Click"
                                                                     @click="updateContribs({{ g.id }})"
@@ -69,7 +69,7 @@
                                                                  checked
                                                             {% endif %}
                                                             />&nbsp;&nbsp;<span class="badge">{{ g.res_count }}</span>
-                                                            </label>
+                                                            </label></div>
                                                         </li>
                                                     {% endfor %}
                                                 {% endif %}

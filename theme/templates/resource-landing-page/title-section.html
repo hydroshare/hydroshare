@@ -223,6 +223,9 @@
                                     <option>Cross-CZO</option>
                                 </select><br/><br/>
                                 <span style="cursor:help" title="To add Topics make a request to admin@criticalzone.org">[info]</span>
+                                {% if admin_user %}
+                                    <a href="/topics/">&nbsp;[edit]</a>
+                                {% endif %}
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
