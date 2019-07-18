@@ -1719,6 +1719,8 @@ class FindGroupsView(TemplateView):
     def get_context_data(self, **kwargs):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
+
+
             groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
 
             for g in groups:

@@ -125,24 +125,24 @@ class TopicsView(TemplateView):
                 new_topic.name = request.POST.get('name')
                 new_topic.save()
             except Exception as e:
-                logger.error("TopicsView error creating new topic {}".format(e))
+                print("TopicsView error creating new topic {}".format(e))
         elif request.POST.get('action') == 'UPDATE':
             try:
                 update_topic = Topic.objects.get(id=request.POST.get('id'))
                 update_topic.name = request.POST.get('name')
                 update_topic.save()
             except Exception as e:
-                logger.error("TopicsView error updating topic {}".format(e))
+                print("TopicsView error updating topic {}".format(e))
         elif request.POST.get('action') == 'DELETE':
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get('id'))
                 delete_topic.delete(keep_parents=False)
             except:
-                logger.error("error")
+                print("error")
         else:
-            logger.error("TopicsView POST action not recognized should be CREATE UPDATE or DELETE")
-
-        return HttpResponseRedirect('/topics/')
+            print("TopicsView POST action not recognized should be CREATE UPDATE or DELETE")
+        # return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
+        return render(request, 'pages/topics.html', {'topics_json': None})
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
@@ -158,32 +158,6 @@ class TopicsView(TemplateView):
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
+
         topics = list(topics)  # force QuerySet evaluation
-
         return mark_safe(escapejs(json.dumps(topics)))
-
-
-# @api_view(['POST', 'GET'])
-# def update_key_value_metadata_public(request, pk):
-#     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-#
-#     if request.method == 'GET':
-#         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
-#
-#     post_data = request.data.copy()
-#     res.extra_metadata = post_data
-#
-#     is_update_success = True
-#
-#     try:
-#         res.save()
-#     except Error as ex:
-#         is_update_success = False
-#
-#     if is_update_success:
-#         resource_modified(res, request.user, overwrite_bag=False)
-#
-#     if is_update_success:
-#         return HttpResponse(status=200)
-#     else:
-#         return HttpResponse(status=400)

@@ -2,11 +2,11 @@ let TopicsApp = new Vue({
     el: '#topics-app',
     data: {
         numbers: [],
-        newTopic: ''
+        newTopic: '',
+        reRender: 0
     },
     mounted() {
-        // depends on topics.html making topics available by importing from Django namespace via JSON exchange
-        topics_from_page.forEach(function (topic) {
+        topics_from_page.forEach(function (topic) {  // defined inline in topics.html
             this.$data.numbers.push({'val': topic, 'edit': false})
         }.bind(this))
     },
@@ -52,7 +52,8 @@ let TopicsApp = new Vue({
                 contentType: false,
                 url: "/topics/",
                 success: function (response) {
-                    // do nothing
+                    $("#add-topic").val('');
+                    window.location.href = "/topics/";
                 },
                 error: function (response) {
                     console.log(response.responseText);
@@ -71,7 +72,7 @@ let TopicsApp = new Vue({
                 contentType: false,
                 url: "/topics/",
                 success: function (response) {
-                    // do nothing
+                    window.location.href = "/topics/";
                 },
                 error: function (response) {
                     console.log(response.responseText);
