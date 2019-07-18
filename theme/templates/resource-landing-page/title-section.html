@@ -222,10 +222,10 @@
                                     <option>SSHCZO</option>
                                     <option>Cross-CZO</option>
                                 </select><br/><br/>
+                                <span style="cursor:help" title="To add Topics make a request to admin@criticalzone.org">[info]</span>
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
-                                       moved-item-location="bottom"
-                                       v-on:item-moved="itemMoved" v-cloak>
+                                       moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover><br/>
                                 Optional Custom Text:<br/>
                                 <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51" maxlength="50"/>

@@ -2,8 +2,7 @@ let TopicsApp = new Vue({
     el: '#topics-app',
     data: {
         numbers: [],
-        newTopic: '',
-        reRender: 0
+        newTopic: ''
     },
     mounted() {
         topics_from_page.forEach(function (topic) {  // defined inline in topics.html
@@ -51,7 +50,7 @@ let TopicsApp = new Vue({
                 processData: false,
                 contentType: false,
                 url: "/topics/",
-                success: function (response) {
+                success: function () {
                     $("#add-topic").val('');
                     window.location.href = "/topics/";
                 },
@@ -71,7 +70,7 @@ let TopicsApp = new Vue({
                 processData: false,
                 contentType: false,
                 url: "/topics/",
-                success: function (response) {
+                success: function () {
                     window.location.href = "/topics/";
                 },
                 error: function (response) {

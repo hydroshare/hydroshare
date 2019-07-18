@@ -1,21 +1,17 @@
 from __future__ import absolute_import
 
 import json
-import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
-from django.views.decorators.cache import never_cache
+
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
 from hs_communities.models import Topic
-
-logger = logging.getLogger(__name__)
 
 
 class CollaborateView(TemplateView):
@@ -94,7 +90,7 @@ class MyCommunitiesView(TemplateView):
                 g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        comm_groups = Community.objects.all()[0]
+        # comm_groups = Community.objects.all()[0]
         member_of = dict()
         for comm in Community.objects.all():
             if u.id in [m.id for m in comm.member_users] or u.id in [o.id for o in comm.owners]:
@@ -141,8 +137,8 @@ class TopicsView(TemplateView):
                 print("error")
         else:
             print("TopicsView POST action not recognized should be CREATE UPDATE or DELETE")
-        # return render(request, 'pages/topics.html', {'topics_json': self.get_context_data()})
-        return render(request, 'pages/topics.html', {'topics_json': None})
+
+        return render(request, 'pages/topics.html')
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
@@ -158,6 +154,5 @@ class TopicsView(TemplateView):
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
-
         topics = list(topics)  # force QuerySet evaluation
         return mark_safe(escapejs(json.dumps(topics)))
