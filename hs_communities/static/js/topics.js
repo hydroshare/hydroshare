@@ -5,8 +5,7 @@ let TopicsApp = new Vue({
         newTopic: ''
     },
     mounted() {
-        // depends on topics.html making topics available by importing from Django namespace via JSON exchange
-        topics_from_page.forEach(function (topic) {
+        topics_from_page.forEach(function (topic) {  // defined inline in topics.html
             this.$data.numbers.push({'val': topic, 'edit': false})
         }.bind(this))
     },
@@ -51,8 +50,9 @@ let TopicsApp = new Vue({
                 processData: false,
                 contentType: false,
                 url: "/topics/",
-                success: function (response) {
-                    // do nothing
+                success: function () {
+                    $("#add-topic").val('');
+                    window.location.href = "/topics/";
                 },
                 error: function (response) {
                     console.log(response.responseText);
@@ -70,8 +70,8 @@ let TopicsApp = new Vue({
                 processData: false,
                 contentType: false,
                 url: "/topics/",
-                success: function (response) {
-                    // do nothing
+                success: function () {
+                    window.location.href = "/topics/";
                 },
                 error: function (response) {
                     console.log(response.responseText);

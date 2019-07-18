@@ -9,7 +9,7 @@
     <body>
     <div id="topics-app">
         <h2>Edit Topics</h2>
-        <input type="text" v-model="newTopic"/>
+        <input id="add-topic" type="text" v-model="newTopic"/>
         <button v-on:click="addTopic('{{ csrf_token }}', )">Add Topic</button>
         <template>
             <ul>
@@ -17,14 +17,11 @@
                     <span v-show="!number.edit" v-on:click="toggleEdit(this, number)">{% templatetag openvariable %} number.val[1] {% templatetag closevariable %}</span>
                     <input type="text" v-model="number.val[1]" v-show="number.edit"
                            v-on:blur="saveEdit('{{ csrf_token }}', this, number)"/>
-                    <span v-on:click="deleteTopic('{{ csrf_token }}', number.val[0])">X</span>
+                    <span style="cursor:pointer" v-on:click="deleteTopic('{{ csrf_token }}', number.val[0])">X</span>
                 </li>
             </ul>
         </template>
-
     </div>
-
-
     </body>
     </html>
 {% endblock %}
@@ -35,11 +32,11 @@
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
-
     <script type="application/javascript">
         // contents here are required by topics.js
         const topics_from_page = JSON.parse("{{ topics_json }}");
     </script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
 
 {% endblock %}
