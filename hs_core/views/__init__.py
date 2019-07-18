@@ -1,60 +1,67 @@
 from __future__ import absolute_import
-
-import datetime
 import json
+import datetime
+import pytz
 import logging
 
-import pytz
-from autocomplete_light import shortcuts as autocomplete_light
-from django import forms
-from django.contrib import messages
+from drf_yasg.utils import swagger_auto_schema
+
+from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.core import signing
+from django.contrib import messages
+from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
-from django.db import Error, IntegrityError
-from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.utils.decorators import method_decorator
+from django.core import signing
+from django.db import Error, IntegrityError
+from django import forms
 from django.views.generic import TemplateView
-from drf_yasg.utils import swagger_auto_schema
-from inplaceeditform.commons import get_dict_from_obj, apply_filters
-from inplaceeditform.views import _get_http_response, _get_adaptor
-from mezzanine.conf import settings
-from mezzanine.pages.page_processors import processor_for
-from mezzanine.utils.email import subject_template, send_mail_template
+from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 
+from mezzanine.conf import settings
+from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
+
+from autocomplete_light import shortcuts as autocomplete_light
+from inplaceeditform.commons import get_dict_from_obj, apply_filters
+from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
-from hs_access_control.models import GroupAccess
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
-from hs_collection_resource.models import CollectionDeletedResource
+
 from hs_core import hydroshare
-from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
-from hs_core.signals import *
-from . import apps
-from . import debug_resource_view
-from . import resource_access_api
-from . import resource_folder_hierarchy
-from . import resource_folder_rest_api
-from . import resource_metadata_rest_api
-from . import resource_rest_api
-from . import resource_ticket_rest_api
-from . import user_rest_api
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
+
+from . import resource_rest_api
+from . import resource_metadata_rest_api
+from . import user_rest_api
+from . import resource_folder_hierarchy
+
+from . import resource_access_api
+from . import resource_folder_rest_api
+from . import debug_resource_view
+from . import resource_ticket_rest_api
+from . import apps
+
+from hs_core.hydroshare import utils
+
+from hs_core.signals import *
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
+
+from hs_collection_resource.models import CollectionDeletedResource
 logger = logging.getLogger(__name__)
 
 
