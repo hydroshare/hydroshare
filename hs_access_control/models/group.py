@@ -75,6 +75,10 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
+    unlisted = models.BooleanField(default=False, 
+                                   editable=False, 
+                                   help_text='whether group appears in public group listings') 
+
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
@@ -385,7 +389,7 @@ class GroupAccess(models.Model):
                         r2grp__group__id=OuterRef('id'), 
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
-            .filter(has_public_resources=True)\
+            .filter(gaccess__unlisted=False, has_public_resources=True)\
             .order_by('name')
 
     @property
