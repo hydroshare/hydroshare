@@ -399,6 +399,10 @@ class GroupAccess(models.Model):
 
         Based upon hs_access_control/models/community.py:Community:public_resources
         """
+        # if the resource is unlisted, it by definition has no exhibited resources. 
+        if self.unlisted: 
+            return BaseResource.objects.none()
+
         res = BaseResource.objects.filter(r2grp__group__gaccess=self,
                                           r2grp__group__gaccess__active=True)\
                                   .filter(Q(raccess__public=True) |

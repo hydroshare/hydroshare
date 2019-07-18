@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
 from hs_core.models import BaseResource
-from django.db.models import Q, F
+from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
 ###################################
@@ -20,7 +20,9 @@ class Community(models.Model):
 
     @property
     def member_groups(self):
-        return Group.objects.filter(gaccess__active=True, g2gcp__community=self)
+        """ This returns all member groups, including unlisted groups """
+        return Group.objects.filter(gaccess__active=True,
+                                    g2gcp__community=self)
 
     @property
     def member_users(self):
@@ -33,6 +35,33 @@ class Community(models.Model):
                                    u2ucp__community=self,
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
 
+    def groups_with_public_resources(self):
+        """ Return the list of groups that have discoverable or public resources
+            These must contain at least one resource that is discoverable and
+            is owned by a group member.
+
+            This query is subtle. See
+                https://medium.com/@hansonkd/\
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16
+            for details of how this improves performance.
+
+           As a short summary, all we need to know is that one resource exists.
+           This is not possible to notate in the main query except through an annotation.
+           However, that annotation is really efficient, and is implemented as a postgres
+           subquery. This is a Django 1.11 extension.
+        """
+        from hs_access_control.models import PrivilegeCodes
+        return self.member_groups\
+            .annotate(
+                has_public_resources=Exists(
+                    BaseResource.objects.filter(
+                        raccess__discoverable=True,
+                        r2grp__group__id=OuterRef('id'),
+                        r2urp__user__u2ugp__group__id=OuterRef('id'),
+                        r2urp__privilege=PrivilegeCodes.OWNER)))\
+            .filter(gaccess__unlisted=False, has_public_resources=True)\
+            .order_by('name')
+
     @property
     def public_resources(self):
         """
@@ -41,12 +70,14 @@ class Community(models.Model):
         # TODO: consider adding GenericRelation to expose reverse querying of metadata field.
         # TODO: This would enable fast querying of first author.
         # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
+
         # import here to avoid import loops
         from hs_access_control.models.privilege import PrivilegeCodes
         res = BaseResource\
             .objects\
             .filter(r2grp__group__g2gcp__community=self,
-                    r2grp__group__gaccess__active=True)\
+                    r2grp__group__gaccess__active=True,
+                    r2grp__group__gaccess__unlisted=False)\
             .filter(Q(raccess__public=True) |
                     Q(raccess__published=True) |
                     Q(raccess__discoverable=True))\
