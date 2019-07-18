@@ -58,10 +58,26 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         self.dogs = self.dog.uaccess.create_group(
             title='dogs', description="We are the dogs")
 
-        self.cat.uaccess.share_resource_with_user(self.posts, self.dog, PrivilegeCodes.VIEW)
-        self.dog.uaccess.share_resource_with_group(self.posts, self.dogs, PrivilegeCodes.VIEW)
+        self.bones = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='all about bones',
+            metadata=[],
+        )
 
-    def test_01_basic(self):
+        self.dog.uaccess.share_resource_with_group(self.bones, self.dogs, PrivilegeCodes.VIEW)
+
+        self.pets = self.dog.uaccess.create_community(
+                'all kinds of pets',
+                'collaboration on how to be a better pet.')
+
+        # Make cats and dogs part of community pets
+        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
+        self.cat.uaccess.share_group_with_user(self.cats, self.dog, PrivilegeCodes.OWNER)
+        self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
+        self.cat.uaccess.unshare_group_with_user(self.cats, self.dog)
+
+    def test_01_groups(self):
         "basic function: groups appear and disappear according to access rules "
 
         # flag state
@@ -69,7 +85,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.posts.raccess.discoverable)
 
         groups = GroupAccess.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([], list(groups)))
+        self.assertTrue(is_equal_to_as_set([], groups))
 
         # override policies for discoverable data
         self.posts.raccess.discoverable = True
@@ -77,11 +93,11 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
 
         # group should appear in list
         groups = GroupAccess.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([self.cats], list(groups)))
+        self.assertTrue(is_equal_to_as_set([self.cats], groups))
 
         # group should contain a public resource
         resources = self.cats.gaccess.public_resources
-        self.assertTrue(is_equal_to_as_set([self.posts], list(resources)))
+        self.assertTrue(is_equal_to_as_set([self.posts], resources))
 
         # now unlist the group
         self.cats.gaccess.unlisted = True
@@ -89,15 +105,68 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
 
         # Now group should not appear in list
         groups = GroupAccess.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([], list(groups)))
+        self.assertTrue(is_equal_to_as_set([], groups))
 
-        # dog owns posts, so should appear as public resource of dogs
-        self.cat.uaccess.share_resource_with_user(self.posts, self.dog, PrivilegeCodes.OWNER)
+        # And resource should not appear in listings for cats
+        # group should contain a public resource
+        resources = self.cats.gaccess.public_resources
+        self.assertTrue(is_equal_to_as_set([], resources))
+
+        self.bones.raccess.discoverable = True
+        self.bones.raccess.save()
 
         # Now group dogs should appear in list
         groups = GroupAccess.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([self.dogs], list(groups)))
+        print(groups)
+        self.assertTrue(is_equal_to_as_set([self.dogs], groups))
 
         # group should contain a public resource
         resources = self.dogs.gaccess.public_resources
-        self.assertTrue(is_equal_to_as_set([self.posts], list(resources)))
+        self.assertTrue(is_equal_to_as_set([self.bones], resources))
+
+    def test_02_communities(self):
+        "groups appear and disappear from communities according to access rules "
+
+        # flag state
+        self.assertFalse(self.cats.gaccess.unlisted)
+        self.assertFalse(self.posts.raccess.discoverable)
+
+        groups = self.pets.groups_with_public_resources()
+        self.assertTrue(is_equal_to_as_set([], groups))
+
+        # override policies for discoverable data
+        self.posts.raccess.discoverable = True
+        self.posts.raccess.save()
+
+        # group should appear in list
+        groups = self.pets.groups_with_public_resources()
+        self.assertTrue(is_equal_to_as_set([self.cats], groups))
+
+        # group should contain a public resource
+        resources = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set([self.posts], resources))
+
+        # now unlist the group
+        self.cats.gaccess.unlisted = True
+        self.cats.gaccess.save()
+
+        # Now group should not appear in list
+        groups = self.pets.groups_with_public_resources()
+        print(groups)
+        self.assertTrue(is_equal_to_as_set([], groups))
+
+        # And resource should not appear in listings for cats
+        # group should contain a public resource
+        resources = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set([], resources))
+
+        self.bones.raccess.discoverable = True
+        self.bones.raccess.save()
+
+        # Now group dogs should appear in list
+        groups = self.pets.groups_with_public_resources()
+        self.assertTrue(is_equal_to_as_set([self.dogs], groups))
+
+        # group should contain a public resource
+        resources = self.pets.public_resources
+        self.assertTrue(is_equal_to_as_set([self.posts], resources))
