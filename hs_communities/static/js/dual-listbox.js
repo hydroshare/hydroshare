@@ -1,9 +1,24 @@
 var TitleAssistantApp = new Vue({
     el: "#title-assistant",
+    computed: {
+        startyears() {
+            const year = new Date().getFullYear();
+            let numericalYears = Array.from({length: year - 1900}, (value, index) => 1901 + index);
+            return numericalYears.reverse()
+        },
+        endyears() {
+            const year = new Date().getFullYear();
+            let numericalYears = Array.from({length: year - 1900}, (value, index) => 1901 + index);
+            numericalYears.push('Ongoing');
+            return numericalYears.reverse()
+        }
+    },
     data: {
         title: '',
         regionSelected: '',
         subtopic: '',
+        startYear: '',
+        endYear: '',
         topics: {
             itemsList: [],
             unselectedItems: [],
@@ -17,12 +32,12 @@ var TitleAssistantApp = new Vue({
             this.$data.topics.selectedValues = this.$data.topics.selectedItems.map(x => x.value).join(', ');
             this.updateTitle()
         },
-        updateRegion: function() {
+        updateRegion: function () {
             console.log("Updating input on region select");
             this.updateTitle(items.join(','))
         },
         updateTitle: function() {
-            this.$data.title = (String(this.$data.regionSelected) + " " + String(this.$data.topics.selectedValues) + " " + String(this.$data.subtopic)).trim()
+            this.$data.title = (String(this.$data.regionSelected) + " " + String(this.$data.topics.selectedValues) + " " + String(this.$data.subtopic)) + " (" + String(this.$data.startYear) + " - " + String(this.$data.endYear) + ")".trim()
         },
         saveTitle: function() {
             $("#txt-title").val(this.$data.title);

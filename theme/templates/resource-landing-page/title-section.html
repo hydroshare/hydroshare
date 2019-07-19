@@ -222,17 +222,33 @@
                                     <option>SSHCZO</option>
                                     <option>Cross-CZO</option>
                                 </select><br/><br/>
-                                <span style="cursor:help" title="To add Topics make a request to admin@criticalzone.org">[info]</span>
+                                <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
+                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">[info]</a>
                                 {% if admin_user %}
                                     <a href="/topics/">&nbsp;[edit]</a>
                                 {% endif %}
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
-                                </mover><br/>
+                                </mover>
+                                <br/>
                                 Optional Custom Text:<br/>
-                                <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51" maxlength="50"/>
+                                <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51"
+                                       maxlength="50"/>
+                                <div style="margin-top: 1em">
+                                    <select id="start-year" v-model="startYear" @change="updateTitle()">
+                                        <option value="0"></option>
+                                        <option v-for="year in startyears" :value="year">{% templatetag openvariable %}
+                                            year {% templatetag closevariable %}</option>
+                                    </select>
+                                    <select id="end-year" v-model="endYear" @change="updateTitle()">
+                                        <option value="0"></option>
+                                        <option v-for="year in endyears" :value="year">{% templatetag openvariable %}
+                                            year {% templatetag closevariable %}</option>
+                                    </select>
+                                </div>
                             </div>
+
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -261,7 +277,8 @@
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
                 <div>
-                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit" style="display: none;">
+                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
+                            style="display: none;">
                         Save changes
                     </button>
                 </div>
