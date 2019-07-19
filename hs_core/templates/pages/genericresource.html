@@ -220,7 +220,7 @@
                     {% for tool in relevant_tools.tool_list %}
                         {% if tool.openwithlist %}
                             {% if tool.agg_types %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
+                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}">
                                     <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
                                      {% if tool.title|length > 20 %}
                                         <span>{{ tool.title|slice:":21"|add:"..." }}</span>
@@ -230,7 +230,7 @@
                                 </li>
                             {% endif %}
                             {% if tool.file_extensions %}
-                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
+                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}">
                                     <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
                                      {% if tool.title|length > 20 %}
                                         <span>{{ tool.title|slice:":21"|add:"..." }}</span>
