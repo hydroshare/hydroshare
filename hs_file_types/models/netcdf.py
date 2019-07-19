@@ -385,10 +385,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """ Creates a NetCDFLogicalFile (aggregation) from a netcdf file (.nc) resource file
-        or a folder """
+        """
 
         log = logging.getLogger()
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # base file name (no path included)
         file_name = res_file.file_name
@@ -397,7 +397,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         resource_metadata = []
         file_type_metadata = []
-        upload_folder = ''
         res_files_to_delete = []
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
@@ -427,12 +426,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # create logical file record in DB
                 logical_file.save()
                 try:
-                    if folder_path is None:
-                        # we are here means aggregation is being created by selecting a file
-                        upload_folder = file_folder
-                    else:
-                        # folder has been selected to create aggregation
-                        upload_folder = folder_path
+                    upload_folder = file_folder
 
                     # make the .nc file part of the aggregation
                     logical_file.add_resource_file(res_file)
