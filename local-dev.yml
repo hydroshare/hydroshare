@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.6
+    image: hydroshare/hs-irods:latest
     container_name: data.local.org
     hostname: data.local.org
     links:
@@ -9,7 +9,6 @@ services:
     ports:
       - "1247:1247"
     volumes:
-      - "idata_root_vol:/root"
       - "idata_iconf_vol:/etc/irods"
       - "idata_vault_vol:/var/lib/irods"
       - "idata_pgres_vol:/var/lib/postgresql/data"
@@ -34,6 +33,7 @@ services:
       LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
       HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
       HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
+      IRODS_ZONE: 'hydroshareZone'
       HS_USER_IRODS_ZONE: 'hydroshareuserZone'
       IRODS_ZONE_NAME: 'hydroshareZone'
       IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
@@ -43,12 +43,10 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:4.2.6
+    image: hydroshare/hs-irods:latest
     container_name: users.local.org
     hostname: users.local.org
     volumes:
-      - "iuser_root_vol:/root"
-      - "iuser_hspx_vol:/home/hsuserproxy"
       - "iuser_iconf_vol:/etc/irods"
       - "iuser_vault_vol:/var/lib/irods"
       - "iuser_pgres_vol:/var/lib/postgresql/data"
@@ -117,7 +115,7 @@ services:
     depends_on:
       - hydroshare
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - "./log/nginx:/var/log/nginx"
       - ".:/hydroshare"
@@ -156,8 +154,6 @@ services:
       - "temp_vol:/hs_tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
-      # temp dir for whole container
-      - "hs_tmp_vol:/tmp"
     ports:
       - "1338:2022"
       - "8000:8000"
@@ -198,8 +194,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       - ".:/hydroshare"
-      # temp dir for whole container
-      - "dw_tmp_vol:/tmp"
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
@@ -219,16 +213,11 @@ volumes:
   idata_iconf_vol:
   idata_vault_vol:
   idata_pgres_vol:
-  idata_root_vol:
   iuser_iconf_vol:
   iuser_vault_vol:
   iuser_pgres_vol:
-  iuser_root_vol:
-  iuser_hspx_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
   share_vol:
-  hs_tmp_vol:
-  dw_tmp_vol:
   rabbitmq_data_vol:
