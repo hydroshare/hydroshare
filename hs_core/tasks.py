@@ -366,7 +366,6 @@ def create_temp_zip(resource_id, input_path, output_path, dataset_pathname=None,
                 except SessionException:
                     logger.error("cannot copy {}".format(aggregation.metadata_file_path))
                 for file in aggregation.files.all():
-                    logger.error(file)
                     try:
                         istorage.copyFiles(file.storage_path, temp_folder_name)
                     except SessionException:

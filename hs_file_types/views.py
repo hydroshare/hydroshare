@@ -237,10 +237,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    res_files = []
-    res_files.extend(aggregation.files.all())
-    aggregation.remove_aggregation()
-    for file in res_files:
+    for file in aggregation.files.all():
         file.delete()
     update_quota_usage(res)
     msg = "Aggregation was successfully deleted."

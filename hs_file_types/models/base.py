@@ -764,7 +764,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def url(self):
-        return "/" + os.path.join("resource", self.resource.file_path, self.aggregation_name)
+        return os.path.join("/", "resource", self.resource.file_path, self.aggregation_name)
 
     @classmethod
     def get_allowed_storage_file_types(cls):
