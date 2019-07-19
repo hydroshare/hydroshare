@@ -249,11 +249,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file,
-        or a folder """
+        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file """
 
         log = logging.getLogger()
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
@@ -285,28 +284,23 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             # create logical file record in DB
             logical_file.save()
             try:
-                if folder_path is None:
-                    # we are here means aggregation is being created by selecting a file
-                    upload_folder = file_folder
+                # we are here means aggregation is being created by selecting a file
+                upload_folder = file_folder
 
-                    # we need to upload files to the resource only if the selected file is a zip
-                    # file - since we created new files by unzipping
-                    if res_file.extension.lower() == ".zip":
-                        # selected file must be a zip file- add the extracted files to the
-                        # resource and make those files part of the aggregation
-                        logical_file.add_files_to_resource(
-                            resource=resource, files_to_add=shape_files,
-                            upload_folder=upload_folder)
-                        res_files_to_delete.append(res_file)
-                    else:
-                        # selected file must be a shp file - make all  associated res files as part
-                        # of the aggregation
-                        for shp_res_file in shp_res_files:
-                            logical_file.add_resource_file(shp_res_file)
+                # we need to upload files to the resource only if the selected file is a zip
+                # file - since we created new files by unzipping
+                if res_file.extension.lower() == ".zip":
+                    # selected file must be a zip file- add the extracted files to the
+                    # resource and make those files part of the aggregation
+                    logical_file.add_files_to_resource(
+                        resource=resource, files_to_add=shape_files,
+                        upload_folder=upload_folder)
+                    res_files_to_delete.append(res_file)
                 else:
-                    # user selected a folder to create aggregation
-                    # make all the files in the selected folder as part of the aggregation
-                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    # selected file must be a shp file - make all  associated res files as part
+                    # of the aggregation
+                    for shp_res_file in shp_res_files:
+                        logical_file.add_resource_file(shp_res_file)
 
                 log.info("GeoFeature aggregation - files were added to the aggregation.")
                 add_metadata(resource, meta_dict, xml_file, logical_file)
