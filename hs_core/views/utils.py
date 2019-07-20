@@ -724,8 +724,7 @@ def link_irods_file_to_django(resource, filepath):
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    folders = listfolders_recursively(istorage, foldername)
-    check_aggregations(resource, folders, res_files)
+    check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -1000,7 +999,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 res_files.append(res_file)
 
             # scan for aggregations
-            check_aggregations(resource, destination_folders, res_files)
+            check_aggregations(resource, res_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
