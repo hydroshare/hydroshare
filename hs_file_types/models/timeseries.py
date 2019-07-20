@@ -535,7 +535,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
 
         # get the file from irods to temp dir
         temp_res_file = utils.get_file_from_irods(res_file)
@@ -568,10 +568,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             logical_file = cls.initialize(base_file_name, resource)
             logical_file.save()
             try:
-                if folder_path is None:
-                    upload_folder = file_folder
-                else:
-                    upload_folder = folder_path
+                upload_folder = file_folder
                 logical_file.add_resource_file(res_file)
 
                 # add a blank ODM2 sqlite file to the resource and make it part of the aggregation
