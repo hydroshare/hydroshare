@@ -8,7 +8,6 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect
 from rest_framework.decorators import api_view
-from django.core.exceptions import ObjectDoesNotExist
 
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
