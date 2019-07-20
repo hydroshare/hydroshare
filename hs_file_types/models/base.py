@@ -806,9 +806,9 @@ class AbstractLogicalFile(models.Model):
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
         if this is missing then folder_path must be specified
-        :param folder_path: (optional) path of the folder which needs to be set to an aggregation
-        type - if this is missing then file_id must be specified. If specified a path relative
-        to the resource.file_path will be returned
+        :param folder_path: (optional) path of the folder which needs to be set to a FileSet
+        aggregation type - if this is missing then file_id must be specified. If specified a
+        path relative to the resource.file_path will be returned
         :raise  ValidationError if validation fails
         :return an instance of ResourceFile if validation is successful and the folder_path
         """
@@ -816,11 +816,21 @@ class AbstractLogicalFile(models.Model):
         if file_id is None and folder_path is None:
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
+
+        if cls.__name__ == 'FileSetLogicalFile' and folder_path is None:
+            raise ValueError("Must specify path of the folder to set as a "
+                             "fileset aggregation type")
+
+        if cls.__name__ != 'FileSetLogicalFile' and file_id is None:
+            raise ValueError("Must specify id of the file to set as an "
+                             "aggregation type")
+
         if file_id is not None:
             # user selected a file to set aggregation
             res_file = get_resource_file_by_id(resource, file_id)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
+            res_file = None
             storage = resource.get_irods_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
@@ -830,29 +840,11 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            # check if an aggregation can be created from the specified folder
-            aggregation_to_set = resource.get_folder_aggregation_type_to_set(path_to_check)
-            if aggregation_to_set is None:
-                msg = "Aggregation can't be created from the specified folder:{}"
+            # check if a FileSet aggregation can be created from the specified folder
+            if not resource.can_set_folder_to_fileset(path_to_check):
+                msg = "FileSet aggregation can't be created from the specified folder:{}"
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
-
-            res_file = None
-            if cls.__name__ != 'FileSetLogicalFile':
-                # get the files from the specified folder location
-                res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                     sub_folders=False)
-                if not res_files:
-                    msg = "The specified folder {} does not contain any file."
-                    msg = msg.format(path_to_check)
-                    raise ValidationError(msg)
-                else:
-                    # check if the specified folder is suitable for aggregation
-                    if cls.check_files_for_aggregation_type(res_files):
-                        # get the primary file suitable for creating a specific aggregation type
-                        res_file = cls.get_primary_resouce_file(res_files)
-                    else:
-                        res_file = None
 
         if cls.__name__ != 'FileSetLogicalFile':
             if res_file is None or not res_file.exists:
