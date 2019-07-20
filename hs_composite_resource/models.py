@@ -100,23 +100,19 @@ class CompositeResource(BaseResource):
                     return res_file.logical_file
         return None
 
-    def get_folder_aggregation_type_to_set(self, dir_path):
-        """Returns an aggregation (file type) type that the specified folder *dir_path* can
-        possibly be set to.
+    def can_set_folder_to_fileset(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to Fileset aggregation
 
         :param dir_path: Resource file directory path (full folder path starting with resource id)
-        for which the possible aggregation type that can be set needs to be determined
+        for which the FileSet aggregation to be set
 
         :return If the specified folder is already represents an aggregation or does
-        not contain suitable file(s) then returns "" (empty string). If the specified folder
-        contains only the files that meet the requirements of a supported aggregation, and
-        does not contain other folders or does not have a parent folder then return the
-        class name of that matching aggregation type.
+        not contain any files then returns False, otherwise True
         """
 
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
-            return None
+            return False
 
         istorage = self.get_irods_storage()
         irods_path = dir_path
@@ -131,17 +127,17 @@ class CompositeResource(BaseResource):
             files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
                                                             sub_folders=True)
             if files_in_sub_folders:
-                return FileSetLogicalFile.__name__
+                return True
 
-            return None
+            return False
         if store[0]:
-            # there are folders under dir_path as well as files - only FileSet can bet set
-            return FileSetLogicalFile.__name__
+            # there are folders under dir_path as well as files - FileSet can bet set
+            return True
 
         if len(files_in_folder) > 0:
-            return FileSetLogicalFile.__name__
+            return True
         else:
-            return None
+            return False
 
     @property
     def supports_folders(self):

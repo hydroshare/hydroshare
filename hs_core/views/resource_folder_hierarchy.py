@@ -17,6 +17,9 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
+
+from hs_file_types.models import FileSetLogicalFile
+
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -88,10 +91,10 @@ def data_store_structure(request):
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
             else:
-                # find if any aggregation type that can be created from this folder
-                folder_aggregation_type_to_set = \
-                    resource.get_folder_aggregation_type_to_set(dir_path)
-                if folder_aggregation_type_to_set is None:
+                # find if FileSet aggregation type that can be created from this folder
+                if resource.can_set_folder_to_fileset(dir_path):
+                    folder_aggregation_type_to_set = FileSetLogicalFile.__name__
+                else:
                     folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
                      'url': d_url,
