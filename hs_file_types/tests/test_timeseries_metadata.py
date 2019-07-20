@@ -243,32 +243,6 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_create_aggregation_from_sqlite_folder_1(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a sqlite file
-
-        self._test_create_aggregation_from_folder_sqlite(sqlite_folder_path='timeseries_aggr')
-
-    def test_create_aggregation_from_sqlite_folder_2(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a sqlite file. This folder has a parent folder
-
-        self._test_create_aggregation_from_folder_sqlite(
-            sqlite_folder_path='parent_folder/timeseries_aggr')
-
-    def test_create_aggregation_from_CSV_folder_1(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a csv file.
-
-        self._test_create_aggregation_from_folder_CSV(csv_folder_path='timeseries_aggr')
-
-    def test_create_aggregation_from_CSV_folder_2(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a csv file. This folder has a parent folder
-
-        self._test_create_aggregation_from_folder_CSV(
-            csv_folder_path='parent_foldertimeseries_aggr')
-
     def test_create_aggregation_from_sqlite_invalid_file(self):
         # here we are using an invalid sqlite file for setting it
         # to TimeSeries file type which should fail
@@ -1046,53 +1020,6 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
         self.assertEqual(self.composite_resource.metadata.coverages.filter(
             type='period').count(), 1)
-
-    def _test_create_aggregation_from_folder_sqlite(self, sqlite_folder_path):
-        self.res_title = 'Untitled resource'
-        self.create_composite_resource()
-
-        # create a folder to place the sqlite file in that folder before creating an
-        # aggregation from the sqlite file
-        ResourceFile.create_folder(self.composite_resource, sqlite_folder_path)
-        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=sqlite_folder_path)
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is not associated with any logical file at this point
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no TimeSeriesLogicalFile object
-        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
-
-        # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user,
-                                            folder_path=sqlite_folder_path)
-        # test extracted metadata
-        assert_time_series_file_type_metadata(self, expected_file_folder=sqlite_folder_path)
-
-        self.composite_resource.delete()
-
-    def _test_create_aggregation_from_folder_CSV(self, csv_folder_path):
-        self.create_composite_resource()
-
-        ResourceFile.create_folder(self.composite_resource, csv_folder_path)
-        self.add_file_to_resource(file_to_add=self.odm2_csv_file, upload_folder=csv_folder_path)
-
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is not associated with any logical file
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no TimeSeriesLogicalFile object
-        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
-
-        # set the CSV file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user,
-                                            folder_path=csv_folder_path)
-        self._test_CSV_aggregation(expected_aggr_folder=csv_folder_path)
-
-        self.composite_resource.delete()
 
     def _test_file_metadata_on_file_delete(self, ext):
 
