@@ -7,7 +7,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 
 
-from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile
+from hs_file_types.models import GenericLogicalFile
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
