@@ -309,11 +309,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file, or a
-        folder """
+        """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file """
 
         log = logging.getLogger()
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
         file_name = res_file.file_name
         # get file name without the extension - needed for naming the aggregation folder
         base_file_name = file_name[:-len(res_file.extension)]
@@ -344,11 +343,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 logical_file = cls.initialize(base_file_name, resource)
                 logical_file.save()
                 try:
-                    if not folder_path:
-                        upload_folder = file_folder
-                    else:
-                        # user selected a folder to create aggregation
-                        upload_folder = folder_path
+                    upload_folder = file_folder
 
                     # make the existing raster specific files part of the
                     # aggregation/file type (this covers both file and folder selection)
