@@ -376,25 +376,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
-    def test_create_aggregation_from_folder_1(self):
-        """Here we are testing that an aggregation of type GeoRasterLogicalFile
-        can be created from a folder that contains the required resource files
-        This folder containing the files are at the root of the folder hierarchy
-        location of raster file before aggregation: georaster_aggr/small_logan.tif
-        location of raster file after aggregation: georaster_aggr/small_logan.tif
-        """
-        self._test_create_aggregation_from_folder(folder_to_test='georaster_aggr')
-
-    def test_create_aggregation_from_folder_2(self):
-        """Here we are testing that an aggregation of type GeoRasterLogicalFile
-        can be created from a folder that contains the required resource files
-        This folder containing the files has one parent folder
-        location of raster file before aggregation: parent_folder/georaster_aggr/small_logan.tif
-        location of raster file after aggregation: parent_folder/georaster_aggr/small_logan.tif
-        """
-
-        self._test_create_aggregation_from_folder(folder_to_test='parent_folder/georaster_aggr')
-
     def test_set_file_type_to_geo_raster_invalid_file_1(self):
         # here we are using an invalid raster tif file for setting it
         # to Geo Raster file type which should fail
@@ -1016,36 +997,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths
         self.assertNotEqual(logical_file.metadata_short_file_path, metadata_short_file_path)
         self.assertNotEqual(logical_file.map_short_file_path, map_short_file_path)
-
-        self.composite_resource.delete()
-
-    def _test_create_aggregation_from_folder(self, folder_to_test):
-
-        self.create_composite_resource()
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # create a folder to upload files there
-        new_folder = folder_to_test
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the tif file to the resource at the above folder
-        res_file = self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
-
-        self.assertEqual(res_file.file_folder, new_folder)
-        # resource should have 1 file now
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        self.assertFalse(res_file.has_logical_file)
-
-        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-        # create the aggregation from the folder
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user,
-                                           folder_path=new_folder)
-        # resource should have 2 files now
-        self.assertEqual(self.composite_resource.files.count(), 2)
-        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
-        for res_file in self.composite_resource.files.all():
-            # test that each resource file is part of an aggregation (logical file)
-            self.assertTrue(res_file.has_logical_file)
-            # test that the each resource file has the same folder - no new folder created
-            self.assertEqual(res_file.file_folder, new_folder)
 
         self.composite_resource.delete()
 
