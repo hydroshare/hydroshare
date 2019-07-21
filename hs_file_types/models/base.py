@@ -730,33 +730,6 @@ class AbstractLogicalFile(models.Model):
 
         return logical_file
 
-    def _finalize(self, user, resource, folder_created, res_files_to_delete):
-        """
-        A helper for creating aggregation. As a final step in creation of aggregation/logical file,
-        sets resource access control and generates aggregation xml files and if necessary delete
-        original resource files
-        :param  user: user who is creating a new aggregation
-        :param  resource: an instance of CompositeResource
-        :param  folder_created: True/False to indicate if a new folder has been created represent
-        this aggregation
-        :param  res_files_to_delete: a list of resource files to delete
-
-        """
-
-        # set resource to private if logical file is missing required metadata
-        resource.update_public_and_discoverable()
-        self.create_aggregation_xml_documents()
-        # check if we need to delete any files
-        if len(res_files_to_delete) == 1:
-            res_file = res_files_to_delete[0]
-            if res_file.extension.lower() == '.zip' or folder_created:
-                delete_resource_file(resource.short_id, res_file.id, user)
-        elif folder_created:
-            for res_file in res_files_to_delete:
-                delete_resource_file(resource.short_id, res_file.id, user)
-
-        resource_modified(resource, user, overwrite_bag=False)
-
     @classmethod
     def _create_aggregation_folder(cls, resource, file_folder, base_file_name):
         """
