@@ -24,7 +24,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
@@ -1454,3 +1454,73 @@ class AbstractLogicalFile(models.Model):
         if file_folder is not None:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
+
+
+class FileTypeContext(object):
+    """A ContextManager for creating file type/aggregation
+    :param  aggr_cls  aggregation class using this context manager
+    :param  user  an instance of User  (user creating the aggregation)
+    :param  resource  an instance of CompositeResource for which aggregation is created
+    :param  file_id  (optional) id of the resource file from which aggregation to be created -
+    required for creating any aggregation other than FileSet aggregation
+    :param  folder_path (optional) path of the folder from which aggregation to be created -
+    required for creating FileSet aggregation
+    :param post_aggr_signal (optional) post aggregation creation signal to send signal
+    :param  is_temp_file if True resource file specified by file_id will be retrieved from
+    irods to temp directory
+    """
+    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path=None,
+                 post_aggr_signal=None, is_temp_file=True):
+
+        self.aggr_cls = aggr_cls
+        self.user = user
+        self.resource = resource
+        self.file_id = file_id
+        self.folder_path = folder_path
+        self.post_aggr_signal = post_aggr_signal
+        self.is_temp_file = is_temp_file
+        # caller must set the logical_file attribute of the context manager
+        # before existing context manager
+        self.logical_file = None
+        # if any resource files need to be deleter as part of creating aggregation, caller needs
+        # to set the res_files_to_delete attribute of the context manager
+        self.res_files_to_delete = []
+
+    def __enter__(self):
+        # run this code at the start of the context manager before control returns to the caller
+        self.temp_dir = None
+        self.temp_file = None
+
+        self.res_file, self.folder_path = self.aggr_cls._validate_set_file_type_inputs(
+            self.resource, self.file_id, self.folder_path)
+
+        if self.is_temp_file:
+            # need to get the file from irods to temp dir
+            self.temp_file = get_file_from_irods(self.res_file)
+            self.temp_dir = os.path.dirname(self.temp_file)
+        return self  # control returned to the caller
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # run this code when caller is done with the context manager
+        if self.logical_file is not None:
+            # set resource to private if logical file is missing required metadata
+            self.resource.update_public_and_discoverable()
+
+            self.logical_file.create_aggregation_xml_documents()
+            if self.post_aggr_signal is not None:
+                self.post_aggr_signal.send(
+                    sender=AbstractLogicalFile,
+                    resource=self.resource,
+                    file=self.logical_file
+                )
+
+        # delete res files
+        for res_file in self.res_files_to_delete:
+            delete_resource_file(self.resource.short_id, res_file.id, self.user)
+
+        resource_modified(self.resource, self.user, overwrite_bag=False)
+
+        # delete temp dir
+        if self.temp_dir is not None:
+            if os.path.isdir(self.temp_dir):
+                shutil.rmtree(self.temp_dir)
