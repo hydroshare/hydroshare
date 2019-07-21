@@ -695,6 +695,41 @@ class AbstractLogicalFile(models.Model):
         # at this point the logical file is not created in DB - caller needs to save it to DB
         return logical_file
 
+    @classmethod
+    def create_aggregation(cls, dataset_name, resource, res_files=None, new_files_to_upload=None,
+                           folder_path=None):
+        """Creates an aggregation
+        :param  dataset_name  a value for setting the dataset_name attribute of the new aggregation
+        :param  resource  an instance of CompositeResource in which the aggregation to be created
+        :param  res_files  a list of resource files that need to be part of the new aggregation
+        :param  new_files_to_upload  a list of files that needs to be uploaded to the resource as
+        part of creating the new aggregation
+        :param  folder_path  path of the folder to which files need to be uploaded
+
+        :returns a new aggregation
+        """
+        logical_file = cls.initialize(dataset_name, resource)
+        logical_file.save()
+        if res_files is None:
+            res_files = []
+
+        # make all existing resource files part of the aggregation
+        for res_file in res_files:
+            logical_file.add_resource_file(res_file)
+
+        if new_files_to_upload is None:
+            new_files_to_upload = []
+        # add all new files to the resource
+        for f in new_files_to_upload:
+            uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
+
+            new_res_file = add_file_to_resource(
+                resource, uploaded_file, folder=folder_path, add_to_aggregation=False
+            )
+            logical_file.add_resource_file(new_res_file)
+
+        return logical_file
+
     def _finalize(self, user, resource, folder_created, res_files_to_delete):
         """
         A helper for creating aggregation. As a final step in creation of aggregation/logical file,
