@@ -29,7 +29,7 @@ from hs_geo_raster_resource.models import CellInformation, BandInformation, Orig
 from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
@@ -312,88 +312,70 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file """
 
         log = logging.getLogger()
-        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
-        file_name = res_file.file_name
-        # get file name without the extension - needed for naming the aggregation folder
-        base_file_name = file_name[:-len(res_file.extension)]
-        file_folder = res_file.file_folder
-        aggregation_folder_created = False
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_raster_aggregation,
+                             is_temp_file=True) as ft_ctx:
 
-        # get the file from irods to temp dir
-        temp_file = utils.get_file_from_irods(res_file)
-        temp_dir = os.path.dirname(temp_file)
-        res_files_to_delete = []
-        raster_folder = folder_path if folder_path is not None else file_folder
-        # validate the file
-        validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
-                                                    raster_folder=raster_folder)
+            res_file = ft_ctx.res_file
+            file_name = res_file.file_name
+            # get file name without the extension - needed for naming the aggregation folder
+            base_file_name = file_name[:-len(res_file.extension)]
+            file_folder = res_file.file_folder
+            upload_folder = file_folder
+            temp_file = ft_ctx.temp_file
+            temp_dir = ft_ctx.temp_dir
 
-        if not validation_results['error_info']:
-            msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
-            file_type_success = False
-            log.info("Geographic raster aggregation validation successful.")
-            # extract metadata
-            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
-                                  '.vrt' == os.path.splitext(f)[1]].pop()
-            metadata = extract_metadata(temp_vrt_file_path)
-            log.info("Geographic raster metadata extraction was successful.")
+            raster_folder = folder_path if folder_path is not None else file_folder
+            # validate the file
+            validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
+                                                        raster_folder=raster_folder)
 
-            with transaction.atomic():
-                # create a geo raster logical file object to be associated with resource files
-                logical_file = cls.initialize(base_file_name, resource)
-                logical_file.save()
-                try:
-                    upload_folder = file_folder
+            if not validation_results['error_info']:
+                msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
+                file_type_success = False
+                log.info("Geographic raster aggregation validation successful.")
+                # extract metadata
+                temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
+                                      '.vrt' == os.path.splitext(f)[1]].pop()
+                metadata = extract_metadata(temp_vrt_file_path)
+                log.info("Geographic raster metadata extraction was successful.")
 
-                    # make the existing raster specific files part of the
-                    # aggregation/file type (this covers both file and folder selection)
-                    for raster_res_file in validation_results['raster_resource_files']:
-                        logical_file.add_resource_file(raster_res_file)
+                with transaction.atomic():
+                    try:
+                        res_files = validation_results['raster_resource_files']
+                        files_to_upload = validation_results['new_resource_files_to_add']
+                        # create a raster aggregation
+                        logical_file = cls.create_aggregation(dataset_name=base_file_name,
+                                                              resource=resource,
+                                                              res_files=res_files,
+                                                              new_files_to_upload=files_to_upload,
+                                                              folder_path=upload_folder)
 
-                    # add all new files to resource and make those part of the logical file
-                    if validation_results['new_resource_files_to_add']:
-                        files_to_add_to_resource = validation_results['new_resource_files_to_add']
-                        logical_file.add_files_to_resource(
-                            resource=resource, files_to_add=files_to_add_to_resource,
-                            upload_folder=upload_folder)
-                    log.info("Geographic raster aggregation type - new files were added "
-                             "to the resource.")
+                        log.info("Geographic raster aggregation type - new files were added "
+                                 "to the resource.")
 
-                    # use the extracted metadata to populate file metadata
-                    for element in metadata:
-                        # here k is the name of the element
-                        # v is a dict of all element attributes/field names and field values
-                        k, v = element.items()[0]
-                        logical_file.metadata.create_element(k, **v)
-                    log.info("Geographic raster aggregation type - metadata was saved to DB")
-                    logical_file._finalize(user, resource,
-                                           folder_created=aggregation_folder_created,
-                                           res_files_to_delete=res_files_to_delete)
+                        # use the extracted metadata to populate file metadata
+                        for element in metadata:
+                            # here k is the name of the element
+                            # v is a dict of all element attributes/field names and field values
+                            k, v = element.items()[0]
+                            logical_file.metadata.create_element(k, **v)
+                        log.info("Geographic raster aggregation type - metadata was saved to DB")
 
-                    file_type_success = True
-                    post_add_raster_aggregation.send(
-                        sender=AbstractLogicalFile,
-                        resource=resource,
-                        file=logical_file
-                    )
-                except Exception as ex:
-                    msg = msg.format(ex.message)
-                    log.exception(msg)
-                finally:
-                    # remove temp dir
-                    if os.path.isdir(temp_dir):
-                        shutil.rmtree(temp_dir)
+                        file_type_success = True
+                        ft_ctx.logical_file = logical_file
+                    except Exception as ex:
+                        msg = msg.format(ex.message)
+                        log.exception(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
-        else:
-            # remove temp dir
-            if os.path.isdir(temp_dir):
-                shutil.rmtree(temp_dir)
-            err_msg = "Geographic raster aggregation type validation failed. {}".format(
-                ' '.join(validation_results['error_info']))
-            log.error(err_msg)
-            raise ValidationError(err_msg)
+                if not file_type_success:
+                    raise ValidationError(msg)
+            else:
+                err_msg = "Geographic raster aggregation type validation failed. {}".format(
+                    ' '.join(validation_results['error_info']))
+                log.error(err_msg)
+                raise ValidationError(err_msg)
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):

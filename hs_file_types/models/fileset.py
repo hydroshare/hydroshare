@@ -4,7 +4,7 @@ import logging
 from django.db import models
 
 from hs_core.models import ResourceFile
-from base import AbstractLogicalFile
+from base import AbstractLogicalFile, FileTypeContext
 from generic import GenericFileMetaDataMixin
 
 
@@ -79,23 +79,28 @@ class FileSetLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        if folder_path is None:
-            raise ValueError("Must specify folder to be set as a file set aggregation type")
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=None,
+                             is_temp_file=False) as ft_ctx:
 
-        _, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+            folder_name = folder_path
+            if '/' in folder_path:
+                folder_name = os.path.basename(folder_path)
 
-        folder_name = folder_path
-        if '/' in folder_path:
-            folder_name = os.path.basename(folder_path)
+            # create a fileset logical file object
+            logical_file = cls.create_aggregation(dataset_name=folder_name,
+                                                  resource=resource,
+                                                  res_files=[],
+                                                  new_files_to_upload=[],
+                                                  folder_path=folder_path)
 
-        logical_file = cls.initialize(folder_name, resource)
-        logical_file.folder = folder_path
-        # logical file record gets created in DB
-        logical_file.save()
-        # make all the files in the selected folder as part of the aggregation
-        logical_file.add_resource_files_in_folder(resource, folder_path)
-        logical_file.create_aggregation_xml_documents()
-        log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
+            logical_file.folder = folder_path
+            logical_file.save()
+            # make all the files in the selected folder as part of the aggregation
+            logical_file.add_resource_files_in_folder(resource, folder_path)
+            ft_ctx.logical_file = logical_file
+            log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
 
     def add_resource_files_in_folder(self, resource, folder):
         """

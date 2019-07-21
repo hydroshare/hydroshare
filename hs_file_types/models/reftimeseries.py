@@ -19,7 +19,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class TimeSeries(object):
@@ -811,74 +811,56 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return res_files[0] if res_files else None
 
     @classmethod
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+        res_file, folder_path = super(RefTimeseriesLogicalFile, cls)._validate_set_file_type_inputs(
+            resource, file_id, folder_path)
+        if not res_file.file_name.lower().endswith('.refts.json'):
+            raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
+                res_file.file_name))
+        return res_file, folder_path
+
+    @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)
         """
 
         log = logging.getLogger()
-        if file_id is None:
-            raise ValueError("Must specify id of the file to be set as an aggregation type")
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_reftimeseries_aggregation,
+                             is_temp_file=True) as ft_ctx:
 
-        # get the the selected resource file object
-        res_file = utils.get_resource_file_by_id(resource, file_id)
-
-        if res_file is None:
-            raise ValidationError("File not found.")
-
-        if not res_file.file_name.lower().endswith('.refts.json'):
-            raise ValidationError("Selected file '{}' is not a Ref Time Series file.".format(
-                res_file.file_name))
-
-        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
-            raise ValidationError("Selected file '{}' is already part of an aggregation".format(
-                res_file.file_name))
-
-        try:
-            json_file_content = _validate_json_file(res_file)
-        except Exception as ex:
-            log.exception("failed json validation")
-            raise ValidationError(ex.message)
-
-        # get the file from irods to temp dir
-        temp_file = utils.get_file_from_irods(res_file)
-        temp_dir = os.path.dirname(temp_file)
-
-        with transaction.atomic():
-            # create a reftiemseries logical file object to be associated with
-            # resource files
-            logical_file = cls.create(resource)
-            # create logical file record in DB
-            logical_file.save()
-            logical_file.metadata.json_file_content = json_file_content
-            logical_file.metadata.save()
-
+            res_file = ft_ctx.res_file
+            upload_folder = res_file.file_folder
             try:
-                # make the json file part of the aggregation
-                logical_file.add_resource_file(res_file)
-                logical_file.dataset_name = logical_file.metadata.get_title_from_json()
-                logical_file.save()
-                # extract metadata
-                _extract_metadata(resource, logical_file)
-                log.info("RefTimeseries aggregation type - json file was added to the resource.")
-                logical_file._finalize(user, resource, folder_created=False,
-                                       res_files_to_delete=[])
-
-                log.info("RefTimeseries aggregation type was created.")
-                post_add_reftimeseries_aggregation.send(
-                    sender=AbstractLogicalFile,
-                    resource=resource,
-                    file=logical_file
-                )
+                json_file_content = _validate_json_file(res_file)
             except Exception as ex:
-                msg = "RefTimeseries aggregation type. Error when setting aggregation " \
-                      "type. Error:{}"
-                msg = msg.format(ex.message)
-                log.exception(msg)
-                raise ValidationError(msg)
-            finally:
-                # remove temp dir
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
+                log.exception("failed json validation")
+                raise ValidationError(ex.message)
+
+            with transaction.atomic():
+                try:
+                    # create a reftimeseries logical file object
+                    logical_file = cls.create_aggregation(dataset_name="",
+                                                          resource=resource,
+                                                          res_files=[res_file],
+                                                          new_files_to_upload=[],
+                                                          folder_path=upload_folder)
+
+                    logical_file.metadata.json_file_content = json_file_content
+                    logical_file.metadata.save()
+                    logical_file.dataset_name = logical_file.metadata.get_title_from_json()
+                    logical_file.save()
+                    # extract metadata
+                    _extract_metadata(resource, logical_file)
+                    log.info("RefTimeseries aggregation type was created.")
+                    ft_ctx.logical_file = logical_file
+                except Exception as ex:
+                    msg = "RefTimeseries aggregation type. Error when setting aggregation " \
+                          "type. Error:{}"
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
+                    raise ValidationError(msg)
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

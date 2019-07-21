@@ -24,7 +24,7 @@ from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, 
     MethodValidationForm, ProcessingLevelValidationForm, TimeSeriesResultValidationForm, \
     UTCOffSetValidationForm
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class CVVariableType(AbstractCVLookupTable):
@@ -535,80 +535,67 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_timeseries_aggregation,
+                             is_temp_file=True) as ft_ctx:
 
-        # get the file from irods to temp dir
-        temp_res_file = utils.get_file_from_irods(res_file)
-        # hold on to temp dir for final clean up
-        temp_dir = os.path.dirname(temp_res_file)
-        if res_file.extension.lower() == '.sqlite':
-            validate_err_message = validate_odm2_db_file(temp_res_file)
-        else:
-            # file must be a csv file
-            validate_err_message = validate_csv_file(temp_res_file)
+            res_file = ft_ctx.res_file
+            temp_res_file = ft_ctx.temp_file
 
-        if validate_err_message is not None:
-            log.error(validate_err_message)
-            # remove temp dir
-            if os.path.isdir(temp_dir):
-                shutil.rmtree(temp_dir)
-            raise ValidationError(validate_err_message)
+            if res_file.extension.lower() == '.sqlite':
+                validate_err_message = validate_odm2_db_file(temp_res_file)
+            else:
+                # file must be a csv file
+                validate_err_message = validate_csv_file(temp_res_file)
 
-        file_name = res_file.file_name
-        # file name without the extension - used for new aggregation dataset_name attribute
-        base_file_name = file_name[:-len(res_file.extension)]
-        file_folder = res_file.file_folder
-        aggregation_folder_created = False
-        res_files_to_delete = []
-        file_type_success = False
+            if validate_err_message is not None:
+                log.error(validate_err_message)
+                raise ValidationError(validate_err_message)
 
-        msg = "TimeSeries aggregation type. Error when creating. Error:{}"
-        with transaction.atomic():
-            # create a TimeSerisLogicalFile object to be associated with resource file
-            logical_file = cls.initialize(base_file_name, resource)
-            logical_file.save()
-            try:
-                upload_folder = file_folder
-                logical_file.add_resource_file(res_file)
+            file_name = res_file.file_name
+            # file name without the extension - used for new aggregation dataset_name attribute
+            base_file_name = file_name[:-len(res_file.extension)]
+            file_folder = res_file.file_folder
+            upload_folder = file_folder
+            file_type_success = False
+            res_files_for_aggr = [res_file]
+            msg = "TimeSeries aggregation type. Error when creating. Error:{}"
+            with transaction.atomic():
+                try:
+                    if res_file.extension.lower() == '.csv':
+                        new_sqlite_file = add_blank_sqlite_file(resource, upload_folder)
+                        res_files_for_aggr.append(new_sqlite_file)
 
-                # add a blank ODM2 sqlite file to the resource and make it part of the aggregation
-                # if we creating aggregation from a csv file
-                if res_file.extension.lower() == '.csv':
-                    new_sqlite_file = add_blank_sqlite_file(resource, upload_folder)
-                    logical_file.add_resource_file(new_sqlite_file)
+                    # create a TimeSerisLogicalFile object
+                    logical_file = cls.create_aggregation(dataset_name=base_file_name,
+                                                          resource=resource,
+                                                          res_files=res_files_for_aggr,
+                                                          new_files_to_upload=[],
+                                                          folder_path=upload_folder)
 
-                info_msg = "TimeSeries aggregation type - {} file was added to the aggregation."
-                info_msg = info_msg.format(res_file.extension[1:])
-                log.info(info_msg)
-                # extract metadata if we are creating aggregation form a sqlite file
-                if res_file.extension.lower() == ".sqlite":
-                    extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
-                    if extract_err_message:
-                        raise ValidationError(extract_err_message)
-                    log.info("Metadata was extracted from sqlite file.")
-                else:
-                    # populate CV metadata django models from the blank sqlite file
-                    extract_cv_metadata_from_blank_sqlite_file(logical_file)
+                    info_msg = "TimeSeries aggregation type - {} file was added to the aggregation."
+                    info_msg = info_msg.format(res_file.extension[1:])
+                    log.info(info_msg)
+                    # extract metadata if we are creating aggregation form a sqlite file
+                    if res_file.extension.lower() == ".sqlite":
+                        extract_err_message = extract_metadata(resource, temp_res_file,
+                                                               logical_file)
+                        if extract_err_message:
+                            raise ValidationError(extract_err_message)
+                        log.info("Metadata was extracted from sqlite file.")
+                    else:
+                        # populate CV metadata django models from the blank sqlite file
+                        extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
-                logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete)
+                    file_type_success = True
+                    ft_ctx.logical_file = logical_file
+                except Exception as ex:
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
 
-                file_type_success = True
-                post_add_timeseries_aggregation.send(
-                    sender=AbstractLogicalFile,
-                    resource=resource,
-                    file=logical_file
-                )
-            except Exception as ex:
-                msg = msg.format(ex.message)
-                log.exception(msg)
-            finally:
-                # remove temp dir
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
-
-        if not file_type_success:
-            raise ValidationError(msg)
+            if not file_type_success:
+                raise ValidationError(msg)
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

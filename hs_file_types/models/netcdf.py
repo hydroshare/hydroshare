@@ -17,7 +17,7 @@ from lxml import etree
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -388,119 +388,94 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        res_file, _ = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_netcdf_aggregation,
+                             is_temp_file=True) as ft_ctx:
 
-        # base file name (no path included)
-        file_name = res_file.file_name
-        # file name without the extension - needed for naming the new aggregation folder
-        nc_file_name = file_name[:-len(res_file.extension)]
+            # base file name (no path included)
+            res_file = ft_ctx.res_file
+            file_name = res_file.file_name
+            # file name without the extension - needed for naming the new aggregation folder
+            nc_file_name = file_name[:-len(res_file.extension)]
 
-        resource_metadata = []
-        file_type_metadata = []
-        res_files_to_delete = []
-        # get the file from irods to temp dir
-        temp_file = utils.get_file_from_irods(res_file)
-        temp_dir = os.path.dirname(temp_file)
+            resource_metadata = []
+            file_type_metadata = []
 
-        # file validation and metadata extraction
-        nc_dataset = nc_utils.get_nc_dataset(temp_file)
-        if isinstance(nc_dataset, netCDF4.Dataset):
-            msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
-            file_type_success = False
-            # extract the metadata from netcdf file
-            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
-            # populate resource_metadata and file_type_metadata lists with extracted metadata
-            add_metadata_to_list(resource_metadata, res_dublin_core_meta,
-                                 res_type_specific_meta, file_type_metadata, resource)
+            # file validation and metadata extraction
+            temp_file = ft_ctx.temp_file
+            nc_dataset = nc_utils.get_nc_dataset(temp_file)
+            if isinstance(nc_dataset, netCDF4.Dataset):
+                msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
+                file_type_success = False
+                # extract the metadata from netcdf file
+                res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
+                # populate resource_metadata and file_type_metadata lists with extracted metadata
+                add_metadata_to_list(resource_metadata, res_dublin_core_meta,
+                                     res_type_specific_meta, file_type_metadata, resource)
 
-            # create the ncdump text file
-            dump_file = create_header_info_txt_file(temp_file, nc_file_name)
-            file_folder = res_file.file_folder
-            aggregation_folder_created = False
-
-            with transaction.atomic():
-                # create a netcdf logical file object to be associated with
-                # resource files
+                # create the ncdump text file
+                dump_file = create_header_info_txt_file(temp_file, nc_file_name)
+                file_folder = res_file.file_folder
+                upload_folder = file_folder
                 dataset_title = res_dublin_core_meta.get('title', nc_file_name)
-                logical_file = cls.initialize(dataset_title, resource)
-                # create logical file record in DB
-                logical_file.save()
-                try:
-                    upload_folder = file_folder
 
-                    # make the .nc file part of the aggregation
-                    logical_file.add_resource_file(res_file)
+                with transaction.atomic():
+                    try:
+                        # create a netcdf logical file object
+                        logical_file = cls.create_aggregation(dataset_name=dataset_title,
+                                                              resource=resource,
+                                                              res_files=[res_file],
+                                                              new_files_to_upload=[dump_file],
+                                                              folder_path=upload_folder)
 
-                    # add the new dump txt file to the resource
-                    uploaded_file = UploadedFile(file=open(dump_file, 'rb'),
-                                                 name=os.path.basename(dump_file))
+                        log.info("NetCDF aggregation creation - a new file was added to the "
+                                 "resource.")
 
-                    new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
-                    )
+                        # use the extracted metadata to populate resource metadata
+                        for element in resource_metadata:
+                            # here k is the name of the element
+                            # v is a dict of all element attributes/field names and field values
+                            k, v = element.items()[0]
+                            if k == 'title':
+                                # update title element
+                                title_element = resource.metadata.title
+                                resource.metadata.update_element('title', title_element.id, **v)
+                            else:
+                                resource.metadata.create_element(k, **v)
 
-                    # make this new resource file we added part of the logical file
-                    logical_file.add_resource_file(new_res_file)
-                    log.info("NetCDF aggregation creation - a new file was added to the resource.")
+                        log.info("NetCDF Aggregation creation - Resource metadata was saved to DB")
 
-                    # use the extracted metadata to populate resource metadata
-                    for element in resource_metadata:
-                        # here k is the name of the element
-                        # v is a dict of all element attributes/field names and field values
-                        k, v = element.items()[0]
-                        if k == 'title':
-                            # update title element
-                            title_element = resource.metadata.title
-                            resource.metadata.update_element('title', title_element.id, **v)
-                        else:
-                            resource.metadata.create_element(k, **v)
+                        # use the extracted metadata to populate file metadata
+                        for element in file_type_metadata:
+                            # here k is the name of the element
+                            # v is a dict of all element attributes/field names and field values
+                            k, v = element.items()[0]
+                            if k == 'subject':
+                                logical_file.metadata.keywords = v
+                                logical_file.metadata.save()
+                                # update resource level keywords
+                                resource_keywords = [subject.value.lower() for subject in
+                                                     resource.metadata.subjects.all()]
+                                for kw in logical_file.metadata.keywords:
+                                    if kw.lower() not in resource_keywords:
+                                        resource.metadata.create_element('subject', value=kw)
+                            else:
+                                logical_file.metadata.create_element(k, **v)
+                        log.info("NetCDF aggregation - metadata was saved in aggregation")
 
-                    log.info("NetCDF Aggregation creation - Resource metadata was saved to DB")
+                        file_type_success = True
+                        ft_ctx.logical_file = logical_file
+                    except Exception as ex:
+                        msg = msg.format(ex.message)
+                        log.exception(msg)
 
-                    # use the extracted metadata to populate file metadata
-                    for element in file_type_metadata:
-                        # here k is the name of the element
-                        # v is a dict of all element attributes/field names and field values
-                        k, v = element.items()[0]
-                        if k == 'subject':
-                            logical_file.metadata.keywords = v
-                            logical_file.metadata.save()
-                            # update resource level keywords
-                            resource_keywords = [subject.value.lower() for subject in
-                                                 resource.metadata.subjects.all()]
-                            for kw in logical_file.metadata.keywords:
-                                if kw.lower() not in resource_keywords:
-                                    resource.metadata.create_element('subject', value=kw)
-                        else:
-                            logical_file.metadata.create_element(k, **v)
-                    log.info("NetCDF aggregation - metadata was saved in aggregation")
-                    logical_file._finalize(user, resource,
-                                           folder_created=aggregation_folder_created,
-                                           res_files_to_delete=res_files_to_delete)
-                    file_type_success = True
-                    post_add_netcdf_aggregation.send(
-                        sender=AbstractLogicalFile,
-                        resource=resource,
-                        file=logical_file
-                    )
-                except Exception as ex:
-                    msg = msg.format(ex.message)
-                    log.exception(msg)
-                finally:
-                    # remove temp dir
-                    if os.path.isdir(temp_dir):
-                        shutil.rmtree(temp_dir)
-
-            if not file_type_success:
-                raise ValidationError(msg)
-
-        else:
-            err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
-            log.error(err_msg)
-            # remove temp dir
-            if os.path.isdir(temp_dir):
-                shutil.rmtree(temp_dir)
-            raise ValidationError(err_msg)
+                if not file_type_success:
+                    raise ValidationError(msg)
+            else:
+                err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
+                log.error(err_msg)
+                raise ValidationError(err_msg)
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
