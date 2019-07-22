@@ -7,7 +7,6 @@ from functools import partial, wraps
 import netCDF4
 import numpy as np
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context

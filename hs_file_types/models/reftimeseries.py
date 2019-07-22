@@ -1,5 +1,3 @@
-import os
-import shutil
 import json
 import logging
 from dateutil import parser
@@ -15,7 +13,6 @@ from django.template import Template, Context
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
-from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
