@@ -169,4 +169,4 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
 
         # group should contain a public resource
         resources = self.pets.public_resources
-        self.assertTrue(is_equal_to_as_set([self.posts], resources))
+        self.assertTrue(is_equal_to_as_set([self.bones], resources))
