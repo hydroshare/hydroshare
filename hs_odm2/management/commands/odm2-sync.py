@@ -1,4 +1,4 @@
-"""This prints the state of a logical file.
+"""This synchronizes the ODM variable class with the external website.
 
 * By default, prints errors on stdout.
 """

@@ -1,4 +1,4 @@
-"""This prints the state of a logical file.
+"""This prints all variable names matching a specific prefix
 
 * By default, prints errors on stdout.
 """

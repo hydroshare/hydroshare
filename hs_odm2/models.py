@@ -45,7 +45,6 @@ class ODM2Variable(models.Model):
                         record.provenance_uri = d['provenance_uri']
                         record.save()
                 else:
-                    print("deleted")
                     record.delete()  # stale record
             except ODM2Variable.DoesNotExist:
                 if d['vocabulary_status'] == 'Current':
