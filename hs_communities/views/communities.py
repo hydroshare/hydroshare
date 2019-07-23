@@ -64,25 +64,26 @@ class MyCommunitiesView(TemplateView):
     def dispatch(self, *args, **kwargs):
         return super(MyCommunitiesView, self).dispatch(*args, **kwargs)
 
-    def group_to_community(self, grp, C):
+    def group_to_community(self, grp, communities):
         """
         return the community membership information of a group; group can belong to only one community
-        :param grp: Group object
-        :param C: Community class object
+        :param grp: group object
+        :param communities: communities
         :return: tuple id, name of community
         """
-        for community in C.objects.all():
+        for community in communities:
             if grp.id in [g.id for g in community.member_groups]:
-                return (community.id, community.name)
+                return community
 
     def get_context_data(self, **kwargs):
-        all_communities = Community.objects.all()
-
+        grps_member_of = []
         u = User.objects.get(pk=self.request.user.id)
         groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members
+            if g.is_user_member:
+                grps_member_of.append(g)
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = None
@@ -90,14 +91,9 @@ class MyCommunitiesView(TemplateView):
                 g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-        # comm_groups = Community.objects.all()[0]
-        member_of = dict()
-        for comm in Community.objects.all():
-            if u.id in [m.id for m in comm.member_users] or u.id in [o.id for o in comm.owners]:
-                member_of[comm.id] = comm.name
-
+        comms_member_of = [self.group_to_community(g, Community.objects.all()) for g in grps_member_of]
         return {
-            'communities_list': all_communities
+            'communities_list': comms_member_of
         }
 
 
@@ -141,18 +137,6 @@ class TopicsView(TemplateView):
         return render(request, 'pages/topics.html')
 
     def get_topics_data(self, **kwargs):
-        # u = User.objects.get(pk=self.request.user.id)
-        # groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # # for each group set group dynamic attributes
-        # for g in groups:
-        #     g.is_user_member = u in g.gaccess.members
-        #     g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-        #     g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-        #     g.join_request = None
-        #     if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-        #         g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-        #                          g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-
         topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
         topics = list(topics)  # force QuerySet evaluation
         return mark_safe(escapejs(json.dumps(topics)))

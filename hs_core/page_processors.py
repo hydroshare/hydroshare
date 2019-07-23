@@ -4,12 +4,14 @@ import json
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
 from forms import ExtendedMetadataForm
+from hs_access_control.models.community import Community
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -286,6 +288,21 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
+    def group_to_community(grp, communities):
+        for community in communities:
+            if grp.id in [g.id for g in community.member_groups]:
+                return community
+
+    grps_member_of = []
+    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+    # for each group set group dynamic attributes
+    for g in groups:
+        g.is_user_member = user in g.gaccess.members
+        if g.is_user_member:
+            grps_member_of.append(g)
+
+    comms_member_of = [group_to_community(g, Community.objects.all()) for g in grps_member_of]
+
     context = {
                'cm': content_model,
                'resource_edit_mode': resource_edit,
@@ -322,7 +339,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'maps_key': maps_key,
                'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
-               'admin_user': True
+               'admin_user': True,
+               'czo_user': any("CZO National" in x.name for x in comms_member_of)
     }
 
     return context
