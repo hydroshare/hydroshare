@@ -39,13 +39,5 @@ class Topics(models.Model):
 
         topic_entry.save()
 
-    # def delete(self, id):
-    #     """
-    #
-    #     :param id:
-    #     :return:
-    #     """
-    #     print("would delete topic id {}".format(id))
-
     def __str__(self):
         return "{}".format(self.topics)
