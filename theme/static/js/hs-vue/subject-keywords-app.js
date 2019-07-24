@@ -1,9 +1,11 @@
 /**
 * Created by Mauriel on 5/19/2019.
 */
-
 let subjKeywordsApp = new Vue({
     el: '#app-keyword',
+    components: {
+        VueBootstrapTypeahead
+    },
     delimiters: ['${', '}'],
     data: {
         newKeyword: '',
@@ -12,7 +14,8 @@ let subjKeywordsApp = new Vue({
         error: ''
     },
     methods: {
-        addKeyword: function (resIdShort) {
+        addKeyword: function (resIdShort, x) {
+            console.log(this.$data.query);
             // Remove any empty keywords from the list
             let newKeywords = this.newKeyword.split(",");
             newKeywords = newKeywords.filter(function(a) {
