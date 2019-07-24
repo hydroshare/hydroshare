@@ -208,7 +208,6 @@
                             <div>
                                 <textarea id="resource-title" v-model="title" disabled rows="3"
                                           cols="75"></textarea><br/><br/>
-                                Region:
                                 <select id="czselect" v-model="regionSelected" @change="updateTitle()">
                                     <option disabled value="">Critical Zone Region</option>
                                     <option>BCCZO</option>
@@ -232,10 +231,11 @@
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover>
                                 <br/>
-                                Optional Custom Text:<br/>
+                                Optional Custom Text<br/>
                                 <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51"
                                        maxlength="50"/>
-                                <div style="margin-top: 1em">
+
+                                <div style="margin-top: 1em">Date Range<br/>
                                     <select id="start-year" v-model="startYear" @change="updateTitle()">
                                         <option value="0"></option>
                                         <option v-for="year in startyears" :value="year">{% templatetag openvariable %}
@@ -247,10 +247,13 @@
                                             year {% templatetag closevariable %}</option>
                                     </select>
                                 </div>
+
                             </div>
 
                         </div>
                         <div class="modal-footer">
+                            <span style="color:red; float:left">{% templatetag openvariable %}
+                                            errmsg {% templatetag closevariable %}</span>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                             <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
                         </div>

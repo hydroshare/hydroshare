@@ -19,6 +19,7 @@ var TitleAssistantApp = new Vue({
         subtopic: '',
         startYear: '',
         endYear: '',
+        errmsg: '',
         topics: {
             itemsList: [],
             unselectedItems: [],
@@ -28,7 +29,6 @@ var TitleAssistantApp = new Vue({
     },
     methods: {
         itemMoved: function () {
-            // ES6 - let's discuss:
             this.$data.topics.selectedValues = this.$data.topics.selectedItems.map(x => x.value).join(', ');
             this.updateTitle()
         },
@@ -38,12 +38,17 @@ var TitleAssistantApp = new Vue({
         },
         updateTitle: function() {
             this.$data.title = (String(this.$data.regionSelected) + " " + String(this.$data.topics.selectedValues) + " " + String(this.$data.subtopic)) + " (" + String(this.$data.startYear) + " - " + String(this.$data.endYear) + ")".trim()
+            this.$data.errmsg = ''
         },
-        saveTitle: function() {
-            $("#txt-title").val(this.$data.title);
-            $("#txt-title").trigger( "change" );
-            $("#title-save-button").trigger("click");
-            $("#title-modal").modal('hide');
+        saveTitle: function () {  // TODO make more robust to select/deselect or clear out items or leaving whitespace and also add the reset of the items to the if statement (date and such)
+            if (this.$data.title === '' || this.$data.regionSelected === '' || this.$data.subtopic === '') {
+                this.$data.errmsg = "Error: All items must be selected";
+            } else {
+                $("#txt-title").val(this.$data.title);
+                $("#txt-title").trigger("change");
+                $("#title-save-button").trigger("click");
+                $("#title-modal").modal('hide');
+            }
         }
     }
 });

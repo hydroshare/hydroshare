@@ -113,13 +113,12 @@
 
              Extended/forked HydroShare Mark O'Brien
              Summer 2019
-             - Reordering right listbox emits change event for updating content ordering hook
+             - Supports re-ordering selected items (now impacts output with emitted event)
              - Add search filter in left listbox
 
              depends on:
              -----------
              CSS:
-             * font-awesome   (optional)
              * vue-mover.css
 
              Script:
@@ -140,7 +139,7 @@
                      >
                </mover>
 
-            Vue code:
+            Sample Vue code:
 
             var app = new Vue({
               el: "#Body",
@@ -429,7 +428,6 @@
                         vue.raiseItemMoved(item, vm.selectedItems, "left");
                     },
                     refreshListDisplay: function () {
-                        console.log("Refreshing list display");
                         setTimeout(function () {
                             var list = vm.selectedItems;
                             vm.selectedItems = [];
@@ -480,9 +478,6 @@
                         var side = e.item.dataset["side"];
                         var insertAt = e.newIndex;
 
-                        // Hack! Remove the dropped item and let Vue handle rendering
-                        //e.item.remove();
-
                         if (side == "left") {
                             var item = vm.unselectedItems.find(function (itm) {
                                 return itm.value == key;
@@ -513,6 +508,7 @@
                     },
                     // removes dupes from unselected list that exist in selected items
                     normalizeListValues: function () {
+                        console.log("normalizeListValues called")
                         if (!vm.selectedItems || vm.selectedItems.length == 0 ||
                             !vm.unselectedItems || vm.unselectedItems.length == 0)
                             return;
@@ -527,7 +523,7 @@
                                 vm.unselectedItems.splice(idx, 1);
                         }
                     }
-                }
+                };
 
                 var vue = this;
                 setTimeout(function () {
@@ -537,18 +533,6 @@
                 return vm;
             }
         });
-
-
-// if (typeof exports == "object") {
-//     module.exports = vue;
-//   } else if (typeof define == "function" && define.amd) {
-//     define([], function () {
-//       return vue;
-//     })
-//   } else if (window.Vue) {
-//     window.vMover = vue;        
-//   }
-
 
 // IE Array Polyfills
 
@@ -640,8 +624,6 @@
                 }
             });
         }
-
-
         /***/
     })
     /******/]);
