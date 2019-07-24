@@ -75,9 +75,9 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
-    unlisted = models.BooleanField(default=False, 
-                                   editable=False, 
-                                   help_text='whether group appears in public group listings') 
+    unlisted = models.BooleanField(default=False,
+                                   editable=False,
+                                   help_text='whether group appears in public group listings')
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
@@ -371,22 +371,22 @@ class GroupAccess(models.Model):
             These must contain at least one resource that is discoverable and
             is owned by a group member.
 
-            This query is subtle. See 
+            This query is subtle. See
                 https://medium.com/@hansonkd/\
-                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16 
-            for details of how this improves performance. 
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16
+            for details of how this improves performance.
 
-           As a short summary, all we need to know is that one resource exists. 
-           This is not possible to notate in the main query except through an annotation. 
-           However, that annotation is really efficient, and is implemented as a postgres 
-           subquery. This is a Django 1.11 extension. 
+           As a short summary, all we need to know is that one resource exists.
+           This is not possible to notate in the main query except through an annotation.
+           However, that annotation is really efficient, and is implemented as a postgres
+           subquery. This is a Django 1.11 extension.
         """
         return Group.objects\
             .annotate(
                 has_public_resources=Exists(
                     BaseResource.objects.filter(
                         raccess__discoverable=True,
-                        r2grp__group__id=OuterRef('id'), 
+                        r2grp__group__id=OuterRef('id'),
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
             .filter(gaccess__unlisted=False, has_public_resources=True)\
@@ -399,8 +399,8 @@ class GroupAccess(models.Model):
 
         Based upon hs_access_control/models/community.py:Community:public_resources
         """
-        # if the resource is unlisted, it by definition has no exhibited resources. 
-        if self.unlisted: 
+        # if the resource is unlisted, it by definition has no exhibited resources.
+        if self.unlisted:
             return BaseResource.objects.none()
 
         res = BaseResource.objects.filter(r2grp__group__gaccess=self,
