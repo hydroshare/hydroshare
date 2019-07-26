@@ -483,6 +483,20 @@ function updateSelectionMenuContext() {
         uiActionStates.setFileSetFileType.fileMenu.hidden = true;
 
         uiActionStates.uploadFiles.disabled = true;
+
+        let logicalFileType = getCurrentPath().aggregation.logical_type;
+        let aggregationTypes = [
+            "GeoRasterLogicalFile",
+            "NetCDFLogicalFile",
+            "GeoFeatureLogicalFile",
+            "TimeSeriesLogicalFile"
+        ];
+
+        //  ------------- Logic specific to the aggregation types above -------------
+        if ($.inArray(logicalFileType, aggregationTypes) >= 0) {
+            uiActionStates.rename.disabled = true;
+            uiActionStates.delete.disabled = true;
+        }
     }
 
     // Toggle properties based on states
