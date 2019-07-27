@@ -115,33 +115,34 @@
         </div>
     {% endif %}
 {% endif %}
+
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-	 {% if self_access_level == 'owner' or self_access_level == 'edit'%}
-		{% if cm.check_content_files %}
-		<div class="col-sm-12">
-		    <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-				aria-hidden="false">&times;</span></button>
-
-			<br>
-			{% if cm.check_content_files == 'multiple_nam' %}
-			    <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
-				<ul>
-				    <li>Only one .nam or .mfn is allowed</li>
-				</ul></span>
-			{% else %}
-			    <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
-				<ul>
-				    {% for f in cm.check_content_files %}
-					<li>{{ f }} </li>
-				    {% endfor %}
-				</ul></span>
-			{% endif %}
-		    </div>
-		</div>
-		{% endif %}
-	{% endif %}
+    {% if self_access_level == 'owner' or self_access_level == 'edit' %}
+        {% if cm.check_content_files %}
+            <div class="col-sm-12">
+                <div id="missing-metadata-or-file" role="alert"
+                     class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                    <br>
+                    {% if cm.check_content_files == 'multiple_nam' %}
+                        <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
+                        <ul>
+                            <li>Only one .nam or .mfn is allowed</li>
+                        </ul>
+                    </span>
+                    {% else %}
+                        <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
+                        <ul>{% for f in cm.check_content_files %}
+                            <li>{{ f }} </li>{% endfor %}</ul>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
 {% endif %}
 
 {# ======= Title ======= #}
@@ -150,21 +151,42 @@
         <h2 id="resource-title">{{ title }}</h2>
         <hr>
         {% if tool_homepage_url %}
-            <span id="apps-dropdown"/>
-            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
+            <span id="apps-url">
+                <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
+            </span>
         {% endif %}
 
+        <span id="apps-dropdown" v-if="tools.length">
+            <div v-if="!isLoading" class="btn-group">
+                <button class="btn btn-default dropdown-toggle"
+                        type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Open with...<span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu pull-right">
+                    <li v-for="tool in tools" :title="tool.title">
+                        <a :href="'{% url 'tracking-applaunch' %}?url=' + tool.url + ';name=' +  tool.title + ';tool_res_id=' + tool.res_id + ';res_id=' + resId"
+                           target="_blank">
+                            <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>
+                            <span>${tool.title}</span>
+                        </a>
+                    </li>
+                    <li v-if="isLoading" style="display: flex;justify-content: center;">
+                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                    </li>
+                 </ul>
+            </div>
+        </span>
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
-              id="id-title"
-              method="post">
+              id="id-title" method="post">
             {% csrf_token %}
             <fieldset>
                 <div id="div_id_value" class="control-group">
-                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                 id="txt-title"
-                                                 maxlength="300" name="value" type="text"
-                                                 value="{{ cm.metadata.title }}"></div>
+                    <div class="controls">
+                        <input class="form-control input-sm textinput textInput"
+                               id="txt-title" maxlength="300" name="value" type="text"
+                               value="{{ cm.metadata.title }}">
+                    </div>
                 </div>
                 <div>
                     <button type="button" class="btn btn-primary pull-right btn-form-submit"
@@ -177,23 +199,29 @@
     {% endif %}
 </div>
 
-
 {% if is_replaced_by %}
     <div class="col-xs-12">
         <div class="clear-fix"><i>A newer version of this resource <a
-                href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
+                href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i>
+        </div>
     </div>
 {% endif %}
+
 {% if is_version_of %}
     <div class="col-xs-12">
-        <div class="clear-fix"><i>An older version of this resource <a
-                href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
+        <div class="clear-fix">
+            <i>An older version of this resource <a
+                href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i>
+        </div>
     </div>
 {% endif %}
 
 {% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
     <div class="col-xs-12">
-        <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp resource has been approved by HydroShare admin.</i></div>
+        <div id="app-approved" class="flex" style="align-items: center">
+            <img src="/static/img/approved_app.png">
+            <span>This WebApp resource has been approved by HydroShare admin.</span>
+        </div>
     </div>
 {% endif %}
 
@@ -293,3 +321,5 @@
     }
 }
 </script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>

@@ -7,11 +7,10 @@
     text-align:center;
 }
 
-.user-webapp-icon, #tool-icon-preview, #tool-icon{
-    width:80px;
-    height:80px;
+.user-webapp-icon, #tool-icon-preview, #tool-icon {
+    width: 80px;
+    height: 80px;
     border-radius: 7px;
-    /*margin: 10px;*/
 }
 
 .default-webapp-icon {
@@ -23,7 +22,8 @@
     width: 40px;
     height: 40px;
     border-radius: 4px;
-    margin: 5px;
+    margin-right: 4px;
+    border: 1px solid #DDD;
 }
 
 .file-options-webapp-icon {
@@ -38,27 +38,26 @@
     height: 50px;
 }
 
-#apps-dropdown {
+#apps-dropdown, #apps-url {
     position: absolute;
     right: 14px;
     bottom: 20px;
 }
 
-.dropdown-menu > li > a {
-    padding: 0;
+#apps-dropdown li > a {
+    cursor: pointer;
+    overflow: hidden;
+    max-width: 300px;
+    text-overflow: ellipsis;
 }
 
-.app-approved-icon-a {
-    position: absolute;
-    display: inline-block;
-    left: 85px;
-    top: 40px;
-    text-align: center;
+div#app-approved > img {
+    width: 25px;
+    height: 25px
 }
 
-.app-approved-icon-img{
-    width: 30px;
-    height: 30px
+div#app-approved > span {
+    margin-left: 4px;
 }
 
 .app-info-toggle {
@@ -69,7 +68,7 @@
     border-radius: 50%;
     text-align: center;
     text-decoration: none;
-    box-shadow: 0px 0px 1px #000;
+    box-shadow: 0 0 1px #000;
     width: 12px;
     height: 12px;
     left: 170px;
