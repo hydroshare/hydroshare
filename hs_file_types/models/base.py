@@ -1278,38 +1278,6 @@ class AbstractLogicalFile(models.Model):
         finally:
             shutil.rmtree(tmpdir)
 
-    @staticmethod
-    def _check_create_aggregation_folder(selected_res_file, selected_folder,
-                                         aggregation_file_count):
-        """
-        A helper that checks if a new folder needs to be created for the aggregation
-        :param: selected_res_file: the file that has been selected by the user to set aggregation
-        :param: aggregation_file_count: number of files that are going to be part of the
-        aggregation to be created
-        """
-        create_new_folder = False
-        file_folder = selected_res_file.file_folder
-        if file_folder and not selected_folder:
-            resource = selected_res_file.resource
-            istorage = resource.get_irods_storage()
-            store = istorage.listdir(selected_res_file.dir_path)
-
-            folders = store[0]
-            files = store[1]
-            if folders:
-                # since there are folders under dir_path - need to create a new folder for
-                # the new aggregation
-                create_new_folder = True
-
-            elif len(files) > aggregation_file_count:
-                # there are additional files at selected_res_file.dir_path - need to create a new
-                # folder new aggregation
-                create_new_folder = True
-        else:
-            create_new_folder = True
-
-        return create_new_folder
-
     def _generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
 
