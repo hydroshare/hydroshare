@@ -176,6 +176,7 @@
                  </ul>
             </div>
         </span>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title" method="post">
@@ -321,5 +322,3 @@
     }
 }
 </script>
-
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>

@@ -690,6 +690,7 @@ function bindFileBrowserItemEvents() {
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
 
             // toggle apps by file extension and aggregations
+            let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
                 var agg_app = false;
                 if ($(this).attr("data-agg-types")){
@@ -706,7 +707,9 @@ function bindFileBrowserItemEvents() {
                     }
                 }
                 $(this).toggle(agg_app || extension_app);
+                hasTools = hasTools || agg_app || extension_app;
             });
+            $("#tools-separator").toggleClass("hidden", !hasTools);
         }
         else {
             menu = $("#right-click-container-menu");    // empty space was clicked
