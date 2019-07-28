@@ -56,6 +56,10 @@ let relevantToolsApp = new Vue({
                 for (let i = 0; i < vue.tools.length; i++) {
                     let tool = vue.tools[i];
 
+                    if (!tool.openwithlist || !tool.url) {
+                        continue;   // Ignore tools not listed in OpenWith menu
+                    }
+
                     if (tool['agg_types']) {
                         let aggregationUrl = vue.getFileAppUrl(tool);
                         if (aggregationUrl) {
