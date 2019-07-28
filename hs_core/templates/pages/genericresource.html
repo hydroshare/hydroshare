@@ -215,6 +215,9 @@
                         </span>
                     </li>
                 {%  endif %}
+                <template>
+                    <li class="btn-open-with">RELEVANT TOOL HERE</li>
+                </template>
             </ul>
 
             {# POPUP MENU - Right clicking empty space in file browser #}
@@ -808,6 +811,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% with cm.last_changed_by as usr %}
           const LAST_CHANGED_BY = {

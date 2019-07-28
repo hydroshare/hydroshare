@@ -164,7 +164,7 @@
                 </button>
                 <ul class="dropdown-menu pull-right">
                     <li v-for="tool in tools" :title="tool.title">
-                        <a :href="'{% url 'tracking-applaunch' %}?url=' + tool.url + ';name=' +  tool.title + ';tool_res_id=' + tool.res_id + ';res_id=' + resId"
+                        <a :href="getResAppUrl(tool)"
                            target="_blank">
                             <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>
                             <span>${tool.title}</span>
