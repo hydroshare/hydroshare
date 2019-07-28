@@ -156,14 +156,14 @@
             </span>
         {% endif %}
 
-        <span id="apps-dropdown" v-if="tools.length">
+        <span id="apps-dropdown" v-if="openWithTools.length">
             <div v-if="!isLoading" class="btn-group">
                 <button class="btn btn-default dropdown-toggle"
                         type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Open with... <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu pull-right">
-                    <li v-for="tool in tools" :title="tool.title">
+                    <li v-for="tool in openWithTools" :title="tool.title">
                         <a :href="getResAppUrl(tool)"
                            target="_blank">
                             <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>

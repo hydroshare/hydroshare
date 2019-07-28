@@ -7,6 +7,7 @@ let relevantToolsApp = new Vue({
     delimiters: ['${', '}'],
     data: {
         tools: [],
+        openWithTools: [],
         resId: SHORT_ID,
         isLoading: true,
         trackingAppLaunchUrl: TRACKING_APPLAUNCH_URL,
@@ -48,6 +49,10 @@ let relevantToolsApp = new Vue({
                     }
 
                     return tool;
+                });
+
+                vue.openWithTools = vue.tools.filter(function(tool) {
+                    return tool.url && tool.openwithlist;
                 });
 
                 // Append menu items to right click menu in file browser
