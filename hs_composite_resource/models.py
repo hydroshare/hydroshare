@@ -7,7 +7,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 
 
-from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
@@ -181,46 +181,70 @@ class CompositeResource(BaseResource):
                     aggregation.create_aggregation_xml_documents()
             except ObjectDoesNotExist:
                 # aggregation_name must be a folder path that doesn't represent an aggregation
-                # there may be single file aggregation in that folder for which xml documents
-                # need to be created
-                self._recreate_xml_docs_for_folder(aggregation_name, check_metadata_dirty=True)
+                # there may be other aggregations in that folder for which xml documents
+                # need to be re-created
+                self._recreate_xml_docs_for_folder(new_folder=aggregation_name,
+                                                   check_metadata_dirty=True)
 
-    def _recreate_xml_docs_for_folder(self, folder, check_metadata_dirty=False):
+    def _recreate_xml_docs_for_folder(self, new_folder, old_folder=None, check_metadata_dirty=False):
         """Re-creates xml metadata and map documents associated with the specified folder.
-        If the *folder* represents an aggregation then map and metadata xml documents are
+        If the *new_folder* represents an aggregation then map and metadata xml documents are
         recreated only for that aggregation. Otherwise, xml documents are created for any
         aggregation that may exist in the specified folder and its sub-folders.
 
-        :param  folder: folder for which xml documents need to be re-created
+        :param  new_folder: folder for which xml documents need to be re-created
+        :param  old_folder: (optional) folder name prior to folder name change to as
+        per 'new_folder'
         :param  check_metadata_dirty: if true, then xml files will be created only if the
         aggregation metadata is dirty
         """
 
-        # first check if the the folder represents an aggregation
+        # first check if the the folder represents an aggregation (fileset)
         try:
-            aggregation = self.get_aggregation_by_name(folder)
+            aggregation = self.get_aggregation_by_name(new_folder)
             if check_metadata_dirty:
                 if aggregation.metadata.is_dirty:
                     aggregation.create_aggregation_xml_documents()
             else:
                 aggregation.create_aggregation_xml_documents()
-                # if we found an aggregation by the folder name that means this folder doesn't
-                # have any sub folders as multi-file aggregation folder can't have sub folders
+            # for fileset aggregation needs to generate xml files for all containing filesets
+            if aggregation.is_fileset:
+                for child_aggr in aggregation.get_children():
+                    if child_aggr.is_fileset:
+                        child_aggr.create_aggregation_xml_documents()
+
         except ObjectDoesNotExist:
             # create xml map and metadata xml documents for all aggregations that exist
-            # in *folder* and its sub-folders
-            if not folder.startswith(self.file_path):
-                folder = os.path.join(self.file_path, folder)
+            # in *new_folder* and its sub-folders
+            if not new_folder.startswith(self.file_path):
+                new_folder = os.path.join(self.file_path, new_folder)
 
-            res_file_objects = ResourceFile.list_folder(self, folder)
+            res_file_objects = ResourceFile.list_folder(self, new_folder)
             aggregations = []
             for res_file in res_file_objects:
                 if res_file.has_logical_file and res_file.logical_file not in aggregations:
-                    aggregations.append(res_file.logical_file)
+                    aggregation = res_file.logical_file
+                    if not aggregation.is_fileset:
+                        aggregations.append(aggregation)
+
+            if old_folder is not None:
+                # find all fileset aggregations under the folder *old_folder*
+                for fs in FileSetLogicalFile.objects.filter(folder__startswith=old_folder):
+                    aggregations.append(fs)
 
             if check_metadata_dirty:
                 aggregations = [aggr for aggr in aggregations if aggr.metadata.is_dirty]
+
+            if new_folder.startswith(self.file_path):
+                new_folder = new_folder[len(self.file_path) + 1:]
+
             for aggregation in aggregations:
+                # if we are finding a fileset aggregation here means old_folder is not None
+                if aggregation.is_fileset and not aggregation.has_parent:
+                    # need to update the folder attribute of the top level fileset aggregations
+                    # children filesets of these top level filesets will be updated by the
+                    # corresponding top level (parent) fileset
+                    aggregation.update_folder(new_folder=new_folder, old_folder=old_folder)
                 aggregation.create_aggregation_xml_documents()
 
     def get_aggregation_by_aggregation_name(self, aggregation_name):
@@ -284,14 +308,17 @@ class CompositeResource(BaseResource):
 
         def delete_old_xml_files(folder=''):
             istorage = self.get_irods_storage()
-            meta_xml_file_name = orig_aggr_name + "_meta.xml"
-            map_xml_file_name = orig_aggr_name + "_resmap.xml"
+            # remove file extension from aggregation name (note: aggregation name is a file path
+            # for all aggregation types except fileset
+            xml_file_name, _ = os.path.splitext(orig_aggr_name)
+            meta_xml_file_name = xml_file_name + "_meta.xml"
+            map_xml_file_name = xml_file_name + "_resmap.xml"
             if not folder:
-                # case if file rename/move for single file aggregation
+                # case of file rename/move for single file aggregation
                 meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
                 map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
             else:
-                # case of folder rename - multi-file aggregation
+                # case of folder rename - fileset aggregation
                 _, meta_xml_file_name = os.path.split(meta_xml_file_name)
                 _, map_xml_file_name = os.path.split(map_xml_file_name)
                 meta_xml_file_full_path = os.path.join(self.file_path, folder, meta_xml_file_name)
@@ -316,11 +343,11 @@ class CompositeResource(BaseResource):
                 if aggregation.is_fileset:
                     # update folder attribute of this fileset aggregation and all nested
                     # fileset aggregations of this aggregation
-                    aggregation.update_folder(new_folder=new_aggr_name)
+                    aggregation.update_folder(new_folder=new_aggr_name, old_folder=orig_aggr_name)
             except ObjectDoesNotExist:
                 # not renaming a fileset aggregation folder
                 pass
-            self._recreate_xml_docs_for_folder(new_aggr_name)
+            self._recreate_xml_docs_for_folder(new_folder=new_aggr_name, old_folder=orig_aggr_name)
         else:
             # check if there is a matching single file aggregation
             try:
