@@ -20,7 +20,7 @@ let relevantToolsApp = new Vue({
         },
         // Returns the Url needed to launch a file in this resource
         getFileAppUrl: function (tool) {
-            if (tool.hasOwnProperty('file_extensions ') && tool.url_file) {
+            if (tool.hasOwnProperty('file_extensions') && tool.url_file) {
                 return this.trackingAppLaunchUrl + '?url=' + tool.url_file + ';name=' + tool.title +
                     ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
             }
