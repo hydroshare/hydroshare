@@ -92,7 +92,7 @@ let relevantToolsApp = new Vue({
                         if (urlFile) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
-                                'data-file-extensions="' + tool['file_extensions '] + '" data-url-file="' +
+                                'data-file-extensions="' + tool['file_extensions'] + '" data-url-file="' +
                                 urlFile + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
                                     '" alt="' + tool['title'] + '"/>' + '<span>' + tool['title'] + '</span>' +
