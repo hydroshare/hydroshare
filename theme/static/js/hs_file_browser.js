@@ -299,6 +299,10 @@ function updateSelectionMenuContext() {
             uiActionStates.setGenericFileType.disabled = true;
             uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
+            // Disable creating aggregations from folders
+            uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+            uiActionStates.subMenuSetContentType.disabled = true;
+
             uiActionStates.setRefTimeseriesFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
@@ -313,37 +317,8 @@ function updateSelectionMenuContext() {
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
 
-            if (selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
-                var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
-                if (logicalFileTypeToSet.length) {
-                    if (logicalFileTypeToSet !== "NetCDFLogicalFile") {
-                        uiActionStates.setNetCDFFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "GeoRasterLogicalFile") {
-                        uiActionStates.setGeoRasterFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "GeoFeatureLogicalFile") {
-                        uiActionStates.setGeoFeatureFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "TimeSeriesLogicalFile") {
-                        uiActionStates.setTimeseriesFileType.disabled = true;
-                    }
-                }
-                else {
-                    uiActionStates.setNetCDFFileType.disabled = true;
-                    uiActionStates.setGeoRasterFileType.disabled = true;
-                    uiActionStates.setGeoFeatureFileType.disabled = true;
-                    uiActionStates.setTimeseriesFileType.disabled = true;
-                    uiActionStates.setFileSetFileType.disabled = true;
-                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
-                }
-            }
-            else {
-                uiActionStates.setNetCDFFileType.disabled = true;
-                uiActionStates.setGeoRasterFileType.disabled = true;
-                uiActionStates.setGeoFeatureFileType.disabled = true;
-                uiActionStates.setTimeseriesFileType.disabled = true;
-                uiActionStates.setFileSetFileType.disabled = true;
+            let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
@@ -396,8 +371,8 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                 logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-                // uiActionStates.cut.disabled = true;
-                // uiActionStates.paste.disabled = true;
+                uiActionStates.cut.disabled = true;
+                uiActionStates.paste.disabled = true;
                 uiActionStates.createFolder.disabled = true;
             }
 
@@ -508,6 +483,20 @@ function updateSelectionMenuContext() {
         uiActionStates.setFileSetFileType.fileMenu.hidden = true;
 
         uiActionStates.uploadFiles.disabled = true;
+
+        let logicalFileType = getCurrentPath().aggregation.logical_type;
+        let aggregationTypes = [
+            "GeoRasterLogicalFile",
+            "NetCDFLogicalFile",
+            "GeoFeatureLogicalFile",
+            "TimeSeriesLogicalFile"
+        ];
+
+        //  ------------- Logic specific to the aggregation types above -------------
+        if ($.inArray(logicalFileType, aggregationTypes) >= 0) {
+            uiActionStates.rename.disabled = true;
+            uiActionStates.delete.disabled = true;
+        }
     }
 
     // Toggle properties based on states
