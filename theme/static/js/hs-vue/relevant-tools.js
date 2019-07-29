@@ -20,12 +20,16 @@ let relevantToolsApp = new Vue({
         },
         // Returns the Url needed to launch a file in this resource
         getFileAppUrl: function (tool) {
-            if (tool.hasOwnProperty('agg_types') && tool.url_aggregation) {
-                return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + ';name=' + tool.title +
+            if (tool.hasOwnProperty('file_extensions ') && tool.url_file) {
+                return this.trackingAppLaunchUrl + '?url=' + tool.url_file + ';name=' + tool.title +
                     ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
             }
-            else if (tool.hasOwnProperty('file_extensions ') && tool.url_file) {
-                return this.trackingAppLaunchUrl + '?url=' + tool.url_file + ';name=' + tool.title +
+            return null;    // default
+        },
+        // Returns the Url needed to launch a file in this resource
+        getAggregationAppUrl: function (tool) {
+            if (tool.hasOwnProperty('agg_types') && tool.url_aggregation) {
+                return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + ';name=' + tool.title +
                     ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
             }
             return null;    // default
@@ -66,7 +70,7 @@ let relevantToolsApp = new Vue({
                     }
 
                     if (tool['agg_types']) {
-                        let aggregationUrl = vue.getFileAppUrl(tool);
+                        let aggregationUrl = vue.getAggregationAppUrl(tool);
                         if (aggregationUrl) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
@@ -82,7 +86,8 @@ let relevantToolsApp = new Vue({
                             hasTools = true;
                         }
                     }
-                    else if (tool['file_extensions']){
+
+                    if (tool['file_extensions']){
                         let urlFile = vue.getFileAppUrl(tool);
                         if (urlFile) {
                             let menuItem =
