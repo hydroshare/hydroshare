@@ -167,15 +167,24 @@ class FileSetLogicalFile(AbstractLogicalFile):
 
         return child_aggregations
 
-    def update_folder(self, new_folder):
+    def update_folder(self, new_folder, old_folder):
         """Update folder attribute of this fileset (self) and folder attribute of all fileset
         aggregations that exist under self.
         When folder name of a fileset aggregation is changed, the folder attribute of all nested
         fileset aggregations needs to be updated.
         :param  new_folder:  new folder path of the self
+        :param  old_folder:  original folder path of the self
         """
 
-        for aggr in self.resource.logical_files:
-            if aggr.is_fileset and aggr.folder.startswith(self.folder):
-                aggr.folder = new_folder + aggr.folder[len(self.folder):]
-                aggr.save()
+        new_folder = new_folder.rstrip('/')
+        old_folder = old_folder.rstrip('/')
+
+        # update child fileset aggregations of self
+        for child_aggr in self.get_children():
+            if child_aggr.is_fileset:
+                child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
+                child_aggr.save()
+
+        # update self
+        self.folder = new_folder + self.folder[len(old_folder):]
+        self.save()
