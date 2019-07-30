@@ -229,7 +229,7 @@
             template: '<div :id="targetId" class="mover-container">' + '\n' +
                 '    <div id="MoverLeft" class="mover-panel-box mover-left">' + '\n' +
                 '        <div class="mover-header">{{titleLeft}}</div>' + '\n' +
-                '         <div><span class="glyphicon glyphicon-search search-icon"></span><input id="leftinput" size=30 v-model="filterOn" placeholder="Filter" v-on:keyup="updateFilter()"/></div>' + '\n' + // TODO ensure this is documented in dependencies glpyicon
+                '        <div><input id="leftinput" size=30 v-model="filterOn" placeholder="Filter" v-on:keyup="updateFilter()"/></div>' + '\n' +
                 '        <div :id="targetId + \'LeftItems\'" class="mover-panel">\n' +
                 '           <div class="mover-item"' + '\n' +
                 '                v-for="item in unselectedItems"' + '\n' +
