@@ -5,16 +5,18 @@
     {{ block.super }}
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>{% endblock %}
 {% block main %}
-        <div id="topics-app">
-            <div style="margin-left: 2em">
-                <a href="{{ request.META.HTTP_REFERER }}">back to resource</a></p>
-                <h3>Inline Topic Edit</h3>
-                <input id="add-topic" type="text" v-model="newTopic"/>
-                <button v-on:click="addTopic('{{ csrf_token }}', )" style="margin-bottom: 1em;">Add Topic</button>
-            </div>
-            <hr/>
-            <template>
-                <ul style="list-style: none;">
+    <div id="topics-app">
+        <div style="margin-left: 2em">
+            {#                <a href="{{ request.META.HTTP_REFERER }}">back to communities admin</a>#}
+            {#TODO get URLs.py to incorporate the #admin or otherwise fix the community.html page#}
+            <a href="/community/1/#admin">back to communities admin</a>
+            <h3>Inline Topic Edit</h3>
+            <input id="add-topic" type="text" v-model="newTopic" placeholder="Enter new topic"/>
+            <button v-on:click="addTopic('{{ csrf_token }}', )" style="margin-bottom: 1em;">Add</button>
+        </div>
+        <hr/>
+        <template>
+            <ul style="list-style: none;">
                     <li v-for="number in numbers">
                         <span style="cursor:pointer; padding-right: 2em"
                               v-on:click="deleteTopic('{{ csrf_token }}', number.val[0])" data-toggle="tooltip" title="Delete item"

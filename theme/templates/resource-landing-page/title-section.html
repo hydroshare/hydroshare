@@ -221,15 +221,12 @@
                                     <option>SSHCZO</option>
                                     <option>Cross-CZO</option>
                                 </select><br/><br/>
-                                <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
-                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">[info]</a>
-                                {% if admin_user %}
-                                    <a href="/topics/">&nbsp;[edit]</a>
-                                {% endif %}
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover>
+                                <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
+                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">E-mail admin to add a new topic</a><br/>
                                 <br/>
                                 Optional Custom Text<br/>
                                 <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51"
@@ -275,7 +272,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                  id="txt-title"
-                            {% if communities_enabled and czo_user %} onclick="titleClick()" {% endif %}
+                            {% if communities_enabled %} onclick="titleClick()" {% endif %}
                                                  maxlength="300" name="value" type="text"
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
