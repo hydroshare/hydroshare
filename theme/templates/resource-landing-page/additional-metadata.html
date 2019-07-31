@@ -1,8 +1,8 @@
 <!-- ========= EXTRA METADATA TAB ========= -->
-{% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+{% if resource_edit_mode or cm.extra_metadata.items %}
     <div class="col-xs-12 content-block">
         <h3>Additional Metadata
-        {% if metadata_form %}
+        {% if resource_edit_mode %}
             <a id="btn-add-new-entry" type="button" class="btn btn-success btn-xs" title="Add New Entry">
                 <i class="fa fa-plus"></i>
             </a>
@@ -13,13 +13,13 @@
             <tr>
                 <th>Name</th>
                 <th>Value</th>
-                {% if metadata_form %}
+                {% if resource_edit_mode %}
                     <th></th>
                 {% endif %}
             </tr>
             </thead>
             <tbody>
-            {% for extra_meta_name, extra_meta_value in page.get_content_model.extra_metadata.items %}
+            {% for extra_meta_name, extra_meta_value in cm.extra_metadata.items %}
                 <tr id="{{ forloop.counter0 }}">
                     <td>
                         {{ extra_meta_name }}
@@ -27,7 +27,7 @@
                     <td>
                         {{ extra_meta_value|urlize }}
                     </td>
-                    {% if metadata_form %}
+                    {% if resource_edit_mode %}
                         <td>
                             <span data-loop-counter="{{ forloop.counter0 }}"
                                class="glyphicon glyphicon-pencil icon-blue icon-button btn-edit-extra-metadata table-icon"

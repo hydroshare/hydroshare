@@ -1,7 +1,10 @@
+{% load hydroshare_tags %}
+
 <a data-toggle="modal" class="author-preview"
    data-target="#view-author-modal" href="#"
-   data-name="{{ author.name|default:"" }}"
+   data-name="{{ author.name|name_without_commas|default:"" }}"
    data-email="{{ author.email|default:"" }}"
+   data-order="{{ author.order }}"
    data-organization="{{ author.organization|default:"" }}"
         {% for name, link in author.identifiers.items %}
    data-{{ name }}="{{ link }}"
@@ -11,7 +14,7 @@
    data-homepage="{{ author.homepage|default:"" }}"
    data-profileurl="{{ author.description|default:"" }}">
     {% if author.name %}
-        {{ author.name|default:"" }}
+        {{ author.name|name_without_commas|default:"" }}
     {% else %}
         {{ author.organization|default:"" }}
     {% endif %}

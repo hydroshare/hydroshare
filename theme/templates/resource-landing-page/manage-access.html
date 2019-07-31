@@ -1,0 +1,236 @@
+<div class="modal fade" id="manage-access">
+    <div class="modal-dialog">
+        <div class="modal-content" :style="{'pointer-events': isProcessing ? 'none' : 'auto' }">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Manage access</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert">
+                    <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse"
+                             data-target="#usage-info">&nbsp;</span>
+                        Use this window to share your resource with specific HydroShare users. You can give other
+                        users the ability to view or edit this resource. You can also add additional owners who
+                        will have full permissions.</p>
+                    <br>
+
+                    <div id="usage-info" class="collapse">
+                        <ul>
+                            <li>
+                                <p><strong>Owners</strong> can perform all operations on a resource and set whether
+                                    a resource is Public,
+                                    Discoverable, or Private and Shareable. Resources that are Public have all their
+                                    content
+                                    visible to all users. Resources that are Discoverable have only their metadata
+                                    public.
+                                    Resources that are private are only accessible to specific users or groups that
+                                    they have been shared with.</p>
+                            </li>
+                            <li>
+                                <p><strong>Editors</strong> can edit resource metadata and add and delete resource
+                                    content files. If the resource
+                                    is Shareable editors can use manage access to extend editing or viewing access
+                                    to other users.</p>
+                            </li>
+                            <li><p><strong>Viewers</strong> can view resource metadata and download resource content
+                                files. If the resource is
+                                Shareable viewers can use manage access to extend viewing access to other users.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div data-toggle="collapse" data-target="#usage-info"
+                       class="btn-show-more btn btn-default btn-xs">Show More</div>
+                    <br>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Who has access</h3>
+                    </div>
+                    <div class="panel-body panel-access ">
+                        <table class="table access-table" :style="{'pointer-events': isProcessing ? 'none' : 'auto' }">
+                            <tbody>
+                                {% include "includes/access-row.html" %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Give access</h3>
+                    </div>
+                    <div id="div-invite-people" class="panel-body">
+                        <div id="invite-flag" class="btn-group space-bottom" role="group"
+                             aria-label="Share with users or groups">
+                            <button type="button"
+                                    :class="{btn: true, 'btn-primary': isInviteUsers, 'btn-default': !isInviteUsers}"
+                                    @click="isInviteUsers = true"
+                                    data-value="users">Users</button>
+                            <button type="button"
+                                    :class="{btn: true, 'btn-primary': !isInviteUsers, 'btn-default': isInviteUsers}"
+                                    @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
+                                    data-value="groups">Groups</button>
+                        </div>
+
+
+                        <div class="row">
+                            <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">
+                                {{ add_view_invite_user_form.user }}
+                            </div>
+
+                            <div v-show="!isInviteUsers" class="add-view-group-form col-xs-12">
+                                {{ add_view_group_form.group }}
+                            </div>
+
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <div class="dropdown custom-dropdown">
+                                            <button class="btn btn-default dropdown-toggle" type="button"
+                                                    id="roles_list" data-toggle="dropdown"
+                                                    aria-haspopup="true">
+                                                <span id="selected_role" data-role="view">${accessStr[selectedAccess]}</span>
+                                                <span class="caret"></span>
+                                            </button>
+
+                                            <ul id="list-roles" class="dropdown-menu" aria-labelledby="roles_list">
+                                                <li :class="{ disabled: selfAccessLevel === 'None' }"
+                                                    @click="selectedAccess = 'view'">
+                                                    <a data-role="view">Can view</a>
+                                                </li>
+
+                                                <li :class="{ disabled: selfAccessLevel !== 'owner' && selfAccessLevel !== 'edit' }"
+                                                    @click="selectedAccess = 'edit'">
+                                                    <a data-role="edit">Can edit</a>
+                                                </li>
+
+                                                <li v-if="isInviteUsers"
+                                                    :class="{ disabled: selfAccessLevel !== 'owner' }"
+                                                    @click="selectedAccess = 'owner'">
+                                                    <a data-role="owner">Is owner</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xs-6">
+                                        <a id="btn-confirm-add-access"
+                                           @click="grantAccess"
+                                           class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbsp;Add</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="error" class='alert alert-danger space-top small'>
+                            <strong>Error: </strong>${ error }
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sharing-status">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Sharing status</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div v-if="selfAccessLevel === 'owner'"
+                                 class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i>
+                                You are the owner of this resource.
+                            </div>
+                            <div v-if="selfAccessLevel === 'edit'"
+                                 class="alert alert-info" role="alert">You have been given specific permission to
+                                {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.
+                            </div>
+                            <div v-if="selfAccessLevel === 'view'"
+                                 class="alert alert-info" role="alert">You have been given specific permission to
+                                view this resource.
+                            </div>
+
+                            <template v-if="canChangeResourceFlags">
+                                <div class="btn-group" role="group">
+                                    {# -------- PUBLIC -------- #}
+                                    <button
+                                        :disabled="!canBePublicDiscoverable || resAccess.isPublic || isProcessingAccess"
+                                        @click="setResourceAccess('make_public')"
+                                        :class="{active: resAccess.isPublic}"
+                                        class="btn btn-default"
+                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="button">
+                                        Public
+                                    </button>
+
+                                    {# -------- DISCOVERABLE -------- #}
+                                    <button :disabled="!canBePublicDiscoverable || isProcessingAccess"
+                                            @click="setResourceAccess('make_discoverable')"
+                                            :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
+                                            class="btn btn-default"
+                                            id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                            type="button" title='Metadata is public but data are protected.'>
+                                        Discoverable
+                                    </button>
+
+                                    {# -------- PRIVATE -------- #}
+                                    <button
+                                        :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || isProcessingAccess"
+                                        @click="setResourceAccess('make_private')"
+                                        :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
+                                        class="btn btn-default"
+                                        id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded only by designated users or research groups.'
+                                        type="button">
+                                        Private
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
+                                    class="alert alert-warning small space-top">
+                                    Note that making the resource public may take a little extra time to update
+                                    Hyrax server in order to provide OPeNDAP service for this resource.
+                                </div>
+
+                                <div v-if="selfAccessLevel === 'owner'">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" v-model="resAccess.isShareable" :disabled="isProcessingShareable"
+                                                   @change="setShareable(resAccess.isShareable ? 'make_not_shareable' : 'make_shareable')">
+                                            Shareable
+                                        </label>
+                                    </div>
+
+                                    <p v-if="resAccess.isShareable" class="text-muted small">
+                                        Uncheck the box to prevent others from sharing the resource
+                                        without the owner's permission.
+                                    </p>
+
+                                    <p v-else class="text-muted small">
+                                        Check this box to allow others to share the resource without the
+                                        owner's permission.
+                                    </p>
+                                </div>
+                            </template>
+
+                            <div v-if="sharingError" class='alert alert-danger space-top small'>
+                                <strong>Error: </strong>${ sharingError }
+                            </div>
+                         </div>
+                    </div>
+
+                    {# ======= Change quota holder ======= #}
+                    {% include "resource-landing-page/quota.html" %}
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a type="button" data-dismiss="modal" class="btn btn-default">Close</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/manage-access-app.js"></script>

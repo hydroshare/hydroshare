@@ -184,38 +184,38 @@ $('#iget_irods').on('click',function() {
         selected.push($(this).attr('name'));
     });
     $('#upload_store').val(selected);
-    $("#irods-username").val(sessionStorage.IRODS_username);
-    $("#irods-password").val(sessionStorage.IRODS_password);
-    $("#irods-host").val(sessionStorage.IRODS_host);
-    $("#irods-zone").val(sessionStorage.IRODS_zone);
-    $("#irods-port").val(sessionStorage.IRODS_port);
+    $("#irods_username").val(sessionStorage.IRODS_username);
+    $("#irods_password").val(sessionStorage.IRODS_password);
+    $("#irods_host").val(sessionStorage.IRODS_host);
+    $("#irods_zone").val(sessionStorage.IRODS_zone);
+    $("#irods_port").val(sessionStorage.IRODS_port);
     $('#irodsContent .modal-backdrop.up-load').show();
     $('#irodsContent .ajax-loader').show();
 });
 
 function irods_upload() {
     $.ajax({
-        url: "/irods/upload/",
+        url: "/irods/upload_add/",
         type: "POST",
         data: {
             upload: $('#upload_store').val(),
-            res_type: $('#res_type').val()
+            res_id: $('#res_id').val(),
+            irods_username: $('#irods_username').val(),
+            irods_password: $('#irods_password').val(),
+            irods_host: $('#irods_host').val(),
+            irods_port: $('#irods_port').val(),
+            irods_zone: $('#irods_zone').val()
         },
         success: function(json) {
-            $("#irods-sel-file").text(json.irods_sel_file);
-            $('#irods_file_names').val(json.irods_file_names);
-            $('#irods_federated').val(json.irods_federated);
-            $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
-            if(json.irods_federated)
-                $('#irods-copy-move').show();
-            else
-                $('#irods-copy-move').hide();
+            refreshFileBrowser();
         },
         error: function(xhr, errmsg, err) {
-            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("#irods-sel-file").text("No file selected.");
+            console.log(xhr.status + ": " + xhr.responseText);
             $('#irodsContent').modal('hide');
+            var jsonResponse = JSON.parse(xhr.responseText);
+            display_error_message('Failed to add file from iRODS', jsonResponse.error);
+            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         }
     });
 }

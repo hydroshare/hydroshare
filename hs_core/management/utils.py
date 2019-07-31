@@ -11,7 +11,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
-import os
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
@@ -43,98 +43,6 @@ def check_relations(resource):
                       .format(resource.short_id, r.type, target))
 
 
-def fix_irods_user_paths(resource, log_actions=True, echo_actions=False, return_actions=False):
-    """Move iRODS user paths to the locations specified in settings.
-
-    :param resource: resource to check
-    :param log_actions: whether to log actions to Django log
-    :param echo_actions: whether to print actions on stdout
-    :param return_actions: whether to collect actions in an array and return them.
-
-    This is a temporary fix to the user resources, which are currently stored like
-    federated resources but whose paths are dynamically determined. This function points
-    the paths for user-level resources to where they are stored in the current environment,
-    as specified in hydroshare/local_settings.py.
-
-    * This only does something if the environment is not a production environment.
-    * It is idempotent, in the sense that it can be repeated more than once without problems.
-    * It must be done once whenever the django database is reloaded.
-    * It does not check whether the paths exist afterward. This is done by check_irods_files.
-    """
-    logger = logging.getLogger(__name__)
-    actions = []
-    ecount = 0
-
-    # location of the user files in production
-    defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
-                          '/hydroshareuserZone/home/localHydroProxy')
-    # where resource should be found; this is equal to the default path in production
-    userpath = '/' + os.path.join(
-        getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-        'home',
-        getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
-
-    msg = "fix_irods_user_paths: user path is {}".format(userpath.encode('ascii', 'replace'))
-    if echo_actions:
-        print(msg)
-    if log_actions:
-        logger.info(msg)
-    if return_actions:
-        actions.append(msg)
-
-    # only take action if you find a path that is a default user path and not in production
-    if resource.resource_federation_path == defaultpath and userpath != defaultpath:
-        msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
-              .format(resource.resource_federation_path, userpath.encode('ascii', 'replace'))
-        if echo_actions:
-            print(msg)
-        if log_actions:
-            logger.info(msg)
-        if return_actions:
-            actions.append(msg)
-
-        resource.resource_federation_path = userpath
-        resource.save()
-        for f in resource.files.all():
-            path = f.storage_path
-            if path.startswith(defaultpath):
-                newpath = userpath + path[len(defaultpath):]
-                f.set_storage_path(newpath, test_exists=False)  # does implicit save
-                ecount += 1
-                msg = "fix_irods_user_paths: rewriting {} to {}"\
-                    .format(path.encode('ascii', 'replace'),
-                            newpath.encode('ascii', 'replace'))
-                if echo_actions:
-                    print(msg)
-                if log_actions:
-                    logger.info(msg)
-                if return_actions:
-                    actions.append(msg)
-            else:
-                msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
-                       " {} should start with {}; cannot convert")\
-                    .format(path.encode('ascii', 'replace'), resource.short_id, defaultpath)
-                if echo_actions:
-                    print(msg)
-                if log_actions:
-                    logger.error(msg)
-                if return_actions:
-                    actions.append(msg)
-
-    if ecount > 0:  # print information about the affected resource (not really an error)
-        msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
-            .format(resource.short_id, resource.resource_type,
-                    resource.title.encode('ascii', 'replace'))
-        if log_actions:
-            logger.info(msg)
-        if echo_actions:
-            print(msg)
-        if return_actions:
-            actions.append(msg)
-
-    return actions, ecount  # empty unless return_actions=True
-
-
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
                       echo_errors=False, return_errors=False,
                       sync_ispublic=False, clean_irods=False, clean_django=False):
@@ -156,8 +64,6 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     istorage = resource.get_irods_storage()
     errors = []
     ecount = 0
-    defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
-                          '/hydroshareuserZone/home/localHydroProxy')
 
     # skip federated resources if not configured to handle these
     if resource.is_federated and not settings.REMOTE_USE_IRODS:
@@ -180,17 +86,6 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 errors.append(msg)
 
     else:
-        # Step 1: repair irods user file paths if necessary
-        if clean_irods or clean_django:
-            # fix user paths before check (required). This is an idempotent step.
-            if resource.resource_federation_path == defaultpath:
-                error2, ecount2 = fix_irods_user_paths(resource,
-                                                       log_actions=log_errors,
-                                                       echo_actions=echo_errors,
-                                                       return_actions=False)
-                errors.extend(error2)
-                ecount += ecount2
-
         # Step 2: does every file in Django refer to an existing file in iRODS?
         for f in resource.files.all():
             if not istorage.exists(f.storage_path):

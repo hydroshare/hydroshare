@@ -1,3 +1,5 @@
+import os
+
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.response import Response
@@ -28,6 +30,7 @@ class FileMetaDataSerializer(serializers.Serializer):
     spatial_coverage = JSONSerializerField(required=False)
     extra_metadata = JSONSerializerField(required=False)
     temporal_coverage = JSONSerializerField(required=False)
+    logical_file = JSONSerializerField(required=False)
 
 
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
@@ -65,31 +68,40 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                 "start": "2018-02-22",
                 "end": "2018-02-24"
             },
-            "title": "File Metadata Title"
+            "title": "File Metadata Title",
+            "logical_file": {}
         }
         ```
         """
         try:
             resource_file = hydroshare.get_resource_file(pk, pathname)
+            logical_file = resource_file.logical_file
+            metadata = resource_file.metadata
         except ObjectDoesNotExist:
             # Backwards compatibility for file_id
-            resource_file = ResourceFile.objects.get(id=pathname)
-        if resource_file is None:
-            raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
+            try:
+                resource_file = ResourceFile.objects.get(id=pathname)
+                logical_file = resource_file.logical_file
+                metadata = resource_file.metadata
+            except Exception:
+                # is it a folder?
+                resource = hydroshare.get_resource_by_shortkey(pk)
+                dir_path = pk + os.path.join("/data/contents/", pathname)
+                logical_file = resource.get_folder_aggregation_object(dir_path)
+                metadata = None
 
-        if resource_file.metadata is None or not resource_file.has_logical_file:
-            raise NotFound("File {} in resource {} has no metadata".format(pathname, pk))
-
-        title = resource_file.metadata.logical_file.dataset_name \
-            if resource_file.metadata.logical_file else ""
-        keywords = resource_file.metadata.keywords \
-            if resource_file.metadata else []
-        spatial_coverage = resource_file.metadata.spatial_coverage.value \
-            if resource_file.metadata.spatial_coverage else {}
-        extra_metadata = resource_file.metadata.extra_metadata \
-            if resource_file.metadata else {}
-        temporal_coverage = resource_file.metadata.temporal_coverage.value if \
-            resource_file.metadata.temporal_coverage else {}
+        title = logical_file.dataset_name \
+            if logical_file else ""
+        keywords = metadata.keywords \
+            if metadata else []
+        spatial_coverage = metadata.spatial_coverage.value \
+            if metadata and metadata.spatial_coverage else {}
+        extra_metadata = metadata.extra_metadata \
+            if metadata else {}
+        temporal_coverage = metadata.temporal_coverage.value if \
+            metadata and metadata.temporal_coverage else {}
+        extra_data = logical_file.metadata.dict() \
+            if logical_file else {}
 
         # TODO: How to leverage serializer for this?
         return Response({
@@ -97,7 +109,8 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             "keywords": keywords,
             "spatial_coverage": spatial_coverage,
             "extra_metadata": extra_metadata,
-            "temporal_coverage": temporal_coverage
+            "temporal_coverage": temporal_coverage,
+            "logical_file": extra_data
         })
 
     def put(self, request, pk, pathname):

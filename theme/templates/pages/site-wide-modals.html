@@ -1,0 +1,30 @@
+{# ======= Modal window begins =======#}
+<div class="modal fade" id="submit-title-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create a Resource</h4>
+            </div>
+            <div class="modal-body">
+                <div class="warnings-list">
+                    <div class="modal-input-title">Enter the title for the new resource.
+                    </div>
+                    <br>
+                    <input id="input-title" class="form-control textinput textInput" maxlength="300"
+                           name="value" type="text" placeholder="Resource Title" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                </button>
+                <button id="btn-resource-create" type="button" data-value="" class="btn btn-primary"
+                        data-dismiss="modal">Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{# ======= Modal window ends =======#}

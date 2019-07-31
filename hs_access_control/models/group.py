@@ -1,10 +1,11 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
+from django.contrib.contenttypes.models import ContentType
 
 #############################################
 # Group access data.
@@ -359,3 +360,62 @@ class GroupAccess(models.Model):
             return p.privilege
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
+
+    @property
+    def public_resources(self):
+        """
+        prepare a list of everything that gets displayed about each resource in a group.
+
+        Based upon hs_access_control/models/community.py:Community:public_resources
+        """
+        res = BaseResource.objects.filter(r2grp__group__gaccess=self,
+                                          r2grp__group__gaccess__active=True)\
+                                  .filter(Q(raccess__public=True) |
+                                          Q(raccess__published=True) |
+                                          Q(raccess__discoverable=True))\
+                                  .filter(r2urp__privilege=PrivilegeCodes.OWNER,
+                                          r2urp__user__u2ugp__group=self.group)\
+                                  .annotate(group_name=F("r2grp__group__name"),
+                                            group_id=F("r2grp__group__id"),
+                                            public=F("raccess__public"),
+                                            published=F("raccess__published"),
+                                            discoverable=F("raccess__discoverable"))
+
+        res = res.only('title', 'resource_type', 'created', 'updated')
+
+        # # Can't do the following because the content model is polymorphic.
+        # # This is documented as only working for monomorphic content_type
+        # res = res.prefetch_related("content_object___title",
+        #                            "content_object___description",
+        #                            "content_object__creators")
+        # We want something that is not O(# resources + # content types).
+        # O(# content types) is sufficiently faster.
+        # The following strategy is documented here:
+        # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
+
+        # collect generics from resources
+        generics = {}
+        for item in res:
+            generics.setdefault(item.content_type.id, set()).add(item.object_id)
+
+        # fetch all content types in one query
+        content_types = ContentType.objects.in_bulk(generics.keys())
+
+        # build a map between content types and the objects that use them.
+        relations = {}
+        for ct, fk_list in generics.items():
+            ct_model = content_types[ct].model_class()
+            relations[ct] = ct_model.objects.in_bulk(list(fk_list))
+
+        # force-populate the cache of content type objects.
+        for item in res:
+            setattr(item, '_content_object_cache',
+                    relations[item.content_type.id][item.object_id])
+
+        # Detailed notes:
+        # This subverts chained lookup by pre-populating the content object cache
+        # that is populated by an object reference. It is very dependent upon the
+        # implementation of GenericRelation and its pre-fetching strategy.
+        # Thus it is quite brittle and vulnerable to major revisions of Generics.
+
+        return res

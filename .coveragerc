@@ -5,7 +5,6 @@ omit =
    dublincore/*
    ga_ows/*
    ga_resources/*
-   jquery_ui/*
    */python-irodsclient/*
    */pysqlite2/*
    */tests/*
