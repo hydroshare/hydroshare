@@ -18,12 +18,12 @@
     min-height: 240px;
     width: 222px;
     min-width: 222px;
-    overflow-y: auto !important;
+    overflow-y: visible !important;
 }
 .mover-controls {
     flex: 0 0 auto;
     align-self: center;
-    padding: 0 30px;
+    padding: 0 12px;
 }
 .mover-controls>button {
     padding: 5px;

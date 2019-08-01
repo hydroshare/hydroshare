@@ -199,17 +199,19 @@
             <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
                 <div class="modal-dialog" role="document">
                     <div id="title-assistant" class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="myModalLabel">Title Assistant</h4>
-                        </div>
+{#                        <div class="modal-header">#}
+{#                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span#}
+{#                                    aria-hidden="true">&times;</span></button>#}
+{#                            <h4 class="modal-title" id="myModalLabel">Title Assistant</h4>#}
+{#                        </div>#}
                         <div class="modal-body">
                             <div>
                                 <textarea id="resource-title" v-model="title" disabled rows="3"
-                                          cols="75"></textarea><br/><br/>
-                                <select id="czselect" v-model="regionSelected" @change="updateTitle()">
-                                    <option disabled value="">Critical Zone Region</option>
+                                          style="width: 100%; margin-bottom: 1em; cursor: not-allowed;"
+                                            placeholder="start selecting items to build title">
+                                </textarea>
+                                <select id="czselect" v-model="regionSelected" @change="updateTitle()" style="margin-bottom: 1em; cursor: pointer;">
+                                    <option disabled value="">Select Critical Zone Region</option>
                                     <option>BCCZO</option>
                                     <option>CCZO</option>
                                     <option>CJCZO</option>
@@ -220,37 +222,26 @@
                                     <option>SSCZO</option>
                                     <option>SSHCZO</option>
                                     <option>Cross-CZO</option>
-                                </select><br/><br/>
+                                </select>
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
                                        title-left="Available Topics" title-right="Selected Items"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover>
                                 <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
                                    href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">E-mail admin to add a new topic</a><br/>
-                                <br/>
-                                Optional Custom Text<br/>
-                                <input id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51"
-                                       maxlength="50"/>
 
-                                <div style="margin-top: 1em">Date Range<br/>
-                                    <select id="start-year" v-model="startYear" @change="updateTitle()">
-                                        <option value="0"></option>
-                                        <option v-for="year in startyears" :value="year">{% templatetag openvariable %}
-                                            year {% templatetag closevariable %}</option>
-                                    </select>
-                                    <select id="end-year" v-model="endYear" @change="updateTitle()">
-                                        <option value="0"></option>
-                                        <option v-for="year in endyears" :value="year">{% templatetag openvariable %}
-                                            year {% templatetag closevariable %}</option>
-                                    </select>
-                                </div>
-
+                                <input class="title-builder-input" id="resource-subtopic" v-model="subtopic" v-on:keyup="updateTitle()" size="51"
+                                       maxlength="50" placeholder="Optional Custom Text" /><br />
+                                <input type="text" maxlength="4" class="title-builder-input" id="start-year" v-model="startYear" v-on:keyup="updateTitle()" placeholder="Start Year" />
+                                <input type="text" maxlength="7" class="title-builder-input" id="end-year" v-model="endYear" v-on:keyup="updateTitle()" placeholder="End Year" />
+                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing" true-value="Ongoing" false-value="" @change="checkOngoing">&nbsp;Ongoing<br>
+                                <input class="title-builder-input" id="title-location" v-model="location" v-on:keyup="updateTitle()" size="51"
+                                       maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/>
                             </div>
-
                         </div>
                         <div class="modal-footer">
-{#                            <span style="color:red; float:left">{% templatetag openvariable %}#}
-{#                                            errmsg {% templatetag closevariable %}</span>#}
+                            <span style="color:red; float:left">{% templatetag openvariable %}
+                                            errmsg {% templatetag closevariable %}</span>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                             <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
                         </div>
@@ -316,6 +307,11 @@
             [v-cloak] {
                 display: none
             }
+
+            .title-builder-input {
+                margin-top: 1em;
+            }
+
         </style>
 
         {#    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script> this is for the edit part TODO move this#}

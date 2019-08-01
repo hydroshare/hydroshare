@@ -1,24 +1,13 @@
 var TitleAssistantApp = new Vue({
     el: "#title-assistant",
-    computed: {
-        startyears() {
-            const year = new Date().getFullYear();
-            let numericalYears = Array.from({length: year - 1900}, (value, index) => 1901 + index);
-            return numericalYears.reverse()
-        },
-        endyears() {
-            const year = new Date().getFullYear();
-            let numericalYears = Array.from({length: year - 1900}, (value, index) => 1901 + index);
-            numericalYears.push('Ongoing');
-            return numericalYears.reverse()
-        }
-    },
     data: {
         title: '',
         regionSelected: '',
         subtopic: '',
         startYear: '',
         endYear: '',
+        yearOngoing: '',
+        location: '',
         errmsg: '',
         topics: {
             itemsList: [],
@@ -26,29 +15,77 @@ var TitleAssistantApp = new Vue({
             selectedItems: [],
             selectedValues: ''
         },
+        startYearParen: '',
+        endYearParen: '',
+        locationParen: ''
     },
     methods: {
+        evalParenFields: function () {
+            if (this.$data.startYear) {
+                this.$data.startYearParen = "(" + this.$data.startYear
+            } else {
+                this.$data.startYearParen = ""
+            }
+            if (this.$data.endYear) {
+                this.$data.endYearParen = this.$data.endYear + ")"
+            } else {
+                this.$data.endYearParen = ""
+            }
+            if (this.$data.location) {
+                this.$data.locationParen = "(" + this.$data.location + ")"
+            } else {
+                this.$data.locationParen = ""
+            }
+        },
         itemMoved: function () {
             this.$data.topics.selectedValues = this.$data.topics.selectedItems.map(x => x.value).join(', ');
+            this.updateTitle()
+        },
+        checkOngoing: function () {
+            console.log(this.$data.yearOngoing);
+            this.$data.endYear = this.$data.yearOngoing;
             this.updateTitle()
         },
         updateRegion: function () {
             console.log("Updating input on region select");
             this.updateTitle(items.join(','))
         },
-        updateTitle: function() {
-            this.$data.title = (String(this.$data.regionSelected) + " " + String(this.$data.topics.selectedValues) + " " + String(this.$data.subtopic)) + " (" + String(this.$data.startYear) + " - " + String(this.$data.endYear) + ")".trim()
-            this.$data.errmsg = ''
+        updateTitle: function () {
+            this.evalParenFields();
+            let titleBuilder = '';
+            let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.locationParen, this.$data.startYearParen, this.$data.endYearParen];
+
+            this.$data.errmsg = '';
+
+            items.forEach(function (item) {
+                if (item) {
+                    titleBuilder = titleBuilder + String(item) + ' - '
+                }
+            });
+            titleBuilder = titleBuilder.substring(0, titleBuilder.length - 3);
+
+            titleBuilder = titleBuilder.replace(") - (", ") (");
+            this.$data.title = titleBuilder.trim()
         },
-        saveTitle: function () {  // TODO make more robust to select/deselect or clear out items or leaving whitespace and also add the reset of the items to the if statement (date and such)
-            if (this.$data.title === '' || this.$data.regionSelected === '' || this.$data.subtopic === '') {
-                this.$data.errmsg = "Error: All items must be selected";
-            } else {
+        saveTitle: function () {
+            if (this.valid()) {
+                this.$data.errmsg = '';
+
                 $("#txt-title").val(this.$data.title);
                 $("#txt-title").trigger("change");
                 $("#title-save-button").trigger("click");
                 $("#title-modal").modal('hide');
+
+            } else {
+                this.$data.errmsg = "Error: must make a selection for all components"
             }
+        },
+        valid: function () {
+            let isValid = false;
+            if (this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.locationParen && this.$data.startYearParen && this.$data.endYearParen) {
+                isValid = true
+            }
+            return isValid
         }
     }
 });
