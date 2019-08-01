@@ -234,7 +234,7 @@
                                        maxlength="50" placeholder="Optional Custom Text" /><br />
                                 <input type="text" maxlength="4" class="title-builder-input" id="start-year" v-model="startYear" v-on:keyup="updateTitle()" placeholder="Start Year" />
                                 <input type="text" maxlength="7" class="title-builder-input" id="end-year" v-model="endYear" v-on:keyup="updateTitle()" placeholder="End Year" />
-                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing" true-value="Ongoing" false-value="" @change="checkOngoing">&nbsp;Ongoing<br>
+                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing" true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing<br>
                                 <input class="title-builder-input" id="title-location" v-model="location" v-on:keyup="updateTitle()" size="51"
                                        maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/>
                             </div>
