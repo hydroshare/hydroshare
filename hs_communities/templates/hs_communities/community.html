@@ -53,14 +53,12 @@
                                     <div class="panel-heading">
                                         <h4 class="panel-title">
                                             <span class="glyphicon glyphicon glyphicon-user"></span>
-                                            <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                               href="#filter">&nbsp;Shared by</a></h4>
+                                            &nbsp;Shared by</h4>
                                     </div>
 {#                                TODO PULL REQUEST ensure fixed height acceptable#}
                                     <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                        <div class="panel-body" style="height: 300px">
+                                        <div class="panel-body">
                                             <div class="list-group">
-
                                                 <div id="groups-list">
                                                     <!-- this id=groups-list is used to construct the VueJS group name to id map -->
                                                     {% if not groups %}
