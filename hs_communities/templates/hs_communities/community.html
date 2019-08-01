@@ -43,6 +43,7 @@
                 </ul>
 
                 <!-- Tab panes -->
+{#            TODO IN PULL REQUEST discuss width in groups and my resources#}
                 <div class="tab-content" style="size: 800px">
                     <!-- PUBLIC -->
                     <div role="tabpanel" class="tab-pane fade in active" id="public">
@@ -55,29 +56,34 @@
                                             <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                                href="#filter">&nbsp;Shared by</a></h4>
                                     </div>
-                                    <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
+                                    <div id="filter-shared-by" style="height: 100%" class="facet-list panel-collapse collapse in">
                                         <div class="panel-body">
                                             <div class="list-group">
 
-                                            <div id="groups-list"><!-- this id=groups-list is used to construct the VueJS group name to id map -->
-                                                {% if not groups %}
-                                                    <i class="list-group-item no-items-found">No resources have been
-                                                        shared with this community yet.</i>
-                                                {% else %}
-                                                    <ul class="list-group inputs-group">
-                                                    {% for g in groups %}
-                                                        <li class="list-group-item" id="{{ g.id }}">
-                                                        <span data-facet="czo sierra" class="badge">{{ g.res_count }}</span>
-                                                            <label class="checkbox noselect"><input id="{{ g.id }}" type="checkbox" data-facet="asdf" value="Click" @click="updateContribs({{ g.id }})"> {{ g.name }}
-                                                             {% if grpfilter == g.name %}
-                                                                 checked
-                                                            {% endif %}
-                                                            </label>
-                                                        </li>
-                                                    {% endfor %}
-                                                    </ul>
-                                                {% endif %}
-                                            </div>
+                                                <div id="groups-list">
+                                                    <!-- this id=groups-list is used to construct the VueJS group name to id map -->
+                                                    {% if not groups %}
+                                                        <i class="list-group-item no-items-found">No resources have been
+                                                            shared with this community yet.</i>
+                                                    {% else %}
+                                                        <ul class="list-group inputs-group">
+                                                            {% for g in groups %}
+                                                                <li class="list-group-item" id="{{ g.id }}">
+                                                                    <span data-facet="none"
+                                                                          class="badge">{{ g.res_count }}</span>
+                                                                    <label class="checkbox noselect"><input
+                                                                            id="{{ g.id }}" type="checkbox"
+                                                                            data-facet="none" value="Click"
+                                                                            @click="updateContribs({{ g.id }})"> {{ g.name }}
+                                                                        {% if grpfilter == g.name %}
+                                                                            checked
+                                                                        {% endif %}
+                                                                    </label>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

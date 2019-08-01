@@ -184,6 +184,7 @@
 
         var vue = Vue.component("mover", {
             vue: vue,
+            name: "mover",
             props: {
                 // Note in the html how camelCase is converted to hypenated variables titleLeft title-left itemsList items-list
                 // Left side title - defaults to Available

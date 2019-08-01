@@ -14,7 +14,8 @@ $(function() {
 </script>
 {% comment_thread object_for_comments %}
 <h3>{% trans "New Comment" %}</h3>
-<form method="post" id="comment" class="comment-form" action="/comment/#comment">
+{#    TODO IN PULL REQUEST AND QA PROCESS, ENSURE ALL ASPECTS OF COMMENTS THOROUGHTLY TESTED#}
+<form method="post" id="comment-form" class="comment-form" action="/comment/#comment">
     {% if not request.POST.replied_to %}
     {% fields_for posted_comment_form %}
     {% else %}
