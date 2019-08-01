@@ -3057,7 +3057,7 @@ span.you-flag {
 }
 
 .facet-list .list-group {
-	max-height: 200px;
+	max-height: 400px;
 	overflow-y: auto;
 }
 
