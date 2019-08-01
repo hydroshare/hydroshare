@@ -78,7 +78,39 @@
         </div>
         <div class="col-lg-10" id="items">
             <div class="row">
-                <div class="col-sm-8 col-xs-12 pull-right">
+                <div class="col-sm-4 col-xs-12" style="width: 150px">
+                    <div id="resource-actions-container" class="noselect">
+                        <span data-toggle="tooltip" data-placement="bottom" title="Label">
+                            <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
+                                  data-toggle="dropdown" aria-expanded="false"></span>
+
+                            <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
+                                <div class="panel-body" role="form">
+                                    <strong>Label as:</strong>
+                                    <ul class="list-group list-labels">
+                                        <li class="divider persist"></li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalCreateLabel">
+                                            <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalManageLabels">
+                                            <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </span>
+
+                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
+                              data-placement="bottom" title="Favorite"></span>
+
+                        <span data-toggle="tooltip"
+                              data-placement="bottom" title="Delete">
+                            <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
+                                  data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
+                        </span>
+                    </div>
+                </div>
+                <div class="col-sm-8 col-xs-12">
                     <div id="search-container" class="input-group">
                         <span class="glyphicon glyphicon-search search-icon"></span>
                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
@@ -133,38 +165,7 @@
                     </div>
                  </div>
 
-                <div class="col-sm-4 col-xs-12 pull-left">
-                    <div id="resource-actions-container" class="noselect">
-                        <span data-toggle="tooltip" data-placement="bottom" title="Label">
-                            <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
-                                  data-toggle="dropdown" aria-expanded="false"></span>
 
-                            <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
-                                <div class="panel-body" role="form">
-                                    <strong>Label as:</strong>
-                                    <ul class="list-group list-labels">
-                                        <li class="divider persist"></li>
-                                        <li class="list-group-item persist" data-toggle="modal"
-                                            data-target="#modalCreateLabel">
-                                            <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
-                                        <li class="list-group-item persist" data-toggle="modal"
-                                            data-target="#modalManageLabels">
-                                            <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </span>
-
-                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
-                              data-placement="bottom" title="Favorite"></span>
-
-                        <span data-toggle="tooltip"
-                              data-placement="bottom" title="Delete">
-                            <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
-                                  data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
-                        </span>
-                    </div>
-                </div>
             </div>
 
             <!-- /input-group -->
