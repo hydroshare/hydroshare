@@ -306,13 +306,16 @@
                     },
                     updateFilter: function () {
 
-                        vm.unselectedItems = vm.itemsList;
+                        let newUnselected = vm.itemsList.filter(n => !vm.selectedItems.includes(n));
+
                         if (vm.filterOn.length > 1) {
-                            vm.unselectedItems = vm.unselectedItems.filter(function (item) {
+                            vm.unselectedItems = newUnselected.filter(function (item) {
                                 return item.value.toLocaleLowerCase().includes(vm.filterOn.toLocaleLowerCase());
                             });
                         }
-
+                        else {
+                            vm.unselectedItems = newUnselected
+                        }
                     },
                     selectItem: function (item, items) {
                         if (!item) {
