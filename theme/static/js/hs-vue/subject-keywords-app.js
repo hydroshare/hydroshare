@@ -42,7 +42,7 @@ let subjKeywordsApp = new Vue({
                         }
                         else {
                             this.resKeywords.push(newKeywordsArray[i].trim());
-                            this.$refs.newKeyword.inputValue = "";
+                            this.$refs.newKeyword.inputValue = "";  // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
                             this.$data.newKeyword = ""
                         }
                     }
