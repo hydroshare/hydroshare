@@ -3,7 +3,6 @@
 {% load hydroshare_tags %}
 
 {% block main %}
-
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -23,31 +22,12 @@
                 <h2 class="page-title">My Communities</h2>
             </div>
             <div class="col-sm-3">
-                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog" disabled><i class="fa fa-plus"></i> Create Community</a>
-
                 <br>
                 <br>
-
-                <div>
-{#                    <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>#}
-{#                    <hr class="solid">#}
-
-
-
-
-                </div>
             </div>
             <div class="col-sm-9">
                 <div class="row">
                     <div class="col-sm-12">
-
-{#                        {% for c in communities_list|default_if_none:'' %}#}
-{#                            {{ c.name }} {{ c.id  }}<br />#}
-{#                            Debug information - group listing<br />#}
-{#                            {{ c.member_groups }}#}
-{#                        {% endfor %}#}
-{#                            Debug information - group listing#}
-{#                            {{ community_members}}#}
                         {% if communities_list %}
                             <table class="groups-table">
                                 {% for c in communities_list %}
@@ -65,35 +45,29 @@
                                                 </div>
                                             {% endif %}
                                         </td>
-
                                         <td>
                                             <h4><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
-                                                <img src="{{ STATIC_URL }}img/public.png" alt="Public Community" title="Public Community">
-
+                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Community"
+                                                 title="Public Community">
                                             <small class="text-muted"> Public Community</small>
                                         </td>
-
-                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
+                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}
+                                            Member{% endif %}</span></td>
                                     </tr>
-
                                 {% endfor %}
                             </table>
                         {% endif %}
-
-
                         {% if not groups and not inactive_groups %}
-{#                            TODO NOTE THAT NOT MEMBER OF ANY COMMUNITIES#}
+                            {#                            TODO NOTE THAT NOT MEMBER OF ANY COMMUNITIES#}
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-{#    <script type="text/javascript" src="{{ STATIC_URL }}js/my-groups.js"></script>#}
 {% endblock %}

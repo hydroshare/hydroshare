@@ -8,19 +8,19 @@ var TitleAssistantApp = new Vue({
         endYear: '',
         yearOngoing: '',
         location: '',
-        errmsg: '',
+        errmsg: '',  // Inline feedback for the user in red
         topics: {
-            itemsList: [],
+            itemsList: [], // hold the master list of topics relayed by the HTML template
             unselectedItems: [],
             selectedItems: [],
             selectedValues: ''
         },
-        startYearParen: '',
+        startYearParen: '',  // Paren items are for special display, requested by the customer to appear that way
         endYearParen: '',
         locationParen: ''
     },
     methods: {
-        evalParenFields: function () {
+        evalParenFields: function () {  // Parenthetical fields are specified by customer to be surrounded by parentheses
             if (this.$data.startYear) {
                 this.$data.startYearParen = "(" + this.$data.startYear
             } else {
@@ -37,20 +37,18 @@ var TitleAssistantApp = new Vue({
                 this.$data.locationParen = ""
             }
         },
-        itemMoved: function () {
+        itemMoved: function () {  // User has selected some topics so concat them with commas for display
             this.$data.topics.selectedValues = this.$data.topics.selectedItems.map(x => x.value).join(', ');
             this.updateTitle()
         },
-        checkOngoing: function () {
-            console.log(this.$data.yearOngoing);
+        checkOngoing: function () {  // Checking Ongoing box indicates End Year contains the string Ongoing
             this.$data.endYear = this.$data.yearOngoing;
             this.updateTitle()
         },
         updateRegion: function () {
-            console.log("Updating input on region select");
             this.updateTitle(items.join(','))
         },
-        updateTitle: function () {
+        updateTitle: function () {  // Collect all the items and show in the readonly top live title display
             this.evalParenFields();
             let titleBuilder = '';
             let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.locationParen, this.$data.startYearParen, this.$data.endYearParen];
@@ -90,6 +88,7 @@ var TitleAssistantApp = new Vue({
     }
 });
 
+// When a CZO User clicks on the Resource Title show the Title Assistant modal
 function titleClick() {
     $("#title-modal").modal('show');
     topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data

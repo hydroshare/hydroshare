@@ -93,7 +93,7 @@ class MyCommunitiesView(TemplateView):
 
         comms_member_of = [self.group_to_community(g, Community.objects.all()) for g in grps_member_of]
         return {
-            'communities_list': comms_member_of
+            'communities_list': [c for c in comms_member_of if c is not None]
         }
 
 

@@ -21,11 +21,20 @@
         <div class="row">
             <div class="col-sm-12">
                 <h2 class="page-title">Find Communities</h2>
-                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog" disabled><i class="fa fa-plus"></i> Create Community</a>
-                <br><br>
+                {#                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog" disabled><i class="fa fa-plus"></i> Create Community</a>#}
+                <div class="col-xs-12">
+                    <div id="missing-metadata-or-file"
+                         class="alert alert-success alert-dismissible"
+                         role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        Communities are a new feature in HydroShare. For more information about creating one please
+                        contact CUAHSI
+                    </div>
+                </div>
                 <div class="group-search input-group">
                     <span class="glyphicon glyphicon-search search-icon"></span>
-                    <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name...">
+                    <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name..."/>
                 </div>
                 <p id="id-Group-Search-Result-Msg"></p>
             </div>
@@ -46,8 +55,9 @@
                                          style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                 {% endif %}
                                 <div class="group-caption">
-                                    <h3 class="group-name"><a
-                                            href="/community/{{ c.id }}">{{ c.name }}</a></h3>
+                                    <h3 class="group-name">
+                                        <a href="/community/{{ c.id }}">{{ c.name }}</a>
+                                    </h3>
                                     <div class="group-purpose" style="overflow-y: auto">
                                         <p>{{ group.gaccess.purpose|linebreaks }}</p>
                                     </div>
@@ -69,7 +79,9 @@
                                                         </div>
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image"
-                                                             title="{{ member|best_name }}"></div>
+                                                             title="{{ member|best_name }}">
+
+                                                        </div>
                                                     {% endif %}
                                                 {% endfor %}
                                             </div>
