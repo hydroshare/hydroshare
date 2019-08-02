@@ -93,6 +93,7 @@ function titleClick() {
     $("#title-modal").modal('show');
     topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data
         this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
-        this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false})
+        this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false});
+        this.$data.errmsg = ''
     }.bind(TitleAssistantApp));
 }
