@@ -186,7 +186,8 @@ class CompositeResource(BaseResource):
                 self._recreate_xml_docs_for_folder(new_folder=aggregation_name,
                                                    check_metadata_dirty=True)
 
-    def _recreate_xml_docs_for_folder(self, new_folder, old_folder=None, check_metadata_dirty=False):
+    def _recreate_xml_docs_for_folder(self, new_folder, old_folder=None,
+                                      check_metadata_dirty=False):
         """Re-creates xml metadata and map documents associated with the specified folder.
         If the *new_folder* represents an aggregation then map and metadata xml documents are
         recreated only for that aggregation. Otherwise, xml documents are created for any
