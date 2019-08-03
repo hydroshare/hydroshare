@@ -799,6 +799,16 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         """This aggregation supports only one file"""
         return True
 
+    @property
+    def redirect_url(self):
+        """
+        return redirect_url if this logical file is a referenced web url file, None otherwise
+        """
+        if 'url' in self.extra_data:
+            return self.extra_data['url']
+        else:
+            return None
+
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
