@@ -12,6 +12,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
+from hs_core.signals import post_move_or_rename_file_or_folder
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -548,6 +549,10 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
+        post_move_or_rename_file_or_folder.send(
+            sender=type(resource),
+            resource=resource
+        )
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
@@ -668,6 +673,10 @@ def data_store_move_to_folder(request, pk=None):
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
+        post_move_or_rename_file_or_folder.send(
+            sender=type(resource),
+            resource=resource
+        )
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
@@ -774,6 +783,10 @@ def data_store_rename_file_or_folder(request, pk=None):
 
     try:
         rename_file_or_folder(user, pk, src_path, tgt_path)
+        post_move_or_rename_file_or_folder.send(
+            sender=type(resource),
+            resource=resource
+        )
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:

@@ -32,3 +32,4 @@ post_add_raster_aggregation = django.dispatch.Signal(providing_args=['resource',
 post_add_reftimeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
 post_add_timeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
 post_raccess_change = django.dispatch.Signal(providing_args=['resource'])
+post_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource'])
