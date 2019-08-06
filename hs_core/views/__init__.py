@@ -1805,9 +1805,7 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-        group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
-
-        # TODO: need to sort this resource list using the date_granted field
+        group_resources = sorted(group_resources, key=lambda x:x.date_granted, reverse=True)
 
         return {
             'profile_user': u,

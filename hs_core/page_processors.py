@@ -20,7 +20,7 @@ from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-
+from hs_odm2.models import ODM2Variable
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -340,7 +340,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'admin_user': True,  # TODO this is probably no longer needed since the link to topics editing was moved to admin tab of community
-               'czo_user': any("CZO National" in x.name for x in comms_member_of)
+               'czo_user': any("CZO National" in x.name for x in comms_member_of),
+               'odm2_terms': list(ODM2Variable.all())
     }
 
     return context
