@@ -1152,9 +1152,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1196,9 +1196,9 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -1248,9 +1248,9 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
-            org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+            orig_src_path = src_full_path[len(resource.file_path) + 1:]
+            new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
