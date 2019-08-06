@@ -202,6 +202,11 @@ class GenericLogicalFile(AbstractLogicalFile):
         return "Generic Data"
 
     @property
+    def is_single_file_aggregation(self):
+        """This aggregation supports only one file"""
+        return True
+
+    @property
     def redirect_url(self):
         """
         return redirect_url if this logical file is a referenced web url file, None otherwise

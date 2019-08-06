@@ -988,6 +988,16 @@ class AbstractLogicalFile(models.Model):
         """
         return os.path.join(self.resource.file_path, self.map_short_file_path)
 
+    @property
+    def is_single_file_aggregation(self):
+        """
+        Returns True if the aggregation consists of only one file, otherwise, False.
+        Subclasses that support only single file must override this property
+
+        :return: True or False
+        """
+        return False
+
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
         is already associated with any other logical file object, this function does not do
