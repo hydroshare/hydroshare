@@ -225,25 +225,23 @@
                                     <option>Cross-CZO</option>
                                 </select>
                                 <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
-                                       title-left="Available Topics" title-right="Selected Items"
+                                       title-left="Available Topics" title-right="Selected Topics"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover>
                                 <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
-                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">E-mail admin to
-                                    add a new topic</a><br/>
-
+                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
                                 <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
                                        v-on:keyup="updateTitle()" size="51"
                                        maxlength="50" placeholder="Optional Custom Text"/><br/>
-                                <input type="text" maxlength="4" class="title-builder-input" id="start-year"
-                                       v-model="startYear" v-on:keyup="updateTitle()" placeholder="Start Year"/>
-                                <input type="text" maxlength="7" class="title-builder-input" id="end-year"
-                                       v-model="endYear" v-on:keyup="updateTitle()" placeholder="End Year"/>
-                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing"
-                                       true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing<br>
                                 <input class="title-builder-input" id="title-location" v-model="location"
                                        v-on:keyup="updateTitle()" size="51"
-                                       maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/>
+                                       maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/><br/>
+                                <input type="text" maxlength="4" class="title-builder-input" id="start-year"
+                                       v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
+                                <input type="text" maxlength="7" class="title-builder-input" id="end-year"
+                                       v-model="endYear" v-on:keyup="updateDate()" placeholder="End Year"/>
+                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing"
+                                       true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
                             </div>
                         </div>
                         <div class="modal-footer">

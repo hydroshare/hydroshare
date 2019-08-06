@@ -230,7 +230,7 @@
             template: '<div :id="targetId" class="mover-container">' + '\n' +
                 '    <div id="MoverLeft" class="mover-panel-box mover-left">' + '\n' +
                 '        <div class="mover-header">{{titleLeft}}</div>' + '\n' +
-                '        <div><input id="leftinput" size=32 v-model="filterOn" placeholder="Filter" v-on:keyup="updateFilter()"/></div>' + '\n' +
+                '        <div><label for="leftinput"><span class="glyphicon glyphicon-search" style="margin:0 5px;"></span></label><input id="leftinput" v-model="filterOn" placeholder="Filter by keyword" v-on:keyup="updateFilter()"/></div>' + '\n' +
                 '        <div :id="targetId + \'LeftItems\'" class="mover-panel">\n' +
                 '           <div class="mover-item"' + '\n' +
                 '                v-for="item in unselectedItems"' + '\n' +

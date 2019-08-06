@@ -16,8 +16,7 @@ var TitleAssistantApp = new Vue({
             selectedValues: ''
         },
         startYearParen: '',  // Paren items are for special display, requested by the customer to appear that way
-        endYearParen: '',
-        locationParen: ''
+        endYearParen: ''
     },
     methods: {
         evalParenFields: function () {  // Parenthetical fields are specified by customer to be surrounded by parentheses
@@ -31,11 +30,6 @@ var TitleAssistantApp = new Vue({
             } else {
                 this.$data.endYearParen = ""
             }
-            if (this.$data.location) {
-                this.$data.locationParen = "(" + this.$data.location + ")"
-            } else {
-                this.$data.locationParen = ""
-            }
         },
         itemMoved: function () {  // User has selected some topics so concat them with commas for display
             this.$data.topics.selectedValues = this.$data.topics.selectedItems.map(x => x.value).join(', ');
@@ -48,10 +42,14 @@ var TitleAssistantApp = new Vue({
         updateRegion: function () {
             this.updateTitle(items.join(','))
         },
+        updateDate: function () {
+            let validYear = false;
+            this.updateTitle()
+        },
         updateTitle: function () {  // Collect all the items and show in the readonly top live title display
             this.evalParenFields();
             let titleBuilder = '';
-            let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.locationParen, this.$data.startYearParen, this.$data.endYearParen];
+            let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.location, this.$data.startYearParen, this.$data.endYearParen];
 
             this.$data.errmsg = '';
 
@@ -62,7 +60,7 @@ var TitleAssistantApp = new Vue({
             });
             titleBuilder = titleBuilder.substring(0, titleBuilder.length - 3);
 
-            titleBuilder = titleBuilder.replace(") - (", ") (");
+            titleBuilder = titleBuilder.replace(" - (", " (");
             this.$data.title = titleBuilder.trim()
         },
         saveTitle: function () {
