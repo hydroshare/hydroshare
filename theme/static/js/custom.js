@@ -164,8 +164,10 @@ $(document).ready(function () {
 
         $('#submit-title-dialog .modal-title').text(title);
         $('#submit-title-dialog .modal-input-title').text(inputTitle);
-
-        $('#submit-title-dialog').modal('show');
+        console.log("SHOULD NOT SEE THIS TODO");
+        // TODO PULL REQUEST WORK NOT COMPLETE - parameterize in template based on settings.COMMUNITIES_ENABLED
+        // $('#submit-title-dialog').modal('show');
+        $("#title-modal").modal('show');
     });
 
     $("#btn-resource-create").on("click", function () {
