@@ -78,7 +78,7 @@ var TitleAssistantApp = new Vue({
         },
         valid: function () {
             let isValid = false;
-            if (this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.locationParen && this.$data.startYearParen && this.$data.endYearParen) {
+            if (this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
                 isValid = true
             }
             return isValid
