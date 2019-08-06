@@ -52,13 +52,23 @@ var TitleAssistantApp = new Vue({
             let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.location, this.$data.startYearParen, this.$data.endYearParen];
 
             this.$data.errmsg = '';
-
+            let i = 0;
             items.forEach(function (item) {
                 if (item) {
-                    titleBuilder = titleBuilder + String(item) + ' - '
+                    if (i + 2 !== items.length) {  // more customer formatting requirements
+                        titleBuilder = titleBuilder + String(item) + ' - '
+                    } else {
+                        titleBuilder = titleBuilder + String(item) + '-'
+                    }
+                    i++
                 }
             });
-            titleBuilder = titleBuilder.substring(0, titleBuilder.length - 3);
+            if (titleBuilder.endsWith(' - ')) {
+                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 3);
+            }
+            if (titleBuilder.endsWith('-')) {
+                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 1);
+            }
 
             titleBuilder = titleBuilder.replace(" - (", " (");
             this.$data.title = titleBuilder.trim()
