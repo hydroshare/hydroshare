@@ -59,3 +59,8 @@ class ODM2Variable(models.Model):
     @classmethod
     def search(cls, prefix):
         return ODM2Variable.objects.filter(name__startswith=prefix).order_by('name')
+
+    @classmethod
+    def all(cls):
+        term_names = ODM2Variable.objects.all().values_list('name').order_by('name')
+        return [str(t[0]) for t in term_names]
