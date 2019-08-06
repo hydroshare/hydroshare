@@ -304,6 +304,7 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
+    "hs_odm2",
     "security",
     "markdown",
     "hs_communities"
