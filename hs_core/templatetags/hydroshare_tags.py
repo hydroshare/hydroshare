@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, unicode_literals
+
 from future.builtins import int
 
 from django.utils.html import format_html
@@ -219,13 +219,13 @@ def remove_last_char(statement):
 def five_options_around(page):
     """ Create five page numbers around current page for discovery pagination. """
     if page.number <= 3:
-        return range(1, min(5, page.paginator.num_pages) + 1)
+        return list(range(1, min(5, page.paginator.num_pages) + 1))
     elif page.number >= (page.paginator.num_pages - 2):
-        return range(max((page.paginator.num_pages - 4), 1),
-                     page.paginator.num_pages + 1)
+        return list(range(max((page.paginator.num_pages - 4), 1),
+                     page.paginator.num_pages + 1))
     else:
-        return range(max(1, (page.number - 2)),
-                     min((page.number + 2), page.paginator.num_pages) + 1)
+        return list(range(max(1, (page.number - 2)),
+                     min((page.number + 2), page.paginator.num_pages) + 1))
 
 
 @register.filter

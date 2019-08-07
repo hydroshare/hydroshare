@@ -6,7 +6,7 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from mezzanine.pages.page_processors import processor_for
 
-from forms import ExtendedMetadataForm
+from .forms import ExtendedMetadataForm
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference

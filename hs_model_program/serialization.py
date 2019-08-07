@@ -37,7 +37,7 @@ class ModelProgramResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(str(self))
 
     def _read_resource_metadata(self):
         super(ModelProgramResourceMeta, self)._read_resource_metadata()
@@ -104,7 +104,7 @@ class ModelProgramResourceMeta(GenericResourceMeta):
                 self.modelSoftware = str(modelSoftware_lit).strip()
                 if self.modelSoftware == '':
                     self.modelSoftware = None
-            print("\t\t{0}".format(str(self)))
+            print(("\t\t{0}".format(str(self))))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):

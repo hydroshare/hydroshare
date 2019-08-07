@@ -1,5 +1,5 @@
 from django.conf.urls import url
-import views
+from . import views
 
 urlpatterns = [
     url(r'^_internal/(?P<resource_id>[0-9a-f]+)/(?P<coverage_type>[A-z]+)/update-coverage/$',

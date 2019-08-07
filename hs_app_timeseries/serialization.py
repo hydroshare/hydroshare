@@ -53,7 +53,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             site_type_lit = self._rmeta_graph.value(o, hsterms.SiteType)
             if site_type_lit is not None:
                 self.site.siteType = str(site_type_lit)
-            print("\t\t{0}".format(self.site))
+            print(("\t\t{0}".format(self.site)))
 
         # Get variable
         for s, p, o in self._rmeta_graph.triples((None, hsterms.variable, None)):
@@ -90,7 +90,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             var_spec_lit = self._rmeta_graph.value(o, hsterms.Speciation)
             if var_spec_lit is not None:
                 self.variable.speciation = str(var_spec_lit)
-            print("\t\t{0}".format(self.variable))
+            print(("\t\t{0}".format(self.variable)))
 
             # Get method
             for s, p, o in self._rmeta_graph.triples((None, hsterms.method, None)):
@@ -121,7 +121,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                 method_link_lit = self._rmeta_graph.value(o, hsterms.MethodLink)
                 if method_link_lit is not None:
                     self.method.methodLink = str(method_link_lit)
-                print("\t\t{0}".format(self.method))
+                print(("\t\t{0}".format(self.method)))
 
             # Get processingLevel
             for s, p, o in self._rmeta_graph.triples((None, hsterms.processingLevel, None)):
@@ -140,7 +140,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                 method_explan_lit = self._rmeta_graph.value(o, hsterms.Explanation)
                 if method_explan_lit is not None:
                     self.processing_level.explanation = str(method_explan_lit)
-                print("\t\t{0}".format(self.processing_level))
+                print(("\t\t{0}".format(self.processing_level)))
 
             # Get timeSeriesResult
             for s, p, o in self._rmeta_graph.triples((None, hsterms.timeSeriesResult, None)):
@@ -189,7 +189,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                     msg = "AggregationStatistic for TimeSeriesResult was not found for resource {0}".format(self.root_uri)
                     raise GenericResourceMeta.ResourceMetaException(msg)
                 self.time_series_result.aggregationStatistics = str(res_aggstat_lit)
-                print("\t\t{0}".format(self.time_series_result))
+                print(("\t\t{0}".format(self.time_series_result)))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):
@@ -269,7 +269,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class Variable(object):
 
@@ -291,7 +291,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class Method(object):
 
@@ -313,7 +313,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class ProcessingLevel(object):
 
@@ -331,7 +331,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class TimeSeriesResult(object):
 
@@ -357,4 +357,4 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))

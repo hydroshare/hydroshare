@@ -177,10 +177,10 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.files.all().count(), 0)
 
         # there should be a title element
-        self.assertNotEquals(self.resNetcdf.metadata.title, None)
+        self.assertNotEqual(self.resNetcdf.metadata.title, None)
 
         # there should be abstract element
-        self.assertNotEquals(self.resNetcdf.metadata.description, None)
+        self.assertNotEqual(self.resNetcdf.metadata.description, None)
 
         # there should be 2 creator element
         self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
@@ -195,7 +195,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.metadata.formats.all().count(), 0)
 
         # there should be subject element
-        self.assertNotEquals(self.resNetcdf.metadata.subjects.all().count(), 0)
+        self.assertNotEqual(self.resNetcdf.metadata.subjects.all().count(), 0)
 
         # testing extended metadata elements
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
@@ -619,7 +619,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.value['northlimit'], '4662377.44692')
         self.assertEqual(ori_coverage.value['eastlimit'], '461939.019091')
         self.assertEqual(ori_coverage.value['southlimit'], '4612607.44692')

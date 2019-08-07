@@ -156,4 +156,4 @@ class RefTSMetadata(CoreMetaData):
         self.quality_levels.all().delete()
         self.datasources.all().delete()
 
-import receivers
+from . import receivers

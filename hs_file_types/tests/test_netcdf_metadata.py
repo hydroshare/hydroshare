@@ -13,7 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData
-from utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin
+from .utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin
 
 
 class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,

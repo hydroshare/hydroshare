@@ -49,7 +49,7 @@ class ResourceToListItemMixin(object):
         resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
         coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
-                     for v in r.metadata.coverages.values()]
+                     for v in list(r.metadata.coverages.values())]
         authors = []
         for c in r.metadata.creators.all():
             authors.append(c.name)
@@ -416,7 +416,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
         if not authorized:
             raise PermissionDenied()
 
-        files = request.FILES.values()
+        files = list(request.FILES.values())
         if len(files) == 0:
             error_msg = {'file': 'No resourcemetadata.xml file was found to update resource '
                                  'metadata.'}
@@ -628,7 +628,7 @@ class ResourceFileCRUD(APIView):
         resource, _, _ = view_utils.authorize(request, pk,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        resource_files = request.FILES.values()
+        resource_files = list(request.FILES.values())
         if len(resource_files) == 0:
             error_msg = {'file': 'No file was found to add to the resource.'}
             raise ValidationError(detail=error_msg)
@@ -806,7 +806,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         """
         resource, _, _ = view_utils.authorize(request, pk,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        resource_files = request.FILES.values()
+        resource_files = list(request.FILES.values())
         if len(resource_files) == 0:
             error_msg = {'file': 'No file was found to add to the resource.'}
             raise ValidationError(detail=error_msg)
@@ -877,7 +877,7 @@ def _validate_metadata(metadata_list):
     for element in metadata_list:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
-        k, v = element.items()[0]
+        k, v = list(element.items())[0]
         if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)

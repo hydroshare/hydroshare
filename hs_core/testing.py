@@ -106,7 +106,7 @@ class TestCaseCommonUtilities(object):
         in iRODS user zone to save ori_file to
         :return:
         """
-        for file_name, target_name in file_name_to_target_name_dict.iteritems():
+        for file_name, target_name in file_name_to_target_name_dict.items():
             self.irods_fed_storage.saveFile(file_name, target_name)
 
     def check_file_exist(self, irods_path):
@@ -340,7 +340,7 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 461954.01909127034)
         self.assertEqual(float(ori_coverage.value['southlimit']), 4612592.446916306)
@@ -348,21 +348,21 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
         self.assertEqual(ori_coverage.value['datum'], "North_American_Datum_1983")
-        projection_string = u'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
-                            u'DATUM["North_American_Datum_1983",' \
-                            u'SPHEROID["GRS 1980",6378137,298.257222101,' \
-                            u'AUTHORITY["EPSG","7019"]],' \
-                            u'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
-                            u'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
-                            u'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
-                            u'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
-                            u'PARAMETER["latitude_of_origin",0],' \
-                            u'PARAMETER["central_meridian",-111],' \
-                            u'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
-                            u'PARAMETER["false_northing",0],' \
-                            u'UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
-                            u'AXIS["Easting",EAST],AXIS["Northing",' \
-                            u'NORTH],AUTHORITY["EPSG","26912"]]'
+        projection_string = 'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
+                            'DATUM["North_American_Datum_1983",' \
+                            'SPHEROID["GRS 1980",6378137,298.257222101,' \
+                            'AUTHORITY["EPSG","7019"]],' \
+                            'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
+                            'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
+                            'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
+                            'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
+                            'PARAMETER["latitude_of_origin",0],' \
+                            'PARAMETER["central_meridian",-111],' \
+                            'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
+                            'PARAMETER["false_northing",0],' \
+                            'UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                            'AXIS["Easting",EAST],AXIS["Northing",' \
+                            'NORTH],AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
         # testing extended metadata element: cell information
@@ -409,7 +409,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
 
         # there should be one license element:
-        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, 1)
+        self.assertNotEqual(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
         self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
@@ -453,9 +453,9 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+        proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
@@ -469,7 +469,7 @@ class TestCaseCommonUtilities(object):
 
         # test time variable
         var_time = self.resNetcdf.metadata.variables.all().filter(name='time').first()
-        self.assertNotEquals(var_time, None)
+        self.assertNotEqual(var_time, None)
         self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
         self.assertEqual(var_time.type, 'Float')
         self.assertEqual(var_time.shape, 'time')
@@ -477,7 +477,7 @@ class TestCaseCommonUtilities(object):
 
         # test x variable
         var_x = self.resNetcdf.metadata.variables.all().filter(name='x').first()
-        self.assertNotEquals(var_x, None)
+        self.assertNotEqual(var_x, None)
         self.assertEqual(var_x.unit, 'Meter')
         self.assertEqual(var_x.type, 'Float')
         self.assertEqual(var_x.shape, 'x')
@@ -485,7 +485,7 @@ class TestCaseCommonUtilities(object):
 
         # test y variable
         var_y = self.resNetcdf.metadata.variables.all().filter(name='y').first()
-        self.assertNotEquals(var_y, None)
+        self.assertNotEqual(var_y, None)
         self.assertEqual(var_y.unit, 'Meter')
         self.assertEqual(var_y.type, 'Float')
         self.assertEqual(var_y.shape, 'y')
@@ -493,7 +493,7 @@ class TestCaseCommonUtilities(object):
 
         # test SWE variable
         var_swe = self.resNetcdf.metadata.variables.all().filter(name='SWE').first()
-        self.assertNotEquals(var_swe, None)
+        self.assertNotEqual(var_swe, None)
         self.assertEqual(var_swe.unit, 'm')
         self.assertEqual(var_swe.type, 'Float')
         self.assertEqual(var_swe.shape, 'y,x,time')
@@ -504,7 +504,7 @@ class TestCaseCommonUtilities(object):
         # test grid mapping variable
         var_grid = self.resNetcdf.metadata.variables.all().\
             filter(name='transverse_mercator').first()
-        self.assertNotEquals(var_grid, None)
+        self.assertNotEqual(var_grid, None)
         self.assertEqual(var_grid.unit, 'Unknown')
         self.assertEqual(var_grid.type, 'Unknown')
         self.assertEqual(var_grid.shape, 'Not defined')

@@ -33,7 +33,7 @@ class Command(BaseCommand):
                     print(msg)
                     continue
 
-                print("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid))
+                print(("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid)))
                 check_relations(resource)
 
         else:  # check all resources
@@ -46,5 +46,5 @@ class Command(BaseCommand):
                     print(msg)
                     continue
 
-                print("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid))
+                print(("LOOKING FOR RELATION ERRORS FOR RESOURCE {}".format(rid)))
                 check_relations(resource)

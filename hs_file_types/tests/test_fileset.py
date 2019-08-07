@@ -7,7 +7,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
-from utils import CompositeResourceTestMixin
+from .utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile
 

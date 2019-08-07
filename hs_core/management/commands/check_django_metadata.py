@@ -104,7 +104,7 @@ class Command(BaseCommand):
                     print(msg)
                     continue
 
-                print("LOOKING FOR METADATA ERRORS FOR RESOURCE {}".format(rid))
+                print(("LOOKING FOR METADATA ERRORS FOR RESOURCE {}".format(rid)))
                 check_django_metadata(resource, stop_on_error=False,
                                       echo_errors=not options['log'],
                                       log_errors=options['log'],

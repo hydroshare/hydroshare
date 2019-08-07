@@ -3,13 +3,13 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field, HTML
 
-from models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
+from .models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
     HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
     ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus, \
     SupportedAggTypes, RequestUrlBaseAggregation, RequestUrlBaseFile
 
 from hs_core.forms import BaseFormHelper
-from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
+from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 from hs_file_types.utils import get_SupportedAggTypes_choices
 from django.core.exceptions import ValidationError
@@ -126,7 +126,7 @@ class AppResourceLevelUrlValidationForm(forms.Form):
         if not cleaned_url:
             return
 
-        from utils import parse_app_url_template
+        from .utils import parse_app_url_template
 
         term_dict = {}
         term_dict["HS_RES_ID"] = "a"
@@ -137,7 +137,7 @@ class AppResourceLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(list(term_dict.keys()))))
 
 
 class AppAggregationLevelUrlValidationForm(forms.Form):
@@ -149,7 +149,7 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
         if not cleaned_url:
             return
 
-        from utils import parse_app_url_template
+        from .utils import parse_app_url_template
 
         term_dict = {}
         term_dict["HS_RES_ID"] = "a"
@@ -161,7 +161,7 @@ class AppAggregationLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(list(term_dict.keys()))))
 
 
 class AppFileLevelUrlValidationForm(forms.Form):
@@ -173,7 +173,7 @@ class AppFileLevelUrlValidationForm(forms.Form):
         if not cleaned_url:
             return
 
-        from utils import parse_app_url_template
+        from .utils import parse_app_url_template
 
         term_dict = {}
         term_dict["HS_RES_ID"] = "a"
@@ -184,7 +184,7 @@ class AppFileLevelUrlValidationForm(forms.Form):
 
         if not parsed:
             raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(term_dict.keys())))
+                                  format(cleaned_url, str(list(term_dict.keys()))))
 
 
 class SupportedFileExtensionsValidationForm(forms.Form):

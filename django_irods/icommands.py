@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 import textwrap
-from cStringIO import StringIO
+from io import StringIO
 from django.conf import settings
 from collections import namedtuple
 
@@ -194,7 +194,7 @@ class Session(object):
 
         stdin = None
         if data:
-            print data
+            print(data)
             stdin = StringIO(data)
 
         proc = subprocess.Popen(

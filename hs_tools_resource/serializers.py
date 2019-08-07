@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from hs_core.views.resource_metadata_rest_api import CoreMetaDataSerializer
-from models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResTypeChoices, \
+from .models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResTypeChoices, \
     SupportedResTypes, SupportedSharingStatusChoices, SupportedSharingStatus, ToolIcon, \
     ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions, \
     RequestUrlBaseAggregation, RequestUrlBaseFile

@@ -28,7 +28,7 @@ def instantiate_timestamp_range(start, end):
     """ instantiate a range of Variable requests """
     events = 0
     ids = 0
-    print("instantiating ids from -{} days to -{} days from now".format(start, end))
+    print(("instantiating ids from -{} days to -{} days from now".format(start, end)))
     for v in Variable.objects.filter(timestamp__gte=datetime.now()-timedelta(start),
                                      timestamp__lte=datetime.now()-timedelta(end)):
         events = events + 1
@@ -47,7 +47,7 @@ def instantiate_timestamp_range(start, end):
                     # print("{} for '{}' ".format(resource_id, value))
                     ids = ids + 1
                     if ids % 1000 == 0:
-                        print("{} of {}".format(ids, events))
+                        print(("{} of {}".format(ids, events)))
 
                     if v.name == 'visit':  # for visits, classify kind of visit
                         if LANDING_RE.search(value):
@@ -68,7 +68,7 @@ def instantiate_timestamp_range(start, end):
                 #    print("NONE for '{}'".format(value))
             # else:
             #     print("NONE for '{}'".format(value))
-    print("resource ids found for {} of {} events".format(ids, events))
+    print(("resource ids found for {} of {} events".format(ids, events)))
 
 
 def instantiate_resource_ids():

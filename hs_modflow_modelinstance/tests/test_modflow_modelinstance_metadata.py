@@ -1077,10 +1077,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.formats.all().count(), 0)
 
         # test the core metadata at this point
-        self.assertNotEquals(self.res.metadata.title, None)
+        self.assertNotEqual(self.res.metadata.title, None)
 
         # there should be an abstract element
-        self.assertNotEquals(self.res.metadata.description, None)
+        self.assertNotEqual(self.res.metadata.description, None)
 
         # there should be one creator element
         self.assertEqual(self.res.metadata.creators.all().count(), 1)

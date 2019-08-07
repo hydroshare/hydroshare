@@ -26,7 +26,7 @@ class ToolResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(str(self))
 
     def _read_resource_metadata(self):
         super(ToolResourceMeta, self)._read_resource_metadata()
@@ -62,7 +62,7 @@ class ToolResourceMeta(GenericResourceMeta):
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.version = str(value_lit)
 
-        print("\t\t{0}".format((str(self))))
+        print(("\t\t{0}".format((str(self)))))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):

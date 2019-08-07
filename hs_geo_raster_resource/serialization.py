@@ -81,7 +81,7 @@ class RasterResourceMeta(GenericResourceMeta):
             nodata_lit = self._rmeta_graph.value(o, hsterms.noDataValue)
             if nodata_lit is not None:
                 self.cell_info.noDataValue = float(str(nodata_lit))
-            print("\t\t{0}".format(self.cell_info))
+            print(("\t\t{0}".format(self.cell_info)))
 
         # Get BandInformation
         if SAX_parse_results:
@@ -122,7 +122,7 @@ class RasterResourceMeta(GenericResourceMeta):
                     band_info.comment = str(comment_lit)
                 self.band_info.append(band_info)
         for b in self.band_info:
-            print("\t\t{0}".format(str(b)))
+            print(("\t\t{0}".format(str(b))))
 
         # Get spatialReference
         for s, p, o in self._rmeta_graph.triples((None, hsterms.spatialReference, None)):
@@ -131,7 +131,7 @@ class RasterResourceMeta(GenericResourceMeta):
                 msg = "Spatial reference value not found for {0}.".format(o)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.spatial_reference = RasterResourceMeta.SpatialReference(str(spat_ref_lit))
-            print("\t\t{0}".format(self.spatial_reference))
+            print(("\t\t{0}".format(self.spatial_reference)))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):
@@ -193,7 +193,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class BandInformation(object):
 
@@ -214,7 +214,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class SpatialReference(object):
 
@@ -236,7 +236,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def __init__(self, value_str):
             kvp = value_str.split(';')

@@ -95,17 +95,17 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
 
     def test_owner_sending_invitation(self):
         # group owner should have no pending invitations to join group
-        self.assertEquals(
+        self.assertEqual(
             self.john_group_owner.uaccess.group_membership_requests.count(), 0)
-        self.assertEquals(
+        self.assertEqual(
             self.mike_group_owner.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # there should be 4 members in the modeling group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # let the group owner (john) send a membership invitation to user lisa
         membership_request = self.john_group_owner.uaccess.create_group_membership_request(
@@ -125,14 +125,14 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
                 self.modeling_group, self.lisa_group_member)
 
         # group owner john should have one pending invitations to join group
-        self.assertEquals(
+        self.assertEqual(
             self.john_group_owner.uaccess.group_membership_requests.count(), 1)
         # group owner mike should have no pending invitations to join group
-        self.assertEquals(
+        self.assertEqual(
             self.mike_group_owner.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have one pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 1)
 
         # let lisa accept the invitation to join modeling group
@@ -140,20 +140,20 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             membership_request, accept_request=True)
 
         # there should be 5 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 5)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 5)
         # lisa should be one of the members
         self.assertIn(
             self.lisa_group_member,
             self.modeling_group.gaccess.members)
 
         # group owner should have no pending invitations to join group
-        self.assertEquals(
+        self.assertEqual(
             self.john_group_owner.uaccess.group_membership_requests.count(), 0)
-        self.assertEquals(
+        self.assertEqual(
             self.mike_group_owner.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # sending invitation to an user who is already a member should raise exception
@@ -173,7 +173,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.john_group_owner.uaccess.unshare_group_with_user(
             self.modeling_group, self.lisa_group_member)
         # there should be now 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # let the group owner (mike) send a membership invitation to user lisa
         membership_request = self.mike_group_owner.uaccess.create_group_membership_request(
@@ -188,14 +188,14 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             self.modeling_group.gaccess.members)
 
         # there should be now 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # group owner should have no pending invitations to join group
-        self.assertEquals(
+        self.assertEqual(
             self.mike_group_owner.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # test group owner cancelling invitation
@@ -259,15 +259,15 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
 
     def test_user_sending_request(self):
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # there should be 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # lisa should should not be one of the members
         self.assertNotIn(
@@ -279,7 +279,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             self.modeling_group)
 
         # modeling group should have one pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 1)
 
         # same user trying to send multiple request to join the same group
@@ -289,29 +289,29 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
                 self.modeling_group)
 
         # user lisa should have 1 pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
 
         # modeling group should have 1 pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 1)
 
         # there should be 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # let john (group owner) accept lisa's request
         self.john_group_owner.uaccess.act_on_group_membership_request(
             membership_request, accept_request=True)
 
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # there should be 5 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 5)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 5)
         # lisa should be one of the members
         self.assertIn(
             self.lisa_group_member,
@@ -338,16 +338,16 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.john_group_owner.uaccess.act_on_group_membership_request(
             membership_request, accept_request=False)
         # there should be 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
         # lisa should not be one of the members
         self.assertNotIn(
             self.lisa_group_member,
             self.modeling_group.gaccess.members)
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # test user cancelling his/her own request to join a group
@@ -355,10 +355,10 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         membership_request = self.lisa_group_member.uaccess.create_group_membership_request(
             self.modeling_group)
         # user lisa should have 1 pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
         # modeling group should have 1 pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 1)
         # let Lisa cancel her own request to join group
         self.lisa_group_member.uaccess.act_on_group_membership_request(
@@ -368,10 +368,10 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             self.lisa_group_member,
             self.modeling_group.gaccess.members)
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
     def test_user_sending_request_auto_approval(self):
@@ -381,15 +381,15 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.modeling_group.gaccess.auto_approve, False)
 
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
 
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # there should be 4 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # lisa should should not be one of the members
         self.assertNotIn(
@@ -405,10 +405,10 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
 
         # user lisa should have no pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
         # lisa should be a member of the modeling group
@@ -464,7 +464,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         lisa_membership_request = self.lisa_group_member.uaccess.create_group_membership_request(
             self.modeling_group)
         # user lisa should have 1 pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
         self.assertIn(lisa_membership_request,
                       self.modeling_group.gaccess.group_membership_requests)
@@ -472,13 +472,13 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         kelly_membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
             self.modeling_group)
         # user kelly should have 1 pending request to join group
-        self.assertEquals(
+        self.assertEqual(
             self.kelly_group_member.uaccess.group_membership_requests.count(), 1)
         self.assertIn(kelly_membership_request,
                       self.modeling_group.gaccess.group_membership_requests)
         # modeling group should have 2 pending membership requests (one from
         # lisa and one from kelly)
-        self.assertEquals(
+        self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 2)
         # let john (group owner) accept lisa's request
         self.john_group_owner.uaccess.act_on_group_membership_request(
@@ -487,7 +487,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.mike_group_owner.uaccess.act_on_group_membership_request(
             kelly_membership_request, accept_request=True)
         # there should be 6 members in the group
-        self.assertEquals(self.modeling_group.gaccess.members.count(), 6)
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 6)
         # lisa should be one of the members
         self.assertIn(
             self.lisa_group_member,

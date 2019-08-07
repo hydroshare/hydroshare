@@ -227,7 +227,7 @@ class SupportedResTypes(AbstractMetaDataElement):
                         res_type)
                 meta_instance.supported_res_types.add(qs[0])
 
-            elif isinstance(res_type, basestring):
+            elif isinstance(res_type, str):
                 # create or update res
                 qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type)
                 if qs.exists():
@@ -241,7 +241,7 @@ class SupportedResTypes(AbstractMetaDataElement):
     @classmethod
     def _validate_supported_res_types(cls, supported_res_types):
         for res_type in supported_res_types:
-            if isinstance(res_type, basestring) \
+            if isinstance(res_type, str) \
                     and res_type not in [res_type_choice[0]
                                          for res_type_choice in get_SupportedResTypes_choices()]:
                 raise ValidationError('Invalid supported_res_types:%s' % res_type)
@@ -317,7 +317,7 @@ class SupportedAggTypes(AbstractMetaDataElement):
                         agg_type)
                 meta_instance.supported_agg_types.add(qs[0])
 
-            elif isinstance(agg_type, basestring):
+            elif isinstance(agg_type, str):
                 # create or update agg
                 qs = SupportedAggTypeChoices.objects.filter(description__iexact=agg_type)
                 if qs.exists():
@@ -331,7 +331,7 @@ class SupportedAggTypes(AbstractMetaDataElement):
     @classmethod
     def _validate_supported_agg_types(cls, supported_agg_types):
         for agg_type in supported_agg_types:
-            if isinstance(agg_type, basestring) \
+            if isinstance(agg_type, str) \
                     and agg_type not in [agg_type_choice[0]
                                          for agg_type_choice in get_SupportedAggTypes_choices()]:
                 raise ValidationError('Invalid supported_agg_types:%s' % agg_type)
@@ -404,7 +404,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                     raise ObjectDoesNotExist('Sharing status {0} is not supported').format(
                         sharing_status)
                 meta_instance.sharing_status.add(qs[0])
-            elif isinstance(sharing_status, basestring):
+            elif isinstance(sharing_status, str):
                 # create or update res
                 qs = SupportedSharingStatusChoices.objects. \
                     filter(description__iexact=sharing_status)
@@ -419,7 +419,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     @classmethod
     def _validate_sharing_status(cls, sharing_status_list):
         for sharing_status in sharing_status_list:
-            if isinstance(sharing_status, basestring) and \
+            if isinstance(sharing_status, str) and \
                     sharing_status not in [sharing_status_choice_tuple[0]
                                            for sharing_status_choice_tuple in
                                            get_SupportedSharingStatus_choices()]:
@@ -589,7 +589,7 @@ class ToolMetaData(CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import ToolMetaDataSerializer
+        from .serializers import ToolMetaDataSerializer
         return ToolMetaDataSerializer(self)
 
     @classmethod
@@ -597,7 +597,7 @@ class ToolMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
@@ -714,7 +714,7 @@ class ToolMetaData(CoreMetaData):
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
-        from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
+        from .forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
             UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
             SupportedAggTypesValidationForm, SupportedFileExtensionsValidationForm, \
             AppResourceLevelUrlValidationForm, AppAggregationLevelUrlValidationForm, \

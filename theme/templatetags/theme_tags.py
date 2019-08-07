@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 from django.conf import settings
 from mezzanine import template
 from mezzanine.utils.sites import current_site_id

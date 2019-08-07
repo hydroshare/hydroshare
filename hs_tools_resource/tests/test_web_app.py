@@ -1,4 +1,4 @@
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group

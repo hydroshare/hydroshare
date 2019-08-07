@@ -12,32 +12,32 @@ import requests
 
 def check_uri(uri, options):
     """ try to download a URL with specific privileges """
-    print("original url is {}".format(uri))
+    print(("original url is {}".format(uri)))
     if options['login'] and options['password']:
         r = hs_requests.get(uri, verify=False, stream=True,
                             auth=requests.auth.HTTPBasicAuth(options['login'], options['password']))
     else:
         r = hs_requests.get(uri, verify=False, stream=True)
 
-    print("localized url is {}".format(str(r.url)))
-    print("status code is {}".format(str(r.status_code)))
+    print(("localized url is {}".format(str(r.url))))
+    print(("status code is {}".format(str(r.status_code))))
     for i in r.headers:
-        print("{} is {}".format(i, r.headers[i]))
+        print(("{} is {}".format(i, r.headers[i])))
     file = 'tmp/check_uri_output'
     if 'Content-Disposition' in r.headers and \
        '; ' in r.headers['Content-Disposition']:
         filename = r.headers['Content-Disposition'].split('; ')[1].split('=')[1].strip('"')
-        print("filename is {}".format(filename))
+        print(("filename is {}".format(filename)))
         if '.' in filename:
             extension = filename.split('.')
             extension = extension[len(extension)-1]
             if extension != "":
-                print("extension is .{}".format(extension))
+                print(("extension is .{}".format(extension)))
                 file = file + '.' + extension
     with open(file, 'wb') as fd:
         for chunk in r.iter_content(chunk_size=128):
             fd.write(chunk)
-    print("query complete: output in {}".format(file))
+    print(("query complete: output in {}".format(file)))
 
 
 class Command(BaseCommand):

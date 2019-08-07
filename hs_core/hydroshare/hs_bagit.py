@@ -133,7 +133,7 @@ def create_bag_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 file_name=f.short_path)
@@ -161,7 +161,7 @@ def create_bag_files(resource):
             if logical_file.has_parent:
                 # skip nested aggregations
                 continue
-            aggr_uri = u'{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
+            aggr_uri = '{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
             aggr_uri = aggr_uri.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,

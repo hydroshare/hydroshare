@@ -42,7 +42,7 @@ def netcdf_post_create_resource(sender, **kwargs):
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
+                k, v = list(element.items())[0]
                 if k == 'title':
                     # update title element
                     title_element = resource.metadata.title
@@ -249,7 +249,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             # update variable info
             nc_res.metadata.variables.all().delete()
-            for var_info in res_type_specific_meta.values():
+            for var_info in list(res_type_specific_meta.values()):
                 nc_res.metadata.create_element('variable',
                                                name=var_info['name'],
                                                unit=var_info['unit'],

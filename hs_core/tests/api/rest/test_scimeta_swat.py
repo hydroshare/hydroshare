@@ -66,7 +66,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             self.assertEqual(title, title_1)
 
             keywords = self.getKeywords(scimeta)
-            kw_comp = zip(kwords_1, keywords)
+            kw_comp = list(zip(kwords_1, keywords))
             for k in kw_comp:
                 self.assertEqual(k[0], k[1])
 
@@ -103,7 +103,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             self.assertEqual(title, title_1)
 
             keywords = self.getKeywords(scimeta)
-            kw_comp = zip(kwords_1, keywords)
+            kw_comp = list(zip(kwords_1, keywords))
             for k in kw_comp:
                 self.assertEqual(k[0], k[1])
 
@@ -153,7 +153,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             self.assertEqual(title, title_2)
 
             keywords = self.getKeywords(scimeta)
-            kw_comp = zip(kwords_2, keywords)
+            kw_comp = list(zip(kwords_2, keywords))
             for k in kw_comp:
                 self.assertEqual(k[0], k[1])
 

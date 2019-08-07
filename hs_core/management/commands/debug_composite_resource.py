@@ -15,7 +15,7 @@ def debug_resource(short_id):
     try:
         res = BaseResource.objects.get(short_id=short_id)
     except BaseResource.DoesNotExist:
-        print("{} does not exist".format(short_id))
+        print(("{} does not exist".format(short_id)))
 
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
@@ -25,23 +25,23 @@ def debug_resource(short_id):
         for f in resource.files.all():
             if f.has_logical_file:
                 metadata = f.metadata.get_html()
-                print("metadata for {} is".format(resource.short_id))
+                print(("metadata for {} is".format(resource.short_id)))
                 pprint(metadata)
 
         storage = resource.get_irods_storage()
         resource.create_aggregation_xml_documents()
-        print("resource {}".format(resource.short_id))
+        print(("resource {}".format(resource.short_id)))
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
-                print("  {} is single file aggregation {} "
+                print(("  {} is single file aggregation {} "
                       .format(f.short_path,
-                              f.logical_file.get_aggregation_type_name()))
+                              f.logical_file.get_aggregation_type_name())))
                 if not storage.exists(f.storage_path):
-                    print("    {} does not exist".format(f.storage_path))
+                    print(("    {} does not exist".format(f.storage_path)))
                 if not storage.exists(f.storage_path + "_resmap.xml"):
-                    print("    {} does not exist".format(f.storage_path + "_resmap.xml"))
+                    print(("    {} does not exist".format(f.storage_path + "_resmap.xml")))
                 if not storage.exists(f.storage_path + "_meta.xml"):
-                    print("    {} does not exist".format(f.storage_path + "_meta.xml"))
+                    print(("    {} does not exist".format(f.storage_path + "_meta.xml")))
 
 
 class Command(BaseCommand):

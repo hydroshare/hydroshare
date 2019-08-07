@@ -22,7 +22,7 @@ import osr
 import netCDF4
 from pyproj import Proj, transform
 
-from nc_utils import get_nc_dataset, get_nc_grid_mapping_projection_import_string_dict,\
+from .nc_utils import get_nc_dataset, get_nc_grid_mapping_projection_import_string_dict,\
     get_nc_variables_coordinate_type_mapping, get_nc_grid_mapping_crs_name, \
     get_nc_variable_coordinate_meta
 
@@ -80,7 +80,7 @@ def get_dublin_core_meta(nc_dataset):
     except Exception:
         nc_coverage_meta = {}
 
-    dublin_core_meta = dict(nc_global_meta.items() + nc_coverage_meta.items())
+    dublin_core_meta = dict(list(nc_global_meta.items()) + list(nc_coverage_meta.items()))
 
     return dublin_core_meta
 
@@ -111,7 +111,7 @@ def extract_nc_global_meta(nc_dataset):
 
     }
 
-    for dublincore, convention in dublincore_vs_convention.items():
+    for dublincore, convention in list(dublincore_vs_convention.items()):
         for option in convention:
             if hasattr(nc_dataset, option) and nc_dataset.__dict__[option]:
                 raw_str = nc_dataset.__dict__[option]
@@ -134,13 +134,13 @@ def extract_nc_coverage_meta(nc_dataset):
     period_info = get_period_info(nc_dataset)
 
     original_box_info = get_original_box_info(nc_dataset)
-    for name in original_box_info.keys():
+    for name in list(original_box_info.keys()):
         original_box_info[name] = str(original_box_info[name])
         if name == 'units' and original_box_info[name].lower() == 'm':
             original_box_info[name] = 'Meter'
 
     box_info = get_box_info(nc_dataset)
-    for name in box_info.keys():
+    for name in list(box_info.keys()):
         box_info[name] = str(box_info[name])
 
     nc_coverage_meta = {
@@ -274,7 +274,7 @@ def get_box_info(nc_dataset):
 
     if box_info:
         # change the value as string
-        for name in box_info.keys():
+        for name in list(box_info.keys()):
             box_info[name] = str(box_info[name])
         box_info['units'] = 'Decimal degrees'
         box_info['projection'] = 'WGS 84 EPSG:4326'
@@ -382,7 +382,7 @@ def get_limits_info(nc_dataset, info_source):
         coor_type = coor_dir + info_source
         limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
         if limit_meta:
-            limits_info = dict(limits_info.items()+limit_meta.items())
+            limits_info = dict(list(limits_info.items())+list(limit_meta.items()))
         else:
             limits_info = {}
             break
@@ -403,8 +403,8 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
     coor_end = []
     coor_units = ''
 
-    var_name_list = coor_type_mapping.keys()
-    coor_type_list = coor_type_mapping.values()
+    var_name_list = list(coor_type_mapping.keys())
+    coor_type_list = list(coor_type_mapping.values())
 
     for coor_type_name in [coor_type, coor_type+'_bnd']:
         if coor_type_name in coor_type_list:
@@ -469,7 +469,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
     Return : the netCDF data variable metadata which are required by HS system.
     """
     nc_data_variables_meta = {}
-    for var_name, var_obj in nc_data_variables.items():
+    for var_name, var_obj in list(nc_data_variables.items()):
         nc_data_variables_meta[var_name] = {
             'name': var_name,
             'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
@@ -499,7 +499,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
                 if isinstance(var_obj.datatype, netCDF4.CompoundType) or \
                    isinstance(var_obj.datatype, netCDF4.VLType):
                     nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
-                elif var_obj.datatype.name in nc_data_type_dict.keys():
+                elif var_obj.datatype.name in list(nc_data_type_dict.keys()):
                     nc_data_variables_meta[var_name]['type'] = \
                         nc_data_type_dict[var_obj.datatype.name]
                 elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):

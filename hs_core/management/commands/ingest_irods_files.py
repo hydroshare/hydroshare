@@ -59,11 +59,11 @@ class Command(BaseCommand):
                    r.resource_type != 'GenericResource' and \
                    r.resource_type != 'ModelInstanceResource' and \
                    r.resource_type != 'ModelProgramResource':
-                    print("resource {} has type {}: skipping".format(r.short_id,
-                                                                     r.resource_type))
+                    print(("resource {} has type {}: skipping".format(r.short_id,
+                                                                     r.resource_type)))
                 else:
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
-                          .format(rid, str(r.files.all().count())))
+                    print(("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
+                          .format(rid, str(r.files.all().count()))))
                     # get the typed resource
                     try:
                         resource = r.get_content_model()
@@ -106,8 +106,8 @@ class Command(BaseCommand):
                    r.resource_type == 'GenericResource' or \
                    r.resource_type == 'ModelInstanceResource' or \
                    r.resource_type == 'ModelProgramResource':
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
-                          .format(r.short_id, str(r.files.all().count())))
+                    print(("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
+                          .format(r.short_id, str(r.files.all().count()))))
                     try:
                         # get the typed resource
                         resource = r.get_content_model()
@@ -141,4 +141,4 @@ class Command(BaseCommand):
                             print(msg)
 
                 else:
-                    print("resource {} has type {}: skipping".format(r.short_id, r.resource_type))
+                    print(("resource {} has type {}: skipping".format(r.short_id, r.resource_type)))

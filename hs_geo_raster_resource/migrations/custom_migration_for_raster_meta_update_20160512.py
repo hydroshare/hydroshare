@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import os
 import shutil
@@ -93,7 +93,7 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update band information metadata in django
                 if res_md_dict['band_info']:
-                    for i, band_meta in res_md_dict['band_info'].items():
+                    for i, band_meta in list(res_md_dict['band_info'].items()):
                         band_obj = res.metadata.bandInformation.filter(name='Band_{}'.format(i)).first()
                         if band_obj:
                             res.metadata.update_element('bandInformation',
@@ -118,11 +118,11 @@ def migrate_tif_file(apps, schema_editor):
                 meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
     # Print migration results
-    print 'Copy resource to temp folder failure: Number: {} List: {}'.format(len(copy_res_fail), copy_res_fail)
-    print 'VRT file update success: Number: {} List{}'.format(len(vrt_update_success), vrt_update_success)
-    print 'VRT file update fail: Number: {} List{}'.format(len(vrt_update_fail), vrt_update_fail)
-    print 'Meta update success: Number: {} List {}'.format(len(meta_update_success), meta_update_success)
-    print 'Meta update fail: Number: {} List {}'.format(len(meta_update_fail), meta_update_fail)
+    print('Copy resource to temp folder failure: Number: {} List: {}'.format(len(copy_res_fail), copy_res_fail))
+    print('VRT file update success: Number: {} List{}'.format(len(vrt_update_success), vrt_update_success))
+    print('VRT file update fail: Number: {} List{}'.format(len(vrt_update_fail), vrt_update_fail))
+    print('Meta update success: Number: {} List {}'.format(len(meta_update_success), meta_update_success))
+    print('Meta update fail: Number: {} List {}'.format(len(meta_update_fail), meta_update_fail))
 
 
 def undo_migrate_tif_file(apps, schema_editor):
@@ -143,7 +143,7 @@ def undo_migrate_tif_file(apps, schema_editor):
                 log.exception(e.message)
                 meta_reverse_fail.append('{}:{}, band:{}'.format(res.short_id, res.metadata.title.value, band_obj.id))
 
-    print 'Meta recover to initial state fail: List {}'.format(meta_reverse_fail)
+    print('Meta recover to initial state fail: List {}'.format(meta_reverse_fail))
 
 
 class Migration(migrations.Migration):

@@ -112,7 +112,7 @@ class TestScriptResource(TransactionTestCase):
         # here we are testing the update() method of the ScriptMetaData class
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resScript.metadata.program, None)
+        self.assertEqual(self.resScript.metadata.program, None)
 
         # create program metadata
         self.resScript.metadata.update([{'scriptspecificmetadata': {'scriptLanguage': 'R',

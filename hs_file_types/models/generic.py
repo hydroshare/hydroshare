@@ -11,7 +11,7 @@ from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
 from hs_core.signals import post_add_generic_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from .base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):

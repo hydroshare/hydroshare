@@ -119,7 +119,7 @@ class Command(BaseCommand):
         if cname is None:
             print("All communities:")
             for c in Community.objects.all():
-                print("  '{}' (id={})".format(c.name, str(c.id)))
+                print(("  '{}' (id={})".format(c.name, str(c.id))))
             exit(0)
 
         if command is None or command == 'list':
@@ -128,13 +128,13 @@ class Command(BaseCommand):
                 usage()
                 exit(1)
 
-            print("community '{}' (id={}):".format(community.name, community.id))
-            print("  description: {}".format(community.description))
-            print("  purpose: {}".format(community.purpose))
+            print(("community '{}' (id={}):".format(community.name, community.id)))
+            print(("  description: {}".format(community.description)))
+            print(("  purpose: {}".format(community.purpose)))
             print("  owners:")
             for ucp in UserCommunityPrivilege.objects.filter(community=community,
                                                              privilege=PrivilegeCodes.OWNER):
-                print("    {} (grantor {})".format(ucp.user.username, ucp.grantor.username))
+                print(("    {} (grantor {})".format(ucp.user.username, ucp.grantor.username)))
 
             print("  member groups:")
             for gcp in GroupCommunityPrivilege.objects.filter(community=community):
@@ -146,13 +146,13 @@ class Command(BaseCommand):
                     myself = 'allows view of group resources'
                 else:
                     myself = 'prohibits view of group resources'
-                print("     '{}' (id={}) (grantor={}):"
-                      .format(gcp.group.name, gcp.group.id, gcp.grantor.username))
-                print("         {}, {}.".format(myself, others))
-                print("         '{}' (id={}) owners are:".format(gcp.group.name, str(gcp.group.id)))
+                print(("     '{}' (id={}) (grantor={}):"
+                      .format(gcp.group.name, gcp.group.id, gcp.grantor.username)))
+                print(("         {}, {}.".format(myself, others)))
+                print(("         '{}' (id={}) owners are:".format(gcp.group.name, str(gcp.group.id))))
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
-                    print("             {}".format(ugp.user.username))
+                    print(("             {}".format(ugp.user.username)))
             exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
@@ -179,8 +179,8 @@ class Command(BaseCommand):
                     description = "No description"
                 purpose = options['purpose']
 
-                print("creating community '{}' with owner '{}' and description '{}'"
-                      .format(cname, owner, description))
+                print(("creating community '{}' with owner '{}' and description '{}'"
+                      .format(cname, owner, description)))
 
                 owner.uaccess.create_community(cname, description, purpose=purpose)
 
@@ -193,10 +193,10 @@ class Command(BaseCommand):
 
             if len(options['command']) < 3:
                 # list owners
-                print("owners of community '{}' (id={})".format(community.name, str(community.id)))
+                print(("owners of community '{}' (id={})".format(community.name, str(community.id))))
                 for ucp in UserCommunityPrivilege.objects.filter(community=community,
                                                                  privilege=PrivilegeCodes.OWNER):
-                    print("    {}".format(ucp.user.username))
+                    print(("    {}".format(ucp.user.username)))
                 exit(0)
 
             oname = options['command'][2]
@@ -206,23 +206,23 @@ class Command(BaseCommand):
                 exit(1)
 
             if len(options['command']) < 4:
-                print("user {} owns community '{}' (id={})"
-                      .format(owner.username, community.name, str(community.id)))
+                print(("user {} owns community '{}' (id={})"
+                      .format(owner.username, community.name, str(community.id))))
             action = options['command'][3]
 
             if action == 'add':
-                print("adding {} as owner of {} (id={})"
-                      .format(owner.username, community.name, str(community.id)))
+                print(("adding {} as owner of {} (id={})"
+                      .format(owner.username, community.name, str(community.id))))
                 UserCommunityPrivilege.share(user=owner, community=community,
                                              privilege=PrivilegeCodes.OWNER, grantor=owner)
 
             elif action == 'remove':
-                print("removing {} as owner of {} (id={})"
-                      .format(owner.username, community.name, str(community.id)))
+                print(("removing {} as owner of {} (id={})"
+                      .format(owner.username, community.name, str(community.id))))
                 UserCommunityPrivilege.unshare(user=owner, community=community, grantor=owner)
 
             else:
-                print("unknown owner action '{}'".format(action))
+                print(("unknown owner action '{}'".format(action)))
                 usage()
                 exit(1)
 
@@ -246,8 +246,8 @@ class Command(BaseCommand):
                         myself = 'allows view of group resources'
                     else:
                         myself = 'prohibits view of group resources'
-                    print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
-                    print("         {}, {}.".format(myself, others))
+                    print(("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username)))
+                    print(("         {}, {}.".format(myself, others)))
                 exit(0)
 
             gname = options['command'][2]
@@ -271,8 +271,8 @@ class Command(BaseCommand):
                     privilege = PrivilegeCodes.VIEW
 
                 try:
-                    print("Updating group '{}' (id={}) status in community '{}' (id={})."
-                          .format(gname, str(group.id), cname, str(community.id)))
+                    print(("Updating group '{}' (id={}) status in community '{}' (id={})."
+                          .format(gname, str(group.id), cname, str(community.id))))
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
                     if gcp.allow_view != (not options['prohibit_view']):
                         gcp.allow_view = not options['prohibit_view']
@@ -283,8 +283,8 @@ class Command(BaseCommand):
                                                       privilege=privilege, grantor=owner)
 
                 except GroupCommunityPrivilege.DoesNotExist:
-                    print("Adding group '{}' (id={}) to community '{}' (id={})"
-                          .format(gname, str(group.id), cname, str(community.id)))
+                    print(("Adding group '{}' (id={}) to community '{}' (id={})"
+                          .format(gname, str(group.id), cname, str(community.id))))
 
                     # create the privilege record
                     GroupCommunityPrivilege.share(group=group, community=community,
@@ -298,12 +298,12 @@ class Command(BaseCommand):
 
             elif action == 'remove':
 
-                print("removing group '{}' (id={}) from community '{}' (id={})"
-                      .format(group.name, str(group.id), community.name, str(community.id)))
+                print(("removing group '{}' (id={}) from community '{}' (id={})"
+                      .format(group.name, str(group.id), community.name, str(community.id))))
                 GroupCommunityPrivilege.unshare(group=group, community=community, grantor=owner)
 
             else:
-                print("unknown group command '{}'.".format(action))
+                print(("unknown group command '{}'.".format(action)))
                 usage()
                 exit(1)
 
@@ -313,10 +313,10 @@ class Command(BaseCommand):
                 usage()
                 exit(1)
 
-            print("removing community '{}' (id={}).".format(community.name, community.id))
+            print(("removing community '{}' (id={}).".format(community.name, community.id)))
             community.delete()
 
         else:
-            print("unknown command '{}'.".format(command))
+            print(("unknown command '{}'.".format(command)))
             usage()
             exit(1)

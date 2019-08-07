@@ -23,7 +23,7 @@ from hs_core.signals import post_add_geofeature_aggregation
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, FieldInformation
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from .base import AbstractFileMetaData, AbstractLogicalFile
 
 UNKNOWN_STR = "unknown"
 
@@ -455,7 +455,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     # populate resource and logical file level metadata
     target_obj = logical_file if logical_file is not None else resource
 
-    if "coverage" in metadata_dict.keys():
+    if "coverage" in list(metadata_dict.keys()):
         coverage_dict = metadata_dict["coverage"]['Coverage']
         target_obj.metadata.coverages.all().filter(type='box').delete()
         target_obj.metadata.create_element('coverage',

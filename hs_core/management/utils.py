@@ -39,8 +39,8 @@ def check_relations(resource):
             try:
                 get_resource_by_shortkey(target, or_404=False)
             except BaseResource.DoesNotExist:
-                print("relation {} {} {} (this does not exist)"
-                      .format(resource.short_id, r.type, target))
+                print(("relation {} {} {} (this does not exist)"
+                      .format(resource.short_id, r.type, target)))
 
 
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
@@ -433,7 +433,7 @@ def __ingest_irods_directory(resource,
             ecount += ecount2
 
     except SessionException as se:
-        print("iRODs error: {}".format(se.stderr))
+        print(("iRODs error: {}".format(se.stderr)))
         logger.error("iRODs error: {}".format(se.stderr))
 
     return errors, ecount  # empty unless return_errors=True
@@ -483,12 +483,12 @@ class CheckJSONLD(object):
             for error in response_json.get("errors"):
                 if "includedInDataCatalog" not in error.get('args'):
                     errors = response_json.get("errors")
-                    print("Error found on resource {}: {}".format(self.short_id, errors))
+                    print(("Error found on resource {}: {}".format(self.short_id, errors)))
                     return
 
         if response_json.get("totalNumWarnings") > 0:
             warnings = response_json.get("warnings")
-            print("Warnings found on resource {}: {}".format(self.short_id, warnings))
+            print(("Warnings found on resource {}: {}".format(self.short_id, warnings)))
             return
 
 
@@ -510,7 +510,7 @@ def repair_resource(resource, logger, stop_on_error=False,
             ecount = ecount + 1
         return errors, ecount
 
-    print("REPAIRING RESOURCE {}".format(resource.short_id))
+    print(("REPAIRING RESOURCE {}".format(resource.short_id)))
 
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
@@ -526,9 +526,9 @@ def repair_resource(resource, logger, stop_on_error=False,
                                       log_errors=False,
                                       return_errors=False)
         if count:
-            print("... affected resource {} has type {}, title '{}'"
+            print(("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
-                          resource.title.encode('ascii', 'replace')))
+                          resource.title.encode('ascii', 'replace'))))
 
     _, count = check_irods_files(resource,
                                  stop_on_error=False,
@@ -539,9 +539,9 @@ def repair_resource(resource, logger, stop_on_error=False,
                                  clean_django=True,
                                  sync_ispublic=True)
     if count:
-        print("... affected resource {} has type {}, title '{}'"
+        print(("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
-                      resource.title.encode('ascii', 'replace')))
+                      resource.title.encode('ascii', 'replace'))))
 
 
 class CheckResource(object):
@@ -553,7 +553,7 @@ class CheckResource(object):
 
     def label(self):
         if not self.header:
-            print("resource {}:".format(self.resource.short_id))
+            print(("resource {}:".format(self.resource.short_id)))
             self.header = True
 
     def check_avu(self, label):
@@ -561,11 +561,11 @@ class CheckResource(object):
             value = self.resource.getAVU(label)
             if value is None:
                 self.label()
-                print("  AVU {} is None".format(label))
+                print(("  AVU {} is None".format(label)))
             return value
         except SessionException:
             self.label()
-            print("  AVU {} NOT FOUND.".format(label))
+            print(("  AVU {} NOT FOUND.".format(label)))
             return None
 
     def test(self):
@@ -576,7 +576,7 @@ class CheckResource(object):
         try:
             self.resource = get_resource_by_shortkey(self.short_id, or_404=False)
         except BaseResource.DoesNotExist:
-            print("{} does not exist in Django".format(self.short_id))
+            print(("{} does not exist in Django".format(self.short_id)))
             return
 
         # skip federated resources if not configured to handle these
@@ -589,25 +589,25 @@ class CheckResource(object):
 
         if not istorage.exists(self.resource.root_path):
             self.label()
-            print("  root path {} does not exist in iRODS".format(self.resource.root_path))
-            print("  ... resource {} has type {} and title {}"
+            print(("  root path {} does not exist in iRODS".format(self.resource.root_path)))
+            print(("  ... resource {} has type {} and title {}"
                   .format(self.resource.short_id,
                           self.resource.resource_type,
-                          self.resource.title.encode('ascii', 'replace')))
+                          self.resource.title.encode('ascii', 'replace'))))
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):
             value = self.check_avu(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
-                print("  AVU resourceType is {}, should be {}".format(value.encode('ascii',
+                print(("  AVU resourceType is {}, should be {}".format(value.encode('ascii',
                                                                                    'replace'),
-                                                                      self.resource.resource_type))
+                                                                      self.resource.resource_type)))
             if a == 'isPublic' and value is not None and value != self.resource.raccess.public:
                 self.label()
-                print("  AVU isPublic is {}, but public is {}".format(value.encode('ascii',
+                print(("  AVU isPublic is {}, but public is {}".format(value.encode('ascii',
                                                                                    'replace'),
-                                                                      self.resource.raccess.public))
+                                                                      self.resource.raccess.public)))
 
         irods_issues, irods_errors = check_irods_files(self.resource,
                                                        log_errors=False,
@@ -618,7 +618,7 @@ class CheckResource(object):
             self.label()
             print("  iRODS errors:")
             for e in irods_issues:
-                print("    {}".format(e))
+                print(("    {}".format(e)))
 
         if self.resource.resource_type == 'CompositeResource':
             logical_issues = []
@@ -647,4 +647,4 @@ class CheckResource(object):
                 self.label()
                 print("  Logical file errors:")
                 for e in logical_issues:
-                    print("    {}".format(e))
+                    print(("    {}".format(e)))

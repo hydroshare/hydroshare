@@ -175,7 +175,7 @@ def get_wgs84_coverage_info(raster_dataset):
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
-    if proj and (None not in original_coverage_info.values()):
+    if proj and (None not in list(original_coverage_info.values())):
 
         original_cs = osr.SpatialReference()
         # create wgs84 geographic coordinate system

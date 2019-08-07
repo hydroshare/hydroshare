@@ -36,16 +36,16 @@ class TestBagIt(TestCase):
 
     def test_create_bag(self):
         # the resource should have only one bags object
-        self.assertEquals(self.test_res.bags.count(), 1)
+        self.assertEqual(self.test_res.bags.count(), 1)
         old_bag = self.test_res.bags.all().first()
 
         # this is the api call we are testing
         new_bag = hs_bagit.create_bag(self.test_res)
 
         # resource should have one new bags object
-        self.assertEquals(self.test_res.bags.count(), 1)
-        self.assertEquals(new_bag, self.test_res.bags.all().first())
-        self.assertNotEquals(old_bag, new_bag)
+        self.assertEqual(self.test_res.bags.count(), 1)
+        self.assertEqual(new_bag, self.test_res.bags.all().first())
+        self.assertNotEqual(old_bag, new_bag)
 
     def test_create_bag_files(self):
         # this is the api call we are testing
@@ -61,8 +61,8 @@ class TestBagIt(TestCase):
 
     def test_delete_files_and_bag(self):
         # check we have one bag at this point
-        self.assertEquals(self.test_res.bags.count(), 1)
+        self.assertEqual(self.test_res.bags.count(), 1)
         # this is the api we are testing
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
-        self.assertEquals(self.test_res.bags.count(), 0)
+        self.assertEqual(self.test_res.bags.count(), 0)

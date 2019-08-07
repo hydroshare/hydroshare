@@ -80,11 +80,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         # Update keywords
         response = self.client.put(file_metadata_url, {
-            "keywords": [u"keyword1", u"keyword2"]
+            "keywords": ["keyword1", "keyword2"]
         }, format="json")
         response = self.client.get(file_metadata_url)
         json_response = json.loads(response.content)
-        self.assertEqual(json_response.get("keywords"), [u"keyword1", u"keyword2"])
+        self.assertEqual(json_response.get("keywords"), ["keyword1", "keyword2"])
 
         # Update keywords
         response = self.client.put(file_metadata_url, {
@@ -95,7 +95,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         }, format="json")
         response = self.client.get(file_metadata_url)
         json_response = json.loads(response.content)
-        self.assertEqual(json_response.get("extra_metadata"), {u'a': u'test', u'this': u'is'})
+        self.assertEqual(json_response.get("extra_metadata"), {'a': 'test', 'this': 'is'})
 
         # Update point spatial coverage
         response = self.client.put(file_metadata_url, {
@@ -110,11 +110,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(file_metadata_url)
         json_response = json.loads(response.content)
         self.assertEqual(json_response.get("spatial_coverage"), {
-            u'units': u'Decimal degrees',
-            u'east': -84.0465,
-            u'north': 49.6791,
-            u'name': u'12232',
-            u'projection': u'WGS 84 EPSG:4326'
+            'units': 'Decimal degrees',
+            'east': -84.0465,
+            'north': 49.6791,
+            'name': '12232',
+            'projection': 'WGS 84 EPSG:4326'
         })
 
         # Update temporal coverage
@@ -197,13 +197,13 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(file_metadata_url)
         json_response = json.loads(response.content)
         self.assertEqual(json_response.get("spatial_coverage"), {
-            u'units': u'Decimal degrees',
-            u'eastlimit': -97.92170777387547,
-            u'northlimit': 30.214583003567654,
-            u'southlimit': 30.127513332692264,
-            u'westlimit': -98.01556648306897,
-            u'name': u'12232',
-            u'projection': u'WGS 84 EPSG:4326'
+            'units': 'Decimal degrees',
+            'eastlimit': -97.92170777387547,
+            'northlimit': 30.214583003567654,
+            'southlimit': 30.127513332692264,
+            'westlimit': -98.01556648306897,
+            'name': '12232',
+            'projection': 'WGS 84 EPSG:4326'
         })
 
         # Update box spatial coverage
@@ -222,11 +222,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         response = self.client.get(file_metadata_url)
         json_response = json.loads(response.content)
         self.assertEqual(json_response.get("spatial_coverage"), {
-            u'units': u'Decimal degrees',
-            u'eastlimit': -97.921707773875,
-            u'northlimit': 30.2145830035676,
-            u'southlimit': 30.1275133326922,
-            u'westlimit': -98.015566483068,
-            u'name': u'12232',
-            u'projection': u'WGS 84 EPSG:4326'
+            'units': 'Decimal degrees',
+            'eastlimit': -97.921707773875,
+            'northlimit': 30.2145830035676,
+            'southlimit': 30.1275133326922,
+            'westlimit': -98.015566483068,
+            'name': '12232',
+            'projection': 'WGS 84 EPSG:4326'
         })

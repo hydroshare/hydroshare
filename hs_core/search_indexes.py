@@ -10,7 +10,6 @@ from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
-from string import maketrans
 import logging
 # # SOLR extension needs to be installed for this to work
 # from haystack.utils.geo import Point
@@ -19,7 +18,7 @@ import logging
 def remove_whitespace(thing):
     intab = ""
     outtab = ""
-    trantab = maketrans(intab, outtab)
+    trantab = str.maketrans(intab, outtab)
     return str(thing).translate(trantab, " \t\r\n")
 
 
@@ -285,7 +284,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return unicode(publisher).lstrip()
+                return str(publisher).lstrip()
             else:
                 return None
         else:
@@ -907,6 +906,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_extra(self, obj):
         """ For extra metadata, include both key and value """
         extra = []
-        for key, value in obj.extra_metadata.items():
+        for key, value in list(obj.extra_metadata.items()):
             extra.append(key + ': ' + value)
         return extra

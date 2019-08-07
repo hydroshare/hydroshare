@@ -15,24 +15,24 @@ def debug_resource(short_id):
     try:
         res = BaseResource.objects.get(short_id=short_id)
     except BaseResource.DoesNotExist:
-        print("{} does not exist".format(short_id))
+        print(("{} does not exist".format(short_id)))
 
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
     irods_issues, irods_errors = check_irods_files(resource, log_errors=False, return_errors=True)
 
-    print("resource: {}".format(short_id))
-    print("resource type: {}".format(resource.resource_type))
-    print("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name))
-    print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
-    print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
-    print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
-    print("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName'))))
+    print(("resource: {}".format(short_id)))
+    print(("resource type: {}".format(resource.resource_type)))
+    print(("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name)))
+    print(("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified')))))
+    print(("resource irods isPublic: {}".format(str(resource.getAVU('isPublic')))))
+    print(("resource irods resourceType: {}".format(str(resource.getAVU('resourceType')))))
+    print(("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName')))))
     if irods_errors:
         print("iRODS errors:")
         for e in irods_issues:
-            print("    {}".format(e))
+            print(("    {}".format(e)))
     else:
         print("No iRODS errors")
 
@@ -40,9 +40,9 @@ def debug_resource(short_id):
         print("Resource file logical files:")
         for res_file in resource.files.all():
             if res_file.has_logical_file:
-                print("    {} logical file {} is [{}]".format(res_file.short_path,
+                print(("    {} logical file {} is [{}]".format(res_file.short_path,
                                                               str(type(res_file.logical_file)),
-                                                              str(res_file.logical_file.id)))
+                                                              str(res_file.logical_file.id))))
 
     # context = {
     #     'shortkey': shortkey,

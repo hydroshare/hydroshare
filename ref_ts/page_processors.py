@@ -3,7 +3,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from models import RefTimeSeriesResource
+from .models import RefTimeSeriesResource
 
 @processor_for(RefTimeSeriesResource)
 def landing_page(request, page):

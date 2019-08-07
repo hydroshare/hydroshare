@@ -3,7 +3,8 @@ import shutil
 import json
 import logging
 from dateutil import parser
-from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import jsonschema
 from lxml import etree
 
@@ -19,7 +20,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from .base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class TimeSeries(object):
@@ -700,7 +701,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
-                header_info = unicode(header_info, 'utf-8')
+                header_info = str(header_info, 'utf-8')
 
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")

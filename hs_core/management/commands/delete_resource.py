@@ -25,6 +25,6 @@ class Command(BaseCommand):
                 try:
                     BaseResource.objects.get(short_id=rid)
                     delete_resource(rid)
-                    print("Resource with id {} DELETED from Django".format(rid))
+                    print(("Resource with id {} DELETED from Django".format(rid)))
                 except BaseResource.DoesNotExist:
-                    print("Resource with id {} NOT FOUND in Django".format(rid))
+                    print(("Resource with id {} NOT FOUND in Django".format(rid)))

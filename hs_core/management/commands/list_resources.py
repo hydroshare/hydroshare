@@ -23,7 +23,7 @@ def measure_resource(short_id):
     try:
         res = BaseResource.objects.get(short_id=short_id)
     except BaseResource.DoesNotExist:
-        print("{} does not exist".format(short_id))
+        print(("{} does not exist".format(short_id)))
 
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
@@ -37,13 +37,13 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
-                                         resource.resource_type, resource.title))
+        print(("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
+                                         resource.resource_type, resource.title)))
     else:
-        print("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
+        print(("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
                                                         resource.storage_type,
                                                         resource.resource_type,
-                                                        resource.title))
+                                                        resource.title)))
 
 
 class Command(BaseCommand):
@@ -98,7 +98,7 @@ class Command(BaseCommand):
             if storage.exists(resource.root_path):
                 measure_resource(resource.short_id)
             else:
-                print("{} does not exist in iRODS".format(resource.short_id))
+                print(("{} does not exist in iRODS".format(resource.short_id)))
 
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.

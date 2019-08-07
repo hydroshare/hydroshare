@@ -38,7 +38,7 @@ def capture_logout(sender, **kwargs):
 def capture_download(**kwargs):
 
     # exit early if the request is not passed in as a kwarg
-    if 'request' not in kwargs.keys():
+    if 'request' not in list(kwargs.keys()):
         return
 
     # exit early if not human (necessary b/c this action does not require log in)
@@ -72,7 +72,7 @@ def capture_download(**kwargs):
 def capture_resource_create(**kwargs):
 
     # exit early if the request is not passed in as a kwarg
-    if 'request' not in kwargs.keys():
+    if 'request' not in list(kwargs.keys()):
         return
 
     # get standard fields
@@ -96,7 +96,7 @@ def capture_resource_create(**kwargs):
 def capture_resource_delete(**kwargs):
 
     # exit early if the request object is not passed in as a kwarg
-    if 'request' not in kwargs.keys():
+    if 'request' not in list(kwargs.keys()):
         return
 
     # get standard fields

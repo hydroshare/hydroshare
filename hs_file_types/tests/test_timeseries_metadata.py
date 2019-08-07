@@ -16,7 +16,7 @@ from hs_file_types.models import TimeSeriesLogicalFile, TimeSeriesFileMetaData
 from hs_file_types.models.timeseries import CVVariableType, CVVariableName, CVSpeciation, \
     CVSiteType, CVElevationDatum, CVMethodType, CVMedium, CVUnitsType, CVStatus, \
     CVAggregationStatistic
-from utils import assert_time_series_file_type_metadata, CompositeResourceTestMixin
+from .utils import assert_time_series_file_type_metadata, CompositeResourceTestMixin
 
 
 class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,

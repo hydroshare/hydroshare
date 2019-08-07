@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import csv
-from cStringIO import StringIO
+from io import StringIO
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -11,7 +11,7 @@ from mock import patch, Mock
 from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
 from hs_tracking.views import AppLaunch
 import hs_tracking.utils as utils
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from pprint import pprint
 
 
@@ -65,7 +65,7 @@ class ViewTests(TestCase):
         request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
 
-        app_url = urllib.quote(request_url)
+        app_url = urllib.parse.quote(request_url)
         href = 'url=%s;name=%s' % (app_url, app_name)
         r.GET = QueryDict(href)
 
@@ -83,12 +83,12 @@ class ViewTests(TestCase):
         data = list(Variable.objects.filter(name='app_launch'))
         values = dict(tuple(pair.split('=')) for pair in data[0].value.split('|'))
 
-        self.assertTrue('res_type' in values.keys())
-        self.assertTrue('name' in values.keys())
-        self.assertTrue('user_email_domain' in values.keys())
-        self.assertTrue('user_type' in values.keys())
-        self.assertTrue('user_ip' in values.keys())
-        self.assertTrue('res_id' in values.keys())
+        self.assertTrue('res_type' in list(values.keys()))
+        self.assertTrue('name' in list(values.keys()))
+        self.assertTrue('user_email_domain' in list(values.keys()))
+        self.assertTrue('user_type' in list(values.keys()))
+        self.assertTrue('user_ip' in list(values.keys()))
+        self.assertTrue('res_id' in list(values.keys()))
 
         self.assertTrue(values['res_type'] == res_type)
         self.assertTrue(values['name'] == app_name)
@@ -151,7 +151,7 @@ class TrackingTests(TestCase):
     def test_get(self):
         v = Variable(name='foo', value='0', type=3)
         pprint(v)
-        print("value={}, type={}".format(v.value, v.type))
+        print(("value={}, type={}".format(v.value, v.type)))
         self.assertEqual(42, Variable(name='var', value='42', type=0).get_value())
         self.assertEqual(3.14, Variable(name='var', value='3.14', type=1).get_value())
         self.assertEqual("X", Variable(name='var', value='X', type=2).get_value())
@@ -264,11 +264,11 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(kvp.keys()),  3)
+        self.assertEqual(len(list(kvp.keys())),  3)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(len(kvp.keys()), 3)
+        self.assertEqual(len(list(kvp.keys())), 3)
 
         client.logout()
 
@@ -276,7 +276,7 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(len(kvp.keys()), 3)
+        self.assertEqual(len(list(kvp.keys())), 3)
 
     def test_activity_parsing(self):
 
@@ -288,7 +288,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(kvp.keys()),  3)
+        self.assertEqual(len(list(kvp.keys())),  3)
 
         client.logout()
 
@@ -318,7 +318,7 @@ class UtilsTests(TestCase):
     def test_std_log_fields(self):
 
         log_fields = utils.get_std_log_fields(self.request, self.session)
-        self.assertTrue(len(log_fields.keys()) == 3)
+        self.assertTrue(len(list(log_fields.keys())) == 3)
         self.assertTrue('user_ip' in log_fields)
         self.assertTrue('user_type' in log_fields)
         self.assertTrue('user_email_domain' in log_fields)

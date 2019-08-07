@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from hs_modelinstance.serializers import ModelInstanceMetaDataSerializer
-from models import ModelOutput, ExecutedBy, StudyArea, GridDimensions, \
+from .models import ModelOutput, ExecutedBy, StudyArea, GridDimensions, \
     StressPeriod, GroundWaterFlow, BoundaryCondition, ModelCalibration,\
     ModelInput, GeneralElements, SpecifiedHeadBoundaryPackageChoices, \
     SpecifiedFluxBoundaryPackageChoices, HeadDependentFluxBoundaryPackageChoices, \
