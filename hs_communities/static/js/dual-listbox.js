@@ -98,7 +98,7 @@ var TitleAssistantApp = new Vue({
             let isValid = false;
             let validYears = (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear));
             validYears = validYears && this.$data.startYear.length === 4 && this.$data.endYear.length === 4;
-            if (validYears && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
+            if (validYears && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
                 isValid = true
             }
             return isValid
