@@ -42,9 +42,17 @@ var TitleAssistantApp = new Vue({
         updateRegion: function () {
             this.updateTitle(items.join(','))
         },
+        updateEndDate: function () {
+            $("#end-date-ongoing").prop( "checked", false );
+            this.updateDate()
+        },
         updateDate: function () {
-            let validYear = false;
-            this.updateTitle()
+            if (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear)) {
+                this.$data.errmsg = "";
+                this.updateTitle()
+            } else {
+                this.$data.errmsg = "Year entry is not valid"
+            }
         },
         updateTitle: function () {  // Collect all the items and show in the readonly top live title display
             this.evalParenFields();
@@ -95,6 +103,15 @@ var TitleAssistantApp = new Vue({
         }
     }
 });
+
+function isValidYear(n) {
+    if (n.length === 0 || n === "Ongoing") {
+        return true
+    } else {
+        let validYear = (!isNaN(parseFloat(n)) && isFinite(n));
+        return validYear && n.length <= 4
+    }
+}
 
 // When a CZO User clicks on the Resource Title show the Title Assistant modal
 function titleClick() {

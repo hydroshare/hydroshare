@@ -239,8 +239,8 @@
                                 <input type="text" maxlength="4" class="title-builder-input" id="start-year"
                                        v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
                                 <input type="text" maxlength="7" class="title-builder-input" id="end-year"
-                                       v-model="endYear" v-on:keyup="updateDate()" placeholder="End Year"/>
-                                <input type="checkbox" name="end-date-ongoing" v-model="yearOngoing"
+                                       v-model="endYear" v-on:keyup="updateEndDate()" placeholder="End Year"/>
+                                <input type="checkbox" id="end-date-ongoing" name="end-date-ongoing" v-model="yearOngoing"
                                        true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
                             </div>
                         </div>
