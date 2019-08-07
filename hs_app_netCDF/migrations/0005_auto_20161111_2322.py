@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='originalcoverage',
             name='projection_string_type',
-            field=models.CharField(max_length=20, null=True, choices=[(b'', b'---------'), (b'WKT Projection', b'WKT Projection'), (b'Proj4 String', b'Proj4 String')]),
+            field=models.CharField(max_length=20, null=True, choices=[('', '---------'), ('WKT Projection', 'WKT Projection'), ('Proj4 String', 'Proj4 String')]),
         ),
     ]

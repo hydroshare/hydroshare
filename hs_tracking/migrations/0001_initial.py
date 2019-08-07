@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('name', models.CharField(max_length=32)),
-                ('type', models.IntegerField(choices=[(b'Integer', int), (b'Floating Point', float), (b'Text', str), (b'Flag', bool)])),
+                ('type', models.IntegerField(choices=[('Integer', int), ('Floating Point', float), ('Text', str), ('Flag', bool)])),
                 ('value', models.CharField(max_length=130)),
                 ('session', models.ForeignKey(to='hs_tracking.Session')),
             ],

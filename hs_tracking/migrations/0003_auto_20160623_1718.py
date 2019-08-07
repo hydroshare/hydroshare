@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='variable',
             name='type',
-            field=models.IntegerField(choices=[(0, b'Integer'), (1, b'Floating Point'), (2, b'Text'), (3, b'Flag'), (4, b'None')]),
+            field=models.IntegerField(choices=[(0, 'Integer'), (1, 'Floating Point'), (2, 'Text'), (3, 'Flag'), (4, 'None')]),
         ),
     ]

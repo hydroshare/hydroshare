@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='executedby',
             name='model_name',
-            field=models.CharField(default=None, max_length=500, choices=[(b'-', b'    ')]),
+            field=models.CharField(default=None, max_length=500, choices=[('-', '    ')]),
             preserve_default=True,
         ),
         migrations.AddField(

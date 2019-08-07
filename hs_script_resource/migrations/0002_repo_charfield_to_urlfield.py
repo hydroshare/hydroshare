@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='scriptspecificmetadata',
             name='scriptCodeRepository',
-            field=models.URLField(help_text=b'A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name=b'Script Repository', blank=True),
+            field=models.URLField(help_text='A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name='Script Repository', blank=True),
         ),
     ]

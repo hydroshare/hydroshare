@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='modelinput',
             name='watershedArea',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Watershed area in square kilometers', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Watershed area in square kilometers', blank=True),
             preserve_default=True,
         ),
     ]
