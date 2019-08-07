@@ -91,12 +91,14 @@ var TitleAssistantApp = new Vue({
                 $("#title-modal").modal('hide');
 
             } else {
-                this.$data.errmsg = "Error: must make a selection for all components"
+                this.$data.errmsg = "Error: must make a valid selection for all components"
             }
         },
         valid: function () {
             let isValid = false;
-            if (this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
+            let validYears = (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear));
+            validYears = validYears && this.$data.startYear.length === 4 && this.$data.endYear.length === 4;
+            if (validYears && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.subtopic && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
                 isValid = true
             }
             return isValid
