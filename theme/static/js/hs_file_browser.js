@@ -692,14 +692,14 @@ function bindFileBrowserItemEvents() {
             // toggle apps by file extension and aggregations
             let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
-                var agg_app = false;
+                let agg_app = false;
                 if ($(this).attr("data-agg-types")){
                     agg_app = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                 }
                 var extension_app = false;
                 if ($(this).attr("data-file-extensions")){
-                    var extensions = $(this).attr("data-file-extensions").split(",");
-                    for (var i = 0; i < extensions.length; ++i) {
+                    let extensions = $(this).attr("data-file-extensions").split(",");
+                    for (let i = 0; i < extensions.length; ++i) {
                         if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
                             extension_app = true;
                             break;
