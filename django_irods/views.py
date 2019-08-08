@@ -139,7 +139,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                             download_url = request.GET.get('url_download', 'false').lower()
                             if download_url == 'false':
                                 # redirect to referenced url in the url file instead
-                                redirect_url = f.logical_file.redirect_url
+                                try:
+                                    redirect_url = f.logical_file.redirect_url
+                                except AttributeError:
+                                    redirect_url = None
                                 if redirect_url:
                                     return HttpResponseRedirect(redirect_url)
                         if __debug__:

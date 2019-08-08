@@ -20,6 +20,8 @@ urlpatterns = [
         views.get_resource_metadata, name='get_metadata'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/update-key-value-metadata/$',
         views.update_key_value_metadata, name="update_key_value_metadata"),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/relevant-tools/$',
+        views.get_relevant_tools, name="get_relevant_tools"),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource-file/(?P<f>[0-9]+)/$',
         views.delete_file, name='delete_file'),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-multiple-files/$',

@@ -221,33 +221,6 @@
                         </span>
                     </li>
                 {%  endif %}
-                {% if relevant_tools %}
-                    <li role="separator" class="divider"></li>
-                    {% for tool in relevant_tools.tool_list %}
-                        {% if tool.openwithlist %}
-                            {% if tool.agg_types %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                            {% if tool.file_extensions %}
-                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
             </ul>
 
             {# POPUP MENU - Right clicking empty space in file browser #}
@@ -857,6 +830,7 @@
               },
           {% endfor %}
       ];
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% with cm.last_changed_by as usr %}
           const LAST_CHANGED_BY = {
@@ -904,8 +878,5 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 
-    {% if relevant_tools %}
-        <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
-    {% endif %}
 {% endblock %}
 
