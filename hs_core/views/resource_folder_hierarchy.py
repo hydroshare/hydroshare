@@ -76,6 +76,7 @@ def data_store_structure(request):
         d_pk = dname.decode('utf-8')
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
+        main_file = ''
         folder_aggregation_type = ''
         folder_aggregation_name = ''
         folder_aggregation_id = ''
@@ -90,6 +91,8 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
+                if not aggregation_object.is_fileset:
+                    main_file = aggregation_object.get_main_file.file_name
             else:
                 # find if FileSet aggregation type that can be created from this folder
                 if resource.can_set_folder_to_fileset(dir_path):
