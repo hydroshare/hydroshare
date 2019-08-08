@@ -512,7 +512,6 @@
                     },
                     // removes dupes from unselected list that exist in selected items
                     normalizeListValues: function () {
-                        console.log("normalizeListValues called")
                         if (!vm.selectedItems || vm.selectedItems.length == 0 ||
                             !vm.unselectedItems || vm.unselectedItems.length == 0)
                             return;

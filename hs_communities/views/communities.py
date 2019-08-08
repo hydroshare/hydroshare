@@ -100,10 +100,6 @@ class MyCommunitiesView(TemplateView):
 @method_decorator(login_required, name='dispatch')
 class TopicsView(TemplateView):
     """
-    TODO log failure and silently redirect to view if missing params
-
-    id:
-    name:
     action: CREATE, READ, UPDATE, DELETE
     """
 

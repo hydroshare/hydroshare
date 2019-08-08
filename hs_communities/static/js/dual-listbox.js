@@ -43,7 +43,7 @@ var TitleAssistantApp = new Vue({
             this.updateTitle(items.join(','))
         },
         updateEndDate: function () {
-            $("#end-date-ongoing").prop( "checked", false );
+            $("#end-date-ongoing").prop("checked", false);
             this.updateDate()
         },
         updateDate: function () {
@@ -63,22 +63,21 @@ var TitleAssistantApp = new Vue({
             let i = 0;
             items.forEach(function (item) {
                 if (item) {
-                    if (i + 2 !== items.length) {  // more customer formatting requirements
-                        titleBuilder = titleBuilder + String(item) + ' - '
-                    } else {
+                    if (String(item).includes("(") && !String(item).includes(")")) {  // more customer formatting requirements
                         titleBuilder = titleBuilder + String(item) + '-'
+                    } else {
+                        titleBuilder = titleBuilder + String(item) + ' -- '
                     }
                     i++
                 }
             });
-            if (titleBuilder.endsWith(' - ')) {
-                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 3);
+            if (titleBuilder.endsWith(' -- ')) {
+                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 2);
             }
             if (titleBuilder.endsWith('-')) {
                 titleBuilder = titleBuilder.substring(0, titleBuilder.length - 1);
             }
 
-            titleBuilder = titleBuilder.replace(" - (", " (");
             this.$data.title = titleBuilder.trim()
         },
         saveTitle: function () {
@@ -115,12 +114,57 @@ function isValidYear(n) {
     }
 }
 
-// When a CZO User clicks on the Resource Title show the Title Assistant modal
+// When a CZO User clicks on the Resource Title show the Title Assistant modal and prepopulate UI
 function titleClick() {
-    $("#title-modal").modal('show');
-    topics_from_page.forEach(function (item) {  //topics is made available in the Django template, by passing serialized JSON data
-        this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
-        this.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false});
-        this.$data.errmsg = ''
-    }.bind(TitleAssistantApp));
+    (function () {
+        /*
+        Optional text might be provided, affecting the Array index of what is stored
+        0: CZO selection
+        1: Topics
+        2: Optional text (or Location)
+        3: Location (or Dates if Optional text was provided in 2)
+        4: Dates (if Optional text was provided in 2)
+        */
+        let sections = $("#txt-title").val().split(" -- ");
+        let topics;
+        let yearsSection;
+
+        if (!this.$data.title) {  // don't repopulate modal if user never browsed away; UI will already contain previous selections
+            if (sections.length === 5) { // title contains optional subtopic
+                this.$data.regionSelected = sections[0];
+                topics = sections[1].split(",");
+                this.$data.subtopic = sections[2];
+                this.$data.location = sections[3];
+                yearsSection = sections[4]
+            }
+
+            if (sections.length === 4) {
+                this.$data.regionSelected = sections[0];
+                topics = sections[1].split(",");
+                this.$data.location = sections[2];
+                yearsSection = sections[3];
+            }
+
+            if (sections.length === 4 || sections.length === 5) {  // only 4 or 5 sections accepted; no other quantity is valid
+                topics.forEach(function (topic) {
+                    this.$data.topics.selectedItems.push({value: topic.trim(), displayValue: topic.trim(), isSelected: false});
+                }.bind(this));
+
+                // console.log(this.$data.topics.selectedItems)
+                yearsSection = yearsSection.substring(1, yearsSection.length - 1).split("-");
+                this.$data.startYear = yearsSection[0];
+                this.$data.endYear = yearsSection[1];
+                this.itemMoved();
+            }
+        }
+        // this.$data.topics.unselectedItems = this.$data.topics.itemsList.filter(n => !this.$data.topics.selectedItems.includes(n));
+        this.$data.subtopic = 'clear';
+        this.$data.subtopic = '';
+        $("#title-modal").modal('show');
+    }.bind(TitleAssistantApp)());
 }
+
+topics_from_page.forEach(function (item) {  // topics is made available in the Django template, by passing serialized JSON data
+    // this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
+    TitleAssistantApp.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false});
+});
