@@ -743,15 +743,16 @@ function bindFileBrowserItemEvents() {
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
 
             // toggle apps by file extension and aggregations
+            let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
-                var agg_app = false;
-                if ($(this).attr("agg-types")){
-                    agg_app = $.inArray(fileAggType, $(this).attr("agg-types").split(",")) !== -1;
+                let agg_app = false;
+                if ($(this).attr("data-agg-types")){
+                    agg_app = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                 }
                 var extension_app = false;
-                if ($(this).attr("file-extensions")){
-                    var extensions = $(this).attr("file-extensions").split(",");
-                    for (var i = 0; i < extensions.length; ++i) {
+                if ($(this).attr("data-file-extensions")){
+                    let extensions = $(this).attr("data-file-extensions").split(",");
+                    for (let i = 0; i < extensions.length; ++i) {
                         if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
                             extension_app = true;
                             break;
@@ -759,7 +760,9 @@ function bindFileBrowserItemEvents() {
                     }
                 }
                 $(this).toggle(agg_app || extension_app);
+                hasTools = hasTools || agg_app || extension_app;
             });
+            $("#tools-separator").toggleClass("hidden", !hasTools);
         }
         else {
             menu = $("#right-click-container-menu");    // empty space was clicked
@@ -2032,28 +2035,6 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
-    });
-
-    // Open with method
-    $(".btn-open-with").click(function () {
-        var file = $("#fb-files-container li.ui-selected");
-        // get the path under the contents directory
-        var path = file.attr("data-url").split(new RegExp("resource/[a-z0-9]*/data/contents/"))[1];
-        var fullURL;
-        if ($(this).attr("url_aggregation")) {
-            fullURL = $(this).attr("url_aggregation").replace("HS_JS_AGG_KEY", path);
-            if (file.children('span.fb-file-type').text() === 'File Folder') {
-                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
-            }
-            else {
-                fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
-            }
-        }
-        else {
-            // not an aggregation
-            fullURL = $(this).attr("url_file").replace("HS_JS_FILE_KEY", path);
-        }
-        window.open(fullURL);
     });
 
     // set generic file type method
