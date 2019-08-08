@@ -65,10 +65,6 @@ let relevantToolsApp = new Vue({
                 for (let i = 0; i < vue.tools.length; i++) {
                     let tool = vue.tools[i];
 
-                    if (!tool.openwithlist || !tool.url) {
-                        continue;   // Ignore tools not listed in OpenWith menu
-                    }
-
                     if (tool['agg_types']) {
                         let aggregationUrl = vue.getAggregationAppUrl(tool);
                         if (aggregationUrl) {
@@ -116,6 +112,7 @@ let relevantToolsApp = new Vue({
                     if ($(this).attr("data-url-aggregation")) {
                         fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
                         if (file.children('span.fb-file-type').text() === 'File Folder') {
+                            // TODO: populate main-file value in aggregation object of structure response
                             fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
                         }
                         else {

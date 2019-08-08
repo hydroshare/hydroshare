@@ -735,11 +735,13 @@ function bindFileBrowserItemEvents() {
             menu = $("#right-click-menu");
 
             var fileAggType = [];
+            let target = $(event.target).closest("li");
+
             // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
-            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("is-single-file-aggregation") === "true"){
-                fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            if (isVirtualFolder(target) || target.attr("main-file") || target.attr("is-single-file-aggregation") === "true"){
+                fileAggType = target.find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
-            var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
+            var fileName = target.find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
 
             // toggle apps by file extension and aggregations
