@@ -2352,7 +2352,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         readme_file = self.readme_file
         if readme_file is not None:
-            readme_file_content = readme_file.read().decode('utf-8', 'ignore')
+            readme_file_content = readme_file.read()
             if readme_file.extension.lower() == '.md':
                 markdown_file_content = markdown(readme_file_content)
                 return {'content': markdown_file_content,
@@ -4130,7 +4130,8 @@ class CoreMetaData(models.Model):
                                              '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return self.XML_HEADER + '\n' + \
+               etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py

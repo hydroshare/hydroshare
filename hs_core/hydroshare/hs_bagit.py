@@ -84,7 +84,7 @@ def create_bag_files(resource):
     from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         # write resource level metadata
-        out.write(resource.get_metadata_xml())
+        out.write(resource.get_metadata_xml().decode())
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 

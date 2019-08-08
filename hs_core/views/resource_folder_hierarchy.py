@@ -69,7 +69,7 @@ def data_store_structure(request):
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
-        d_pk = dname.decode('utf-8')
+        d_pk = dname
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
         main_file = ''
@@ -108,7 +108,6 @@ def data_store_structure(request):
 
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
-        fname = fname.decode('utf-8')
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
         size = store[2][index]

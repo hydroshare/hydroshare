@@ -181,7 +181,7 @@ class Session(object):
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)
         else:
-            return stdout, stderr
+            return stdout.decode(), stderr.decode()
 
     def run_safe(self, icommand, data=None, *args):
         myenv = os.environ.copy()
