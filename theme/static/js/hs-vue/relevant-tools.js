@@ -112,8 +112,8 @@ let relevantToolsApp = new Vue({
                     if ($(this).attr("data-url-aggregation")) {
                         fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
                         if (file.children('span.fb-file-type').text() === 'File Folder') {
-                            // TODO: populate main-file value in aggregation object of structure response
-                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("main-file"));
+                            // TODO: populate main_file value in aggregation object of structure response
+                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("data-main-file"));
                         }
                         else {
                             fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
