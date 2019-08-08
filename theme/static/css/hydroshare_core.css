@@ -1108,8 +1108,9 @@ table.info-table {
     display: none;
 }
 
-#resourceSpecificTab{
-    overflow-x:hidden;
+#resourceSpecificTab {
+	overflow-x: hidden;
+	word-break: break-word;
 }
 
 #variables .custom-well {
