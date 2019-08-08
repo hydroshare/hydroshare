@@ -1,4 +1,4 @@
-FROM python3-dockerbase
+FROM hydroshare/hs_docker_base:python-3-wip
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 # inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
