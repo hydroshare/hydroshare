@@ -145,6 +145,7 @@ def data_store_structure(request):
                                      'logical_type': f.logical_file.get_aggregation_class_name(),
                                      'aggregation_name':
                                          f.logical_file.get_aggregation_display_name(),
+                                     'main_file': f.logical_file.get_main_file.file_name,
                                      'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
             logical_file_id = f.logical_file.id
