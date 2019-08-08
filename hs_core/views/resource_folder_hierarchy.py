@@ -101,6 +101,7 @@ def data_store_structure(request):
                     folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
                      'url': d_url,
+                     'main_file': main_file,
                      'folder_aggregation_type': folder_aggregation_type,
                      'folder_aggregation_name': folder_aggregation_name,
                      'folder_aggregation_id': folder_aggregation_id,
