@@ -88,17 +88,23 @@ var TitleAssistantApp = new Vue({
                 $("#txt-title").trigger("change");
                 $("#title-save-button").trigger("click");
                 $("#title-modal").modal('hide');
-
-            } else {
-                this.$data.errmsg = "Error: must make a valid selection for all components"
             }
         },
         valid: function () {
             let isValid = false;
             let validYears = (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear));
-            validYears = validYears && this.$data.startYear.length === 4 && this.$data.endYear.length === 4;
+            validYears = validYears && this.$data.startYear.length === 4;
             if (validYears && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
                 isValid = true
+            }
+
+            if (!isValid) {
+                this.$data.errmsg = "Must make a valid selection for all components"
+            }
+
+            if (this.subtopic.includes("--") || this.location.includes("--")) {
+                this.$data.errmsg = "Entries may not contain a double hyphen";
+                isValid = false;
             }
             return isValid
         }
@@ -119,6 +125,7 @@ function titleClick() {
     (function () {
         /*
         Optional text might be provided, affecting the Array index of what is stored
+
         0: CZO selection
         1: Topics
         2: Optional text (or Location)
@@ -136,9 +143,7 @@ function titleClick() {
                 this.$data.subtopic = sections[2];
                 this.$data.location = sections[3];
                 yearsSection = sections[4]
-            }
-
-            if (sections.length === 4) {
+            } else if (sections.length === 4) {
                 this.$data.regionSelected = sections[0];
                 topics = sections[1].split(",");
                 this.$data.location = sections[2];
@@ -154,12 +159,16 @@ function titleClick() {
                 yearsSection = yearsSection.substring(1, yearsSection.length - 1).split("-");
                 this.$data.startYear = yearsSection[0];
                 this.$data.endYear = yearsSection[1];
+                if (this.$data.endYear === "Ongoing") {
+                    $("#end-date-ongoing").prop("checked", true)
+                }
                 this.itemMoved();
             }
         }
-        // this.$data.topics.unselectedItems = this.$data.topics.itemsList.filter(n => !this.$data.topics.selectedItems.includes(n));
-        this.$data.subtopic = 'clear';
-        this.$data.subtopic = '';
+        if (!this.subtopic) {
+            this.$data.subtopic = 'clear';
+            this.$data.subtopic = '';
+        }
         $("#title-modal").modal('show');
     }.bind(TitleAssistantApp)());
 }
