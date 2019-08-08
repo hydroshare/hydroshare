@@ -27,8 +27,8 @@ class ODM2Variable(models.Model):
     @classmethod
     def sync(cls, uri='http://vocabulary.odm2.org/api/v1/variablename/?format:json'):
         response = urllib2.urlopen(uri)
-        str = response.read()
-        data = json.loads(str)
+        read_response = response.read()
+        data = json.loads(read_response)
         print(data.keys())
         for d in data['objects']:
             print("id='{}' name='{}'".format(d['vocabulary_id'], d['name']))
@@ -63,4 +63,8 @@ class ODM2Variable(models.Model):
     @classmethod
     def all(cls):
         term_names = ODM2Variable.objects.all().values_list('name').order_by('name')
-        return [str(t[0]) for t in term_names]
+        try:
+            formatted_terms = [str(t[0].replace(",", " -")) for t in term_names if not t[0][0].isdigit()]
+            return formatted_terms
+        except:
+            pass

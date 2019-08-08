@@ -155,7 +155,6 @@ function titleClick() {
                     this.$data.topics.selectedItems.push({value: topic.trim(), displayValue: topic.trim(), isSelected: false});
                 }.bind(this));
 
-                // console.log(this.$data.topics.selectedItems)
                 yearsSection = yearsSection.substring(1, yearsSection.length - 1).split("-");
                 this.$data.startYear = yearsSection[0];
                 this.$data.endYear = yearsSection[1];
@@ -174,6 +173,5 @@ function titleClick() {
 }
 
 topics_from_page.forEach(function (item) {  // topics is made available in the Django template, by passing serialized JSON data
-    // this.$data.topics.unselectedItems.push({value: item, displayValue: item, isSelected: false});
     TitleAssistantApp.$data.topics.itemsList.push({value: item, displayValue: item, isSelected: false});
 });

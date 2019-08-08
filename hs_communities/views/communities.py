@@ -110,7 +110,7 @@ class TopicsView(TemplateView):
         if request.POST.get('action') == 'CREATE':
             try:
                 new_topic = Topic()
-                new_topic.name = request.POST.get('name')
+                new_topic.name = request.POST.get('name').replace("--", "")
                 new_topic.save()
             except Exception as e:
                 print("TopicsView error creating new topic {}".format(e))
