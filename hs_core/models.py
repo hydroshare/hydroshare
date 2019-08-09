@@ -346,13 +346,9 @@ class AbstractMetaDataElement(models.Model):
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    def __unicode__(self):
-        """Implement in derived classes for templates"""
-        pass
-
     def __str__(self):
         """Return unicode for python 3 compatibility in templates"""
-        return self.__unicode__
+        return self.__unicode__()
 
     @property
     def metadata(self):
