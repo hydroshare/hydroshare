@@ -746,7 +746,7 @@
                                         </div>
                                         <div class="activity-block row">
                                             <div class="activity-info col-sm-12">
-                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title.value }}</a></span>
+                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                                 <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
                                                 <h5><span class="text-muted">Authors: </span>
                                                     {% for creator in res.metadata.creators.all %}
