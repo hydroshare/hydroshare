@@ -13,7 +13,7 @@
                         to see it if the owner has shared it with you, or to request access.</strong>
                 {% endif %}
                 {% with res=request.path|res_uuid_from_res_path|resource_from_uuid %}
-                    <h2 class="page-title">{{ res.metadata.title }}</h2>
+                    <h2 class="page-title">{{ res.metadata.title.value }}</h2>
                     <table class="info-table">
                         <tr>
                             <th>Owners:</th>
