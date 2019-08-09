@@ -45,10 +45,10 @@
                                 </td>
                                 <td>
                                     {% if res|user_permission:request.user.pk|lower == "none" %}
-                                        <strong>{{ res.metadata.title.value }}</strong>
+                                        <strong>{{ res.metadata.title }}</strong>
                                     {% else %}
                                         <strong><a href="{{ res.get_absolute_url }}"
-                                                   target="_blank">{{ res.metadata.title.value }}</a></strong>
+                                                   target="_blank">{{ res.metadata.title }}</a></strong>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -195,7 +195,7 @@
                                         <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
                                     </td>
                                     <td>
-                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title.value }}</a></strong></td>
+                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
                                     <td>
                                         {{ res.resource_type }}
                                     </td>

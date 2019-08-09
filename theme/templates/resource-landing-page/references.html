@@ -211,10 +211,10 @@ Click this button to add a relationship to another resource, external website, o
                 <tr id="{{ res.short_id }}">
                     <td>
                         {% if res|user_permission:request.user.pk|lower == "none" %}
-                            <strong>{{ res.metadata.title.value }}</strong>
+                            <strong>{{ res.metadata.title }}</strong>
                         {% else %}
                             <strong><a href="{{ res.get_absolute_url }}"
-                                       target="_blank">{{ res.metadata.title.value }}</a></strong>
+                                       target="_blank">{{ res.metadata.title }}</a></strong>
                         {% endif %}
                     </td>
                     <td>
