@@ -927,6 +927,107 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_rename_aggregation_4(self):
+        """Testing that when we rename a folder (normal folder) that contains nested fileset
+        aggregations, the folder path of each of the fileset aggregations gets updated accordingly
+        """
+
+        self.create_composite_resource()
+        root_folder = 'normal_folder'
+        parent_fs_folder = '{}/parent_fileset_folder'.format(root_folder)
+        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=parent_fs_folder)
+        # There should be one fileset aggregation associated with one resource file
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+
+        # create a folder inside fileset folder - parent_fs_folder
+        child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
+        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # set child folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=child_fs_folder)
+
+        # There should be 2 fileset aggregations
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=child_fs_folder).count(), 1)
+
+        # rename the root_folder
+        new_root_folder = root_folder + '_1'
+        src_path = 'data/contents/{}'.format(root_folder)
+        tgt_path = 'data/contents/{}'.format(new_root_folder)
+
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        # new expected folder path of the parent fileset aggregation
+        new_parent_fs_folder = '{}/parent_fileset_folder'.format(new_root_folder)
+        # new expected folder path of the child fileset aggregation
+        new_child_fs_folder = '{}/child_fileset_folder'.format(new_parent_fs_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_parent_fs_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
+
+        self.composite_resource.delete()
+
+    def test_move_fileset_into_another_fileset(self):
+        """Testing that we can move a fileset folder to another fileset folder
+        """
+
+        self.create_composite_resource()
+        fs_1_folder = 'fs_1_folder'
+        ResourceFile.create_folder(self.composite_resource, fs_1_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fs_1_folder)
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=fs_1_folder)
+        # There should be one fileset aggregation associated with one resource file
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+
+        # create a another folder for the 2nd fileset aggregation
+        fs_2_folder = 'fs_2_folder'
+        ResourceFile.create_folder(self.composite_resource, fs_2_folder)
+        # add the the json file to the resource at the above sub folder
+        self.add_file_to_resource(file_to_add=self.json_file, upload_folder=fs_2_folder)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        # set 2nd folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=fs_2_folder)
+
+        # There should be 2 fileset aggregations now
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=fs_1_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=fs_2_folder).count(), 1)
+
+        # move the 2nd fileset folder inside the 1st fileset folder
+        src_path = 'data/contents/{}'.format(fs_2_folder)
+        tgt_path = 'data/contents/{}/{}'.format(fs_1_folder, fs_2_folder)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
+
+        # new expected folder path of the 2nd fileset aggregation
+        new_fs2_folder = '{}/{}'.format(fs_1_folder, fs_2_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=fs_1_folder).count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_fs2_folder).count(), 1)
+
+        self.composite_resource.delete()
+
     def test_remove_aggregation(self):
         """Test that we can remove fileset aggregation that lives at the root"""
 

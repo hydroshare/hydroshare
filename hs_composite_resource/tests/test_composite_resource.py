@@ -1346,7 +1346,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_supports_zip_multi_file_aggregation_folder(self):
         """Here we are testing the function supports_zip()
-        Test that zipping a folder that represents a multi-file aggregation
+        Test that zipping a folder that contains a multi-file aggregation
         (e.g., raster aggregation) is not allowed
         """
 
