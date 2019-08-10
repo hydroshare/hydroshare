@@ -620,8 +620,8 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 def delete_author(request, shortkey, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     try:
-        res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         res.metadata.delete_element('creator', element_id)
         resource_modified(res, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
