@@ -548,7 +548,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                 ]
             self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
 
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()

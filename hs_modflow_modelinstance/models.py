@@ -953,7 +953,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                                                       self.NAMESPACES['hsterms'])
                 subsidence_package.text = self.general_elements.subsidencePackage
 
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(MODFLOWModelInstanceMetaData, self).delete_all_elements()
