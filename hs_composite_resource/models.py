@@ -114,30 +114,13 @@ class CompositeResource(BaseResource):
             # target folder is already an aggregation
             return False
 
-        istorage = self.get_irods_storage()
         irods_path = dir_path
         if self.is_federated:
             irods_path = os.path.join(self.resource_federation_path, irods_path)
-        store = istorage.listdir(irods_path)
-        files_in_folder = ResourceFile.list_folder(self, folder=irods_path, sub_folders=False)
 
-        if not files_in_folder:
-            # folder is empty
-            # check sub folders for files - if file exist we can set FileSet aggregation
-            files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
-                                                            sub_folders=True)
-            if files_in_sub_folders:
-                return True
-
-            return False
-        if store[0]:
-            # there are folders under dir_path as well as files - FileSet can bet set
-            return True
-
-        if len(files_in_folder) > 0:
-            return True
-        else:
-            return False
+        files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+        # if there are any files in the dir_path, we can set the folder to fileset aggregation
+        return len(files_in_path) > 0
 
     @property
     def supports_folders(self):
@@ -462,7 +445,8 @@ class CompositeResource(BaseResource):
                     src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
                     aggregation = src_res_file.logical_file
                     if aggregation is None:
-                        raise ObjectDoesNotExist
+                        raise ObjectDoesNotExist("No aggregation found at {}".format(
+                            aggregation_path))
                     if is_renaming_file:
                         return aggregation.supports_resource_file_rename
                     else:
