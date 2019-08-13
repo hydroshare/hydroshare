@@ -591,7 +591,7 @@ def save_ts_to_files(res, tempdir, ts):
 
         root_wml_1 = etree.fromstring(ts['wml_str'])
         with open(xml_1011_full_path, 'w') as xml_1_file:
-            xml_1_file.write(etree.tostring(root_wml_1, pretty_print=True))
+            xml_1_file.write(etree.tostring(root_wml_1, encoding='UTF-8', pretty_print=True))
         res_file_info_array.append({"fname": xml_1011_name, "fullpath": xml_1011_full_path})
 
         try:
