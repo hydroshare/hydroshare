@@ -305,8 +305,6 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     ft_ctx.logical_file = logical_file
                     ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
-                    msg = "GeoFeature aggregation type. Error when creating aggregation " \
-                          "type. Error:{}"
                     msg = msg.format(ex.message)
                     log.exception(msg)
 
