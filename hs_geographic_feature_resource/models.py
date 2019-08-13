@@ -345,4 +345,4 @@ class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='unicode', pretty_print=pretty_print)
