@@ -8,6 +8,7 @@ from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource
 
 
 from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
@@ -336,8 +337,8 @@ class CompositeResource(BaseResource):
             # remove file extension from aggregation name (note: aggregation name is a file path
             # for all aggregation types except fileset
             xml_file_name, _ = os.path.splitext(orig_path)
-            meta_xml_file_name = xml_file_name + "_meta.xml"
-            map_xml_file_name = xml_file_name + "_resmap.xml"
+            meta_xml_file_name = xml_file_name + METADATA_FILE_ENDSWITH
+            map_xml_file_name = xml_file_name + RESMAP_FILE_ENDSWITH
             if not folder:
                 # case of file rename/move for single file aggregation
                 meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
@@ -378,7 +379,8 @@ class CompositeResource(BaseResource):
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith('_meta.xml') or file_path.endswith('_resmap.xml')):
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH) or
+                file_path.endswith(RESMAP_FILE_ENDSWITH)):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \

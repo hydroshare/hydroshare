@@ -29,6 +29,9 @@ from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, Core
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 
+RESMAP_FILE_ENDSWITH = "_resmap.xml"
+METADATA_FILE_ENDSWITH = "_meta.xml"
+
 
 class AbstractFileMetaData(models.Model):
     """ base class for HydroShare file type metadata """
@@ -1394,9 +1397,9 @@ class AbstractLogicalFile(models.Model):
         xml_file_name, _ = os.path.splitext(xml_file_name)
 
         if resmap:
-            xml_file_name += "_resmap.xml"
+            xml_file_name += RESMAP_FILE_ENDSWITH
         else:
-            xml_file_name += "_meta.xml"
+            xml_file_name += METADATA_FILE_ENDSWITH
 
         if self.is_fileset:
             file_folder = self.folder

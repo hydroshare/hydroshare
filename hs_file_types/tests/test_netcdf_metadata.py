@@ -13,6 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 
@@ -623,10 +624,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{}_meta.xml'.format(nc_file_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(nc_file_path)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
@@ -646,10 +647,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{}_meta.xml'.format(nc_file_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(nc_file_path)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -681,10 +682,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{}_meta.xml'.format(nc_file_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(nc_file_path)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -720,9 +721,9 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths after folder rename
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{}_meta.xml'.format(nc_file_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
-        expected_map_file_path = '{}_resmap.xml'.format(nc_file_path)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -769,10 +770,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{}_meta.xml'.format(nc_file_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(nc_file_path)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()

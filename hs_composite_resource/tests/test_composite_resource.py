@@ -16,6 +16,7 @@ from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
     GeoFeatureLogicalFile
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
@@ -1778,8 +1779,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.count(), 3)
         # there should not be any resource files ending with _meta.xml or _resmap.xml
         for res_file in self.composite_resource.files.all():
-            self.assertFalse(res_file.file_name.endswith('_mata.xml'))
-            self.assertFalse(res_file.file_name.endswith('_resmap.xml'))
+            self.assertFalse(res_file.file_name.endswith(METADATA_FILE_ENDSWITH))
+            self.assertFalse(res_file.file_name.endswith(RESMAP_FILE_ENDSWITH))
 
     def test_unzip_rename(self):
         """Test that when a zip file gets unzipped at data/contents/ and the unzipped folder may be

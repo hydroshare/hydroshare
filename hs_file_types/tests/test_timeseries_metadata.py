@@ -13,6 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 from hs_app_timeseries.models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 from hs_file_types.models import TimeSeriesLogicalFile, TimeSeriesFileMetaData
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.models.timeseries import CVVariableType, CVVariableName, CVSpeciation, \
     CVSiteType, CVElevationDatum, CVMethodType, CVMedium, CVUnitsType, CVStatus, \
     CVAggregationStatistic
@@ -750,10 +751,12 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(new_folder, base_sqlite_file_name)
+        expected_meta_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                   METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(new_folder, base_sqlite_file_name)
+        expected_map_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                  RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
@@ -772,10 +775,12 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}_1/{}_meta.xml'.format(new_folder, base_sqlite_file_name)
+        expected_meta_file_path = '{}_1/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                     METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_1/{}_resmap.xml'.format(new_folder,  base_sqlite_file_name)
+        expected_map_file_path = '{}_1/{}{}'.format(new_folder,  base_sqlite_file_name,
+                                                    RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -808,12 +813,12 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(aggregation_folder_name,
-                                                          base_sqlite_file_name)
+        expected_meta_file_path = '{}/{}{}'.format(aggregation_folder_name,
+                                                   base_sqlite_file_name, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(aggregation_folder_name,
-                                                           base_sqlite_file_name)
+        expected_map_file_path = '{}/{}{}'.format(aggregation_folder_name,
+                                                  base_sqlite_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -849,14 +854,16 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths after folder rename
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder_rename,
-                                                                aggregation_folder_name,
-                                                                base_sqlite_file_name)
+        expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
+                                                          aggregation_folder_name,
+                                                          base_sqlite_file_name,
+                                                          METADATA_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder_rename,
-                                                                 aggregation_folder_name,
-                                                                 base_sqlite_file_name)
+        expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
+                                                         aggregation_folder_name,
+                                                         base_sqlite_file_name,
+                                                         RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
@@ -905,14 +912,16 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder,
-                                                                aggregation_folder_name,
-                                                                base_sqlite_file_name)
+        expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
+                                                          aggregation_folder_name,
+                                                          base_sqlite_file_name,
+                                                          METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder,
-                                                                 aggregation_folder_name,
-                                                                 base_sqlite_file_name)
+        expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
+                                                         aggregation_folder_name,
+                                                         base_sqlite_file_name,
+                                                         RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 

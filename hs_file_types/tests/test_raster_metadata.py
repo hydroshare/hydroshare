@@ -13,6 +13,7 @@ from hs_core.models import Coverage, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
 
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from utils import assert_raster_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
@@ -848,10 +849,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         aggregation_name = logical_file.aggregation_name
         # test aggregation xml file paths
         vrt_file_path = get_path_with_no_file_extension(aggregation_name)
-        expected_meta_file_path = '{}_meta.xml'.format(vrt_file_path)
+        expected_meta_file_path = '{0}{1}'.format(vrt_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(vrt_file_path)
+        expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
@@ -871,10 +872,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         vrt_file_path = get_path_with_no_file_extension(aggregation_name)
-        expected_meta_file_path = '{}_meta.xml'.format(vrt_file_path)
+        expected_meta_file_path = '{0}{1}'.format(vrt_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(vrt_file_path)
+        expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -906,10 +907,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths
         # test aggregation xml file paths
         vrt_file_path = get_path_with_no_file_extension(aggregation_name)
-        expected_meta_file_path = '{}_meta.xml'.format(vrt_file_path)
+        expected_meta_file_path = '{0}{1}'.format(vrt_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_resmap.xml'.format(vrt_file_path)
+        expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -944,10 +945,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         aggregation_name = logical_file.aggregation_name
         # test aggregation xml file paths after folder rename
         vrt_file_path = get_path_with_no_file_extension(aggregation_name)
-        expected_meta_file_path = '{}_meta.xml'.format(vrt_file_path)
+        expected_meta_file_path = '{0}{1}'.format(vrt_file_path, METADATA_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
-        expected_map_file_path = '{}_resmap.xml'.format(vrt_file_path)
+        expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
