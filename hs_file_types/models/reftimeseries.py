@@ -701,7 +701,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
-                header_info = str(header_info, 'utf-8')
+                header_info = header_info.encode('utf-8')
 
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")
