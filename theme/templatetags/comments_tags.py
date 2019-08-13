@@ -79,13 +79,12 @@ def comment_filter(comment_text):
     """
     Passed comment text to be rendered through the function defined
     by the ``COMMENT_FILTER`` setting. If no function is defined
-    (the default), Django's ``linebreaksbr`` and ``urlize`` filters
-    are used.
+    (the default), Django's ``linebreaksbr`` filter is used.
     """
     filter_func = settings.COMMENT_FILTER
     if not filter_func:
         def filter_func(s):
-            return linebreaksbr(urlize(s, autoescape=True), autoescape=True)
+            return linebreaksbr(s, autoescape=True)
     elif not callable(filter_func):
         filter_func = import_dotted_path(filter_func)
     return filter_func(comment_text)

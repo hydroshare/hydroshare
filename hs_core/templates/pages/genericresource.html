@@ -216,33 +216,6 @@
                         </span>
                     </li>
                 {%  endif %}
-                {% if relevant_tools %}
-                    <li role="separator" class="divider"></li>
-                    {% for tool in relevant_tools.tool_list %}
-                        {% if tool.openwithlist %}
-                            {% if tool.agg_types %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                            {% if tool.file_extensions %}
-                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}};tool_res_id={{tool.res_id}};res_id={{ cm.short_id }}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
             </ul>
 
             {# POPUP MENU - Right clicking empty space in file browser #}
@@ -278,13 +251,6 @@
                     <span class="fa fa-th-large icon-blue"></span>
                     <span>Select all</span>
                 </li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                    <li role="separator" class="divider"></li>
-                    <li data-menu-name="paste">
-                        <span class="fa fa-clipboard icon-blue"></span>
-                        <span>Paste</span>
-                    </li>
-                {% endif %}
             </ul>
 
             <div class="col-xs-12 content-block">
@@ -482,7 +448,7 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button"
+                                                <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
                                                 </a>
@@ -506,6 +472,7 @@
                                                         </li>
 
                                                         <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                            data-fb-action="uploadFiles"
                                                             data-toggle="modal" data-target="#irodsContent">
                                                             <a>
                                                                 <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
@@ -659,7 +626,7 @@
                                             <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                                             <small class="uploading-message">
                                                 <strong>Uploading files to:</strong>&nbsp;
-                                                <span id="root-path">contents</span><span id="upload-folder-path"></span>
+                                                <span id="root-path">contents</span>
                                                 <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
                                                 <span id="upload-progress"></span>
                                             </small>
@@ -817,14 +784,12 @@
             {% include "resource-landing-page/modals.html" %}
             {% include "includes/author-preview.html" %}
             {% include "resource-landing-page/coordinates_picker.html" %}
-
         {%  endblock %}
         </div>
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <!--suppress JSAnnotator -->
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
       const RES_KEYWORDS = {{ keywords|safe }};
@@ -838,6 +803,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% with cm.last_changed_by as usr %}
           const LAST_CHANGED_BY = {
@@ -885,9 +851,5 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 
-
-    {% if relevant_tools %}
-        <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
-    {% endif %}
 {% endblock %}
 

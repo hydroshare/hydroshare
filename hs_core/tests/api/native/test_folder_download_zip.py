@@ -49,6 +49,7 @@ class TestFolderDownloadZip(TestCase):
 
         add_resource_files(self.res.short_id, self.refts_file)
         self.res.create_aggregation_xml_documents()
+        self.istorage = IrodsStorage()
 
     def tearDown(self):
         super(TestFolderDownloadZip, self).tearDown()
@@ -61,17 +62,16 @@ class TestFolderDownloadZip(TestCase):
             self.refts_file.close()
             os.remove(self.refts_file.name)
         GenericResource.objects.all().delete()
-        istorage = IrodsStorage()
-        if istorage.exists("zips"):
-            istorage.delete("zips")
+        if self.istorage.exists("zips"):
+            self.istorage.delete("zips")
 
     def test_create_temp_zip(self):
         input_path = "{}/data/contents/foo".format(self.res.short_id)
         output_path = "zips/rand/foo.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                        output_path, False))
-        self.assertTrue(IrodsStorage().exists(output_path))
+                                        output_path, None, False))
+        self.assertTrue(self.istorage.exists(output_path))
 
         # test aggregation
         input_path = "{}/data/contents/multi_sites_formatted_version1.0.refts.json"\
@@ -79,5 +79,15 @@ class TestFolderDownloadZip(TestCase):
         output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
 
         self.assertTrue(create_temp_zip(self.res.short_id, input_path,
-                                        output_path, True, sf_zip=True))
-        self.assertTrue(IrodsStorage().exists(output_path))
+                                        output_path, None, sf_zip=True))
+        self.assertTrue(self.istorage.exists(output_path))
+
+    def test_create_temp_zip_aggregation(self):
+        input_path = "{}/data/contents/" \
+                     "multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
+        output_path = "zips/rand/aggregation.zip"
+
+        self.assertTrue(create_temp_zip(self.res.short_id, input_path,
+                                        output_path, "multi_sites_formatted_version1.0.refts.json",
+                                        False))
+        self.assertTrue(self.istorage.exists(output_path))

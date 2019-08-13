@@ -1,7 +1,5 @@
 """Page processors for hs_core app."""
 
-import json
-
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -19,6 +17,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
+import json
+
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_odm2.models import ODM2Variable
 
@@ -72,7 +72,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     belongs_to_collections = content_model.collections.all()
 
-    relevant_tools = None
     tool_homepage_url = None
     if not resource_edit:  # In view mode
         landing_page_res_obj = content_model
@@ -80,8 +79,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if landing_page_res_type_str.lower() == "toolresource":
             if landing_page_res_obj.metadata.app_home_page_url:
                 tool_homepage_url = content_model.metadata.app_home_page_url.value
-        else:
-            relevant_tools = resource_level_tool_urls(landing_page_res_obj, request)
 
     just_created = False
     just_copied = False
@@ -204,7 +201,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'missing_metadata_elements': missing_metadata_elements,
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
-                   'relevant_tools': relevant_tools,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,

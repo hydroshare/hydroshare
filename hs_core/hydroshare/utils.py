@@ -1053,45 +1053,21 @@ def resolve_request(request):
     return {}
 
 
-def check_aggregations(resource, folders, res_files):
+def check_aggregations(resource, res_files):
     """
-    A helper to support creating aggregations for a given composite resource when new folders
-    or files are added to the resource
+    A helper to support creating aggregations for a given composite resource when new files are
+    added to the resource
     Checks for aggregations in each folder first, then checks for aggregations in each file
     :param resource: resource object
-    :param folders: list of folders as strings to check for aggregations creation
     :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
-        # check folders for aggregations
-        for fol in folders:
-            folder = fol
-            if not fol.startswith(resource.file_path):
-                # need absolute folder path to check if folder can be set to aggregation
-                folder = os.path.join(resource.file_path, fol)
-            else:
-                # need relative folder path for creating aggregation from folder
-                fol = fol[len(resource.file_path) + 1:]
-            agg_type = resource.get_folder_aggregation_type_to_set(folder)
 
-            if agg_type == 'TimeSeriesLogicalFile':
-                # check if the folder (fol) contains a csv file
-                res_files = ResourceFile.list_folder(resource=resource, folder=fol,
-                                                     sub_folders=False)
-                # there can be only one file in the folder
-                # if that file is a csv file - don't use the folder to create aggregation
-                if res_files[0].extension.lower() == '.csv':
-                    continue
-
-            if agg_type and agg_type != "FileSetLogicalFile":
-                agg_type = agg_type.replace('LogicalFile', '')
-                set_logical_file_type(res=resource, user=None, file_id=None,
-                                      hs_file_type=agg_type, folder_path=fol,
-                                      fail_feedback=False)
-        # check files for aggregation
+        # check files for aggregation creation
         for res_file in res_files:
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+                # create aggregation from file 'res_file'
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)
