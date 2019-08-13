@@ -172,7 +172,7 @@ class ScriptMetaData(CoreMetaData):
             script_code_repository = etree.SubElement(container, '{%s}scriptCodeRepository' % self.NAMESPACES['hsterms'])
             script_code_repository.text = self.program.scriptCodeRepository
 
-        xml_string = etree.tostring(RDF_ROOT, encoding='unicode', pretty_print=pretty_print)
+        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
         return xml_string
 

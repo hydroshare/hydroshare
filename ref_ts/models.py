@@ -145,7 +145,7 @@ class RefTSMetadata(CoreMetaData):
                                              self.datasources.all().first(),
                                              datasources_fields)
 
-        return etree.tostring(RDF_ROOT, encoding='unicode', pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(RefTSMetadata, self).delete_all_elements()

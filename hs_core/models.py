@@ -3393,7 +3393,7 @@ class BaseResource(Page, AbstractResource):
             name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, encoding='unicode', pretty_print=pretty_print)
+            ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     @property
     def size(self):
@@ -4135,7 +4135,7 @@ class CoreMetaData(models.Model):
             hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + \
-               etree.tostring(RDF_ROOT, encoding='unicode', pretty_print=pretty_print)
+               etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py

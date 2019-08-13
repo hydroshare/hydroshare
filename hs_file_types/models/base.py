@@ -377,8 +377,8 @@ class AbstractFileMetaData(models.Model):
                                             CoreMetaData.NAMESPACES['rdfs1'])
         rdfs_isDefinedBy.text = current_site_url() + "/terms"
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='unicode',
-                                                               pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print).decode()
 
     def _get_xml_containers(self):
         """Helper for the subclasses to get the xml containers element to which the sub classes

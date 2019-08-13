@@ -192,7 +192,7 @@ class CompositeResource(BaseResource):
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
-        return etree.tostring(RDF_ROOT, encoding='unicode', pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def create_aggregation_xml_documents(self, aggregation_name=None):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
