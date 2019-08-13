@@ -216,16 +216,15 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     """
 
     response_data = {'status': 'error'}
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in composite resource."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    if hs_file_type not in FILE_TYPE_MAP:
-        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -253,17 +252,16 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     """moves all files associated with an aggregation and all the associated metadata.
     """
     response_data = {'status': 'error'}
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     res, _, user = authorize(request, resource_id,
                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in composite resource."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    if hs_file_type not in FILE_TYPE_MAP:
-        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
