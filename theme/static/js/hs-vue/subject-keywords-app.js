@@ -7,6 +7,7 @@ let subjKeywordsApp = new Vue({
     delimiters: ['${', '}'],
     data: {
         newKeyword: '',
+        resMode: RESOURCE_MODE,
         resKeywords: RES_KEYWORDS,   // global constant defined in template
         showIsDuplicate: false,
         error: ''
