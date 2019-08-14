@@ -166,7 +166,7 @@ def update_account(user, **kwargs):
                 setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
-        raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
+        raise exceptions.ValidationError(e.msg)  # ignore deprecated user profile module when we upgrade to 1.7
 
     user_update = dict()
     update_keys = [x for x in list(kwargs.keys()) if hasattr(user, str(x))]

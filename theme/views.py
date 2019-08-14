@@ -194,13 +194,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         try:
             new_user = form.save()
         except ValidationError as e:
-            if e.message == "Email already in use.":
+            if e.msg == "Email already in use.":
                 messages.error(request, '<p>An account with this email already exists.  Log in '
                                 'or click <a href="' + reverse("mezzanine_password_reset") +
                                '" >here</a> to reset password',
                                extra_tags="html")
             else:
-                messages.error(request, e.message)
+                messages.error(request, e.msg)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             if not new_user.is_active:
@@ -269,7 +269,7 @@ def update_user_profile(request):
         post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
         identifiers = post_data_dict.get('identifiers', {})
     except Exception as ex:
-        messages.error(request, "Update failed. {}".format(ex.message))
+        messages.error(request, "Update failed. {}".format(ex.msg))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     dict_items = request.POST['organization'].split(";")
@@ -338,7 +338,7 @@ def update_user_profile(request):
                 messages.error(request, msg)
 
     except Exception as ex:
-        messages.error(request, ex.message)
+        messages.error(request, ex.msg)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -597,7 +597,7 @@ def delete_irods_account(request):
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message}),
+                    dumps({"error": ex.msg}),
                     content_type = "application/json"
             )
 
@@ -635,7 +635,7 @@ def create_irods_account(request):
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message + ' - iRODS server failed to create this '
+                    dumps({"error": ex.msg + ' - iRODS server failed to create this '
                                                  'iRODS account.'}),
                     content_type = "application/json"
             )

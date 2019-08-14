@@ -467,7 +467,7 @@ class ToolIcon(AbstractMetaDataElement):
         try:
             response = requests.get(url, verify=False)
         except Exception as ex:
-            raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
+            raise ValidationError("Failed to read data from given url: {0}".format(ex.msg))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
                                format(response.status_code))

@@ -2023,7 +2023,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             dog.uaccess.share_resource_with_group(
                 holes, meowers, PrivilegeCodes.OWNER)
-        self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        self.assertEqual(cm.exception.msg, 'Groups cannot own resources')
 
         # even django admin can't make a group as the owner of a resource
         self.assertFalse(
@@ -2032,7 +2032,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             self.admin.uaccess.share_resource_with_group(
                 holes, meowers, PrivilegeCodes.OWNER)
-        self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        self.assertEqual(cm.exception.msg, 'Groups cannot own resources')
 
     def test_12_resource_sharing_rw_with_group(self):
         """Resource can be shared as CHANGE with a group"""

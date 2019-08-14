@@ -450,4 +450,4 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         except QuotaException as ex:
             self.fail(
                 "create resource should not raise QuotaException for over quota cases "
-                " if quota is not enforced - Quota Exception: " + ex.message)
+                " if quota is not enforced - Quota Exception: " + ex.msg)

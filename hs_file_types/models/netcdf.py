@@ -466,7 +466,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(ex.msg)
                         log.exception(msg)
 
                 if not file_type_success:
@@ -962,7 +962,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         nc_dataset.close()
 
     except Exception as ex:
-        log.exception(ex.message)
+        log.exception(ex.msg)
         if os.path.exists(temp_nc_file):
             shutil.rmtree(os.path.dirname(temp_nc_file))
         raise ex

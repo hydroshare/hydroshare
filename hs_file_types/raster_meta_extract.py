@@ -76,7 +76,7 @@ def get_original_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(ex.msg)
         proj_wkt = None
 
     if proj_wkt:
@@ -114,7 +114,7 @@ def get_original_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(ex.msg)
         gt = None
 
     if gt and proj_wkt:  # only get the bounding box when the projection is defined
@@ -169,7 +169,7 @@ def get_wgs84_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(ex.msg)
         proj = None
 
     wgs84_coverage_info = OrderedDict()
@@ -197,7 +197,7 @@ def get_wgs84_coverage_info(raster_dataset):
 
         except Exception as ex:
             log = logging.getLogger()
-            log.exception(ex.message)
+            log.exception(ex.msg)
 
         # get original bounding box info
         original_northlimit = original_coverage_info['northlimit']

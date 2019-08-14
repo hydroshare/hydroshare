@@ -839,7 +839,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 json_file_content = _validate_json_file(res_file)
             except Exception as ex:
                 log.exception("failed json validation")
-                raise ValidationError(ex.message)
+                raise ValidationError(ex.msg)
 
             with transaction.atomic():
                 try:
@@ -861,7 +861,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 except Exception as ex:
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
-                    msg = msg.format(ex.message)
+                    msg = msg.format(ex.msg)
                     log.exception(msg)
                     raise ValidationError(msg)
 
@@ -959,7 +959,7 @@ def _validate_json_file(res_json_file):
         # validate json_data based on the schema
         jsonschema.Draft4Validator(TS_SCHEMA).validate(json_data)
     except jsonschema.ValidationError as ex:
-        msg = "Not a valid reference time series json file. {}".format(ex.message)
+        msg = "Not a valid reference time series json file. {}".format(ex.msg)
         raise Exception(msg)
 
     _validate_json_data(json_data)

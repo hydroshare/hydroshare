@@ -1870,7 +1870,7 @@ class TimeSeriesMetaDataMixin(models.Model):
             log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.msg))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):

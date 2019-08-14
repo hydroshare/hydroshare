@@ -366,7 +366,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(ex.msg)
                         log.exception(msg)
 
                 if not file_type_success:
@@ -452,7 +452,7 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
             try:
                 temp_vrt_file = create_vrt_file(raster_file)
             except Exception as ex:
-                error_info.append(ex.message)
+                error_info.append(ex.msg)
             else:
                 if os.path.isfile(temp_vrt_file):
                     new_resource_files_to_add.append(temp_vrt_file)
@@ -461,7 +461,7 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
         try:
             extract_file_paths = _explode_raster_zip_file(raster_file)
         except Exception as ex:
-            error_info.append(ex.message)
+            error_info.append(ex.msg)
         else:
             if extract_file_paths:
                 new_resource_files_to_add.extend(extract_file_paths)
@@ -606,7 +606,7 @@ def create_vrt_file(tif_file):
         tree.write(vrt_file_path)
 
     except Exception as ex:
-        log.exception("Failed to create/write to vrt file. Error:{}".format(ex.message))
+        log.exception("Failed to create/write to vrt file. Error:{}".format(ex.msg))
         raise Exception("Failed to create/write to vrt file")
 
     return vrt_file_path
@@ -634,7 +634,7 @@ def _explode_raster_zip_file(zip_file):
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception as ex:
-        log.exception("Failed to unzip. Error:{}".format(ex.message))
+        log.exception("Failed to unzip. Error:{}".format(ex.msg))
         raise ex
 
     return extract_file_paths

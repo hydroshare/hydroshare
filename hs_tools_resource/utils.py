@@ -133,7 +133,7 @@ def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_sho
         except SessionException as ex:
             raise WebAppLaunchException(ex.stderr)
         except Exception as ex:
-            raise WebAppLaunchException(ex.message)
+            raise WebAppLaunchException(ex.msg)
 
 
 def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):

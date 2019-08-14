@@ -570,7 +570,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         try:
             self.composite_resource.get_metadata_xml()
         except Exception as ex:
-            self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
+            self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.msg))
 
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage
