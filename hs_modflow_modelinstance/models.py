@@ -14,7 +14,7 @@ from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, Executed
 
 def delete_if_empty(term_obj, non_standard_elements):
     all_blank = True
-    for attr, val in vars(term_obj).items():
+    for attr, val in list(vars(term_obj).items()):
         if attr in non_standard_elements and val != '':
             all_blank = False
             break
@@ -114,7 +114,7 @@ class GridDimensions(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'typeOfRows' or key == 'typeOfColumns':
                 kwargs[key] = validate_choice(val, cls.gridTypeChoices)
         return kwargs
@@ -166,7 +166,7 @@ class StressPeriod(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'stressPeriodType':
                 kwargs[key] = validate_choice(val, cls.stressPeriodTypeChoices)
             elif key == 'transientStateValueType':
@@ -212,7 +212,7 @@ class GroundWaterFlow(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'flowPackage':
                 kwargs[key] = validate_choice(val, cls.flowPackageChoices)
             elif key == 'flowParameter':
@@ -434,7 +434,7 @@ class BoundaryCondition(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'specified_head_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
                                for package in kwargs[key]]
@@ -490,7 +490,7 @@ class ModelCalibration(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'observationProcessPackage':
                 kwargs[key] = validate_choice(val, cls.observationProcessPackageChoices)
         return kwargs
@@ -582,7 +582,7 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         # raise Exception(kwargs)
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
             elif key == 'output_control_package':

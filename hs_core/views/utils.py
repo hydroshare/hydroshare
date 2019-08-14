@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import errno
 import json
@@ -8,7 +8,8 @@ import shutil
 import string
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
-from urllib2 import Request, urlopen, HTTPError, URLError
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 from uuid import uuid4
 
 import paramiko
@@ -58,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 
 def json_or_jsonp(r, i, code=200):
-    if not isinstance(i, basestring):
+    if not isinstance(i, str):
         i = json.dumps(i)
 
     if 'callback' in r.REQUEST:
@@ -451,7 +452,7 @@ def validate_metadata(metadata, resource_type):
     for element in metadata:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
-        k, v = element.items()[0]
+        k, v = list(element.items())[0]
         is_core_element = False
         model_type = None
         try:

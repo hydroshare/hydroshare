@@ -38,7 +38,7 @@ def check_element_exist(sender, **kwargs):
     element_name = kwargs['element_name']
     element_exists = False
     class_names = vars(modflow_models)
-    for class_name, cls in class_names.items():
+    for class_name, cls in list(class_names.items()):
         if class_name.lower() == element_name.lower():
             try:
                 cls.objects.get(pk=element_id)

@@ -4,8 +4,8 @@ import logging
 from django.db import models
 
 from hs_core.models import ResourceFile
-from base import AbstractLogicalFile, FileTypeContext
-from generic import GenericFileMetaDataMixin
+from .base import AbstractLogicalFile, FileTypeContext
+from .generic import GenericFileMetaDataMixin
 
 
 class FileSetMetaData(GenericFileMetaDataMixin):

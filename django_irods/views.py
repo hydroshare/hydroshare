@@ -62,7 +62,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
         split_path_strs.pop()
-    path = u'/'.join(split_path_strs)  # no trailing slash
+    path = '/'.join(split_path_strs)  # no trailing slash
 
     # initialize case variables
     is_bag_download = False
@@ -113,7 +113,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     irods_output_path = irods_path
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
-        store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
+        store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -249,7 +249,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
         if __debug__:
-            logger.debug(u"irods_output_path is {}".format(irods_output_path))
+            logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True

@@ -1345,7 +1345,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-2')
-        self.assertNotIn('key-1', logical_file.metadata.extra_metadata.keys())
+        self.assertNotIn('key-1', list(logical_file.metadata.extra_metadata.keys()))
 
         # update existing key value metadata - updating value only
         request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-1',
@@ -1419,7 +1419,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-2')
-        self.assertNotIn('key-1', logical_file.metadata.extra_metadata.keys())
+        self.assertNotIn('key-1', list(logical_file.metadata.extra_metadata.keys()))
 
         # update existing key value metadata - updating value only
         request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-1',

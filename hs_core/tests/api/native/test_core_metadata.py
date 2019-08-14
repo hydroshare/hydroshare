@@ -372,7 +372,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(cr_lisa.identifiers), 2,
                          msg="Creator Lisa does not have 2 identifier.")
 
-        for name, link in cr_lisa.identifiers.items():
+        for name, link in list(cr_lisa.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001'])
 
@@ -417,7 +417,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(con_lisa.identifiers), 4,
                          msg="Contributor Lisa does not have 4 identifier.")
 
-        for name, link in con_lisa.identifiers.items():
+        for name, link in list(con_lisa.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID', 'GoogleScholarID', 'ResearcherID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001',
                                  'https://scholar.google.com/LH001',

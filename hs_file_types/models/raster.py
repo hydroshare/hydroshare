@@ -29,7 +29,7 @@ from hs_geo_raster_resource.models import CellInformation, BandInformation, Orig
 from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
@@ -155,7 +155,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
             formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=self.bandInformations.values(), prefix='BandInformation')
+            initial=list(self.bandInformations.values()), prefix='BandInformation')
 
         for frm in bandinfo_formset.forms:
             if len(frm.initial) > 0:
@@ -359,7 +359,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         for element in metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
                         log.info("Geographic raster aggregation type - metadata was saved to DB")
 
@@ -575,7 +575,7 @@ def extract_metadata(temp_vrt_file_path):
     metadata.append({'CellInformation': res_md_dict['cell_info']})
 
     # Save extended meta band info
-    for band_info in res_md_dict['band_info'].values():
+    for band_info in list(res_md_dict['band_info'].values()):
         metadata.append({'BandInformation': band_info})
     return metadata
 

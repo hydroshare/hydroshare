@@ -329,7 +329,7 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def _validate_time_step(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if val == 'Choose a type':
                 kwargs[key] = ''
             elif val != '':

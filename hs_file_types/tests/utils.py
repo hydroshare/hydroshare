@@ -191,7 +191,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
 
     # there should be one license element:
-    self.assertNotEquals(self.composite_resource.metadata.rights.statement, 1)
+    self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
 
     # there should be no relation element
     self.assertEqual(self.composite_resource.metadata.relations.all().count(), 0)
@@ -244,9 +244,9 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
-    self.assertNotEquals(ori_coverage, None)
+    self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+    proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
     self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
     self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
@@ -260,7 +260,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test time variable
     var_time = logical_file.metadata.variables.all().filter(name='time').first()
-    self.assertNotEquals(var_time, None)
+    self.assertNotEqual(var_time, None)
     self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
     self.assertEqual(var_time.type, 'Float')
     self.assertEqual(var_time.shape, 'time')
@@ -268,7 +268,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test x variable
     var_x = logical_file.metadata.variables.all().filter(name='x').first()
-    self.assertNotEquals(var_x, None)
+    self.assertNotEqual(var_x, None)
     self.assertEqual(var_x.unit, 'Meter')
     self.assertEqual(var_x.type, 'Float')
     self.assertEqual(var_x.shape, 'x')
@@ -276,7 +276,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test y variable
     var_y = logical_file.metadata.variables.all().filter(name='y').first()
-    self.assertNotEquals(var_y, None)
+    self.assertNotEqual(var_y, None)
     self.assertEqual(var_y.unit, 'Meter')
     self.assertEqual(var_y.type, 'Float')
     self.assertEqual(var_y.shape, 'y')
@@ -284,7 +284,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test SWE variable
     var_swe = logical_file.metadata.variables.all().filter(name='SWE').first()
-    self.assertNotEquals(var_swe, None)
+    self.assertNotEqual(var_swe, None)
     self.assertEqual(var_swe.unit, 'm')
     self.assertEqual(var_swe.type, 'Float')
     self.assertEqual(var_swe.shape, 'y,x,time')
@@ -295,7 +295,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # test grid mapping variable
     var_grid = logical_file.metadata.variables.all(). \
         filter(name='transverse_mercator').first()
-    self.assertNotEquals(var_grid, None)
+    self.assertNotEqual(var_grid, None)
     self.assertEqual(var_grid.unit, 'Unknown')
     self.assertEqual(var_grid.type, 'Unknown')
     self.assertEqual(var_grid.shape, 'Not defined')

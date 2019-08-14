@@ -106,7 +106,7 @@ class TestCaseCommonUtilities(object):
         in iRODS user zone to save ori_file to
         :return:
         """
-        for file_name, target_name in file_name_to_target_name_dict.items():
+        for file_name, target_name in list(file_name_to_target_name_dict.items()):
             self.irods_fed_storage.saveFile(file_name, target_name)
 
     def check_file_exist(self, irods_path):

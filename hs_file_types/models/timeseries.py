@@ -24,7 +24,7 @@ from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, 
     MethodValidationForm, ProcessingLevelValidationForm, TimeSeriesResultValidationForm, \
     UTCOffSetValidationForm
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class CVVariableType(AbstractCVLookupTable):
@@ -89,8 +89,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         series_id = kwargs.get('series_id', None)
         if series_id is None:
-            series_id = self.series_ids_with_labels.keys()[0]
-        elif series_id not in self.series_ids_with_labels.keys():
+            series_id = list(self.series_ids_with_labels.keys())[0]
+        elif series_id not in list(self.series_ids_with_labels.keys()):
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         html_string = super(TimeSeriesFileMetaData, self).get_html()
@@ -161,8 +161,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         series_id = kwargs.get('series_id', None)
         if series_id is None:
-            series_id = self.series_ids_with_labels.keys()[0]
-        elif series_id not in self.series_ids_with_labels.keys():
+            series_id = list(self.series_ids_with_labels.keys())[0]
+        elif series_id not in list(self.series_ids_with_labels.keys()):
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         root_div = div("{% load crispy_forms_tags %}")
@@ -289,7 +289,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             with form(id="series-selection-form-file_type", action=action_url, method="get",
                       enctype="multipart/form-data"):
                 with select(cls="form-control", id="series_id_file_type"):
-                    for series_id, label in self.series_ids_with_labels.items():
+                    for series_id, label in list(self.series_ids_with_labels.items()):
                         display_text = label[:120] + "..."
                         if series_id == selected_series_id:
                             option(display_text, value=series_id, selected="selected", title=label)
@@ -320,9 +320,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                 span("NOTE:", style="color:red;")
                                 span("New resource specific metadata elements can't be created "
                                      "after you update the SQLite file.")
-                    input(id="metadata-dirty", type="hidden", value=is_dirty)
-                    input(id="can-update-sqlite-file", type="hidden",
-                          value=can_update_sqlite_file)
+                    eval(input(id="metadata-dirty", type="hidden", value=is_dirty))
+                    eval(input(id="can-update-sqlite-file", type="hidden",
+                          value=can_update_sqlite_file))
                     with form(action=form_action, method="post", id="update-sqlite-file"):
                         button("Update SQLite File", type="button", cls="btn btn-primary",
                                id="id-update-sqlite-file")
@@ -754,11 +754,11 @@ def validate_odm2_db_file(sqlite_file_path):
                     log.info(err_message)
                     return err_message
         return None
-    except sqlite3.Error, e:
+    except sqlite3.Error as e:
         sqlite_err_msg = str(e.args[0])
         log.error(sqlite_err_msg)
         return sqlite_err_msg
-    except Exception, e:
+    except Exception as e:
         log.error(e.message)
         return e.message
 
@@ -769,7 +769,7 @@ def validate_csv_file(csv_file_path):
     with open(csv_file_path, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row
-        header = csv_reader.next()
+        header = next(csv_reader)
         header = [el.strip() for el in header]
         if any(len(h) == 0 for h in header):
             err_message += " Column heading is missing."
@@ -1188,7 +1188,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     with open(temp_csv_file, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
-        header = csv_reader.next()
+        header = next(csv_reader)
         # read the 1st data row
         start_date_str = csv_reader.next()[0]
         last_row = None
