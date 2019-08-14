@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import
 
 import errno
 import json
@@ -8,8 +8,7 @@ import shutil
 import string
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
+from urllib2 import Request, urlopen, HTTPError, URLError
 from uuid import uuid4
 
 import paramiko
@@ -59,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 
 def json_or_jsonp(r, i, code=200):
-    if not isinstance(i, str):
+    if not isinstance(i, basestring):
         i = json.dumps(i)
 
     if 'callback' in r.REQUEST:
@@ -452,7 +451,7 @@ def validate_metadata(metadata, resource_type):
     for element in metadata:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
-        k, v = list(element.items())[0]
+        k, v = element.items()[0]
         is_core_element = False
         model_type = None
         try:
@@ -725,8 +724,7 @@ def link_irods_file_to_django(resource, filepath):
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    folders = listfolders_recursively(istorage, foldername)
-    check_aggregations(resource, folders, res_files)
+    check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -981,13 +979,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                         aggregation_object = resource.get_file_aggregation_object(
                             destination_file)
                         if aggregation_object:
-                            if aggregation_object.is_single_file_aggregation:
-                                aggregation_object.logical_delete(user)
-                            else:
-                                directory = os.path.dirname(destination_file)
-                                # remove_folder expects path to start with 'data/contents'
-                                directory = directory.replace(res_id + "/", "")
-                                remove_folder(user, res_id, directory)
+                            aggregation_object.logical_delete(user)
                         else:
                             logger.error("No aggregation object found for " + destination_file)
                             istorage.delete(destination_file)
@@ -1007,7 +999,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 res_files.append(res_file)
 
             # scan for aggregations
-            check_aggregations(resource, destination_folders, res_files)
+            check_aggregations(resource, res_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
@@ -1160,9 +1152,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1204,9 +1196,9 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -1256,9 +1248,9 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
-            org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+            orig_src_path = src_full_path[len(resource.file_path) + 1:]
+            new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 

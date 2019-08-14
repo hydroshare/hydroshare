@@ -540,7 +540,7 @@ def create_resource(
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = list(element.items())[0]
+                k, v = element.items()[0]
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:
@@ -742,7 +742,7 @@ def add_resource_files(pk, *files, **kwargs):
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
-            print(("kwargs[{}]".format(k)))
+            print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'
@@ -777,7 +777,7 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, new_folders, ret)
+            utils.check_aggregations(resource, ret)
         # some file(s) added, need to update quota usage
         update_quota_usage(res=resource)
     return ret

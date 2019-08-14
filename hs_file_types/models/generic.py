@@ -3,15 +3,13 @@ import logging
 
 from django.db import models
 from django.template import Template, Context
-from django.core.exceptions import ValidationError
 
 from dominate.tags import div, form, button, hr, i
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.hydroshare import utils
 from hs_core.signals import post_add_generic_aggregation
 
-from .base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):
@@ -233,31 +231,33 @@ class GenericLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        if file_id is None:
-            raise ValueError("Must specify id of the file to be set as an aggregation type")
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_generic_aggregation,
+                             is_temp_file=False) as ft_ctx:
 
-        res_file = utils.get_resource_file_by_id(resource, file_id)
-        # resource file that is not part of an aggregation or part of a fileset aggregation
-        # can be used for creating a single file aggregation
-        if res_file.has_logical_file and not res_file.logical_file.is_fileset:
-            raise ValidationError("Selected file '{}' is already part of an aggregation".format(
-                res_file.file_name))
+            res_file = ft_ctx.res_file
+            upload_folder = res_file.file_folder
+            dataset_name, _ = os.path.splitext(res_file.file_name)
+            # create a generic logical file object
+            logical_file = cls.create_aggregation(dataset_name=dataset_name,
+                                                  resource=resource,
+                                                  res_files=[res_file],
+                                                  new_files_to_upload=[],
+                                                  folder_path=upload_folder)
 
-        logical_file = GenericLogicalFile.create(resource)
-        dataset_name, _ = os.path.splitext(res_file.file_name)
-        logical_file.dataset_name = dataset_name
-        if extra_data:
-            logical_file.extra_data = extra_data
-        logical_file.save()
-        res_file.logical_file_content_object = logical_file
-        res_file.save()
-        logical_file.create_aggregation_xml_documents()
-        log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
-        post_add_generic_aggregation.send(
-            sender=AbstractLogicalFile,
-            resource=resource,
-            file=logical_file
-        )
+            if extra_data:
+                logical_file.extra_data = extra_data
+                logical_file.save()
+
+            ft_ctx.logical_file = logical_file
+            log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+
+    @classmethod
+    def get_primary_resouce_file(cls, resource_files):
+        """Gets any resource file as the primary file  from the list of files *resource_files* """
+
+        return resource_files[0]
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)

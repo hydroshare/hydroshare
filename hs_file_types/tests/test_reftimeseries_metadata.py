@@ -8,9 +8,10 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-from .utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
+from utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
 
 from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMetaData
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 
 
 class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -227,8 +228,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
         logical_file = res_file.logical_file
-        expected_meta_path = '{}_meta.xml'.format(res_file.file_name)
-        expected_map_path = '{}_resmap.xml'.format(res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}{1}'.format(res_file_name, METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}{1}'.format(res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -242,8 +244,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -254,8 +257,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(new_folder, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(new_folder, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -267,8 +271,10 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_meta_path = '{0}/{1}_meta.xml'.format(folder_rename, res_file.file_name)
-        expected_map_path = '{0}/{1}_resmap.xml'.format(folder_rename, res_file.file_name)
+        res_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_meta_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
+                                                 METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.composite_resource.delete()

@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import
 import json
 import datetime
 import pytz
@@ -44,6 +44,8 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
+
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -161,7 +163,7 @@ def update_quota_usage(request, username):
 def extract_files_with_paths(request):
     res_files = []
     full_paths = {}
-    for key in list(request.FILES.keys()):
+    for key in request.FILES.keys():
         full_path = request.POST.get(key, None)
         f = request.FILES[key]
         res_files.append(f)
@@ -264,6 +266,12 @@ def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def get_relevant_tools(request, shortkey, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    relevant_tools = resource_level_tool_urls(res, request)
+    return HttpResponse(json.dumps(relevant_tools))
 
 
 def update_key_value_metadata(request, shortkey, *args, **kwargs):
@@ -599,7 +607,8 @@ def file_download_url_mapper(request, shortkey):
     istorage = res.get_irods_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
-    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
+    aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped, aggregation))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -1059,13 +1068,13 @@ def save_ajax(request):
             return _get_http_response({'errors': False,
                                         'value': adaptor.render_value_edit()})
         messages = [] # The error is for another field that you are editing
-        for field_name_error, errors_field in list(form.errors.items()):
+        for field_name_error, errors_field in form.errors.items():
             for error in errors_field:
-                messages.append("%s: %s" % (field_name_error, str(error)))
+                messages.append("%s: %s" % (field_name_error, unicode(error)))
         message_i18n = ','.join(messages)
         return _get_http_response({'errors': message_i18n})
     except ValidationError as error: # The error is for a field that you are editing
-        message_i18n = ', '.join(["%s" % m for m in error.messages])
+        message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
 
 
@@ -1656,7 +1665,7 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
 
 
 def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
-    users_to_keep = list(User.objects.in_bulk(users_to_unshare_with).values())
+    users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
     owners = set(resource.raccess.owners.all())
     editors = set(resource.raccess.edit_users.all()) - owners
     viewers = set(resource.raccess.view_users.all()) - editors - owners

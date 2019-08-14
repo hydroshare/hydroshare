@@ -4,7 +4,7 @@ from dateutil import parser
 
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, add_file_to_resource
+from hs_core.hydroshare.utils import add_file_to_resource
 from hs_core.hydroshare import create_resource, add_resource_files
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
     NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
@@ -72,7 +72,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
 
     res_file = self.composite_resource.files.first()
-    expected_dataset_name = os.path.basename(res_file.file_folder)
+    expected_dataset_name, _ = os.path.splitext(res_file.file_name)
     logical_file = res_file.logical_file
     self.assertEqual(logical_file.dataset_name, expected_dataset_name)
     self.assertEqual(logical_file.has_metadata, True)
@@ -153,7 +153,11 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.files.count(), 2)
     # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path, aggr_folder,
+        if aggr_folder is not None:
+            expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path,
+                                                      aggr_folder, res_file.file_name)
+        else:
+            expected_file_path = "{0}/{1}".format(self.composite_resource.file_path,
                                                   res_file.file_name)
         self.assertEqual(res_file.full_path, expected_file_path)
         self.assertEqual(res_file.file_folder, aggr_folder)
@@ -187,7 +191,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
 
     # there should be one license element:
-    self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
+    self.assertNotEquals(self.composite_resource.metadata.rights.statement, 1)
 
     # there should be no relation element
     self.assertEqual(self.composite_resource.metadata.relations.all().count(), 0)
@@ -240,9 +244,9 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
-    self.assertNotEqual(ori_coverage, None)
+    self.assertNotEquals(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+    proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
     self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
     self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
@@ -256,7 +260,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test time variable
     var_time = logical_file.metadata.variables.all().filter(name='time').first()
-    self.assertNotEqual(var_time, None)
+    self.assertNotEquals(var_time, None)
     self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
     self.assertEqual(var_time.type, 'Float')
     self.assertEqual(var_time.shape, 'time')
@@ -264,7 +268,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test x variable
     var_x = logical_file.metadata.variables.all().filter(name='x').first()
-    self.assertNotEqual(var_x, None)
+    self.assertNotEquals(var_x, None)
     self.assertEqual(var_x.unit, 'Meter')
     self.assertEqual(var_x.type, 'Float')
     self.assertEqual(var_x.shape, 'x')
@@ -272,7 +276,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test y variable
     var_y = logical_file.metadata.variables.all().filter(name='y').first()
-    self.assertNotEqual(var_y, None)
+    self.assertNotEquals(var_y, None)
     self.assertEqual(var_y.unit, 'Meter')
     self.assertEqual(var_y.type, 'Float')
     self.assertEqual(var_y.shape, 'y')
@@ -280,7 +284,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test SWE variable
     var_swe = logical_file.metadata.variables.all().filter(name='SWE').first()
-    self.assertNotEqual(var_swe, None)
+    self.assertNotEquals(var_swe, None)
     self.assertEqual(var_swe.unit, 'm')
     self.assertEqual(var_swe.type, 'Float')
     self.assertEqual(var_swe.shape, 'y,x,time')
@@ -291,7 +295,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # test grid mapping variable
     var_grid = logical_file.metadata.variables.all(). \
         filter(name='transverse_mercator').first()
-    self.assertNotEqual(var_grid, None)
+    self.assertNotEquals(var_grid, None)
     self.assertEqual(var_grid.unit, 'Unknown')
     self.assertEqual(var_grid.type, 'Unknown')
     self.assertEqual(var_grid.shape, 'Not defined')
@@ -314,14 +318,9 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
         self.assertEqual(res_file.logical_file_type_name, "GeoFeatureLogicalFile")
         self.assertEqual(res_file.has_logical_file, True)
         self.assertTrue(isinstance(res_file.logical_file, GeoFeatureLogicalFile))
-    # check that we put the 3 files in a new folder
+    # check that we put the 3 files in a new folder - expected_folder_name
     for res_file in self.composite_resource.files.all():
-        file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
-        expected_file_path = "{}/data/contents/{}/{}"
-        res_file.file_folder = expected_folder_name
-        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                       expected_folder_name, base_file_name)
-        self.assertEqual(file_path, expected_file_path)
+        self.assertEqual(res_file.file_folder, expected_folder_name)
     # test extracted raster file type metadata
     # there should not be any resource level coverage
     self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
@@ -656,3 +655,8 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     self.assertEqual(logical_file.metadata.cv_aggregation_statistics.all().count(), 17)
     # there should not be any UTCOffset element
     self.assertEqual(logical_file.metadata.utc_offset, None)
+
+
+def get_path_with_no_file_extension(path):
+    path_no_ext, _ = os.path.splitext(path)
+    return path_no_ext
