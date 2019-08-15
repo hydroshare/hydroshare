@@ -8,16 +8,21 @@
             <div class="col-sm-12">
                 <h2 class="page-title">Collaborate</h2>
             </div>
-            <div class="col-sm-3">
-                <a href="{% url 'groups' %}"><img src="{{ STATIC_URL }}/img/groups.png" hspace="3px">GROUPS</a><br />
+            <div>
+                <div style="float: left; margin-bottom: 3em; margin-right: 2em">
+                <a style="text-decoration: none" href="{% url 'groups' %}"><img src="{{ STATIC_URL }}/img/groups.png"><h4>&nbsp;&nbsp;GROUPS</h4></a>
+                </div>
+                <div style="width: 500px; padding-top:1em;">
                 Groups are for research teams to share resources members of those teams. Resources can be privately
-                shared, within the group for specific audiences.
-                <br /><br /><br />
-
-                <a href="{% url 'communities' %}"><img
-                        src="{{ STATIC_URL }}/img/communities/communities.jpg">COMMUNITIES</a><br/>
+                shared, within the group for specific audiences</div>
+                <div style="clear: both"></div>
+                <div style="float: left; margin-right: 2em;">
+                <a style="text-decoration: none" href="{% url 'communities' %}"><img
+                        src="{{ STATIC_URL }}/img/communities/communities.jpg"><h4>COMMUNITIES</h4></a></div>
+                <div style="width: 600px; padding-top:1em;">
                 A Community is a collection of Groups that have something in common like being members of a large
-                research network. Communities are designed around public data sharing and open access.<br /><br />
+                research network. Communities are designed around public data sharing and open access
+                </div>
             </div>
         </div>
     </div>
