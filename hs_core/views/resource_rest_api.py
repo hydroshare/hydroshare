@@ -22,7 +22,8 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
+from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
+    get_content_types
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
@@ -31,6 +32,7 @@ from hs_core.serialization import GenericResourceMeta, HsDeserializationDependen
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.parsers import MultiPartParser
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,8 @@ class ResourceToListItemMixin(object):
                                                           coverages=coverages,
                                                           science_metadata_url=science_metadata_url,
                                                           resource_map_url=resource_map_url,
-                                                          resource_url=resource_url)
+                                                          resource_url=resource_url,
+                                                          content_types=r.aggregation_types)
         return resource_list_item
 
 
@@ -114,6 +117,22 @@ class ResourceTypes(generics.ListAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceTypesSerializer
+
+
+class ContentTypes(generics.ListAPIView):
+    pagination_class = None
+
+    @swagger_auto_schema(operation_description="List Content Types",
+                         responses={200: serializers.ContentTypesSerializer})
+    def get(self, request):
+        return self.list(request)
+
+    def get_queryset(self):
+        return [serializers.ContentType(content_type=ctype.__name__) for ctype in
+                get_content_types()]
+
+    def get_serializer_class(self):
+        return serializers.ContentTypesSerializer
 
 
 class CheckTaskStatus(generics.RetrieveAPIView):
@@ -177,9 +196,13 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
         validated_request_data = resource_create_request_validator.validated_data
         resource_type = validated_request_data['resource_type']
+        if resource_type in ["RasterResource", "GeographicFeatureResource", "RefTimeSeriesResource",
+                             "NetcdfResource", "TimeSeriesResource", "GenericResource"]:
+            # force deprecated resource types to composite
+            resource_type = "CompositeResource"
 
         res_title = validated_request_data.get('title', 'Untitled resource')
-        keywords = validated_request_data.get('keywords', None)
+        keywords = validated_request_data.get('keywords', [])
         abstract = validated_request_data.get('abstract', None)
         metadata = validated_request_data.get('metadata', None)
         extra_metadata = validated_request_data.get('extra_metadata', None)
@@ -208,7 +231,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             # TODO: validate extra metadata here
 
         try:
-            _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
+            _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(
                 resource_type=resource_type, resource_title=res_title,
                 page_redirect_url_key=None, files=files, metadata=metadata,
                 **kwargs)
@@ -537,6 +560,7 @@ class ResourceFileCRUD(APIView):
     'parameter-2': ['error message-2'], .. }
     """
     allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+    parser_classes = (MultiPartParser,)
 
     def initialize_request(self, request, *args, **kwargs):
         """
@@ -589,6 +613,7 @@ class ResourceFileCRUD(APIView):
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
+    @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
     def post(self, request, pk, pathname):
         """
         Add a file to a resource.
@@ -619,6 +644,7 @@ class ResourceFileCRUD(APIView):
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],
+                                                           folder=pathname,
                                                            user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException,
@@ -666,6 +692,7 @@ class ResourceFileCRUD(APIView):
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(auto_schema=None)
     def put(self, request, pk, pathname):
         # TODO: (Brian) Currently we do not have this action for the front end. Will implement
         # in the next iteration. Implement only after we have a decision on when to validate a file

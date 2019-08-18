@@ -4,6 +4,8 @@ import datetime
 import pytz
 import logging
 
+from drf_yasg.utils import swagger_auto_schema
+
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -15,7 +17,6 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
@@ -43,6 +44,8 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
+
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -96,11 +99,16 @@ def verify(request, *args, **kwargs):
 
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
+    ajax_response_data = {'status': 'error', 'message': ''}
+
     if not new_holder_uname:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Please select a user."
+        return JsonResponse(ajax_response_data)
     new_holder_u = User.objects.filter(username=new_holder_uname).first()
     if not new_holder_u:
-        return HttpResponseBadRequest()
+        ajax_response_data['message'] = "Unable to change quota holder. " \
+                                     "Please verify that the selected user still has access to this resource."
+        return JsonResponse(ajax_response_data)
 
     res = utils.get_resource_by_shortkey(shortkey)
     try:
@@ -119,16 +127,20 @@ def change_quota_holder(request, shortkey):
                            settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
                            context=context)
     except PermissionDenied:
-        return HttpResponseForbidden()
+        ajax_response_data['message'] = "You do not have permission to change the quota holder for this resource."
+        return JsonResponse(ajax_response_data)
     except utils.QuotaException as ex:
         msg = 'Failed to change quota holder to {0} since {0} does not have ' \
               'enough quota to hold this new resource. The exception quota message ' \
               'reported for {0} is: '.format(new_holder_u.username) + ex.message
-        request.session['validation_error'] = msg
+        ajax_response_data['message'] = msg
+        return JsonResponse(ajax_response_data)
 
-    return HttpResponseRedirect(res.get_absolute_url())
+    ajax_response_data['status'] = 'success'
+    return JsonResponse(ajax_response_data)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def update_quota_usage(request, username):
     req_user = request.user
@@ -256,6 +268,12 @@ def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def get_relevant_tools(request, shortkey, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    relevant_tools = resource_level_tool_urls(res, request)
+    return HttpResponse(json.dumps(relevant_tools))
+
+
 def update_key_value_metadata(request, shortkey, *args, **kwargs):
     """
     This one view function is for CRUD operation for resource key/value arbitrary metadata.
@@ -302,6 +320,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
@@ -567,6 +586,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
@@ -587,7 +607,8 @@ def file_download_url_mapper(request, shortkey):
     istorage = res.get_irods_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
-    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
+    aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped, aggregation))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -909,38 +930,22 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_effective_privilege(user)
-    if current_user_privilege == PrivilegeCodes.VIEW:
-        current_user_privilege = "view"
-    elif current_user_privilege == PrivilegeCodes.CHANGE:
-        current_user_privilege = "change"
-    elif current_user_privilege == PrivilegeCodes.OWNER:
-        current_user_privilege = "owner"
+    from hs_core.models import get_access_object
 
     if user_or_group == 'user':
-        is_current_user = False
-        if user == user_to_share_with:
-            is_current_user = True
+        user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
+        user_to_share_with.can_undo = user_can_undo
 
-        picture_url = 'No picture provided'
-        if user_to_share_with.userprofile.picture:
-            picture_url = user_to_share_with.userprofile.picture.url
-
-        ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                              'username': user_to_share_with.username, 'privilege_granted': privilege,
-                              'current_user_privilege': current_user_privilege,
-                              'profile_pic': picture_url, 'is_current_user': is_current_user,
-                              'error_msg': err_message}
-
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(user_to_share_with, "user", privilege)}
     else:
-        group_pic_url = 'No picture provided'
-        if group_to_share_with.gaccess.picture:
-            group_pic_url = group_to_share_with.gaccess.picture.url
+        group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+        group_to_share_with.can_undo = group_can_undo
 
-        ajax_response_data = {'status': status, 'name': group_to_share_with.name,
-                              'privilege_granted': privilege, 'group_pic': group_pic_url,
-                              'current_user_privilege': current_user_privilege,
-                              'error_msg': err_message}
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(group_to_share_with, "group", privilege)}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
@@ -994,7 +999,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
         if undo_user_privilege == PrivilegeCodes.VIEW:
             undo_user_privilege = "view"
         elif undo_user_privilege == PrivilegeCodes.CHANGE:
-            undo_user_privilege = "change"
+            undo_user_privilege = "edit"
         elif undo_user_privilege == PrivilegeCodes.OWNER:
             undo_user_privilege = "owner"
         else:
@@ -1021,7 +1026,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
         if group_to_unshare_with in res.raccess.edit_groups:
-            undo_group_privilege = 'change'
+            undo_group_privilege = 'edit'
         elif group_to_unshare_with in res.raccess.view_groups:
             undo_group_privilege = 'view'
         else:
@@ -1220,11 +1225,6 @@ def add_generic_context(request, page):
 
 
 @login_required
-def create_resource_select_resource_type(request, *args, **kwargs):
-    return render(request, 'pages/create-resource.html')
-
-
-@login_required
 def create_resource(request, *args, **kwargs):
     # Note: This view function must be called by ajax
 
@@ -1232,40 +1232,14 @@ def create_resource(request, *args, **kwargs):
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
     resource_files, full_paths = extract_files_with_paths(request)
-    source_names = []
-    irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower() == 'true'
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
-    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
-    fed_copy_or_move = request.POST.get("copy-or-move")
-
-    if irods_fnames:
-        if federated:
-            source_names = irods_fnames.split(',')
-        else:
-            user = request.POST.get('irods-username')
-            password = request.POST.get("irods-password")
-            port = request.POST.get("irods-port")
-            host = request.POST.get("irods-host")
-            zone = request.POST.get("irods-zone")
-            try:
-                upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
-            except utils.ResourceFileSizeException as ex:
-                ajax_response_data['message'] = ex.message
-                return JsonResponse(ajax_response_data)
-
-            except SessionException as ex:
-                ajax_response_data['message'] = ex.stderr
-                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
     try:
-        _, res_title, metadata, fed_res_path = \
+        _, res_title, metadata = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
                                                          resource_title=res_title,
-                                                         source_names=source_names,
                                                          page_redirect_url_key=url_key,
                                                          requesting_user=request.user,
                                                          **kwargs)
@@ -1288,10 +1262,6 @@ def create_resource(request, *args, **kwargs):
                 title=res_title,
                 metadata=metadata,
                 files=resource_files,
-                source_names=source_names,
-                # TODO: should probably be resource_federation_path like it is set to.
-                fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-                move=(fed_copy_or_move == 'move'),
                 content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
@@ -1614,9 +1584,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
-            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
         else:
-            user_name = "{} {}".format(user.first_name, user.last_name)
+            user_name = "{}, {}".format(user.last_name, user.first_name)
 
         user_data['name'] = user_name
         user_data['email'] = user.email
@@ -1866,7 +1836,7 @@ class MyResourcesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-
+        
         resource_collection = get_my_resources_list(u)
 
         return {

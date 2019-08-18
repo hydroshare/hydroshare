@@ -94,6 +94,7 @@ class Visitor(models.Model):
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
     visitor = models.ForeignKey(Visitor, related_name='session')
+    # TODO: hostname = models.CharField(null=True, default=None, max_length=256)
 
     objects = SessionManager()
 
@@ -138,6 +139,11 @@ class Variable(models.Model):
                                  on_delete=models.SET_NULL)
     last_resource_id = models.CharField(null=True, max_length=32)
 
+    # flags describe kind of visit. False for non-visits
+    landing = models.BooleanField(null=False, default=False)
+    rest = models.BooleanField(null=False, default=False)
+    # REDUNDANT: internal = models.BooleanField(null=False, default=False)
+
     def get_value(self):
         v = self.value
         if self.type == 3:  # boolean types don't coerce reflexively
@@ -157,7 +163,8 @@ class Variable(models.Model):
         return '|'.join(msg_items)
 
     @classmethod
-    def record(cls, session, name, value=None, resource=None, resource_id=None):
+    def record(cls, session, name, value=None, resource=None, resource_id=None,
+               rest=False, landing=False):
         if resource is None and resource_id is not None:
             try:
                 resource = get_resource_by_shortkey(resource_id, or_404=False)
@@ -167,7 +174,9 @@ class Variable(models.Model):
                                        type=cls.encode_type(value),
                                        value=cls.encode(value),
                                        last_resource_id=resource_id,
-                                       resource=resource)
+                                       resource=resource,
+                                       rest=rest,
+                                       landing=landing)
 
     @classmethod
     def encode(cls, value):
@@ -224,6 +233,34 @@ class Variable(models.Model):
                       last_accessed=models.Max('variable__timestamp'))\
             .filter(variable__timestamp=F('last_accessed'))\
             .order_by('-last_accessed')[:n_resources]
+
+    @classmethod
+    def popular_resources(cls, n_resources=5, days=60, today=None):
+        """
+        fetch the most recent n resources with which a specific user has interacted
+
+        :param n_resources: the number of resources to return.
+        :param days: the number of days to scan.
+
+        The reason for the parameter `days` is that the runtime of this method
+        is very dependent upon the days that one scans. Thus, there is a tradeoff
+        between reporting history and timely responsiveness of the dashboard.
+        """
+        # TODO: document actions like labeling and commenting (currently these are 'visit's)
+        if today is None:
+            today = datetime.now()
+        return BaseResource.objects.filter(
+                variable__timestamp__gte=(today-timedelta(days)),
+                variable__timestamp__lt=(today),
+                variable__resource__isnull=False,
+                variable__name='visit')\
+            .distinct()\
+            .annotate(users=models.Count('variable__session__visitor__user'))\
+            .annotate(public=F('raccess__public'),
+                      discoverable=F('raccess__discoverable'),
+                      published=F('raccess__published'),
+                      last_accessed=models.Max('variable__timestamp'))\
+            .order_by('-users')[:n_resources]
 
     @classmethod
     def recent_users(cls, resource, n_users=5, days=60):

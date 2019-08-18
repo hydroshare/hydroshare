@@ -12,16 +12,6 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
-    <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
-    <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-    <input type="hidden" id="resource-mode" value="{% if resource_edit_mode %}Edit{% else %}View{% endif %}" >
-    <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
-    <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
-    <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
-    <input type="hidden" id="keywords-string" value="{{ keywords_string }}">
-    <input type="hidden" id="short-id" value="{{ cm.short_id }}">
-    <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
     {% if page.perms.change and resource_edit_mode %}
     {% csrf_token %}
     {% endif %}
@@ -51,6 +41,9 @@
                 </div>
             </div>
         {% endif %}
+
+        {# Needs to be included first so it's available before other instances initialize #}
+        {% include "includes/profile-card.html" %}
 
         {# ======= Title ======= #}
         {% include "resource-landing-page/title-section.html" %}
@@ -222,33 +215,6 @@
                         </span>
                     </li>
                 {%  endif %}
-                {% if relevant_tools %}
-                    <li role="separator" class="divider"></li>
-                    {% for tool in relevant_tools.tool_list %}
-                        {% if tool.openwithlist %}
-                            {% if tool.agg_types %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                            {% if tool.file_extensions %}
-                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
             </ul>
 
             {# POPUP MENU - Right clicking empty space in file browser #}
@@ -284,13 +250,6 @@
                     <span class="fa fa-th-large icon-blue"></span>
                     <span>Select all</span>
                 </li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                    <li role="separator" class="divider"></li>
-                    <li data-menu-name="paste">
-                        <span class="fa fa-clipboard icon-blue"></span>
-                        <span>Paste</span>
-                    </li>
-                {% endif %}
             </ul>
 
             <div class="col-xs-12 content-block">
@@ -488,7 +447,7 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button"
+                                                <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
                                                 </a>
@@ -512,6 +471,7 @@
                                                         </li>
 
                                                         <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                            data-fb-action="uploadFiles"
                                                             data-toggle="modal" data-target="#irodsContent">
                                                             <a>
                                                                 <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
@@ -665,7 +625,7 @@
                                             <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                                             <small class="uploading-message">
                                                 <strong>Uploading files to:</strong>&nbsp;
-                                                <span id="root-path">contents</span><span id="upload-folder-path"></span>
+                                                <span id="root-path">contents</span>
                                                 <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
                                                 <span id="upload-progress"></span>
                                             </small>
@@ -829,9 +789,60 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+      {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const RES_KEYWORDS = {{ keywords|safe }};
+      const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      const RES_TYPE = "{{ cm|resource_type }}";
+      const FILE_COUNT = {{ cm.files.all.count }};
+      const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
+      const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
+      const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      const SHORT_ID = "{{ cm.short_id }}";
+      const STATIC_URL = "{{ STATIC_URL }}";
+      const USERS_JSON = {{ users_json|safe }};
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
+
+      {% with cm.last_changed_by as usr %}
+          const LAST_CHANGED_BY = {
+          "id": {{ usr.id }},
+          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
+          "best_name": "{{ usr|best_name }}",
+          "email": "{{ usr.email|safe }}",
+          "organization": "{{ usr.userprofile.organization }}",
+          "title": "{{ usr.userprofile.title }}",
+          "contributions": "{{ usr.uaccess.owned_resources|length  }}",
+          "subject_areas": "{{ usr.userprofile.subject_areas }}",
+          "identifiers": {
+              {% for name, link in usr.userprofile.identifiers.items %}
+                  "{{ name }}": "{{ link }}",
+              {% endfor %}
+          },
+          "state": "{{ usr.userprofile.state }}",
+          "country": "{{ usr.userprofile.country }}",
+          "joined": "{{ usr.date_joined|date:"M d, Y" }}"
+      };
+      {% endwith %}
+
+      {% if show_manage_access %}
+          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
+          const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
+          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
+          const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
+          const RESOURCE_ACCESS = {
+              isPublic: "{{ cm.raccess.public }}" === "True",
+              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+              isShareable: "{{ cm.raccess.shareable }}" === "True"
+          };
+      {% endif %}
+      var spatial_coverage_type = "{{ spatial_coverage.type }}";
+    </script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
@@ -839,8 +850,5 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 
-    {% if relevant_tools %}
-        <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
-    {% endif %}
 {% endblock %}
 

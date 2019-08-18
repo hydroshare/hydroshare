@@ -46,7 +46,6 @@ $('#btn-signout-irods').on('click', function() {
         $("#sign-in-info").removeClass();
         $("#sign-in-info").addClass("hidden");
         sessionStorage.IRODS_signininfo = '';
-        $("#irods-sel-file").text('');
         $("#btn-select-irods-file").toggleClass("hidden", true);
         $("#log-into-irods").show();
         $("#btn-signout-irods").toggleClass("hidden", true);
@@ -89,7 +88,6 @@ function irods_login() {
                     $("#log-into-irods").hide();
                     $("#btn-signout-irods").toggleClass("hidden", false);
                     $("#btn-select-irods-file").toggleClass("hidden", false);
-                    $("#irods-sel-file").text("No file selected.");
                 }
 
                 sessionStorage.IRODS_signininfo = signInStr;
@@ -116,7 +114,6 @@ function irods_login() {
                     $("#sign-in-info").addClass("alert alert-danger");
                     sessionStorage.IRODS_signininfo = '';
                     $("#btn-select-irods-file").toggleClass("hidden", true);
-                    $("#irods-sel-file").text('');
                 }
             }
             $('#irodsSignin').modal('hide');
@@ -141,7 +138,6 @@ function irods_login() {
                 $("#sign-in-info").removeClass();
                 $("#sign-in-info").addClass("alert alert-danger");
                 $("#btn-select-irods-file").toggleClass("hidden", true);
-                $("#irods-sel-file").text('');
                 $('#irodsSignin').modal('hide');
                 $("#irodsSignin .btn-primary").text("Sign in");
                 $("#irodsSignin .btn-primary").toggleClass("disabled", false);

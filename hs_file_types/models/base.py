@@ -24,10 +24,13 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from lxml import etree
 
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
+
+RESMAP_FILE_ENDSWITH = "_resmap.xml"
+METADATA_FILE_ENDSWITH = "_meta.xml"
 
 
 class AbstractFileMetaData(models.Model):
@@ -55,6 +58,13 @@ class AbstractFileMetaData(models.Model):
          associated with this file type metadata object.
         """
         return list(self.coverages.all())
+
+    def dict(self):
+        dict = {}
+        metadata = self.get_metadata_elements()
+        for element in metadata:
+            dict.update(element.dict)
+        return dict
 
     def delete_all_elements(self):
         self.coverages.all().delete()
@@ -688,42 +698,40 @@ class AbstractLogicalFile(models.Model):
         # at this point the logical file is not created in DB - caller needs to save it to DB
         return logical_file
 
-    def _finalize(self, user, resource, folder_created, res_files_to_delete, reset_title=False):
-        """
-        A helper for creating aggregation. As a final step in creation of aggregation/logical file,
-        sets resource access control and generates aggregation xml files and if necessary delete
-        original resource files
-        :param  user: user who is creating a new aggregation
-        :param  resource: an instance of CompositeResource
-        :param  folder_created: True/False to indicate if a new folder has been created represent
-        this aggregation
-        :param  res_files_to_delete: a list of resource files to delete
-        :param  reset_title: True/False to indicate if aggregation dataset_name attribute needs
-        to be modified
-        """
+    @classmethod
+    def create_aggregation(cls, dataset_name, resource, res_files=None, new_files_to_upload=None,
+                           folder_path=None):
+        """Creates an aggregation
+        :param  dataset_name  a value for setting the dataset_name attribute of the new aggregation
+        :param  resource  an instance of CompositeResource in which the aggregation to be created
+        :param  res_files  a list of resource files that need to be part of the new aggregation
+        :param  new_files_to_upload  a list of files that needs to be uploaded to the resource as
+        part of creating the new aggregation
+        :param  folder_path  path of the folder to which files need to be uploaded
 
-        # for multi-file aggregation set the aggregation dataset_name field to the containing
-        # folder name
-        if not self.is_single_file_aggregation and reset_title:
-            if '/' in self.aggregation_name:
-                folder = os.path.basename(self.aggregation_name)
-            else:
-                folder = self.aggregation_name
-            self.dataset_name = folder
-            self.save()
-        # set resource to private if logical file is missing required metadata
-        resource.update_public_and_discoverable()
-        self.create_aggregation_xml_documents()
-        # check if we need to delete any files
-        if len(res_files_to_delete) == 1:
-            res_file = res_files_to_delete[0]
-            if res_file.extension.lower() == '.zip' or folder_created:
-                delete_resource_file(resource.short_id, res_file.id, user)
-        elif folder_created:
-            for res_file in res_files_to_delete:
-                delete_resource_file(resource.short_id, res_file.id, user)
+        :returns a new aggregation
+        """
+        logical_file = cls.initialize(dataset_name, resource)
+        logical_file.save()
+        if res_files is None:
+            res_files = []
 
-        resource_modified(resource, user, overwrite_bag=False)
+        # make all existing resource files part of the aggregation
+        for res_file in res_files:
+            logical_file.add_resource_file(res_file)
+
+        if new_files_to_upload is None:
+            new_files_to_upload = []
+        # add all new files to the resource
+        for f in new_files_to_upload:
+            uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
+
+            new_res_file = add_file_to_resource(
+                resource, uploaded_file, folder=folder_path, add_to_aggregation=False
+            )
+            logical_file.add_resource_file(new_res_file)
+
+        return logical_file
 
     @classmethod
     def _create_aggregation_folder(cls, resource, file_folder, base_file_name):
@@ -765,6 +773,10 @@ class AbstractLogicalFile(models.Model):
                         return f
         return None
 
+    @property
+    def url(self):
+        return os.path.join("/", "resource", self.resource.file_path, self.aggregation_name)
+
     @classmethod
     def get_allowed_storage_file_types(cls):
         # can store any file types in this logical file group - subclass needs to override this
@@ -805,9 +817,9 @@ class AbstractLogicalFile(models.Model):
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
         if this is missing then folder_path must be specified
-        :param folder_path: (optional) path of the folder which needs to be set to an aggregation
-        type - if this is missing then file_id must be specified. If specified a path relative
-        to the resource.file_path will be returned
+        :param folder_path: (optional) path of the folder which needs to be set to a FileSet
+        aggregation type - if this is missing then file_id must be specified. If specified a
+        path relative to the resource.file_path will be returned
         :raise  ValidationError if validation fails
         :return an instance of ResourceFile if validation is successful and the folder_path
         """
@@ -815,11 +827,21 @@ class AbstractLogicalFile(models.Model):
         if file_id is None and folder_path is None:
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
+
+        if cls.__name__ == 'FileSetLogicalFile' and folder_path is None:
+            raise ValueError("Must specify path of the folder to set as a "
+                             "fileset aggregation type")
+
+        if cls.__name__ != 'FileSetLogicalFile' and file_id is None:
+            raise ValueError("Must specify id of the file to set as an "
+                             "aggregation type")
+
         if file_id is not None:
             # user selected a file to set aggregation
             res_file = get_resource_file_by_id(resource, file_id)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
+            res_file = None
             storage = resource.get_irods_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
@@ -829,29 +851,11 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            # check if an aggregation can be created from the specified folder
-            aggregation_to_set = resource.get_folder_aggregation_type_to_set(path_to_check)
-            if aggregation_to_set is None:
-                msg = "Aggregation can't be created from the specified folder:{}"
+            # check if a FileSet aggregation can be created from the specified folder
+            if not resource.can_set_folder_to_fileset(path_to_check):
+                msg = "FileSet aggregation can't be created from the specified folder:{}"
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
-
-            res_file = None
-            if cls.__name__ != 'FileSetLogicalFile':
-                # get the files from the specified folder location
-                res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
-                                                     sub_folders=False)
-                if not res_files:
-                    msg = "The specified folder {} does not contain any file."
-                    msg = msg.format(path_to_check)
-                    raise ValidationError(msg)
-                else:
-                    # check if the specified folder is suitable for aggregation
-                    if cls.check_files_for_aggregation_type(res_files):
-                        # get the primary file suitable for creating a specific aggregation type
-                        res_file = cls.get_primary_resouce_file(res_files)
-                    else:
-                        res_file = None
 
         if cls.__name__ != 'FileSetLogicalFile':
             if res_file is None or not res_file.exists:
@@ -884,39 +888,6 @@ class AbstractLogicalFile(models.Model):
         """Sub classes must implement this method to return a name for this
         logical (aggregation) type used in UI"""
         raise NotImplementedError()
-
-    @staticmethod
-    def _cleanup_on_fail_to_create_aggregation(user, resource, folder_to_delete, original_folder,
-                                               aggregation_from_folder):
-        """Deletes folder if a new aggregation folder *folder_to_delete*  was created
-        :param  user: user hwo was trying to create the aggregation
-        :param  resource: an instance of CompositeResource for which the aggregation was created
-        :param  folder_to_delete: the aggregation folder to delete
-        :param  original_folder: folder path for the files originally located before moving to the
-        new aggregation folder
-        :param  aggregation_from_folder: (bool) a flag to indicate if the aggregation was being
-        created from a folder or not
-        """
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-
-        new_folder_created = folder_to_delete and not aggregation_from_folder
-        if new_folder_created:
-
-            # delete if a new folder was created for the aggregation
-            folder_to_remove = os.path.join('data', 'contents', folder_to_delete)
-            res_files = ResourceFile.list_folder(resource=resource, folder=folder_to_delete,
-                                                 sub_folders=False)
-            # move the files from the folder to delete to the original folder
-            if original_folder is None:
-                original_folder = ''
-            original_folder_path = os.path.join('data', 'contents', original_folder)
-            for f in res_files:
-                tgt_file_path = os.path.join(original_folder_path, f.file_name)
-                src_file_path = os.path.join('data', 'contents', f.short_path)
-                move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
-                                              tgt_file_path, validate_move_rename=False)
-            remove_folder(user, resource.short_id, folder_to_remove)
 
     def get_aggregation_class_name(self):
         """Return the class name of the logical type (aggregation type)"""
@@ -953,11 +924,6 @@ class AbstractLogicalFile(models.Model):
         return sum([f.size for f in self.files.all()])
 
     @property
-    def can_contain_folders(self):
-        """By default an aggregation can't have folders"""
-        return False
-
-    @property
     def supports_resource_file_move(self):
         """allows a resource file that is part of this logical file type to be moved"""
         return True
@@ -991,33 +957,21 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
-        if self.is_single_file_aggregation:
-            # self is a single file aggregation type
-            return self.files.first().short_path
-        else:
-            # self is a multi- file aggregation type
-            if not self.is_fileset:
-                return self.files.first().file_folder
-
-            # self is a fileset aggregation
-            return self.folder
+        if not self.is_fileset:
+            # any aggregation that is not a fileset type, the path of the aggregation primary file
+            # is the aggregation name
+            primary_file = self.get_primary_resouce_file(self.files.all())
+            if not primary_file:
+                return ""
+            return primary_file.short_path
+        # self is a fileset aggregation - aggregation folder path is the aggregation name
+        return self.folder
 
     @property
     def metadata_short_file_path(self):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
-
-        xml_file_name = self.aggregation_name
-        if "/" in xml_file_name:
-            xml_file_name = os.path.basename(xml_file_name)
-        xml_file_name += "_meta.xml"
-        if self.is_fileset:
-            file_folder = self.folder
-        else:
-            file_folder = self.files.first().file_folder
-        if file_folder is not None:
-            xml_file_name = os.path.join(file_folder, xml_file_name)
-        return xml_file_name
+        return self._xml_file_short_path(resmap=False)
 
     @property
     def metadata_file_path(self):
@@ -1029,17 +983,7 @@ class AbstractLogicalFile(models.Model):
     def map_short_file_path(self):
         """File path of the aggregation map xml file relative to {resource_id}/data/contents/
         """
-        xml_file_name = self.aggregation_name
-        if "/" in xml_file_name:
-            xml_file_name = os.path.basename(xml_file_name)
-        xml_file_name += "_resmap.xml"
-        if self.is_fileset:
-            file_folder = self.folder
-        else:
-            file_folder = self.files.first().file_folder
-        if file_folder is not None:
-            xml_file_name = os.path.join(file_folder, xml_file_name)
-        return xml_file_name
+        return self._xml_file_short_path()
 
     @property
     def map_file_path(self):
@@ -1267,7 +1211,7 @@ class AbstractLogicalFile(models.Model):
         """
 
         aggr_path = self.aggregation_name
-        if "/" in aggr_path:
+        if aggr_path and "/" in aggr_path:
             parent_aggr_path = os.path.dirname(aggr_path)
             return self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
 
@@ -1346,38 +1290,6 @@ class AbstractLogicalFile(models.Model):
             raise ex
         finally:
             shutil.rmtree(tmpdir)
-
-    @staticmethod
-    def _check_create_aggregation_folder(selected_res_file, selected_folder,
-                                         aggregation_file_count):
-        """
-        A helper that checks if a new folder needs to be created for the aggregation
-        :param: selected_res_file: the file that has been selected by the user to set aggregation
-        :param: aggregation_file_count: number of files that are going to be part of the
-        aggregation to be created
-        """
-        create_new_folder = False
-        file_folder = selected_res_file.file_folder
-        if file_folder and not selected_folder:
-            resource = selected_res_file.resource
-            istorage = resource.get_irods_storage()
-            store = istorage.listdir(selected_res_file.dir_path)
-
-            folders = store[0]
-            files = store[1]
-            if folders:
-                # since there are folders under dir_path - need to create a new folder for
-                # the new aggregation
-                create_new_folder = True
-
-            elif len(files) > aggregation_file_count:
-                # there are additional files at selected_res_file.dir_path - need to create a new
-                # folder new aggregation
-                create_new_folder = True
-        else:
-            create_new_folder = True
-
-        return create_new_folder
 
     def _generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
@@ -1471,3 +1383,98 @@ class AbstractLogicalFile(models.Model):
         xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
+
+    def _xml_file_short_path(self, resmap=True):
+        """File path of the aggregation metadata or map xml file relative
+        to {resource_id}/data/contents/
+        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
+        aggregation metadata file is returned
+        """
+        xml_file_name = self.aggregation_name
+        if "/" in xml_file_name:
+            xml_file_name = os.path.basename(xml_file_name)
+
+        xml_file_name, _ = os.path.splitext(xml_file_name)
+
+        if resmap:
+            xml_file_name += RESMAP_FILE_ENDSWITH
+        else:
+            xml_file_name += METADATA_FILE_ENDSWITH
+
+        if self.is_fileset:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
+        if file_folder is not None:
+            xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
+
+
+class FileTypeContext(object):
+    """A ContextManager for creating file type/aggregation
+    :param  aggr_cls  aggregation class using this context manager
+    :param  user  an instance of User  (user creating the aggregation)
+    :param  resource  an instance of CompositeResource for which aggregation is created
+    :param  file_id  (optional) id of the resource file from which aggregation to be created -
+    required for creating any aggregation other than FileSet aggregation
+    :param  folder_path (optional) path of the folder from which aggregation to be created -
+    required for creating FileSet aggregation
+    :param post_aggr_signal (optional) post aggregation creation signal to send signal
+    :param  is_temp_file if True resource file specified by file_id will be retrieved from
+    irods to temp directory
+    """
+    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path=None,
+                 post_aggr_signal=None, is_temp_file=True):
+
+        self.aggr_cls = aggr_cls
+        self.user = user
+        self.resource = resource
+        self.file_id = file_id
+        self.folder_path = folder_path
+        self.post_aggr_signal = post_aggr_signal
+        self.is_temp_file = is_temp_file
+        # caller must set the logical_file attribute of the context manager
+        # before existing context manager
+        self.logical_file = None
+        # if any resource files need to be deleter as part of creating aggregation, caller needs
+        # to set the res_files_to_delete attribute of the context manager
+        self.res_files_to_delete = []
+
+    def __enter__(self):
+        # run this code at the start of the context manager before control returns to the caller
+        self.temp_dir = None
+        self.temp_file = None
+
+        self.res_file, self.folder_path = self.aggr_cls._validate_set_file_type_inputs(
+            self.resource, self.file_id, self.folder_path)
+
+        if self.is_temp_file:
+            # need to get the file from irods to temp dir
+            self.temp_file = get_file_from_irods(self.res_file)
+            self.temp_dir = os.path.dirname(self.temp_file)
+        return self  # control returned to the caller
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # run this code when caller is done with the context manager
+        if self.logical_file is not None:
+            # set resource to private if logical file is missing required metadata
+            self.resource.update_public_and_discoverable()
+
+            self.logical_file.create_aggregation_xml_documents()
+            if self.post_aggr_signal is not None:
+                self.post_aggr_signal.send(
+                    sender=AbstractLogicalFile,
+                    resource=self.resource,
+                    file=self.logical_file
+                )
+
+        # delete res files
+        for res_file in self.res_files_to_delete:
+            delete_resource_file(self.resource.short_id, res_file.id, self.user)
+
+        resource_modified(self.resource, self.user, overwrite_bag=False)
+
+        # delete temp dir
+        if self.temp_dir is not None:
+            if os.path.isdir(self.temp_dir):
+                shutil.rmtree(self.temp_dir)

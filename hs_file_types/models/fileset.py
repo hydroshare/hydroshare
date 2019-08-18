@@ -4,7 +4,7 @@ import logging
 from django.db import models
 
 from hs_core.models import ResourceFile
-from base import AbstractLogicalFile
+from base import AbstractLogicalFile, FileTypeContext
 from generic import GenericFileMetaDataMixin
 
 
@@ -46,11 +46,6 @@ class FileSetLogicalFile(AbstractLogicalFile):
         """
         return "File Set"
 
-    @property
-    def can_contain_folders(self):
-        """This aggregation can contain folders"""
-        return True
-
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""
@@ -84,23 +79,28 @@ class FileSetLogicalFile(AbstractLogicalFile):
         """
 
         log = logging.getLogger()
-        if folder_path is None:
-            raise ValueError("Must specify folder to be set as a file set aggregation type")
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=None,
+                             is_temp_file=False) as ft_ctx:
 
-        _, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+            folder_name = folder_path
+            if '/' in folder_path:
+                folder_name = os.path.basename(folder_path)
 
-        folder_name = folder_path
-        if '/' in folder_path:
-            folder_name = os.path.basename(folder_path)
+            # create a fileset logical file object
+            logical_file = cls.create_aggregation(dataset_name=folder_name,
+                                                  resource=resource,
+                                                  res_files=[],
+                                                  new_files_to_upload=[],
+                                                  folder_path=folder_path)
 
-        logical_file = cls.initialize(folder_name, resource)
-        logical_file.folder = folder_path
-        # logical file record gets created in DB
-        logical_file.save()
-        # make all the files in the selected folder as part of the aggregation
-        logical_file.add_resource_files_in_folder(resource, folder_path)
-        logical_file.create_aggregation_xml_documents()
-        log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
+            logical_file.folder = folder_path
+            logical_file.save()
+            # make all the files in the selected folder as part of the aggregation
+            logical_file.add_resource_files_in_folder(resource, folder_path)
+            ft_ctx.logical_file = logical_file
+            log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
 
     def add_resource_files_in_folder(self, resource, folder):
         """
@@ -167,15 +167,24 @@ class FileSetLogicalFile(AbstractLogicalFile):
 
         return child_aggregations
 
-    def update_folder(self, new_folder):
+    def update_folder(self, new_folder, old_folder):
         """Update folder attribute of this fileset (self) and folder attribute of all fileset
         aggregations that exist under self.
         When folder name of a fileset aggregation is changed, the folder attribute of all nested
         fileset aggregations needs to be updated.
         :param  new_folder:  new folder path of the self
+        :param  old_folder:  original folder path of the self
         """
 
-        for aggr in self.resource.logical_files:
-            if aggr.is_fileset and aggr.folder.startswith(self.folder):
-                aggr.folder = new_folder + aggr.folder[len(self.folder):]
-                aggr.save()
+        new_folder = new_folder.rstrip('/')
+        old_folder = old_folder.rstrip('/')
+
+        # update child fileset aggregations of self
+        for child_aggr in self.get_children():
+            if child_aggr.is_fileset:
+                child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
+                child_aggr.save()
+
+        # update self
+        self.folder = new_folder + self.folder[len(old_folder):]
+        self.save()

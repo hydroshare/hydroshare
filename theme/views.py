@@ -577,8 +577,8 @@ def delete_irods_account(request):
     if request.method == 'POST':
         user = request.user
         try:
-            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD, user.username)
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+            exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE, pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                             exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper():
@@ -608,11 +608,11 @@ def create_irods_account(request):
         try:
             user = request.user
             pwd = str(request.POST.get('password'))
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+            exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
                                             user.username, pwd)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper() and \

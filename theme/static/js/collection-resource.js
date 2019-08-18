@@ -208,10 +208,11 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
                             var res_is_discoverable = $("#discoverable").val();
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
-                                customAlert("Collection Status:", "Sufficient to publish or make public","success", 3000);
-                                $("#btn-public").prop("disabled", false);
-                                $("#btn-discoverable").prop("disabled", false);
+                                customAlert("Collection Status:", "Sufficient to publish or make public", "success", 3000);
                             }
+                        }
+                        else {
+                            manageAccessApp.onMetadataInsufficient();
                         }
                     }
                 }
@@ -288,8 +289,6 @@ function add_collection_item_ajax() {
                             // published, public and discoverable all have discoverable = True
                             if (res_is_discoverable.toLowerCase() != "true") {
                                 customAlert("Collection Status:", "Sufficient to publish or make public", "success", 3000);
-                                $("#btn-public").prop("disabled", false);
-                                $("#btn-discoverable").prop("disabled", false);
                             }
                         }
                     }

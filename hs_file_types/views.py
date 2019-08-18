@@ -18,6 +18,8 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
     ResourceFile, utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
+from hs_core.hydroshare.resource import update_quota_usage
+from hs_core.views.utils import rename_irods_file_or_folder_in_django
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
@@ -205,6 +207,87 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     response_data['message'] = msg
     spatial_coverage_dict = get_coverage_data_dict(res)
     response_data['spatial_coverage'] = spatial_coverage_dict
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
+    """Deletes all files associated with an aggregation and all the associated metadata.
+    """
+
+    response_data = {'status': 'error'}
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if res.resource_type != "CompositeResource":
+        err_msg = "Aggregation type can be deleted only in composite resource."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if aggregation is None:
+        err_msg = "No matching aggregation was found."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    for file in aggregation.files.all():
+        file.delete()
+    update_quota_usage(res)
+    msg = "Aggregation was successfully deleted."
+    response_data['status'] = 'success'
+    response_data['message'] = msg
+    spatial_coverage_dict = get_coverage_data_dict(res)
+    response_data['spatial_coverage'] = spatial_coverage_dict
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", **kwargs):
+    """moves all files associated with an aggregation and all the associated metadata.
+    """
+    response_data = {'status': 'error'}
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    res, _, user = authorize(request, resource_id,
+                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if res.resource_type != "CompositeResource":
+        err_msg = "Aggregation type can be deleted only in composite resource."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if aggregation is None:
+        err_msg = "No matching aggregation was found."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    istorage = res.get_irods_storage()
+    res_files = []
+    res_files.extend(aggregation.files.all())
+    orig_aggregation_name = aggregation.aggregation_name
+    for file in res_files:
+        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        istorage.moveFile(file.storage_path, tgt_full_path)
+        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    res.recreate_aggregation_xml_docs(orig_path=orig_aggregation_name,
+                                      new_path=new_aggregation_name)
+    resource_modified(res, user, overwrite_bag=False)
+    msg = "Aggregation was successfully moved to {}.".format(tgt_path)
+    response_data['status'] = 'success'
+    response_data['message'] = msg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
