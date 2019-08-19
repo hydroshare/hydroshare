@@ -1,11 +1,10 @@
-import os
 import logging
 
 from django.core.management.base import BaseCommand
 
 from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
-from hs_core.models import ResourceFile, CoreMetaData, Coverage
-from hs_core.views.utils import rename_irods_file_or_folder_in_django
+from hs_core.models import CoreMetaData, Coverage
+
 from hs_app_netCDF.models import NetcdfResource
 from hs_file_types.models import NetCDFLogicalFile
 from ..utils import migrate_core_meta_elements
@@ -61,28 +60,6 @@ class Command(BaseCommand):
                     # skip this corrupt netcdf resource
                     continue
 
-                # create a new folder based on nc file name
-                folder_name = nc_file.file_name[:-3]
-                ResourceFile.create_folder(nc_res, folder=folder_name)
-                # move the the two resource files to this new folder
-                file_move_failed = False
-                for res_file in nc_res.files.all():
-                    tgt_path = 'data/contents/{}/{}'.format(folder_name, res_file.file_name)
-                    src_full_path = res_file.public_path
-                    tgt_full_path = os.path.join(nc_res.root_path, tgt_path)
-                    try:
-                        istorage.moveFile(src_full_path, tgt_full_path)
-                        rename_irods_file_or_folder_in_django(nc_res, src_full_path, tgt_full_path)
-                    except Exception as ex:
-                        file_move_failed = True
-                        logger.error(ex.message)
-                        err_msg = "Failed to convert netcdf resource (ID: {}). {} ".format(
-                            nc_res.short_id, ex.message)
-                        print("Error:>> {}".format(err_msg))
-                        break
-                if file_move_failed:
-                    # skip this netcdf resource
-                    continue
             # change the resource_type
             nc_metadata_obj = nc_res.metadata
             nc_res.resource_type = to_resource_type
