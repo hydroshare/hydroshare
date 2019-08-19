@@ -81,7 +81,16 @@ class Command(BaseCommand):
             type_element.save()
             if create_nc_aggregation:
                 # create a NetCDF aggregation
-                nc_aggr = NetCDFLogicalFile.create(resource=comp_res)
+                try:
+                    nc_aggr = NetCDFLogicalFile.create(resource=comp_res)
+                except Exception as ex:
+                    err_msg = 'Failed to create NetCDF aggregation for resource (ID: {})'
+                    err_msg = err_msg.format(nc_res.short_id)
+                    err_msg = err_msg + '\n' + ex.message
+                    logger.error(err_msg)
+                    print("Error:>> {}".format(err_msg))
+                    continue
+
                 # set aggregation dataset title
                 nc_aggr.dataset_name = comp_res.metadata.title.value
                 nc_aggr.save()
@@ -120,6 +129,7 @@ class Command(BaseCommand):
                 msg = 'One Multidimensional aggregation was created in resource (ID: {})'
                 msg = msg.format(comp_res.short_id)
                 logger.info(msg)
+
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
             try:
@@ -127,6 +137,7 @@ class Command(BaseCommand):
             except Exception as ex:
                 err_msg = 'Failed to set bag flag dirty for the converted resource (ID: {})'
                 err_msg = err_msg.format(nc_res.short_id)
+                err_msg = err_msg + '\n' + ex.message
                 logger.error(err_msg)
                 print("Error:>> {}".format(err_msg))
 
