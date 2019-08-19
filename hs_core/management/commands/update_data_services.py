@@ -24,11 +24,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Run only if web services are enabled.
         if settings.HSWS_ACTIVATED:
+            print("Starting resource registration")
             # Get a list of public resources, or specified public resources.
             if len(options["resource_ids"]) > 0:
                 resource_list = [BaseResource.public_resources.get(
                     short_id=resource_id
-                ) for i in options["resource_ids"]]
+                ) for resource_id in options["resource_ids"]]
             else:
                 resource_list = BaseResource.public_resources.all()
             # Update composite resources containing geospatial content.
@@ -50,3 +51,7 @@ class Command(BaseCommand):
                             settings.HSWS_PUBLISH_URLS,
                             resource.short_id
                         ), countdown=1)
+                        print(resource.short_id)
+            print("Finished")
+        else:
+            print("Data services not enabled")
