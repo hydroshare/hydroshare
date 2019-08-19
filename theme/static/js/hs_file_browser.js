@@ -1466,10 +1466,10 @@ $(document).ready(function () {
                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                                     '<span aria-hidden="true">&times;</span></button>' +
                                 '<div>' +
-                                    '<strong>File Upload Failed</strong>'+
+                                    '<strong>Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
+                                    '<span>' + errorMessage['validation_error'] + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });
