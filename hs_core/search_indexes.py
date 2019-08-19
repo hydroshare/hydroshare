@@ -164,7 +164,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
-        if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
+        if hasattr(obj, 'metadata') and obj.metadata.title is not None:
             return obj.metadata.title.value.lstrip()
         else:
             return 'none'
