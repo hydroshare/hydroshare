@@ -534,7 +534,7 @@ $(document).ready(function () {
         "info": false,
         "bFilter": false,
         "bInfo": false,
-        "language": {"emptyTable": "No Extended Metadata"}
+        "language": {"emptyTable": "No Additional Metadata"}
     });
 
     $("#btn-add-new-entry").click(function() {
