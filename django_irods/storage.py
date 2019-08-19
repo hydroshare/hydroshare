@@ -322,5 +322,6 @@ class IrodsStorage(Storage):
         Reject duplicate file names rather than renaming them.
         """
         if self.exists(name):
-            raise ValidationError(str.format("File {} already exists.", name))
+            name = str(name).split("/")
+            raise ValidationError(str.format("File '{}' already exists.", name[-1]))
         return name
