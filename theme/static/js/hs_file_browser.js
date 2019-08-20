@@ -2,11 +2,12 @@
  * Created by Mauriel on 8/16/2016.
  */
 
-var sourcePaths = [];
+var sourcePaths = {path: null, selected:[]};
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
+var currentAggregations = [];
 
 var file_metadata_alert =
     '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
@@ -33,63 +34,103 @@ var loading_metadata_alert =
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, url, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath, mainFile) {
-    if (folderAgrregationType.length > 0) {
+function getCurrentPath() {
+    return pathLog[pathLogIndex];
+}
+
+function clearSourcePaths() {
+    sourcePaths = {path: null, selected: []};
+    $("#fb-files-container li").removeClass("fb-cutting");
+}
+
+function getFolderTemplateInstance(folder) {
+    if (folder['folder_aggregation_type'] === "FileSetLogicalFile") {
         var folderIcons = getFolderIcons();
         let iconTemplate = folderIcons.DEFAULT;
 
-        if (folderIcons[folderAgrregationType]) {
-            iconTemplate = folderIcons[folderAgrregationType];
+        if (folderIcons[folder['folder_aggregation_type']]) {
+            iconTemplate = folderIcons[folder['folder_aggregation_type']];
         }
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' data-logical-file-id='" + folderAggregationID+ "' main-file='" + mainFile + "' title='" + folderName + "&#13;" + folderAggregationName + "' >" +
-                iconTemplate +
-                "<span class='fb-file-name'>" + folderName + "</span>" +
-                "<span class='fb-file-type'>File Folder</span>" +
-                "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID +  "'>" + folderAggregationName + "</span>" +
-                "<span class='fb-file-size'></span>" +
-            "</li>"
-    }
-    else {
-        return "<li class='fb-folder droppable draggable' data-url='" + url + "' title='" + folderName + "&#13;Type: File Folder'>" +
-            "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
-            "<span class='fb-file-name'>" + folderName + "</span>" +
-            "<span class='fb-file-type' data-folder-short-path='" + folderShortPath + "'>File Folder</span>" +
-            "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folderAggregationTypeToSet + "'></span>" +
+        return "<li class='fb-folder droppable draggable' data-url='" +
+            folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
+            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] + "' >" +
+            iconTemplate +
+            "<span class='fb-file-name'>" + folder['name'] + "</span>" +
+            "<span class='fb-file-type'>File Folder</span>" +
+            "<span class='fb-logical-file-type' data-logical-file-type='" +
+            folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
+            folder['folder_aggregation_name'] + "</span>" +
             "<span class='fb-file-size'></span>" +
             "</li>"
     }
+
+    // Default
+    return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
+        folder.name + "&#13;Type: File Folder'>" +
+        "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
+        "<span class='fb-file-name'>" + folder.name + "</span>" +
+        "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
+        folder['folder_aggregation_type_to_set'] + "'></span>" +
+        "<span class='fb-file-size'></span>" +
+        "</li>";
+}
+
+function getVirtualFolderTemplateInstance(agg) {
+    var folderIcons = getFolderIcons();
+    let iconTemplate = folderIcons.DEFAULT;
+
+    if (folderIcons[agg.logical_type]) {
+      iconTemplate = folderIcons[agg.logical_type];
+    }
+
+    return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
+      "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
+      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file + "' >" +
+      iconTemplate +
+      "<span class='fb-file-name'>" + agg.name + "</span>" +
+      "<span class='fb-file-type'>File Folder</span>" +
+      "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
+      "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
+      "<span class='fb-file-size'></span>" +
+      "</li>";
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url, ref_url, is_single_file_aggregation) {
-    var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-
+function getFileTemplateInstance(file) {
+    var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
     var iconTemplate;
-
     var fileIcons = getFileIcons();
 
     if (fileIcons[fileTypeExt.toUpperCase()]) {
         iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
     }
-    else if (fileName.toUpperCase().endsWith(".REFTS.JSON")){
+    else if (file.name.toUpperCase().endsWith(".REFTS.JSON")){
         iconTemplate = fileIcons["JSON"];
     }
     else {
         iconTemplate = fileIcons.DEFAULT;
     }
 
-    if (logical_type.length > 0){
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;" + aggregation_name;
+    if (file.logical_type.length > 0){
+        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+            formatBytes(parseInt(file.size)) + "&#13;" + file.aggregation_name;
     }
     else {
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
+        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+            formatBytes(parseInt(file.size));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' data-ref-url='" + ref_url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" + is_single_file_aggregation + "'>" +
+    return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
+        file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
+        "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
+        file.is_single_file_aggregation + "'>" +
         iconTemplate +
-        "<span class='fb-file-name'>" + fileName + "</span>" +
-        "<span class='fb-file-type'>" + fileType + " File</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type='" + logical_type + "' data-logical-file-id='" + logical_file_id +  "'>" + aggregation_name + "</span>" +
-        "<span class='fb-file-size' data-file-size=" + fileSize + ">" + formatBytes(parseInt(fileSize)) + "</span></li>"
+        "<span class='fb-file-name'>" + file.name + "</span>" +
+        "<span class='fb-file-type'>" + file.type + " File</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
+        file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
+        "<span class='fb-file-size' data-file-size=" + file.size + ">" + formatBytes(parseInt(file.size)) +
+        "</span></li>"
 }
 
 function formatBytes(bytes) {
@@ -123,7 +164,7 @@ var initActionState = {
 */
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
-    var resourceType = $("#resource-type").val();
+    var resourceType = RES_TYPE;
     var mode = $("#hs-file-browser").attr("data-mode");
     var selectedFileName = selected.children(".fb-file-name").text().toUpperCase();
 
@@ -150,6 +191,7 @@ function updateSelectionMenuContext() {
         "subMenuSetContentType",
         "unzip",
         "updateRefUrl",
+        "uploadFiles",
         "zip",
     ];
     var uiActionStates = {};
@@ -162,7 +204,7 @@ function updateSelectionMenuContext() {
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
-        // Multiple files selected
+        //  ------------- Multiple files selected -------------
         uiActionStates.rename.disabled = true;
         uiActionStates.rename.fileMenu.hidden = true;
 
@@ -242,7 +284,7 @@ function updateSelectionMenuContext() {
 
         var fileName = $(selected).find(".fb-file-name").text();
 
-        // The item selected is a folder
+        //  ------------- The item selected is a folder -------------
         if (selected.hasClass("fb-folder")) {
             uiActionStates.unzip.disabled = true;
             uiActionStates.unzip.fileMenu.hidden = true;
@@ -257,6 +299,10 @@ function updateSelectionMenuContext() {
             uiActionStates.setGenericFileType.disabled = true;
             uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
+            // Disable creating aggregations from folders
+            uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+            uiActionStates.subMenuSetContentType.disabled = true;
+
             uiActionStates.setRefTimeseriesFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
@@ -264,47 +310,19 @@ function updateSelectionMenuContext() {
                 uiActionStates.removeAggregation.fileMenu.hidden = true;
             }
             else {
-                // Folder is a logical file type
+                //  ------------- Folder is a logical file type -------------
                 uiActionStates.zip.disabled = true;
+                uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
 
-            if (selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
-                var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
-                if (logicalFileTypeToSet.length) {
-                    if (logicalFileTypeToSet !== "NetCDFLogicalFile") {
-                        uiActionStates.setNetCDFFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "GeoRasterLogicalFile") {
-                        uiActionStates.setGeoRasterFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "GeoFeatureLogicalFile") {
-                        uiActionStates.setGeoFeatureFileType.disabled = true;
-                    }
-                    if (logicalFileTypeToSet !== "TimeSeriesLogicalFile") {
-                        uiActionStates.setTimeseriesFileType.disabled = true;
-                    }
-                }
-                else {
-                    uiActionStates.setNetCDFFileType.disabled = true;
-                    uiActionStates.setGeoRasterFileType.disabled = true;
-                    uiActionStates.setGeoFeatureFileType.disabled = true;
-                    uiActionStates.setTimeseriesFileType.disabled = true;
-                    uiActionStates.setFileSetFileType.disabled = true;
-                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
-                }
-            }
-            else {
-                uiActionStates.setNetCDFFileType.disabled = true;
-                uiActionStates.setGeoRasterFileType.disabled = true;
-                uiActionStates.setGeoFeatureFileType.disabled = true;
-                uiActionStates.setTimeseriesFileType.disabled = true;
-                uiActionStates.setFileSetFileType.disabled = true;
+            let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
-        // The item selected is a file
+        //  ------------- The item selected is a file -------------
         else {
             const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
 
@@ -392,7 +410,7 @@ function updateSelectionMenuContext() {
         }
     }
     else {
-        // No files selected
+        // ------------- No files selected -------------
         uiActionStates.cut.disabled = true;
         uiActionStates.rename.disabled = true;
         uiActionStates.unzip.disabled = true;
@@ -417,6 +435,8 @@ function updateSelectionMenuContext() {
                     logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
+                        uiActionStates.paste.disabled = true;
+                        uiActionStates.uploadFiles.disabled = true;
                     }
                 }
             })
@@ -426,20 +446,19 @@ function updateSelectionMenuContext() {
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
 
-    // Any number of items selected
+    // ------------- Any number of items selected ----------------------
 
-    const logicalFileType = $(selected).children('span.fb-logical-file-type').attr("data-logical-file-type");
+    // Check if any aggregation was included in the selection
+    selected.each(function () {
+        if (isVirtualFolder(selected[0])) {
+            uiActionStates.createFolder.disabled = true;
+            uiActionStates.delete.disabled = !selected.hasClass("fb-folder");
+            // uiActionStates.cut.disabled = true;
+            uiActionStates.setGenericFileType.disabled = true;
+        }
+    });
 
-    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-        logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-        uiActionStates.createFolder.disabled = true;
-        uiActionStates.rename.disabled = !selected.hasClass("fb-folder");
-        uiActionStates.delete.disabled = !selected.hasClass("fb-folder");
-        uiActionStates.cut.disabled = true;
-        uiActionStates.setGenericFileType.disabled = true;
-    }
-
-    // A file is included in the selection
+    //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
@@ -451,8 +470,33 @@ function updateSelectionMenuContext() {
         uiActionStates.zip.fileMenu.hidden = true;
     }
 
-    if (!sourcePaths.length) {
+    if (!sourcePaths.selected.length) {
         uiActionStates.paste.disabled = true;
+    }
+
+    if (getCurrentPath().hasOwnProperty("aggregation")) {
+        //  ------------- The current path points to an aggregation -------------
+        uiActionStates.setGenericFileType.disabled = true;
+        uiActionStates.setGenericFileType.fileMenu.hidden = true;
+
+        uiActionStates.setFileSetFileType.disabled = true;
+        uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+        uiActionStates.uploadFiles.disabled = true;
+
+        let logicalFileType = getCurrentPath().aggregation.logical_type;
+        let aggregationTypes = [
+            "GeoRasterLogicalFile",
+            "NetCDFLogicalFile",
+            "GeoFeatureLogicalFile",
+            "TimeSeriesLogicalFile"
+        ];
+
+        //  ------------- Logic specific to the aggregation types above -------------
+        if ($.inArray(logicalFileType, aggregationTypes) >= 0) {
+            uiActionStates.rename.disabled = true;
+            uiActionStates.delete.disabled = true;
+        }
     }
 
     // Toggle properties based on states
@@ -471,6 +515,48 @@ function updateSelectionMenuContext() {
     $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
 }
 
+// Proxy function when pasting in current directory triggering from menu item or button
+function onPaste() {
+    let folderName = $("#fb-files-container li.ui-selected").find(".fb-file-name").text();
+    paste(getCurrentPath().path.concat(folderName))
+}
+
+// Pastes the files currently in the global variable source Paths into a destination path
+function paste(destPath) {
+    let calls = [];
+    let localSources = [];
+
+    // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
+    sourcePaths.selected.each(function () {
+        if (isVirtualFolder(this)) {
+            let item = $(this);
+            const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+            const file_type_id = item.attr("data-logical-file-id");
+            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+        }
+        else {
+            const itemName = $(this).find(".fb-file-name").text();
+            localSources.push(sourcePaths.path.concat(itemName).join('/'));
+            $(this).addClass("fb-cutting");
+        }
+    });
+
+    if (localSources.length) {
+        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
+    }
+
+    // Wait for the asynchronous call to finish to get new folder structure
+    $.when.apply($, calls).done(function () {
+        refreshFileBrowser();
+        clearSourcePaths();
+    });
+
+    $.when.apply($, calls).fail(function () {
+        refreshFileBrowser();
+        clearSourcePaths();
+    });
+}
+
 function bindFileBrowserItemEvents() {
     var mode = $("#hs-file-browser").attr("data-mode");
 
@@ -478,63 +564,31 @@ function bindFileBrowserItemEvents() {
     if (mode === "edit") {
         $(".droppable").droppable({
             drop: function (event, ui) {
+                // var resID = $("#hs-file-browser").attr("data-res-id");
                 var destination = $(event.target);
-                var sources = $("#fb-files-container li.ui-selected").children(".fb-file-name");
-                var destName = destination.children(".fb-file-name").text();
-                var destFileType = destination.children(".fb-file-type").text();
+                if (isVirtualFolder(destination)) {
+                    return; // Moving files into aggregations is not allowed
+                }
+                var selection = $("#fb-files-container li.ui-selected");
+                var destName = destination.find(".fb-file-name").text();
+                var destFileType = destination.find(".fb-file-type").text();
 
                 if (destFileType !== "File Folder") {
                     return;
                 }
 
-                var currentPath = $("#hs-file-browser").attr("data-current-path");
-                var destFolderPath;
-                if(currentPath === "") {
-                    destFolderPath = destName;
-                }
-                else {
-                    destFolderPath = currentPath + "/" + destName;
-                }
-                var calls = [];
-                var callSources = [];
-                for (var i = 0; i < sources.length; i++) {
-                    var sourcePath;
-                    var destPath;
-                    if(currentPath === "") {
-                        sourcePath = $(sources[i]).text();
-                    }
-                    else {
-                        sourcePath = currentPath + "/" + $(sources[i]).text();
-                    }
-                    if(destFolderPath === "") {
-                        destPath = $(sources[i]).text();
-                    }
-                    else {
-                        destPath = destFolderPath + "/" + $(sources[i]).text();
-                    }
-                    if (sourcePath !== destPath) {
-                        callSources.push(sourcePath);
-                    }
-                }
-                // use same entry point as cut/paste
-                calls.push(move_to_folder_ajax_submit(SHORT_ID, callSources, destFolderPath));
-
-                $.when.apply($, calls).done(function () {
-                    refreshFileBrowser();
-                    destination.removeClass("fb-drag-cutting");
-                });
-
-                $.when.apply($, calls).fail(function () {
-                    refreshFileBrowser();
-                    destination.removeClass("fb-drag-cutting");
-                });
-
+                // Load the files to be moved
+                sourcePaths = {path: getCurrentPath().path, selected: selection};
+                paste(getCurrentPath().path.concat(destName));
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
                 if (!$(event.target).hasClass("ui-selected")) {
                     $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
-                    $(event.target).addClass("fb-drag-cutting");
+                    let target = $(event.target);
+                    if (!target.attr("data-logical-file-id")) {
+                        target.addClass("fb-drag-cutting");
+                    }
                 }
             },
             out: function (event, ui) {
@@ -681,11 +735,13 @@ function bindFileBrowserItemEvents() {
             menu = $("#right-click-menu");
 
             var fileAggType = [];
+            let target = $(event.target).closest("li");
+
             // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
-            if ($(event.target).closest("li").attr("main-file") || $(event.target).closest("li").attr("is-single-file-aggregation") === "true"){
-                fileAggType = $(event.target).closest("li").find("span.fb-logical-file-type").attr("data-logical-file-type");
+            if (isVirtualFolder(target) || target.attr("main-file") || target.attr("is-single-file-aggregation") === "true"){
+                fileAggType = target.find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
-            var fileName = $(event.target).closest("li").find("span.fb-file-name").text();
+            var fileName = target.find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
 
             // toggle apps by file extension and aggregations
@@ -737,7 +793,8 @@ function showFileTypeMetadata(file_type_time_series, url){
 
     var selectedItem = $("#fb-files-container li.ui-selected");
     var logical_file_id = selectedItem.attr("data-logical-file-id");
-    if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
+    if (getCurrentPath().hasOwnProperty("aggregation") ||
+      !logical_file_id || (logical_file_id && logical_file_id.length == 0)) {
         $("#fileTypeMetaData").html(no_metadata_alert);
         // Set corresponding action for "Add metadata" button in side bar
         if (selectedItem.hasClass("fb-file")) {
@@ -745,6 +802,11 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
         else {
             $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+        }
+
+        if (getCurrentPath().hasOwnProperty("aggregation")) {
+            // Metadata can't be added to aggregation files
+            $("#btnSideAddMetadata").addClass("disabled");
         }
         return;
     }
@@ -754,9 +816,9 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     if (selectedItem.hasClass("fb-file")) {
-        // only in the case Ref TimeSeries file type or generic file type we need to show
-        // file type metadata when a file is selected
-        if (logical_type !== "RefTimeseriesLogicalFile" && logical_type !== "GenericLogicalFile") {
+        // we need to show file type metadata when a file is selected if that file is not part
+        // of a FileSet aggregation
+        if (logical_type === "FileSetLogicalFile") {
             $("#fileTypeMetaData").html(no_metadata_alert);
             $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
             updateSelectionMenuContext();
@@ -811,77 +873,80 @@ function showFileTypeMetadata(file_type_time_series, url){
                  return false;
              }
          });
-         $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-         $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
-         $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
-         showMetadataFormSaveChangesButton();
-         initializeDatePickers();
-         var bindCoordinatesPicker = true;
-         // show/hide spatial delete option for aggregation in addition to other settings for
-         // aggregation spatial coverage form
-         setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
-         // show/hide temporal data delete option for the aggregation
-         setFileTypeTemporalCoverageDeleteOption(logical_type);
-         // Bind event handler for submit button
-         setFileTypeMetadataFormsClickHandlers();
 
-         var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
-         var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
-         if (logical_type === "NetCDFLogicalFile") {
-             // don't let the user open the Projection String Type dropdown list
-             // when editing Original Coverage element
-             $("#id_projection_string_type_filetype").css('pointer-events', 'none');
-             // don't let the user open the Variable type dropdown list when editing
-             // Variable elements
-             $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
-         }
-         if (logical_type === "RefTimeseriesLogicalFile"){
-             var $startDateElement = $("#id_start_filetype");
-             var $endDateElement = $("#id_end_filetype");
-             $startDateElement.css('pointer-events', 'none');
-             $endDateElement.css('pointer-events', 'none');
-         }
-         if (logical_type === 'TimeSeriesLogicalFile') {
-             $("#series_id_file_type").change(function () {
-                 var $url = $(this.form).attr('action');
-                 $url = $url.replace('series_id', $(this).val());
-                 $url = $url.replace('resource_mode', resource_mode);
-                 // make a recursive call to this function
-                 showFileTypeMetadata(true, $url);
-             });
-             if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
-                 $("#div-sqlite-file-update").hide();
+        if (RESOURCE_MODE === "Edit") {
+             $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+             $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
+             $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
+             showMetadataFormSaveChangesButton();
+             initializeDatePickers();
+             var bindCoordinatesPicker = true;
+             // show/hide spatial delete option for aggregation in addition to other settings for
+             // aggregation spatial coverage form
+             setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
+             // show/hide temporal data delete option for the aggregation
+             setFileTypeTemporalCoverageDeleteOption(logical_type);
+             // Bind event handler for submit button
+             setFileTypeMetadataFormsClickHandlers();
+
+             var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
+             var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
+             if (logical_type === "NetCDFLogicalFile") {
+                 // don't let the user open the Projection String Type dropdown list
+                 // when editing Original Coverage element
+                 $("#id_projection_string_type_filetype").css('pointer-events', 'none');
+                 // don't let the user open the Variable type dropdown list when editing
+                 // Variable elements
+                 $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
              }
-             $(".hs-coordinates-picker").each(function() {
-                    const instance = $(this);
-                    instance.coordinatesPicker();
-             });
-             InitializeTimeSeriesFileTypeForms();
-         }
-         if (logical_type === "GeoRasterLogicalFile"){
-             $spatialRadioBox.prop("checked", true);
-             $("#id_type_filetype input:radio").trigger("change");
-             $spatialRadioBox.attr('onclick', 'return false');
-             $spatialRadioPoint.attr('onclick', 'return false');
-         }
-         else {
-             if ($spatialRadioBox.attr('checked') === 'checked'){
+             if (logical_type === "RefTimeseriesLogicalFile"){
+                 var $startDateElement = $("#id_start_filetype");
+                 var $endDateElement = $("#id_end_filetype");
+                 $startDateElement.css('pointer-events', 'none');
+                 $endDateElement.css('pointer-events', 'none');
+             }
+             if (logical_type === 'TimeSeriesLogicalFile') {
+                 $("#series_id_file_type").change(function () {
+                     var $url = $(this.form).attr('action');
+                     $url = $url.replace('series_id', $(this).val());
+                     $url = $url.replace('resource_mode', resource_mode);
+                     // make a recursive call to this function
+                     showFileTypeMetadata(true, $url);
+                 });
+                 if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
+                     $("#div-sqlite-file-update").hide();
+                 }
+                 $(".hs-coordinates-picker").each(function() {
+                        const instance = $(this);
+                        instance.coordinatesPicker();
+                 });
+                 InitializeTimeSeriesFileTypeForms();
+             }
+             if (logical_type === "GeoRasterLogicalFile"){
                  $spatialRadioBox.prop("checked", true);
+                 $("#id_type_filetype input:radio").trigger("change");
+                 $spatialRadioBox.attr('onclick', 'return false');
+                 $spatialRadioPoint.attr('onclick', 'return false');
              }
              else {
-                 $spatialRadioPoint.prop("checked", true);
+                 if ($spatialRadioBox.attr('checked') === 'checked'){
+                     $spatialRadioBox.prop("checked", true);
+                 }
+                 else {
+                     $spatialRadioPoint.prop("checked", true);
+                 }
              }
-         }
-         if (logical_type === "FileSetLogicalFile") {
-             // Submit for aggregation spatial coverage update
-             $("#btn-update-aggregation-spatial-coverage").click(function () {
-                fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
-             });
-             // Submit for aggregation temporal coverage update
-             $("#btn-update-aggregation-temporal-coverage").click(function () {
-                fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
-             });
-         }
+             if (logical_type === "FileSetLogicalFile") {
+                 // Submit for aggregation spatial coverage update
+                 $("#btn-update-aggregation-spatial-coverage").click(function () {
+                    fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
+                 });
+                 // Submit for aggregation temporal coverage update
+                 $("#btn-update-aggregation-temporal-coverage").click(function () {
+                    fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                 });
+             }
+        }
     });
 }
 
@@ -894,14 +959,14 @@ function InitializeTimeSeriesFileTypeForms() {
 
     tsSelect.change(function(e){
         if (e.target.value === "Other") {
-            var name = e.target.name;
+            let name = e.target.name;
             $(e.target).parent().parent().find(".other-field").show();
             $(e.target).parent().parent().find(".other-field input").attr("name", name);
             $(e.target).removeAttr("name");
         }
         else {
             if (!e.target.name.length) {
-                var name = $(e.target).parent().parent().find(".other-field input").attr("name");
+                let name = $(e.target).parent().parent().find(".other-field input").attr("name");
                 $(e.target).attr("name", name);
                 $(e.target).parent().parent().find(".other-field input").removeAttr("name");
                 $(e.target).parent().parent().find(".other-field").hide();
@@ -915,29 +980,36 @@ function InitializeTimeSeriesFileTypeForms() {
     processProcessingLevelMetadataElement();
 }
 
-function setBreadCrumbs(path) {
+function setBreadCrumbs(bcPath) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if (path) {
-        if (path.lastIndexOf("/") === "-1") {
-            $("#fb-move-up").toggleClass("disabled", true)
-        }
-        else {
-            $("#fb-move-up").toggleClass("disabled", false)
-        }
+    if (bcPath.hasOwnProperty("aggregation")) {
+        bcPath.path.push(bcPath.aggregation.name);
+    }
 
-        var setFirstActive = false;
-        while (path) {
-            var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
-            var currentPath = path;
-            path = path.substr(0, path.lastIndexOf("/"));
-            if (setFirstActive) {
-                crumbs.prepend('<li data-path="' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+    if (bcPath.path.length) {
+        for (let i = 0; i < bcPath.path.length; i++) {
+            let isActive = i === bcPath.path.length - 1;
+            if (isActive) {
+                if (bcPath.hasOwnProperty("aggregation")) {
+                    let logicalType = bcPath.aggregation.logical_type;
+                    let icon = getFolderIcons()[logicalType];
+
+                    // Crumb for active aggregaqtion (with its icon)
+                    crumbs.append('<li class="active crumb-aggregation">' + icon + '<span class="crumb-aggregation-name"> '
+                        + bcPath.path[i] + '</span></li>');
+                }
+                else {
+                    // Crumb for the active folder
+                    crumbs.append('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> '
+                        + bcPath.path[i] + '</span></li>');
+                }
             }
             else {
-                crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
-                setFirstActive = true;
+                // Crumb for inactive folder
+                crumbs.append('<li data-path="' + getCurrentPath().path.slice(0, i + 1).join('/') +
+                    '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + bcPath.path[i] + '</span></li>');
             }
         }
 
@@ -945,18 +1017,9 @@ function setBreadCrumbs(path) {
         crumbs.prepend('<li data-path="">' +
             '<i class="fa fa-folder-o" aria-hidden="true"></i>' +
             '<span> contents</span></li>');
-
-        // Bind click events
-        $("#fb-bread-crumbs li:not(.active)").click(function () {
-            var path = $(this).attr("data-path");
-            sessionStorage.currentBrowsepath = path;
-            pathLog.push(sessionStorage.currentBrowsepath);
-            pathLogIndex = pathLog.length - 1;
-            get_irods_folder_struct_ajax_submit(SHORT_ID, sessionStorage.currentBrowsepath);
-            $("#fileTypeMetaDataTab").html(file_metadata_alert);
-        });
     }
     else {
+        $("#fb-move-up").toggleClass("disabled", true);
         crumbs.prepend('<li class="active">' +
             '<i class="fa fa-folder-open-o" aria-hidden="true"></i><span> contents</span>' +
             '</li>');
@@ -1058,7 +1121,18 @@ function onOpenFile() {
     }
 }
 
+// Takes an element and returns true if the element is a virtual folder
+function isVirtualFolder(item) {
+    item = $(item);
+    let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
+    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+}
+
 function startDownload(zipped) {
+    if (zipped === undefined) {
+        zipped = false;
+    }
+
     var downloadList = $("#fb-files-container li.ui-selected");
 
     // Remove previous temporary download frames
@@ -1067,18 +1141,29 @@ function startDownload(zipped) {
     if (downloadList.length) {
         // Workaround for Firefox and IE
         for (var i = 0; i < downloadList.length; i++) {
-            var url = $(downloadList[i]).attr("data-url");
-            var fileName = $(downloadList[i]).children(".fb-file-name").text();
+            let item = $(downloadList[i]);
+            let url = item.attr("data-url");
+            let fileName = item.children(".fb-file-name").text();
+            let itemIsVirtualFolder = isVirtualFolder(item.first());
+            let parameters = [];
+
             if (fileName.toUpperCase().endsWith(".URL")) {
-                url += '?url_download=true';
-                if(zipped === true)
-                    url += "&zipped=true"
-            }
-            else if(zipped === true) {
-                url += "?zipped=True"
+                parameters.push('url_download=true');
             }
 
-            var frameID = "download-frame-" + i;
+            if (zipped === true) {
+                parameters.push("zipped=true");
+            }
+
+            if (itemIsVirtualFolder) {
+                parameters.push("aggregation=true");
+            }
+
+            if (parameters.length) {
+                url += "?" + parameters.join("&");
+            }
+
+            let frameID = "download-frame-" + i;
             $("body").append("<iframe class='temp-download-frame' id='"
                 + frameID + "' style='display:none;' src='" + url + "'></iframe>");
         }
@@ -1086,26 +1171,51 @@ function startDownload(zipped) {
 }
 
 function onOpenFolder() {
-    var currentPath = $("#hs-file-browser").attr("data-current-path");
-    var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-    var targetPath = currentPath.length > 0 ? currentPath + "/" + folderName : folderName;
-    sessionStorage.currentBrowsepath = targetPath;
-    var allowCreateFolder = true;
+    let selectedFolder = $("#fb-files-container li.ui-selected");
+    let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
+    let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
+
+    if (aggregationId && logicalFileType !== "FileSetLogicalFile") {
+        // Remove further paths from the log
+        let range = pathLog.length - pathLogIndex;
+        pathLog.splice(pathLogIndex + 1, range);
+
+        // Aggregations can be loaded from memory
+        let selectedAgg = currentAggregations.filter(function(agg){
+            return agg.logical_file_id === aggregationId && agg.logical_type === logicalFileType;
+        })[0];
+
+        let path = {
+            path: getCurrentPath().path.slice(),
+            aggregation: selectedAgg,
+        };
+
+        pathLog.push(path);
+        pathLogIndex = pathLog.length - 1;
+        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
+
+        get_aggregation_folder_struct(selectedAgg);
+
+        return;
+    }
+
+    let folderName = selectedFolder.children(".fb-file-name").text();
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var targetPath = {path: getCurrentPath().path.concat(folderName)};
+
+    sessionStorage.currentBrowsepath = JSON.stringify(targetPath);
+
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
     pathLog.push(targetPath);
     pathLogIndex = pathLog.length - 1;
-    // remove any aggregation metadata display
-    $("#fileTypeMetaData").html(file_metadata_alert);
 
     var calls = [];
-    calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, targetPath));
+    calls.push(get_irods_folder_struct_ajax_submit(resID, targetPath));
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
-        let logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        allowCreateFolder = !logicalFileType || logicalFileType.length === 0;
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1114,24 +1224,29 @@ function onOpenFolder() {
 }
 
 function updateNavigationState() {
-    $("#fb-move-back").toggleClass("disabled", pathLogIndex == 0); // we are at the root folder
+    $("#fb-move-back").toggleClass("disabled", pathLogIndex === 0); // we are at the root folder
     $("#fb-move-forward").toggleClass("disabled", pathLogIndex >= pathLog.length - 1);
-
-    let currentPath = $("#hs-file-browser").attr("data-current-path");
-    $("#fb-move-up").toggleClass("disabled", currentPath === "");    // The root path is an empty string
+    $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
 // Reload the current folder structure
 // Optional argument: file name or folder name to select after reload
 function refreshFileBrowser(name) {
-    var currentPath = $("#hs-file-browser").attr("data-current-path");
+    var resID = $("#hs-file-browser").attr("data-res-id");
     var calls = [];
-    calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, sessionStorage.currentBrowsepath));
+    currentAggregations = [];   // These will be updated
+    pathLog[pathLogIndex] = JSON.parse(sessionStorage.currentBrowsepath);
+
+    if (getCurrentPath().hasOwnProperty("aggregation")) {
+        calls.push(get_aggregation_folder_struct(getCurrentPath().aggregation));
+    }
+    else {
+        calls.push(get_irods_folder_struct_ajax_submit(resID, getCurrentPath()));
+    }
 
     $.when.apply($, calls).done(function () {
-        $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
-        sourcePaths = [];
+        clearSourcePaths();
 
         $("#fileTypeMetaData").html(file_metadata_alert);
 
@@ -1154,10 +1269,9 @@ function refreshFileBrowser(name) {
     });
 
     $.when.apply($, calls).fail(function () {
-        $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
-        sourcePaths = [];
-        sessionStorage.currentBrowsepath = currentPath;
+        clearSourcePaths();
+        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         updateSelectionMenuContext();
     });
 }
@@ -1188,24 +1302,26 @@ $(document).ready(function () {
     });
 
     // Set initial folder structure
-
-    if (SHORT_ID) {
-        if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== SHORT_ID){
-            sessionStorage.currentBrowsepath = '';
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    if (resID) {
+        if(!sessionStorage.currentBrowsepath || sessionStorage.resID !== resID){
+            sessionStorage.currentBrowsepath = JSON.stringify({path: []});
         }
-        if(sessionStorage.resID !== SHORT_ID) {
-            sessionStorage.resID = SHORT_ID;
-        }
-        get_irods_folder_struct_ajax_submit(SHORT_ID, sessionStorage.currentBrowsepath);
-        var currentPaths = sessionStorage.currentBrowsepath.split("/");
-        var path = currentPaths[0];
-        pathLog.push(path);
-        for(var i=1; i < currentPaths.length; i++) {
-            path += "/" + currentPaths[i];
-            pathLog.push(path);
+        if(sessionStorage.resID !== resID) {
+            sessionStorage.resID = resID;
         }
 
+        let currentPath = JSON.parse(sessionStorage.currentBrowsepath);
+        pathLog.push(currentPath);
         pathLogIndex = pathLog.length - 1;
+
+        if (currentPath.hasOwnProperty("aggregation")) {
+            get_aggregation_folder_struct(currentPath.aggregation);
+        }
+        else {
+            get_irods_folder_struct_ajax_submit(resID, currentPath);
+        }
+
         updateNavigationState();
     }
 
@@ -1223,7 +1339,7 @@ $(document).ready(function () {
                 '<i class="fa fa-plus"></i> Add metadata' +
             '</a>' +
         '</div>'
-    };
+    }
 
     if (mode === "edit" && acceptedFiles.length > 0) {
         var allowMultiple = null;
@@ -1269,6 +1385,7 @@ $(document).ready(function () {
                 this.on("drop", function (event) {
                     var myDropzone = this;
                     myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.
+
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
@@ -1288,15 +1405,33 @@ $(document).ready(function () {
 
                 // When a file is added to the list
                 this.on("addedfile", function (file) {
+                    var myDropzone = this;
+                    if (getCurrentPath().hasOwnProperty("aggregation")) {
+                        myDropzone.removeFile(file);
+                        // Display an error here
+                        $("#fb-alerts .upload-failed-alert").remove();
+                        $("#hsDropzone").toggleClass("glow-blue", false);
+
+                        $("#fb-alerts").append(
+                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                    '<span aria-hidden="true">&times;</span></button>' +
+                                '<div>' +
+                                    '<strong>File Upload Failed</strong>'+
+                                '</div>'+
+                                '<div>'+
+                                    '<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>' +
+                                '</div>'+
+                            '</div>').fadeIn(200);
+                        }
+
                     $(".fb-drag-flag").hide();
                 });
 
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        var currentPath = $("#hs-file-browser").attr("data-current-path");
-                        previewNode.find("#upload-folder-path").text(currentPath);
-                        $("#root-path").text(currentPath.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1308,12 +1443,11 @@ $(document).ready(function () {
                     // Remove further paths from the log
                     let range = pathLog.length - pathLogIndex;
                     pathLog.splice(pathLogIndex + 1, range);
-                    pathLog.push(sessionStorage.currentBrowsepath);
+                    pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
                     pathLogIndex = pathLog.length - 1;
 
                     if (resourceType === 'Composite Resource') {
-                        let currentPath = $("#hs-file-browser").attr("data-current-path");
-                        sessionStorage.currentBrowsepath = currentPath;
+                        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
                         refreshFileBrowser();
                     }
                     else {
@@ -1323,7 +1457,7 @@ $(document).ready(function () {
                 });
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
-                this.on("error", function (error, errorMessage, xhr) {
+                this.on("error", function (error, errorMessage) {
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
 
@@ -1335,7 +1469,7 @@ $(document).ready(function () {
                                     '<strong>File Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + errorMessage + '</span>' +
+                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });
@@ -1346,7 +1480,7 @@ $(document).ready(function () {
                 });
 
                 this.on('sending', function (file, xhr, formData) {
-                    formData.append('file_folder', $("#upload-folder-path").text());
+                    formData.append('file_folder', getCurrentPath().path.join('/'));
                 });
 
                 // Applies allowing upload of multiple files to OS upload dialog
@@ -1376,6 +1510,20 @@ $(document).ready(function () {
             $("#fb-files-container").addClass("fb-view-grid");
             localStorage.setItem('file-browser-view', 'fb-view-grid');
         }
+    });
+
+    // Bind click events
+    $("#fb-bread-crumbs").on("click", "li:not(.active)", function () {
+        var resID = $("#hs-file-browser").attr("data-res-id");
+
+        let path = $(this).attr("data-path").length ? $(this).attr("data-path").split('/') : [];
+        path = {path: path};
+
+        sessionStorage.currentBrowsepath = JSON.stringify(path);
+        pathLog.push(path);
+        pathLogIndex = pathLog.length - 1;
+        get_irods_folder_struct_ajax_submit(resID, path);
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 
     // Bind file browser gui events
@@ -1560,18 +1708,13 @@ $(document).ready(function () {
 
     // Create folder at current directory
     $("#btn-create-folder").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var folderName = $("#txtFolderName").val();
         var newFolderPath;
         if (folderName) {
             var calls = [];
-            if(currentPath === ""){
-                newFolderPath = folderName;
-            }
-            else {
-                newFolderPath = currentPath + "/" + folderName;
-            }
-            calls.push(create_irods_folder_ajax_submit(SHORT_ID, newFolderPath));
+            newFolderPath = {path: getCurrentPath().path.concat(folderName)};
+            calls.push(create_irods_folder_ajax_submit(resID, newFolderPath.path.join('/')));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1586,12 +1729,12 @@ $(document).ready(function () {
 
     // Add web url reference content at current directory
     $("#btn-add-reference-url").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var refName = $("#txtRefName").val();
         var refURL = $("#txtRefURL").val();
         if (refName && refURL) {
             var calls = [];
-            calls.push(add_ref_content_ajax_submit(SHORT_ID, currentPath, refName, refURL, true));
+            calls.push(add_ref_content_ajax_submit(resID, getCurrentPath().path.join('/'), refName, refURL, true));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1610,13 +1753,13 @@ $(document).ready(function () {
 
     // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
     $("#btn-reference-url-without-validation").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var refName = $("#ref_name_passover").val();
         var refURL = $("#ref_url_passover").val();
         var newRefURL = $("#new_ref_url_passover").val();
         var calls = [];
         if (refName && refURL) {
-            calls.push(add_ref_content_ajax_submit(SHORT_ID, currentPath, refName, refURL, false));
+            calls.push(add_ref_content_ajax_submit(resID, getCurrentPath().path.join('/'), refName, refURL, false));
 
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
@@ -1633,7 +1776,7 @@ $(document).ready(function () {
             var file = $("#fb-files-container li.ui-selected");
             var oldurl = file.attr("data-ref-url");
             if (oldurl != newRefURL) {
-                calls.push(update_ref_url_ajax_submit(SHORT_ID, currentPath, refName, newRefURL, false));
+                calls.push(update_ref_url_ajax_submit(resID, getCurrentPath().path.join('/'), refName, newRefURL, false));
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
                 });
@@ -1648,14 +1791,14 @@ $(document).ready(function () {
 
     // Update reference URL method
     $("#btn-edit-url").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var file = $("#fb-files-container li.ui-selected");
         var oldurl = file.attr("data-ref-url");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newurl = $("#txtNewRefURL").val().trim();
         if (oldurl != newurl) {
             var calls = [];
-            calls.push(update_ref_url_ajax_submit(SHORT_ID, currentPath, oldName, newurl, true));
+            calls.push(update_ref_url_ajax_submit(resID, getCurrentPath().path.join('/'), oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -1669,12 +1812,19 @@ $(document).ready(function () {
 
     // Move up one directory
     $("#fb-move-up").click(function () {
-        var upPath = $("#hs-file-browser").attr("data-current-path");
-        upPath = upPath.substr(0, upPath.lastIndexOf("/"));
+        var upPath = {path: getCurrentPath().path.slice()};
+        upPath.path.pop();  // Remove last item
+
         pathLog.push(upPath);
         pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(SHORT_ID, upPath);
-        sessionStorage.currentBrowsepath = upPath;
+
+        if (getCurrentPath().hasOwnProperty("aggregation")) {
+            get_aggregation_folder_struct(getCurrentPath().aggregation);
+        }
+        else {
+            get_irods_folder_struct_ajax_submit(resID, getCurrentPath());
+        }
+        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
     });
 
     // Move back
@@ -1685,8 +1835,14 @@ $(document).ready(function () {
                 // we are at the root folder
                 $("#fb-move-back").addClass("disabled");
             }
-            get_irods_folder_struct_ajax_submit(SHORT_ID, pathLog[pathLogIndex]);
-            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
+            if (pathLog[pathLogIndex].hasOwnProperty("aggregation")) {
+                get_aggregation_folder_struct(getCurrentPath().aggregation);
+            }
+            else {
+                get_irods_folder_struct_ajax_submit(resID, getCurrentPath());
+            }
+
+            sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         }
     });
 
@@ -1697,35 +1853,29 @@ $(document).ready(function () {
             if (pathLogIndex == pathLog.length - 1) {
                 $("#fb-move-forward").addClass("disabled");
             }
-            get_irods_folder_struct_ajax_submit(SHORT_ID, pathLog[pathLogIndex]);
-            sessionStorage.currentBrowsepath = pathLog[pathLogIndex];
+
+            if (getCurrentPath().hasOwnProperty("aggregation")) {
+                get_aggregation_folder_struct(getCurrentPath().aggregation);
+            }
+            else {
+                get_irods_folder_struct_ajax_submit(resID, getCurrentPath());
+            }
+            sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         }
     });
 
     $("#btn-open").click(onOpenFolder);
-
     $("#btn-cut, #fb-cut").click(onCut);
+    $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
 
     function onCut() {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
-        $("#fb-files-container li").removeClass("fb-cutting");
-        sourcePaths = [];
+        let selection = $("#fb-files-container li.ui-selected:not(.hidden)");
+        clearSourcePaths();
 
-        var selection = $("#fb-files-container li.ui-selected:not(.hidden)");
+        selection.addClass("fb-cutting");
+        sourcePaths = {path: getCurrentPath().path, selected: selection};
 
-        for (var i = 0; i < selection.length; i++) {
-            var itemName = $(selection[i]).children(".fb-file-name").text();
-            if(currentPath === "") {
-                sourcePaths.push(itemName);
-            }
-            else {
-                sourcePaths.push(currentPath + "/" + itemName);
-            }
-
-            $(selection[i]).addClass("fb-cutting");
-        }
-
-        if (sourcePaths.length) {
+        if (selection.length) {
             $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", false);
             $("#fb-paste").toggleClass("disabled", false);
         }
@@ -1733,66 +1883,35 @@ $(document).ready(function () {
         $("#fb-cut").toggleClass("disabled", true);
     }
 
-    $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
-
-    function onPaste() {
-        var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
-        var targetPath;
-        if(currentPath === "") {
-            targetPath = folderName;
-        }
-        else {
-            targetPath = currentPath + "/" + folderName;
-        }
-
-        var calls = [];
-        var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
-        calls.push(move_to_folder_ajax_submit(SHORT_ID, localSources, targetPath));
-
-        // Wait for the asynchronous call to finish to get new folder structure
-        $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-            sourcePaths = [];
-            $("#fb-files-container li").removeClass("fb-cutting");
-            updateSelectionMenuContext();
-        });
-
-        $.when.apply($, calls).fail(function () {
-            refreshFileBrowser();
-            sourcePaths = [];
-            $("#fb-files-container li").removeClass("fb-cutting");
-            updateSelectionMenuContext();
-        });
-    }
-
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var filesToDelete = "";
         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
-                var pk = $(deleteList[i]).attr("data-pk");
+                let item = $(deleteList[i]);
+                var pk = item.attr("data-pk");
                 if (pk) {
                     if (filesToDelete !== "") {
                         filesToDelete += ",";
                     }
                     filesToDelete += pk;
                 }
-                else {  // item is a folder
-                    var folderName = $(deleteList[i]).children(".fb-file-name").text();
-                    var folder_path;
-                    if(currentPath === ""){
-                        folder_path = folderName;
+                else {
+                    if (isVirtualFolder(item.first())) {
+                        // Item is a virtual folder
+                        let hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+                        let file_type_id = item.attr("data-logical-file-id");
+                        calls.push(delete_virtual_folder_ajax_submit(hs_file_type, file_type_id));
                     }
                     else {
-                        folder_path = currentPath + "/" + folderName;
+                        // Item is a regular folder
+                        let folderName = item.children(".fb-file-name").text();
+                        let folder_path = getCurrentPath().path.concat(folderName);
+                        calls.push(delete_folder_ajax_submit(resID, folder_path.join('/')));
                     }
-
-                    calls.push(delete_folder_ajax_submit(SHORT_ID, folder_path));
                 }
             }
 
@@ -1835,12 +1954,13 @@ $(document).ready(function () {
 
     // Rename method
     $("#btn-rename").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
-        var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        let selected = $("#fb-files-container li.ui-selected");
+        var oldName = selected.children(".fb-file-name").text().trim();
         var newName = $("#txtName").val();
 
-        if ($("#file-type-addon").length) {
-            newName = newName + $("#file-type-addon").text();
+        let fileTypeAddon = $("#file-type-addon");
+        if (fileTypeAddon.length) {
+            newName = newName + fileTypeAddon.text();
         }
 
         // make sure .url file has .url extension after renaming
@@ -1849,25 +1969,29 @@ $(document).ready(function () {
         }
 
         var calls = [];
-        var oldNamePath;
-        var newNamePath;
-        if(currentPath === "") {
-            oldNamePath = oldName;
-            newNamePath = newName;
+        var oldNamePath = getCurrentPath().path.concat(oldName);
+        var newNamePath = getCurrentPath().path.concat(newName);
+
+        if (isVirtualFolder(selected.first())){
+            let fileType = selected.children(".fb-logical-file-type").attr("data-logical-file-type");
+            let fileTypeId = selected.attr("data-logical-file-id");
+            calls.push(rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName));
         }
         else {
-            oldNamePath = currentPath + "/" + oldName;
-            newNamePath = currentPath + "/" + newName;
+            calls.push(rename_file_or_folder_ajax_submit(resID, oldNamePath.join('/'), newNamePath.join('/')));
         }
-        calls.push(rename_file_or_folder_ajax_submit(SHORT_ID, oldNamePath, newNamePath));
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
+            $("#btn-rename").text("Save Changes");
+            $("#rename-dialog").modal('hide');
             refreshFileBrowser();
         });
 
         $.when.apply($, calls).fail(function () {
-            sessionStorage.currentBrowsepath = currentPath;
+            sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
+            $("#btn-rename").text("Save Changes");
+            $("#rename-dialog").modal('hide');
             refreshFileBrowser();
         });
     });
@@ -1899,13 +2023,20 @@ $(document).ready(function () {
         startDownload(isDownloadZipped);
     });
 
-    // Get file URL method
+    // Get file or folder URL
     $("#btn-get-link, #fb-get-link").click(function () {
-        var file = $("#fb-files-container li.ui-selected");
-        var URL = file.attr("data-url");
+        var item = $("#fb-files-container li.ui-selected");
+        var url = item.attr("data-url");
         var basePath = window.location.protocol + "//" + window.location.host;
-        // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
-        $("#txtFileURL").val(basePath + URL);
+
+        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id") &&
+            item.find(".fb-logical-file-type").attr("data-logical-file-type") !== "FileSetLogicalFile") {
+            // The selected item is a virtual folder
+            let parameters = ["zipped=true", "aggregation=true"];
+            url += "?" + parameters.join("&");
+        }
+
+        $("#txtFileURL").val(basePath + url);
     });
 
     // set generic file type method
@@ -1950,14 +2081,13 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() !== "") {
-            let currentPath = $("#hs-file-browser").attr("data-current-path");
             let folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
             let fileName = $("#txtZipName").val() + ".zip";
 
             let calls = [];
-            let path = currentPath !== "" ? currentPath + "/" + folderName : folderName;
+            let path = getCurrentPath().path.concat(folderName);
 
-            calls.push(zip_irods_folder_ajax_submit(SHORT_ID, path, fileName));
+            calls.push(zip_irods_folder_ajax_submit(resID, path.join('/'), fileName));
 
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
@@ -1972,13 +2102,12 @@ $(document).ready(function () {
 
     // Unzip method
     $("#btn-unzip, #fb-unzip").click(function () {
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, currentPath ? currentPath + "/" + fileName : fileName));
+            calls.push(unzip_irods_file_ajax_submit(resID, getCurrentPath().path.concat(fileName).join('/')));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
@@ -2058,6 +2187,7 @@ var expdays = 365;
 
 // used for setting various file types within composite resource
 function setFileType(fileType){
+    var resID = $("#hs-file-browser").attr("data-res-id");
     var url;
     var folderPath = "";
     let selected = $("#fb-files-container li.ui-selected");
@@ -2065,12 +2195,12 @@ function setFileType(fileType){
 
     if(selected.hasClass('fb-file')){
         var file_id = selected.attr("data-pk");
-        url = "/hsapi/_internal/" + SHORT_ID + "/" + file_id + "/" + fileType + "/set-file-type/";
+        url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
     }
     else {
         // this must be folder selection for aggregation creation
         folderPath = selected.children('span.fb-file-type').attr("data-folder-short-path");
-        url = "/hsapi/_internal/" + SHORT_ID + "/" + fileType + "/set-file-type/";
+        url = "/hsapi/_internal/" + resID + "/" + fileType + "/set-file-type/";
     }
 
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
@@ -2101,8 +2231,8 @@ function updateResourceUI() {
         let UIData = JSON.parse(result);
         $("#id_abstract").val(UIData.abstract);
         $("#txt-title").val(UIData.title);
-        subjKeywordsApp.$data.resKeywords = UIData.keywords;
         updateResourceAuthors(UIData.creators);
+        updateResourceKeywords(UIData.keywords.join(","));
         updateResourceSpatialCoverage(UIData.spatial_coverage);
         updateResourceTemporalCoverage(UIData.temporal_coverage);
     });
@@ -2112,7 +2242,8 @@ function updateResourceUI() {
 function removeAggregation(){
     var aggregationType = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
     var aggregationID = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-id");
-    var url = "/hsapi/_internal/" + SHORT_ID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var url = "/hsapi/_internal/" + resID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
     var calls = [];

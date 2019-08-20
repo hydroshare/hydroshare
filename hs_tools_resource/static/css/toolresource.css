@@ -38,10 +38,13 @@
     height: 50px;
 }
 
+#resource-title {
+    flex-grow: 1;
+}
+
 #apps-dropdown, #apps-url {
-    position: absolute;
-    right: 14px;
-    bottom: 20px;
+    align-self: flex-end;
+    margin-left: 8px;
 }
 
 #apps-dropdown li > a {

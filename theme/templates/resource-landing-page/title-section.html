@@ -148,35 +148,38 @@
 {# ======= Title ======= #}
 <div class="col-xs-12">
     {% if not resource_edit_mode %}
-        <h2 id="resource-title">{{ title }}</h2>
-        <hr>
-        {% if tool_homepage_url %}
-            <span id="apps-url">
-                <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
-            </span>
-        {% endif %}
+        <div class="flex">
+            <h2 id="resource-title">{{ title }}</h2>
 
-        <span id="apps-dropdown" v-if="openWithTools.length">
-            <div v-if="!isLoading" class="btn-group">
-                <button class="btn btn-default dropdown-toggle"
-                        type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Open with... <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu pull-right">
-                    <li v-for="tool in openWithTools" :title="tool.title">
-                        <a :href="getResAppUrl(tool)"
-                           target="_blank">
-                            <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>
-                            <span>${tool.title}</span>
-                        </a>
-                    </li>
-                    <li v-if="isLoading" style="display: flex;justify-content: center;">
-                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                    </li>
-                 </ul>
-            </div>
-        </span>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+            {% if tool_homepage_url %}
+                <span id="apps-url">
+                    <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
+                </span>
+            {% endif %}
+
+            <span id="apps-dropdown" v-if="openWithTools.length">
+                <div v-if="!isLoading" class="btn-group">
+                    <button class="btn btn-default dropdown-toggle"
+                            type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Open with... <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-right">
+                        <li v-for="tool in openWithTools" :title="tool.title">
+                            <a :href="getResAppUrl(tool)"
+                               target="_blank">
+                                <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>
+                                <span>${tool.title}</span>
+                            </a>
+                        </li>
+                        <li v-if="isLoading" style="display: flex;justify-content: center;">
+                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                        </li>
+                     </ul>
+                </div>
+            </span>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+        </div>
+        <hr>
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title" method="post">

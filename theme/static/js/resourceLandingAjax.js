@@ -125,6 +125,30 @@ function showWaitDialog(){
     });
 }
 
+function handleIsDirty(json_response) {
+    // show update netcdf file update option for NetCDFLogicalFile
+    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+        $("#div-netcdf-file-update").show();
+    }
+    // show update sqlite file update option for TimeSeriesLogicalFile
+    if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
+        json_response.is_dirty && json_response.can_update_sqlite) {
+        $("#div-sqlite-file-update").show();
+    }
+    // show update netcdf resource
+    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
+        json_response.is_dirty) {
+        $("#netcdf-file-update").show();
+    }
+
+    // start timeseries resource specific DOM manipulation
+    if (RES_TYPE === 'Time Series') {
+        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
+            $("#sql-file-update").show();
+        }
+    }
+}
+
 function metadata_update_ajax_submit(form_id){
     let $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -159,27 +183,7 @@ function metadata_update_ajax_submit(form_id){
             /* The div contains now the updated form */
             let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
-                // show update netcdf file update option for NetCDFLogicalFile
-                if (json_response.logical_file_type === "NetCDFLogicalFile"){
-                    $("#div-netcdf-file-update").show();
-                }
-                // show update sqlite file update option for TimeSeriesLogicalFile
-                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  &&
-                    json_response.is_dirty && json_response.can_update_sqlite) {
-                    $("#div-sqlite-file-update").show();
-                }
-                // show update netcdf resource
-                if (resourceType === 'Multidimensional (NetCDF)' &&
-                    json_response.is_dirty) {
-                    $("#netcdf-file-update").show();
-                }
-
-                // start timeseries resource specific DOM manipulation
-                if(resourceType === 'Time Series') {
-                    if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-                        $("#sql-file-update").show();
-                    }
-                }
+                handleIsDirty(json_response);
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
@@ -473,8 +477,8 @@ function filetype_keywords_update_ajax_submit() {
                 var resKeywords = json_response.resource_keywords;
                 for (var i = 0; i < resKeywords.length; i++) {
                     if (resKeywords[i] != "") {
-                        if ($.inArray(resKeywords[i].trim(), subjKeywordsCmp.resKeywords) === -1) {
-                            subjKeywordsCmp.resKeywords.push(resKeywords[i].trim());
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsApp.resKeywords) === -1) {
+                            subjKeywordsApp.resKeywords.push(resKeywords[i].trim());
                         }
                     }
                 }
@@ -511,11 +515,8 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
 }
 
 function update_netcdf_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        File update was successful.\
-    </div>';
+    $("#id-update-netcdf-file").text("Updating...");
+    $("#id-update-netcdf-file").attr("disabled", true);
 
     var url = $('#update-netcdf-file').attr("action");
     $.ajax({
@@ -523,16 +524,11 @@ function update_netcdf_file_ajax_submit() {
         url: url,
         dataType: 'html',
         success: function (result) {
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 $("#div-netcdf-file-update").hide();
-                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
-                $("#fb-inner-controls").before($alert_success);
-                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
-                    $("#success-alert").alert('close');
-                });
-                // refetch file metadata to show the updated header file info
-                 showFileTypeMetadata(false, "");
+                customAlert("Success!", json_response.message, "success", 8000);
+                showFileTypeMetadata(false, "");    // refetch file metadata to show the updated header file info
             }
             else {
                 display_error_message("File update.", json_response.message);
@@ -655,38 +651,90 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    let url = '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/delete-aggregation/';
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        success: function (result) {
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Folder Deletion Failed', xhr.responseText);
+        }
+    });
+}
+
+function get_aggregation_folder_struct(aggregation) {
+    let files = aggregation.files;
+    $('#fb-files-container').empty();
+
+    $.each(files, function (i, file) {
+        $('#fb-files-container').append(getFileTemplateInstance(file));
+    });
+
+    onSort();
+    bindFileBrowserItemEvents();
+    updateSelectionMenuContext();
+    setBreadCrumbs(jQuery.extend(true, {}, getCurrentPath()));   // Use a deep copy.
+    updateNavigationState();
+}
+
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
-    // TODO: 2105: doesn't return enough information for intelligent decision 
+
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
         async: true,
         data: {
             res_id: res_id,
-            store_path: store_path
+            store_path: store_path.path.join('/')
         },
         success: function (result) {
             var files = result.files;
             var folders = result.folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
+
             $('#fb-files-container').empty();
-            if (files.length > 0) {
-                $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
-                        v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-                        v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
-                });
-            }
-            if (folders.length > 0) {
-                $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
-                        v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
-                });
-            }
+            currentAggregations = result.aggregations.filter(function(agg) {
+                return agg['logical_type'] !== "FileSetLogicalFile"; // Exclude FileSet aggregations
+            });
+
+            // Render each file. Aggregation files get loaded in memory instead.
+            $.each(files, function (i, file) {
+                // Check if the file belongs to an aggregation. Exclude FileSets and their files.
+                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile") {
+                    let selectedAgg = currentAggregations.filter(function (agg) {
+                        return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
+                    })[0];
+
+                    if (!selectedAgg.hasOwnProperty('files')) {
+                        selectedAgg.files = [];     // Initialize the array
+                    }
+                    selectedAgg.files.push(file);   // Push the aggregation files to the collection
+                }
+                else {
+                    // Regular files
+                    $('#fb-files-container').append(getFileTemplateInstance(file));
+                }
+            });
+
+            // Display virtual folders for each aggregation.
+            $.each(currentAggregations, function (i, agg) {
+                $('#fb-files-container').append(getVirtualFolderTemplateInstance(agg));
+            });
+
+            // Display regular folders
+            $.each(folders, function (i, folder) {
+                $('#fb-files-container').append(getFolderTemplateInstance(folder));
+            });
+
+            // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
                     $('#fb-files-container').append(
@@ -705,18 +753,16 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     );
                 }
             }
+
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
+
             onSort();
-
             bindFileBrowserItemEvents();
-
-            $("#hs-file-browser").attr("data-current-path", store_path);
-            $("#upload-folder-path").text(store_path); // We don't show the data folder in the UI path
-
-            // strip the 'data' folder from the path
-            setBreadCrumbs(store_path);
+            pathLog[pathLogIndex] = store_path;
+            $("#hs-file-browser").attr("data-res-id", res_id);
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
 
             if ($("#hsDropzone").hasClass("dropzone")) {
                 // If no multiple files allowed and a file already exists, disable upload
@@ -741,10 +787,12 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
+
             if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
+
             if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
                 var temporalCoverage = result.temporal_coverage;
                 updateResourceTemporalCoverage(temporalCoverage);
@@ -755,8 +803,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
-            setBreadCrumbs(store_path);
-            $("#fb-files-container").prepend("<span>No files to display.</span>")
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
+            $("#fb-files-container").prepend("<span>No files to display.</span>");
             updateSelectionMenuContext();
         }
     });
@@ -892,7 +940,7 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
             }
             else {
                 // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
-                display_error_message('Error: failed to edit referenced URL.');
+                display_error_message('Error', 'Failed to edit referenced URL.');
                 $('#validate-reference-url-dialog').modal('hide');
             }
         }
@@ -900,14 +948,14 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
+function move_to_folder_ajax_submit(source_paths, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-to-folder/',
         async: true,
         data: {
-            res_id: res_id,
+            res_id: SHORT_ID,
             source_paths: JSON.stringify(source_paths),
             target_path: target_path
         },
@@ -923,7 +971,22 @@ function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
     });
 }
 
-// prefixes must be the same on source_path and target_path 
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
+        async: true,
+        success: function (result) {
+
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Moving Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path
 function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
@@ -943,6 +1006,27 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Renaming Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path
+function rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName) {
+    let url = '/hsapi/_internal/' + fileType + '/' + fileTypeId + '/update-filetype-dataset-name/';
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        data: {
+            dataset_name: newName,
+        },
+        success: function (response) {
+            handleIsDirty(response);
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Failed to rename aggregation', xhr.responseText);
         }
     });
 }

@@ -240,8 +240,9 @@
 }
 
 .fb-view-list .fb-stack-netcdf .fa-th-large {
-	font-size: 10px;
-	top: -4px;
+    font-size: 10px;
+    top: -9px;
+    left: -2px;
 }
 
 .fb-view-grid .fb-stack-refts .fa-line-chart, .fb-stack-refts .fa-line-chart {
@@ -260,8 +261,9 @@
 }
 
 .fb-view-list .fb-stack-shape .fa-globe {
-	font-size: 10px;
-	top: -4px;
+    font-size: 10px;
+    top: -3px;
+    left: -2px;
 }
 
 .fb-view-grid .fb-stack .fa-file-o {
