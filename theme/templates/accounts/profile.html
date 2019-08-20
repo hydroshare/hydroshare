@@ -268,44 +268,50 @@
                             <div class="col-md-7">
                                 <div data-page-mode="on-edit-blur" class="panel panel-default">
                                     <div class="panel-heading">
-                                        <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent Activity</h3>
-                                   </div>
+                                        <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent
+                                            Activity</h3>
+                                    </div>
                                     <div class="panel-body">
                                         {% if resources %}
+                                            {% for res in resources reversed %}
+                                                {# Show only the last five #}
+                                                {% if forloop.counter0 < 5 %}
+                                                    <div class="activity-block">
+                                                        {% if profile.picture and profile.picture.url %}
+                                                            <div style="background-image: url('{{ profile.picture.url }}');"
+                                                                 class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                        {% endif %}
 
-                                        {% for res in resources reversed %}
-                                            {# Show only the last five #}
-                                            {% if forloop.counter0 < 5 %}
-                                            <div class="activity-block">
-                                                {% if profile.picture and profile.picture.url %}
-                                                    <div style="background-image: url('{{ profile.picture.url }}');"
-                                                         class="profile-pic-thumbnail round-image pull-left">
+                                                        <div class="metadata-wrapper">
+                                                            <div class="shared-resource-info">
+                                                                <strong>{{ profile_user|contact }}</strong>
+                                                                <span class="text-muted"> shared </span>
+                                                                <span><a
+                                                                        href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                            </div>
+                                                            <h5><span
+                                                                    class="text-muted">Resource type: </span>{{ res|resource_type }}
+                                                            </h5>
+                                                            <h5><span class="text-muted">Date: </span>{{ res.created }}
+                                                            </h5>
+                                                        </div>
+
+                                                        {% if res.metadata.description %}
+                                                            <div class="activity-description col-sm-12">
+                                                                <p class="description">
+                                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">
+                                                                Show More
+                                                            </div>
+                                                        {% endif %}
                                                     </div>
-                                                {% else %}
-                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 {% endif %}
-
-                                                <div class="metadata-wrapper">
-                                                    <div class="shared-resource-info">
-                                                        <strong>{{ profile_user|contact }}</strong>
-                                                        <span class="text-muted"> shared </span>
-                                                        <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                    </div>
-                                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
-                                                </div>
-
-                                                {% if res.metadata.description %}
-                                                    <div class="activity-description col-sm-12">
-                                                        <p class="description">
-                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                        </p>
-                                                    </div>
-                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                {% endif %}
-                                            </div>
-                                            {% endif %}
-                                        {% endfor %}
+                                            {% endfor %}
 
                                         {% else %}
                                             <span class="text-muted">This user has no recent activity.</span>
@@ -678,11 +684,11 @@
                             </div>
                             <div class="col-sm-12 col-md-9">
                                 {% if resources %}
-                                {% for res in resources %}
-                                    {% with res|resource_type as resource_type %}
-                                    <div data-type="type-{{ resource_type }}" class="contribution">
-                                        <div class="icon-resource-type-wrapper">
-                                        <span class="icon-resource-type">
+                                    {% for res in resources %}
+                                        {% with res|resource_type as resource_type %}
+                                            <div data-type="type-{{ resource_type }}" class="contribution">
+                                            <div class="icon-resource-type-wrapper">
+                                            <span class="icon-resource-type">
                                             <span><strong>{{ resource_type }}</strong></span>
                                             {% if res.resource_type == "CompositeResource" %}
                                                 <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
@@ -741,40 +747,40 @@
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% endif %}
-
-                                        </span>
-                                        </div>
-                                        <div class="activity-block row">
-                                            <div class="activity-info col-sm-12">
-                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
-                                                <h5><span class="text-muted">Authors: </span>
-                                                    {% for creator in res.metadata.creators.all %}
-                                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                        {% if creator.description %}
-                                                            <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                        {% else %}
-                                                            <span>{{ creator.name }}</span>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </h5>
-                                            </div>
-
-                                            {% if res.metadata.description %}
-                                                <div class="activity-description col-sm-12">
-                                                    <p>
-                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                    </p>
+                                            </span>
                                                 </div>
-                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                            {% endif %}
+                                                    <div class="activity-block row">
+                                                        <div class="activity-info col-sm-12">
+                                                            <span class="title"><a
+                                                                    href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                            <h5><span class="text-muted">Created: </span>{{ res.created }}
+                                                            </h5>
+                                                            <h5><span class="text-muted">Authors: </span>
+                                                                {% for creator in res.metadata.creators.all %}
+                                                                    {% if forloop.counter0 != 0 %}<span> · </span>
+                                                                    {% endif %}
+                                                                    {% if creator.description %}
+                                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                                                    {% else %}
+                                                                <span>{{ creator.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </h5>
+                                                </div>
 
+                                                {% if res.metadata.description %}
+                                                    <div class="activity-description col-sm-12">
+                                                        <p>
+                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                    </div>
-                                    {% endwith %}
-                                {% endfor %}
-                                {% else %}
-                                    <span class="text-muted">This user has not shared any resources.</span>
+                                        {% endwith %}
+                                    {% endfor %}
+                                   <span class="text-muted">End of Resource Listing</span>
                                 {% endif %}
                             </div>
                         </div>

@@ -1,5 +1,4 @@
-from json import dumps
-
+import json
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -40,10 +39,14 @@ from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
 from .forms import SignupForm
-
+from django.template.defaulttags import register
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
+
+    # @register.filter
+    # def get_item(dictionary, key):
+    #     return dictionary.get(key)
 
     def get_context_data(self, **kwargs):
         u = User.objects.none()
@@ -100,11 +103,20 @@ class UserProfileView(TemplateView):
                                      Prefetch('content_object___description'),
                                      Prefetch('content_object___title')
                                      )
+
+        types = {"type": r.verbose_name for r in list(resources)}
+
+        type_counts = {}
+        for typename in types.values():
+            count = len([x for x in list(resources) if x.verbose_name == typename])
+            type_counts[typename] = count
+
         return {
             'profile_user': u,
             'resources': resources,
             'quota_message': get_quota_message(u),
             'group_membership_requests': group_membership_requests,
+            'type_counts': type_counts
         }
 
 
@@ -148,7 +160,7 @@ def comment(request, template="generic/comments.html"):
         #     set_cookie(response, cookie_name, cookie_value)
         return response
     elif request.is_ajax() and form.errors:
-        return HttpResponse(dumps({"errors": form.errors}))
+        return HttpResponse(json.dumps({"errors": form.errors}))
     # Show errors with stand-alone comment form.
     context = {"obj": obj, "posted_comment_form": form}
     response = render(request, template, context)
@@ -179,7 +191,7 @@ def rating(request):
             json = {}
             for f in ("average", "count", "sum"):
                 json["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
-            response = HttpResponse(dumps(json))
+            response = HttpResponse(json.dumps(json))
         ratings = ",".join(rating_form.previous + [rating_form.current])
         set_cookie(response, "mezzanine-rating", ratings)
     return response
@@ -584,7 +596,7 @@ def delete_irods_account(request):
                 if 'ERROR:' in output.upper():
                     # there is an error from icommand run, report the error
                     return HttpResponse(
-                        dumps({"error": 'iRODS server failed to delete this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        json.dumps({"error": 'iRODS server failed to delete this iRODS account {0}. Check the server log for details.'.format(user.username)}),
                         content_type = "application/json"
                     )
 
@@ -592,12 +604,12 @@ def delete_irods_account(request):
             user_profile.create_irods_user_account = False
             user_profile.save()
             return HttpResponse(
-                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
+                    json.dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
                     content_type = "application/json"
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message}),
+                    json.dumps({"error": ex.message}),
                     content_type = "application/json"
             )
 
@@ -620,7 +632,7 @@ def create_irods_account(request):
                     # there is an error from icommand run which is not about the fact 
                     # that the user already exists, report the error
                     return HttpResponse(
-                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. '
+                        json.dumps({"error": 'iRODS server failed to create this iRODS account {0}. '
                                         'Check the server log for details.'.format(user.username)}),
                         content_type = "application/json"
                     )
@@ -629,19 +641,19 @@ def create_irods_account(request):
             user_profile.create_irods_user_account = True
             user_profile.save()
             return HttpResponse(
-                    dumps({"success": "iRODS account {0} is created successfully".format(
+                    json.dumps({"success": "iRODS account {0} is created successfully".format(
                         user.username)}),
                     content_type = "application/json"
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message + ' - iRODS server failed to create this '
+                    json.dumps({"error": ex.message + ' - iRODS server failed to create this '
                                                  'iRODS account.'}),
                     content_type = "application/json"
             )
     else:
         return HttpResponse(
-            dumps({"error": "Not POST request"}),
+            json.dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
 
