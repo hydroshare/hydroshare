@@ -32,6 +32,8 @@ var loading_metadata_alert =
         '<span class="sr-only">Loading...</span>' +
     '</div>';
 
+const MAX_FILE_SIZE = 1024; // MB
+
 function getCurrentPath() {
     return pathLog[pathLogIndex];
 }
@@ -198,6 +200,8 @@ function updateSelectionMenuContext() {
     $.each(uiActions, function (i, val) {
         uiActionStates[val] = $.extend(true, {}, initActionState);  // Deep copy
     });
+
+    var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
         //  ------------- Multiple files selected -------------
@@ -1330,12 +1334,12 @@ $(document).ready(function () {
             paramName: "files", // The name that will be used to transfer the file
             clickable: ".upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
+            maxFilesize: MAX_FILE_SIZE, // MB
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
-            maxFilesize: 100000, // Provided in MB. Arbitrary large size (100 GB)
             autoProcessQueue: true,
             uploadMultiple: true,
-            parallelUploads: 10,
+            parallelUploads : 10,
             error: function (file, response) {
                 // console.log(response);
             },
