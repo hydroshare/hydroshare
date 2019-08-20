@@ -1332,9 +1332,10 @@ $(document).ready(function () {
             previewsContainer: "#previews", // Define the container to display the previews
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
+            maxFilesize: 100000, // Provided in MB. Arbitrary large size (100 GB)
             autoProcessQueue: true,
             uploadMultiple: true,
-            parallelUploads : 10,
+            parallelUploads: 10,
             error: function (file, response) {
                 // console.log(response);
             },
