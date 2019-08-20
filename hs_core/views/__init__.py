@@ -45,6 +45,8 @@ from hs_core.models import GenericResource, resource_processor, CoreMetaData, Su
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -264,6 +266,12 @@ def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def get_relevant_tools(request, shortkey, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    relevant_tools = resource_level_tool_urls(res, request)
+    return HttpResponse(json.dumps(relevant_tools))
 
 
 def update_key_value_metadata(request, shortkey, *args, **kwargs):
@@ -599,7 +607,8 @@ def file_download_url_mapper(request, shortkey):
     istorage = res.get_irods_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
-    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
+    aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped, aggregation))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
