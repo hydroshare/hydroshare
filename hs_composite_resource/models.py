@@ -36,18 +36,21 @@ class CompositeResource(BaseResource):
 
     @property
     def logical_files(self):
-        """Returns a list of all logical file type objects associated with this resource """
-
-        lf_list = []
-        lf_list.extend(self.filesetlogicalfile_set.all())
-        lf_list.extend(self.genericlogicalfile_set.all())
-        lf_list.extend(self.geofeaturelogicalfile_set.all())
-        lf_list.extend(self.netcdflogicalfile_set.all())
-        lf_list.extend(self.georasterlogicalfile_set.all())
-        lf_list.extend(self.reftimeserieslogicalfile_set.all())
-        lf_list.extend(self.timeserieslogicalfile_set.all())
-
-        return lf_list
+        """A generator that returns each of the logical files of this resource"""
+        for lf in self.filesetlogicalfile_set.all():
+            yield lf
+        for lf in self.genericlogicalfile_set.all():
+            yield lf
+        for lf in self.geofeaturelogicalfile_set.all():
+            yield lf
+        for lf in self.netcdflogicalfile_set.all():
+            yield lf
+        for lf in self.georasterlogicalfile_set.all():
+            yield lf
+        for lf in self.reftimeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.timeserieslogicalfile_set.all():
+            yield lf
 
     @property
     def can_be_published(self):
@@ -83,10 +86,7 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        try:
-            return self.get_aggregation_by_name(aggregation_path)
-        except ObjectDoesNotExist:
-            return None
+        return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
@@ -95,11 +95,15 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        for res_file in self.files.all():
-            if res_file.full_path == file_path:
-                if res_file.has_logical_file:
-                    return res_file.logical_file
-        return None
+        relative_file_path = file_path[len(self.file_path) + 1:]
+        folder, base = os.path.split(relative_file_path)
+        try:
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
+            return None
+        except ObjectDoesNotExist:
+            return None
 
     def can_set_folder_to_fileset(self, dir_path):
         """Checks if the specified folder *dir_path* can be set to Fileset aggregation
@@ -294,12 +298,26 @@ class CompositeResource(BaseResource):
         :return an aggregation object if found
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
-        for aggregation in self.logical_files:
-            # remove the last slash in aggregation_name if any
-            if aggregation.aggregation_name.rstrip('/') == name:
-                return aggregation
+        # check if aggregation path *name* is a file path or a folder
+        _, ext = os.path.splitext(name)
+        is_aggr_path_a_folder = ext == ''
+        if is_aggr_path_a_folder:
+            folder_full_path = os.path.join(self.file_path, name)
+            aggregation = self.get_folder_aggregation_object(folder_full_path)
+            if aggregation is None:
+                raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
+            return aggregation
+        else:
+            folder, base = os.path.split(name)
+            if folder == '':
+                folder = None
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
 
-        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+            raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
 
     def get_fileset_aggregation_in_path(self, path):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
