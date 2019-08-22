@@ -9,7 +9,7 @@
 {% block main %}
     <div id="topics-app">
         <div style="margin-left: 2em">
-            <a href="/community/1/#admin">back to communities admin</a>
+            <a href="/community/1/">back to communities</a>
             <h3>Inline Topic Edit</h3>
             <input id="add-topic" type="text" v-model="newTopic" placeholder="Enter new topic"/>
             <button v-on:click="addTopic('{{ csrf_token }}', )" style="margin-bottom: 1em;">Add</button>
