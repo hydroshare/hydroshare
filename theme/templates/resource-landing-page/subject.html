@@ -8,22 +8,35 @@
 
             <div class="tags">
                 {% if resource_edit_mode %}
-                    <div id="add-keyword-wrapper" class="input-group" @keyup.enter="addKeyword('{{ cm.short_id }}')">
-                        {#                        https://github.com/alexurquhart/vue-bootstrap-typeahead#}
-                        <vue-bootstrap-typeahead
-                                :data="{{ odm2_terms }}"
-                                v-model="newKeyword"
-{#                                Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19#}
-                                ref="newKeyword"
-                                input-class="typeahead-search-input"
-                                @hit=addKeyword('{{ cm.short_id }}')
-                                placeholder="Examples: Hydrologic_modeling, USU, land use">
-                        </vue-bootstrap-typeahead>
-                        <span class="input-group-btn">
+                    {% if czo_user %}
+                        <div id="add-keyword-wrapper" class="input-group"
+                             @keyup.enter="addKeyword('{{ cm.short_id }}')">
+                            {#                        https://github.com/alexurquhart/vue-bootstrap-typeahead#}
+                            <vue-bootstrap-typeahead
+                                    :data="{{ odm2_terms }}"
+                                    v-model="newKeyword"
+                                    {#                                Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19#}
+                                    ref="newKeyword"
+                                    input-class="typeahead-search-input"
+                                    @hit=addKeyword('{{ cm.short_id }}')
+                                    placeholder="Examples: Hydrologic_modeling, USU, land use">
+                            </vue-bootstrap-typeahead>
+                            <span class="input-group-btn">
                             <button @click="addKeyword('{{ cm.short_id }}')"
                                     class="btn btn-success" type="button">Add</button>
                         </span>
-                    </div>
+                        </div>
+                    {% else %}
+                        <div id="add-keyword-wrapper" class="input-group">
+                            <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
+                                   @keyup.enter="addKeyword('{{ cm.short_id }}')"
+                                   placeholder="Examples: Hydrologic_modeling, USU, land use">
+                            <span class="input-group-btn">
+                            <button @click="addKeyword('{{ cm.short_id }}')"
+                                    class="btn btn-success" type="button">Add</button>
+                        </span>
+                        </div>
+                    {% endif %}
                 {% endif %}
 
                 <ul id="lst-tags" class="custom-well tag-list">
