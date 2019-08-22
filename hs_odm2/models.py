@@ -21,7 +21,7 @@ class ODM2Variable(models.Model):
     provenance_uri = models.TextField(editable=False, null=False, blank=True,
                                       help_text="URI describing provenance of variable name")
 
-    def __str__(self): 
+    def __str__(self):
         return self.name
 
     @classmethod
@@ -29,9 +29,7 @@ class ODM2Variable(models.Model):
         response = urllib2.urlopen(uri)
         str = response.read()
         data = json.loads(str)
-        print(data.keys())
         for d in data['objects']:
-            print("id='{}' name='{}'".format(d['vocabulary_id'], d['name']))
             try:
                 record = ODM2Variable.objects.get(id=int(d['vocabulary_id']))
                 if d['vocabulary_status'] == 'Current':
