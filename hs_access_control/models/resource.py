@@ -68,7 +68,6 @@ class ResourceAccess(models.Model):
     def __view_users_from_community(self):
         return Q(is_active=True,
                  u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__allow_view=True,
                  u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                  u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource)
 
@@ -144,7 +143,6 @@ class ResourceAccess(models.Model):
     @property
     def __view_groups_from_community(self):
         return Q(gaccess__active=True,
-                 g2gcp__community__c2gcp__allow_view=True,
                  g2gcp__community__c2gcp__group__gaccess__active=True,
                  g2gcp__community__c2gcp__group__g2grp__resource=self.resource)
 
@@ -259,35 +257,15 @@ class ResourceAccess(models.Model):
 
             if include_community_granted_access:
                 # view privilege results if either group or community privilege is view,
-                # but if community privilege is VIEW, then allow_view must be True
-
                 # include exact privilege
-                i = Q(u2ugp__group__gaccess__active=True,  # community is VIEW, allow_view=True
+                i = Q(u2ugp__group__gaccess__active=True,
                       u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__community__c2gcp__allow_view=True,
-                      u2ugp__group__g2gcp__privilege=PC.VIEW) | \
-                    Q(u2ugp__group__gaccess__active=True,  # community is CHANGE, group is VIEW
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege=PC.CHANGE,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PC.VIEW)
+                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True)
 
                 if incl is not None:
                     incl = incl | i
                 else:
                     incl = i
-
-                # exclude higher privilege
-                e = Q(u2ugp__group__gaccess__active=True,  # community is CHANGE
-                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege__lt=PC.VIEW,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege__lt=PC.VIEW)
-                if excl is not None:
-                    excl = excl | e
-                else:
-                    excl = e
 
             if incl is not None:
                 if excl is not None:
@@ -417,27 +395,17 @@ class ResourceAccess(models.Model):
 
         This does not account for resource flags.
         """
-        # There are two cases, determining whether privilege will be VIEW or CHANGE
+        # Community privileges are either direct or via community.
         community_priv = GroupResourcePrivilege.objects \
             .filter(Q(resource=self.resource,
                       group__gaccess__active=True,
-                      group__g2gcp__allow_view=True,
-                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user) |
-                    Q(resource=self.resource,
-                      group__gaccess__active=True,
-                      privilege=PC.CHANGE,
-                      group__g2gcp__community__c2gcp__privilege=PC.CHANGE,
-                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user)) \
+                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user))\
             .aggregate(models.Min('privilege'),
                        models.Min('group__g2gcp__community__c2gcp__privilege'))
 
         if community_priv['privilege__min'] is None or \
            community_priv['group__g2gcp__community__c2gcp__privilege__min'] is None:
             return PC.NONE
-        elif community_priv['privilege__min'] == PC.CHANGE and \
-            community_priv['group__g2gcp__community__c2gcp__privilege__min'] == \
-                PC.CHANGE:
-            return PC.CHANGE
         else:
             return PC.VIEW
 

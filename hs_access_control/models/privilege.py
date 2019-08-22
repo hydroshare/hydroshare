@@ -858,20 +858,10 @@ class GroupCommunityPrivilege(PrivilegeBase):
     This encodes the privileges of a specific group over a community.
 
     * VIEW privilege means the group can view resources of the community.
-    * CHANGE privilege means the group can edit resources that are editable to any group
+    * Removed: CHANGE privilege means the group can edit resources that are editable to any group
       in the community.
 
     These are outgoing privileges (Group to Community).
-
-    Incoming privileges (Community to group) are handled separately via the
-    "allow_view" boolean flag.
-
-    * If allow_view is True, the resources accessible to the group
-      are accessible to the groups in the community that have VIEW privilege.
-    * If allow_view is False, resources accessible to the group
-      are hidden from the groups of the community with view privilege.
-    * This does not affect groups of the community with CHANGE privilege, which have
-      in essence superuser access to the resources of the community member groups.
 
     There is a reasonable meaning to PrivilegeCodes.NONE, which is to be
     a community member without the ability to view anything in the community.
@@ -902,12 +892,6 @@ class GroupCommunityPrivilege(PrivilegeBase):
                                 editable=False,
                                 related_name='x2swp',
                                 help_text='grantor of privilege')
-
-    # This field is not stored in provenance, nor restored upon undo.
-    allow_view = models.BooleanField(null=False,
-                                     editable=False,
-                                     default=True,
-                                     help_text="whether to allow view for group's resources")
 
     class Meta:
         unique_together = ('community', 'group')

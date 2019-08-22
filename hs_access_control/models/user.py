@@ -267,7 +267,6 @@ class UserAccess(models.Model):
                                       gaccess__active=False,
                                       g2ugp__privilege=PrivilegeCodes.OWNER) |
                                     Q(gaccess__active=True,
-                                      g2gcp__allow_view=True,
                                       g2gcp__community__c2gcp__group__gaccess__active=True,
                                       g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
                                     Q(gaccess__active=True,
@@ -372,12 +371,6 @@ class UserAccess(models.Model):
                   g2ugp__user=self.user) |
                 # if user has access to a group in a community, grant access to whole community
                 Q(gaccess__active=True,
-                  g2gcp__community__c2gcp__allow_view=True,
-                  g2gcp__community__c2gcp__group__gaccess__active=True,
-                  g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
-                # if the group's privilege over the community is CHANGE, override allow_view=False
-                Q(gaccess__active=True,
-                  g2gcp__privilege=PrivilegeCodes.CHANGE,
                   g2gcp__community__c2gcp__group__gaccess__active=True,
                   g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
 
@@ -1040,15 +1033,8 @@ class UserAccess(models.Model):
               r2grp__group__g2ugp__user=self.user) |
             # access via an unprivileged peer group in a community
             Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__allow_view=True,
               r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
-            # access via a privileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-            ).distinct()
+              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1097,15 +1083,7 @@ class UserAccess(models.Model):
             Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE) |
-            # user has access by being a member of a privileged group in the same community
-            # Note: CHANGE privilege overrides allow_view flag.
-            Q(raccess__immutable=False,
-              r2grp__group__gaccess__active=True,
-              r2grp__privilege=PrivilegeCodes.CHANGE,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user,
-              r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE))\
+              r2grp__privilege=PrivilegeCodes.CHANGE))\
             .distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
@@ -1132,8 +1110,8 @@ class UserAccess(models.Model):
         * The default is via_user=True, via_group=False, via_community=False, which is the original
           behavior of the routine before this revision.
         * Immutable resources are listed as VIEW even if the user or group has CHANGE
-        * In the case of multiple privileges, the lowest privilege number
-          (highest privilege) wins.
+        * Via_community privilege only grants VIEW.
+        * In the case of multiple privileges, the lowest privilege number (highest privilege) wins.
 
         However, please note that when via_user=True, via_group=True, via_community are True
         together, this applies to the **total combined privilege** rather than individual
@@ -1193,20 +1171,6 @@ class UserAccess(models.Model):
                     incl = gquery
                 # CHANGE is highest permission; no need to exclude anything
 
-            # community permission is CHANGE only if both permissions are CHANGE
-            # allow_view does not apply to CHANGE access.
-            if via_community:
-                squery = Q(raccess__immutable=False,
-                           r2grp__privilege=PrivilegeCodes.CHANGE,
-                           r2grp__group__gaccess__active=True,
-                           r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                           r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if incl is not None:
-                    incl = incl | squery
-                else:
-                    incl = squery
-                # CHANGE is highest permission; no need to exclude anything
-
             if incl is not None:
                 if excl:
                     # exclude owners; immutability doesn't matter for them
@@ -1257,40 +1221,17 @@ class UserAccess(models.Model):
                 else:
                     excl = gexcl
 
-            # community permission is VIEW if at least one of the two permissions is VIEW
-            # or if the resource is immutable and there is any path to it.
+            # community permission is VIEW if community link exists at all.g
             if via_community:
                 cquery = \
                     Q(r2grp__group__gaccess__active=True,
-                      r2grp__privilege=PrivilegeCodes.VIEW,  # overrides CHANGE in all cases
-                      r2grp__group__g2gcp__community__c2gcp__allow_view=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user) | \
-                    Q(r2grp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__privilege=PrivilegeCodes.VIEW,  # not CHANGE
-                      r2grp__group__g2gcp__community__c2gcp__allow_view=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user) | \
-                    Q(raccess__immutable=True,  # overrides even supervisor CHANGE
-                      r2grp__group__gaccess__active=True,
                       r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                       r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
                 if incl is not None:
                     incl = incl | cquery
                 else:
                     incl = cquery
-
-                # exclude groups with true community CHANGE privilege
-                cexcl = Q(raccess__immutable=False,
-                          r2grp__privilege=PrivilegeCodes.CHANGE,
-                          r2grp__group__gaccess__active=True,
-                          r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                          r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                          r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if excl is not None:
-                    excl = excl | cexcl
-                else:
-                    excl = cexcl
+                # No CHANGE privilege over community resources.g
 
             if incl is not None:
                 if excl:
@@ -1662,11 +1603,7 @@ class UserAccess(models.Model):
 
         # special exception for peer groups: CHANGE grants ability to share with community
         # without being member
-        if not GroupCommunityPrivilege.objects.filter(
-                privilege=PrivilegeCodes.CHANGE,
-                community__c2gcp__group=this_group,
-                group__g2ugp__user=self.user).exists() and\
-           self.user not in this_group.gaccess.members and\
+        if self.user not in this_group.gaccess.members and\
            not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
@@ -3014,8 +2951,8 @@ class UserAccess(models.Model):
         """
         self.__check_share_group(this_group, this_privilege)
         # only owners of the original groups can share a group with a community
-        if this_privilege == PrivilegeCodes.OWNER:
-            raise PermissionDenied("Groups cannot own communities")
+        if this_privilege != PrivilegeCodes.VIEW:
+            raise PermissionDenied("Groups can only view communities")
         if not self.user.uaccess.owns_community(this_community):
             raise PermissionDenied("User must own the community to be modified")
         if not self.user.uaccess.owns_group(this_group):

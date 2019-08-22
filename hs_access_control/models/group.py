@@ -184,7 +184,6 @@ class GroupAccess(models.Model):
                 (Q(u2ugp__group__gaccess__active=True,
                    u2ugp__group=self.group) |
                  Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__allow_view=True,
                    u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                    u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
 
@@ -225,7 +224,6 @@ class GroupAccess(models.Model):
         Used in BaseResource queries only
         """
         return Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__allow_view=True,
                  r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
                  r2grp__group__g2gcp__community__c2gcp__group=self.group) |\
                Q(r2grp__group__gaccess__active=True,
