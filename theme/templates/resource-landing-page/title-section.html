@@ -189,12 +189,10 @@
                     <div id="title-assistant" class="modal-content">
                         <div class="modal-body">
                             <div>
-                                <textarea id="resource-title" v-model="title" disabled rows="3"
-                                          style="width: 100%; margin-bottom: 1em; cursor: not-allowed;"
+                                <textarea id="resource-title" class="title-builder-output" v-model="title" disabled rows="3"
                                           placeholder="start selecting items to build title">
                                 </textarea>
-                                <select id="czselect" v-model="regionSelected" @change="updateTitle()"
-                                        style="margin-bottom: 1em; cursor: pointer;">
+                                <select id="czselect" class="cz-select" v-model="regionSelected" @change="updateTitle()">
                                     <option disabled value="">Select Critical Zone Region</option>
                                     <option>BCCZO</option>
                                     <option>CCZO</option>
@@ -228,7 +226,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <span style="color:red; float:left">{% templatetag openvariable %}
+                            <span class="inline-error">{% templatetag openvariable %}
                                     errmsg {% templatetag closevariable %}</span>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                             <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
@@ -294,6 +292,7 @@
 
 {% if communities_enabled %}
     {% block extra_js %}
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
         <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
 
         <style>
@@ -305,6 +304,7 @@
                 margin-top: 1em;
             }
         </style>
+        {#        vue-mover uses Sortable.min.js#}
         <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
         <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
     {% endblock %}
