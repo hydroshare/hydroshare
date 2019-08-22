@@ -81,7 +81,6 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         "basic function: groups appear and disappear according to access rules "
 
         # flag state
-        self.assertFalse(self.cats.gaccess.unlisted)
         self.assertFalse(self.posts.raccess.discoverable)
 
         groups = GroupAccess.groups_with_public_resources()
@@ -99,36 +98,22 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         resources = self.cats.gaccess.public_resources
         self.assertTrue(is_equal_to_as_set([self.posts], resources))
 
-        # now unlist the group
-        self.cats.gaccess.unlisted = True
-        self.cats.gaccess.save()
-
-        # Now group should not appear in list
-        groups = GroupAccess.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([], groups))
-
-        # And resource should not appear in listings for cats
-        # group should contain a public resource
-        resources = self.cats.gaccess.public_resources
-        self.assertTrue(is_equal_to_as_set([], resources))
-
         self.bones.raccess.discoverable = True
         self.bones.raccess.save()
 
         # Now group dogs should appear in list
         groups = GroupAccess.groups_with_public_resources()
         print(groups)
-        self.assertTrue(is_equal_to_as_set([self.dogs], groups))
+        self.assertTrue(is_equal_to_as_set([self.cats, self.dogs], groups))
 
         # group should contain a public resource
         resources = self.dogs.gaccess.public_resources
-        self.assertTrue(is_equal_to_as_set([self.bones], resources))
+        self.assertTrue(is_equal_to_as_set([self.posts, self.bones], resources))
 
     def test_02_communities(self):
         "groups appear and disappear from communities according to access rules "
 
         # flag state
-        self.assertFalse(self.cats.gaccess.unlisted)
         self.assertFalse(self.posts.raccess.discoverable)
 
         groups = self.pets.groups_with_public_resources()
@@ -146,27 +131,13 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         resources = self.pets.public_resources
         self.assertTrue(is_equal_to_as_set([self.posts], resources))
 
-        # now unlist the group
-        self.cats.gaccess.unlisted = True
-        self.cats.gaccess.save()
-
-        # Now group should not appear in list
-        groups = self.pets.groups_with_public_resources()
-        print(groups)
-        self.assertTrue(is_equal_to_as_set([], groups))
-
-        # And resource should not appear in listings for cats
-        # group should contain a public resource
-        resources = self.pets.public_resources
-        self.assertTrue(is_equal_to_as_set([], resources))
-
         self.bones.raccess.discoverable = True
         self.bones.raccess.save()
 
         # Now group dogs should appear in list
         groups = self.pets.groups_with_public_resources()
-        self.assertTrue(is_equal_to_as_set([self.dogs], groups))
+        self.assertTrue(is_equal_to_as_set([self.cats, self.dogs], groups))
 
         # group should contain a public resource
         resources = self.pets.public_resources
-        self.assertTrue(is_equal_to_as_set([self.bones], resources))
+        self.assertTrue(is_equal_to_as_set([self.posts, self.bones], resources))

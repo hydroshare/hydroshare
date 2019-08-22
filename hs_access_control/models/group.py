@@ -75,10 +75,6 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
-    unlisted = models.BooleanField(default=False,
-                                   editable=False,
-                                   help_text='whether group appears in public group listings')
-
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
@@ -389,7 +385,7 @@ class GroupAccess(models.Model):
                         r2grp__group__id=OuterRef('id'),
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
-            .filter(gaccess__unlisted=False, has_public_resources=True)\
+            .filter(has_public_resources=True)\
             .order_by('name')
 
     @property
@@ -399,10 +395,6 @@ class GroupAccess(models.Model):
 
         Based upon hs_access_control/models/community.py:Community:public_resources
         """
-        # if the resource is unlisted, it by definition has no exhibited resources.
-        if self.unlisted:
-            return BaseResource.objects.none()
-
         res = BaseResource.objects.filter(r2grp__group__gaccess=self,
                                           r2grp__group__gaccess__active=True)\
                                   .filter(Q(raccess__public=True) |

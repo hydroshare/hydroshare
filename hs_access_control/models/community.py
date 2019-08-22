@@ -20,7 +20,7 @@ class Community(models.Model):
 
     @property
     def member_groups(self):
-        """ This returns all member groups, including unlisted groups """
+        """ This returns all member groups """
         return Group.objects.filter(gaccess__active=True,
                                     g2gcp__community=self)
 
@@ -59,7 +59,7 @@ class Community(models.Model):
                         r2grp__group__id=OuterRef('id'),
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
-            .filter(gaccess__unlisted=False, has_public_resources=True)\
+            .filter(has_public_resources=True)\
             .order_by('name')
 
     @property
@@ -76,8 +76,7 @@ class Community(models.Model):
         res = BaseResource\
             .objects\
             .filter(r2grp__group__g2gcp__community=self,
-                    r2grp__group__gaccess__active=True,
-                    r2grp__group__gaccess__unlisted=False)\
+                    r2grp__group__gaccess__active=True)\
             .filter(Q(raccess__public=True) |
                     Q(raccess__published=True) |
                     Q(raccess__discoverable=True))\
