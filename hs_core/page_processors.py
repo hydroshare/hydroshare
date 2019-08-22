@@ -335,7 +335,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'maps_key': maps_key,
                'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
-               'admin_user': True,  # TODO this is probably no longer needed since the link to topics editing was moved to admin tab of community
                'czo_user': any("CZO National" in x.name for x in comms_member_of),
                'odm2_terms': list(ODM2Variable.all())
     }
