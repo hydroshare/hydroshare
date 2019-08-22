@@ -584,6 +584,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
