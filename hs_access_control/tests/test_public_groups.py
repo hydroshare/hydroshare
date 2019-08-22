@@ -108,7 +108,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
 
         # group should contain a public resource
         resources = self.dogs.gaccess.public_resources
-        self.assertTrue(is_equal_to_as_set([self.posts, self.bones], resources))
+        self.assertTrue(is_equal_to_as_set([self.bones], resources))
 
     def test_02_communities(self):
         "groups appear and disappear from communities according to access rules "
