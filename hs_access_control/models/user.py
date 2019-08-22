@@ -268,10 +268,6 @@ class UserAccess(models.Model):
                                       g2ugp__privilege=PrivilegeCodes.OWNER) |
                                     Q(gaccess__active=True,
                                       g2gcp__community__c2gcp__group__gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user) |
-                                    Q(gaccess__active=True,
-                                      g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                                      g2gcp__community__c2gcp__group__gaccess__active=True,
                                       g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
                             .distinct()
 
@@ -304,12 +300,7 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                    # edit privilege inherited from community
-                                    Q(gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__gaccess__active=True,
-                                      g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
+                                      g2ugp__privilege=PrivilegeCodes.OWNER))\
                             .distinct()
 
     @property
@@ -1221,7 +1212,7 @@ class UserAccess(models.Model):
                 else:
                     excl = gexcl
 
-            # community permission is VIEW if community link exists at all.g
+            # community permission is VIEW if community link exists at all.
             if via_community:
                 cquery = \
                     Q(r2grp__group__gaccess__active=True,
@@ -1231,7 +1222,7 @@ class UserAccess(models.Model):
                     incl = incl | cquery
                 else:
                     incl = cquery
-                # No CHANGE privilege over community resources.g
+                # No CHANGE privilege over community resources.
 
             if incl is not None:
                 if excl:

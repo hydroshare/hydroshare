@@ -858,10 +858,7 @@ class GroupCommunityPrivilege(PrivilegeBase):
     This encodes the privileges of a specific group over a community.
 
     * VIEW privilege means the group can view resources of the community.
-    * Removed: CHANGE privilege means the group can edit resources that are editable to any group
-      in the community.
-
-    These are outgoing privileges (Group to Community).
+    * No other privileges are allowed.
 
     There is a reasonable meaning to PrivilegeCodes.NONE, which is to be
     a community member without the ability to view anything in the community.

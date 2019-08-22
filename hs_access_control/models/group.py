@@ -224,24 +224,7 @@ class GroupAccess(models.Model):
         Used in BaseResource queries only
         """
         return Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group) |\
-               Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
                  r2grp__group__g2gcp__community__c2gcp__group=self.group)
-
-    @property
-    def __edit_resources_of_community(self):
-        """
-        Subquery Q expression for editable resources according to community memberships
-
-        Used in BaseResource queries only.
-        """
-        return Q(raccess__immutable=False,
-                 r2grp__group__gaccess__active=True,
-                 r2grp__privilege=PrivilegeCodes.CHANGE,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
 
     @property
     def view_resources(self):
@@ -265,7 +248,7 @@ class GroupAccess(models.Model):
         :return: List of resource objects that can be edited by this group.
 
         These include resources that are directly editable, as well as those editable
-        due to oversight privileges over a community
+        via membership in a group.
         """
         return BaseResource.objects.filter(self.__edit_resources_of_group)
 

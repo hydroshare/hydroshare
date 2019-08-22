@@ -300,18 +300,6 @@ class ResourceAccess(models.Model):
                     incl = i
                 # There is no higher privilege than CHANGE, so there is no need to exclude
 
-            if include_community_granted_access:
-                i = Q(u2ugp__group__gaccess__active=True,  # both group and community are CHANGE
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__privilege=PC.CHANGE,
-                      u2ugp__group__g2gcp__community__c2gcp__privilege=PC.CHANGE)
-                if incl is not None:
-                    incl = incl | i
-                else:
-                    incl = i
-                # There is no higher privilege than CHANGE, so there is no need to exclude
-
             if incl is not None:
                 if excl is not None:
                     # A subquery speeds up the execution of __in by eliminating
@@ -430,7 +418,6 @@ class ResourceAccess(models.Model):
 
         :param this_user: the user upon which to report
         :return: integer privilege 1-4 (PrivilegeCodes)
-
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
         group_priv = self.__get_raw_group_privilege(this_user)
@@ -449,10 +436,7 @@ class ResourceAccess(models.Model):
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
         community_priv = self.__get_raw_community_privilege(this_user)
-        if self.immutable and community_priv == PC.CHANGE:
-            return PC.VIEW
-        else:
-            return community_priv
+        return community_priv
 
     def get_effective_privilege(self, this_user):
         """
