@@ -132,8 +132,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
         expected_file_folder = new_folder
@@ -182,8 +182,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
         expected_file_folder = new_folder

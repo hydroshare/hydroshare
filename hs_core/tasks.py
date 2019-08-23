@@ -585,8 +585,9 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     resource.save()
 
                 for url in response_content["content"]:
-                    lf = resource.logical_files[[i.aggregation_name for i in
-                                                resource.logical_files].index(
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
                                                     url["layer_name"].encode("utf-8")
                                                 )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
