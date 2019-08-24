@@ -232,16 +232,14 @@ class CompositeResource(BaseResource):
         if not new_folder.startswith(self.file_path):
             new_folder = os.path.join(self.file_path, new_folder)
 
+        # create xml docs for all non-fileset aggregations
         res_file_objects = ResourceFile.list_folder(self, new_folder)
-        aggregations = []
-        for res_file in res_file_objects:
-            if res_file.has_logical_file:
-                aggregation = res_file.logical_file
-                if aggregation not in aggregations:
-                    aggregations.append(aggregation)
-                    if aggregation.is_fileset:
-                        continue
-                    aggregation.create_aggregation_xml_documents()
+        logical_files = [res_file.logical_file for res_file in res_file_objects if
+                         res_file.has_logical_file and not res_file.logical_file.is_fileset]
+        # remove duplicate aggregations
+        logical_files = set(logical_files)
+        for lf in logical_files:
+            lf.create_aggregation_xml_documents()
 
     def _create_xml_docs_for_folder(self, folder):
         """Creates xml metadata and map documents for any aggregation that is part of the
@@ -261,14 +259,13 @@ class CompositeResource(BaseResource):
         # note: we can't get to all filesets from resource files since
         # it is possible to have filesets without any associated resource files
         res_file_objects = ResourceFile.list_folder(self, folder)
-        aggregations = []
-        for res_file in res_file_objects:
-            if res_file.has_logical_file and res_file.logical_file not in aggregations:
-                aggregation = res_file.logical_file
-                aggregations.append(aggregation)
-                if not aggregation.is_fileset:
-                    if aggregation.metadata.is_dirty:
-                        aggregation.create_aggregation_xml_documents()
+        logical_files = [res_file.logical_file for res_file in res_file_objects if
+                         res_file.has_logical_file and not res_file.logical_file.is_fileset]
+        # remove duplicate aggregations
+        logical_files = set(logical_files)
+        for lf in logical_files:
+            if lf.metadata.is_dirty:
+                lf.create_aggregation_xml_documents()
 
         # create xml docs for all fileset aggregations that exist under folder *folder*
         if folder.startswith(self.file_path):
