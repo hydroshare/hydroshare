@@ -140,6 +140,7 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
     return Response(data=response_dict['message'],
                     status=json_response.status_code)
 
+
 # TODO: This view function needs to be deleted as the actual view function for deleting
 # logical_file/aggregation is 'delete_aggregation'
 @login_required
