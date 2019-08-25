@@ -348,7 +348,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         # set the nc file to NetCDFLogicalFile (aggregation)
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        
+
         # test that we have one logical file of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
