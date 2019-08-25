@@ -724,8 +724,7 @@ def link_irods_file_to_django(resource, filepath):
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    folders = listfolders_recursively(istorage, foldername)
-    check_aggregations(resource, folders, res_files)
+    check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -980,13 +979,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                         aggregation_object = resource.get_file_aggregation_object(
                             destination_file)
                         if aggregation_object:
-                            if aggregation_object.is_single_file_aggregation:
-                                aggregation_object.logical_delete(user)
-                            else:
-                                directory = os.path.dirname(destination_file)
-                                # remove_folder expects path to start with 'data/contents'
-                                directory = directory.replace(res_id + "/", "")
-                                remove_folder(user, res_id, directory)
+                            aggregation_object.logical_delete(user)
                         else:
                             logger.error("No aggregation object found for " + destination_file)
                             istorage.delete(destination_file)
@@ -1006,7 +999,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 res_files.append(res_file)
 
             # scan for aggregations
-            check_aggregations(resource, destination_folders, res_files)
+            check_aggregations(resource, res_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
@@ -1074,6 +1067,9 @@ def create_folder(res_id, folder_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
+    # check for duplicate folder path
+    if istorage.exists(coll_path):
+        raise ValidationError("Folder already exists")
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -1156,9 +1152,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1200,9 +1196,9 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
-        org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-        new_aggregation_name = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+        orig_src_path = src_full_path[len(resource.file_path) + 1:]
+        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
+        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -1252,9 +1248,9 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
-            org_aggregation_name = src_full_path[len(resource.file_path) + 1:]
-            new_aggregation_name = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_xml_docs(org_aggregation_name, new_aggregation_name)
+            orig_src_path = src_full_path[len(resource.file_path) + 1:]
+            new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
+            resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
@@ -1290,6 +1286,7 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['name'] = spatial_coverage.value.get('name', "")
             spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']

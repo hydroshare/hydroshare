@@ -33,6 +33,8 @@ from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command, get_metadata_contenttypes
 from hs_dictionary.models import University, UncategorizedTerm
+from hs_tracking.models import Variable
+from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
@@ -115,6 +117,9 @@ class UserPasswordResetView(TemplateView):
             raise ValidationError('Unauthorised access to reset password')
         context = super(UserPasswordResetView, self).get_context_data(**kwargs)
         return context
+
+def landingPage(request, template="pages/homepage.html"):
+    return render(request, template)
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
@@ -479,6 +484,23 @@ def send_verification_mail_for_password_reset(request, user):
                        context=context)
 
 
+def home_router(request):
+    if request.user.is_authenticated():
+        return redirect("dashboard")
+    else:
+        return render(request, "pages/homepage.html")
+
+
+@login_required
+def dashboard(request, template="pages/dashboard.html"):
+    my_username = request.user.username
+    user = User.objects.get(username=my_username)
+    my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+
+    context = {'recent': my_recent}
+    return render(request, template, context)
+
+
 def login(request, template="accounts/account_login.html",
           form_class=LoginForm, extra_context=None):
     """
@@ -555,8 +577,8 @@ def delete_irods_account(request):
     if request.method == 'POST':
         user = request.user
         try:
-            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD, user.username)
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+            exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE, pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                             exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper():
@@ -586,11 +608,11 @@ def create_irods_account(request):
         try:
             user = request.user
             pwd = str(request.POST.get('password'))
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+            exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
                                             user.username, pwd)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
                 if 'ERROR:' in output.upper() and \

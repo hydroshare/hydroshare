@@ -13,6 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 from hs_app_timeseries.models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 from hs_file_types.models import TimeSeriesLogicalFile, TimeSeriesFileMetaData
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.models.timeseries import CVVariableType, CVVariableName, CVSpeciation, \
     CVSiteType, CVElevationDatum, CVMethodType, CVMedium, CVUnitsType, CVStatus, \
     CVAggregationStatistic
@@ -51,8 +52,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here in this case the sqlite file is at the root of the folder hierarchy
         # location of the sqlite file before aggregation:
         # data/contents/ODM2_Multi_Site_One_Variable.sqlite
-        # location of the sqlite file after aggregation:
-        # data/contents/ODM2_Multi_Site_One_Variable/ODM2_Multi_Site_One_Variable.sqlite
+        # location of the sqlite file after aggregation (no change):
+        # data/contents/ODM2_Multi_Site_One_Variable.sqlite
 
         self.res_title = 'Untitled resource'
         self.create_composite_resource()
@@ -71,8 +72,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test extracted metadata
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_file_folder = base_file_name
-        assert_time_series_file_type_metadata(self, expected_file_folder=expected_file_folder)
+        assert_time_series_file_type_metadata(self, expected_file_folder=None)
 
         self.composite_resource.delete()
 
@@ -113,14 +113,13 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # here we are using a valid sqlite file for setting it
         # to TimeSeries file type which includes metadata extraction
         # here in this case the sqlite file is in a folder along with another file that is not
-        # going to be part of the aggregation. In this case a new folder should be created to
-        # represent the aggregation
+        # going to be part of the aggregation.
         # location of the sqlite file before aggregation:
         # my_folder/ODM2_Multi_Site_One_Variable.sqlite
         # location of the additional file before aggregation:
         # my_folder/ODM2_invalid.sqlite
-        # location of the sqlite file after aggregation:
-        # my_folder/ODM2_Multi_Site_One_Variable/ODM2_Multi_Site_One_Variable.sqlite
+        # location of the sqlite file after aggregation (no change):
+        # my_folder/ODM2_Multi_Site_One_Variable.sqlite
 
         self.res_title = 'Untitled resource'
         self.create_composite_resource()
@@ -137,20 +136,19 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.sqlite_invalid_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
-        # create and test aggregation to check that a new folder was created
+        # create and test aggregation to check that no new folder was created
         self._test_aggregation_folder_creation(res_file, new_folder)
 
     def test_create_aggregation_from_sqlite_file_4(self):
         # here we are using a valid sqlite file for setting it
         # to TimeSeries file type which includes metadata extraction
         # here in this case the sqlite file is in a folder which contains another folder
-        # in this case a new folder should be created to represent the aggregation
         # location of the sqlite file before aggregation:
         # my_folder/ODM2_Multi_Site_One_Variable.sqlite
         # location of the additional folder before aggregation:
         # my_folder/another_folder
-        # location of the sqlite file after aggregation:
-        # my_folder/ODM2_Multi_Site_One_Variable/ODM2_Multi_Site_One_Variable.sqlite
+        # location of the sqlite file after aggregation (no change):
+        # my_folder/ODM2_Multi_Site_One_Variable.sqlite
         # location of the additional folder after aggregation:
         # my_folder/another_folder
 
@@ -191,15 +189,15 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_file_folder = base_file_name
-        self._test_CSV_aggregation(expected_aggr_folder=expected_file_folder)
+
+        self._test_CSV_aggregation(expected_aggr_folder=None)
 
         self.composite_resource.delete()
 
     def test_create_aggregation_from_CSV_file_2(self):
         # here we are using a valid CSV file for setting it
         # to TimeSeries file type which includes metadata extraction
-        # here in this case the csv file in a folder
+        # here in this case the csv file is in a folder
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
@@ -242,36 +240,9 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # set the CSV file to TimeSeries file type
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # aggregation folder is created from the uploaded csv file
-        new_aggr_folder = res_file.file_name[:-4]
-        self._test_CSV_aggregation(expected_aggr_folder=new_aggr_folder, value_count_by_series='2')
+        self._test_CSV_aggregation(expected_aggr_folder=None, value_count_by_series='2')
 
         self.composite_resource.delete()
-
-    def test_create_aggregation_from_sqlite_folder_1(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a sqlite file
-
-        self._test_create_aggregation_from_folder_sqlite(sqlite_folder_path='timeseries_aggr')
-
-    def test_create_aggregation_from_sqlite_folder_2(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a sqlite file. This folder has a parent folder
-
-        self._test_create_aggregation_from_folder_sqlite(
-            sqlite_folder_path='parent_folder/timeseries_aggr')
-
-    def test_create_aggregation_from_CSV_folder_1(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a csv file.
-
-        self._test_create_aggregation_from_folder_CSV(csv_folder_path='timeseries_aggr')
-
-    def test_create_aggregation_from_CSV_folder_2(self):
-        # here we are testing that timeseries aggregation can be created from a folder that
-        # contains a csv file. This folder has a parent folder
-
-        self._test_create_aggregation_from_folder_CSV(
-            csv_folder_path='parent_foldertimeseries_aggr')
 
     def test_create_aggregation_from_sqlite_invalid_file(self):
         # here we are using an invalid sqlite file for setting it
@@ -629,9 +600,9 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check the file folder is not deleted
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        file_folder = base_file_name
+
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, file_folder)
+            self.assertEqual(f.file_folder, None)
         self.composite_resource.delete()
 
     def test_aggregation_folder_delete(self):
@@ -642,7 +613,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # in that folder gets deleted, the logicalfile object gets deleted and
         # the associated metadata objects get deleted
 
-        self.create_composite_resource(file_to_upload=self.sqlite_file)
+        self.create_composite_resource()
+        new_folder = 'timeseries_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -650,12 +624,11 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        file_folder = base_file_name
         # test that we have one logical file of type TimeSeries
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         self.assertEqual(TimeSeriesFileMetaData.objects.count(), 1)
         # delete the folder for the logical file
-        folder_path = "data/contents/{}".format(file_folder)
+        folder_path = "data/contents/{}".format(new_folder)
         remove_folder(self.user, self.composite_resource.short_id, folder_path)
         # there should no content files
         self.assertEqual(self.composite_resource.files.count(), 0)
@@ -712,14 +685,12 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 1)
-        res_file = self.composite_resource.files.first()
         base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
-        self.assertEqual(res_file.file_folder, expected_folder_name)
-        src_path = 'data/contents/{0}/{1}{2}'.format(expected_folder_name, base_file_name, ext)
-        new_file_name = 'some_raster.{}'.format(ext)
+        self.assertEqual(res_file.file_folder, None)
+        src_path = 'data/contents/{}'.format(res_file.file_name)
+        new_file_name = 'some_sqlite.{}'.format(ext)
         self.assertNotEqual(res_file.file_name, new_file_name)
-        tgt_path = 'data/contents/{}/{}'.format(expected_folder_name, new_file_name)
+        tgt_path = 'data/contents/{}'.format(new_file_name)
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
@@ -739,9 +710,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # should raise exception
         self.assertEqual(self.composite_resource.files.count(), 1)
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
-        self.assertEqual(res_file.file_folder, expected_folder_name)
+        self.assertEqual(res_file.file_folder, None)
         new_folder = 'timeseries_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
 
@@ -760,51 +729,58 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource map xml file path on folder name change
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
+        new_folder = 'timeseries_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
+
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        sqlite_file_name = res_file.file_name
+        base_sqlite_file_name, ext = os.path.splitext(res_file.file_name)
 
         # create aggregation from the sqlite file
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         self.assertEqual(self.composite_resource.files.count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, expected_folder_name)
+        self.assertEqual(res_file.file_folder, new_folder)
 
         # test aggregation name
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        expected_aggr_name = "{}/{}".format(new_folder, sqlite_file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(base_file_name, base_file_name)
+        expected_meta_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                   METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(base_file_name, base_file_name)
+        expected_map_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                  RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
-        src_path = 'data/contents/{}'.format(expected_folder_name)
-        tgt_path = 'data/contents/{}_1'.format(expected_folder_name)
+        src_path = 'data/contents/{}'.format(new_folder)
+        tgt_path = 'data/contents/{}_1'.format(new_folder)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, '{}_1'.format(expected_folder_name))
+        self.assertEqual(res_file.file_folder, '{}_1'.format(new_folder))
 
         # test aggregation name update
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        expected_aggr_name = "{}_1/{}".format(new_folder, sqlite_file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}_1/{}_1_meta.xml'.format(expected_folder_name,
-                                                              expected_folder_name)
+        expected_meta_file_path = '{}_1/{}{}'.format(new_folder, base_sqlite_file_name,
+                                                     METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_1/{}_1_resmap.xml'.format(expected_folder_name,
-                                                               expected_folder_name)
+        expected_map_file_path = '{}_1/{}{}'.format(new_folder,  base_sqlite_file_name,
+                                                    RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -814,10 +790,13 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource map xml file path on aggregation folder parent folder name change
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
+        new_folder = 'timeseries_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
+        sqlite_file_name = res_file.file_name
+        base_sqlite_file_name, ext = os.path.splitext(res_file.file_name)
+        aggregation_folder_name = new_folder
 
         # create aggregation from the sqlite file
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -830,16 +809,16 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        expected_aggr_name = "{}/{}".format(aggregation_folder_name, sqlite_file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(aggregation_folder_name,
-                                                          aggregation_folder_name)
+        expected_meta_file_path = '{}/{}{}'.format(aggregation_folder_name,
+                                                   base_sqlite_file_name, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(aggregation_folder_name,
-                                                           aggregation_folder_name)
+        expected_map_file_path = '{}/{}{}'.format(aggregation_folder_name,
+                                                  base_sqlite_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -870,17 +849,21 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name after folder rename
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        expected_aggr_name = "{0}/{1}/{2}".format(parent_folder_rename, aggregation_folder_name,
+                                                  sqlite_file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths after folder rename
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder_rename,
-                                                                aggregation_folder_name,
-                                                                aggregation_folder_name)
+        expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
+                                                          aggregation_folder_name,
+                                                          base_sqlite_file_name,
+                                                          METADATA_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder_rename,
-                                                                 aggregation_folder_name,
-                                                                 aggregation_folder_name)
+        expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
+                                                         aggregation_folder_name,
+                                                         base_sqlite_file_name,
+                                                         RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
@@ -891,10 +874,14 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource map xml file path on aggregation folder move
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
+        new_folder = 'timeseries_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
+
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
+        sqlite_file_name = res_file.file_name
+        base_sqlite_file_name, ext = os.path.splitext(res_file.file_name)
+        aggregation_folder_name = new_folder
 
         # create aggregation from the sqlite file
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -920,108 +907,27 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name update
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        expected_aggr_name = "{0}/{1}/{2}".format(parent_folder, aggregation_folder_name,
+                                                  sqlite_file_name)
+        self.assertEqual(logical_file.aggregation_name, expected_aggr_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder,
-                                                                aggregation_folder_name,
-                                                                aggregation_folder_name)
+        expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
+                                                          aggregation_folder_name,
+                                                          base_sqlite_file_name,
+                                                          METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder,
-                                                                 aggregation_folder_name,
-                                                                 aggregation_folder_name)
+        expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
+                                                         aggregation_folder_name,
+                                                         base_sqlite_file_name,
+                                                         RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
 
-    def test_aggregation_folder_move_not_allowed(self):
-        # test a folder is not allowed to be moved into a folder that represents an aggregation
-
-        self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
-
-        # create aggregation from the sqlite file
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # create a folder to move the aggregation folder there
-        new_folder = 'folder_to_move'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        # move the new folder into the aggregation folder
-        src_path = 'data/contents/{}'.format(new_folder)
-        tgt_path = 'data/contents/{}'.format(aggregation_folder_name)
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-
-        self.composite_resource.delete()
-
-    def test_aggregation_folder_sub_folder_not_allowed(self):
-        # test a folder can't be created inside a folder that represents an aggregation
-
-        self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
-
-        # create aggregation from the sqlite file
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
-        # create a folder inside the aggregation folder
-        new_folder = '{}/sub_folder'.format(res_file.file_folder)
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.composite_resource, new_folder)
-
-        self.composite_resource.delete()
-
-    def test_file_move_to_aggregation_not_allowed(self):
-        # test no file can be moved into a folder that represents a timeseries aggregation
-
-        self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
-
-        # create aggregation from the sqlite file
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
-
-        # add a file to the resource which will try to move into the aggregation folder
-        res_file_to_move = self.add_file_to_resource(file_to_add=self.odm2_csv_file)
-        src_path = os.path.join('data', 'contents', res_file_to_move.short_path)
-        tgt_path = 'data/contents/{}'.format(res_file.file_folder)
-
-        # move file to aggregation folder
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        self.composite_resource.delete()
-
-    def test_upload_file_to_aggregation_not_allowed(self):
-        # test no file can be uploaded into a folder that represents an aggregation
-
-        self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.sqlite_file)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
-
-        # create aggregation from the sqlite file
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
-
-        # add a file to the resource at the aggregation folder
-        with self.assertRaises(ValidationError):
-            self.add_file_to_resource(file_to_add=self.odm2_csv_file,
-                                      upload_folder=res_file.file_folder)
-        self.composite_resource.delete()
-
-    def _test_aggregation_folder_creation(self, res_file, file_folder):
+    def _test_aggregation_folder_creation(self, res_file, file_folder_path):
         # check that the resource file is not associated with any logical file at this point
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -1037,9 +943,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = self.composite_resource.logical_files[0]
         self.assertEqual(logical_file.files.count(), 1)
         base_sqlite_file_name, _ = os.path.splitext(self.sqlite_file_name)
-        expected_file_folder = '{0}/{1}'.format(file_folder, base_sqlite_file_name)
         res_file = logical_file.files.first()
-        self.assertEqual(res_file.file_folder, expected_file_folder)
+        self.assertEqual(res_file.file_folder, file_folder_path)
         self.assertTrue(isinstance(logical_file, TimeSeriesLogicalFile))
         self.assertTrue(logical_file.metadata, TimeSeriesFileMetaData)
 
@@ -1084,8 +989,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Paradise'],
                          value_count_by_series)
 
-        # the dataset name (title) must be set the name of the folder in which the CSV file exist
-        expected_dataset_name = os.path.basename(csv_res_file.file_folder)
+        # the dataset name (title) must be set the name of the CSV file
+        expected_dataset_name = csv_res_file.file_name[:-4]
         self.assertEqual(logical_file.dataset_name, expected_dataset_name)
 
         # there should not be any file level abstract
@@ -1124,53 +1029,6 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
         self.assertEqual(self.composite_resource.metadata.coverages.filter(
             type='period').count(), 1)
-
-    def _test_create_aggregation_from_folder_sqlite(self, sqlite_folder_path):
-        self.res_title = 'Untitled resource'
-        self.create_composite_resource()
-
-        # create a folder to place the sqlite file in that folder before creating an
-        # aggregation from the sqlite file
-        ResourceFile.create_folder(self.composite_resource, sqlite_folder_path)
-        self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=sqlite_folder_path)
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is not associated with any logical file at this point
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no TimeSeriesLogicalFile object
-        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
-
-        # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user,
-                                            folder_path=sqlite_folder_path)
-        # test extracted metadata
-        assert_time_series_file_type_metadata(self, expected_file_folder=sqlite_folder_path)
-
-        self.composite_resource.delete()
-
-    def _test_create_aggregation_from_folder_CSV(self, csv_folder_path):
-        self.create_composite_resource()
-
-        ResourceFile.create_folder(self.composite_resource, csv_folder_path)
-        self.add_file_to_resource(file_to_add=self.odm2_csv_file, upload_folder=csv_folder_path)
-
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # check that the resource file is not associated with any logical file
-        self.assertEqual(res_file.has_logical_file, False)
-
-        # check that there is no TimeSeriesLogicalFile object
-        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
-
-        # set the CSV file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user,
-                                            folder_path=csv_folder_path)
-        self._test_CSV_aggregation(expected_aggr_folder=csv_folder_path)
-
-        self.composite_resource.delete()
 
     def _test_file_metadata_on_file_delete(self, ext):
 

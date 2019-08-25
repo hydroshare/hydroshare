@@ -58,7 +58,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
     def test_update_netcdf_file(self):
         # create a netcdf resource
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(
+        _, _, metadata = utils.resource_pre_create_actions(
             resource_type='NetcdfResource',
             resource_title='Untitled resource',
             page_redirect_url_key=None,

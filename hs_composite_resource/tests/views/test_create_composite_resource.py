@@ -47,8 +47,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
 
         # test with no file upload
         post_data = {'resource-type': 'CompositeResource',
-                     'title': 'Test Composite Resource Creation',
-                     'irods_federated': 'false'
+                     'title': 'Test Composite Resource Creation'
                      }
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
@@ -73,7 +72,6 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         post_data = {'resource-type': 'CompositeResource',
                      'title': 'Test Composite Resource Creation',
-                     'irods_federated': 'false',
                      'files': (self.txt_file_name, open(self.txt_file_path), 'text/plain')
                      }
         url = reverse('create_resource')

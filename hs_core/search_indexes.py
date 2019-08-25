@@ -40,7 +40,8 @@ def normalize_name(name):
     """
     sname = name.encode('utf-8').strip()  # remove spaces
     try:
-        _, type = probablepeople.tag(sname)  # discard parser result
+        # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
+        _, type = probablepeople.tag(name)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
         return sname
 
@@ -163,7 +164,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
-        if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
+        if hasattr(obj, 'metadata') and obj.metadata.title is not None:
             return obj.metadata.title.value.lstrip()
         else:
             return 'none'

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block meta_title %}Home{% endblock %}
+{% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n hydroshare_tags %}
+
+{% comment %}
+
+These data should be given fast without ajax.
+The dashboard template assumes context dictionary has the following keys
+timestamp
+title
+first author
+resource id
+content type
+privacy;;
+
+timestamp should go with a template tags to convert to a human readble day.
+{% endcomment %}
+
+{% block main %}
+    <div class="container  collapse dashboard-section-container" id="getStarted">
+        {% trans "Getting Started" as whole_title %}
+        {% include "includes/apps_block_title.html" %}
+        <div id="row-1" class="row">
+            <div class="col-xs-12 col-sm-4  get-started-cell">
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/"
+                   class="get-started-link">Learn to use HydroShare</a>
+            </div>
+            <div class="col-xs-12 col-sm-4  get-started-cell">
+                <a href="/user/" class="get-started-link">Complete profile</a>
+            </div>
+            <div class="col-xs-12 col-sm-4  get-started-cell">
+                <a href="/search/" class="get-started-link">Browse data</a>
+            </div>
+        </div>
+
+        <div id="row-2" class="row">
+            <div class="col-xs-12 col-sm-4 get-started-cell">
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/" class="get-started-link">Introduction to HydroShare</a>
+            </div>
+            <div class="col-xs-12 col-sm-4 get-started-cell">
+                <a href="https://help.hydroshare.org/introduction-to-hydroshare/getting-started/example-resources/"
+                   class="get-started-link">Example resources
+                </a>
+            </div>
+            <div class="col-xs-12 col-sm-4 get-started-cell">
+                <a href="https://help.hydroshare.org/about-hydroshare/releases/"
+                   class="get-started-link">Recent upgrades</a>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div>
+        <div class="container dashboard-section-container">
+            <div class="row dashboard-section-container-title-row">
+                <span>
+                 <h3 class="home-page-block-title">Recently Visited </h3>
+                    <span style="float: right">
+                    <a href="#" id="id-getting-started-toggle" class="get-started-toggle" data-toggle="collapse"
+                       data-target="#getStarted">Show Getting Started</a>
+                    </span>
+                </span>
+            </div>
+            <table class="table-hover table-striped resource-custom-table" id="recently-visited-resources"
+                   style="width: 100%;">
+                <thead>
+                <tr>
+                    <th style="padding-left: 10px;">Accessed</th>
+                    <th style="padding-left: 10px;">Title</th>
+                    <th style="padding-left: 10px;">First Author</th>
+                    <th style="padding-left: 10px;">Resource Type</th>
+                    <th style="padding-left: 10px;">Visibility</th>
+                </tr>
+                </thead>
+                {# ====================================== #}
+                {# == Here comes the data from backend == #}
+                {# ====================================== #}
+                <tbody>
+                {% for r in recent %}
+                    <tr class="data-row">
+                        <td>{{ r.last_accessed | just_in_time }}</td>
+                        <td>
+                            {% autoescape off %}
+                                {% resource_link_builder r.title r.short_id %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{{ r|resource_first_author }}</td>
+                        <td>
+                            {% autoescape off %}
+                                {% resource_verbose_name_builder r.resource_type %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+        <div class="container dashboard-section-container">
+            {% trans "Featured Apps" as whole_title %}
+            {% include "includes/apps_block_title.html" %}
+            <div class="row big-app-row">
+                {% trans "CUAHSI JupyterHub" as title_name %}
+                {% trans "https://jupyter.cuahsi.org" as title_url %}
+                {% trans "jupiterhub.png" as app_image %}
+                {% trans "Jupyter Hub App" as app_image_alt %}
+                {% trans "Use this app to launch HydroShare data in an online Python environment that uses JupyterHub software stack." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
+
+                {% trans "National Water Model Forecast Viewer" as title_name %}
+                {% trans "https://hs-apps.hydroshare.org/apps/nwm-forecasts/" as title_url %}
+                {% trans "nwm_forecasts.png" as app_image %}
+                {% trans "National Water Model Forecast Viewer App" as app_image_alt %}
+                {% trans "Retrieve and preview National Water Model data." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
+            </div>
+
+        </div>
+
+        {# CUAHSI developed apps #}
+        <div class="container dashboard-section-container">
+            {% trans "Additional CUAHSI Water Data Services" as whole_title %}
+            {% include "includes/apps_block_title.html" %}
+            <div class="row big-app-row">
+                {% trans "HydroClient" as title_name %}
+                {% trans "https://data.cuahsi.org" as title_url %}
+                {% trans "hydro_client.png" as app_image %}
+                {% trans "CUAHSI hyrdoclient web app" as app_image_alt %}
+                {% trans "Explore and retrieve time series data from federal agencies, academic scientists, & volunteer monitoring organizations." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
+
+                {% trans "Time Series Data Uploader" as title_name %}
+                {% trans "http://hydroserver.cuahsi.org" as title_url %}
+                {% trans "hydro_server.png" as app_image %}
+                {% trans "CUAHSI data uploader for Time Series Data" as app_image_alt %}
+                {% trans "Share your time series data. Request a database and upload your formatted data to make it available in HydroClient." as app_content %}
+                {% include "includes/big_image_button_app.html" %}
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}
+
+
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/dashboard.css">
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/dashboard.js"></script>
+{% endblock %}

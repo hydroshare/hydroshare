@@ -398,7 +398,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         res_id = self.resComposite.short_id
         tool_res_id = self.resWebApp.short_id
         ipath = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + \
-                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE
+                settings.HS_IRODS_PROXY_USER_IN_USER_ZONE
         target_res_path = ipath + '/' + self.user.username + '/' + res_id
         if super(TestWebAppFeature, self).check_file_exist(target_res_path):
             super(TestWebAppFeature, self).delete_directory(target_res_path)
@@ -411,14 +411,14 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         self.resWebApp.extra_metadata = {
             irods_path_key: ipath,
-            irods_resc_key: settings.HS_IRODS_LOCAL_ZONE_DEF_RES
+            irods_resc_key: settings.HS_IRODS_USER_ZONE_DEF_RES
         }
         self.resWebApp.save()
 
         self.assertNotEqual(self.resWebApp.extra_metadata, {})
         self.assertEqual(self.resWebApp.extra_metadata[irods_path_key], ipath)
         self.assertEqual(self.resWebApp.extra_metadata[irods_resc_key],
-                         settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+                         settings.HS_IRODS_USER_ZONE_DEF_RES)
 
         # assert resource copying will take place now that extra_metadata keys for irods federation
         # target path and resource keys exist
