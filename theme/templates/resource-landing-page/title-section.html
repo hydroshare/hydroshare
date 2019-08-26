@@ -250,7 +250,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls">
                         <input class="form-control input-sm textinput textInput" id="txt-title"
-                                {% if communities_enabled and czo_user %} onclick="titleClick()" {% endif %}
+                                {% if communities_enabled and czo_user %} onfocus="titleClick()" {% endif %}
                                maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
                     </div>
                 </div>
