@@ -76,8 +76,7 @@ class Community(models.Model):
         res = BaseResource\
             .objects\
             .filter(r2grp__group__g2gcp__community=self,
-                    r2grp__group__gaccess__active=True,
-                    r2grp__group__gaccess__unlisted=False)\
+                    r2grp__group__gaccess__active=True)\
             .filter(Q(raccess__public=True) |
                     Q(raccess__published=True) |
                     Q(raccess__discoverable=True))\

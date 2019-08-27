@@ -1729,7 +1729,7 @@ class FindGroupsView(TemplateView):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = Group.objects.filter(gaccess__active=True).filter(gaccess__unlisted=False).exclude(name="Hydroshare Author")
+            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
             for g in groups:
                 g.is_user_member = u in g.gaccess.members
                 g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
