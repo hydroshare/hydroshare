@@ -171,7 +171,7 @@ class Community(models.Model):
 
         # if user is a member, member privileges apply regardless of superuser privileges
         # (superusers only obtain member privileges over every group in the community)
-        if user in group.gaccess.members or self.is_superuser(user):
+        if group.gaccess.members.filter(id=user.id).exists() or self.is_superuser(user):
             if privilege == PrivilegeCodes.CHANGE:
                 return BaseResource.objects.filter(raccess__immutable=False,
                                                    r2grp__group=group,

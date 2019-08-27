@@ -23,7 +23,7 @@ from hs_core.signals import post_add_geofeature_aggregation
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, FieldInformation
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
 
@@ -249,125 +249,67 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=None):
-        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file,
-        or a folder """
+        """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file """
 
         log = logging.getLogger()
-        res_file, folder_path = cls._validate_set_file_type_inputs(resource, file_id, folder_path)
+        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
+                             folder_path=folder_path,
+                             post_aggr_signal=post_add_geofeature_aggregation,
+                             is_temp_file=True) as ft_ctx:
 
-        try:
-            meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
-        except ValidationError as ex:
-            log.exception(ex.message)
-            raise ex
-
-        # hold on to temp dir for final clean up
-        temp_dir = os.path.dirname(shape_files[0])
-        file_name = res_file.file_name
-        # file name without the extension
-        base_file_name = file_name[:-len(res_file.extension)]
-        xml_file = ''
-        for f in shape_files:
-            if f.lower().endswith('.shp.xml'):
-                xml_file = f
-                break
-
-        file_folder = res_file.file_folder
-        file_type_success = False
-        upload_folder = ''
-        res_files_to_delete = []
-        aggregation_folder_created = False
-        create_new_folder = cls._check_create_aggregation_folder(
-            selected_res_file=res_file, selected_folder=folder_path,
-            aggregation_file_count=len(shape_files))
-
-        msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
-        with transaction.atomic():
-            # create a GeoFeature logical file object to be associated with
-            # resource files
-            logical_file = cls.initialize(base_file_name, resource)
+            res_file = ft_ctx.res_file
             try:
-                if folder_path is None:
-                    # we are here means aggregation is being created by selecting a file
+                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
+                                                                                   res_file)
+            except ValidationError as ex:
+                log.exception(ex.message)
+                raise ex
 
-                    if create_new_folder:
-                        # create a folder for the geofeature file type using the base file
-                        # name as the name for the new folder
-                        upload_folder = cls._create_aggregation_folder(resource, file_folder,
-                                                                       base_file_name)
+            file_name = res_file.file_name
+            # file name without the extension
+            base_file_name = file_name[:-len(res_file.extension)]
+            xml_file = ''
+            for f in shape_files:
+                if f.lower().endswith('.shp.xml'):
+                    xml_file = f
+                    break
 
-                        log.info("Folder created:{}".format(upload_folder))
-                        aggregation_folder_created = True
-                        # create logical file record in DB
-                        logical_file.save()
-                        if res_file.extension.lower() == ".shp":
-                            # selected file is a shp file - that means we didn't create any new
-                            # files - we just need to copy all the existing files to a new folder
-                            # and makes those copied files part of the new aggregation
-                            tgt_folder = upload_folder
-                            logical_file.copy_resource_files(resource, shp_res_files, tgt_folder)
-                            res_files_to_delete.extend(shp_res_files)
+            file_folder = res_file.file_folder
+            upload_folder = file_folder
+            file_type_success = False
+            res_files_to_delete = []
 
-                        else:
-                            # selected file must be a zip file - add the extracted files to
-                            # the resource and make those files part of the aggregation
-                            logical_file.add_files_to_resource(
-                                resource=resource, files_to_add=shape_files,
-                                upload_folder=upload_folder)
-                            res_files_to_delete.append(res_file)
+            msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
+            with transaction.atomic():
+                try:
+                    if res_file.extension.lower() == ".zip":
+                        files_to_upload = shape_files
+                        res_files_for_aggr = []
+                        res_files_to_delete.append(res_file)
                     else:
-                        # create logical file record in DB
-                        logical_file.save()
-                        upload_folder = file_folder
+                        files_to_upload = []
+                        res_files_for_aggr = shp_res_files
 
-                        # we need to upload files to the resource only if the selected file is a zip
-                        # file - since we created new files by unzipping
-                        if res_file.extension.lower() == ".zip":
-                            # selected file must be a zip file- add the extracted files to the
-                            # resource and make those files part of the aggregation
-                            logical_file.add_files_to_resource(
-                                resource=resource, files_to_add=shape_files,
-                                upload_folder=upload_folder)
-                            res_files_to_delete.append(res_file)
-                        else:
-                            # selected file must be a shp file - make all files in the folder part
-                            # of the aggregation
-                            logical_file.add_resource_files_in_folder(resource, upload_folder)
-                else:
-                    # create logical file record in DB
-                    logical_file.save()
-                    # user selected a folder to create aggregation
-                    # make all the files in the selected folder as part of the aggregation
-                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    # create a GeoFeature logical file object
+                    logical_file = cls.create_aggregation(dataset_name=base_file_name,
+                                                          resource=resource,
+                                                          res_files=res_files_for_aggr,
+                                                          new_files_to_upload=files_to_upload,
+                                                          folder_path=upload_folder)
 
-                log.info("GeoFeature aggregation - files were added to the aggregation.")
-                add_metadata(resource, meta_dict, xml_file, logical_file)
-                log.info("GeoFeature aggregation and resource level metadata updated.")
-                reset_title = logical_file.dataset_name == base_file_name
-                logical_file._finalize(user, resource, folder_created=aggregation_folder_created,
-                                       res_files_to_delete=res_files_to_delete,
-                                       reset_title=reset_title)
+                    log.info("GeoFeature aggregation - files were added to the aggregation.")
+                    add_metadata(resource, meta_dict, xml_file, logical_file)
+                    log.info("GeoFeature aggregation and resource level metadata updated.")
 
-                file_type_success = True
-                post_add_geofeature_aggregation.send(
-                    sender=AbstractLogicalFile,
-                    resource=resource,
-                    file=logical_file
-                )
-            except Exception as ex:
-                msg = "GeoFeature aggregation type. Error when creating aggregation type. Error:{}"
-                msg = msg.format(ex.message)
-                log.exception(msg)
-            finally:
-                # remove temp dir
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
+                    file_type_success = True
+                    ft_ctx.logical_file = logical_file
+                    ft_ctx.res_files_to_delete = res_files_to_delete
+                except Exception as ex:
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
 
-        if not file_type_success:
-            aggregation_from_folder = folder_path is not None
-            cls._cleanup_on_fail_to_create_aggregation(user, resource, upload_folder,
-                                                       file_folder, aggregation_from_folder)
-            raise ValidationError(msg)
+            if not file_type_success:
+                raise ValidationError(msg)
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
