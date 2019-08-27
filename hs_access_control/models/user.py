@@ -1591,7 +1591,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise PermissionDenied("User has insufficient sharing privilege over resource")
 
-        if not this_group.gaccess.members.filter(id=self.user).exists() and\
+        if not this_group.gaccess.members.filter(id=self.user.id).exists() and\
            not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
