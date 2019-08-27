@@ -13,8 +13,8 @@ def resource_level_tool_urls(resource_obj, request_obj):
     resource_level_app_counter = 0
 
     # associate resources with app tools using extended metadata name-value pair with 'appkey' key
-    filterd_res_obj = BaseResource.objects.filter(short_id=resource_obj.short_id,
-                                                  extra_metadata__has_key=tool_app_key).first()
+    filterd_res_obj = BaseResource.objects.exclude(resource_type='ToolResource').filter(
+        short_id=resource_obj.short_id, extra_metadata__has_key=tool_app_key).first()
     if filterd_res_obj:
         # check appkey matching with web app tool resources
         appkey_dict = {tool_app_key: filterd_res_obj.extra_metadata[tool_app_key]}

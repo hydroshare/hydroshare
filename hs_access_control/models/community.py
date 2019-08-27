@@ -20,7 +20,7 @@ class Community(models.Model):
 
     @property
     def member_groups(self):
-        """ This returns all member groups, including unlisted groups """
+        """ This returns all member groups """
         return Group.objects.filter(gaccess__active=True,
                                     g2gcp__community=self)
 
@@ -59,7 +59,7 @@ class Community(models.Model):
                         r2grp__group__id=OuterRef('id'),
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
-            .filter(gaccess__unlisted=False, has_public_resources=True)\
+            .filter(has_public_resources=True)\
             .order_by('name')
 
     @property
@@ -164,10 +164,6 @@ class Community(models.Model):
         Get community resources available at a specific privilege for a given user and group.
         This routine is the root of the routines for rendering a community's holdings.
         The group determines which resources will be listed.
-        The user determines the protection level. If any of the user's own groups are declared
-        as supergroups, then the user has CHANGE over anything with CHANGE to its local group.
-        Otherwise, the user has at most VIEW. If the user is not a member of a supergroup,
-        listing may be overridden via the allow_view flag.o
 
         This listing routine has been separated from the main listing routines to avoid
         corrupting existing group views of resources, which have different protections than this.
@@ -188,25 +184,9 @@ class Community(models.Model):
         # user is not a member of group and not a superuser
         elif privilege == PrivilegeCodes.CHANGE:  # requires superuser
             return BaseResource.objects.none()
-        else:  # VIEW is requested for regular user
+        else:  # VIEW is requested for regular user via community
             return BaseResource.objects.filter(
-                # if it's immutable, it just needs to be held by this group
-                Q(raccess__immutable=True,
-                  r2grp__group=group,
+                # The only reasonable protection is VIEW; don't check protection.
+                Q(r2grp__group=group,
                   r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user) |
-                # it's view if the group community privilege is VIEW
-                Q(raccess__immutable=False,
-                  r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user) |
-                # it's view if the target group's privilege is view
-                Q(raccess__immutable=False,
-                  r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__privilege=PrivilegeCodes.VIEW,
                   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()

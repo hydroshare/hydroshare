@@ -35,6 +35,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        for g in GroupAccess.groups_with_public_resources(): 
+        for g in GroupAccess.groups_with_public_resources():
             # n = g.gaccess.public_resources.count()
             print("group is {} (id={})".format(g.name, g.id))

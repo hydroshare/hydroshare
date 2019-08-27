@@ -49,7 +49,6 @@ def access_permissions(u, r):
     for q in UserGroupPrivilege.objects\
             .filter(user=u,
                     group__gaccess__active=True,
-                    group__g2gcp__community__c2gcp__allow_view=True,
                     group__g2gcp__community__c2gcp__group__gaccess__active=True,
                     group__g2gcp__community__c2gcp__group__g2grp__resource=r)\
             .exclude(pk__in=UserGroupPrivilege.objects.filter(user=u,
