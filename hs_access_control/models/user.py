@@ -328,6 +328,26 @@ class UserAccess(models.Model):
         return Group.objects.filter(g2ugp__user=self.user,
                                     g2ugp__privilege=PrivilegeCodes.OWNER)
 
+    @property
+    def my_groups(self):
+        """
+        Get a list of groups that should appear in "my groups".
+
+        Inactive groups will be included only if self owns those groups.
+
+        :return: QuerySet evaluating to held groups.
+        """
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return Group.objects.filter(Q(g2ugp__user=self.user,
+                                      g2ugp__privilege__lte=PrivilegeCodes.VIEW,
+                                      gaccess__active=True) |
+                                    Q(g2ugp__user=self.user,
+                                      gaccess__active=False,
+                                      g2ugp__privilege=PrivilegeCodes.OWNER))\
+                            .distinct()
+
     #################################
     # access checks for groups
     #################################
@@ -1591,7 +1611,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise PermissionDenied("User has insufficient sharing privilege over resource")
 
-        if not this_group.gaccess.members.filter(id=self.user).exists() and\
+        if not this_group.gaccess.members.filter(id=self.user.id).exists() and\
            not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
