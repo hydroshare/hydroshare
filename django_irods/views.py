@@ -115,9 +115,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
         # check for aggregations
         if is_aggregation_request and res.resource_type == "CompositeResource":
-            prefix = res.short_id + "/data/contents/"
+            prefix = res.file_path
             if path.startswith(prefix):
-                aggregation_name = path[len(prefix):]
+                # +1 to remove trailing slash
+                aggregation_name = path[len(prefix)+1:]
             aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
             if not is_zip_request:
                 download_url = request.GET.get('url_download', 'false').lower()
