@@ -25,16 +25,16 @@ class CommunityView(TemplateView):
         return super(CommunityView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        # user_id = User.objects.get(pk=self.request.user.id)
         grpfilter = self.request.GET.get('grp')
 
-        community_resources = community_from_name_or_id("CZO National Community").public_resources
+        community = community_from_name_or_id(kwargs['community_id'])
+        community_resources = community.public_resources
+        raw_groups = community.groups_with_public_resources()
         groups = []
-        for c in community_resources:
-            if not any(str(c.group_id) == g.get('id') for g in groups):  # if the group id is not already present in the list
-                if c.group_name != "CZO National":  # The National Group is used to establish the entire Community
-                    res_count = len([r for r in community_resources if r.group_name == c.group_name])
-                    groups.append({'id': str(c.group_id), 'name': str(c.group_name), 'res_count': str(res_count)})
+
+        for g in raw_groups:
+            res_count = len([r for r in community_resources if r.group_name == g.name])
+            groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
 
         groups = sorted(groups, key=lambda key: key['name'])
         return {
