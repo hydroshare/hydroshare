@@ -1762,7 +1762,7 @@ class MyGroupsView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
-        groups = u.uaccess.view_groups
+        groups = u.uaccess.my_groups
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
