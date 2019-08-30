@@ -141,6 +141,8 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
                     status=json_response.status_code)
 
 
+# TODO: This view function needs to be deleted as the actual view function for deleting
+# logical_file/aggregation is 'delete_aggregation'
 @login_required
 def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """deletes an instance of a specific file type and all its associated resource files"""
@@ -236,8 +238,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    for file in aggregation.files.all():
-        file.delete()
+    aggregation.logical_delete(request.user)
     update_quota_usage(res)
     msg = "Aggregation was successfully deleted."
     response_data['status'] = 'success'
