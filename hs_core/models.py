@@ -210,7 +210,7 @@ def get_access_object(user, user_type, user_access):
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
-            "joined": user.date_joined.strftime("%d %b, %Y")
+            "joined": user.date_joined.strftime("%d %b, %Y"),
         }
     elif user_type == "group":
         if user.gaccess.picture:

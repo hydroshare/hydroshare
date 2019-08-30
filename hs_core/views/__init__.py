@@ -618,6 +618,17 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def delete_author(request, shortkey, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    try:
+        res.metadata.delete_element('creator', element_id)
+        resource_modified(res, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
+    except Error as exp:
+        ajax_response_data = {'status': 'error', 'message': exp.message}
+    return JsonResponse(ajax_response_data)
+
+
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
