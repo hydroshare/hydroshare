@@ -1788,24 +1788,16 @@ class AddUserForm(forms.Form):
 
 
 class GroupView(TemplateView):
-    template_name = 'pages/group.html'
+    template_name = 'pages/group-unauthenticated.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/group.html'
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
-
-        u = User.objects.get(pk=self.request.user.id)
-        u.is_group_owner = u.uaccess.owns_group(g)
-        u.is_group_editor = g in u.uaccess.edit_groups
-        u.is_group_viewer = g in u.uaccess.view_groups
-
-        g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-        g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-        g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
@@ -1815,16 +1807,37 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-        group_resources = sorted(group_resources, key=lambda x:x.date_granted, reverse=True)
 
-        return {
-            'profile_user': u,
-            'group': g,
-            'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-            'group_resources': group_resources,
-            'add_view_user_form': AddUserForm(),
-            'communities_enabled': settings.COMMUNITIES_ENABLED
-        }
+        group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
+
+        if self.request.user.is_authenticated():
+
+            u = User.objects.get(pk=self.request.user.id)
+            u.is_group_owner = u.uaccess.owns_group(g)
+            u.is_group_editor = g in u.uaccess.edit_groups
+            u.is_group_viewer = g in u.uaccess.view_groups
+
+            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+            g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+
+            return {
+                'profile_user': u,
+                'group': g,
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED
+            }
+        else:
+            public_group_resources = [r for r in group_resources if r.raccess.public]
+
+            return {
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': public_group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED
+            }
 
 
 class MyResourcesView(TemplateView):
