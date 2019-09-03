@@ -21,17 +21,15 @@ class ODM2Variable(models.Model):
     provenance_uri = models.TextField(editable=False, null=False, blank=True,
                                       help_text="URI describing provenance of variable name")
 
-    def __str__(self): 
+    def __str__(self):
         return self.name
 
     @classmethod
     def sync(cls, uri='http://vocabulary.odm2.org/api/v1/variablename/?format:json'):
         response = urllib2.urlopen(uri)
-        read_response = response.read()
-        data = json.loads(read_response)
-        print(data.keys())
+        str = response.read()
+        data = json.loads(str)
         for d in data['objects']:
-            print("id='{}' name='{}'".format(d['vocabulary_id'], d['name']))
             try:
                 record = ODM2Variable.objects.get(id=int(d['vocabulary_id']))
                 if d['vocabulary_status'] == 'Current':
@@ -63,8 +61,5 @@ class ODM2Variable(models.Model):
     @classmethod
     def all(cls):
         term_names = ODM2Variable.objects.all().values_list('name').order_by('name')
-        try:
-            formatted_terms = [str(t[0].replace(",", " -")) for t in term_names if not t[0][0].isdigit()]
-            return formatted_terms
-        except:
-            pass
+        formatted_terms = [str(t[0].replace(",", " -")) for t in term_names if not t[0][0].isdigit()]
+        return formatted_terms
