@@ -8,6 +8,8 @@ Modify the resource id of an existing resource
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from hs_core.models import BaseResource, short_id
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.hs_bagit import create_bag
 from uuid import UUID
 from django.db import transaction, IntegrityError
 from django_irods.icommands import SessionException
@@ -32,7 +34,7 @@ class Command(BaseCommand):
             raise CommandError('resource_id argument is required')
         res_id = options['resource_id']
         try:
-            res = BaseResource.objects.get(short_id=res_id)
+            res = get_resource_by_shortkey(res_id, or_404=False)
         except ObjectDoesNotExist:
             raise CommandError("No Resource found for id {}".format(res_id))
 
@@ -95,5 +97,8 @@ class Command(BaseCommand):
 
         print("Moving Resource files")
         storage.moveFile(res_id, new_res_id)
+
+        print("Creating Bag")
+        create_bag(res)
 
         print("Resource id successfully update from {} to {}".format(res_id, new_res_id))
