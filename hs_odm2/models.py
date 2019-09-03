@@ -61,4 +61,5 @@ class ODM2Variable(models.Model):
     @classmethod
     def all(cls):
         term_names = ODM2Variable.objects.all().values_list('name').order_by('name')
-        return [str(t[0]) for t in term_names]
+        formatted_terms = [str(t[0].replace(",", " -")) for t in term_names if not t[0][0].isdigit()]
+        return formatted_terms
