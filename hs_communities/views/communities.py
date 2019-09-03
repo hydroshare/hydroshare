@@ -108,12 +108,9 @@ class TopicsView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         if request.POST.get('action') == 'CREATE':
-            try:
-                new_topic = Topic()
-                new_topic.name = request.POST.get('name').replace("--", "")
-                new_topic.save()
-            except Exception as e:
-                print("TopicsView error creating new topic {}".format(e))
+            new_topic = Topic()
+            new_topic.name = request.POST.get('name').replace("--", "")
+            new_topic.save()
         elif request.POST.get('action') == 'UPDATE':
             try:
                 update_topic = Topic.objects.get(id=request.POST.get('id'))
