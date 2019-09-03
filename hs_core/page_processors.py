@@ -284,11 +284,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
-    def group_to_community(grp, communities):
-        for community in communities:
-            if grp.id in [g.id for g in community.member_groups]:
-                return community
-
     grps_member_of = []
     groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
     # for each group set group dynamic attributes
@@ -296,8 +291,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         g.is_user_member = user in g.gaccess.members
         if g.is_user_member:
             grps_member_of.append(g)
-
-    comms_member_of = [group_to_community(g, Community.objects.all()) for g in grps_member_of]
 
     context = {
                'cm': content_model,
@@ -335,7 +328,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'maps_key': maps_key,
                'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
-               'czo_user': any("CZO National" in x.name for x in comms_member_of),
+               'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all())
     }
 
