@@ -85,6 +85,11 @@ class Command(BaseCommand):
                 for i in res.metadata.identifiers.all():
                     i.url = i.url.replace(res_id, new_res_id)
                     i.save()
+
+                print("Updating logical_files metadata")
+                for aggregation in res.logical_files:
+                    aggregation.metadata.is_dirty = True
+                    aggregation.metadata.save()
         except IntegrityError:
             raise EnvironmentError("Error occurred  while updating")
 
