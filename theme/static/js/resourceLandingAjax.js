@@ -65,95 +65,6 @@ function label_ajax_submit() {
     return false;
 }
 
-function change_access_ajax_submit() {
-    let form = $(this).closest("form");
-    let element = $(this);  // The access button that was pressed
-    form.find("input[name='flag']").val(element.attr("data-flag").trim());
-
-    // Disable buttons while request is being made
-    form.find("button").toggleClass("disabled", true);
-    form.css("cursor", "progress");
-
-    let datastring = form.serialize();
-    let url = form.attr('action');
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                form.find("button").removeAttr("disabled");
-                form.find("button").removeClass("active");
-                element.toggleClass("active", true);
-                element.attr("disabled", true);
-            }
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-
-            // Enable Publish Resource button if the resource was made public
-            const isPublic = element.attr("id") === "btn-public";
-            $("#publish").toggleClass("disabled", !isPublic);
-            $("#publish > span").attr("data-original-title", !isPublic ? "Publish this resource<br><br><small>You must make your resource public in the Manage Access Panel before it can be published." : "Publish this resource");
-            $("#publish").attr("data-toggle", !isPublic ? "" : "modal");   // Disable the agreement modal
-            $("#hl-sharing-status").text(element.text().trim());    // Update highlight sharing status
-        },
-        error: function () {
-            form.find("button").toggleClass("disabled", false);
-            form.css("cursor", "auto");
-        }
-    });
-
-    return false;   //don't submit the form
-}
-
-function shareable_ajax_submit(event) {
-    var form = $(this).closest("form");
-    var datastring = form.serialize();
-    var url = form.attr('action');
-    var element = $(this);
-    var action = $(this).closest("form").find("input[name='t']").val();
-
-    element.attr("disabled", true);
-
-    if (element.prop("checked")) {
-        $("#shareable-description").text("Uncheck the box to prevent others from sharing the resource without the owner's permission.");
-    }
-    else {
-        $("#shareable-description").text("Check this box to allow others to share the resource without the owner's permission.");
-    }
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status === 'success') {
-                element.attr("disabled", false);
-                if (action === "make_not_shareable") {
-                    element.closest("form").find("input[name='t']").val("make_shareable");
-                }
-                else {
-                    element.closest("form").find("input[name='t']").val("make_not_shareable");
-                }
-            }
-            else {
-                element.attr("disabled", false);
-                element.closest("form").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>")
-            }
-        },
-        error: function () {
-            element.attr("disabled", false);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function license_agreement_ajax_submit(event) {
     // this sets if user will be required to agree to resource rights statement prior
     // to any resource file or bag download
@@ -202,151 +113,6 @@ function license_agreement_ajax_submit(event) {
     return false;
 }
 
-function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
-    if (typeof check_for_prompt === 'undefined'){
-        check_for_prompt = true;
-    }
-    if (typeof  remove_permission === 'undefined'){
-        remove_permission = true;
-    }
-    if (check_for_prompt){
-        if (!promptSelfRemovingAccess(form_id)){
-            return;
-        }
-    }
-    if (!remove_permission){
-        return;
-    }
-
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    setPointerEvents(false);
-    $form.parent().closest("tr").addClass("loading");
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-                if (json_response.hasOwnProperty('redirect_to')){
-                    window.location.href = json_response.redirect_to;
-                }
-                $form.parent().closest("tr").remove();
-                if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
-                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                }
-                setPointerEvents(true);
-            }
-            else {
-                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-            }
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
-function undo_share_ajax_submit(form_id) {
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    setPointerEvents(false);
-    $form.parent().closest("tr").addClass("loading");
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var json_response;
-            var divInvite = $("#div-invite-people");
-
-            try {
-                json_response = JSON.parse(result);
-            }
-            catch (err) {
-                console.log(err.message);
-                // Remove previous alerts
-                divInvite.find(".label-danger").remove();
-
-                // Append new error message
-                divInvite.append("<span class='label label-danger'>" +
-                    "<strong>Error: </strong>Failed to undo action.</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-                return;
-            }
-
-            if (json_response.status === "success") {
-                // Set the new permission level in the interface
-                var userRoles = $form.closest("tr").find(".user-roles");
-
-                userRoles.find("li").removeClass("active");
-
-                if (json_response.undo_user_privilege === "view" || json_response.undo_group_privilege === "view") {
-                    userRoles.find(".dropdown-toggle").text("Can view");
-                    userRoles.find("li[data-access-type='" + "Can view"
-                        + "']").addClass("active");
-                }
-                else if (json_response.undo_user_privilege === "change" || json_response.undo_group_privilege === "change") {
-                    userRoles.find(".dropdown-toggle").text("Can edit");
-                    userRoles.find("li[data-access-type='" + "Can edit"
-                        + "']").addClass("active");
-                }
-                else if (json_response.undo_user_privilege === "owner" || json_response.undo_group_privilege === "owner") {
-                    userRoles.find(".dropdown-toggle").text("Is owner");
-                    userRoles.find("li[data-access-type='" + "Is owner"
-                        + "']").addClass("active");
-                }
-                else {
-                    // The item has no other permission. Remove it.
-                    $form.parent().closest("tr").remove();
-                    setPointerEvents(true);
-                    return;
-                }
-
-                ownersConstrain();
-
-                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
-                $(".role-dropdown").removeClass("open");
-                $form.toggleClass("hidden", true);
-            }
-            else {
-                // An error occurred
-                divInvite.find(".label-danger").remove(); // Remove previous alerts
-
-                divInvite.append("<span class='label label-danger'><strong>Error: </strong>"
-                    + json_response.message + "</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-            }
-
-            $form.parent().closest("tr").removeClass("loading");
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
-}
-
 function showWaitDialog(){
     // display wait for the process to complete dialog
     return $("#wait-to-complete").dialog({
@@ -359,389 +125,28 @@ function showWaitDialog(){
     });
 }
 
-function promptSelfRemovingAccess(form_id){
-    $form = $('#' + form_id);
-    var url = $form.attr('action');
-    // check if we are unsharing a user or a group
-    var isUserUnsharing = false;
-    if (url.indexOf("unshare-resource-with-user") > 0) {
-        isUserUnsharing = true;
+function handleIsDirty(json_response) {
+    // show update netcdf file update option for NetCDFLogicalFile
+    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+        $("#div-netcdf-file-update").show();
     }
-    if(!isUserUnsharing){
-        return true;
+    // show update sqlite file update option for TimeSeriesLogicalFile
+    if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
+        json_response.is_dirty && json_response.can_update_sqlite) {
+        $("#div-sqlite-file-update").show();
     }
-    var formIDParts = form_id.split('-');
-    var userID = parseInt(formIDParts[formIDParts.length -1]);
-    var currentUserID = parseInt($("#current-user-id").val());
-    if (currentUserID != userID){
-        // no need to prompt for confirmation since self is not unsharing
-        return true;
+    // show update netcdf resource
+    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
+        json_response.is_dirty) {
+        $("#netcdf-file-update").show();
     }
 
-    // close the manage access panel (modal)
-    $("#manage-access ").modal("hide");
-
-    // display remove access confirmation dialog
-    $("#dialog-confirm-delete-self-access").dialog({
-        resizable: false,
-        draggable: false,
-        height: "auto",
-        width: 500,
-        modal: true,
-        dialogClass: 'noclose',
-        buttons: {
-            Cancel: function () {
-                $(this).dialog("close");
-                // show manage access control panel again
-                $("#manage-access").modal('show');
-                unshare_resource_ajax_submit(form_id, false, false);
-            },
-            "Remove": function () {
-                $(this).dialog("close");
-                unshare_resource_ajax_submit(form_id, false, true);
-            }
-        },
-        open: function () {
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:first") // the first button
-                .addClass("btn btn-default");
-
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:nth-child(2)") // the second button
-                .addClass("btn btn-danger");
-        }
-    });
-}
-
-function promptChangeSharePermission(form_id){
-    // close the manage access panel (modal)
-    $("#manage-access").modal('hide');
-
-    // display change share permission confirmation dialog
-    $("#dialog-confirm-change-share-permission").dialog({
-        resizable: false,
-        draggable: false,
-        height: "auto",
-        width: 500,
-        modal: true,
-        dialogClass: 'noclose',
-        buttons: {
-            Cancel: function () {
-                $(this).dialog("close");
-		// show manage access control panel again
-		$("#manage-access").modal('show');
-            },
-            "Confirm": function () {
-                $(this).dialog("close");
-                change_share_permission_ajax_submit(form_id, false);
-		$("#manage-access").modal('show');
-            }
-        },
-	open: function () {
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:first") // the first button
-                .addClass("btn btn-default");
-
-            $(this).closest(".ui-dialog")
-                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
-                .addClass("btn btn-danger");
-        }
-    });
-}
-
-function isSharePermissionPromptRequired(form_id) {
-    const REQUIRED = true;
-    const NOT_REQUIRED = false;
-
-    let formIDParts = form_id.split('-');
-    let userID = parseInt(formIDParts[formIDParts.length -1]);
-    let currentUserID = parseInt($("#current-user-id").val());
-
-    let $form = $('#' + form_id);
-    let previousAccess = $form.closest(".dropdown-menu").find("li.active").attr("data-access-type");
-    let clickedAccess = $form.closest("form").attr("data-access-type");
-
-    if (currentUserID == userID 
-        && previousAccess == "Is owner" 
-	&& previousAccess != clickedAccess){
-         return REQUIRED;
-    }
-    return NOT_REQUIRED;
-}
-function change_share_permission_ajax_submit(form_id, check_permission=true) {
-    if (check_permission && isSharePermissionPromptRequired(form_id)) {
-	promptChangeSharePermission(form_id);
-	return;
-    }
-
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-    $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("loading");
-    setPointerEvents(false);
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            json_response = JSON.parse(result);
-
-            try {
-                json_response = JSON.parse(result);
-            }
-            catch (err) {
-                console.log(err.message);
-                // Remove previous alerts
-                $("#div-invite-people").find(".label-danger").remove();
-
-                // Append new error message
-                $("#div-invite-people").append("<span class='label label-danger'>" +
-                    "<strong>Error: </strong>Failed to change permission.</span>");
-
-                $form.parent().closest("tr").removeClass("loading");
-                setPointerEvents(true);
-                return;
-            }
-
-            var userRoles = $form.parent().closest(".user-roles");
-
-            if (json_response.status == "success") {
-                userRoles.find(".dropdown-toggle").text($form.attr("data-access-type"));
-                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
-                userRoles.find("li").removeClass("active");
-
-                userRoles.find("li[data-access-type='" + $form.attr("data-access-type")
-                    + "']").addClass("active");
-                $(".role-dropdown").removeClass("open");
-
-                $form.closest("tr").find(".undo-share-form").toggleClass("hidden", false);
-
-                updateActionsState(json_response.current_user_privilege);
-            }
-            else if (json_response.status == "error") {
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-            }
-            userRoles.find("li").removeClass("loading");
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-}
-
-function isUserInvited(userID) { 
-    const INVITED = true;
-    const NOT_INVITED = false;
- 
-    if (userID < 1) {
-       /* invalid user, treat invalid user as not invited */
-       return NOT_INVITED;
-    } 
-
-    /* found a matching entry */
-    if($(".access-table #row-id-" + userID).length > 0) {
-        return INVITED;
-    } 
-    
-    return NOT_INVITED;
-}
-
-/* get the user id  that is already populated in the invitee text field */
-function getUserIDIntendToInvite() {
-    let share_with = -1;
-    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
-        if ($("#id_user-deck > .hilight").length > 0) {
-            share_with = parseInt($("#id_user-deck > .hilight")[0].getAttribute("data-value"));
+    // start timeseries resource specific DOM manipulation
+    if (RES_TYPE === 'Time Series') {
+        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
+            $("#sql-file-update").show();
         }
     }
-
-    return share_with;
-}
-
-/*return the current login user. */
-function getCurrentUser() {
-    return parseInt($("#current-user-id").val());
-}
-
-function promptUserInShareList() {
-    let errorMsg = "The user selected already has access. To change, adjust the setting next to the user in the who has access panel.";
-    $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-    $("#div-invite-people").append("<div class='label-danger label-block'><p><strong>Error: </strong>" + errorMsg + "</p></div>");
-
-}
-
-function share_resource_ajax_submit(form_id) {
-    if(isUserInvited(getUserIDIntendToInvite())) {
-	promptUserInShareList();
-        return;
-    }
-
-    $form = $('#' + form_id);
-    var datastring = $form.serialize();
-    var share_with;
-    var shareType;
-
-    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
-        if ($("#user-deck > .hilight").length > 0) {
-            share_with = $("#user-deck > .hilight")[0].getAttribute("data-value");
-            shareType = "user";
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        if ($("#id_group-deck > .hilight").length > 0) {
-            share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
-            shareType = "group";
-        }
-        else {
-            return false;
-        }
-    }
-
-    var access_type = $("#selected_role")[0].getAttribute("data-role");
-    var url = $form.attr('action') + access_type + "/" + share_with + "/";
-    setPointerEvents(false);
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-                $(".access-table #row-id-" + share_with).remove(); // Remove previous entry if it exists
-                $(".hilight > span").click(); // Clears the search field
-
-                // Get a copy of the user row template
-                var rowTemplate = $("#templateRow").clone();
-
-                // Form actions
-                var unshareUrl;
-                var undoUrl;
-                if (shareType == "user") {
-                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
-                        + share_with + "/";
-                    undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
-                }
-                else {
-                    unshareUrl =
-                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
-                        + share_with + "/";
-
-                    undoUrl = rowTemplate.find(".undo-share-form").attr("action")
-                            .replace("undo-share-resource-with-user", "undo-share-resource-with-group")
-                        + share_with + "/";
-                }
-
-                var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
-                var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
-                var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
-
-                rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
-                rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-
-                rowTemplate.find(".undo-share-form").attr('action', undoUrl);
-                rowTemplate.find(".undo-share-form").attr('id', 'form-undo-share-' + share_with);
-
-                // Set form urls, ids
-                rowTemplate.find(".share-form-view").attr('action', viewUrl);
-                rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
-                rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
-                rowTemplate.find(".share-form-view a").attr("data-arg", "share-view-" + share_with);
-                rowTemplate.find(".share-form-edit").attr('action', changeUrl);
-                rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
-                rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
-                rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
-
-                if (shareType == "user") {
-                    rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
-                    rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
-                    rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                    rowTemplate.find(".share-form-owner a").attr("data-arg", "share-owner-" + share_with);
-                }
-                else {
-                    rowTemplate.find(".share-form-owner").parent().remove();
-                }
-
-                if (json_response.name) {
-                    rowTemplate.find("div[data-col='name'] a").text(json_response.name);
-                }
-                else {
-                    rowTemplate.find("div[data-col='name'] a").text(json_response.username);
-                }
-
-                rowTemplate.find("div[data-col='name'] a").attr("href", "/" + shareType + "/" + share_with);
-
-                if (!json_response.is_current_user) {
-                    rowTemplate.find(".you-flag").hide();
-                }
-
-                if (shareType == "user") {
-                    rowTemplate.find("div[data-col='user-name']").text(json_response.username);
-                }
-                else {
-                    rowTemplate.find("div[data-col='user-name']").text("(Group)");
-                }
-
-                if (shareType == "user") {
-                    rowTemplate.find(".group-image-wrapper").remove();
-                    if (json_response.profile_pic != "No picture provided") {
-                        rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
-                        rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
-                    }
-                }
-                else {
-                    rowTemplate.find(".profile-pic-thumbnail").remove();
-                    if (json_response.group_pic != "No picture provided") {
-                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
-                    }
-                    else {
-                        // Set default group picture
-                        var defaultImgURL = $("#templateRow .group-preview-image-default")[0].style.backgroundImage;
-                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: " + defaultImgURL);
-                    }
-                }
-
-                if (access_type == "view") {
-                    rowTemplate.find("span[data-col='current-access']").text("Can view");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-view").parent().addClass("active");
-                }
-                else if (access_type == "edit") {
-                    rowTemplate.find("span[data-col='current-access']").text("Can edit");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-edit").parent().addClass("active");
-                }
-                else if (access_type == "owner") {
-                    rowTemplate.find("span[data-col='current-access']").text("Is owner");
-                    rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
-                    rowTemplate.find(".share-form-owner").parent().addClass("active");
-                }
-                $(".access-table > tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
-
-                updateActionsState(json_response.current_user_privilege);
-            }
-            else if (json_response.status == "error") {
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-            }
-            setPointerEvents(true);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
-            setPointerEvents(true);
-        }
-    });
-    //don't submit the form
-    return false;
 }
 
 function metadata_update_ajax_submit(form_id){
@@ -759,8 +164,8 @@ function metadata_update_ajax_submit(form_id){
     if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
         metadata_update_ajax_submit.resourceSatusDisplayed = false;
     }
-    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-    var resourceType = $("#resource-type").val();
+
+    var resourceType = RES_TYPE;
     let $form = $('#' + form_id);
     var datastring = $form.serialize();
 
@@ -774,39 +179,17 @@ function metadata_update_ajax_submit(form_id){
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
-        async: flagAsync,
         success: function(result) {
             /* The div contains now the updated form */
-            //$('#' + form_id).html(result);
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
-                // show update netcdf file update option for NetCDFLogicalFile
-                if (json_response.logical_file_type === "NetCDFLogicalFile"){
-                    $("#div-netcdf-file-update").show();
-                }
-                // show update sqlite file update option for TimeSeriesLogicalFile
-                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  &&
-                    json_response.is_dirty && json_response.can_update_sqlite) {
-                    $("#div-sqlite-file-update").show();
-                }
-                // show update netcdf resource
-                if (resourceType === 'Multidimensional (NetCDF)' &&
-                    json_response.is_dirty) {
-                    $("#netcdf-file-update").show();
-                }
-
-                // start timeseries resource specific DOM manipulation
-                if(resourceType === 'Time Series') {
-                    if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-                        $("#sql-file-update").show();
-                    }
-                }
+                handleIsDirty(json_response);
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                        json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
@@ -852,10 +235,12 @@ function metadata_update_ajax_submit(form_id){
 
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
+
                 if (json_response.hasOwnProperty('element_id')){
-                    form_update_action = $form.attr('action');
+                    let form_update_action = $form.attr('action');
+                    let update_url;
                     if (!json_response.hasOwnProperty('form_action')){
-                        res_short_id = form_update_action.split('/')[3];
+                        let res_short_id = form_update_action.split('/')[3];
                         update_url = "/hsapi/_internal/" + res_short_id + "/"
                             + json_response.element_name + "/"
                             + json_response.element_id + "/update-metadata/";
@@ -877,22 +262,20 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 if (json_response.element_exists == false){
-                    form_update_action = $form.attr('action');
-                    res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
+                    let form_update_action = $form.attr('action');
+                    let res_short_id = form_update_action.split('/')[3];
+                    let update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
                     if(json_response.element_name === 'title'){
-                        $res_title = $(".section-header").find("span").first();
-                        field_name_value = $res_title.text();
-                        updated_title = $form.find("#id_value").val();
+                        let $res_title = $(".section-header").find("span").first();
+                        let updated_title = $form.find("#id_value").val();
                         $res_title.text(updated_title);
                     }
                 }
 
                 showCompletedMessage(json_response);
-
 
                 $('body > .main-container > .container').append($alert_success);
                 $('#error-alert').each(function(){
@@ -935,7 +318,8 @@ function showCompletedMessage(json_response) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
             if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                let resourceType = $("#resource-type").val();
+                manageAccessApp.$data.canBePublicDiscoverable = true;
+                let resourceType = RES_TYPE;
                 let promptMessage = "";
                 if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
                     promptMessage = "All required fields are completed. The resource can now be made discoverable " +
@@ -944,6 +328,7 @@ function showCompletedMessage(json_response) {
                 else
                     promptMessage = "All required fields are completed. The resource can now be made discoverable " +
                       "or public.";
+
                 if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
                     metadata_update_ajax_submit.resourceSatusDisplayed = true;
                     if (json_response.hasOwnProperty('res_public_status')) {
@@ -959,41 +344,8 @@ function showCompletedMessage(json_response) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                 $("#missing-metadata-file-type:not(.persistent)").fadeOut();
             }
-        }
-    }
-
-    if (json_response.hasOwnProperty('res_public_status') && json_response.hasOwnProperty('res_discoverable_status')) {
-        if (json_response.res_public_status == "public") {
-            if (!$("#btn-public").hasClass('active')) {
-                $("#btn-public").prop("disabled", false);
-            }
-        }
-        else {
-            $("#btn-public").removeClass('active');
-            $("#btn-public").prop("disabled", true);
-        }
-
-        if (json_response.res_discoverable_status == "discoverable") {
-            if (!$("#btn-discoverable").hasClass('active')) {
-                $("#btn-discoverable").prop("disabled", false);
-            }
-        }
-        else {
-            $("#btn-discoverable").removeClass('active');
-            $("#btn-discoverable").prop("disabled", true);
-        }
-
-        if (json_response.res_public_status !== "public" && json_response.res_discoverable_status !== "discoverable") {
-            $("#btn-private").addClass('active');
-            $("#btn-private").prop("disabled", true);
-        }
-
-        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-            if (!$("#btn-public").hasClass('active')) {
-                $("#btn-public").prop("disabled", false);
-            }
-            if (!$("#btn-discoverable").hasClass('active')) {
-                $("#btn-discoverable").prop("disabled", false);
+            else {
+                manageAccessApp.onMetadataInsufficient();
             }
         }
     }
@@ -1069,10 +421,9 @@ function remove_aggregation_ajax_submit(url) {
 }
 
 function getResourceMetadata() {
-    const res_id = $("#short-id").val();
     return $.ajax({
         type: "POST",
-        url: '/hsapi/_internal/' + res_id + '/get-metadata/',
+        url: '/hsapi/_internal/' + SHORT_ID + '/get-metadata/',
         dataType: 'html',
         async: false,
         success: function (result) {
@@ -1124,14 +475,11 @@ function filetype_keywords_update_ajax_submit() {
                 }
                 // Refresh keywords field for the resource
                 var resKeywords = json_response.resource_keywords;
-                $("#lst-tags").empty();
                 for (var i = 0; i < resKeywords.length; i++) {
                     if (resKeywords[i] != "") {
-                        var li = $("<li class='tag'><span></span></li>");
-                        li.find('span').text(resKeywords[i]);
-                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-                        $("#lst-tags").append(li);
-                        $("#lst-tags").find(".icon-remove").click(onRemoveKeyword);
+                        if ($.inArray(resKeywords[i].trim(), subjKeywordsApp.resKeywords) === -1) {
+                            subjKeywordsApp.resKeywords.push(resKeywords[i].trim());
+                        }
                     }
                 }
                 // show update netcdf file update option for NetCDFLogicalFile
@@ -1167,11 +515,8 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
 }
 
 function update_netcdf_file_ajax_submit() {
-    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
-        <button type="button" class="close" data-dismiss="alert">x</button> \
-        <strong>Success! </strong> \
-        File update was successful.\
-    </div>';
+    $("#id-update-netcdf-file").text("Updating...");
+    $("#id-update-netcdf-file").attr("disabled", true);
 
     var url = $('#update-netcdf-file').attr("action");
     $.ajax({
@@ -1179,16 +524,11 @@ function update_netcdf_file_ajax_submit() {
         url: url,
         dataType: 'html',
         success: function (result) {
-            json_response = JSON.parse(result);
+            let json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 $("#div-netcdf-file-update").hide();
-                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
-                $("#fb-inner-controls").before($alert_success);
-                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
-                    $("#success-alert").alert('close');
-                });
-                // refetch file metadata to show the updated header file info
-                 showFileTypeMetadata(false, "");
+                customAlert("Success!", json_response.message, "success", 8000);
+                showFileTypeMetadata(false, "");    // refetch file metadata to show the updated header file info
             }
             else {
                 display_error_message("File update.", json_response.message);
@@ -1229,18 +569,13 @@ function update_sqlite_file_ajax_submit() {
 }
 
 function get_user_info_ajax_submit(url, obj) {
-    var is_group = false;
-    var entry = $(obj).closest("div[data-hs-user-type]").find("#user-deck > .hilight");
-    if (entry.length < 1) {
-        entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
-        is_group = true;
-    }
+    var entry = $(obj).closest("div[data-contributor-type]").find("#user-deck > .hilight");
     if (entry.length < 1) {
         return false;
     }
 
     var userID = entry[0].getAttribute("data-value");
-    url = url + userID + "/" + is_group;
+    url = url + userID + "/false";
 
     $.ajax({
         type: "POST",
@@ -1249,32 +584,26 @@ function get_user_info_ajax_submit(url, obj) {
         success: function (result) {
             var formContainer = $(obj).parent().parent();
             var json_response = JSON.parse(result);
-            if (is_group){
-                formContainer.find("input[name='description']").val(json_response.url);
-                formContainer.find("input[name='organization']").val(json_response.organization);
-            }
-            else{
-                formContainer.find("input[name='name']").val(json_response.name);
-                formContainer.find("input[name='description']").val(json_response.url);
-                formContainer.find("input[name='organization']").val(json_response.organization);
-                formContainer.find("input[name='email']").val(json_response.email);
-                formContainer.find("input[name='address']").val(json_response.address);
-                formContainer.find("input[name='phone']").val(json_response.phone);
-                formContainer.find("input[name='homepage']").val(json_response.website);
+            var user_id = "/user/" + json_response.url.split("/")[4] + "/";
+            formContainer.find("input[name='name']").val(json_response.name);
+            formContainer.find("input[name='description']").val(user_id);
+            formContainer.find("input[name='organization']").val(json_response.organization);
+            formContainer.find("input[name='email']").val(json_response.email);
+            formContainer.find("input[name='address']").val(json_response.address);
+            formContainer.find("input[name='phone']").val(json_response.phone);
+            formContainer.find("input[name='homepage']").val(json_response.website);
 
-                for (var identif in json_response.identifiers) {
-                    modalBody = formContainer.find(".modal-body");
-                    modalBody.append(
-                        $('<input />').attr('type', 'hidden')
-                            .attr('name', "identifier_name")
-                            .attr('value', identif));
+            for (var identifier in json_response.identifiers) {
+                let modalBody = formContainer.find(".modal-body");
+                modalBody.append(
+                    $('<input />').attr('type', 'hidden')
+                        .attr('name', "identifier_name")
+                        .attr('value', identifier));
 
-                    modalBody.append(
-                        $('<input />').attr('type', 'hidden')
-                            .attr('name', "identifier_link")
-                            .attr('value', json_response.identifiers[identif]));
-                }
-
+                modalBody.append(
+                    $('<input />').attr('type', 'hidden')
+                        .attr('name', "identifier_link")
+                        .attr('value', json_response.identifiers[identifier]));
             }
             formContainer.submit();
         },
@@ -1322,38 +651,90 @@ function delete_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    let url = '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/delete-aggregation/';
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        success: function (result) {
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Folder Deletion Failed', xhr.responseText);
+        }
+    });
+}
+
+function get_aggregation_folder_struct(aggregation) {
+    let files = aggregation.files;
+    $('#fb-files-container').empty();
+
+    $.each(files, function (i, file) {
+        $('#fb-files-container').append(getFileTemplateInstance(file));
+    });
+
+    onSort();
+    bindFileBrowserItemEvents();
+    updateSelectionMenuContext();
+    setBreadCrumbs(jQuery.extend(true, {}, getCurrentPath()));   // Use a deep copy.
+    updateNavigationState();
+}
+
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
-    // TODO: 2105: doesn't return enough information for intelligent decision 
+
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
         async: true,
         data: {
             res_id: res_id,
-            store_path: store_path
+            store_path: store_path.path.join('/')
         },
         success: function (result) {
             var files = result.files;
             var folders = result.folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
+
             $('#fb-files-container').empty();
-            if (files.length > 0) {
-                $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'],
-                        v['aggregation_name'], v['logical_type'], v['logical_file_id'],
-                        v['size'], v['pk'], v['url'], v['reference_url'], v['is_single_file_aggregation']));
-                });
-            }
-            if (folders.length > 0) {
-                $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['name'], v['url'],
-                        v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'],
-                        v['folder_aggregation_type_to_set'], v['folder_short_path'], v['main_file']));
-                });
-            }
+            currentAggregations = result.aggregations.filter(function(agg) {
+                return agg['logical_type'] !== "FileSetLogicalFile"; // Exclude FileSet aggregations
+            });
+
+            // Render each file. Aggregation files get loaded in memory instead.
+            $.each(files, function (i, file) {
+                // Check if the file belongs to an aggregation. Exclude FileSets and their files.
+                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile") {
+                    let selectedAgg = currentAggregations.filter(function (agg) {
+                        return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
+                    })[0];
+
+                    if (!selectedAgg.hasOwnProperty('files')) {
+                        selectedAgg.files = [];     // Initialize the array
+                    }
+                    selectedAgg.files.push(file);   // Push the aggregation files to the collection
+                }
+                else {
+                    // Regular files
+                    $('#fb-files-container').append(getFileTemplateInstance(file));
+                }
+            });
+
+            // Display virtual folders for each aggregation.
+            $.each(currentAggregations, function (i, agg) {
+                $('#fb-files-container').append(getVirtualFolderTemplateInstance(agg));
+            });
+
+            // Display regular folders
+            $.each(folders, function (i, folder) {
+                $('#fb-files-container').append(getFolderTemplateInstance(folder));
+            });
+
+            // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode == "edit") {
                     $('#fb-files-container').append(
@@ -1372,19 +753,16 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     );
                 }
             }
+
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
+
             onSort();
-
             bindFileBrowserItemEvents();
-
-            $("#hs-file-browser").attr("data-current-path", store_path);
-            $("#upload-folder-path").text(store_path); // We don't show the data folder in the UI path
+            pathLog[pathLogIndex] = store_path;
             $("#hs-file-browser").attr("data-res-id", res_id);
-
-            // strip the 'data' folder from the path
-            setBreadCrumbs(store_path);
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
 
             if ($("#hsDropzone").hasClass("dropzone")) {
                 // If no multiple files allowed and a file already exists, disable upload
@@ -1409,10 +787,12 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
+
             if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
+
             if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
                 var temporalCoverage = result.temporal_coverage;
                 updateResourceTemporalCoverage(temporalCoverage);
@@ -1423,8 +803,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
-            setBreadCrumbs(store_path);
-            $("#fb-files-container").prepend("<span>No files to display.</span>")
+            setBreadCrumbs(jQuery.extend(true, {}, store_path));
+            $("#fb-files-container").prepend("<span>No files to display.</span>");
             updateSelectionMenuContext();
         }
     });
@@ -1481,6 +861,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
             folder_path: folder_path
         },
         success: function (result) {
+            $("#fb-alerts .upload-failed-alert").remove();
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
                 $('#create-folder-dialog').modal('hide');
@@ -1559,7 +940,7 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
             }
             else {
                 // TODO: xhr.responseText not user friendly enough to display in the UI. Update once addressed.
-                display_error_message('Error: failed to edit referenced URL.');
+                display_error_message('Error', 'Failed to edit referenced URL.');
                 $('#validate-reference-url-dialog').modal('hide');
             }
         }
@@ -1567,14 +948,14 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
+function move_to_folder_ajax_submit(source_paths, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-to-folder/',
         async: true,
         data: {
-            res_id: res_id,
+            res_id: SHORT_ID,
             source_paths: JSON.stringify(source_paths),
             target_path: target_path
         },
@@ -1590,7 +971,22 @@ function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
     });
 }
 
-// prefixes must be the same on source_path and target_path 
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
+        async: true,
+        success: function (result) {
+
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Moving Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path
 function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
@@ -1610,6 +1006,27 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Renaming Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path
+function rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName) {
+    let url = '/hsapi/_internal/' + fileType + '/' + fileTypeId + '/update-filetype-dataset-name/';
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: url,
+        async: true,
+        data: {
+            dataset_name: newName,
+        },
+        success: function (response) {
+            handleIsDirty(response);
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Failed to rename aggregation', xhr.responseText);
         }
     });
 }
@@ -1750,6 +1167,7 @@ function deleteFileTypeExtraMetadata(form_id){
         }
     });
 }
+
 function deleteFileTypeSpatialCoverage(url, deleteButton) {
     $.ajax({
         type: "POST",
@@ -1842,6 +1260,7 @@ function BindKeyValueFileTypeClickHandlers(){
         })
     });
 }
+
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
@@ -2023,7 +1442,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 // updates the UI spatial coverage elements for resource
 function updateResourceSpatialCoverage(spatialCoverage) {
     if ($("#id-coverage-spatial").length) {
-        $("#spatial-coverage-type").val(spatialCoverage.type);
+        spatial_coverage_type = spatialCoverage.type;
         var $form = $("#id-coverage-spatial");
         var form_update_action = $form.attr('action');
         var res_short_id = form_update_action.split('/')[3];
@@ -2038,7 +1457,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("input[value='point']");
         var $box_radio = $id_type_div.find("input[value='box']");
-        var resourceType = $("#resource-type").val();
+        var resourceType = RES_TYPE;
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
@@ -2224,69 +1643,19 @@ function setFileTypeMetadataFormsClickHandlers(){
     BindKeyValueFileTypeClickHandlers();
 }
 
-function updateResourceKeywords(keywordString) {
-    // Update the value of the input used in form submission
-    $("#id-subject").find("#id_subject_keyword_control_input").val(keywordString);
-
-    // Populate keywords field in the UI
-    var keywords = keywordString.split(",");
-    $("#lst-tags").empty();
-
-    for (var i = 0; i < keywords.length; i++) {
-        if (keywords[i] != "") {
-            var li = $("<li class='tag'><span></span></li>");
-            li.find('span').text(keywords[i]);
-            li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
-            $("#lst-tags").append(li);
-        }
-    }
-}
-
 function updateResourceAuthors(authors) {
-    let container = $("#left-header-table .authors-wrapper");
-    container.empty();
-    authors.forEach(function (author) {
-        const shortID = $("#short-id").val();
-
-        // Could be cleaner using template literals, but those are currently not supported by IE 11
-        // https://kangax.github.io/compat-table/es6/
-        let authorTemplate = '<span> \
-            <a title="Edit ' + author.name + '" \
-               class="author-modal-trigger" data-id="' + author.id + '" \
-               data-name="' + author.name + '" data-order="' + author.order + '" \
-               data-description="' + author.description + '" \
-               data-organization="' + author.organization + '" \
-               data-email="' + author.email + '" \
-               data-address="' + author.address + '" \
-               data-phone="' + author.phone + '" \
-               data-homepage="' + author.homepage + '">' + (author.name ? author.name : author.organization) + ' \
-            </a> \
-            <form class="hidden-form" \
-                  action="/hsapi/_internal/' + shortID + '/creator/' + author.id + '/update-metadata/" \
-                  enctype="multipart/form-data"> \
-                ' + $(".main-container > input[name='csrfmiddlewaretoken']").outerHTML() +' \
-                <input name="resource-mode" type="hidden" value="edit"> \
-                <input name="creator-' + (author.order - 1) + '-name" \
-                       value="' + author.name + '"> \
-                <input name="creator-' + (author.order - 1) + '-description" \
-                       value="' + author.description + '"> \
-                <input name="creator-' + (author.order - 1) + '-organization" \
-                       value="' + author.organization + '"> \
-                <input name="creator-' + (author.order - 1) + '-email" \
-                       value="' + author.email + '"> \
-                <input name="creator-' + (author.order - 1) + '-address" \
-                       value="' + author.address + '"> \
-                <input name="creator-' + (author.order - 1) + '-phone" \
-                       type="text" value="' + author.phone + '"> \
-                <input name="creator-' + (author.order - 1) + '-homepage" type="url" \
-                       value="' + author.homepage + '"> \
-                <input class="input-order" \
-                       name="creator-' + (author.order - 1) + '-order" \
-                       type="number" value="' + author.order + '"> \
-            </form> \
-         </span>';
-
-        container.append(authorTemplate);
-    });
-
+    leftHeaderApp.$data.authors = authors.map(function(author) {
+        return {
+            name: author.name,
+            address: author.address,
+            email: author.email,
+            id: author.id.toString(),
+            identifiers: author.identifiers,
+            order: author.order.toString(),
+            organization: author.organization,
+            phone: author.phone,
+            profileUrl: author.description,
+            homepage: author.homepage,
+        };
+    })
 }

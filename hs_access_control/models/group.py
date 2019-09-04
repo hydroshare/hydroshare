@@ -1,10 +1,11 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F, Exists, OuterRef
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
+from django.contrib.contenttypes.models import ContentType
 
 #############################################
 # Group access data.
@@ -183,7 +184,6 @@ class GroupAccess(models.Model):
                 (Q(u2ugp__group__gaccess__active=True,
                    u2ugp__group=self.group) |
                  Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__allow_view=True,
                    u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                    u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
 
@@ -224,25 +224,7 @@ class GroupAccess(models.Model):
         Used in BaseResource queries only
         """
         return Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__allow_view=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group) |\
-               Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
                  r2grp__group__g2gcp__community__c2gcp__group=self.group)
-
-    @property
-    def __edit_resources_of_community(self):
-        """
-        Subquery Q expression for editable resources according to community memberships
-
-        Used in BaseResource queries only.
-        """
-        return Q(raccess__immutable=False,
-                 r2grp__group__gaccess__active=True,
-                 r2grp__privilege=PrivilegeCodes.CHANGE,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
 
     @property
     def view_resources(self):
@@ -266,7 +248,7 @@ class GroupAccess(models.Model):
         :return: List of resource objects that can be edited by this group.
 
         These include resources that are directly editable, as well as those editable
-        due to oversight privileges over a community
+        via membership in a group.
         """
         return BaseResource.objects.filter(self.__edit_resources_of_group)
 
@@ -359,3 +341,89 @@ class GroupAccess(models.Model):
             return p.privilege
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
+
+    @classmethod
+    def groups_with_public_resources(cls):
+        """ Return the list of groups that have discoverable or public resources
+            These must contain at least one resource that is discoverable and
+            is owned by a group member.
+
+            This query is subtle. See
+                https://medium.com/@hansonkd/\
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16
+            for details of how this improves performance.
+
+           As a short summary, all we need to know is that one resource exists.
+           This is not possible to notate in the main query except through an annotation.
+           However, that annotation is really efficient, and is implemented as a postgres
+           subquery. This is a Django 1.11 extension.
+        """
+        return Group.objects\
+            .annotate(
+                has_public_resources=Exists(
+                    BaseResource.objects.filter(
+                        raccess__discoverable=True,
+                        r2grp__group__id=OuterRef('id'),
+                        r2urp__user__u2ugp__group__id=OuterRef('id'),
+                        r2urp__privilege=PrivilegeCodes.OWNER)))\
+            .filter(has_public_resources=True)\
+            .order_by('name')
+
+    @property
+    def public_resources(self):
+        """
+        prepare a list of everything that gets displayed about each resource in a group.
+
+        Based upon hs_access_control/models/community.py:Community:public_resources
+        """
+        res = BaseResource.objects.filter(r2grp__group__gaccess=self,
+                                          r2grp__group__gaccess__active=True)\
+                                  .filter(Q(raccess__public=True) |
+                                          Q(raccess__published=True) |
+                                          Q(raccess__discoverable=True))\
+                                  .filter(r2urp__privilege=PrivilegeCodes.OWNER,
+                                          r2urp__user__u2ugp__group=self.group)\
+                                  .annotate(group_name=F("r2grp__group__name"),
+                                            group_id=F("r2grp__group__id"),
+                                            public=F("raccess__public"),
+                                            published=F("raccess__published"),
+                                            discoverable=F("raccess__discoverable"))
+
+        res = res.only('title', 'resource_type', 'created', 'updated')
+
+        # # Can't do the following because the content model is polymorphic.
+        # # This is documented as only working for monomorphic content_type
+        # res = res.prefetch_related("content_object___title",
+        #                            "content_object___description",
+        #                            "content_object__creators")
+        # We want something that is not O(# resources + # content types).
+        # O(# content types) is sufficiently faster.
+        # The following strategy is documented here:
+        # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
+
+        # collect generics from resources
+        generics = {}
+        for item in res:
+            generics.setdefault(item.content_type.id, set()).add(item.object_id)
+
+        # fetch all content types in one query
+        content_types = ContentType.objects.in_bulk(generics.keys())
+
+        # build a map between content types and the objects that use them.
+        relations = {}
+        for ct, fk_list in generics.items():
+            ct_model = content_types[ct].model_class()
+            relations[ct] = ct_model.objects.in_bulk(list(fk_list))
+
+        # force-populate the cache of content type objects.
+        for item in res:
+            setattr(item, '_content_object_cache',
+                    relations[item.content_type.id][item.object_id])
+
+        # Detailed notes:
+        # This subverts chained lookup by pre-populating the content object cache
+        # that is populated by an object reference. It is very dependent upon the
+        # implementation of GenericRelation and its pre-fetching strategy.
+        # Thus it is quite brittle and vulnerable to major revisions of Generics.
+
+        return res

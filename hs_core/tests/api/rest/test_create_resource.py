@@ -76,7 +76,8 @@ class TestCreateResource(HSRESTTestCase):
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['resource_type'], rtype)
+        # generic has been deprecated and now defaults to Composite (#2575)
+        self.assertEqual(content['resource_type'], "CompositeResource")
         self.assertEqual(content['resource_title'], title)
         # Get resource bag
         response = self.getResourceBag(res_id)

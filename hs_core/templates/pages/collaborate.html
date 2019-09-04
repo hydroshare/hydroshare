@@ -27,6 +27,7 @@
                     <span class="glyphicon glyphicon-search search-icon"></span>
                     <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
                 </div>
+                <p id="id-Group-Search-Result-Msg"></p>
             </div>
         </div>
 
@@ -88,7 +89,7 @@
                                                             <tbody>
                                                             {% for u in group.gaccess.members %}
                                                                 <tr id="row-id-{{ u.pk }}"
-                                                                    {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
+                                                                    {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
                                                                     <td>
                                                                         <div class="user-scope">
                                                                             {% if u.userprofile.picture %}
@@ -172,7 +173,8 @@
                 {% endif %}
             {% endfor %}
                 {% else %}
-               <div class="col-sm-12"><i>No groups have been created yet.</i></div>
+               <div class="col-sm-12"><i>No groups have been created yet.</i>
+               </div>
             {% endif %}
         </div>
     </div>

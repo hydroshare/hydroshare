@@ -1,4 +1,3 @@
-import os
 import json
 
 from django.test import TestCase, RequestFactory
@@ -15,7 +14,7 @@ from hs_file_types.views import set_file_type, add_metadata_element, update_meta
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
     delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
     update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata, remove_aggregation, \
-    delete_coverage_element, update_aggregation_coverage
+    delete_coverage_element, update_aggregation_coverage, move_aggregation, delete_aggregation
 from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, NetCDFFileMetaData, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
 from hs_file_types.tests.utils import CompositeResourceTestMixin
@@ -292,15 +291,19 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def test_remove_aggregation(self):
         # here we are testing the remove_aggregation view function
 
-        self.create_composite_resource(file_to_upload=self.netcdf_file)
-
+        self.create_composite_resource()
+        new_folder = 'my_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
+        expected_file_folder = res_file.file_folder
 
         # set the nc file to NetCDFLogicalFile (aggregation)
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        expected_file_folder, _ = os.path.splitext(res_file.file_name)
+
         # test that we have one logical file of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
@@ -330,6 +333,238 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, expected_file_folder)
 
+        self.composite_resource.delete()
+
+    def test_delete_aggregation(self):
+        # here we are testing the delete_aggregation view function
+
+        self.create_composite_resource()
+        # new_folder = 'my_folder'
+        # ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile'
+                      }
+        url = reverse('delete_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+        # check the files are deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+
+        self.composite_resource.delete()
+
+    def test_move_aggregation(self):
+        # here we are testing the move_aggregation view function
+
+        self.create_composite_resource()
+        new_folder = 'my_folder'
+        tgt_folder = 'moved_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile',
+                      'tgt_path': tgt_folder
+                      }
+        url = reverse('move_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = move_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is now tgt_folder
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, tgt_folder)
+        self.composite_resource.delete()
+
+    def test_move_aggregation_nested(self):
+        # here we are testing the move_aggregation view function
+
+        self.create_composite_resource()
+        new_folder = 'my_folder'
+        tgt_folder = 'my_folder/moved_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile',
+                      'tgt_path': tgt_folder
+                      }
+        url = reverse('move_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = move_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is now tgt_folder
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, tgt_folder)
+        self.composite_resource.delete()
+
+    def test_move_aggregation_root(self):
+        # here we are testing the move_aggregation view function
+
+        self.create_composite_resource()
+        new_folder = ''
+        tgt_folder = 'moved_folder'
+        # ResourceFile.create_folder(self.composite_resource, new_folder)
+        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile',
+                      'tgt_path': tgt_folder
+                      }
+        url = reverse('move_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = move_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is now tgt_folder
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, tgt_folder)
+        self.composite_resource.delete()
+
+    def test_move_aggregation_to_root(self):
+        # here we are testing the move_aggregation view function
+
+        self.create_composite_resource()
+        new_folder = 'new_folder'
+        # ResourceFile.create_folder(self.composite_resource, new_folder)
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile'
+                      }
+        url = reverse('move_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = move_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is now tgt_folder
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, None)
         self.composite_resource.delete()
 
     def test_add_update_single_file_aggregation_metadata(self):

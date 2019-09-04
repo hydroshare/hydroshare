@@ -278,7 +278,6 @@ INSTALLED_APPS = (
     "crispy_forms",
     "mezzanine.accounts",
     "haystack",
-    "jquery_ui",
     "rest_framework",
     "robots",
     "hs_core",
@@ -305,6 +304,7 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
+    "hs_odm2",
     "security",
     "markdown"
 )
@@ -314,7 +314,6 @@ OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'jquery_ui',
     'rest_framework',
     'django_nose',
     'inplaceeditform',

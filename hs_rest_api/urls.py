@@ -3,8 +3,8 @@ from django.conf.urls import url
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
-from hs_core.views.resource_folder_hierarchy import data_store_add_reference, \
-    data_store_edit_reference_url
+from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
+    data_store_edit_reference_url_public
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -12,7 +12,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
-from .views.hs_core import ShareResourceGroup, ShareResourceUser
+from .views.resource_share import ShareResourceGroup, ShareResourceUser
+from .discovery import DiscoverSearchView
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
@@ -38,6 +39,9 @@ urlpatterns = [
     # resource API
     url(r'^resource/types/$', core_views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
+
+    url(r'^resource/content_types/$', core_views.resource_rest_api.ContentTypes.as_view(),
+        name='list_contenttypes'),
 
     url(r'^resource/$', core_views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
@@ -109,10 +113,10 @@ urlpatterns = [
         name='list_create_resource_file'),
 
     url(r'^resource/data-store-add-reference/$',
-        data_store_add_reference),
+        data_store_add_reference_public),
 
     url(r'^resource/data_store_edit_reference_url/$',
-        data_store_edit_reference_url),
+        data_store_edit_reference_url_public),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$',
         core_views.resource_folder_rest_api.ResourceFolders.as_view(),
@@ -173,5 +177,5 @@ urlpatterns = [
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
-
+    url(r'^resource/search$', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
 ]

@@ -1,9 +1,0 @@
-{
-   "db_username" : "irods",
-   "catalog_database_type" : "postgres",
-   "db_password" : "irods",
-   "db_host" : "data.local.org",
-   "db_odbc_type" : "unix",
-   "db_name" : "ICAT",
-   "db_port" : 5432
-}

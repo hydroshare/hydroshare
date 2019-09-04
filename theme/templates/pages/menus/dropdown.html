@@ -2,6 +2,9 @@
 {% spaceless %}
 
 <ul class="nav navbar-nav">
+    <li {% if request.path == "/home/" %}class="active"{% endif %} id="dropdown-menu-home">
+        <a href="/home/">Home</a>
+    </li>
     <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
         <a href="/my-resources/">My Resources</a>
     </li>
@@ -15,11 +18,101 @@
         <a href="https://www.hydroshare.org/apps/">Apps</a>
     </li>
     <li class="" id="dropdown-menu-https:--help.hydroshare.org">
-        <a href="http://help.hydroshare.org">HELP</a>
+        <a href="http://help.hydroshare.org">Help</a>
     </li>
-    <li class="" id="dropdown-menu-https:--help.hydroshare.org-about-hydroshare-">
-        <a href="https://help.hydroshare.org/about-hydroshare/">About</a>
+</ul>
+
+<ul class="nav navbar-nav navbar-right">
+    {% if not user.is_anonymous %}
+    <li class="res-dropdown">
+        <button id="select-resource-type" data-toggle="dropdown"
+           class="dropdown-toggle btn btn-primary"
+           role="button" aria-haspopup="true" aria-expanded="false">Create
+        </button>
+        {% if not user.is_anonymous %}
+        <ul class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="A resource which can include multiple files without file format limitations."
+                   data-modal-title="Create a Resource"
+                   data-modal-input-title="Enter the title for the new resource."
+                   data-value="CompositeResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                         alt="Composite Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;Resource</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="A resource that holds a list of other resources in HydroShare."
+                   data-modal-title="Create a Collection"
+                   data-modal-input-title="Enter the title for the new collection of HydroShare resources."
+                   data-value="CollectionResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                         alt="Collection Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;Collection</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
+                   data-modal-title="Create a Web App Connector"
+                   data-modal-input-title="Enter the name for the new Web App Connector."
+                   data-value="ToolResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                         alt="Web App Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;Web App Connector</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="Describes the software component of a generic model within the water domain."
+                   data-modal-title="Create a Model Program Resource"
+                   data-modal-input-title="Enter the name for the new Model Program Resource."
+                   data-value="ModelProgramResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                         alt="Model Program Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;Model Program</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="Defines the input and output data for a generic hydrological model, for a specific time and place."
+                   data-modal-title="Create a Model Instance Resource"
+                   data-modal-input-title="Enter the name for the new Model Instance Resource."
+                   data-value="ModelInstanceResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                         alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;Model Instance</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
+                   data-modal-title="Create a SWAT Model Instance Resource"
+                   data-modal-input-title="Enter the name for the new SWAT Model Instance Resource."
+                   data-value="SWATModelInstanceResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                         alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
+                   title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
+                   data-modal-title="Create a MODFLOW Model Instance Resource"
+                   data-modal-input-title="Enter the name for the new MODFLOW Model Instance Resource."
+                   data-value="MODFLOWModelInstanceResource">
+                    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                         alt="Collection Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                </a>
+            </li>
+        </ul>
+        {% endif %}
     </li>
+    {% endif %}
+
     {% if not user.is_anonymous %}
         <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
     {% endif %}
@@ -33,4 +126,5 @@
         {% endif %}
     {% endifinstalled %}
 </ul>
+
 {% endspaceless %}

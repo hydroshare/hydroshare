@@ -197,15 +197,15 @@
                             {% endif %}
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
-                                    <tr class="active" data-filter-by="all">
+                                    <tr class="active c-pointer" data-filter-by="all">
                                         <td><span>All</span></td>
                                         <td><span class="badge" data-filter-by='All'>0</span></td>
                                     </tr>
-                                     <tr data-filter-by="edit-user">
+                                    <tr class="c-pointer" data-filter-by="edit-user">
                                         <td><span>Owners</span></td>
                                         <td><span class="badge" data-filter-by='Owners'>0</span></td>
                                     </tr>
-                                    <tr data-filter-by="pending">
+                                    <tr class="c-pointer" data-filter-by="pending">
                                         <td><span>Pending</span></td>
                                         <td><span class="badge" data-filter-by='Pending'>0</span></td>
                                     </tr>
@@ -467,7 +467,9 @@
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <span class="glyphicon glyphicon glyphicon-user"></span>
-                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Shared by</a></h4>
+                                        <a data-toggle="collapse" class="accordion-toggle"
+                                           data-parent="#accordion" href="#filter-shared-by">&nbsp;Shared by</a>
+                                    </h4>
                                 </div>
                                 <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                     <div class="panel-body">
@@ -624,17 +626,11 @@
                                                 </strong>
                                             </td>
                                             {# First Author #}
-                                            {% if res.first_creator.description %}
-                                                <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                                </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
+                                            <td>{{ res|resource_first_author }}</td>
                                             {# Date Created #}
-                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
+                                            <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
                                             {# Last Modified #}
-                                            <td>{{ res.last_updated|date:"d M Y" }} {{ res.last_updated|time }}</td>
+                                            <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
                                             <td><!-- Needed for datatable to function properly --></td>
                                             <td><!-- Needed for datatable to function properly --></td>
                                             <td><!-- Needed for datatable to function properly --></td>
@@ -643,7 +639,7 @@
                                             <td>{{ res.last_updated|date:"U" }}</td>
                                             <td><!-- Needed for datatable to function properly --></td>
                                             <td>{{ res.created|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -673,12 +669,12 @@
                     </div>
                     <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                         <div class="modal-body">
-                            <div id="div-invite-people">
+                            <div id="div-invite-people" class="flex">
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
                                     <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
+                                       class="btn btn-add-access btn-success glyphicon glyphicon-send space-left"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>

@@ -72,16 +72,16 @@ $(document).ready(function () {
         $("#search-box").toggleClass('display-block animated fadeInUp');
     });
 
-	// Smooth scrolling for UI elements page
-	// =====================================
+    // Smooth scrolling for UI elements page
+    // =====================================
 
-	$('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
-		var anchor = $(this);
-		$('html, body').stop().animate({
-			scrollTop: $(anchor.attr('href')).offset().top
-		}, 1000);
-		e.preventDefault();
-	});
+    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+        var anchor = $(this);
+        $('html, body').stop().animate({
+            scrollTop: $(anchor.attr('href')).offset().top
+        }, 1000);
+        e.preventDefault();
+    });
 
     // 404 error page
     // ====================
@@ -157,6 +157,65 @@ $(document).ready(function () {
         return false
     });
 
+    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+
+        $('#submit-title-dialog').modal('show');
+    });
+
+    $("#btn-resource-create").on("click", function () {
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
+    });
+    
+    function createResource(type, title="Untitled Resource") {
+        // Disable dropdown items while we process the request
+        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
+
+        var formData = new FormData();
+
+        formData.append("csrfmiddlewaretoken", csrf_token);
+        formData.append("title", title);
+        formData.append("resource-type", type);
+
+        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
+        $("html").css("cursor", "progress");
+
+        $.ajax({
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            url: "/hsapi/_internal/create-resource/do/",
+            success: function (response) {
+                if (response.status == "success") {
+                    window.location = response['resource_url'];
+                }
+                else {
+                    console.log(response);
+                    $(".custom-alert").alert('close');  // Dismiss previous alert
+                    customAlert("Error", 'Failed to create resource.', "error", 6000);
+                    $("html").css("cursor", "initial");
+                    $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+                }
+            },
+            error: function (response) {
+                console.log(response);
+                $(".custom-alert").alert('close');  // Dismiss previous alert
+                customAlert("Error", 'Failed to create resource.', "error", 6000);
+                $("html").css("cursor", "initial");
+                $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+            }
+        });
+    }
+
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
@@ -172,92 +231,14 @@ $(document).ready(function () {
                 var message = 'Your profile is nearly complete. Please fill in the '
                     + '<strong>Organization</strong> field'
                     + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
-                showUniversalMessage("warn", message, 10000)();
+
+                customAlert("Profile", message, "info", 10000);
             }
         },
-        error: showUniversalMessage()
-    });
-
-    // Event trigger for profile preview
-    $(".profile-preview").click(function () {
-        // Move the profile card below the clicked item
-        var profileCard = $(this).parent().find(".profile-card");
-        profileCard.css("top", ($(this).position().top + 30) + "px");
-        profileCard.css("left", ($(this).position().left - 175 + $(this).width()/2) + "px");
-
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        var identifiers = ["googlescholarid", "orcid", "researchgateid", "researcerid"];
-
-        resetProfilePreview(profileCard);
-        var data = jQuery.extend(true, {}, $(this).data());
-
-        // Populate subject areas
-        var areas = data.subjectareas.split(",");
-        for (var i = 0; i < areas.length; i++) {
-            profileCard.find("[data-subjectareas]").append("<span class='label label-info'>" + areas[i] + "</span> ");
-        }
-
-        // Populate profile button url
-        profileCard.find("[data-name]").attr("href", data.profileUrl);
-        profileCard.find("[data-url]").attr("href", data.profileUrl);
-
-        // Populate profile picture
-        var pic = profileCard.find(".dropdown-profile-pic-thumbnail");
-        if (data.profilePicture) {
-            pic.toggleClass("dropdown-user-icon", false);
-            pic.css("background-image", "url('" + data.profilePicture + "')");
-        }
-        else {
-            pic.toggleClass("dropdown-user-icon", true);
-            pic.css("background-image", "none");
-        }
-
-        // Toggle wrappers visibility:
-
-        // State and Country
-        if ((data["country"] && data["country"] != "Unspecified") || (data["state"] && data["state"] != "Unspecified")) {
-            $(".location-wrapper").show();
-        }
-
-        // Organization and Title
-        if ((data["organization"] && data["organization"] != "Unspecified") || (data["title"] && data["title"] != "Unspecified")) {
-            $(".org-wrapper").show();
-        }
-
-        // Rest of the fields
-        for (var item in data) {
-            if ($.inArray(item, fields) != -1) {
-                var content = data[item];
-                var field = profileCard.find("[data-" + item + "]");
-                if (content && content != "Unspecified") {
-                    field.text(content);
-                    field.show();
-                }
-                else {
-                    profileCard.find("." + item + "-wrapper").hide();
-                    field.hide();
-                }
-            }
-            else if ($.inArray(item, identifiers) != -1) {
-                var ident = profileCard.find("[data-" + item + "]");
-                ident.show();
-                profileCard.find(".externalprofiles-wrapper").show();
-                ident.attr("href", data[item]);
-            }
+        error: function(response) {
+            console.log(response);
         }
     });
-
-    function resetProfilePreview(profileCard) {
-        var fields = ["name", "email", "country", "state", "organization", "title", "subjectareas", "joined", "contributions"];
-        fields.forEach(function (f) {
-            profileCard.find("[data-" + f + "]").text("");
-            profileCard.find("." + f + "-wrapper").show();
-        });
-        profileCard.find(".identifier-icon").hide();
-        $(".profile-card .externalprofiles-wrapper").hide();
-        $(".profile-card .location-wrapper").hide();
-        $(".profile-card .org-wrapper").hide();
-    }
 
     $(".author-preview").click(function() {
         resetAuthorPreview();
@@ -313,10 +294,6 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    $(".profile-card").click(function (e) {
-        e.stopPropagation();    // Prevents the dropdown from closing while clicking on items inside
-    });
-
     // Abstract collapse toggle
     $(".toggle-abstract").click(function () {
         if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
@@ -351,25 +328,44 @@ $(document).ready(function () {
         this.box.insertAfter(this.input).css({top: 35, left: 0});
     };
 
+    // Prevent clicking on list items dismissing the modal window
+    $(".autocomplete-light-widget > input.autocomplete").each(function (i, el) {
+        $(el).yourlabsAutocomplete()
+            .input.bind('selectChoice', function (e, choice, autocomplete) {
+            e.stopPropagation();
+        });
+    });
+
     // Can be used to obtain an element's HTML including itself and not just its content
     jQuery.fn.outerHTML = function () {
         return jQuery('<div />').append(this.eq(0).clone()).html();
     };
 });
 
-function showUniversalMessage(type, message, timeout) {
-    return function(response,returnType,content) {
-        if(!message) message = content;
-        if(!type) type = returnType;
-        if(!timeout) timeout = 5000;
-
-        $("#universalMessage span").html(message);
-        $("#universalMessage").attr('class','');
-        $("#universalMessage").addClass(type);
-        $("#universalMessage").slideDown();
-
-        setTimeout(function() {
-            $("#universalMessage a.um_close").click()
-        }, timeout)
+// Alert Types: "error", "success", "info"
+// pass a duration value of -1 for persistent alerts
+function customAlert(alertTitle, alertMessage, alertType, duration) {
+    alertType = alertType || "success";
+    var el = document.createElement("div");
+    var top = 200;
+    var style = "top:" + top + "px";
+    var alertTypes = {
+        success: {class: "alert alert-success", icon: "fa fa-check"},
+        error: {class: "alert alert-danger", icon: "fa fa-exclamation-triangle"},
+        info: {class: "alert alert-info", icon: "fa fa-exclamation-circle"}
+    };
+    el.setAttribute("style", style);
+    el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
+    alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
+        + alertTitle + '</strong><br>' + alertMessage;
+    el.innerHTML = alertMessage;
+    if (duration !== -1) {
+        setTimeout(function () {
+            $(el).fadeOut(300, function () {
+                $(this).remove();
+            });
+        }, duration);
     }
+    $(el).appendTo("body > .main-container > .container");
+    $(el).hide().fadeIn(400);
 }

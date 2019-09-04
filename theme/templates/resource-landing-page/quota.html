@@ -1,54 +1,62 @@
 {% load hydroshare_tags %}
-{% if is_owner_user %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Storage</h3>
-        </div>
-        <div class="panel-body">
-            <span>The quota holder of this resource is:</span>
-            <span>
-                {% include "includes/profile-link.html" with user=quota_holder %}
-                {% include "includes/profile-card.html" %}
-            </span>
-
-            {% if owners|length > 1 %}
-                <button id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
-                        style="margin-left: 5px;"
-                    data-toggle="collapse" data-target="#form-quota-holder">
-                    Change
-                </button>
-
-                <form action="/hsapi/_internal/{{ cm.short_id }}/change-quota-holder/" method="POST"
-                      enctype="multipart/form-data" id="form-quota-holder" class="collapse">
-                    {% csrf_token %}
-                    <hr>
-                    <div class="form-group">
-                        <fieldset>
-                            <div id="div_id_type" class="control-group">
-                                <label for="id_type" class="control-label requiredField">
-                                    Change quota holder to another owner</label>
-                                <div class="controls">
-                                    <select class="form-control input-sm select" id="new_holder_username"
-                                            name="new_holder_username">
-                                        {% for owner in owners %}
-                                            {% if owner.username != quota_holder.username %}
-                                                <option value={{ owner.username }}>{{ owner|display_name }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-
-                    <button type="button" class="btn btn-default" data-toggle="collapse"
-                            data-target="#form-quota-holder">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-change-quota-holder btn-disable-after-valid"
-                    style="margin-left: 5px;">Save Changes</button>
-                </form>
-            {% endif %}
-            <hr>
-            <p>The size of this resource is <strong>{{ cm.size|filesizeformat }}</strong>.</p>
-        </div>
+<div v-if="selfAccessLevel === 'owner'" class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Storage</h3>
     </div>
-{% endif %}
+    <div class="panel-body">
+        <span>The quota holder of this resource is: </span>
+        <span>
+            <profile-link v-on:load-card="onLoadQuotaHolderCard($event)" :user="quotaHolder"></profile-link>
+            <profile-card :user="quotaHolder" :position="cardPosition"></profile-card>
+        </span>
+
+        <button v-show="!hasOnlyOneOwner"
+                id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
+                style="margin-left: 5px;"
+                data-toggle="collapse" data-target="#form-quota-holder">
+            Change
+        </button>
+
+        <div v-show="!hasOnlyOneOwner" id="form-quota-holder" class="collapse">
+            <hr>
+            <div class="form-group">
+                <fieldset>
+                    <div class="control-group">
+                        <label for="new_holder_username" class="control-label requiredField">
+                            Change quota holder to another owner</label>
+
+                        <div class="controls">
+                            <select ref="newHolder" class="form-control input-sm select"
+                                    id="new_holder_username"
+                                    name="new_holder_username">
+                                <option v-for="user in users"
+                                        v-if="user.user_type === 'user' && user.access === 'owner' && user.id !== quotaHolder"
+                                        :value="user.user_name">${user.best_name}
+                                </option>
+                            </select>
+
+                            <div v-if="quotaError" class='alert alert-danger space-top small'>
+                                <strong>Error: </strong>${ quotaError }
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button
+                :class="{disabled: isChangingQuotaHolder}"
+                class="btn btn-default space-right" data-toggle="collapse"
+                type="button"
+                data-target="#form-quota-holder">Cancel
+            </button>
+
+            <button @click="setQuotaHolder($refs.newHolder.value)"
+                    :class="{disabled: isChangingQuotaHolder}"
+                    class="btn btn-primary"
+                    type="button">${isChangingQuotaHolder ? "Saving Changes..." : "Save Changes"}
+            </button>
+        </div>
+        <hr>
+        <p>The size of this resource is <strong>{{ cm.size|filesizeformat }}</strong>.</p>
+    </div>
+</div>

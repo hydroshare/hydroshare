@@ -13,7 +13,9 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData
-from utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+from utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
+    get_path_with_no_file_extension
 
 
 class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -53,11 +55,12 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        expected_res_file_folder_path = res_file.file_folder
         # set the nc file to NetCDF file type
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test extracted metadata
-        assert_netcdf_file_type_metadata(self, self.res_title, aggr_folder=expected_folder_name)
+        assert_netcdf_file_type_metadata(self, self.res_title,
+                                         aggr_folder=expected_res_file_folder_path)
         # test file level keywords
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -101,10 +104,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # to NetCDF file type which includes metadata extraction
         # the nc file in this case is not at the root of the folder hierarchy but in a folder. The
         # same folder contains another file that's not going part of the aggregation
-        # location nc file before aggregation is created: /my_folder/netcdf_valid.nc
+        # location of the nc file before aggregation is created: /my_folder/netcdf_valid.nc
         # location of another file before aggregation is created: /my_folder/netcdf_invalid.nc
         # location of nc file after aggregation is created:
-        # /my_folder/netcdf_valid/netcdf_valid.nc
+        # /my_folder/netcdf_valid.nc
         # location of another file after aggregation is created: /my_folder/netcdf_invalid.nc
 
         self.create_composite_resource()
@@ -133,7 +136,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = self.composite_resource.logical_files[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
-        expected_file_folder = '{0}/{1}'.format(new_folder, base_nc_file_name)
+        expected_file_folder = new_folder
         for res_file in logical_file.files.all():
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, NetCDFLogicalFile))
@@ -154,9 +157,9 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # the nc file in this case is not at the root of the folder hierarchy but in a folder. The
         # same folder contains another folder
         # location nc file before aggregation is created: /my_folder/netcdf_valid.nc
-        # location of another folder before egation is created: /my_folder/another_folder.nc
+        # location of another folder before aggregation is created: /my_folder/another_folder
         # location of nc file after aggregation is created:
-        # /my_folder/netcdf_valid/netcdf_valid.nc
+        # /my_folder/netcdf_valid.nc
 
         self.create_composite_resource()
         new_folder = 'my_folder'
@@ -183,7 +186,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = self.composite_resource.logical_files[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
-        expected_file_folder = '{0}/{1}'.format(new_folder, base_nc_file_name)
+        expected_file_folder = new_folder
         for res_file in logical_file.files.all():
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, NetCDFLogicalFile))
@@ -217,26 +220,6 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.title.value, res_title)
 
         self.composite_resource.delete()
-
-    def test_create_aggregation_from_folder_1(self):
-        """Here we are testing that an aggregation of type NetCDFLogicalFile
-        can be created from a folder that contains the required nc file
-        This folder containing the nc file is not at the root of the folder hierarchy
-        location of the nc file before aggregation: netcdf_aggr/netcdf_valid.nc
-        location of the nc file after aggregation: netcdf_aggr/netcdf_valid.nc
-        """
-
-        self._test_create_aggregation_from_folder(foldet_to_test='netcdf_aggr')
-
-    def test_create_aggregation_from_folder_2(self):
-        """Here we are testing that an aggregation of type NetCDFLogicalFile
-        can be created from a folder that contains the required nc file
-        This folder containing the nc file has a parent folder
-        location of the nc file before aggregation: parent_folder/netcdf_aggr/netcdf_valid.nc
-        location of the nc file after aggregation: parent_folder/netcdf_aggr/netcdf_valid.nc
-        """
-
-        self._test_create_aggregation_from_folder(foldet_to_test='parent_folder/netcdf_aggr')
 
     def test_create_aggregation_from_invalid_nc_file_1(self):
         # here we are using an invalid netcdf file for setting it
@@ -427,12 +410,12 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # metadata is deleted
 
         self.create_composite_resource(self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        nc_res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(nc_res_file.file_name)
+        expected_folder_name = nc_res_file.file_folder
 
         # set the nc file to NetCDFLogicalFile aggregation
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
 
         # test that we have one logical file (aggregation) of type NetCDFLogicalFile
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -510,13 +493,17 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # in that folder gets deleted, the logicalfile object gets deleted and
         # the associated metadata objects get deleted
 
-        self.create_composite_resource(self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        self.create_composite_resource()
+        new_folder = 'nc_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        base_file_name, _ = os.path.splitext(nc_res_file.file_name)
+        expected_folder_name = nc_res_file.file_folder
 
         # extract metadata from the tif file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
 
         # test that we have one logical file of type NetCDFLogicalFile as a result
         # of metadata extraction
@@ -557,8 +544,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.netcdf_file)
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        expected_folder_path = res_file.file_folder
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test renaming of files that are associated with aggregation raises exception
@@ -566,11 +552,18 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         for res_file in self.composite_resource.files.all():
             base_file_name, ext = os.path.splitext(res_file.file_name)
-            self.assertEqual(res_file.file_folder, expected_folder_name)
-            src_path = 'data/contents/{0}/{1}.{2}'.format(expected_folder_name, base_file_name, ext)
+            self.assertEqual(res_file.file_folder, expected_folder_path)
+            if expected_folder_path is not None:
+                src_path = 'data/contents/{0}/{1}'.format(expected_folder_path, res_file.file_name)
+            else:
+                src_path = 'data/contents/{}'.format(res_file.file_name)
+
             new_file_name = 'some_netcdf.{}'.format(ext)
             self.assertNotEqual(res_file.file_name, new_file_name)
-            tgt_path = 'data/contents/{}/{}'.format(expected_folder_name, new_file_name)
+            if expected_folder_path is not None:
+                tgt_path = 'data/contents/{}/{}'.format(expected_folder_path, new_file_name)
+            else:
+                tgt_path = 'data/contents/{}'.format(new_file_name)
             with self.assertRaises(DRF_ValidationError):
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
@@ -582,16 +575,15 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
+        nc_res_file = self.composite_resource.files.first()
 
         # create the aggregation using the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         # test renaming of files that are associated with raster LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 2)
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
-        self.assertEqual(res_file.file_folder, expected_folder_name)
+        expected_folder_path = nc_res_file.file_folder
+        self.assertEqual(res_file.file_folder, expected_folder_path)
         new_folder = 'netcdf_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
 
@@ -607,55 +599,58 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_aggregation_folder_rename(self):
         # test changes to aggregation name, aggregation metadata xml file path, and aggregation
-        # resource map xml file path on folder name change
+        # resource map xml file path on folder (that contains netcdf aggregation) name change
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        expected_folder_name = base_file_name
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        expected_folder_path = nc_res_file.file_folder
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
 
         self.assertEqual(self.composite_resource.files.count(), 2)
 
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, expected_folder_name)
+            self.assertEqual(res_file.file_folder, expected_folder_path)
 
         # test aggregation name
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        self.assertEqual(logical_file.aggregation_name, nc_res_file.short_path)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(base_file_name, base_file_name)
+        nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(base_file_name, base_file_name)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
-        src_path = 'data/contents/{}'.format(expected_folder_name)
-        tgt_path = 'data/contents/{}_1'.format(expected_folder_name)
+        src_path = 'data/contents/{}'.format(expected_folder_path)
+        tgt_path = 'data/contents/{}_1'.format(expected_folder_path)
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
         for res_file in self.composite_resource.files.all():
-            self.assertEqual(res_file.file_folder, '{}_1'.format(expected_folder_name))
+            self.assertEqual(res_file.file_folder, '{}_1'.format(expected_folder_path))
 
         # test aggregation name update
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        nc_res_file.refresh_from_db()
+        self.assertEqual(logical_file.aggregation_name, nc_res_file.short_path)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{}_1/{}_1_meta.xml'.format(expected_folder_name,
-                                                              expected_folder_name)
+        nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_1/{}_1_resmap.xml'.format(expected_folder_name,
-                                                               expected_folder_name)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
@@ -665,13 +660,15 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource map xml file path on aggregation folder parent folder name change
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        aggregation_folder_name = new_folder
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 2)
 
@@ -681,16 +678,14 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        self.assertEqual(logical_file.aggregation_name, nc_res_file.short_path)
 
         # test aggregation xml file paths
-        # test aggregation xml file paths
-        expected_meta_file_path = '{}/{}_meta.xml'.format(aggregation_folder_name,
-                                                          aggregation_folder_name)
+        nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}/{}_resmap.xml'.format(aggregation_folder_name,
-                                                           aggregation_folder_name)
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -721,34 +716,32 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name after folder rename
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        nc_res_file.refresh_from_db()
+        self.assertEqual(logical_file.aggregation_name, nc_res_file.short_path)
 
         # test aggregation xml file paths after folder rename
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder_rename,
-                                                                aggregation_folder_name,
-                                                                aggregation_folder_name)
-
+        nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder_rename,
-                                                                 aggregation_folder_name,
-                                                                 aggregation_folder_name)
-
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
 
-    def test_aggregation_folder_move(self):
+    def test_aggregation_folder_move_1(self):
         # test changes to aggregation name, aggregation metadata xml file path, and aggregation
-        # resource map xml file path on aggregation folder move
+        # resource map xml file path on moving a folder that contains netcdf aggregation
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        aggregation_folder_name = nc_res_file.file_folder
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
 
         self.assertEqual(self.composite_resource.files.count(), 2)
 
@@ -772,74 +765,77 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation name update
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.aggregation_name, res_file.file_folder)
+        nc_res_file.refresh_from_db()
+        self.assertEqual(logical_file.aggregation_name, nc_res_file.short_path)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{0}/{1}/{2}_meta.xml'.format(parent_folder,
-                                                                aggregation_folder_name,
-                                                                aggregation_folder_name)
+        nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}/{1}/{2}_resmap.xml'.format(parent_folder,
-                                                                 aggregation_folder_name,
-                                                                 aggregation_folder_name)
-
+        expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.composite_resource.delete()
 
-    def test_aggregation_folder_move_not_allowed(self):
-        # test a folder is not allowed to be moved into a folder that represents an aggregation
+    def test_aggregation_folder_move_2(self):
+        # test a folder can be moved into a folder that contains a netcdf aggregation
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
-        aggregation_folder_name = base_file_name
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        aggregation_folder_name = new_folder
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        # create a folder to move the aggregation folder there
-        new_folder = 'folder_to_move'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        # move the new folder into the aggregation folder
-        src_path = 'data/contents/{}'.format(new_folder)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
+        # create a folder to move into the aggregation folder
+        folder_to_move = 'folder_to_move'
+        ResourceFile.create_folder(self.composite_resource, folder_to_move)
+        # move the folder_to_move into the aggregation folder
+        src_path = 'data/contents/{}'.format(folder_to_move)
         tgt_path = 'data/contents/{}'.format(aggregation_folder_name)
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
 
         self.composite_resource.delete()
 
-    def test_aggregation_folder_sub_folder_not_allowed(self):
-        # test a folder can't be created inside a folder that represents an aggregation
+    def test_aggregation_folder_sub_folder_creation(self):
+        # test a folder can be created inside a folder that contains a netcdf aggregation
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        self.assertEqual(nc_res_file.file_folder, new_folder)
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         res_file = self.composite_resource.files.first()
         self.assertNotEqual(res_file.file_folder, None)
         # create a folder inside the aggregation folder
         new_folder = '{}/sub_folder'.format(res_file.file_folder)
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.composite_resource, new_folder)
+        ResourceFile.create_folder(self.composite_resource, new_folder)
 
         self.composite_resource.delete()
 
-    def test_file_move_to_aggregation_not_allowed(self):
-        # test no file can be moved into a folder that represents an aggregation
+    def test_file_move_to_aggregation_folder_allowed(self):
+        # test a file can be moved into a folder that contains a netcdf aggregation
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
-        res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = self.composite_resource.files.first()
+        self.assertEqual(nc_res_file.file_folder, new_folder)
 
         # create aggregation from the nc file
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         res_file = self.composite_resource.files.first()
         self.assertNotEqual(res_file.file_folder, None)
 
@@ -849,18 +845,20 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         tgt_path = 'data/contents/{}'.format(res_file.file_folder)
 
         # move file to aggregation folder
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                      tgt_path)
         self.composite_resource.delete()
 
-    def test_upload_file_to_aggregation_not_allowed(self):
+    def test_upload_file_to_aggregation_folder_allowed(self):
         # test no file can be uploaded into a folder that represents an aggregation
 
         self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        new_folder = 'netcdf_aggr'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, new_folder)
 
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -868,37 +866,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertNotEqual(res_file.file_folder, None)
 
         # add a file to the resource at the aggregation folder
-        with self.assertRaises(ValidationError):
-            self.add_file_to_resource(file_to_add=self.netcdf_invalid_file,
-                                      upload_folder=res_file.file_folder)
-
-        self.composite_resource.delete()
-
-    def _test_create_aggregation_from_folder(self, foldet_to_test):
-
-        self.create_composite_resource()
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # create a folder to upload the nc file there
-        new_folder = foldet_to_test
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the nc file to the resource at the above folder
-        res_file = self.add_file_to_resource(file_to_add=self.netcdf_file,
-                                             upload_folder=new_folder)
-
-        self.assertEqual(res_file.file_folder, new_folder)
-        # resource should have 1 file now
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        for res_file in self.composite_resource.files.all():
-            self.assertFalse(res_file.has_logical_file)
-        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
-        # create the aggregation from the folder
-        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
-        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
-        for res_file in self.composite_resource.files.all():
-            # test that each resource file is part of an aggregation (logical file)
-            self.assertTrue(res_file.has_logical_file)
-            # test that the each resource file has the same folder - no new folder created
-            self.assertEqual(res_file.file_folder, new_folder)
+        self.add_file_to_resource(file_to_add=self.netcdf_invalid_file,
+                                  upload_folder=res_file.file_folder)
 
         self.composite_resource.delete()
 

@@ -12,8 +12,6 @@
             </h2>
         </div>
         <div class="col-lg-2" id="facets">
-            <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
-
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
@@ -247,7 +245,7 @@
                                 </strong>
                             </td>
                             {# First Author #}
-                            {{ res|resource_first_author }}
+                            <td>{{ res|resource_first_author }}</td>
 
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>

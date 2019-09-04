@@ -18,6 +18,10 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
 
+from hs_file_types.models import FileSetLogicalFile
+
+from drf_yasg.utils import swagger_auto_schema
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +69,7 @@ def data_store_structure(request):
 
     files = []
     dirs = []
+    aggregations = []
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
@@ -82,19 +87,17 @@ def data_store_structure(request):
             aggregation_object = resource.get_folder_aggregation_object(dir_path)
             # folder aggregation type is not relevant for single file aggregation types - which
             # are: GenericLogicalFile, and RefTimeseriesLogicalFile
-            if aggregation_object is not None and not \
-                    aggregation_object.is_single_file_aggregation:
+            if aggregation_object is not None:
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
-                main_file = ''
                 if not aggregation_object.is_fileset:
                     main_file = aggregation_object.get_main_file.file_name
             else:
-                # find if any aggregation type that can be created from this folder
-                folder_aggregation_type_to_set =  \
-                    resource.get_folder_aggregation_type_to_set(dir_path)
-                if folder_aggregation_type_to_set is None:
+                # find if FileSet aggregation type that can be created from this folder
+                if resource.can_set_folder_to_fileset(dir_path):
+                    folder_aggregation_type_to_set = FileSetLogicalFile.__name__
+                else:
                     folder_aggregation_type_to_set = ""
         dirs.append({'name': d_pk,
                      'url': d_url,
@@ -131,25 +134,34 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
-        is_single_file_aggregation = ''
-        if resource.resource_type == "CompositeResource":
-            if f.has_logical_file:
-                logical_file_type = f.logical_file_type_name
-                logical_file_id = f.logical_file.id
-                aggregation_name = f.aggregation_display_name
-                is_single_file_aggregation = f.logical_file.is_single_file_aggregation
-                if 'url' in f.logical_file.extra_data:
-                    f_ref_url = f.logical_file.extra_data['url']
+        if f.has_logical_file:
+            main_extension = f.logical_file.get_main_file_type()
+            if not main_extension:
+                # accept any extension
+                main_extension = ""
+            if main_extension.endswith(f.extension):
+                aggregations.append({'logical_file_id': f.logical_file.id,
+                                     'name': f.logical_file.dataset_name,
+                                     'logical_type': f.logical_file.get_aggregation_class_name(),
+                                     'aggregation_name':
+                                         f.logical_file.get_aggregation_display_name(),
+                                     'main_file': f.logical_file.get_main_file.file_name,
+                                     'url': f.logical_file.url})
+            logical_file_type = f.logical_file_type_name
+            logical_file_id = f.logical_file.id
+            aggregation_name = f.aggregation_display_name
+            if 'url' in f.logical_file.extra_data:
+                f_ref_url = f.logical_file.extra_data['url']
 
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id,
-                      'is_single_file_aggregation': is_single_file_aggregation})
+                      'logical_file_id': logical_file_id})
 
     return_object = {'files': files,
                      'folders': dirs,
+                     'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
@@ -316,6 +328,12 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 
 @api_view(['POST'])
+def data_store_add_reference_public(request):
+    return data_store_add_reference(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
+@api_view(['POST'])
 def data_store_add_reference(request):
     """
     create the reference url file, add the url file to resource, and add the url to
@@ -360,6 +378,12 @@ def data_store_add_reference(request):
         return JsonResponse({'message': msg}, status=ret_status)
 
 
+@api_view(['POST'])
+def data_store_edit_reference_url_public(request):
+    return data_store_edit_reference_url(request)
+
+
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_edit_reference_url(request):
     """
@@ -542,6 +566,7 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_move_to_folder(request, pk=None):
     """
@@ -660,6 +685,7 @@ def data_store_move_to_folder(request, pk=None):
     )
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def data_store_rename_file_or_folder(request, pk=None):
     """

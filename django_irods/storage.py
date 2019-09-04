@@ -62,12 +62,12 @@ class IrodsStorage(Storage):
     # zone direct file operations
     def set_fed_zone_session(self):
         if settings.REMOTE_USE_IRODS:
-            self.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                  password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                  host=settings.HS_WWW_IRODS_HOST,
+            self.set_user_session(username=settings.IRODS_USERNAME,
+                                  password=settings.IRODS_AUTH,
+                                  host=settings.IRODS_HOST,
                                   port=settings.IRODS_PORT,
-                                  def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES,
-                                  zone=settings.HS_WWW_IRODS_ZONE,
+                                  def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
+                                  zone=settings.IRODS_ZONE,
                                   sess_id='federated_session')
 
     def delete_user_session(self):
@@ -312,9 +312,9 @@ class IrodsStorage(Storage):
         stdout = self.session.run("ils", None, "-l", name)[0].split()
         return int(stdout[3])
 
-    def url(self, name, url_download=False, zipped=False):
+    def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
-        query_params = {'url_download': url_download, "zipped": zipped}
+        query_params = {'url_download': url_download, "zipped": zipped, 'aggregation': aggregation}
         return reverse_url + '?' + urlencode(query_params)
 
     def get_available_name(self, name, max_length=None):
