@@ -9,7 +9,7 @@
             <div class="tags">
                 {% if resource_edit_mode %}
                     {% if czo_user %}
-                        <div id="add-keyword-wrapper" class="input-group"
+                        <div id="cv-add-keyword-wrapper" class="input-group"
                              @keyup.enter="addKeyword('{{ cm.short_id }}')">
                             {#                        https://github.com/alexurquhart/vue-bootstrap-typeahead#}
                             <vue-bootstrap-typeahead
@@ -22,9 +22,9 @@
                                     placeholder="Examples: Hydrologic_modeling, USU, land use">
                             </vue-bootstrap-typeahead>
                             <span class="input-group-btn">
-                            <button @click="addKeyword('{{ cm.short_id }}')"
-                                    class="btn btn-success" type="button">Add</button>
-                        </span>
+                                <button @click="addKeyword('{{ cm.short_id }}')"
+                                        class="btn btn-success cv-add-button" type="button">Add</button>
+                            </span>
                         </div>
                     {% else %}
                         <div id="add-keyword-wrapper" class="input-group">
@@ -32,9 +32,9 @@
                                    @keyup.enter="addKeyword('{{ cm.short_id }}')"
                                    placeholder="Examples: Hydrologic_modeling, USU, land use">
                             <span class="input-group-btn">
-                            <button @click="addKeyword('{{ cm.short_id }}')"
-                                    class="btn btn-success" type="button">Add</button>
-                        </span>
+                                <button @click="addKeyword('{{ cm.short_id }}')"
+                                        class="btn btn-success" type="button">Add</button>
+                            </span>
                         </div>
                     {% endif %}
                 {% endif %}

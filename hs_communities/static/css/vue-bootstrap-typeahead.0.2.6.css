@@ -2,9 +2,10 @@
     width: 475px;
 }
 
-.input-group {
-    width: 400px;
+#cv-add-keyword-wrapper .input-group {
+    width: 100%;
 }
+
 .vbt-autcomplete-list {
     max-height: 350px;
     overflow-y: auto;
