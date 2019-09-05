@@ -233,11 +233,7 @@ class CompositeResource(BaseResource):
             new_folder = os.path.join(self.file_path, new_folder)
 
         # create xml docs for all non-fileset aggregations
-        res_file_objects = ResourceFile.list_folder(self, new_folder)
-        logical_files = [res_file.logical_file for res_file in res_file_objects if
-                         res_file.has_logical_file and not res_file.logical_file.is_fileset]
-        # remove duplicate aggregations
-        logical_files = set(logical_files)
+        logical_files = self._get_aggregations_by_folder(new_folder)
         for lf in logical_files:
             lf.create_aggregation_xml_documents()
 
@@ -258,11 +254,7 @@ class CompositeResource(BaseResource):
         # create xml docs for all non fileset aggregations
         # note: we can't get to all filesets from resource files since
         # it is possible to have filesets without any associated resource files
-        res_file_objects = ResourceFile.list_folder(self, folder)
-        logical_files = [res_file.logical_file for res_file in res_file_objects if
-                         res_file.has_logical_file and not res_file.logical_file.is_fileset]
-        # remove duplicate aggregations
-        logical_files = set(logical_files)
+        logical_files = self._get_aggregations_by_folder(folder)
         for lf in logical_files:
             if lf.metadata.is_dirty:
                 lf.create_aggregation_xml_documents()
@@ -275,6 +267,16 @@ class CompositeResource(BaseResource):
         for fs in filesets:
             if fs.metadata.is_dirty:
                 fs.create_aggregation_xml_documents()
+
+    def _get_aggregations_by_folder(self, folder):
+        """Get a list of all non-fileset aggregations associated with resource files that
+        exist in the specified file path *folder*
+        :param  folder: the folder path for which aggregations need to be searched
+        """
+        res_file_objects = ResourceFile.list_folder(self, folder)
+        logical_files = set(res_file.logical_file for res_file in res_file_objects if
+                            res_file.has_logical_file and not res_file.logical_file.is_fileset)
+        return logical_files
 
     def get_aggregation_by_aggregation_name(self, aggregation_name):
         """Get an aggregation that matches the aggregation dataset_name specified by *dataset_name*
