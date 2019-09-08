@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 err_msg = "NetCDF resource not found in irods (ID: {})".format(nc_res.short_id)
                 logger.error(err_msg)
                 print("Error:>> {}".format(err_msg))
-                # skip this netcdf resource
+                # skip this netcdf resource for migration
                 continue
 
             # get the nc file name which needs to be used to create a new folder
@@ -57,7 +57,7 @@ class Command(BaseCommand):
                         file_missing = True
                         break
                 if file_missing:
-                    # skip this corrupt netcdf resource
+                    # skip this corrupt netcdf resource for migration
                     continue
 
             # change the resource_type
@@ -81,6 +81,7 @@ class Command(BaseCommand):
             type_element.save()
             if create_nc_aggregation:
                 # create a NetCDF aggregation
+                nc_aggr = None
                 try:
                     nc_aggr = NetCDFLogicalFile.create(resource=comp_res)
                 except Exception as ex:
@@ -89,46 +90,46 @@ class Command(BaseCommand):
                     err_msg = err_msg + '\n' + ex.message
                     logger.error(err_msg)
                     print("Error:>> {}".format(err_msg))
-                    continue
 
-                # set aggregation dataset title
-                nc_aggr.dataset_name = comp_res.metadata.title.value
-                nc_aggr.save()
-                # make the res files part of the aggregation
-                for res_file in comp_res.files.all():
-                    nc_aggr.add_resource_file(res_file)
+                if nc_aggr is not None:
+                    # set aggregation dataset title
+                    nc_aggr.dataset_name = comp_res.metadata.title.value
+                    nc_aggr.save()
+                    # make the res files part of the aggregation
+                    for res_file in comp_res.files.all():
+                        nc_aggr.add_resource_file(res_file)
 
-                # migrate netcdf specific metadata to aggregation
-                for variable in nc_metadata_obj.variables.all():
-                    variable.content_object = nc_aggr.metadata
-                    variable.save()
+                    # migrate netcdf specific metadata to aggregation
+                    for variable in nc_metadata_obj.variables.all():
+                        variable.content_object = nc_aggr.metadata
+                        variable.save()
 
-                # create aggregation level coverage elements
-                for coverage in comp_res.metadata.coverages.all():
-                    aggr_coverage = Coverage()
-                    aggr_coverage.type = coverage.type
-                    aggr_coverage._value = coverage._value
-                    aggr_coverage.content_object = nc_aggr.metadata
-                    aggr_coverage.save()
+                    # create aggregation level coverage elements
+                    for coverage in comp_res.metadata.coverages.all():
+                        aggr_coverage = Coverage()
+                        aggr_coverage.type = coverage.type
+                        aggr_coverage._value = coverage._value
+                        aggr_coverage.content_object = nc_aggr.metadata
+                        aggr_coverage.save()
 
-                org_coverage = nc_metadata_obj.originalCoverage
-                if org_coverage:
-                    org_coverage.content_object = nc_aggr.metadata
-                    org_coverage.save()
+                    org_coverage = nc_metadata_obj.originalCoverage
+                    if org_coverage:
+                        org_coverage.content_object = nc_aggr.metadata
+                        org_coverage.save()
 
-                # create aggregation level keywords
-                keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
-                nc_aggr.metadata.keywords = keywords
-                # set aggregation metadata dirty status to that of the netcdf resource metadata
-                # dirty status - this would trigger netcdf file update for the new aggregation
-                # if metadata is dirty
-                nc_aggr.metadata.is_dirty = nc_metadata_obj.is_dirty
-                nc_aggr.metadata.save()
-                # create aggregation level xml files
-                nc_aggr.create_aggregation_xml_documents()
-                msg = 'One Multidimensional aggregation was created in resource (ID: {})'
-                msg = msg.format(comp_res.short_id)
-                logger.info(msg)
+                    # create aggregation level keywords
+                    keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
+                    nc_aggr.metadata.keywords = keywords
+                    # set aggregation metadata dirty status to that of the netcdf resource metadata
+                    # dirty status - this would trigger netcdf file update for the new aggregation
+                    # if metadata is dirty
+                    nc_aggr.metadata.is_dirty = nc_metadata_obj.is_dirty
+                    nc_aggr.metadata.save()
+                    # create aggregation level xml files
+                    nc_aggr.create_aggregation_xml_documents()
+                    msg = 'One Multidimensional aggregation was created in resource (ID: {})'
+                    msg = msg.format(comp_res.short_id)
+                    logger.info(msg)
 
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
