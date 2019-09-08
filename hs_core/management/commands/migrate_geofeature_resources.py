@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
 from hs_core.models import CoreMetaData, Coverage
-from hs_file_types.models import GeoFeatureLogicalFile, geofeature
+from hs_file_types.models import GeoFeatureLogicalFile
 from hs_geographic_feature_resource.models import GeographicFeatureResource
 from ..utils import migrate_core_meta_elements
 
@@ -28,47 +28,31 @@ class Command(BaseCommand):
                 err_msg = "Geofeature resource not found in irods (ID: {})".format(gf_res.short_id)
                 logger.error(err_msg)
                 print("Error:>> {}".format(err_msg))
-                # skip this geofeature resource
+                # skip this geofeature resource for migration
                 continue
 
-            shp_file = None
-            dbf_file = None
-            shx_file = None
-            invalid_file_type = False
-            if gf_res.files.count() >= 3:
-                for res_file in gf_res.files.all():
-                    if res_file.extension.lower() not in \
-                            geofeature.GeoFeatureLogicalFile.get_allowed_storage_file_types():
-                        invalid_file_type = True
-                        break
-                    if res_file.extension.lower() == '.shp':
-                        shp_file = res_file
-                    elif res_file.extension.lower() == '.dbf':
-                        dbf_file = res_file
-                    elif res_file.extension.lower() == '.shx':
-                        shx_file = res_file
-
-            required_files = [shp_file, dbf_file, shx_file]
             create_gf_aggregation = False
-            if not invalid_file_type:
-                create_gf_aggregation = all(r_file is not None for r_file in required_files)
-                if create_gf_aggregation:
-                    # check resource files exist on irods
-                    file_missing = False
-                    for res_file in gf_res.files.all():
-                        file_path = res_file.public_path
-                        if not istorage.exists(file_path):
-                            err_msg = "File path not found in irods:{}".format(file_path)
-                            logger.error(err_msg)
-                            err_msg = "Failed to convert geofeature resource (ID: {}). " \
-                                      "Resource file is missing on irods"
-                            err_msg = err_msg.format(gf_res.short_id)
-                            print("Error:>> {}".format(err_msg))
-                            file_missing = True
-                            break
-                    if file_missing:
-                        # skip this corrupt geofeature resource
-                        continue
+            if gf_res.has_required_content_files() and \
+                    gf_res.metadata.geometryinformation is not None:
+                create_gf_aggregation = True
+
+            if create_gf_aggregation:
+                # check resource files exist on irods
+                file_missing = False
+                for res_file in gf_res.files.all():
+                    file_path = res_file.public_path
+                    if not istorage.exists(file_path):
+                        err_msg = "File path not found in irods:{}".format(file_path)
+                        logger.error(err_msg)
+                        err_msg = "Failed to convert geofeature resource (ID: {}). " \
+                                  "Resource file is missing on irods"
+                        err_msg = err_msg.format(gf_res.short_id)
+                        print("Error:>> {}".format(err_msg))
+                        file_missing = True
+                        break
+                if file_missing:
+                    # skip this corrupt geofeature resource for migration
+                    continue
 
             # change the resource_type
             gf_metadata_obj = gf_res.metadata
@@ -91,6 +75,7 @@ class Command(BaseCommand):
             type_element.save()
             if create_gf_aggregation:
                 # create a Geofeature aggregation
+                gf_aggr = None
                 try:
                     gf_aggr = GeoFeatureLogicalFile.create(resource=comp_res)
                 except Exception as ex:
@@ -99,47 +84,47 @@ class Command(BaseCommand):
                     err_msg = err_msg + '\n' + ex.message
                     logger.error(err_msg)
                     print("Error:>> {}".format(err_msg))
-                    continue
 
-                # set aggregation dataset title
-                gf_aggr.dataset_name = comp_res.metadata.title.value
-                gf_aggr.save()
-                # make the res files part of the aggregation
-                for res_file in comp_res.files.all():
-                    gf_aggr.add_resource_file(res_file)
+                if gf_aggr is not None:
+                    # set aggregation dataset title
+                    gf_aggr.dataset_name = comp_res.metadata.title.value
+                    gf_aggr.save()
+                    # make the res files part of the aggregation
+                    for res_file in comp_res.files.all():
+                        gf_aggr.add_resource_file(res_file)
 
-                # migrate geofeature specific metadata to aggregation
-                for fieldinfo in gf_metadata_obj.fieldinformations.all():
-                    fieldinfo.content_object = gf_aggr.metadata
-                    fieldinfo.save()
+                    # migrate geofeature specific metadata to aggregation
+                    for fieldinfo in gf_metadata_obj.fieldinformations.all():
+                        fieldinfo.content_object = gf_aggr.metadata
+                        fieldinfo.save()
 
-                # create aggregation level coverage elements
-                for coverage in comp_res.metadata.coverages.all():
-                    aggr_coverage = Coverage()
-                    aggr_coverage.type = coverage.type
-                    aggr_coverage._value = coverage._value
-                    aggr_coverage.content_object = gf_aggr.metadata
-                    aggr_coverage.save()
+                    # create aggregation level coverage elements
+                    for coverage in comp_res.metadata.coverages.all():
+                        aggr_coverage = Coverage()
+                        aggr_coverage.type = coverage.type
+                        aggr_coverage._value = coverage._value
+                        aggr_coverage.content_object = gf_aggr.metadata
+                        aggr_coverage.save()
 
-                org_coverage = gf_metadata_obj.originalcoverage
-                if org_coverage:
-                    org_coverage.content_object = gf_aggr.metadata
-                    org_coverage.save()
+                    org_coverage = gf_metadata_obj.originalcoverage
+                    if org_coverage:
+                        org_coverage.content_object = gf_aggr.metadata
+                        org_coverage.save()
 
-                geom_info = gf_metadata_obj.geometryinformation
-                if geom_info:
-                    geom_info.content_object = gf_aggr.metadata
-                    geom_info.save()
+                    geom_info = gf_metadata_obj.geometryinformation
+                    if geom_info:
+                        geom_info.content_object = gf_aggr.metadata
+                        geom_info.save()
 
-                # create aggregation level keywords
-                keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
-                gf_aggr.metadata.keywords = keywords
+                    # create aggregation level keywords
+                    keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
+                    gf_aggr.metadata.keywords = keywords
 
-                # create aggregation level xml files
-                gf_aggr.create_aggregation_xml_documents()
-                msg = 'One Geofeature aggregation was created in resource (ID: {})'
-                msg = msg.format(comp_res.short_id)
-                logger.info(msg)
+                    # create aggregation level xml files
+                    gf_aggr.create_aggregation_xml_documents()
+                    msg = 'One Geofeature aggregation was created in resource (ID: {})'
+                    msg = msg.format(comp_res.short_id)
+                    logger.info(msg)
 
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
