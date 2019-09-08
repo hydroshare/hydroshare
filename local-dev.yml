@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.6
     container_name: data.local.org
     hostname: data.local.org
     links:
@@ -9,6 +9,7 @@ services:
     ports:
       - "1247:1247"
     volumes:
+      - "idata_root_vol:/root"
       - "idata_iconf_vol:/etc/irods"
       - "idata_vault_vol:/var/lib/irods"
       - "idata_pgres_vol:/var/lib/postgresql/data"
@@ -43,10 +44,12 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.6
     container_name: users.local.org
     hostname: users.local.org
     volumes:
+      - "iuser_root_vol:/root"
+      - "iuser_hspx_vol:/home/hsuserproxy"
       - "iuser_iconf_vol:/etc/irods"
       - "iuser_vault_vol:/var/lib/irods"
       - "iuser_pgres_vol:/var/lib/postgresql/data"
@@ -194,6 +197,8 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       - ".:/hydroshare"
+      - "temp_vol:/hs_tmp"
+      - "share_vol:/shared_tmp"
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
@@ -213,9 +218,12 @@ volumes:
   idata_iconf_vol:
   idata_vault_vol:
   idata_pgres_vol:
+  idata_root_vol:
   iuser_iconf_vol:
   iuser_vault_vol:
   iuser_pgres_vol:
+  iuser_root_vol:
+  iuser_hspx_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
