@@ -56,7 +56,7 @@ class Command(BaseCommand):
                             file_missing = True
                             break
                     if file_missing:
-                        # skip this corrupt raster resource
+                        # skip this corrupt raster resource for migration
                         continue
 
             # change the resource_type
@@ -80,6 +80,7 @@ class Command(BaseCommand):
             type_element.save()
             if create_raster_aggregation:
                 # create a Raster aggregation
+                ras_aggr = None
                 try:
                     ras_aggr = GeoRasterLogicalFile.create(resource=comp_res)
                 except Exception as ex:
@@ -88,46 +89,46 @@ class Command(BaseCommand):
                     err_msg = err_msg + '\n' + ex.message
                     logger.error(err_msg)
                     print("Error:>> {}".format(err_msg))
-                    continue
 
-                # set aggregation dataset title
-                ras_aggr.dataset_name = comp_res.metadata.title.value
-                ras_aggr.save()
-                # make the res files part of the aggregation
-                for res_file in comp_res.files.all():
-                    ras_aggr.add_resource_file(res_file)
+                if ras_aggr is not None:
+                    # set aggregation dataset title
+                    ras_aggr.dataset_name = comp_res.metadata.title.value
+                    ras_aggr.save()
+                    # make the res files part of the aggregation
+                    for res_file in comp_res.files.all():
+                        ras_aggr.add_resource_file(res_file)
 
-                # migrate raster specific metadata to aggregation
-                for bandinfo in ras_metadata_obj.bandInformations:
-                    bandinfo.content_object = ras_aggr.metadata
-                    bandinfo.save()
+                    # migrate raster specific metadata to aggregation
+                    for bandinfo in ras_metadata_obj.bandInformations:
+                        bandinfo.content_object = ras_aggr.metadata
+                        bandinfo.save()
 
-                # create aggregation level spatial coverage element
-                # note - the resource level spatial coverage which is a core metadata
-                # element gets populated as part of raster resource creation
-                spatial_coverage = comp_res.metadata.spatial_coverage
-                if spatial_coverage:
-                    aggr_coverage = Coverage()
-                    aggr_coverage.type = spatial_coverage.type
-                    aggr_coverage._value = spatial_coverage._value
-                    aggr_coverage.content_object = ras_aggr.metadata
-                    aggr_coverage.save()
+                    # create aggregation level spatial coverage element
+                    # note - the resource level spatial coverage which is a core metadata
+                    # element gets populated as part of raster resource creation
+                    spatial_coverage = comp_res.metadata.spatial_coverage
+                    if spatial_coverage:
+                        aggr_coverage = Coverage()
+                        aggr_coverage.type = spatial_coverage.type
+                        aggr_coverage._value = spatial_coverage._value
+                        aggr_coverage.content_object = ras_aggr.metadata
+                        aggr_coverage.save()
 
-                org_coverage = ras_metadata_obj.originalCoverage
-                if org_coverage:
-                    org_coverage.content_object = ras_aggr.metadata
-                    org_coverage.save()
+                    org_coverage = ras_metadata_obj.originalCoverage
+                    if org_coverage:
+                        org_coverage.content_object = ras_aggr.metadata
+                        org_coverage.save()
 
-                cell_info = ras_metadata_obj.cellInformation
-                if cell_info:
-                    cell_info.content_object = ras_aggr.metadata
-                    cell_info.save()
+                    cell_info = ras_metadata_obj.cellInformation
+                    if cell_info:
+                        cell_info.content_object = ras_aggr.metadata
+                        cell_info.save()
 
-                # create aggregation level xml files
-                ras_aggr.create_aggregation_xml_documents()
-                msg = 'One Raster aggregation was created in resource (ID: {})'
-                msg = msg.format(comp_res.short_id)
-                logger.info(msg)
+                    # create aggregation level xml files
+                    ras_aggr.create_aggregation_xml_documents()
+                    msg = 'One Raster aggregation was created in resource (ID: {})'
+                    msg = msg.format(comp_res.short_id)
+                    logger.info(msg)
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
             try:
@@ -140,7 +141,7 @@ class Command(BaseCommand):
                 print("Error:>> {}".format(err_msg))
 
             resource_counter += 1
-            # delete the instance of NetCdfMetaData that was part of the original netcdf resource
+            # delete the instance of RasterMetaData that was part of the original raster resource
             ras_metadata_obj.delete()
             msg = 'Raster resource (ID: {}) was converted to Composite Resource type'
             msg = msg.format(comp_res.short_id)
