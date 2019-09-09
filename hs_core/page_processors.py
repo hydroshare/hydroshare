@@ -9,7 +9,6 @@ from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
 from forms import ExtendedMetadataForm
-from hs_access_control.models.community import Community
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -19,8 +18,8 @@ from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 import json
 
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_odm2.models import ODM2Variable
+
 
 @processor_for(GenericResource)
 def landing_page(request, page):
