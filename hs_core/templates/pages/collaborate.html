@@ -8,23 +8,36 @@
             <div class="col-sm-12">
                 <h2 class="page-title">Collaborate</h2>
             </div>
-            <div>
-                <div style="float: left; margin-bottom: 3em; margin-right: 2em">
-                <a style="text-decoration: none" href="{% url 'groups' %}"><img src="{{ STATIC_URL }}/img/groups.png"><h4>&nbsp;&nbsp;GROUPS</h4></a>
-                </div>
-                <div style="width: 500px; padding-top:1em;">
-                Groups are for research teams to share Private resources among members. Resources and team
-                members are often themed around a concept or event</div>
-                <div style="clear: both"></div>
-                <div style="float: left; margin-right: 2em;">
-                <a style="text-decoration: none" href="{% url 'communities' %}"><img
-                        src="{{ STATIC_URL }}img/communities.png"><h4>COMMUNITIES</h4></a></div>
-                <div style="width: 600px; padding-top:1em;">
-                A Community is a collection of Groups that wish to share resources more seamlessly. Large
-                research networks and collaborations between Universities are good examples of Communities.
-                Communities are designed around public data sharing and open access
-                </div>
-            </div>
+            <table>
+                <tr>
+                    <td>
+                        <div style="float: left; margin-bottom: 3em; margin-right: 2em">
+                            <a style="text-decoration: none" href="{% url 'groups' %}"><img
+                                    src="{{ STATIC_URL }}/img/groups.png"><h4>&nbsp;&nbsp;GROUPS</h4></a>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="width: 500px; padding-top:1em;">
+                            Groups are for research teams to share Private resources among members. Resources and team
+                            members are often themed around a concept or event
+                        </div>
+                    </td>
+                <tr>
+                    <td>
+                        <div style="clear: both"></div>
+                        <div style="float: left; margin-right: 2em;">
+                            <a style="text-decoration: none" href="{% url 'communities' %}"><img
+                                    src="{{ STATIC_URL }}img/communities.png"><h4>COMMUNITIES</h4></a></div>
+                    </td>
+                    <td>
+                        <div style="width: 600px; padding-top:1em;">
+                            A Community is a collection of Groups that wish to share resources more seamlessly. Large
+                            research networks and collaborations between Universities are good examples of Communities.
+                            Communities are designed around public data sharing and open access
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 {% endblock %}
