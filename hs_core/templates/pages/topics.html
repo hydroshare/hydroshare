@@ -9,7 +9,7 @@
 {% block main %}
     <div id="topics-app">
         <div style="margin-left: 2em">
-            <a href="/community/1/">back to communities</a>
+            <a href="/community/1/">back to community</a>
             <h3>Inline Topic Edit</h3>
             <input id="add-topic" type="text" v-model="newTopic" placeholder="Enter new topic"/>
             <button v-on:click="addTopic('{{ csrf_token }}', )" style="margin-bottom: 1em;">Add</button>
@@ -30,7 +30,6 @@
         </div>
     <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="application/javascript">
-        // TODO INVESTIGATE IF THIS CAN BE DONE WITH A VUE COMPONENT AND PASSING THIS var/let/const VIA PROPS
         // contents here are required by topics.js
         const topics_from_page = JSON.parse("{{ topics_json }}");
     </script>
