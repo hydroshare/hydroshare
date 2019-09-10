@@ -487,7 +487,7 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+        resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
         resource.save()
 
         if not metadata:
