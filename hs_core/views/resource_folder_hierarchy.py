@@ -329,7 +329,7 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 @api_view(['POST'])
 def data_store_add_reference_public(request):
-    return data_store_add_reference(request)
+    return data_store_add_reference(request._request)
 
 
 @swagger_auto_schema(method='post', auto_schema=None)
@@ -380,7 +380,7 @@ def data_store_add_reference(request):
 
 @api_view(['POST'])
 def data_store_edit_reference_url_public(request):
-    return data_store_edit_reference_url(request)
+    return data_store_edit_reference_url(request._request)
 
 
 @swagger_auto_schema(method='post', auto_schema=None)
