@@ -5,7 +5,6 @@ from django.views.generic import TemplateView  # ListView
 from hs_core.models import get_user
 from hs_explore.models import RecommendedGroup, Status, PropensityPreferences, \
     PropensityPrefToPair, GroupPreferences, GroupPrefToPair
-from hs_core.hydroshare.utils import user_from_id
 
 
 class RecommendGroups(TemplateView):
@@ -16,8 +15,6 @@ class RecommendGroups(TemplateView):
 
         target_user = get_user(self.request)
         target_username = target_user.username
-        # target_username = str(self.request.GET['user'])
-        # target_user = user_from_id(target_username)
         action = str(self.request.GET['action'])
 
         if action == 'update':
@@ -58,8 +55,6 @@ class RecommendGroups(TemplateView):
                 union_cardinality = len(set.union(*[target_propensity_preferences_set,
                                                     gp_propensity_preferences_set]))
                 js = intersection_cardinality/float(union_cardinality)
-                #if js - 0 < 0.000001:
-                #    continue
                 r3 = RecommendedGroup.recommend(target_user, group, round(js, 4))
                 common_subjects = set.intersection(target_propensity_preferences_set,
                                                    gp_propensity_preferences_set)
