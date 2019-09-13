@@ -53,7 +53,7 @@ class TestStorage(TestCase):
         funcType = type(IrodsStorage.ils_l)
         storage.ils_l = funcType(mocked_ils_l, storage, IrodsStorage)
 
-        listing = storage.listdir("path")
+        listing = storage.listdir_ils("path")
         self.assertEqual(len(listing[1]), 3)
 
     def test_listdir(self):
@@ -70,5 +70,5 @@ class TestStorage(TestCase):
         funcType = type(IrodsStorage.ils_l)
         storage.ils_l = funcType(mocked_ils_l, storage, IrodsStorage)
 
-        listing = storage.listdir("path")
+        listing = storage.listdir_ils("path")
         self.assertEqual(len(listing[1]), 3)
