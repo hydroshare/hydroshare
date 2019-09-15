@@ -2,7 +2,7 @@ import json
 import uuid
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
@@ -84,7 +84,33 @@ def resource_with_metadata():
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('assets/cea.tif'),)
+        files=(open('pytest/assets/cea.tif'),)
     )
     yield res_uuid
     _res.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def composite_resource():
+    """composite resource for testing"""
+    group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+    user = hydroshare.create_account(
+        'user1@nowhere.com',
+        username='user1',
+        first_name='Creator_FirstName',
+        last_name='Creator_LastName',
+        superuser=False,
+        groups=[group]
+    )
+    _res = hydroshare.create_resource(
+        resource_type='CompositeResource',
+        owner=user,
+        title='Test Composite Resource',
+        metadata=[],
+        files=()
+    )
+
+    yield _res, user
+    _res.delete()
+    user.delete()
