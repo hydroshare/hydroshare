@@ -151,11 +151,9 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
-      # hydroshare repository
       - ".:/hydroshare"
-      # shared location for gunicorn.sock between containers
-      - "temp_vol:/hs_tmp"
-      # temp directory shared with celery workers
+      - "temp_vol:/tmp"
+      - "hs_temp_vol:/hs_tmp"
       - "share_vol:/shared_tmp"
     ports:
       - "1338:2022"
@@ -197,7 +195,8 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       - ".:/hydroshare"
-      - "temp_vol:/hs_tmp"
+      - "temp_vol:/tmp"
+      - "hs_temp_vol:/hs_tmp"
       - "share_vol:/shared_tmp"
     links:
       - postgis:postgis
@@ -227,5 +226,6 @@ volumes:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
+  hs_temp_vol:
   share_vol:
   rabbitmq_data_vol:
