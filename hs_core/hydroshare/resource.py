@@ -540,7 +540,7 @@ def create_resource(
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
+                k, v = list(element.items())[0]
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:
@@ -742,7 +742,7 @@ def add_resource_files(pk, *files, **kwargs):
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
-            print("kwargs[{}]".format(k))
+            print(("kwargs[{}]".format(k)))
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'

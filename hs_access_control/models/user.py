@@ -195,10 +195,10 @@ class UserAccess(models.Model):
         owner.
         """
         if __debug__:
-            assert isinstance(title, (str, unicode))
-            assert isinstance(description, (str, unicode))
+            assert isinstance(title, str)
+            assert isinstance(description, str)
             if purpose:
-                assert isinstance(purpose, (str, unicode))
+                assert isinstance(purpose, str)
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -2407,10 +2407,10 @@ class UserAccess(models.Model):
         owner.
         """
         if __debug__:
-            assert isinstance(title, (str, unicode))
-            assert isinstance(description, (str, unicode))
+            assert isinstance(title, str)
+            assert isinstance(description, str)
             if purpose:
-                assert isinstance(purpose, (str, unicode))
+                assert isinstance(purpose, str)
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")

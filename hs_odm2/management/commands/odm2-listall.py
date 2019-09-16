@@ -11,4 +11,4 @@ class Command(BaseCommand):
     help = "query ODM2 variable name database for all entries."
 
     def handle(self, *args, **options):
-        print(list(ODM2Variable.all()))
+        print((list(ODM2Variable.all())))

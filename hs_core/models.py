@@ -5,7 +5,7 @@ import json
 import arrow
 import logging
 from uuid import uuid4
-from languages_iso import languages as iso_languages
+from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 from markdown import markdown
@@ -56,8 +56,8 @@ def clean_for_xml(s):
     * Space-pad paragraph and NL symbols as necessary
 
     """
-    CR = unichr(0x23CE)  # carriage return unicode SYMBOL
-    PARA = unichr(0xB6)  # paragraph mark unicode SYMBOL
+    CR = chr(0x23CE)  # carriage return unicode SYMBOL
+    PARA = chr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
     next = None
     last = None
@@ -364,7 +364,7 @@ class AbstractMetaDataElement(models.Model):
     def update(cls, element_id, **kwargs):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
                 setattr(element, key, value)
         element.save()
         return element
@@ -436,8 +436,8 @@ class Party(AbstractMetaDataElement):
         if identifier_links and identifier_names:
             if len(identifier_names) != len(identifier_links):
                 raise Exception("Invalid data for identifiers")
-            identifiers = dict(zip(identifier_names, identifier_links))
-            if len(identifier_names) != len(identifiers.keys()):
+            identifiers = dict(list(zip(identifier_names, identifier_links)))
+            if len(identifier_names) != len(list(identifiers.keys())):
                 raise Exception("Invalid data for identifiers")
 
             if as_json:
@@ -579,7 +579,7 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Invalid data found for identifiers. "
                                           "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in identifiers.values()]
+            links = [l.lower() for l in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier links found.")
@@ -593,7 +593,7 @@ class Party(AbstractMetaDataElement):
                                           "Identifier link must be a URL.")
 
             # validate identifier keys - check for duplicate names
-            names = [n.lower() for n in identifiers.keys()]
+            names = [n.lower() for n in list(identifiers.keys())]
             if len(names) != len(set(names)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier names found")
@@ -743,7 +743,7 @@ class Date(AbstractMetaDataElement):
     def create(cls, **kwargs):
         """Define custom create method for Date model."""
         if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
+            if not kwargs['type'] in list(dict(cls.DATE_TYPE_CHOICES).keys()):
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
             # get matching resource
@@ -755,7 +755,7 @@ class Date(AbstractMetaDataElement):
                     del kwargs['end_date']
 
             if 'start_date' in kwargs:
-                if isinstance(kwargs['start_date'], basestring):
+                if isinstance(kwargs['start_date'], str):
                     kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
@@ -765,7 +765,7 @@ class Date(AbstractMetaDataElement):
                     raise ValidationError("Resource has not been made public yet.")
             elif kwargs['type'] == 'valid':
                 if 'end_date' in kwargs:
-                    if isinstance(kwargs['end_date'], basestring):
+                    if isinstance(kwargs['end_date'], str):
                         kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date "
@@ -782,7 +782,7 @@ class Date(AbstractMetaDataElement):
         dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
-            if isinstance(kwargs['start_date'], basestring):
+            if isinstance(kwargs['start_date'], str):
                 kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if dt.type == 'created':
                 raise ValidationError("Resource creation date can't be changed")
@@ -791,7 +791,7 @@ class Date(AbstractMetaDataElement):
                 dt.save()
             elif dt.type == 'valid':
                 if 'end_date' in kwargs:
-                    if isinstance(kwargs['end_date'], basestring):
+                    if isinstance(kwargs['end_date'], str):
                         kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date "
@@ -865,7 +865,7 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
-        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+        if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         # ensure isHostedBy and isCopiedFrom are mutually exclusive
@@ -901,7 +901,7 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
-        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+        if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         # ensure isHostedBy and isCopiedFrom are mutually exclusive
@@ -1197,7 +1197,7 @@ class Coverage(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
 
-            if not kwargs['type'] in dict(cls.COVERAGE_TYPES).keys():
+            if not kwargs['type'] in list(dict(cls.COVERAGE_TYPES).keys()):
                 raise ValidationError('Invalid coverage type:%s' % kwargs['type'])
 
             if kwargs['type'] == 'box':
@@ -1225,14 +1225,14 @@ class Coverage(AbstractMetaDataElement):
                 cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.items()
                                   if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.items()
                                   if k in ('name', 'east', 'north', 'units', 'elevation',
                                            'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.items()
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
@@ -2100,7 +2100,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def delete(self, using=None):
         """Delete resource along with all of its metadata and data bag."""
-        from hydroshare import hs_bagit
+        from .hydroshare import hs_bagit
         for fl in self.files.all():
             if fl.logical_file is not None:
                 # delete of metadata file deletes the logical file (one-to-one relation)
@@ -2188,16 +2188,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if first_names:
             initials_list = [i[0] for i in first_names]
-            initials = u". ".join(initials_list) + "."
+            initials = ". ".join(initials_list) + "."
             if first_author:
-                author_name = u"{last_name}, {initials}"
+                author_name = "{last_name}, {initials}"
             else:
-                author_name = u"{initials} {last_name}"
+                author_name = "{initials} {last_name}"
             author_name = author_name.format(last_name=last_names,
                                              initials=initials
                                              )
         else:
-            author_name = u"{last_name}".format(last_name=last_names)
+            author_name = "{last_name}".format(last_name=last_names)
 
         return author_name + ", "
 
@@ -2251,12 +2251,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
                                  citation_date.start_date.year)
         if ref_rel:
-            citation_str_lst.append(u", {ref_rel_value}, last accessed {creation_date}.".format(
+            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
                 ref_rel_value=ref_rel.value,
                 creation_date=date_str))
         elif repl_rel:
-            citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
+            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
+                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
                                                                    creation_date=date_str,
                                                                    url=hs_identifier.url))
         else:
@@ -2478,7 +2478,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         path_split = folder_path.split('/')
         while path_split[-1] == '':
             path_split.pop()
-        dir_path = u'/'.join(path_split[0:-1])
+        dir_path = '/'.join(path_split[0:-1])
 
         # handles federation
         irods_path = os.path.join(self.root_path, dir_path)
@@ -2677,7 +2677,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
-                    assert(isinstance(source, basestring))
+                    assert(isinstance(source, str))
                 # source is a path to an iRODS file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
@@ -3339,7 +3339,7 @@ class BaseResource(Page, AbstractResource):
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit."""
         # importing here to avoid circular import problem
-        from hydroshare.resource import get_activated_doi
+        from .hydroshare.resource import get_activated_doi
 
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
         schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
@@ -3607,7 +3607,7 @@ class CoreMetaData(models.Model):
         """Return an instance of rest_framework Serializer for self
         Note: Subclass must override this property
         """
-        from views.resource_metadata_rest_api import CoreMetaDataSerializer
+        from .views.resource_metadata_rest_api import CoreMetaDataSerializer
         return CoreMetaDataSerializer(self)
 
     @classmethod
@@ -3619,7 +3619,7 @@ class CoreMetaData(models.Model):
         :param  parsed_metadata: a list of dicts that will be appended with parsed data
         """
 
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'title' in keys_to_update:
             parsed_metadata.append({"title": {"value": metadata.pop('title')}})
 
@@ -3696,7 +3696,7 @@ class CoreMetaData(models.Model):
         :param  form: an instance of Django Form class
         """
         error_string = ", ".join(key + ":" + form.errors[key][0]
-                                 for key in form.errors.keys())
+                                 for key in list(form.errors.keys()))
         return error_string
 
     def set_dirty(self, flag):
@@ -3821,7 +3821,7 @@ class CoreMetaData(models.Model):
         :param  user: user who is updating metadata
         :return:
         """
-        from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
             SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
 
@@ -3943,7 +3943,7 @@ class CoreMetaData(models.Model):
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""
         # importing here to avoid circular import problem
-        from hydroshare.utils import current_site_url, get_resource_types
+        from .hydroshare.utils import current_site_url, get_resource_types
 
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
         # create the Description element -this is not exactly a dc element
@@ -4118,7 +4118,7 @@ class CoreMetaData(models.Model):
 
         # encode extended key/value arbitrary metadata
         resource = BaseResource.objects.filter(object_id=self.id).first()
-        for key, value in resource.extra_metadata.items():
+        for key, value in list(resource.extra_metadata.items()):
             hsterms_key_value = etree.SubElement(
                 rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
             hsterms_key_value_rdf_Description = etree.SubElement(
@@ -4190,7 +4190,7 @@ class CoreMetaData(models.Model):
     def _create_person_element(self, etree, parent_element, person):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
-        from hydroshare.utils import current_site_url
+        from .hydroshare.utils import current_site_url
         from hs_core.templatetags.hydroshare_tags import name_without_commas
 
         if isinstance(person, Creator):
@@ -4241,7 +4241,7 @@ class CoreMetaData(models.Model):
                                                 '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        for name, link in person.identifiers.iteritems():
+        for name, link in person.identifiers.items():
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)

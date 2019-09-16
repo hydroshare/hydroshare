@@ -125,7 +125,7 @@ class AbstractFileMetaData(models.Model):
                             th("Key")
                             th("Value")
                     with tbody():
-                        for k, v in self.extra_metadata.items():
+                        for k, v in list(self.extra_metadata.items()):
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
@@ -224,7 +224,7 @@ class AbstractFileMetaData(models.Model):
                             th("Edit/Remove")
                     with tbody():
                         counter = 0
-                        for k, v in self.extra_metadata.items():
+                        for k, v in list(self.extra_metadata.items()):
                             counter += 1
                             with tr(data_key=k):
                                 td(k)
@@ -350,7 +350,7 @@ class AbstractFileMetaData(models.Model):
             dc_subject.text = kw
 
         # add any key/value metadata items
-        for key, value in self.extra_metadata.items():
+        for key, value in list(self.extra_metadata.items()):
             hsterms_key_value = etree.SubElement(
                 rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
             hsterms_key_value_rdf_Description = etree.SubElement(
@@ -549,7 +549,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="edit-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.items():
+            for k, v in list(self.extra_metadata.items()):
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="edit-keyvalue-filetype-modal-{}".format(counter),
@@ -614,7 +614,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="delete-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.items():
+            for k, v in list(self.extra_metadata.items()):
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="delete-keyvalue-filetype-modal-{}".format(counter),
