@@ -308,13 +308,15 @@ class IrodsStorage(Storage):
                     listing[2].append(size)
         return listing
 
-    def listdir(self, path):
-        listing = ([], [], [])
+    def _list_files(self, path):
+        """
+        internal method to only list data objects/files under path
+        :param path: iRODS collection/directory path
+        :return: ordered filename_list and filesize_list
+        """
 
-        # remove any trailing slashes if any; otherwise, iquest would fail
-        path = path.strip()
-        while path.endswith('/'):
-            path = path[:-1]
+        fname_list = []
+        fsize_list = []
 
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
@@ -327,9 +329,18 @@ class IrodsStorage(Storage):
             if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
                 break
             file_info = stdout[i].rsplit(',', 1)
-            listing[1].append(file_info[0])
-            listing[2].append(file_info[1])
+            fname_list.append(file_info[0])
+            fsize_list.append(file_info[1])
 
+        return fname_list, fsize_list
+
+    def _list_subdirs(self, path):
+        """
+        internal method to only list sub-collections/sub-directories under path
+        :param path: iRODS collection/directory path
+        :return: sub-collection/directory name list
+        """
+        subdir_list = []
         # the query below returns name of all sub-collections/sub-directories
         # under the path collection/directory
         qrystr = "select COLL_NAME where COLL_PARENT_NAME like '%{}'".format(path)
@@ -342,14 +353,37 @@ class IrodsStorage(Storage):
             # remove absolute path prefix to only show relative sub-dir name
             idx = dirname.find(path)
             if idx > 0:
-                dirname = dirname[idx+len(path)+1:]
+                dirname = dirname[idx + len(path) + 1:]
 
-            listing[0].append(dirname)
-            listing[2].append("-1")
+            subdir_list.append(dirname)
+
+        return subdir_list
+
+    def listdir(self, path):
+        """
+        return list of sub-collections/sub-directories, data objects/files and their sizes
+        :param path: iRODS collection/directory path
+        :return: (sub_directory_list, file_name_list, file_size_list)
+        """
+        # remove any trailing slashes if any; otherwise, iquest would fail
+        path = path.strip()
+        while path.endswith('/'):
+            path = path[:-1]
+
+        fname_list, fsize_list = self._list_files(path)
+
+        subdir_list = self._list_subdirs(path)
+
+        listing = (subdir_list, fname_list, fsize_list)
 
         return listing
 
     def size(self, name):
+        """
+        return the size of the data object/file with file name being passed in
+        :param name: file name
+        :return: the size of the file
+        """
         file_info = name.rsplit('/', 1)
         if len(file_info) < 2:
             raise ValidationError('{} is not a valid file path to retrieve file size '
