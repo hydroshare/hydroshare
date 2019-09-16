@@ -306,7 +306,8 @@ INSTALLED_APPS = (
     "hs_dictionary",
     "hs_odm2",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -692,6 +693,8 @@ SWAGGER_SETTINGS = {
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
+
+COMMUNITIES_ENABLED = False
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

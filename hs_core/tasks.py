@@ -24,6 +24,7 @@ from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
 
@@ -31,6 +32,7 @@ from django_irods.icommands import SessionException
 
 from hs_core.models import BaseResource
 from theme.utils import get_quota_message
+
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -602,3 +604,11 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
         return e
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
+def daily_odm2_sync():
+    """
+    ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
+    """
+    ODM2Variable.sync()
