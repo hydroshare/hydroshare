@@ -275,39 +275,6 @@ class IrodsStorage(Storage):
         except SessionException:
             return False
 
-    def ils_l(self, path):
-        # in it's own method to mock for testing
-        return self.session.run("ils", None, "-l", path)[0]
-
-    def listdir_ils(self, path):
-        stdout = self.ils_l(path).split("\n")
-        listing = ([], [], [])
-        directory = stdout[0][0:-1]
-        directory_prefix = "  C- " + directory + "/"
-        for i in range(1, len(stdout)):
-            if stdout[i][:len(directory_prefix)] == directory_prefix:
-                dirname = stdout[i][len(directory_prefix):].strip()
-                if dirname:
-                    listing[0].append(dirname)
-                    listing[2].append("-1")
-            else:
-                # don't use split for filename to preserve spaces in filename
-                line = stdout[i].split(None, 6)
-                if len(line) < 6:
-                    # the last line is empty
-                    continue
-                if line[1] != '0':
-                    # filter replicas
-                    continue
-                # create a seperator based off the id, date, &
-                sep = " ".join(line[3:6])
-                filename = stdout[i].split(sep)[1].strip()
-                size = line[3]
-                if filename:
-                    listing[1].append(filename)
-                    listing[2].append(size)
-        return listing
-
     def _list_files(self, path):
         """
         internal method to only list data objects/files under path
