@@ -352,7 +352,7 @@ class AbstractMetaDataElement(models.Model):
 
     def __str__(self):
         """Return unicode for python 3 compatibility in templates"""
-        return self.__unicode__
+        return self.__unicode__()
 
     @property
     def metadata(self):
