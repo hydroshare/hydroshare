@@ -309,14 +309,19 @@ class IrodsStorage(Storage):
         return listing
 
     def listdir(self, path):
+        listing = ([], [], [])
+
+        # remove any trailing slashes if any; otherwise, iquest would fail
+        path = path.strip()
+        while path.endswith('/'):
+            path = path[:-1]
+
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
                  "COLL_NAME like '%{}'".format(path)
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s",
                                   qrystr)[0].split("\n")
-
-        listing = ([], [], [])
 
         for i in range(len(stdout)):
             if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
