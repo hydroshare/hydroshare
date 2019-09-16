@@ -15,7 +15,7 @@ from hs_file_types.models.timeseries import TimeSeriesLogicalFile
 def delete_hanging_logical_files(logical_files):
     count = 0
     for file in logical_files:
-        if not file.files.all() and not hasattr(file, 'resource'):
+        if not file.files.all() or not hasattr(file, 'resource'):
             file.delete()
             count = count + 1
     return count
@@ -26,14 +26,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         count = delete_hanging_logical_files(GenericLogicalFile.objects.all())
-        print((">> {} GenericLogicalFiles deleted".format(count)))
+        print(">> {} GenericLogicalFiles deleted".format(count))
         count = delete_hanging_logical_files(GeoFeatureLogicalFile.objects.all())
-        print((">> {} GeoFeatureLogicalFile deleted".format(count)))
+        print(">> {} GeoFeatureLogicalFile deleted".format(count))
         count = delete_hanging_logical_files(NetCDFLogicalFile.objects.all())
-        print((">> {} NetCDFLogicalFile deleted".format(count)))
+        print(">> {} NetCDFLogicalFile deleted".format(count))
         count = delete_hanging_logical_files(GeoRasterLogicalFile.objects.all())
-        print((">> {} GeoRasterLogicalFile deleted".format(count)))
+        print(">> {} GeoRasterLogicalFile deleted".format(count))
         count = delete_hanging_logical_files(RefTimeseriesLogicalFile.objects.all())
-        print((">> {} RefTimeseriesLogicalFile deleted".format(count)))
+        print(">> {} RefTimeseriesLogicalFile deleted".format(count))
         count = delete_hanging_logical_files(TimeSeriesLogicalFile.objects.all())
-        print((">> {} TimeSeriesLogicalFile deleted".format(count)))
+        print(">> {} TimeSeriesLogicalFile deleted".format(count))

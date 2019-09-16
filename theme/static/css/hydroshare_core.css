@@ -399,6 +399,13 @@ a.sign-out-inline:hover {
 	overflow: hidden;
 }
 
+#add-author-modal .author-types > button, #add-contributor-dialog .author-types > button {
+	flex-grow: 1;
+	flex-basis: 0;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 /* warning access removal dialog title */
 .access-dialog-title {
 	display: none;
@@ -983,19 +990,11 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before {
-    content: "";
-    width: 1px;
-    display: inline-block;
-    background-color: #999;
-	height: 22px;
-    margin: 0 4px;
-    position: relative;
-    top: 2px;
-}
-
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before,
+.owners-wrapper > a:not(:first-child)::before,
+.separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
@@ -1006,8 +1005,21 @@ li.account p{
     top: 2px;
 }
 
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before {
+	margin: 0 -6px;
+}
+
 .authors-wrapper.sortable span:last-child a {
     margin-right: 10px;
+}
+
+.authors-wrapper .ui-state-highlight {
+	width: 100px;
+	height: 1em;
+	display: inline-block;
+	margin-left: 8px;
+	margin-right: 4px;
+	padding: 0;
 }
 
 .authors-wrapper a {
@@ -1217,10 +1229,10 @@ div.readme .readme-header h4 > span {
 	height: 155px;
 }
 
-span.remove {
-    position: absolute;
-    right: 1px;
-    top: 4px;
+.hilight > span.remove {
+	position: absolute;
+	right: 8px;
+	top: 10px;
 }
 
 .form-control, .controls .input-group .form-control {
@@ -2269,7 +2281,7 @@ table.user-scope tr {
     background-color: #f5f5f5;
 }
 
-.user-roles li.loading, .access-table tr.loading {
+.user-roles li.loading, .access-table tr.loading, .authors-wrapper.loading {
 	animation: grayScaleChange 1s; /* animation-name followed by duration in seconds*/
 	/* you could also use milliseconds (ms) or something like 2.5s */
 	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
@@ -3062,7 +3074,7 @@ span.you-flag {
 }
 
 .facet-list .list-group {
-	max-height: 200px;
+	max-height: 400px;
 	overflow-y: auto;
 }
 
@@ -3441,6 +3453,15 @@ span.you-flag {
 
 .come-in:nth-child(odd) {
   animation-duration: 0.6s; /* So they look staggered */
+}
+
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .35s;
+	transition-timing-function: ease;
+}
+
+.fade-enter, .fade-leave-to {
+	opacity: 0;
 }
 
 @keyframes come-in {
@@ -4021,21 +4042,6 @@ div.group-add-photo {
 #edit-group-dialog div.toggle.btn {
 	width: 100px !important;
 	float: right;
-}
-
-.center-radio-inline {
-    padding: 8px;
-    border-radius: 4px;
-    width: 190px;
-}
-
-.center-radio-inline input[type='radio']{
-	float: none;
-	margin: 0;
-}
-
-.center-radio-inline label {
-	cursor: pointer;
 }
 
 .or-separator {

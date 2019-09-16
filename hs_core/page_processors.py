@@ -2,11 +2,14 @@
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import ExtendedMetadataForm
+from forms import ExtendedMetadataForm
+from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
@@ -14,6 +17,8 @@ from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
 import json
+
+from hs_odm2.models import ODM2Variable
 
 
 @processor_for(GenericResource)
@@ -116,6 +121,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     has_web_ref = res_has_web_reference(content_model)
 
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+    if settings.COMMUNITIES_ENABLED:
+        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+        topics = list(topics)  # force QuerySet evaluation
+    else:
+        topics = []
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -273,6 +283,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
+    grps_member_of = []
+    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+    # for each group set group dynamic attributes
+    for g in groups:
+        g.is_user_member = user in g.gaccess.members
+        if g.is_user_member:
+            grps_member_of.append(g)
+
     context = {
                'cm': content_model,
                'resource_edit_mode': resource_edit,
@@ -306,7 +324,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               type_value != 'hasPart'),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
-               'maps_key': maps_key
+               'maps_key': maps_key,
+               'communities_enabled': settings.COMMUNITIES_ENABLED,
+               'topics_json': mark_safe(escapejs(json.dumps(topics))),
+               'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
+               'odm2_terms': list(ODM2Variable.all())
     }
 
     return context

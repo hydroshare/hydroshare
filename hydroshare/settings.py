@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import, unicode_literals
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
@@ -304,8 +304,10 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
+    "hs_odm2",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -691,6 +693,8 @@ SWAGGER_SETTINGS = {
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
+
+COMMUNITIES_ENABLED = False
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

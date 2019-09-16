@@ -17,7 +17,6 @@ from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from . import models as m
 from .icommands import Session, GLOBAL_SESSION
-from hs_core.models import ResourceFile
 from drf_yasg.utils import swagger_auto_schema
 
 import logging
@@ -62,13 +61,14 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
         split_path_strs.pop()
-    path = '/'.join(split_path_strs)  # no trailing slash
+    path = u'/'.join(split_path_strs)  # no trailing slash
 
     # initialize case variables
     is_bag_download = False
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
-    is_sf_agg_file = False
+    is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
+    aggregation_name = None
     is_sf_request = False
 
     if split_path_strs[0] == 'bags':
@@ -113,7 +113,32 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     irods_output_path = irods_path
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
-        store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
+        # check for aggregations
+        if is_aggregation_request and res.resource_type == "CompositeResource":
+            prefix = res.file_path
+            if path.startswith(prefix):
+                # +1 to remove trailing slash
+                aggregation_name = path[len(prefix)+1:]
+            aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
+            if not is_zip_request:
+                download_url = request.GET.get('url_download', 'false').lower()
+                if download_url == 'false':
+                    # redirect to referenced url in the url file instead
+                    if hasattr(aggregation, 'redirect_url'):
+                        return HttpResponseRedirect(aggregation.redirect_url)
+            # point to the main file path
+            path = aggregation.get_main_file.url[len("/resource/"):]
+            is_zip_request = True
+            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+            output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+            if res.is_federated:
+                irods_path = os.path.join(res.resource_federation_path, path)
+                irods_output_path = os.path.join(res.resource_federation_path, output_path)
+            else:
+                irods_path = path
+                irods_output_path = output_path
+
+        store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -129,27 +154,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
-            # check for single file aggregations
-            if "data/contents/" in path:  # not a metadata file
-                for f in ResourceFile.objects.filter(object_id=res.id):
-                    if path == f.storage_path:
-                        is_sf_agg_file = True
-                        if not is_zip_request and f.has_logical_file and \
-                                f.logical_file.is_single_file_aggregation:
-                            download_url = request.GET.get('url_download', 'false').lower()
-                            if download_url == 'false':
-                                # redirect to referenced url in the url file instead
-                                try:
-                                    redirect_url = f.logical_file.redirect_url
-                                except AttributeError:
-                                    redirect_url = None
-                                if redirect_url:
-                                    return HttpResponseRedirect(redirect_url)
-                        if __debug__:
-                            logger.debug(
-                                "request for single file aggregation {}".format(path))
-                        break
-
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
@@ -160,7 +164,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
-    # * is_sf_agg_file: path is a single-file aggregation in Composite Resource
+    # * aggregation: aggregation object if the path matches an aggregation
     # * is_sf_request: path is a single-file
     # flags for download:
     # * is_bag_download: download a bag in format bags/{rid}.zip
@@ -201,7 +205,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                is_sf_agg_file, is_sf_request))
+                                                aggregation_name, is_sf_request))
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
 
@@ -223,7 +227,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         is_sf_agg_file, is_sf_request)
+                                         aggregation_name, is_sf_request)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
@@ -249,7 +253,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
         if __debug__:
-            logger.debug("irods_output_path is {}".format(irods_output_path))
+            logger.debug(u"irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True
