@@ -337,6 +337,13 @@ class IrodsStorage(Storage):
         while path.endswith('/'):
             path = path[:-1]
 
+        # check first whether the path is an iRODS collection/directory or not, and if not, need
+        # to raise SessionException, and if yes, can proceed to get files and sub-dirs under it
+        qrystr = "select COLL_NAME where COLL_NAME like '%{}'".format(path)
+        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        if "CAT_NO_ROWS_FOUND" in stdout:
+            raise SessionException(-1, '', 'folder {} does not exist'.format(path))
+
         fname_list, fsize_list = self._list_files(path)
 
         subdir_list = self._list_subdirs(path)
