@@ -21,7 +21,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "pk": "abc123",
             "pathname": "bad_path"
         }))
-        self.assertEqual(response.content,
+        self.assertEqual(str(response.content),
                          '{"detail":"No resource was found for resource id:abc123"}')
 
         # Create resource
