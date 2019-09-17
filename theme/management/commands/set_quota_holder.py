@@ -51,14 +51,14 @@ class Command(BaseCommand):
                 # attribute, hence raise AttributeError - ignore for testing and it should not
                 # happen in production where federation is set up properly
                 print((res.short_id + ' raised AttributeError when setting quota holder: ' +
-                      ex.msg))
+                      str(ex)))
                 continue
             except ValueError as ex:
                 # when federation is not set up correctly, istorage does not have a session
                 # attribute, hence raise AttributeError - ignore for testing and it should not
                 # happen in production where federation is set up properly
                 print((res.short_id + ' raised ValueError when setting quota holder: ' +
-                      ex.msg))
+                      str(ex)))
                 continue
 
         print(('{} resources with missing quota holder have been fixed'.format(count)))

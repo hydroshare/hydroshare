@@ -262,7 +262,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
                                                                                    res_file)
             except ValidationError as ex:
-                log.exception(ex.msg)
+                log.exception(str(ex))
                 raise ex
 
             file_name = res_file.file_name
@@ -305,7 +305,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     ft_ctx.logical_file = logical_file
                     ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
-                    msg = msg.format(ex.msg)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
 
             if not file_type_success:
@@ -379,7 +379,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
         else:
             msg = "Failed to parse the .shp file. Error{}"
 
-        msg = msg.format(ex.msg)
+        msg = msg.format(str(ex))
         raise ValidationError(msg)
 
 

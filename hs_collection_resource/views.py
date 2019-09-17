@@ -146,11 +146,11 @@ def update_collection(request, shortkey, *args, **kwargs):
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(ex.msg,
+        logger.error(err_msg.format(str(ex),
                      request.user.username if request.user.is_authenticated() else "anonymous",
                      shortkey))
         status = "error"
-        msg = ex.msg
+        msg = str(ex)
     finally:
         ajax_response_data = \
             {'status': status, 'msg': msg,
@@ -201,9 +201,9 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     except Exception as ex:
         logger.error("Failed to update collection for "
                      "deleted resources.Collection resource ID: {}. "
-                     "Error:{} ".format(shortkey, ex.msg))
+                     "Error:{} ".format(shortkey, str(ex)))
 
-        ajax_response_data = {'status': "error", 'message': ex.msg}
+        ajax_response_data = {'status': "error", 'message': str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -227,9 +227,9 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
 
     except Exception as ex:
         logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
-                     "Error:{1} ".format(shortkey, ex.msg))
+                     "Error:{1} ".format(shortkey, str(ex)))
 
-        ajax_response_data = {'status': "error", 'message': ex.msg}
+        ajax_response_data = {'status': "error", 'message': str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -297,7 +297,7 @@ def _calculate_collection_coverages(collection_res_obj):
                                    "Contained res ID: {1}"
                                    "Msg: {2} ".
                                    format(res_id,
-                                          contained_res_obj.short_id, ex.msg))
+                                          contained_res_obj.short_id, str(ex)))
 
     # spatial coverage
     if len(lon_list) > 0 and len(lat_list) > 0:

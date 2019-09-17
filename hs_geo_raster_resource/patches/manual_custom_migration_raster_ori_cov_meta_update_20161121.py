@@ -71,7 +71,7 @@ for res in RasterResource.objects.all():
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
-        print((e.msg))
+        print((str(e)))
         print(res_md_dict)
 
 print(('Copy Fail Number: {} List: {}'.format(len(copy_res_fail), copy_res_fail)))

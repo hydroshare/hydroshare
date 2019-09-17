@@ -57,7 +57,7 @@ class TestBagIt(TestCase):
             # this is the api call we testing
             create_bag_by_irods(self.test_res.short_id)
         except Exception as ex:
-            self.fail("create_bag_by_irods() raised exception.{}".format(ex.msg))
+            self.fail("create_bag_by_irods() raised exception.{}".format(str(ex)))
 
     def test_delete_files_and_bag(self):
         # check we have one bag at this point

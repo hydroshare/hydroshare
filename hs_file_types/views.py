@@ -87,10 +87,10 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_201_CREATED)
 
     except ValidationError as ex:
-        response_data['message'] = ex.message
+        response_data['message'] = str(ex)
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
     except Exception as ex:
-        response_data['message'] = ex.message
+        response_data['message'] = str(ex)
         return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -370,9 +370,9 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
             resource_modified(resource, request.user, overwrite_bag=False)
             is_update_success = True
         except ValidationError as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
         except Error as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
     else:
         err_msg = err_msg.format(element_name, validation_response['errors'])
 
@@ -443,9 +443,9 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
             resource_modified(logical_file.resource, request.user, overwrite_bag=False)
             is_add_success = True
         except ValidationError as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
         except Error as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
     else:
         err_msg = err_msg.format(element_name, validation_response['errors'])
 
@@ -897,7 +897,7 @@ def update_netcdf_file(request, file_type_id, **kwargs):
         logical_file.update_netcdf_file(request.user)
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'message': ex.message}
+                              'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -930,7 +930,7 @@ def update_sqlite_file(request, file_type_id, **kwargs):
         logical_file.update_sqlite_file(request.user)
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'message': ex.message}
+                              'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -975,7 +975,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
             metadata = logical_file.metadata.get_html_forms()
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
-        ajax_response_data = {'status': 'error', 'message': ex.message}
+        ajax_response_data = {'status': 'error', 'message': str(ex)}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -1014,7 +1014,7 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
             metadata = logical_file.metadata.get_html_forms(series_id=series_id)
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
-        ajax_response_data = {'status': 'error', 'message': ex.message}
+        ajax_response_data = {'status': 'error', 'message': str(ex)}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 

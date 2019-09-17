@@ -51,7 +51,7 @@ for tool_res_obj in tool_res_list:
     except Exception as ex:
         print(("[{0}] Failed to check Tools {1}: {2}\n".format(str(datetime.now()),
                                                                tool_res_obj.short_id,
-                                                               ex.msg)))
+                                                               str(ex))))
         error_check_counter += 1
 
 print(("[{0}] Check Done!\n".format(str(datetime.now()))))

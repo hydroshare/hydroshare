@@ -70,7 +70,7 @@ def create_bag_files(resource):
             shutil.rmtree(temp_path)
             os.makedirs(temp_path)
         else:
-            raise Exception(ex.msg)
+            raise Exception(str(ex))
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command,
     # so creating an empty visualization directory to be put into the zip file as done by the two

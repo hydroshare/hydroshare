@@ -236,7 +236,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                 page_redirect_url_key=None, files=files, metadata=metadata,
                 **kwargs)
         except Exception as ex:
-            error_msg = {'resource': "Resource creation failed. %s" % ex.msg}
+            error_msg = {'resource': "Resource creation failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
@@ -256,7 +256,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             if abstract:
                 resource.metadata.create_element('description', abstract=abstract)
         except Exception as ex:
-            error_msg = {'resource': "Resource creation failed. %s" % ex.msg}
+            error_msg = {'resource': "Resource creation failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         post_creation_error_msg = ''
@@ -265,7 +265,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
                                                           user=request.user,
                                                           metadata=metadata, **kwargs)
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            post_creation_error_msg = ex.msg
+            post_creation_error_msg = str(ex)
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
                          'message': post_creation_error_msg}
 
@@ -475,7 +475,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
                 logger.error(msg)
                 raise ValidationError(detail=msg)
             except HsDeserializationException as e:
-                raise ValidationError(detail=e.msg)
+                raise ValidationError(detail=str(e))
 
             resource_modified(resource, request.user, overwrite_bag=False)
             return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
@@ -598,7 +598,7 @@ class ResourceFileCRUD(APIView):
         try:
             view_utils.irods_path_is_allowed(pathname)
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.msg, status_code=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status_code=status.HTTP_400_BAD_REQUEST)
 
         try:
             f = hydroshare.get_resource_file(pk, pathname).resource_file
@@ -649,7 +649,7 @@ class ResourceFileCRUD(APIView):
 
         except (hydroshare.utils.ResourceFileSizeException,
                 hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % ex.msg}
+            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
@@ -660,7 +660,7 @@ class ResourceFileCRUD(APIView):
                                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % ex.msg}
+            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
             raise ValidationError(detail=error_msg)
 
         # prepare response data
@@ -680,12 +680,12 @@ class ResourceFileCRUD(APIView):
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.msg, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
         try:
             hydroshare.delete_resource_file(pk, pathname, user)
         except ObjectDoesNotExist as ex:    # matching file not found
-            raise NotFound(detail=ex.msg)
+            raise NotFound(detail=str(ex))
 
         # prepare response data
         response_data = {'resource_id': pk, 'file_name': pathname}
@@ -829,7 +829,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
         except (hydroshare.utils.ResourceFileSizeException,
                 hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % ex.msg}
+            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
@@ -840,7 +840,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % ex.msg}
+            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
             raise ValidationError(detail=error_msg)
 
         # prepare response data

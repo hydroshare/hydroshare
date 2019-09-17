@@ -31,7 +31,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
             return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [ex.msg]}}
+                    "errors": {"identifiers": [str(ex)]}}
 
         element_form = CreatorValidationForm(post_data_dict)
 
@@ -40,7 +40,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
             return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [ex.msg]}}
+                    "errors": {"identifiers": [str(ex)]}}
         element_form = ContributorValidationForm(post_data_dict)
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
@@ -105,7 +105,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                     post_data_dict = Party.get_post_data_with_identifiers(request=request)
                 except Exception as ex:
                     return {'is_valid': False, 'element_data_dict': None,
-                            "errors": {"identifiers": [ex.msg]}}
+                            "errors": {"identifiers": [str(ex)]}}
 
                 # for creator or contributor who is not a hydroshare user the 'description'
                 # key might be missing in the POST form data

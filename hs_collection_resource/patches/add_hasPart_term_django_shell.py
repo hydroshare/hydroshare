@@ -48,7 +48,7 @@ for collection_res_obj in collection_res_list:
     except Exception as ex:
         print(("[{0}] Error on Collection {1}: {2}\n".format(str(datetime.now()),
                                                              collection_res_obj.short_id,
-                                                             ex.msg)))
+                                                             str(ex))))
         error_counter += 1
 
 print(("[{0}] All Done!\n".format(str(datetime.now()))))

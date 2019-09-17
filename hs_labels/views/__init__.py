@@ -76,7 +76,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
                 elif label_type == OPENWITHAPP:
                     user.ulabels.remove_open_with_app(res)
         except Exception as exp:
-            err_msg = exp.msg
+            err_msg = str(exp)
 
     if err_msg:
         ajax_response_data = {'status': 'error', 'message': err_msg}

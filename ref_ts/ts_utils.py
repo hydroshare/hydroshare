@@ -91,7 +91,7 @@ def sites_from_soap(wsdl_url, locations='[:]'):
             # sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
             sites_list.append("%s. %s [network:%s]" % (str(counter), siteName, siteCode))
     except Exception as e:
-        logger.exception("sites_from_soap: %s" % (e.msg))
+        logger.exception("sites_from_soap: %s" % (str(e)))
         raise e
     return sites_list
 
@@ -128,7 +128,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
 
         return variables_list
     except Exception as e:
-        logger.exception("site_info_from_soap: %s" % (e.msg))
+        logger.exception("site_info_from_soap: %s" % (str(e)))
         raise e
 
 def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
@@ -287,7 +287,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
                 "end_date": end_date
                 }
     except Exception as e:
-        logger.exception("parse_1_0_and_1_1_owslib: %s" % (e.msg))
+        logger.exception("parse_1_0_and_1_1_owslib: %s" % (str(e)))
         raise e
 
 def getAttributeValueFromElement(ele, a_name, exactmatch=False):
@@ -434,7 +434,7 @@ def parse_2_0(wml_string):
                         "end_date": end_date
                         }
     except Exception as ex:
-        logger.error(ex.msg)
+        logger.error(str(ex))
         raise Exception("parse 2.0 error")
 
 def time_str_to_datetime(t):
@@ -475,7 +475,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         ts["wml_version"] = wml_version_xml_tag
         return ts
     except Exception as e:
-        logger.exception("QueryHydroServerGetParsedWML: %s" % (e.msg))
+        logger.exception("QueryHydroServerGetParsedWML: %s" % (str(e)))
         raise e
 
 def create_vis_2(path, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
@@ -507,7 +507,7 @@ def create_vis_2(path, data, xlabel, variable_name, units, noDataValue, predefin
         plt.savefig(vis_path, bbox_inches='tight')
         return {"fname": vis_name, "fullpath": vis_path}
     except Exception as e:
-        logger.exception("create_vis_2: %s" % (e.msg))
+        logger.exception("create_vis_2: %s" % (str(e)))
         raise e
 
 def generate_resource_files(shortkey, tempdir):
@@ -604,7 +604,7 @@ def save_ts_to_files(res, tempdir, ts):
             tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
             res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
         except Exception as e:
-            logger.exception("convert to wml2 error: %s".format(e.msg))
+            logger.exception("convert to wml2 error: %s".format(str(e)))
 
     elif ts["wml_version"] == 20:
         with open(wml_2_0_full_path, 'w') as xml_2_file:

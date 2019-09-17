@@ -30,7 +30,7 @@ class AppLaunch(TemplateView):
             try:
                 do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
             except WebAppLaunchException as ex:
-                messages.warning(request, ex.msg)
+                messages.warning(request, str(ex))
                 return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
         # log app launch details if user is logged in

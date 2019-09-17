@@ -249,7 +249,7 @@ def get_fed_zone_files(irods_fnames):
                 shutil.rmtree(tmpdir)
                 os.makedirs(tmpdir)
             else:
-                raise Exception(ex.msg)
+                raise Exception(str(ex))
         irods_storage.getFile(ifname, tmpfile)
         ret_file_list.append(tmpfile)
     return ret_file_list

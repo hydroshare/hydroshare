@@ -591,7 +591,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     file_type_success = True
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
-                    msg = msg.format(ex.msg)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
 
             if not file_type_success:
@@ -759,8 +759,8 @@ def validate_odm2_db_file(sqlite_file_path):
         log.error(sqlite_err_msg)
         return sqlite_err_msg
     except Exception as e:
-        log.error(e.msg)
-        return e.msg
+        log.error(str(e))
+        return str(e)
 
 
 def validate_csv_file(csv_file_path):
@@ -864,7 +864,7 @@ def add_blank_sqlite_file(resource, upload_folder):
         log.info("Blank SQLite file was added.")
         return new_res_file
     except Exception as ex:
-        log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.msg))
+        log.exception("Error when adding the blank SQLite file. Error:{}".format(str(ex)))
         raise ex
 
 
@@ -1146,7 +1146,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
         log.error(sqlite_err_msg)
         return sqlite_err_msg
     except Exception as ex:
-        log.error(ex.msg)
+        log.error(str(ex))
         return err_message
 
 
@@ -1789,7 +1789,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
             log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update SQLite file. Error:{}".format(ex.msg))
+            log.exception("Failed to update SQLite file. Error:{}".format(str(ex)))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):

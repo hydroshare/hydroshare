@@ -255,7 +255,7 @@ def send_over_quota_emails():
                               [u.email, settings.DEFAULT_SUPPORT_EMAIL],
                               html_message=msg_str)
                 except Exception as ex:
-                    logger.debug("Failed to send quota warning email: " + ex.msg)
+                    logger.debug("Failed to send quota warning email: " + str(ex))
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit
@@ -403,7 +403,7 @@ def create_bag_by_irods(resource_id):
         try:
             create_bag_files(res)
         except Exception as ex:
-            logger.error('Failed to create bag files. Error:{}'.format(ex.msg))
+            logger.error('Failed to create bag files. Error:{}'.format(str(ex)))
             return False
 
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)

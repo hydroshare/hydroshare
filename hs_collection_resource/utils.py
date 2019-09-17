@@ -113,8 +113,8 @@ def update_collection_list_csv(collection_obj):
 
     except Exception as ex:
         logger.error("Failed to update_collection_list_csv in {}"
-                     "Error:{} ".format(short_key, ex.msg))
-        raise Exception("update_collection_list_csv error: " + ex.msg)
+                     "Error:{} ".format(short_key, str(ex)))
+        raise Exception("update_collection_list_csv error: " + str(ex))
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)

@@ -198,7 +198,7 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
         set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
         hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
     except Exception as ex:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.msg, None
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex), None
 
     return status.HTTP_200_OK, 'success', f.id
 
@@ -250,7 +250,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
             shutil.rmtree(temp_path)
             os.makedirs(temp_path)
         else:
-            return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.msg
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex)
 
     # update url file in iRODS
     urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'

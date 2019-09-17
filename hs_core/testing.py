@@ -75,7 +75,7 @@ class TestCaseCommonUtilities(object):
             user_profile.create_irods_user_account = True
             user_profile.save()
         except Exception as ex:
-            self.assertRaises(SessionException(-1, ex.msg, ex.msg))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
@@ -96,7 +96,7 @@ class TestCaseCommonUtilities(object):
             user_profile.save()
         except Exception as ex:
             # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, ex.msg, ex.msg))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
         """Save a list of files to iRODS user zone.
