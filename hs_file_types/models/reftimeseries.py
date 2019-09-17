@@ -733,7 +733,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             series.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
