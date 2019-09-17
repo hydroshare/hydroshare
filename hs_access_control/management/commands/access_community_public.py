@@ -59,18 +59,19 @@ class Command(BaseCommand):
             print((("{} '{}' '{}' type='{}' group='{}' (id={}) published={} public={} " +
                   "discoverable={} created='{}' updated='{}' first author='{}'")
                    .format(r.short_id,
-                          shorten(r.title, 20),
-                          # equivalently: shorten(r.content_object._title.first().value, 20),
-                          shorten(r.description, 20),
-                          # equivalently: shorten(r.content_object._description.first().value, 20),
-                          r.resource_type,
-                          r.group_name,
-                          r.group_id,
-                          r.published,
-                          r.public,
-                          r.discoverable,
-                          r.created,
-                          r.updated,
-                          r.first_creator
-                          # equivalently: r.content_object.creators.filter(order=1).first()
-                          )))
+                           shorten(r.title, 20),
+                           # equivalently: shorten(r.content_object._title.first().value, 20),
+                           shorten(r.description, 20),
+                           # equivalently: shorten(r.content_object._description.first().value, 20),
+                           r.resource_type,
+                           r.group_name,
+                           r.group_id,
+                           r.published,
+                           r.public,
+                           r.discoverable,
+                           r.created,
+                           r.updated,
+                           r.first_creator
+                           # equivalently: r.content_object.creators.filter(order=1).first()
+                           )
+                   ))
