@@ -340,7 +340,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be abstract element
         self.assertNotEqual(self.composite_resource.metadata.description, None)
         # add a file to the resource to auto create format element
-        self.raster_file_obj = open(self.raster_file, 'r')
+        self.raster_file_obj = open(self.raster_file, 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.raster_file_obj,), user=self.user,
                                   auto_aggregate=False)

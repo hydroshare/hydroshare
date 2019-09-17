@@ -51,7 +51,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         self.original_file.write("original text")
         self.original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         added_files = hydroshare.add_resource_files(new_res.short_id, original_file)
 
@@ -71,7 +71,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file_data = 'data in new file'
         self.new_file.write(new_file_data)
         self.new_file.close()
-        new_file = open(new_file_name, 'r')
+        new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
         rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)
@@ -95,7 +95,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file_data = 'data in new file'
         new_file.write(new_file_data)
         new_file.close()
-        new_file = open(new_file_name, 'r')
+        new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
         rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)

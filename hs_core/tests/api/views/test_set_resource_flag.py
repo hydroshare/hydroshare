@@ -39,7 +39,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         txt = open(self.txt_file_path, 'w')
         txt.write("Hello World\n")
         txt.close()
-        self.txt_file = open(self.txt_file_path, 'r')
+        self.txt_file = open(self.txt_file_path, 'rb')
         files = [UploadedFile(self.txt_file, name=self.txt_file_name)]
         metadata_dict = [
             {'description': {'abstract': 'My test abstract'}},

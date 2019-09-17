@@ -40,25 +40,25 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
-        self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
+        self.netcdf_file_obj = open(target_temp_netcdf_file, 'rb')
 
         self.temp_dir = tempfile.mkdtemp()
         self.netcdf_file_name_crs = 'netcdf_valid_crs.nc'
         self.netcdf_file_crs = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name_crs)
         target_temp_netcdf_file_crs = os.path.join(self.temp_dir, self.netcdf_file_name_crs)
         shutil.copy(self.netcdf_file_crs, target_temp_netcdf_file_crs)
-        self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'r')
+        self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'rb')
 
         self.netcdf_bad_file_name = 'netcdf_invalid.nc'
         self.netcdf_bad_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_bad_file_name)
         target_temp_bad_netcdf_file = os.path.join(self.temp_dir, self.netcdf_bad_file_name)
         shutil.copy(self.netcdf_bad_file, target_temp_bad_netcdf_file)
-        self.netcdf_bad_file_obj = open(target_temp_bad_netcdf_file, 'r')
+        self.netcdf_bad_file_obj = open(target_temp_bad_netcdf_file, 'rb')
 
         temp_text_file = os.path.join(self.temp_dir, 'netcdf_text.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("NetCDF records")
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
         super(TestNetcdfMetaData, self).tearDown()

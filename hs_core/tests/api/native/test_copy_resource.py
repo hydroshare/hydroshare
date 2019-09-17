@@ -90,7 +90,7 @@ class TestCopyResource(TestCase):
         temp_dir = tempfile.mkdtemp()
         self.temp_raster_file = os.path.join(temp_dir, 'cea.tif')
         shutil.copy(raster_file, self.temp_raster_file)
-        self.raster_obj = open(self.temp_raster_file, 'r')
+        self.raster_obj = open(self.temp_raster_file, 'rb')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
         self.res_raster = hydroshare.create_resource(
             resource_type='RasterResource',
@@ -308,7 +308,7 @@ class TestCopyResource(TestCase):
         logical file type object contains. Here we are not testing resource level metadata copy
         as that has been tested in separate unit tests"""
 
-        self.raster_obj = open(self.temp_raster_file, 'r')
+        self.raster_obj = open(self.temp_raster_file, 'rb')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',

@@ -359,7 +359,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         raster = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name=self.raster_file_path,
                                          content_type='image/tiff',
                                          size=os.stat(self.raster_file_path).st_size)
-        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'r'), name=self.txt_file_path,
+        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'rb'), name=self.txt_file_path,
                                        content_type='text/plain',
                                        size=os.stat(self.txt_file_path).st_size)
         res = resource.create_resource('GenericResource',

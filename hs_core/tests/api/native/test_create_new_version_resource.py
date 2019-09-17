@@ -63,7 +63,7 @@ class TestNewVersionResource(TestCase):
         temp_dir = tempfile.mkdtemp()
         temp_raster_file = os.path.join(temp_dir, 'cea.tif')
         shutil.copy(raster_file, temp_raster_file)
-        self.raster_obj = open(temp_raster_file, 'r')
+        self.raster_obj = open(temp_raster_file, 'rb')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
         self.res_raster = hydroshare.create_resource(
             resource_type='RasterResource',

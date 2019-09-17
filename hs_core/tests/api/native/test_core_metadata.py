@@ -1060,7 +1060,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         original_file.write("original text")
         original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         hydroshare.add_resource_files(res_with_files.short_id, original_file)
 
@@ -1500,7 +1500,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         original_file.write("original text")
         original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
 
