@@ -192,23 +192,23 @@ class Command(BaseCommand):
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
                                                             raccess__published=False)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              EDITABLE by group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              VIEWABLE by group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
             print(("        groups where {} has view:".format(user.username)))
             groups = c.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
             for g in groups:
@@ -217,20 +217,20 @@ class Command(BaseCommand):
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
                                                             raccess__published=False)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              EDITABLE by group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))
                 print(("              VIEWABLE by group '{}' (id={})".format(g.name, g.id)))
                 resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
                 for r in resources:
                     print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                       r.short_id)))
+                                                                        r.short_id)))

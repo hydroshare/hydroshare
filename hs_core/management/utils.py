@@ -601,13 +601,13 @@ class CheckResource(object):
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
                 print(("  AVU resourceType is {}, should be {}".format(value.encode('ascii',
-                                                                                   'replace'),
-                                                                      self.resource.resource_type)))
+                                                                                    'replace'),
+                                                                       self.resource.resource_type)))
             if a == 'isPublic' and value is not None and value != self.resource.raccess.public:
                 self.label()
                 print(("  AVU isPublic is {}, but public is {}".format(value.encode('ascii',
-                                                                                   'replace'),
-                                                                      self.resource.raccess.public)))
+                                                                                    'replace'),
+                                                                       self.resource.raccess.public)))
 
         irods_issues, irods_errors = check_irods_files(self.resource,
                                                        log_errors=False,

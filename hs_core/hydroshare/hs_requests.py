@@ -41,7 +41,7 @@ def localize_url(url):
        parsed[1] == getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org'):
         # insert local IP instead of fake target
         parsed2 = urllib.parse.ParseResult(parsed[0], get_nginx_ip(), parsed[2],
-                                       parsed[3], parsed[4], parsed[5])
+                                           parsed[3], parsed[4], parsed[5])
         return parsed2.geturl()
     else:
         return url

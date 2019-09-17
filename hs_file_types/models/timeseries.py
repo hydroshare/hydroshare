@@ -322,7 +322,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                      "after you update the SQLite file.")
                     eval(input(id="metadata-dirty", type="hidden", value=is_dirty))
                     eval(input(id="can-update-sqlite-file", type="hidden",
-                          value=can_update_sqlite_file))
+                               value=can_update_sqlite_file))
                     with form(action=form_action, method="post", id="update-sqlite-file"):
                         button("Update SQLite File", type="button", cls="btn btn-primary",
                                id="id-update-sqlite-file")

@@ -8,7 +8,6 @@
 # the latter may cause error "cannot enable tty mode on non tty input"
 
 
-
 import os
 import shutil
 import tempfile

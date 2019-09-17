@@ -11,7 +11,9 @@ from mock import patch, Mock
 from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
 from hs_tracking.views import AppLaunch
 import hs_tracking.utils as utils
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 from pprint import pprint
 
 

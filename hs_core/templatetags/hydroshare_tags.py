@@ -222,10 +222,10 @@ def five_options_around(page):
         return list(range(1, min(5, page.paginator.num_pages) + 1))
     elif page.number >= (page.paginator.num_pages - 2):
         return list(range(max((page.paginator.num_pages - 4), 1),
-                     page.paginator.num_pages + 1))
+                          page.paginator.num_pages + 1))
     else:
         return list(range(max(1, (page.number - 2)),
-                     min((page.number + 2), page.paginator.num_pages) + 1))
+                          min((page.number + 2), page.paginator.num_pages) + 1))
 
 
 @register.filter
