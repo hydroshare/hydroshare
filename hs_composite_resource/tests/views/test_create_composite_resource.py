@@ -72,7 +72,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         post_data = {'resource-type': 'CompositeResource',
                      'title': 'Test Composite Resource Creation',
-                     'files': (self.txt_file_name, open(self.txt_file_path), 'text/plain')
+                     'files': (self.txt_file_name, open(self.txt_file_path, 'rb'), 'text/plain')
                      }
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)

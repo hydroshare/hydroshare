@@ -452,7 +452,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a netcdf resource
         netcdf_file = 'hs_core/tests/data/netcdf_valid.nc'
-        file_to_upload = open(netcdf_file, "r")
+        file_to_upload = open(netcdf_file, "rb")
         self._create_resource(resource_type="NetcdfResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -541,7 +541,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a netcdf resource
         netcdf_file = 'hs_core/tests/data/netcdf_valid.nc'
-        file_to_upload = open(netcdf_file, "r")
+        file_to_upload = open(netcdf_file, "rb")
         self._create_resource(resource_type="NetcdfResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -583,7 +583,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a raster resource
         raster_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(raster_file, "r")
+        file_to_upload = open(raster_file, "rb")
         self._create_resource(resource_type="RasterResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -661,7 +661,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a raster resource
         raster_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(raster_file, "r")
+        file_to_upload = open(raster_file, "rb")
         self._create_resource(resource_type="RasterResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -689,7 +689,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a model program resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="ModelProgramResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -766,7 +766,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a model program resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="ModelProgramResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -794,7 +794,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="ModelInstanceResource", file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
             res_id=self.resource.short_id)
@@ -862,7 +862,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="ModelInstanceResource", file_to_upload=file_to_upload)
         # create a model program resource to link as executed by
         model_program_resource = resource.create_resource(
@@ -888,7 +888,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a MODFLOW model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="MODFLOWModelInstanceResource",
                               file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
@@ -1005,7 +1005,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
         # create a MODFLOW model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
-        file_to_upload = open(some_file, "r")
+        file_to_upload = open(some_file, "rb")
         self._create_resource(resource_type="MODFLOWModelInstanceResource",
                               file_to_upload=file_to_upload)
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(

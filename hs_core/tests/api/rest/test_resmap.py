@@ -79,7 +79,7 @@ class TestResourceMap(ResMapTestCase):
 
         # Upload the new resource file
         params = {'file': (txt_file_name,
-                           open(txt_file_path),
+                           open(txt_file_path, 'rb'),
                            'text/plain')}
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)

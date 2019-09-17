@@ -43,8 +43,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         open(file_two, "w").close()
 
         # open files for read and upload
-        self.file_one = open(file_one, "r")
-        self.file_two = open(file_two, "r")
+        self.file_one = open(file_one, "rb")
+        self.file_two = open(file_two, "rb")
 
         # Make a text file
         self.txt_file_path = os.path.join(self.tmp_dir, 'text.txt')

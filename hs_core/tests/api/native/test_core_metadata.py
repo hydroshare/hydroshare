@@ -797,7 +797,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_1, "w").close()
 
         # open the file for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -814,7 +814,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_2, "w").close()
 
         # open the file for read
-        file_obj_2 = open(res_file_2, "r")
+        file_obj_2 = open(res_file_2, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -829,10 +829,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test adding files of different mime types creates one format element for each mime type
         res_file_3 = "file_three.tif"
         open(res_file_3, "w").close()
-        file_obj_3 = open(res_file_3, "r")
+        file_obj_3 = open(res_file_3, "rb")
 
         # reopen file_obj_1 for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
 
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
@@ -856,7 +856,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_1, "w").close()
 
         # open the file for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -887,8 +887,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_2, "w").close()
 
         # open the file for read
-        file_obj_2 = open(res_file_2, "r")
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_2 = open(res_file_2, "rb")
+        file_obj_1 = open(res_file_1, "rb")
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
 
         # the two files have the same format

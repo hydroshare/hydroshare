@@ -31,7 +31,7 @@ class TestResourceList(HSRESTTestCase):
         gen_pid = gen_res.short_id
         self.resources_to_delete.append(gen_pid)
 
-        raster = open('hs_core/tests/data/cea.tif')
+        raster = open('hs_core/tests/data/cea.tif', 'rb')
         geo_res = resource.create_resource('RasterResource',
                                            self.user,
                                            'My raster resource',

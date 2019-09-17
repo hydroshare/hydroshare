@@ -87,7 +87,7 @@ class TestResourceFile(HSRESTTestCase):
         txt.close()
         # Upload the new resource file
         params = {'file': (txt_file_name,
-                           open(txt_file_path),
+                           open(txt_file_path, 'rb'),
                            'text/plain')}
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
@@ -116,7 +116,7 @@ class TestResourceFile(HSRESTTestCase):
         # Upload the new resource file
 
         params = {
-            'file': (txt_file_name, open(txt_file_path), 'text/plain'),
+            'file': (txt_file_name, open(txt_file_path, 'rb'), 'text/plain'),
             'folder': "folder/path"
         }
 

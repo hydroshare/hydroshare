@@ -34,7 +34,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         open(file_one, "w").close()
 
         # open files for read and upload
-        self.file_one = open(file_one, "r")
+        self.file_one = open(file_one, "rb")
 
         self.res = resource.create_resource(
             'GenericResource',
